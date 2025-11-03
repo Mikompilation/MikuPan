@@ -93,7 +93,6 @@ extern EFFECT_CONT efcntm[48]; // = {0}
 extern EFFECT_CONT efcnt_cnt[64]; // = {0}
 extern EFFECT_CONT efcntm_cnt[48]; // = {0}
 extern int look_debugmenu;
-extern int set_buffer[2];
 
 void InitEffects();
 void InitEffectsEF();

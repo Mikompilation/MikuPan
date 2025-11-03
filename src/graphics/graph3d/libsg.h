@@ -291,11 +291,18 @@ static inline void calc_skinned_normal(sceVu0FVECTOR dp, sceVu0FVECTOR v)
 // Line 351
 static inline void Vu0CopyVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
+    v0[0] = v1[0];
+    v0[1] = v1[1];
+    v0[2] = v1[2];
+    v0[3] = v1[3];
+
+    /*
     asm volatile("        \n\
         lq    $6, 0x0(%1) \n\
         sq    $6, 0x0(%0) \n\
         ": :"r"(v0), "r"(v1): "$6"
     );
+    */
 }
 
 // Line 366

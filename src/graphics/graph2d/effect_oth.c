@@ -313,7 +313,13 @@ void RunRipple2()
 
             bak = ndpkt;
 
-            pbuf[ndpkt++].ul128 = (u_long128)0;
+            /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+            pbuf[ndpkt].ul128[0] = 0;
+            pbuf[ndpkt].ul128[1] = 0;
+            pbuf[ndpkt].ul128[2] = 0;
+            pbuf[ndpkt].ul128[3] = 0;
+            ndpkt++;
 
             pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(5, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
             pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -445,7 +451,13 @@ void SetEffSQTex(int n, float *v, int tp, float w, float h, u_char r, u_char g, 
 
     Reserve2DPacket(0x1000);
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+
     pbuf[ndpkt++].ui32[0] = DMAend | 20;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -540,7 +552,12 @@ void SetEffSQITex(int n, int *v, int tp, float w, float h, u_char r, u_char g, u
 
     Reserve2DPacket(0x1000);
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+
     pbuf[ndpkt++].ui32[0] = DMAend | 20;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -796,7 +813,12 @@ void SubFire1(EFFECT_CONT *ec)
 
         Reserve2DPacket(0x1000);
 
-        pbuf[ndpkt].ul128 = (u_long128)0;
+        /// pbuf[ndpkt].ul128 = (u_long128)0;
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+
         pbuf[ndpkt++].ui32[0] = DMAend | 20;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -2530,7 +2552,13 @@ int SetAmuletFire()
 
     c = ndpkt;
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+
     pbuf[ndpkt++].ui32[0] = DMAend;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -3307,7 +3335,13 @@ void SetSunshine(EFFECT_CONT *ec)
 
     n = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TEX0_1(7, 2, SCE_GS_PSMCT32, 0, 0, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 16, 0);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -3651,7 +3685,12 @@ void SetDust(EFFECT_CONT *ec)
 
         c = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        /// pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+        ndpkt++;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -3920,7 +3959,13 @@ void SetWaterdrop(EFFECT_CONT *ec)
 
     c = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -4349,7 +4394,13 @@ void RunLeafSub(EFF_LEAF *lep)
 
     c = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -4767,7 +4818,13 @@ u_char SetCanalSub(int no, float *mpos)
 
     n = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(8, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -5467,7 +5524,13 @@ void SetSky()
 
             c = ndpkt;
 
-            pbuf[ndpkt].ul128 = (u_long128)0;
+            /// pbuf[ndpkt].ul128 = (u_long128)0;
+
+            pbuf[ndpkt].ul128[0] = 0;
+            pbuf[ndpkt].ul128[1] = 0;
+            pbuf[ndpkt].ul128[2] = 0;
+            pbuf[ndpkt].ul128[3] = 0;
+
             pbuf[ndpkt++].ui32[0] = DMAend;
 
             pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -5651,7 +5714,13 @@ void SetPond()
     n = ndpkt;
     m = (pnumw + 1) * pnumh;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(8, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -5995,7 +6064,13 @@ void SetHaze_Pond()
 
     c = ndpkt;
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+
     pbuf[ndpkt++].ui32[0] = DMAend;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -6180,7 +6255,13 @@ void DrawNewPerticleSub(int num, sceVu0FVECTOR *pos, u_char r1, u_char g1, u_cha
 
     n = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(3, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -6422,7 +6503,13 @@ void SetEneFace(EFFECT_CONT *ec)
 
     bak = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -6812,7 +6899,13 @@ void SetFaceSpirit(EFFECT_CONT *ec)
 
     bak = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;

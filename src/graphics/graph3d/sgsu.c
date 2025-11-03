@@ -3,6 +3,9 @@
 #include "enums.h"
 #include "sgsu.h"
 
+#include <stdio.h>
+
+#include "sgsup.h"
 #include "ee/eestruct.h"
 
 #include "graphics/graph3d/libsg.h"

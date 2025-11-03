@@ -10,13 +10,14 @@ typedef int s_int;
 //typedef int s_long128 __attribute__ ((mode (TI)));
 typedef int s_long128[4];
 
-typedef unsigned long u_long;
+/// TODO: CHECK FOR PROPER IMPLEMENTATION OF MODE TI
+//typedef unsigned int u_long128 __attribute__ ((mode (TI)));
+typedef unsigned int u_long128[4];
+
+typedef unsigned long long u_long;
 typedef unsigned short u_short;
 typedef unsigned char u_char;
 typedef unsigned int u_int;
-
-/// TODO: CHECK FOR PROPER IMPLEMENTATION OF MODE TI
-typedef unsigned int u_long128[4];
 
 typedef long int dword[2] __attribute__ ((aligned(16)));;
 typedef int qword[4] __attribute__ ((aligned(16)));

@@ -2,6 +2,8 @@
 #include "typedefs.h"
 #include "tim2_new.h"
 
+#include <stdio.h>
+
 #include "main/glob.h"
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph3d/sgdma.h"

@@ -23,6 +23,7 @@
 #include "graphics/graph3d/libsg.h"
 // #include "graphics/graph3d/gra3d.h" // RequestSpirit needs to be undeclared
 
+#include "effect_oth.h"
 #include "data/enedmg_fileno_tbl.h" // static int enedmg_fileno_tbl[][2];
 #include "data/enedmg_texno_tbl.h"  // static SPRT_DAT enedmg_texno_tbl[];
 #include "data/eto_light.h"         // static sceVu0FVECTOR eto_light[5];
@@ -138,7 +139,13 @@ void SetETOCircleTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, float w, float h, u_cha
 
         bak = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+        ndpkt++;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -419,7 +426,13 @@ int SetCamFont(int no, int fl)
 
     bak = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TEX0_1(0x5, 2, SCE_GS_PSMCT32, 0, 0, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 16, 0);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1661,7 +1674,13 @@ void RunCamSlow2(int o, float hrt, float rrt, u_int alp)
 
     bak = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(3, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -2517,7 +2536,12 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
 
     n = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    //pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -2888,7 +2912,10 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
     int pnumw;
     int pnumh;
     int wiy;
-    register int sx2 asm("s6"); // HACK: fixes regswap
+
+    //register int sx2 asm("s6"); // HACK: fixes regswap
+    int sx2; // HACK: fixes regswap
+
     int sy2;
     int clip;
     float l;
@@ -3123,7 +3150,12 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
 
         bak = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        /// pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+        ndpkt++;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -4289,7 +4321,13 @@ void SetEneDmgEffect1_Sub2(int num)
 
     bak = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(5, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;

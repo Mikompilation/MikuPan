@@ -2,6 +2,8 @@
 #include "typedefs.h"
 #include "effect_rdr.h"
 
+#include <string.h>
+
 #include "sce/libvu0.h"
 
 #include "os/pad.h"
@@ -484,7 +486,12 @@ void SubRDFire(EFFECT_CONT *ec)
 
         bak = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        /// pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+        ndpkt++;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;

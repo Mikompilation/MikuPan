@@ -55,5 +55,6 @@ void SetStarRay(float *bpos, int tp, float sc, int num, float aang);
 void SetStarRay(float *bpos, int tp, float sc, int num, float aang);
 void _SetPartsDeformSTQRegs(sceVu0FVECTOR *params);
 void _CalcParstDeformSTQ(float *stq, float *vt);
+void SetNegaCircle(EFFECT_CONT *ec); /// Initially not there
 
 #endif // GRAPHICS_GRAPH2D_EFFECT_OBJ_H

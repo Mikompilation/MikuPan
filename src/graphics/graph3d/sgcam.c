@@ -2,6 +2,8 @@
 #include "typedefs.h"
 #include "sgcam.h"
 
+#include <stdio.h>
+
 // gcc/src/newlib/libm/math/sf_tan.c
 float tanf(float x);
 

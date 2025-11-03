@@ -1,8 +1,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include "include_asm.h"
-
 typedef char s8;
 typedef short s16;
 typedef int s32;

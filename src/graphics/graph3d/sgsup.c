@@ -2,6 +2,9 @@
 #include "typedefs.h"
 #include "sgsup.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "ee/kernel.h"
 #include "ee/eeregs.h"
 #include "ee/eestruct.h"

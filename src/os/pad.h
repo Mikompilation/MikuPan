@@ -38,9 +38,9 @@ int InitPad();
 int PadSyncCallback();
 int PadReadFunc(PAD_STRUCT *psp, int p_id);
 void SetAnlgInfo(PAD_STRUCT *psp, int p_id);
-// u_short VibrateRequest(u_short p_id, u_short act1, u_short act2);
-// u_short VibrateRequest1(u_short p_id, u_short act_1);
-// u_short VibrateRequest2(u_short p_id, u_short act_2);
+u_short VibrateRequest(u_short p_id, u_short act1, u_short act2); /// Initiall badly imported
+u_short VibrateRequest1(u_short p_id, u_short act_1); /// Initiall badly imported
+u_short VibrateRequest2(u_short p_id, u_short act_2); /// Initiall badly imported
 void PadClearCount(int p_id);
 
 #ifdef MATCHING_DECOMP

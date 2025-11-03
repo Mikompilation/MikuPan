@@ -156,7 +156,13 @@ void DrawRareEne_Sub(int mno, int dno, sceVu0FVECTOR pos, int tblno, int ani, in
 
         n = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+        ndpkt++;
 
         Get2PosRot(camera.p, bpos, &rot_x, &rot_y);
 

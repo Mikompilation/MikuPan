@@ -3,6 +3,8 @@
 #include "enums.h"
 #include "fod.h"
 
+#include <string.h>
+
 #include "sce/libvu0.h"
 
 #include "common/utility.h"

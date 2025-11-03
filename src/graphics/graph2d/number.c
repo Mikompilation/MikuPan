@@ -8,6 +8,8 @@
 // #include "graphics/graph2d/message.h" // DO NOT IMPORT!!
 // #include "graphics/graph2d/tim2.h" // DO NOT IMPORT!!
 
+#include "message.h"
+#include "tim2.h"
 #include "data/number_tex.h" // SPRT_DAT number_tex[][10];
 
 void NumberDisp(int number, short int pos_x, short int pos_y, u_char font, u_char r, u_char g, u_char b, u_char alpha, int pri, int digit, int type)

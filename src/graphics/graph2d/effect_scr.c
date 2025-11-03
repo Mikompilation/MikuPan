@@ -10,6 +10,10 @@
 // /usr/local/sce/ee/gcc/src/newlib/libm/math/s_isnan.c
 // int isnan(double x);
 
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "ee/eestruct.h"
 #include "ee/kernel.h"
 #include "sce/libgraph.h"
@@ -25,6 +29,7 @@
 #include "graphics/graph2d/effect_obj.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/libsg.h"
+#include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
 
 typedef struct { // 0x28
@@ -815,7 +820,13 @@ void MakeScrDeformPacket(/* s1 17 */ int pnumw, /* 0x0(sp) */ int pnumh, /* s2 1
     
     ppbuf = Get2DPacketBufferAddress();
     
-    ppbuf->ul128 = (u_long128)0;
+    /// ppbuf->ul128 = (u_long128)0;
+
+    ppbuf->ul128[0] = 0;
+    ppbuf->ul128[1] = 0;
+    ppbuf->ul128[2] = 0;
+    ppbuf->ul128[3] = 0;
+
     ppbuf->ui32[0] = (pnumh * (pnumw + 1)) * 4 + DMAend + 9;
     ppbuf++;
     
@@ -1007,7 +1018,12 @@ void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp
 
     Reserve2DPacket(0x1000);
     
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+
     // (25 * 16) * 6 + 0x70000008
     pbuf[ndpkt++].ui32[0] = DMAend + 8 + (pnumh * (vnumw+1)) * 6;
 
@@ -1299,7 +1315,13 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
     
     bak = ndpkt;
     
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1583,7 +1605,11 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
     
     Reserve2DPacket(0x1000);
     
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
     pbuf[ndpkt++].ui32[0] = DMAend + (pnumh)*(pnumw+1)*2*3 + 8; // 0x1298; // 8 + 24*33*2*3;
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -3642,7 +3668,13 @@ void SetMAGATOKI(/* s0 16 */ EFFECT_CONT *ec)
     
     bak = ndpkt;
     
-    pbuf[ndpkt++].ul128 = (u_long128)0; // Line 4843
+    /// pbuf[ndpkt++].ul128 = (u_long128)0; // Line 4843
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1); // Line 4845
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD; // Line 4846
@@ -4004,7 +4036,13 @@ void SubGameOver(/* 0x11b60(sp) */ u_char alp, /* f20 58 */ float rate)
     
     bak = ndpkt;
     
-    pbuf[ndpkt++].ul128 = (u_long128)0; // Line 5199
+    /// pbuf[ndpkt++].ul128 = (u_long128)0; // Line 5199
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1); // Line 5201
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD; // Line 5202

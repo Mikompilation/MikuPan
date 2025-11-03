@@ -8,7 +8,7 @@
 #include "outgame/outgame.h"
 #include "graphics/graph2d/sprt.h"
 #include "graphics/graph2d/number.h"
-// #include "graphics/graph2d/tim2.h"
+#include "graphics/graph2d/tim2.h"
 
 #include "data/test_tex0.h" // extern SPRT_DAT test_tex0[];
 #include "data/test_tex1.h" // extern SPRT_DAT test_tex1[];

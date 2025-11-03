@@ -111,7 +111,7 @@ float SlideEncode(u_char *base, u_char *addrs, int max_size)
         text[r + len] = c;
     }
 
-    if ((incount = len) == 0) return;
+    if ((incount = len) == 0) return 0.0f;
     
     for (i = 1; i <= F; i++)
     {

@@ -2,6 +2,8 @@
 #include "typedefs.h"
 #include "takep_pe.h"
 
+#include <stdlib.h>
+
 #include "sce/libvu0.h"
 #include "ee/eestruct.h"
 
@@ -430,7 +432,12 @@ void SetParticleEffect() {
 
     n = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
 
     start_pktaddr = (u_int)&pbuf[ndpkt];
 
@@ -518,7 +525,12 @@ void EyeLightCtrl() {
 
         n = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        /// pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+        ndpkt++;
 
         start_pktaddr = (u_int)&pbuf[ndpkt];
         qd = (Q_WORDDATA *)start_pktaddr;

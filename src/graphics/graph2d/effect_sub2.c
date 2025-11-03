@@ -17,6 +17,8 @@
 #include "ingame/menu/ig_menu.h"
 #include "ingame/event/ev_main.h"
 // #include "ingame/plyr/plyr_ctl.h" // do not include the declaration for `FinderEndSet`
+#include <string.h>
+
 #include "outgame/mode_slct.h"
 #include "outgame/btl_mode/btl_dat.h"
 #include "outgame/btl_mode/btl_mode.h"
@@ -30,6 +32,9 @@
 #include "graphics/graph2d/effect_obj.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/libsg.h"
+#include "ingame/event/ev_spcl.h"
+#include "ingame/plyr/plyr_ctl.h"
+#include "os/eeiop/adpcm/ea_cmd.h"
 
 typedef struct { // 0x8
 	/* 0x0 */ void *start_point;
@@ -675,7 +680,13 @@ void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotati
         
         bak = ndpkt;
         
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+        ndpkt++;
         
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1045,7 +1056,13 @@ void GusObjDraw(/* a0 4 */ int leaf_num, /* a1 5 */ int area, /* a2 6 */ int fal
 
     bak = ndpkt;
     
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+    ndpkt++;
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1411,7 +1428,13 @@ void HoleGusDraw(/* s5 21 */ int leaf_no)
         
         bak = ndpkt;
         
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+        ndpkt++;
         
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -2080,8 +2103,14 @@ void LineGusDraw(/* s6 22 */ int leaf_no, /* s5 21 */ int line_num)
         
         bak = ndpkt;
         
-        pbuf[ndpkt++].ul128 = (u_long128)0;
-        
+        /// pbuf[ndpkt++].ul128 = (u_long128)0;
+
+        pbuf[ndpkt].ul128[0] = 0;
+        pbuf[ndpkt].ul128[1] = 0;
+        pbuf[ndpkt].ul128[2] = 0;
+        pbuf[ndpkt].ul128[3] = 0;
+        ndpkt++;
+
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
         

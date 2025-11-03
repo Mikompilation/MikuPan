@@ -29,12 +29,16 @@
 #include "graphics/graph2d/effect_sub.h"
 // #include "ingame/entry/ap_sgost.h" // DO NOT INCLUDE
 
+#include <string.h>
+
 #include "data/effdat.h" // SPRT_DAT effdat[];
 #include "data/camdat.h" // SPRT_DAT camdat[];
+#include "ingame/entry/ap_sgost.h"
 static int tmp_effect_off = 0;
 static void *r23_e1 = 0;
 static void *r23_e2 = 0;
 static u_char r28_torch_flag = 0;
+static int set_buffer[2];
 
 void InitEffects()
 {
@@ -1400,7 +1404,7 @@ void EffectControl(int no)
     return;
 }
 
-static int set_buffer[2];
+
 
 void SetBlurOff()
 {

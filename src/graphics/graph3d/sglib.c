@@ -2,6 +2,8 @@
 #include "typedefs.h"
 #include "sglib.h"
 
+#include <stdio.h>
+
 #include "ee/eestruct.h"
 #include "sce/libdma.h"
 #include "sce/libvu0.h"
@@ -55,8 +57,7 @@ int set_bw_color = 0;
 
 static inline float asm_1(float rad)
 {
-    float ret;
-
+    /*
     __asm__ volatile("\n\
         lqc2     $vf12,0(%0)\n\
         qmtc2    %1,$vf13\n\
@@ -75,8 +76,9 @@ static inline float asm_1(float rad)
         qmfc2    %0,$vf13\n\
         ": "=r" (ret) : : "v0"
     );
+    */
 
-    return ret;
+    return rad + ((float)(int)(trad[1] * rad)) * trad[2];
 }
 
 static inline float asm_2(float rad)

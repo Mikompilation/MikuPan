@@ -2,6 +2,9 @@
 #include "typedefs.h"
 #include "message.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include "gcc/stdarg.h"
 
 #include "ee/eestruct.h"
@@ -692,7 +695,13 @@ static void SetFontPacketHeader(int n, int type, u_char alp)
         Change.CLD = 0;
     }
 
-    mpbuf[nmdpkt].ul128 = (u_long128)0;
+    /// mpbuf[nmdpkt].ul128 = (u_long128)0;
+
+    mpbuf[nmdpkt].ul128[0] = 0;
+    mpbuf[nmdpkt].ul128[1] = 0;
+    mpbuf[nmdpkt].ul128[2] = 0;
+    mpbuf[nmdpkt].ul128[3] = 0;
+
     mpbuf[nmdpkt++].ui32[0] = (DMAend | 10) + n * 5;
 
     mpbuf[nmdpkt].ul64[0] = SCE_GIF_SET_TAG(8, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -1098,7 +1107,12 @@ static void MesPacketEnd()
 static void PacketEnd()
 #endif
 {
-    mpbuf[nmdpkt].ul128 = (u_long128)0;
+    /// mpbuf[nmdpkt].ul128 = (u_long128)0;
+    mpbuf[nmdpkt].ul128[0] = 0;
+    mpbuf[nmdpkt].ul128[1] = 0;
+    mpbuf[nmdpkt].ul128[2] = 0;
+    mpbuf[nmdpkt].ul128[3] = 0;
+
     mpbuf[nmdpkt++].ui32[0] = DMAend | 2;
 
     mpbuf[nmdpkt].ul64[0] = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -1513,7 +1527,13 @@ int SetMessageV2_2(DISP_STR *s)
     s->brnch_num = selnum;
 
     i = draw_mpri[nmdpri][1];
-    mpbuf[i].ul128 = (u_long128)0;
+    /// mpbuf[i].ul128 = (u_long128)0;
+
+    mpbuf[i].ul128[0] = 0;
+    mpbuf[i].ul128[1] = 0;
+    mpbuf[i].ul128[2] = 0;
+    mpbuf[i].ul128[3] = 0;
+
     mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
     nmdpri++;
 
@@ -1844,7 +1864,13 @@ int SetMessageV2(DISP_STR *s)
     s->brnch_num = selnum;
 
     i = draw_mpri[nmdpri][1];
-    mpbuf[i].ul128 = (u_long128)0;
+    /// mpbuf[i].ul128 = (u_long128)0;
+
+    mpbuf[i].ul128[0] = 0;
+    mpbuf[i].ul128[1] = 0;
+    mpbuf[i].ul128[2] = 0;
+    mpbuf[i].ul128[3] = 0;
+
     mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
     nmdpri++;
 
@@ -2349,7 +2375,13 @@ int SubMessageV3(u_char *s, int pri, int delflg)
     }
 
     i = draw_mpri[nmdpri][1];
-    mpbuf[i].ul128 = (u_long128)0;
+    /// mpbuf[i].ul128 = (u_long128)0;
+
+    mpbuf[i].ul128[0] = 0;
+    mpbuf[i].ul128[1] = 0;
+    mpbuf[i].ul128[2] = 0;
+    mpbuf[i].ul128[3] = 0;
+
     mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
     nmdpri++;
 

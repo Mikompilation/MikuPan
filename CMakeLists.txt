@@ -164,4 +164,4 @@ add_executable(MikuPan
         "src/outgame/sound_test.c"
         "src/outgame/title.c")
 
-target_include_directories(MikuPan PRIVATE "include/" "src")
+target_include_directories(MikuPan PRIVATE "include/" "src" "resources/")

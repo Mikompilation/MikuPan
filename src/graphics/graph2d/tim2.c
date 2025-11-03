@@ -1379,7 +1379,14 @@ static void FlushTextureCache()
 {
     Q_WORDDATA pflsh[8];
 
-    pflsh[0].ul128 = (u_long128)0;
+    /// pflsh[0].ul128 = (u_long128)0;
+
+    pflsh[0].ul128[0] = 0;
+    pflsh[0].ul128[1] = 0;
+    pflsh[0].ul128[2] = 0;
+    pflsh[0].ul128[3] = 0;
+
+
     pflsh[0].ui32[0] = DMAend | 2;
 
     pflsh[1].ul64[0] = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -1696,7 +1703,13 @@ void SetScissor(int pri, int x, int y, int w, int h)
 
     Reserve2DPacket(pri);
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+
     pbuf[ndpkt++].ui32[0] = DMAend | 2;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -1710,7 +1723,13 @@ void ResetScissor(int pri)
 {
     Reserve2DPacket(pri);
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+
     pbuf[ndpkt++].ui32[0] = DMAend | 2;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -1960,7 +1979,13 @@ void DispSprD(DISP_SPRT *s)
 
     Reserve2DPacket(mpri);
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+
     pbuf[ndpkt++].ui32[0] = DMAend | 24;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(10, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -2329,7 +2354,13 @@ void DispSqrD(DISP_SQAR *s)
 
     Reserve2DPacket(mpri);
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    /// pbuf[ndpkt].ul128 = (u_long128)0;
+
+    pbuf[ndpkt].ul128[0] = 0;
+    pbuf[ndpkt].ul128[1] = 0;
+    pbuf[ndpkt].ul128[2] = 0;
+    pbuf[ndpkt].ul128[3] = 0;
+
     pbuf[ndpkt++].ui32[0] = DMAend | 14;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
