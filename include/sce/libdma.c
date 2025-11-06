@@ -1,6 +1,6 @@
 #include "libdma.h"
 
-#include <stdlib.h>
+//#include <stdlib.h>
 
 int sceDmaReset(int mode)
 {
