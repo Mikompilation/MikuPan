@@ -1,6 +1,8 @@
 #ifndef TYPEDEFS_H 
 #define TYPEDEFS_H
 
+#define __u_char_defined
+
 typedef long s_long;
 typedef short s_short;
 typedef char s_char;

@@ -2,7 +2,7 @@
 #include "typedefs.h"
 #include "g2d_main.h"
 
-//#include <stdlib.h>
+#include <stdlib.h>
 
 #include "main/glob.h"
 #include "ingame/menu/pause.h"

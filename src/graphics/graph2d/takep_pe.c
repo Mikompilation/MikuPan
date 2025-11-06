@@ -2,7 +2,7 @@
 #include "typedefs.h"
 #include "takep_pe.h"
 
-//#include <stdlib.h>
+#include <stdlib.h>
 
 #include "sce/libvu0.h"
 #include "ee/eestruct.h"

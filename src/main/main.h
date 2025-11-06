@@ -3,7 +3,6 @@
 
 #include "typedefs.h"
 
-int main();
 void InitGameFirst();
 void CallSoftReset();
 int SoftResetChk();

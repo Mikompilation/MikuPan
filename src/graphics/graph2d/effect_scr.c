@@ -11,7 +11,7 @@
 // int isnan(double x);
 
 #include <math.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "ee/eestruct.h"

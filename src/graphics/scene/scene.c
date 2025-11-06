@@ -3,7 +3,7 @@
 #include "enums.h"
 #include "scene.h"
 
-//#include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "sce/libvu0.h"

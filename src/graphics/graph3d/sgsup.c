@@ -3,7 +3,7 @@
 #include "sgsup.h"
 
 #include <stdio.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 
 #include "ee/kernel.h"
 #include "ee/eeregs.h"
