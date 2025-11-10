@@ -22,6 +22,13 @@ static Q_WORDDATA g2d_top_pkt[2];
 
 #define UNCACHED(p) ((char *)((u_int)p | 0x20000000))
 
+/**
+ * Implemented GS Texture Upload
+ * @param pkt_addr
+ * @param tim2_addr
+ * @param tbp
+ * @return
+ */
 u_int* MakeTim2Direct2(u_int *pkt_addr, u_int *tim2_addr, int tbp)
 {
     TIM2_PICTUREHEADER *tph;
@@ -119,6 +126,13 @@ u_int* MakeTim2Direct2(u_int *pkt_addr, u_int *tim2_addr, int tbp)
     return (u_int *)qw;
 }
 
+/**
+ * Implemented GS Texture Upload
+ * @param pkt_addr
+ * @param tim2_addr
+ * @param cbp
+ * @return
+ */
 u_int* MakeClutDirect2(u_int *pkt_addr, u_int *tim2_addr, int cbp)
 {
     TIM2_PICTUREHEADER *tph;

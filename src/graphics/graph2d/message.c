@@ -776,7 +776,7 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     int dh;
     int z;
 
-    if (type & 1)
+    if (type & 0)
     {
         Font_W = 12;
         Font_H = 14;
@@ -807,16 +807,27 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     px2 = dx + dw;
     py2 = dy + dh;
 
-    tw1 = ((no % Num_W) * Font_W + off_w); tw1 *= 16;
-    th1 = ((no / Num_W) * Font_H + off_ht); th1 *= 16;
-    tw2 = ((no % Num_W) * Font_W + Font_W + off_w); tw2 *= 16;
-    th2 = ((no / Num_W) * Font_H + Font_H + off_hd); th2 *= 16;
+    tw1 = ((no % Num_W) * Font_W + off_w);              //tw1 *= 16;
+    th1 = ((no / Num_W) * Font_H + off_ht);             //th1 *= 16;
+    tw2 = ((no % Num_W) * Font_W + Font_W + off_w);     //tw2 *= 16;
+    th2 = ((no / Num_W) * Font_H + Font_H + off_hd);    //th2 *= 16;
 
-    int64_t addr = FontTextAddress;
+    DISP_SPRT s;
+    s.r = r;
+    s.g = g;
+    s.b = b;
+    s.alpha = a;
 
+    s.tex0 = fntdat[type].tex0;
+    s.x = x;
+    s.y = y;
+    s.u = tw1;
+    s.v = th1;
+    s.w = tw2 - tw1;
+    s.h = th2 - th1;
 
-    //image = DownloadGsTexture(&tex0);
-    //SDL_Render2DTexture(s, image);
+    unsigned char* image = DownloadGsTexture(&fntdat[type].tex0);
+    SDL_Render2DTexture(&s, image);
 
     mpbuf[nmdpkt].ui32[0] = r;
     mpbuf[nmdpkt].ui32[1] = g;

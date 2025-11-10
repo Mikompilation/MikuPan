@@ -21,6 +21,7 @@
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/libsg.h"
+#include "rendering/sdl_renderer.h"
 
 typedef struct {
 	int screen_flag;
@@ -128,6 +129,8 @@ void SetSquare(int pri, float x1, float y1, float x2, float y2, float x3, float 
     y[1] = (y2 / div + 2048.0f) * 16.0f;
     y[2] = (y3 / div + 2048.0f) * 16.0f;
     y[3] = (y4 / div + 2048.0f) * 16.0f;
+
+    SDL_RenderSquare(x1, y1, x2, y2, x3, y3, x4, y4, r, g, b, a);
 
     z = 0x0fffffff - mpri;
 

@@ -67,19 +67,34 @@ void SDL_Render2DTexture(DISP_SPRT* sprite, unsigned char* image)
 
     src_rect.x = sprite->u;
     src_rect.y = sprite->v;
+
     src_rect.w = sprite->w;
     src_rect.h = sprite->h;
 
     dst_rect.x = sprite->x;
     dst_rect.y = sprite->y;
+
     dst_rect.w = sprite->w;
     dst_rect.h = sprite->h;
 
-    SDL_SetTextureAlphaMod(texture, (char)(255.0f * (sprite->alpha / 128.0f)));
-    SDL_SetTextureColorMod(texture, sprite->r, sprite->g, sprite->r);
+    //SDL_SetTextureAlphaMod(texture, (char)(255.0f * (sprite->alpha / 128.0f)));
+    SDL_SetTextureColorMod(texture, sprite->r, sprite->g, sprite->b);
     SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
 }
 
 void SDL_Render2DTexture2(DISP_SQAR *sprite, unsigned char *image)
 {
+}
+
+void SDL_RenderSquare(float x1, float y1, float x2, float y2, float x3,
+    float y3, float x4, float y4, u_char r, u_char g, u_char b, u_char a)
+{
+    SDL_SetRenderDrawColor(renderer, r, g, b, a);
+
+    SDL_FRect rect;
+    rect.x = x1;
+    rect.y = y1;
+    rect.w = x4 - x1;
+    rect.h = y4 - y1;
+    SDL_RenderFillRect(renderer, &rect);
 }

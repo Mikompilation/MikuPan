@@ -18,5 +18,6 @@ SDL_AppResult InitSDL();
 void SDL_Clear();
 void SDL_Render2DTexture(DISP_SPRT* sprite, unsigned char* image);
 void SDL_Render2DTexture2(DISP_SQAR* sprite, unsigned char* image);
+void SDL_RenderSquare(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, u_char r, u_char g, u_char b, u_char a);
 
 #endif //MIKUPAN_SDL_RENDERER_H

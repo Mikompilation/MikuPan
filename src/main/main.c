@@ -3,6 +3,8 @@
 #include "enums.h"
 #include "main.h"
 
+#include "graphics/graph2d/g2d_debug.h"
+
 #include <string.h>
 
 #include "main/glob.h"
@@ -76,7 +78,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             GameMain();
             CheckDMATrans();
             sceGsSyncPath(0, 0);
-            //SetString2(0x10, 48.0f, 364.0f, 1, 0x80, 0x80, 0x80, "HELLO WORLD!");
             vfunc();
             //DrawAll2DMes_P2();
             //FlushModel(1);

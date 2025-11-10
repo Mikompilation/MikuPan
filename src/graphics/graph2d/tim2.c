@@ -25,7 +25,7 @@ u_int draw_pri[4096][2] = {0};
 Q_WORDDATA mpbufw[2][8192] = {0};
 int draw_mpri[1024][2] = {0};
 
-u_char g_bInterlace = 1;
+u_char g_bInterlace = 0;
 int ndpkt = 0;
 int ndpri = 0;
 int nmdpkt = 0;
