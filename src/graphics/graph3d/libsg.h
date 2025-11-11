@@ -47,7 +47,8 @@ static inline void copy_skinned_data(sceVu0FVECTOR *vb, float *s0, float *s1)
 // Line 151
 static inline float vu0Rand()
 {
-    float r = 0.5f;
+#define RAND_MAX 2147483647
+    float r = rand() * rand() / RAND_MAX;
 
     /*
     asm volatile("                      \n\

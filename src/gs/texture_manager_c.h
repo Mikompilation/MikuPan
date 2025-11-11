@@ -1,11 +1,11 @@
 #ifndef MIKUPAN_TEXTURE_MANAGER_C_H
 #define MIKUPAN_TEXTURE_MANAGER_C_H
 
-void AddTexture(unsigned long long tbp0, unsigned char* img);
-void AddSDLTexture(unsigned long long tbp0, void* img);
-unsigned char* GetTexture(unsigned long long tbp0);
-void* GetSDLTexture(unsigned long long tbp0);
+void AddTexture(sceGsTex0* tex0, unsigned char* img);
+void AddSDLTexture(sceGsTex0* tex0, void* img);
+unsigned char* GetTexture(sceGsTex0* tex0);
+void* GetSDLTexture(sceGsTex0* tex0);
 void FirstUploadDone();
-bool IsFirstUploadDone();
+int IsFirstUploadDone();
 
 #endif //MIKUPAN_TEXTURE_MANAGER_C_H

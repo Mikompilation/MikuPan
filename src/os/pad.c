@@ -225,7 +225,6 @@ int PadSyncCallback()
                 // enable DualShock2 pressure sensitive mode (function is asynchronous)
                 if (scePadEnterPressMode(psp->port, psp->slot) == 1)
                 {
-                    __asm__ volatile (""); // dirty hack
                     psp->step = 11;
                 }
             }
@@ -311,7 +310,7 @@ int PadReadFunc(PAD_STRUCT *psp, int p_id)
     }
     
     // logical reverse button info => 1: press down, 0: release
-    psp->now = 0xffff ^ ((r_data[2] << 8) | (u_char)r_data[3]);    
+    psp->now = 0xffff ^ ((u_short)(r_data[2] << 8) | (u_char)r_data[3]);
     psp->one = psp->now & (psp->now ^ psp->old);
     psp->rpt = psp->one;
     

@@ -368,10 +368,10 @@ void gra2dDrawDbgMenuSub(DEBUG_MENU *wlp)
     int var2;
 
 start:
-    bx = (wlp->kai * 32) - 300;
-    by = (wlp->kai * 32) - 200;
+    bx = (wlp->kai * 32);
+    by = (wlp->kai * 32);
     sw = (wlp->max * 12) + 12;
-    sh = (wlp->mnum * 14) + 4;
+    sh = (wlp->mnum * 14)+ 4;
 
     SetSquareSN((((0x30 - wlp->kai) & 0xff) * 16) - 0, bx + 0, by + 0, (bx + sw) + 14, (by + sh) + 35, 0x00, 0x00, 0x00, 0x80);
     SetSquareSN((((0x30 - wlp->kai) & 0xff) * 16) - 1, bx + 1, by + 1, (bx + sw) + 13, (by + sh) + 33, 0x40, 0x40, 0x40, 0x80);
@@ -384,6 +384,9 @@ start:
     SetSquareSN((((0x30 - wlp->kai) & 0xff) * 16) - 2, bx + 0, (by + sh) + 31, bx + 4, (by + sh) + 35, 0x00, 0x00, 0x00, 0x80);
     SetSquareSN((((0x30 - wlp->kai) & 0xff) * 16) - 2, (bx + sw) + 10, by + 0, (bx + sw) + 14, by + 4, 0x00, 0x00, 0x00, 0x80);
     SetSquareSN((((0x30 - wlp->kai) & 0xff) * 16) - 2, (bx + sw) + 10, (by + sh) + 31, (bx + sw) + 14, (by + sh) + 35, 0x00, 0x00, 0x00, 0x80);
+
+    bx = (wlp->kai * 32) - 320;
+    by = (wlp->kai * 32) - 224;
 
     SetASCIIString2((((0x30 - wlp->kai) & 0xff) * 16) - 7, bx + 333, by + 234, 1, 0x80, 0x80, 0x80, wlp->title);
 
@@ -416,10 +419,15 @@ start:
 
     sh = (wlp->pos * 14) + 31;
 
+    bx = (wlp->kai * 32);
+    by = (wlp->kai * 32);
+    sw = (wlp->max * 12);
+
+
     var2 = by + 2;
     var1 = sh;
 
-    SetSquareSN((((0x30 - wlp->kai) & 0xff) * 16) - 6, bx + 7, (by + sh) - 2, (bx + sw) + 7, (var2 + var1) + 12, 0x40, 0x40, 0x80, 0x40);
+    SetSquareSN((((0x30 - wlp->kai) & 0xff) * 16) - 6, bx + 7, (by + sh) - 2, (bx + sw) + 20, (var2 + var1) + 12, 0x40, 0x40, 0x80, 0x40);
 
     if (wlp->parent == -1)
     {
@@ -427,6 +435,8 @@ start:
     }
 
     wlp = dbgmenu_tbl[wlp->parent];
+
+    return;
 
     goto start;
 }

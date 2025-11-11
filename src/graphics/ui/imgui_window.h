@@ -3,6 +3,10 @@
 #include "SDL3/SDL_render.h"
 #include "SDL3/SDL_video.h"
 
+extern bool show_fps;
+extern bool ingame_debug_menu;
+extern bool show_menu_bar;
+
 extern "C"
 {
     void InitImGuiWindow(SDL_Window *window, SDL_Renderer *renderer);

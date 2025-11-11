@@ -19,6 +19,21 @@ extern void* PBUF_ADDRESS; /// Packet buffer
 // #define SPRITE_ADDRESS 0xa30000
 extern void* SPRITE_ADDRESS;
 
+/// 0x1d05140
+extern void* PL_BGBG_PK2_ADDRESS;
+
+/// 0x1ce0000
+extern void* PL_STTS_PK2_ADDRESS;
+
+/// 0x1d59630
+extern void* PL_PSVP_PK2_ADDRESS;
+
+/// 0x1d15600
+extern void* PL_SAVE_PK2_ADDRESS;
+
+/// 0x1d28c80
+extern void* SV_PHT_PK2_ADDRESS;
+
 #define VNBufferAddress     0x00420000
 #define CachedBuffer        0x20000000
 #define UnCachedBuffer      0x30000000

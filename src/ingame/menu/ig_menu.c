@@ -82,6 +82,8 @@ void CmnCursol(short int pos_x, short int pos_y, short int wide, short int high,
 
 u_short Ana2PadDirCnt(u_char chk)
 {
+    return 0;
+    //return ana_pad.on_cnt[chk];
 }
 
 void AnaPonChk()

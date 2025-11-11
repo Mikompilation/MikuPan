@@ -13,6 +13,7 @@
 #include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/effect_sub.h"
 #include "gs/gs_server_c.h"
+#include "gs/texture_manager_c.h"
 
 u_int *tm2_end_pkt = NULL;
 
@@ -888,6 +889,28 @@ void DrawAll2DMes_P2()
         SetString2(0x10, 320.0f, 364.0f, 1, 0x80, 0x80, 0x80, "Mes Chain  Num : %4d", mch);
         SetString2(0x10, 320.0f, 380.0f, 1, 0x80, 0x80, 0x80, "Mes Packet Num : %4d", mpk);
     }
+}
+
+void UploadFontTexture(int ftype)
+{
+    int64_t addr = FontTextAddress;
+
+    if (!IsFirstUploadDone())
+    {
+        return;
+    }
+
+    int texnum = ((int*)addr)[0];
+    int* offtop = &((int*)addr)[4];
+    u_int* pkt_addr = (u_int*)fnt_pkt;
+
+    MakeTim2ClutDirect2(pkt_addr, (u_int *)(addr + offtop[ftype]), -1, -1);
+
+    for (int i = 0; i < texnum; i++)
+    {
+        //MakeTim2ClutDirect2(pkt_addr, (u_int *)(addr + offtop[i]), -1, -1);
+    }
+
 }
 
 #ifdef BUILD_EU_VERSION

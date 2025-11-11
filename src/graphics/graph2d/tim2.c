@@ -967,7 +967,7 @@ u_int Tim2LoadClut2(TIM2_PICTUREHEADER *ph, u_int cbp, u_int offset)
 
                 FlushCache(WRITEBACK_DCACHE);
 
-                sceGsExecLoadImage(&li, pClut);
+                //sceGsExecLoadImage(&li, pClut);
                 sceGsSyncPath(0, 0);
 
                 if ((ph->ClutType & 0x3F) == TIM2_RGB16)
@@ -1169,7 +1169,7 @@ void Tim2LoadTexture(int psm, u_int tbp, int tbw, int w, int h, u_long128 *pImag
 
         FlushCache(WRITEBACK_DCACHE);
 
-        sceGsExecLoadImage(&li, p);
+        //sceGsExecLoadImage(&li, p);
         sceGsSyncPath(0, 0);
     }
 }
@@ -2051,7 +2051,7 @@ void DispSprD(DISP_SPRT *s)
         pbuf[ndpkt++].ul64[1] = SCE_GS_NOP;
     }
 
-    SDL_Render2DTexture(s, image);
+    MikuPan_Render2DTexture(s, image);
 
     pbuf[ndpkt].ul64[0] = mtex1;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEX1_1;

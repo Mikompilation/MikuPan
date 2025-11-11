@@ -18,6 +18,7 @@
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_sub.h"
 #include "gs/gs_server_c.h"
+#include "gs/texture_manager_c.h"
 #include "rendering/sdl_renderer.h"
 #ifdef BUILD_EU_VERSION
 #include "graphics/graph2d/subtitles.h"
@@ -693,13 +694,14 @@ static void SetFontPacketHeader(int n, int type, u_char alp)
         Load.PSM = SCE_GS_PSMT8;
         Load.CSA = 0;
         Load.CLD = 1;
-
         Change = *(sceGsTex0 *)&fntdat[type].tex0;
         Change.CSA = 0;
         Change.CLD = 0;
     }
 
     /// mpbuf[nmdpkt].ul128 = (u_long128)0;
+
+    UploadFontTexture(type);
 
     /// TODO: Check why mpbuf makes the program crash
     return;
@@ -778,8 +780,9 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     int dw;
     int dh;
     int z;
+    int ft = 0;
 
-    if (type & 0)
+    if (type & 1)
     {
         Font_W = 12;
         Font_H = 14;
@@ -787,6 +790,7 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
         off_w = 8;
         off_ht = 1;
         off_hd = -1;
+        ft = 0;
     }
     else
     {
@@ -796,16 +800,25 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
         off_w = 0;
         off_ht = 0;
         off_hd = 0;
+        ft = 1;
     }
 
     div = g_bInterlace ? 2 : 1;
 
     z = pri > 0 ? 0xfffffff - pri : 0xfffefff;
 
-    dx = x + 1728; dx *= 16;
-    dw = Font_W; dw *= 16;
-    dy = y / div + 2048; dy -= 448 / (div * 2); dy *= 16;
-    dh = Font_H / div + 1; dh *= 16;
+    dx = x /* + 1728 */;
+    dx *= 16;
+
+    dw = Font_W;
+    dw *= 16;
+
+    dy = y / div /* + 2048 */;
+    dy -= 448 / (div * 2);
+    dy *= 16;
+
+    dh = Font_H / div + 1;
+    dh *= 16;
 
     px2 = dx + dw;
     py2 = dy + dh;
@@ -821,22 +834,31 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     s.b = b;
     s.alpha = a;
 
-    s.tex0 = fntdat[type].tex0;
+    sceGsTex0 Load = *(sceGsTex0*)&fntdat[ft].tex0;
+
+    //if (Load.PSM == 20)
+    //{
+    //    Load.PSM = SCE_GS_PSMT8;
+    //    Load.CSA = 0;
+    //    Load.CLD = 1;
+    //}
+
+    s.tex0 = *(u_long*)&Load;
     s.x = x;
     s.y = y;
     s.u = tw1;
     s.v = th1;
-    s.w = tw2 - tw1;
-    s.h = th2 - th1;
+    s.w = Font_W;
+    s.h = Font_H - 1;
 
     /// If font texture has not been loaded yet, avoid requesting the texture
-    if (FontTextAddress == NULL)
+    if (!IsFirstUploadDone())
     {
         return;
     }
 
-    unsigned char* image = DownloadGsTexture(&fntdat[type].tex0);
-    SDL_Render2DTexture(&s, image);
+    unsigned char* image = DownloadGsTexture(&Load);
+    MikuPan_Render2DTexture(&s, image);
 
     return;
     mpbuf[nmdpkt].ui32[0] = r;

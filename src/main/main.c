@@ -45,7 +45,7 @@ const double TARGET_FRAME_TIME = 1000.0 / TARGET_FPS; // milliseconds per frame
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
-    SDL_AppResult result = InitSDL();
+    SDL_AppResult result = MikuPan_Init();
 
     /// GAME LOGIC ///
     SDL_Log("Initializing Systems");
@@ -63,6 +63,16 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
     }
 
+    if (event->type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
+    {
+        MikuPan_UpdateWindowSize(event->window.data1, event->window.data2);
+    }
+
+    if (event->type == SDL_EVENT_GAMEPAD_ADDED)
+    {
+        scePadPortOpen(0, 0 ,0);
+    }
+
     ProcessEventImGui(event);
 
     return SDL_APP_CONTINUE;
@@ -73,7 +83,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     uint64_t frameStart = SDL_GetTicks();
     NewFrameImGuiWindow();
 
-    SDL_Clear();
+    MikuPan_Clear();
 
     if (!SoftResetChk())
     {
@@ -94,10 +104,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     {
         InitGameFirst();
     }
-
-    //gra2dDrawDbgMenu();
-    //DrawPerformanceCounter();
-    SetString2(0x10, 0.0f, 420.0f, 1, 0x80, 0x80, 0x80, "FPS %d", (int)GetFrameRate());
 
     DrawImGuiWindow();
     RenderImGuiWindow(renderer);

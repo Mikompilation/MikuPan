@@ -4,21 +4,23 @@ std::unordered_map<unsigned long long, unsigned char*> texture_atlas;
 std::unordered_map<unsigned long long, void*> sdl_texture_atlas;
 bool first_upload_done = false;
 
-void AddTexture(unsigned long long tbp0, unsigned char *img)
+#define CONVERT_TEX0_TO_ULONG(tex0) *(u_long*)tex0
+
+void AddTexture(sceGsTex0* tex0, unsigned char *img)
 {
-    texture_atlas[tbp0] = img;
+    texture_atlas[CONVERT_TEX0_TO_ULONG(tex0)] = img;
 }
 
-unsigned char * GetTexture(unsigned long long tbp0)
+unsigned char * GetTexture(sceGsTex0* tex0)
 {
     if (!first_upload_done)
     {
         return nullptr;
     }
 
-    if (auto el = texture_atlas.find(tbp0); el != texture_atlas.end())
+    if (auto el = texture_atlas.find(CONVERT_TEX0_TO_ULONG(tex0)); el != texture_atlas.end())
     {
-        return texture_atlas[tbp0];
+        return texture_atlas[CONVERT_TEX0_TO_ULONG(tex0)];
     }
 
     return nullptr;
@@ -34,21 +36,21 @@ bool IsFirstUploadDone()
     return first_upload_done;
 }
 
-void AddSDLTexture(unsigned long long tbp0, void *img)
+void AddSDLTexture(sceGsTex0* tex0, void *img)
 {
-    sdl_texture_atlas[tbp0] = img;
+    sdl_texture_atlas[CONVERT_TEX0_TO_ULONG(tex0)] = img;
 }
 
-void * GetSDLTexture(unsigned long long tbp0)
+void * GetSDLTexture(sceGsTex0* tex0)
 {
     if (!first_upload_done)
     {
         return nullptr;
     }
 
-    if (auto el = sdl_texture_atlas.find(tbp0); el != sdl_texture_atlas.end())
+    if (auto el = sdl_texture_atlas.find(CONVERT_TEX0_TO_ULONG(tex0)); el != sdl_texture_atlas.end())
     {
-        return sdl_texture_atlas[tbp0];
+        return sdl_texture_atlas[CONVERT_TEX0_TO_ULONG(tex0)];
     }
 
     return nullptr;
