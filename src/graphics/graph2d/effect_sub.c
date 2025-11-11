@@ -607,6 +607,9 @@ void SetLine(int pri, float x1, float y1, float x2, float y2, u_char r, u_char g
     y[1] = (y2 / div + 2048.0f) * 16.0f;
 
     z = 0xfffffff - mpri;
+
+    MIKUPAN_RenderLine(x1, y1, x2, y2, r, g, b, a);
+    return;
     
     /// pbuf[ndpkt].ul128 = (u_long128)0;
     pbuf[ndpkt].ul128[0] = 0;

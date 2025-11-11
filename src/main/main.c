@@ -95,7 +95,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         InitGameFirst();
     }
 
-    gra2dDrawDbgMenu();
+    //gra2dDrawDbgMenu();
+    //DrawPerformanceCounter();
     SetString2(0x10, 0.0f, 420.0f, 1, 0x80, 0x80, 0x80, "FPS %d", (int)GetFrameRate());
 
     DrawImGuiWindow();

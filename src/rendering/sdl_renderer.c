@@ -111,3 +111,10 @@ void SDL_RenderSquare(float x1, float y1, float x2, float y2, float x3,
     rect.h = y4 - y1;
     SDL_RenderFillRect(renderer, &rect);
 }
+
+void MIKUPAN_RenderLine(float x1, float y1, float x2, float y2, u_char r, u_char g, u_char b, u_char a)
+{
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255.0f * a / 128.0f);
+
+    SDL_RenderLine(renderer, 300.0f+x1, 200.0f+y1, 300.0f+x2, 200.0f+y2);
+}
