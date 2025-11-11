@@ -89,11 +89,11 @@ void SDL_Render2DTexture2(DISP_SQAR *sprite, unsigned char *image)
 void SDL_RenderSquare(float x1, float y1, float x2, float y2, float x3,
     float y3, float x4, float y4, u_char r, u_char g, u_char b, u_char a)
 {
-    SDL_SetRenderDrawColor(renderer, r, g, b, a);
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255.0f * a / 128.0f);
 
     SDL_FRect rect;
-    rect.x = x1;
-    rect.y = y1;
+    rect.x = 300 + x1;
+    rect.y = 200 + y1;
     rect.w = x4 - x1;
     rect.h = y4 - y1;
     SDL_RenderFillRect(renderer, &rect);

@@ -24,8 +24,6 @@ extern void* SPRITE_ADDRESS;
 #define UnCachedBuffer      0x30000000
 #define VU0_ADDRESS         0x11000000
 
-
-#define TIM2_ADDRESS 0x1e30000
 #define MC_WORK_ADDRESS 0x420000
 
 #define SPRITE_ADDR_1 0x0c80000

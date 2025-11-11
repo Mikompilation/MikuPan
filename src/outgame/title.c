@@ -5,9 +5,13 @@
 #include "memory_album.h"
 #include "outgame.h"
 #include "common/memory_addresses.h"
+#include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph3d/sgdma.h"
+#include "graphics/motion/mdlwork.h"
 #include "graphics/mov/movie.h"
+#include "ingame/menu/ig_album.h"
+#include "ingame/menu/ig_menu.h"
 #include "main/gamemain.h"
 #include "main/glob.h"
 #include "mc/mc_at.h"
@@ -426,6 +430,9 @@ SPRT_DAT title_sprt[11] = {
         TitleWaitMode();
         DispOutDither();
 
+            SetString2(0x10, 48.0f, 364.0f, 1, 0x80, 0x80, 0x80, "HELLO WORLD");
+            gra2dDrawDbgMenu();
+
         if (IsEndAdpcmFadeOut() != 0)
         {
             EAdpcmCmdPlay(0, 1, AO000_TITLE_STR, 0, GetAdpcmVol(AO000_TITLE_STR), 0x280, 0xfff, 0);
@@ -440,7 +447,6 @@ SPRT_DAT title_sprt[11] = {
         SetSprFile(SPRITE_ADDRESS);
         TitleWaitMode();
         DispOutDither();
-
         if (title_cnt >= 60*46 && title_wrk.mode != TITLE_TITLE_SEL_INIT)
         {
             title_wrk.mode = TITLE_MOVIE_STEP1;
@@ -518,7 +524,7 @@ SPRT_DAT title_sprt[11] = {
         }
         else
         {
-            SetFTIM2File(TIM2_ADDRESS);
+            SetFTIM2File(FontTextAddress);
             TitleStartSlct();
         }
 
@@ -606,7 +612,7 @@ SPRT_DAT title_sprt[11] = {
         }
         else
         {
-            SetFTIM2File(TIM2_ADDRESS);
+            SetFTIM2File(FontTextAddress);
             TitleSelectMode();
         }
 
@@ -979,6 +985,243 @@ void TitleStartSlct()
 
 void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 {
+    /* s0 16 */ int i;
+	/* s1 17 */ u_char mode;
+	/* fp 30 */ u_char adj;
+	/* s3 19 */ u_char dsp;
+	/* s6 22 */ u_char chr1;
+	/* s5 21 */ u_char chr2;
+	/* v0 2 */ u_char alp;
+	/* s0 16 */ u_char rgb;
+	/* 0x0(sp) */ DISP_SPRT ds;
+
+    for (i = 0; i < 11; i++)
+    {
+        CopySprDToSpr(&ds, &title_sprt[i]);
+
+        ds.alpha = alp_max;
+
+        DispSprD(&ds);
+    }
+
+    for (mode = 0; mode < 3; mode++)
+    {
+        switch (mode)
+        {
+        case 0:
+            chr1 = 8;
+            chr2 = 4;
+
+            switch (title_wrk.csr)
+            {
+            case 0:
+                adj = 0;
+                dsp = 1;
+            break;
+            case 1:
+                adj = 0;
+                dsp = 0;
+            break;
+            case 2:
+                adj = 0;
+                dsp = 0;
+            break;
+            }
+        break;
+        case 1:
+            chr1 = 0;
+            chr2 = 5;
+
+            switch (title_wrk.csr)
+            {
+            case 0:
+                adj = 35;
+                dsp = 0;
+            break;
+            case 1:
+                adj = 35;
+                dsp = 1;
+            break;
+            case 2:
+                adj = 35;
+                dsp = 0;
+            break;
+            }
+        break;
+        case 2:
+            chr1 = 7;
+            chr2 = 0xff;
+
+            switch (title_wrk.csr)
+            {
+            case 0:
+                adj = 70;
+                dsp = 0;
+            break;
+            case 1:
+                adj = 70;
+                dsp = 0;
+            break;
+            case 2:
+                adj = 70;
+                dsp = 1;
+            break;
+            }
+        break;
+        }
+
+        CopySprDToSpr(&ds, &font_sprt[chr1]);
+
+        ds.y += adj;
+
+        alp = rgb = dsp * (alp_max / 2) + (alp_max / 2);
+
+        ds.alpha = alp;
+        ds.r = rgb; ds.g = rgb; ds.b = rgb;
+
+        if (dsp != 0)
+        {
+            ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+        }
+
+        ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
+
+        DispSprD(&ds);
+
+        if (chr2 != 0xff)
+        {
+            CopySprDToSpr(&ds, &font_sprt[chr2]);
+
+            ds.y += adj;
+
+            alp = rgb;
+
+            ds.alpha = alp;
+            ds.r = alp; ds.g = alp; ds.b = alp;
+
+            if (dsp != 0)
+            {
+                ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+            }
+
+            ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
+
+            DispSprD(&ds);
+        }
+    }
+
+    if (pad_off != 0)
+    {
+        return;
+    }
+
+    if (*key_now[5] == 1 || *key_now[12] == 1)
+    {
+        ingame_wrk.clear_count = 0;
+        ingame_wrk.ghost_cnt = 0;
+        ingame_wrk.rg_pht_cnt = 0;
+        ingame_wrk.pht_cnt = 0;
+        ingame_wrk.high_score = 0;
+        ingame_wrk.difficult = 0;
+
+        cribo.costume = 0;
+        cribo.clear_info = 0;
+
+        NewgameMenuAlbumInit();
+
+        realtime_scene_flg = 0;
+
+        MovieInitWrk();
+
+        motInitMsn();
+
+        switch (title_wrk.csr)
+        {
+        case 0:
+            NewGameInit();
+
+            title_wrk.mode = 9;
+            title_wrk.csr = 0;
+
+            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        break;
+        case 1:
+            title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1d05140);
+            title_wrk.load_id = LoadReq(PL_STTS_PK2, 0x1ce0000);
+            title_wrk.load_id = LoadReq(PL_PSVP_PK2, 0x1d59630);
+            title_wrk.load_id = LoadReq(PL_SAVE_PK2, 0x1d15600);
+            title_wrk.load_id = LoadReq(SV_PHT_PK2, 0x1d28c80);
+
+            ingame_wrk.stts |= 0x20;
+
+            InitialDmaBuffer();
+
+            title_wrk.mode = 6;
+
+            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            EAdpcmFadeOut(60);
+        break;
+        case 2:
+            title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1d05140);
+            title_wrk.load_id = LoadReq(PL_STTS_PK2, 0x1ce0000);
+            title_wrk.load_id = LoadReq(PL_PSVP_PK2, 0x1d59630);
+            title_wrk.load_id = LoadReq(PL_SAVE_PK2, 0x1d15600);
+            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, 0x1d28c80);
+
+            ingame_wrk.stts |= 0x20;
+
+            InitialDmaBuffer();
+
+            title_wrk.mode = 14;
+
+            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            EAdpcmFadeOut(60);
+        break;
+        }
+    }
+    else if (*key_now[4] == 1)
+    {
+        ttl_dsp.timer = 0;
+        title_wrk.mode = 2;
+
+        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+    }
+    else if (
+        *key_now[1] == 1 ||
+        (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+        Ana2PadDirCnt(2) == 1 ||
+        (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
+    )
+    {
+        if (title_wrk.csr < 2)
+        {
+            title_wrk.csr++;
+        }
+        else
+        {
+            title_wrk.csr = 0;
+        }
+
+        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+    }
+    else if (
+        *key_now[0] == 1 ||
+        (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+        Ana2PadDirCnt(0) == 1 ||
+        (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
+    )
+    {
+        if (title_wrk.csr > 0)
+        {
+            title_wrk.csr--;
+        }
+        else
+        {
+            title_wrk.csr = 2;
+        }
+
+        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+    }
 }
 
 void TitleLoadCtrl()
@@ -1007,6 +1250,12 @@ void LoadGameInit()
 
 void InitOutDither()
 {
+    out_dither.cnt = 0.0f;
+    out_dither.spd = 8.0f;
+    out_dither.alp = 64.0f;
+    out_dither.alpmx = 0x40;
+    out_dither.colmx = 0x40;
+    out_dither.type = 7;
 }
 
 void MakeOutDither()

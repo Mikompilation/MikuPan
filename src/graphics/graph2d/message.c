@@ -700,6 +700,7 @@ static void SetFontPacketHeader(int n, int type, u_char alp)
     }
 
     /// mpbuf[nmdpkt].ul128 = (u_long128)0;
+    MakeFontTexSendPacket();
 
     /// TODO: Check why mpbuf makes the program crash
     return;
@@ -829,6 +830,12 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     s.w = tw2 - tw1;
     s.h = th2 - th1;
 
+    /// If font texture has not been loaded yet, avoid requesting the texture
+    if (FontTextAddress == NULL)
+    {
+        return;
+    }
+
     unsigned char* image = DownloadGsTexture(&fntdat[type].tex0);
     SDL_Render2DTexture(&s, image);
 
@@ -903,6 +910,8 @@ static void SetFontTex(int flg, int bank)
 {
     static int obank = -1;
     sceGsTex0 tex0;
+
+
 
     if (flg != 0 && bank == obank)
     {

@@ -133,6 +133,8 @@ void SetSquare(int pri, float x1, float y1, float x2, float y2, float x3, float 
 
     SDL_RenderSquare(x1, y1, x2, y2, x3, y3, x4, y4, r, g, b, a);
 
+    return;
+
     z = 0x0fffffff - mpri;
 
     /// pbuf[ndpkt].ul128 = (u_long128)0; // clear tag
@@ -1590,8 +1592,8 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
 
     s.x = mx + 320;
     s.y = my + 224;
-    s.u = 40;
-    s.v = 32;
+    s.u = 0;
+    s.v = 0;
     s.w = sd->size_w;
     s.h = sd->size_h;
     SDL_Render2DTexture(&s, img);

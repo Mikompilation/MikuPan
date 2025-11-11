@@ -86,6 +86,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             sceGsSyncPath(0, 0);
             vfunc();
             DrawAll2DMes_P2();
+
             //FlushModel(1);
             //ClearTextureCache();
             //SeCtrlMain();
