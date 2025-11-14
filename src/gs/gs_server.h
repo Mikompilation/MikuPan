@@ -178,7 +178,7 @@ extern GS::GSHelper gsHelper;
 
 extern "C"
 {
-    void GsUpload(sceGsLoadImage* tex0, unsigned char* image);
+    void GsUpload(sceGsLoadImage* image_load, unsigned char* image);
     unsigned char* DownloadGsTexture(sceGsTex0* tex0);
 }
 

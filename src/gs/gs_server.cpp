@@ -237,7 +237,7 @@ unsigned char* DownloadGsTexture(sceGsTex0* tex0)
     int width = (1<<tex0->TW);
     int height = (1<<tex0->TH);
 
-    spdlog::info("GS download request for DBP {:#x} CBP {:#x} DPSM {} ", (unsigned long long)tex0->TBP0, (unsigned long long)tex0->CBP, (unsigned long long)tex0->PSM);
+    //spdlog::info("GS download request for DBP {:#x} CBP {:#x} DPSM {} ", (unsigned long long)tex0->TBP0, (unsigned long long)tex0->CBP, (unsigned long long)tex0->PSM);
 
     auto texture = GetTexture(tex0);
     if (texture != nullptr)

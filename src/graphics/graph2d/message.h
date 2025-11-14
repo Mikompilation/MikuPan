@@ -3,6 +3,8 @@
 
 #include "typedefs.h"
 
+#include <stdint.h>
+
 typedef struct {
 	u_char *str;
 	int pos_x;
@@ -91,8 +93,8 @@ extern u_char *save_mes_addr;
 
 void InitMessage();
 void InitMessageEF();
-void SetMessageDirect(int addr, int pri, int fn, int x, int y, u_char r, u_char g, u_char b);
-void SetMessageAddr(int addr);
+void SetMessageDirect(uint64_t addr, int pri, int fn, int x, int y, u_char r, u_char g, u_char b);
+void SetMessageAddr(uint64_t addr);
 int SetMessage();
 void MessageWaitOff();
 void SetMesFrame(int pri, int type, float bx, float by, float sw, float sh);

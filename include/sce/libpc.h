@@ -5,7 +5,7 @@ static inline int scePcGetCounter0(void) {
     //register int ctr0;
     //__asm__ volatile ("mfpc %0, 0": "=r" (ctr0));
     //return ctr0;
-    return 0;
+    return 1;
 }
 
 #define SCE_PC0_RESERVED            (0  <<  5)

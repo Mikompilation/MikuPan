@@ -7,6 +7,8 @@
 #include "enums.h"
 #include "common/memory_addresses.h"
 
+#include <stdlib.h>
+
 typedef struct {
     u_char start_pos;
     u_char req_pos;
@@ -71,13 +73,13 @@ int LoadReq(int file_no, uint64_t addr)
     return LoadReqNSector(file_no, img_arng->start, img_arng->size, addr);
 }
 
-u_int LoadReqGetAddr(int file_no, uint64_t addr, int *id)
+int64_t LoadReqGetAddr(int file_no, uint64_t addr, int64_t *id)
 {
     IMG_ARRANGEMENT *img_arng;
-    u_int ret;
+    int64_t ret;
     
     img_arng = GetImgArrangementP(file_no);
-    *id = LoadReqNSector(file_no, img_arng->start, img_arng->size, addr);
+    *id = LoadReqNSector(file_no, img_arng->start, img_arng->size, &addr);
     ret = addr + img_arng->size;
     
     if (ret % 16)
@@ -105,19 +107,15 @@ int LoadReqSe(int file_no, u_char se_type)
     return ret;
 }
 
-int LoadReqNSector(int file_no, int sector, int size, int64_t addr)
+int64_t LoadReqNSector(int file_no, int sector, int size, int64_t addr)
 {
     int ret;
     
     ret = GetFreeId();
-
-    void* file_ptr = malloc(size);
-
-   *((int64_t*)addr) = (int64_t)file_ptr;
     
     if (ret != -1)
     {
-        SetIopCmdLg(IC_CDVD_LOAD_SECT, file_no, sector, size, file_ptr, 0, ret, 0);
+        SetIopCmdLg(IC_CDVD_LOAD_SECT, file_no, sector, size, addr, 0, ret, 0);
     }
     
     return ret;

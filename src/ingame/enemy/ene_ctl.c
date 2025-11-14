@@ -2046,7 +2046,7 @@ void GhostDeadMain()
     break;
     case 1:
         Mission03BindGhost01Delete();
-        gd_load_id = SeFileLoadAndSet(SGY000_BD, 1);
+        gd_load_id = SeFileLoadAndSet(SGY000_BD, SE_ADDRNO_BTLHIT);
         ene_dead_mode = 2;
     break;
     case 2:

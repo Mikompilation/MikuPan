@@ -33,9 +33,23 @@ void ReadFileInArchive(int sector, int size, int64_t address)
         return;
     }
 
+    if (address == 0)
+    {
+        return;
+    }
+
+    if ((int64_t*)*(int64_t*)address != nullptr)
+    {
+        free((int64_t*)*(int64_t*)address);
+    }
+
+    void* file_ptr = malloc(size);
+
+    *((int64_t*)address) = (int64_t)file_ptr;
+
     std::ifstream infile("./IMG_BD.BIN", std::ios::binary);
     infile.seekg(sector * 0x800, std::ios::beg);
-    infile.read((char*)address, size);
+    infile.read((char*)file_ptr, size);
 
     infile.close();
 }

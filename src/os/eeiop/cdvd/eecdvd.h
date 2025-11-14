@@ -13,9 +13,9 @@ typedef struct {
 void CdvdInit();
 void CdvdInitSoftReset();
 int LoadReq(int file_no, uint64_t addr);
-u_int LoadReqGetAddr(int file_no, uint64_t addr, int *id);
+int64_t LoadReqGetAddr(int file_no, uint64_t addr, int64_t *id);
 int LoadReqSe(int file_no, u_char se_type);
-int LoadReqNSector(int file_no, int sector, int size, int64_t addr);
+int64_t LoadReqNSector(int file_no, int sector, int size, int64_t addr);
 int LoadReqNFno(int file_no, int64_t addr);
 int LoadReqBFno(int file_no, int64_t addr);
 u_int LoadReqBFnoGetAddr(int file_no, int64_t addr);

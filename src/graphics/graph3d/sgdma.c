@@ -103,7 +103,7 @@ static void FlushBuffer()
         for (i = 0; i < 1; i++)
         {
             sceDmaSync(dvif1, 0, 0);
-            sceDmaSend(dvif1, (u_int *)((u_int)cachetag & 0x0fffffff));
+            sceDmaSend(dvif1, cachetag);
         }
     }
 
@@ -148,7 +148,8 @@ void AppendDmaTag(int64_t addr, int size)
     ptag->pad[0] = ptag->pad[1] = 0;
 
     ((int *)ptag)[0] = size | 0x30000000;
-    ((int *)ptag)[1] = addr;
+    *(uint64_t*)&((int *)ptag)[1] = addr;
+    //((int *)ptag)[1] = addr;
 
     vu1tag_num++;
 }
@@ -162,7 +163,8 @@ void AppendDmaBuffer(int size)
     ptag->pad[0] = ptag->pad[1] = 0;
 
     ((int *)ptag)[0] = size | 0x30000000;
-    ((int *)ptag)[1] = (u_int)(&objwork[sbuffer_p]) & 0xfffffff;
+    *(uint64_t*)&((int *)ptag)[1] = ((uint64_t)&objwork[sbuffer_p]);
+    //((int *)ptag)[1] = (u_int)(&objwork[sbuffer_p]) & 0xfffffff;
 
     sbuffer_p += size;
     vu1tag_num++;
@@ -172,9 +174,11 @@ void AppendDmaTagCall(int64_t next_tag_addr)
 {
     SgSourceChainTag *ptag;
 
-    ptag = &cachetag[vu1tag_num];
+    /// TODO : Reimplement this
+    //ptag = &cachetag[vu1tag_num];
 
     //((int *)ptag)[0] = 0x20000000;
+    //*(uint64_t*)&((int *)ptag)[1] = ((uint64_t)next_tag_addr);
     //((int *)ptag)[1] = next_tag_addr & 0x0fffffff;
 
     //ptag->pad[0] = ptag->pad[1] = 0;
@@ -185,7 +189,7 @@ void AppendDmaTagCall(int64_t next_tag_addr)
 void AppendDmaTagNextRet(void *tag_addr)
 {
     ((int *)tag_addr)[0] = 0x20000000;
-    ((int *)tag_addr)[1] = ((u_int)&cachetag[vu1tag_num]) & 0xfffffff;
+    *(uint64_t*)&((int *)tag_addr)[1] = ((uint64_t)&cachetag[vu1tag_num]);
 }
 
 void AppendDmaBufferFromEndAddress(qword *end_adr)
@@ -201,7 +205,7 @@ void AppendDmaBufferFromEndAddress(qword *end_adr)
 
     read_p = (u_int *)getObjWrk();
 
-    size = ((u_int)end_adr - (u_int)read_p) / 16;
+    size = ((uint64_t)end_adr - (uint64_t)read_p) / 16;
 
     read_p[0] = 0;
     read_p[1] = 0;
@@ -209,7 +213,7 @@ void AppendDmaBufferFromEndAddress(qword *end_adr)
     read_p[3] = (size - 1 | 0x50000000);
 
     ((int *)ptag)[0] = size | 0x30000000;
-    ((int *)ptag)[1] = (u_int)read_p & 0xfffffff;
+    ((int *)ptag)[1] = (uint64_t)read_p & 0xfffffff;
 
     ptag->pad[0] = ptag->pad[1] = 0;
 
@@ -380,7 +384,7 @@ void RebuildTRI2Files(u_int *prim)
 
         search_addr = prim + 4;
 
-        while (((u_int)search_addr - (u_int)(prim)) / 16 < tri2size - 8)
+        while (((uint64_t)search_addr - (uint64_t)(prim)) / 16 < tri2size - 8)
         {
             tbp = search_addr[5] & 0xffff;
             tbw = search_addr[5] >> 16 & 0x3f;

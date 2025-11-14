@@ -3,6 +3,8 @@
 
 #include "typedefs.h"
 
+#include <stdint.h>
+
 typedef struct {
 	u_int *sgd_room;
 	u_int *sgd_furn[30];
@@ -41,7 +43,7 @@ u_char GetRoomArea(u_char room_id);
 int SetAreaLoadRoom(u_char mode, u_char area_no);
 void AreaRoomAllLoadInit();
 int AreaRoomAllLoad(u_char area_no);
-int GetEmptyRoomAddr();
+int64_t GetEmptyRoomAddr();
 // void ClearDispRoom(int wrk_no);
 
 #endif // INGAME_MAP_MAP_AREA_H

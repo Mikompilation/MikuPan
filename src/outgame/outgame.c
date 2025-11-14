@@ -27,10 +27,6 @@ static int rsc_no[2] = {0, 0};
 
 static u_int load_size;
 
-#define LOAD_ADDRESS (u_int *)0x04610000
-#define REQ_ADDRESS_1 (u_int *)EFFECT_ADDRESS
-#define REQ_ADDRESS_2 (u_int *)0x007f8000
-
 void OutGameCtrl(void)
 {
     AnaPonChk();
@@ -58,6 +54,21 @@ void OutGameCtrl(void)
             OutGameModeChange(OUTGAME_MODE_TITLE);
         case OUTGAME_MODE_TITLE:
             TitleCtrl();
+
+            if (/* SELECT */ *key_now[13] == 1 && /* SQUARE */ *key_now[6] == 1)
+            {
+                OutGameModeChange(OUTGAME_MODE_LAYOUT_TEST);
+            }
+
+            if (/* SELECT */ *key_now[13] == 1 && /* TRIANGLE */ *key_now[4] == 1)
+            {
+                OutGameModeChange(OUTGAME_MODE_SCENE_TEST);
+            }
+
+            if (/* SELECT */ *key_now[13] == 1 && /* CIRCLE */ *key_now[7] == 1)
+            {
+                OutGameModeChange(OUTGAME_MODE_ROOM_SIZE_CHECK);
+            }
         break;
         case OUTGAME_MODE_BATTLE:
             ModeSlctLoop();
@@ -176,13 +187,13 @@ void RoomSizeCheckCtrl()
 
         if (rsc_menu_csr == 2)
         {
-            LoadReq(rsc_no[0] + 10, (u_int)REQ_ADDRESS_2);
+            LoadReq(rsc_no[0] + 10, &TEST_ROOM_CHECK_ADDRESS);
 
-            end_addr = RoomMdlLoadReq(LOAD_ADDRESS, 0, rsc_no[0], rsc_no[1], 0);
+            end_addr = RoomMdlLoadReq(TEST_ROOM_CHECK_ADDRESS, 0, rsc_no[0], rsc_no[1], 0);
 
             while (RoomMdlLoadWait() == 0) {}
 
-            load_size = (u_int)end_addr - (u_int)LOAD_ADDRESS;
+            load_size = (uint64_t)end_addr - (uint64_t)TEST_ROOM_CHECK_ADDRESS;
         }
     }
 

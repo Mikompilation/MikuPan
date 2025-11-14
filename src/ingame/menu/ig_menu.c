@@ -1,6 +1,8 @@
 #include "common.h"
 #include "ig_menu.h"
 
+#include <stdint.h>
+
 /* data 33d8c8 */ STR_DAT ig_menu_str;
 
 void NewgameMenuInit()
@@ -31,7 +33,7 @@ int Get4Byte(u_char* addr)
 {
 }
 
-int GetIngameMSGAddr(u_char type, int msg_no)
+uint64_t GetIngameMSGAddr(u_char type, int msg_no)
 {
 }
 

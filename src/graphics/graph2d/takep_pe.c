@@ -419,8 +419,8 @@ void StopParticleEffect()
 
 void SetParticleEffect() {
     int n;
-    u_int start_pktaddr;
-    u_int end_pktaddr;
+    uint64_t start_pktaddr;
+    uint64_t end_pktaddr;
     sceVu0FMATRIX mat;
 
     if (pe_callflg == 0)
@@ -432,14 +432,9 @@ void SetParticleEffect() {
 
     n = ndpkt;
 
-    /// pbuf[ndpkt++].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
-    ndpkt++;
+    pbuf[ndpkt++].ul128 = (u_long128)0;
 
-    start_pktaddr = (u_int)&pbuf[ndpkt];
+    start_pktaddr = (uint64_t)&pbuf[ndpkt];
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(1, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 3);
     pbuf[ndpkt++].ul64[1] = 0 \
@@ -450,12 +445,12 @@ void SetParticleEffect() {
     pbuf[ndpkt++].ul64[0] = effdat[46].tex0;
 
     /// RE-enable this
-    //pbuf[ndpkt++].ul128 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0); // shouldn't this be a SCE_GS_TEX0_2 ??
+    pbuf[ndpkt++].ul128 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0); // shouldn't this be a SCE_GS_TEX0_2 ??
 
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
     pbuf[ndpkt++].ul64[1] = SCE_GS_ALPHA_1;
 
-    end_pktaddr = (u_int)ParticleEffectInTakingPicture(&pbuf[ndpkt], pe_index);
+    end_pktaddr = (uint64_t)ParticleEffectInTakingPicture(&pbuf[ndpkt], pe_index);
     end_pktaddr = (end_pktaddr - start_pktaddr) >> 4;
 
     pbuf[n].ui32[0] = DMAend + end_pktaddr;
@@ -484,8 +479,8 @@ void EyeLightCtrl() {
     int i;
     int n;
     int w;
-    u_int start_pktaddr;
-    u_int end_pktaddr;
+    uint64_t start_pktaddr;
+    uint64_t end_pktaddr;
     sceVu0FMATRIX mat;
     sceVu0IVECTOR scr[2];
     sceVu0IVECTOR col = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -526,14 +521,9 @@ void EyeLightCtrl() {
 
         n = ndpkt;
 
-        /// pbuf[ndpkt++].ul128 = (u_long128)0;
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
-        ndpkt++;
+        pbuf[ndpkt++].ul128 = (u_long128)0;
 
-        start_pktaddr = (u_int)&pbuf[ndpkt];
+        start_pktaddr = (uint64_t)&pbuf[ndpkt];
         qd = (Q_WORDDATA *)start_pktaddr;
 
         qd->ul64[0] = SCE_GIF_SET_TAG(1, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 3);
@@ -569,7 +559,7 @@ void EyeLightCtrl() {
             qd = SetPESpritePacket(qd, col, scr[i], (scr[i][2] * 300.0f) / 4000.0f, 0x50);
         }
 
-        end_pktaddr = ((u_int)qd - start_pktaddr) >> 4;
+        end_pktaddr = ((uint64_t)qd - start_pktaddr) >> 4;
 
         pbuf[n].ui32[0] = DMAend + end_pktaddr;
 

@@ -1516,11 +1516,11 @@ void EndingMain()
         case ENDING_MODE_MOVIE:
             if (ingame_wrk.difficult && cribo.clear_info & 2)
             {
-                MoviePlay(92);
+                MoviePlay(SCENE_NO_5_02_0);
             }
             else
             {
-                MoviePlay(91);
+                MoviePlay(SCENE_NO_5_01_0);
             }
 
             ingame_wrk.stts |= 0x20;
@@ -1528,7 +1528,7 @@ void EndingMain()
             break;
 
         case ENDING_MODE_STAFF:
-            MoviePlay(96);
+            MoviePlay(SCENE_NO_9_00_1);
             ingame_wrk.stts |= 0x20;
             ending_mode = ENDING_MODE_CLEAR;
             SeBackupInit();

@@ -1,9 +1,12 @@
 #ifndef SCE_SIF_H
 #define SCE_SIF_H
+#include "common.h"
+
+#include <stdint.h>
 
 typedef struct {
 	unsigned int	data;
-	unsigned int	addr;
+	int64_t	addr;
 	unsigned int	size;
 	unsigned int	mode;
 } sceSifDmaData;

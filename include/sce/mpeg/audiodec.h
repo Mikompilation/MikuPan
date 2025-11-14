@@ -40,12 +40,12 @@ typedef struct { // 0x5c
     /* 0x38 */ int count;
     /* 0x3c */ int size;
     /* 0x40 */ int totalBytes;
-    /* 0x44 */ int iopBuff;
+    /* 0x44 */ int64_t iopBuff;
     /* 0x48 */ int iopBuffSize;
     /* 0x4c */ int iopLastPos;
     /* 0x50 */ int iopPausePos;
     /* 0x54 */ int totalBytesSent;
-    /* 0x58 */ int iopZero;
+    /* 0x58 */ int64_t iopZero;
 } AudioDec;
 
 #endif // SCE_MPEG_AUDIODEC_H

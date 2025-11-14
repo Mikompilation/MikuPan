@@ -27,7 +27,7 @@ int FileLoadInit()
     return 1;
 }
 
-void FileLoadNReq(int file_no, long int addr)
+void FileLoadNReq(int file_no, int64_t addr)
 {
     sbuff[1] = addr;
     sbuff[0] = file_no;
@@ -40,7 +40,7 @@ int FileLoadNEnd(int file_no)
     return 1;
 }
 
-void FileLoadB(int file_no, long int addr)
+void FileLoadB(int file_no, int64_t addr)
 {
     LoadReq(file_no, addr);
 }

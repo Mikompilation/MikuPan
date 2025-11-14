@@ -105,7 +105,7 @@ void InitMessageEF()
 #endif
 }
 
-void SetMessageDirect(int addr, int pri, int fn, int x, int y, u_char r, u_char g, u_char b)
+void SetMessageDirect(uint64_t addr, int pri, int fn, int x, int y, u_char r, u_char g, u_char b)
 {
     static DISP_STR ds;
     STR_DAT sd = {
@@ -133,7 +133,7 @@ void SetMessageDirect(int addr, int pri, int fn, int x, int y, u_char r, u_char 
     SetMessageV2(&ds);
 }
 
-void SetMessageAddr(int addr)
+void SetMessageAddr(uint64_t addr)
 {
     save_mes_addr = (u_char *)addr;
     SetMessageV3(save_mes_addr, 0x64000);
@@ -245,7 +245,7 @@ void SetASCIIString3(int pri, float x, float y, int type, u_char r, u_char g, u_
     draw_mpri[nmdpri][1] = nmdpkt;
     nmdpri++;
 
-    while (str[i] != NULL)
+    while (str[i] != 0)
     {
         c2 = str[i+1];
 
@@ -262,7 +262,7 @@ void SetASCIIString3(int pri, float x, float y, int type, u_char r, u_char g, u_
 
     i = 0;
 
-    while (str[i] != NULL)
+    while (str[i] != 0)
     {
         c1 = str[i];
         c2 = str[i+1];
@@ -699,17 +699,7 @@ static void SetFontPacketHeader(int n, int type, u_char alp)
         Change.CLD = 0;
     }
 
-    /// mpbuf[nmdpkt].ul128 = (u_long128)0;
-
-    UploadFontTexture(type);
-
-    /// TODO: Check why mpbuf makes the program crash
-    return;
-
-    mpbuf[nmdpkt].ul128[0] = 0;
-    mpbuf[nmdpkt].ul128[1] = 0;
-    mpbuf[nmdpkt].ul128[2] = 0;
-    mpbuf[nmdpkt].ul128[3] = 0;
+    mpbuf[nmdpkt].ul128 = (u_long128)0;
 
     mpbuf[nmdpkt++].ui32[0] = (DMAend | 10) + n * 5;
 
@@ -721,10 +711,10 @@ static void SetFontPacketHeader(int n, int type, u_char alp)
 
     if (psm == 20)
     {
-        mpbuf[nmdpkt].ul64[0] = *(long *)&Load;
+        mpbuf[nmdpkt].ul64[0] = *(unsigned long long *)&Load;
         mpbuf[nmdpkt++].ul64[1] = SCE_GS_TEX0_1;
 
-        mpbuf[nmdpkt].ul64[0] = *(long *)&Change;
+        mpbuf[nmdpkt].ul64[0] = *(unsigned long long *)&Change;
         mpbuf[nmdpkt++].ul64[1] = SCE_GS_TEX0_1;
     }
     else
@@ -836,13 +826,6 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
 
     sceGsTex0 Load = *(sceGsTex0*)&fntdat[ft].tex0;
 
-    //if (Load.PSM == 20)
-    //{
-    //    Load.PSM = SCE_GS_PSMT8;
-    //    Load.CSA = 0;
-    //    Load.CLD = 1;
-    //}
-
     s.tex0 = *(u_long*)&Load;
     s.x = x;
     s.y = y;
@@ -852,15 +835,14 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     s.h = Font_H - 1;
 
     /// If font texture has not been loaded yet, avoid requesting the texture
-    if (!IsFirstUploadDone())
-    {
-        return;
-    }
+    //if (!IsFirstUploadDone())
+    //{
+    //    return;
+    //}
 
     unsigned char* image = DownloadGsTexture(&Load);
     MikuPan_Render2DTexture(&s, image);
 
-    return;
     mpbuf[nmdpkt].ui32[0] = r;
     mpbuf[nmdpkt].ui32[1] = g;
     mpbuf[nmdpkt].ui32[2] = b;
@@ -931,8 +913,6 @@ static void SetFontTex(int flg, int bank)
 {
     static int obank = -1;
     sceGsTex0 tex0;
-
-
 
     if (flg != 0 && bank == obank)
     {
@@ -1162,11 +1142,7 @@ static void MesPacketEnd()
 static void PacketEnd()
 #endif
 {
-    /// mpbuf[nmdpkt].ul128 = (u_long128)0;
-    mpbuf[nmdpkt].ul128[0] = 0;
-    mpbuf[nmdpkt].ul128[1] = 0;
-    mpbuf[nmdpkt].ul128[2] = 0;
-    mpbuf[nmdpkt].ul128[3] = 0;
+    mpbuf[nmdpkt].ul128 = (u_long128)0;
 
     mpbuf[nmdpkt++].ui32[0] = DMAend | 2;
 
@@ -1582,12 +1558,8 @@ int SetMessageV2_2(DISP_STR *s)
     s->brnch_num = selnum;
 
     i = draw_mpri[nmdpri][1];
-    /// mpbuf[i].ul128 = (u_long128)0;
 
-    mpbuf[i].ul128[0] = 0;
-    mpbuf[i].ul128[1] = 0;
-    mpbuf[i].ul128[2] = 0;
-    mpbuf[i].ul128[3] = 0;
+    mpbuf[i].ul128 = (u_long128)0;
 
     mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
     nmdpri++;
@@ -1921,12 +1893,7 @@ int SetMessageV2(DISP_STR *s)
     //SDL_Render2DTexture2(&dq);
 
     i = draw_mpri[nmdpri][1];
-    /// mpbuf[i].ul128 = (u_long128)0;
-
-    mpbuf[i].ul128[0] = 0;
-    mpbuf[i].ul128[1] = 0;
-    mpbuf[i].ul128[2] = 0;
-    mpbuf[i].ul128[3] = 0;
+    mpbuf[i].ul128 = (u_long128)0;
 
     mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
     nmdpri++;
@@ -2432,12 +2399,7 @@ int SubMessageV3(u_char *s, int pri, int delflg)
     }
 
     i = draw_mpri[nmdpri][1];
-    /// mpbuf[i].ul128 = (u_long128)0;
-
-    mpbuf[i].ul128[0] = 0;
-    mpbuf[i].ul128[1] = 0;
-    mpbuf[i].ul128[2] = 0;
-    mpbuf[i].ul128[3] = 0;
+    mpbuf[i].ul128 = (u_long128)0;
 
     mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
     nmdpri++;

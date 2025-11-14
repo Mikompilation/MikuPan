@@ -102,7 +102,7 @@ u_int* SceneDataLoadReq(int scene_no, u_int *load_addr)
     u_int *scn_addr;
     int scn_file_no;
     int i;
-    int next_addr;
+    int64_t next_addr;
 
     scn_addr = load_addr;
 

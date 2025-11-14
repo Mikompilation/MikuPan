@@ -8,12 +8,12 @@ bool first_upload_done = false;
 
 void AddTexture(sceGsTex0* tex0, unsigned char *img)
 {
-    texture_atlas[CONVERT_TEX0_TO_ULONG(tex0)] = img;
+    //texture_atlas[CONVERT_TEX0_TO_ULONG(tex0)] = img;
 }
 
 unsigned char * GetTexture(sceGsTex0* tex0)
 {
-    if (!first_upload_done)
+    //if (!first_upload_done)
     {
         return nullptr;
     }
@@ -38,12 +38,12 @@ bool IsFirstUploadDone()
 
 void AddSDLTexture(sceGsTex0* tex0, void *img)
 {
-    sdl_texture_atlas[CONVERT_TEX0_TO_ULONG(tex0)] = img;
+    //sdl_texture_atlas[CONVERT_TEX0_TO_ULONG(tex0)] = img;
 }
 
 void * GetSDLTexture(sceGsTex0* tex0)
 {
-    if (!first_upload_done)
+    //if (!first_upload_done)
     {
         return nullptr;
     }

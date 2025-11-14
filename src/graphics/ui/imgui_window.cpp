@@ -2,6 +2,7 @@
 
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
+#include "main/glob.h"
 
 extern "C"
 {
@@ -10,7 +11,6 @@ extern "C"
 }
 
 bool show_fps = true;
-bool ingame_debug_menu = true;
 bool show_menu_bar = false;
 
 void InitImGuiWindow(SDL_Window *window, SDL_Renderer *renderer)
@@ -46,27 +46,21 @@ void DrawImGuiWindow()
 
     if (ImGui::IsKeyPressed(ImGuiKey_F2))
     {
-        ingame_debug_menu = !ingame_debug_menu;
+        dbg_wrk.mode_on = !dbg_wrk.mode_on;
     }
 
     if (show_menu_bar && ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Stats")) {
-            ImGui::Checkbox("Show FPS", &show_fps);
-            ImGui::EndMenu();
-        }
-
         if (ImGui::BeginMenu("Debug")) {
-            ImGui::Checkbox("Show Ingame Debug Menu", &ingame_debug_menu);
-
-            if (ImGui::MenuItem("Create")) {
-            }
-
+            ImGui::Checkbox("FPS Counter", &show_fps);
+            ImGui::Checkbox("Ingame Debug Menu", (bool*)&dbg_wrk.mode_on);
+            ImGui::Checkbox("Performance Info", (bool*)&dbg_wrk.oth_perf);
+            ImGui::Checkbox("Packet Count", (bool*)&dbg_wrk.oth_pkt_num_sw);
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
 
-    if (ingame_debug_menu)
+    if (dbg_wrk.mode_on)
     {
         gra2dDrawDbgMenu();
     }

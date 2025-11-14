@@ -5,6 +5,8 @@
 #include "gs/texture_manager_c.h"
 #include "graphics/ui/imgui_window_c.h"
 
+#include <stdlib.h>
+
 #define PS2_RESOLUTION_X_FLOAT 640.0f
 #define PS2_RESOLUTION_X_INT 640
 #define PS2_RESOLUTION_Y_FLOAT 448.0f
@@ -61,7 +63,7 @@ void MikuPan_Render2DTexture(DISP_SPRT* sprite, unsigned char* image)
 
     SDL_Texture* texture = (SDL_Texture*)GetSDLTexture(&tex0);
 
-    if (texture == NULL)
+    //if (texture == NULL)
     {
         SDL_Surface *surface = SDL_CreateSurfaceFrom(
         texture_width, texture_height,
@@ -92,6 +94,9 @@ void MikuPan_Render2DTexture(DISP_SPRT* sprite, unsigned char* image)
     SDL_SetTextureAlphaMod(texture, (char)(255.0f * (sprite->alpha / 128.0f)));
     SDL_SetTextureColorMod(texture, sprite->r, sprite->g, sprite->b);
     SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
+
+    SDL_DestroyTexture(texture);
+    free(image);
 }
 
 void MikuPan_Render2DTexture2(DISP_SQAR *sprite, unsigned char *image)

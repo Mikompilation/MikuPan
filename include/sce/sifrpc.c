@@ -11,7 +11,11 @@ void sceSifInitRpc(unsigned int mode)
 int sceSifBindRpc(sceSifClientData* client, unsigned int rpc_number, unsigned int mode)
 {
     /// Returns success otherwise program will loop forever
-    client->serve = malloc(sizeof(struct _sif_serve_data));
+    if (client->serve == NULL)
+    {
+        client->serve = malloc(sizeof(struct _sif_serve_data));
+    }
+
     return 1;
 }
 
@@ -50,15 +54,19 @@ int sceSifCallRpc(sceSifClientData* client, unsigned int rpc_number, unsigned in
             switch (send_cmd[i].cmd_no)
             {
             default: printf("Error: Command %d not yet implemented!\n", send_cmd[i].cmd_no); break;
-            case IC_CDVD_INIT:
-                {
-                    break;
-                }
+            case IC_CDVD_INIT:  break;
             case IC_CDVD_LOAD_SECT:
-                {
-                    ReadFileInArchive(send_cmd[i].data2, send_cmd[i].data3, send_cmd[i].data4);
+                    /// Indicates file load
+                    if (send_cmd[i].data5 == 0)
+                    {
+                        ReadFileInArchive(send_cmd[i].data2, send_cmd[i].data3, send_cmd[i].data4);
+                    }
+                    /// TODO : Implement SoundEffect Loading
+                    /// Sound Effect load request
+                    else if (send_cmd[i].data5 == 2)
+                    {}
+
                     break;
-                }
             }
         }
     }

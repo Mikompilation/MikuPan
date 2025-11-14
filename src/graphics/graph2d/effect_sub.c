@@ -133,15 +133,9 @@ void SetSquare(int pri, float x1, float y1, float x2, float y2, float x3, float 
 
     MikuPan_RenderSquare(x1, y1, x2, y2, x3, y3, x4, y4, r, g, b, a);
 
-    return;
-
     z = 0x0fffffff - mpri;
 
-    /// pbuf[ndpkt].ul128 = (u_long128)0; // clear tag
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0; // clear tag
 
     // Is there nothing in the SDK to make dma tags???
     // this is DMA_ID_END + 10 quads worth of transfer data
@@ -231,13 +225,8 @@ void SetSquare2s(int pri, float x1, float y1, float x4, float y4, u_char r1, u_c
     z = 0x0fffffff - mpri;
 
     MikuPan_RenderSquare(x1, y1, 0, 0, 0, 0, x4, y4, r1, g1, b1, a);
-    return;
     
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ui32[0] = DMAend | 12;
     ndpkt++;
@@ -331,11 +320,7 @@ void SetSquareZ(int pri, float x1, float y1, float x4, float y4, int z)
     y[0] = (y1 / div + 2048.0f) * 16.0f;
     y[3] = (y4 / div + 2048.0f) * 16.0f;
     
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ui32[0] = DMAend | 8;
     ndpkt++;
@@ -460,11 +445,7 @@ void SetTriangle(int pri, float x1, float y1, float x2, float y2, float x3, floa
     
     z = 0xfffffff - mpri;
 
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ui32[0] = DMAend | 8;
     ndpkt++;
@@ -532,11 +513,7 @@ void SetTriangleZ(int pri, float x1, float y1, float z1, float x2, float y2, flo
     y[1] = (y2 / div + 2048.0f) * 16.0f;
     y[2] = (y3 / div + 2048.0f) * 16.0f;
     
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ui32[0] = DMAend | 9;
     ndpkt++;
@@ -612,13 +589,9 @@ void SetLine(int pri, float x1, float y1, float x2, float y2, u_char r, u_char g
     z = 0xfffffff - mpri;
 
     MikuPan_RenderLine(x1, y1, x2, y2, r, g, b, a);
-    return;
     
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
+
     pbuf[ndpkt].ui32[0] = DMAend | 7;
     ndpkt++;
     
@@ -741,11 +714,7 @@ void DrawPoint(float *mpos, int no)
 
         n = ndpkt;
         
-        /// pbuf[ndpkt].ul128 = (u_long128)0;
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
+        pbuf[ndpkt].ul128 = (u_long128)0;
         pbuf[ndpkt].ui32[0] = DMAend | 0;
         ndpkt++;
         
@@ -824,11 +793,7 @@ void DrawPoint2(float *mpos, u_char r, u_char g, u_char b, u_char a) {
 
         n = ndpkt;
         
-        /// pbuf[ndpkt].ul128 = (u_long128)0;
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
+        pbuf[ndpkt].ul128 = (u_long128)0;
 
         pbuf[ndpkt].ui32[0] = DMAend | 0;
         ndpkt++;
@@ -871,8 +836,6 @@ void DrawPoint2(float *mpos, u_char r, u_char g, u_char b, u_char a) {
 
 void DrawLine(float *mpos1, u_char r1, u_char g1, u_char b1, u_char a1, float *mpos2, u_char r2, u_char g2, u_char b2, u_char a2)
 {
-	// u_char b2;
-	// u_char a2;
 	int i;
 	int n;
 	int clip;
@@ -925,11 +888,7 @@ void DrawLine(float *mpos1, u_char r1, u_char g1, u_char b1, u_char a1, float *m
 
         n = ndpkt;
         
-        /// pbuf[ndpkt].ul128 = (u_long128)0;
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
+        pbuf[ndpkt].ul128 = (u_long128)0;
 
         pbuf[ndpkt++].ui32[0] = DMAend | 0;
         
@@ -1061,11 +1020,7 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
 
         bak = ndpkt;
         
-        ///pbuf[ndpkt++].ul128 = (u_long128)0;
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
+        pbuf[ndpkt++].ul128 = (u_long128)0;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1089,7 +1044,7 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
         pbuf[ndpkt++].ul64[1] = SCE_GS_TEST_1;
         
         pbuf[ndpkt].ul64[0] = de->prim;
-        // pbuf[ndpkt++].ul64[1] = 0x412;
+
         pbuf[ndpkt++].ul64[1] = 0 \
             | SCE_GS_ST    << (4 * 0) 
             | SCE_GS_RGBAQ << (4 * 1) 
@@ -1190,12 +1145,7 @@ void _SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
     
     Reserve2DPacket(pri);
 
-    
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt++].ui32[0] = DMAend | 15;
     
@@ -1306,18 +1256,10 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
 	float mszh;
 	float px;
 	float py;
-    // float pw;
 	float ph;
 	u_char malp;
 	sceGsTex0 Load;
 	sceGsTex0 Change;
-    
-    u_long uVar6;
-    sceGsTex0 sVar9;
-    u_int uVar10;
-    u_int uVar11;
-    int iVar12;
-    float fVar15;
     
     malp = sd->alpha;
     mz = sd->pos_z;
@@ -1382,11 +1324,8 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
     
     Reserve2DPacket(pri);
     
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
+
     pbuf[ndpkt++].ui32[0] = DMAend + 10 + n * 5;
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(8, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -1602,16 +1541,12 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
     s.v = 0;
     s.w = sd->size_w;
     s.h = sd->size_h;
+
     MikuPan_Render2DTexture(&s, img);
 
-    return;
     Reserve2DPacket(pri);
     
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt++].ui32[0] = DMAend | 15;
     
@@ -1795,11 +1730,7 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
 
     Reserve2DPacket(pri);
     
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt++].ui32[0] = DMAend | 15;
     
@@ -2055,11 +1986,7 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
     
     Reserve2DPacket(0xffffffff);
 
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt++].ui32[0] = DMAend | 19;
     
@@ -2364,12 +2291,7 @@ void ClearFBuffer()
     
     Reserve2DPacket(0x1000);
 
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ui32[0] = DMAend | 34;
     ndpkt++;
@@ -2431,11 +2353,8 @@ void ClearZBuffer()
     
     Reserve2DPacket(0x1000);
 
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
+
     pbuf[ndpkt].ui32[0] = DMAend | 34;
     ndpkt++;
     
@@ -2892,15 +2811,9 @@ void ClearLocalCopyLtoLCache()
 int LocalCopyLtoLDraw(int addr1, int addr2)
 {
 	int i;
-	int old_ndpkt;
+	int64_t old_ndpkt;
 	int xyoff;
 	Q_WORDDATA *ppbuf;
-	// float *v0;
-	// float *v1;
-	// float *v0;
-	// float *v1;
-	// float *v0;
-	// float *v1;
 
     xyoff = GS_Y_COORD(0) + 8 - pdrawenv->xyoffset1.OFY;
     
@@ -3181,7 +3094,7 @@ int SetTecmoLogo()
     break;
     }
     
-    SetSprFile3(EFFECT_ADDRESS, 0);
+    SetSprFile3((int64_t)EFFECT_ADDRESS, 0);
     CopySprDToSpr(&ds, logotex);
     
     ds.zbuf = 0x10100008c;

@@ -14,6 +14,8 @@
 #include "graphics/graph2d/effect_sub.h"
 #include "gs/gs_server_c.h"
 #include "gs/texture_manager_c.h"
+#include "common/logging_c.h"
+#include "gs/gs_packet_handler.h"
 
 u_int *tm2_end_pkt = NULL;
 
@@ -36,7 +38,7 @@ u_int* MakeTim2Direct2(u_int *pkt_addr, u_int *tim2_addr, int tbp)
     u_int *img_addr;
     u_int psm;
     u_int tbw;
-    u_int qwc;
+    int64_t qwc;
     u_int nloop;
     sceGsTex0 sgtx0;
     Q_WORDDATA *qw;
@@ -101,7 +103,7 @@ u_int* MakeTim2Direct2(u_int *pkt_addr, u_int *tim2_addr, int tbp)
 
     qw = SetImageTransParam2(qw, tbp, tbw, psm, tph->ImageWidth, tph->ImageHeight);
 
-    GsUpload(&load_image, (unsigned char*)img_addr);
+    //GsUpload(&load_image, (unsigned char*)img_addr);
 
 #ifdef BUILD_EU_VERSION
     qw->ul64[0] = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 0);
@@ -111,11 +113,10 @@ u_int* MakeTim2Direct2(u_int *pkt_addr, u_int *tim2_addr, int tbp)
     qw->ul64[1] = SCE_GIF_PACKED_AD;
     qw++;
 
-    qwc = (((int)qw - (int)pkt_addr) >> 4) - 1;
+    qwc = (((int64_t)qw - (int64_t)pkt_addr) >> 4) - 1;
 
     qw->ui32[0] = nloop | DMAref;
-    qw->ui32[1] = (u_int)img_addr;
-    qw->ui32[2] = 0;
+    *(uint64_t*)&qw->ui32[1] = (uint64_t)img_addr;
     qw->ui32[3] = nloop | DMAcall;
     qw++;
 
@@ -218,7 +219,7 @@ u_int* MakeClutDirect2(u_int *pkt_addr, u_int *tim2_addr, int cbp)
         load_image.trxregaddr = SCE_GS_TRXREG;
     }
 
-    GsUpload(&load_image, (unsigned char*)img_addr);
+    //GsUpload(&load_image, (unsigned char*)img_addr);
 
 #ifdef BUILD_EU_VERSION
     qw->ul64[0] = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 0);
@@ -228,11 +229,11 @@ u_int* MakeClutDirect2(u_int *pkt_addr, u_int *tim2_addr, int cbp)
     qw->ul64[1] = SCE_GIF_PACKED_AD;
     qw++;
 
-    qwc = (((int)qw - (int)pkt_addr) >> 4) - 1;
+    qwc = (((int64_t)qw - (int64_t)pkt_addr) >> 4) - 1;
 
     qw->ui32[0] = nloop | DMAref;
-    qw->ui32[1] = (u_int)img_addr;
-    qw->ui32[2] = 0;
+    *(uint64_t*)&qw->ui32[1] = (uint64_t)img_addr;
+    //qw->ui32[2] = 0;
     qw->ui32[3] = nloop | DMAcall;
     qw++;
 
@@ -377,8 +378,9 @@ void CallFontTexAndMesPacket()
     else
     {
         tm2_end_pkt[0] = DMAnext;
-        tm2_end_pkt[1] = (u_int)mmp;
-        tm2_end_pkt[2] = VU0_ADDRESS;
+        *(uint64_t*)&tm2_end_pkt[1] = (uint64_t)mmp;
+        //tm2_end_pkt[1] = (u_int)mmp;
+        //tm2_end_pkt[2] = VU0_ADDRESS;
         tm2_end_pkt[3] = 0;
     }
 
@@ -484,13 +486,13 @@ void MakeTim2Direct3(u_int *tim2_addr, int tbp, int offset)
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
     *(u_long*)&load_image.giftag1 = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
 
-    GsUpload(&load_image, (unsigned char*)img_addr);
+    //GsUpload(&load_image, (unsigned char*)img_addr);
 
     qwc = (ndpkt - qwtop) - 1;
 
     pbuf[ndpkt].ui32[0] = nloop | DMAref;
-    pbuf[ndpkt].ui32[1] = (int64_t)img_addr;
-    pbuf[ndpkt].ui32[2] = 0;
+    *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)img_addr;
+    //pbuf[ndpkt].ui32[2] = 0;
     pbuf[ndpkt++].ui32[3] = nloop | DMAcall;
 
     pbuf[qwtop].ui32[0] = qwc | DMAcnt;
@@ -596,13 +598,13 @@ void MakeClutDirect3(u_int *tim2_addr, int cbp, int offset)
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
     *(u_long*)&load_image.giftag1 = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
 
-    GsUpload(&load_image, (unsigned char*)img_addr);
+    //GsUpload(&load_image, (unsigned char*)img_addr);
 
     qwc = (ndpkt - qwtop) - 1;
 
     pbuf[ndpkt].ui32[0] = nloop | DMAref;
-    pbuf[ndpkt].ui32[1] = (u_int)img_addr;
-    pbuf[ndpkt].ui32[2] = 0;
+    *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)img_addr;
+    //pbuf[ndpkt].ui32[2] = 0;
     pbuf[ndpkt++].ui32[3] = nloop | DMAcall;
 
     pbuf[qwtop].ui32[0] = qwc | DMAcnt;
@@ -630,7 +632,7 @@ void MakeTim2ClutDirect3(int64_t tm2_addr, int tbp, int cbp, int offset)
     pbuf[ndpkt].ui32[0] = DMAcnt;
     pbuf[ndpkt].ui32[1] = 0;
     pbuf[ndpkt].ui32[2] = 0;
-    pbuf[ndpkt++].ui32[3] = VU0_ADDRESS;
+    pbuf[ndpkt++].ui32[3] = 0;//VU0_ADDRESS;
 
     addr = tm2_addr;
 
@@ -644,9 +646,10 @@ void MakeTim2ClutDirect3(int64_t tm2_addr, int tbp, int cbp, int offset)
     }
 
     pbuf[ndpkt].ui32[0] = DMAnext;
-    pbuf[ndpkt].ui32[1] = (u_int)&pbuf[ndpkt+1] & 0x0fffffff;
-    pbuf[ndpkt].ui32[2] = 0;
-    pbuf[ndpkt++].ui32[3] = VU0_ADDRESS;
+    *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)&pbuf[ndpkt+1];
+    //pbuf[ndpkt].ui32[1] = (u_int)&pbuf[ndpkt+1] & 0x0fffffff;
+    //pbuf[ndpkt].ui32[2] = 0;
+    pbuf[ndpkt++].ui32[3] = 0;//VU0_ADDRESS;
 }
 
 void MakeTim2ClutDirect4(int64_t tm2_addr, int num, int tbp, int cbp, int offset)
@@ -661,9 +664,9 @@ void MakeTim2ClutDirect4(int64_t tm2_addr, int num, int tbp, int cbp, int offset
     pbuf[ndpkt].ui32[0] = DMAcnt;
     pbuf[ndpkt].ui32[1] = 0;
     pbuf[ndpkt].ui32[2] = 0;
-    pbuf[ndpkt++].ui32[3] = VU0_ADDRESS;
+    pbuf[ndpkt++].ui32[3] = 0;//VU0_ADDRESS;
 
-    addr = (int)tm2_addr;
+    addr = (uint64_t)tm2_addr;
 
     texnum = ((int *)addr)[0];
     offtop = &((int *)addr)[4];
@@ -678,9 +681,10 @@ void MakeTim2ClutDirect4(int64_t tm2_addr, int num, int tbp, int cbp, int offset
     }
 
     pbuf[ndpkt].ui32[0] = DMAnext;
-    pbuf[ndpkt].ui32[1] = (u_int)&pbuf[ndpkt+1] & 0x0fffffff;
-    pbuf[ndpkt].ui32[2] = 0;
-    pbuf[ndpkt++].ui32[3] = VU0_ADDRESS;
+    *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)&pbuf[ndpkt+1];
+    //pbuf[ndpkt].ui32[1] = (u_int)&pbuf[ndpkt+1] & 0x0fffffff;
+    //pbuf[ndpkt].ui32[2] = 0;
+    pbuf[ndpkt++].ui32[3] = 0;//VU0_ADDRESS;
 }
 
 void MakeTim2SendPacket(int64_t tm2_addr, int offset)
@@ -690,15 +694,17 @@ void MakeTim2SendPacket(int64_t tm2_addr, int offset)
     pbuf[ndpkt].ui32[0] = DMAcnt;
     pbuf[ndpkt].ui32[1] = 0;
     pbuf[ndpkt].ui32[2] = 0;
-    pbuf[ndpkt++].ui32[3] = VU0_ADDRESS;
+    pbuf[ndpkt++].ui32[3] = 0;//VU0_ADDRESS;
 
     MakeTim2Direct3((u_int *)tm2_addr, -1, offset);
     MakeClutDirect3((u_int *)tm2_addr, -1, offset);
 
     pbuf[ndpkt].ui32[0] = DMAnext;
-    pbuf[ndpkt].ui32[1] = (u_int)&pbuf[ndpkt+1] & 0x0fffffff;
-    pbuf[ndpkt].ui32[2] = 0;
-    pbuf[ndpkt++].ui32[3] = VU0_ADDRESS;
+
+    *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)&pbuf[ndpkt+1];
+    //pbuf[ndpkt].ui32[1] = (u_int)&pbuf[ndpkt+1] & 0x0fffffff;
+    //pbuf[ndpkt].ui32[2] = 0;
+    pbuf[ndpkt++].ui32[3] = 0;//VU0_ADDRESS;
 }
 
 void MakeTim2SendPacket_3Dpkt(int64_t tm2_addr, int offset)
@@ -708,7 +714,7 @@ void MakeTim2SendPacket_3Dpkt(int64_t tm2_addr, int offset)
     pbuf[ndpkt].ui32[0] = DMAcnt;
     pbuf[ndpkt].ui32[1] = 0;
     pbuf[ndpkt].ui32[2] = 0;
-    pbuf[ndpkt++].ui32[3] = VU0_ADDRESS;
+    pbuf[ndpkt++].ui32[3] = 0;//VU0_ADDRESS;
 
     MakeTim2Direct3((u_int *)tm2_addr, -1, offset);
     MakeClutDirect3((u_int *)tm2_addr, -1, offset);
@@ -716,7 +722,7 @@ void MakeTim2SendPacket_3Dpkt(int64_t tm2_addr, int offset)
     pbuf[ndpkt].ui32[0] = DMAnext;
     pbuf[ndpkt].ui32[1] = 0;
     pbuf[ndpkt].ui32[2] = 0;
-    pbuf[ndpkt++].ui32[3] = VU0_ADDRESS;
+    pbuf[ndpkt++].ui32[3] = 0;//VU0_ADDRESS;
 
     AppendDmaTagNextRet(&ndpkt[pbuf-1]);
     SetG2DTopPkt((int64_t)&pbuf[ndpkt]);
@@ -738,8 +744,8 @@ void Reserve2DPacket_Load()
 void SetG2DTopPkt(int64_t addr)
 {
     g2d_top_pkt[mes_swap].ui32[0] = DMAnext;
-    g2d_top_pkt[mes_swap].ui32[1] = addr & 0xfffffff;
-    g2d_top_pkt[mes_swap].ui32[2] = VU0_ADDRESS;
+    *(uint64_t*)&g2d_top_pkt[mes_swap].ui32[1] = (uint64_t)addr;
+    //g2d_top_pkt[mes_swap].ui32[2] = VU0_ADDRESS;
     g2d_top_pkt[mes_swap].ui32[3] = 0; // DMArefe ?
 }
 
@@ -750,7 +756,7 @@ Q_WORDDATA* Get2DPacketBufferAddress()
 
 void Set2DPacketBufferAddress(Q_WORDDATA *addr)
 {
-    ndpkt = (((u_int)addr & 0xfffffff) - ((u_int)pbuf & 0xfffffff)) / 16;
+    ndpkt = (((uint64_t)addr) - ((uint64_t)pbuf)) / 16;
 }
 
 void DrawAll2DMes_P2()
@@ -765,22 +771,12 @@ void DrawAll2DMes_P2()
     int mch;
     int mpk;
 
-    ndpkt = 0;
-    return;
-    //DrawPerformanceCounter();
+    DrawPerformanceCounter();
 
     if (ndpri > 0)
     {
         for (i = 0; i < ndpri-1; i++)
         {
-#ifdef MATCHING_DECOMP
-            // hack to fix t0<->t1 regswap
-            if (pbuf)
-            {
-                unsigned char x = -x;
-            }
-#endif
-
             n = draw_pri[i][1];
             m = draw_pri[i+1][1];
 
@@ -789,8 +785,8 @@ void DrawAll2DMes_P2()
             if (pbuf[n].uc8[3] == 0x70) // upper part of 0x70000000 (DMAend) ??
             {
                 pbuf[n].uc8[3] = 0x20; // upper part of 0x20000000 (DMAnext) ?? // Line 602
-                pbuf[n].ui32[1] = (u_int)&pbuf[m] & 0x0fffffff;
-                pbuf[n].ui32[2] = 0;
+                *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)&pbuf[m];
+                //pbuf[n].ui32[2] = 0;
 
                 if (s != 0)
                 {
@@ -810,8 +806,7 @@ void DrawAll2DMes_P2()
         if (pbuf[n].uc8[3] == 0x70) // upper part of 0x70000000 (DMAend) ??
         {
             pbuf[n].uc8[3] = 0x20; // upper part of 0x20000000 (DMAnext) ??
-            pbuf[n].ui32[1] = (u_int)&pbuf[ndpkt] & 0x0fffffff;
-            pbuf[n].ui32[2] = 0;
+            *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)&pbuf[ndpkt];
 
             if (s != 0)
             {
@@ -836,26 +831,27 @@ void DrawAll2DMes_P2()
     if (mmp == NULL)
     {
         pbuf[ndpkt].ui32[0] = DMAnext;
-        pbuf[ndpkt].ui32[1] = (u_int)&g2d_end_pkt[mes_swap] & 0x0fffffff;
-        pbuf[ndpkt].ui32[2] = 0;
+        *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)&g2d_end_pkt[mes_swap];
         pbuf[ndpkt++].ui32[3] = 0;
     }
     else
     {
         pbuf[ndpkt].ui32[0] = DMAnext;
-        pbuf[ndpkt].ui32[1] = (u_int)fnt_pkt & 0x0fffffff;
-        pbuf[ndpkt].ui32[2] = 0;
+        *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)fnt_pkt;
         pbuf[ndpkt++].ui32[3] = 0;
 
-        tm2_end_pkt[0] = DMAnext;
-        tm2_end_pkt[1] = (u_int)mmp & 0x0fffffff;
-        tm2_end_pkt[2] = VU0_ADDRESS;
-        tm2_end_pkt[3] = 0;
+        if (tm2_end_pkt != NULL)
+        {
+            tm2_end_pkt[0] = DMAnext;
+            tm2_end_pkt[1] = (uint64_t)mmp;
+            //tm2_end_pkt[2] = VU0_ADDRESS;
+            tm2_end_pkt[3] = 0;
+        }
     }
 
     g2d_end_pkt[mes_swap].ui32[0] = DMAnext;
     g2d_end_pkt[mes_swap].ui32[1] = 0;
-    g2d_end_pkt[mes_swap].ui32[2] = VU0_ADDRESS;
+    g2d_end_pkt[mes_swap].ui32[2] = 0;//VU0_ADDRESS;
     g2d_end_pkt[mes_swap].ui32[3] = 0;
 
     AppendDmaTagCall((int64_t)&g2d_top_pkt[mes_swap]);
@@ -869,19 +865,34 @@ void DrawAll2DMes_P2()
         printf("2D-PacketBuffer Half Over\n");
     }
 
+    for (i = 0; i < ndpkt; i++)
+    {
+        //ReadPacket(&pbuf[i]);
+    }
+
+    ReadAllPackets(pbuf);
+
     ndpri = 0;
     ndpkt = 0;
 
     mes_swap = mes_swap ^ 1;
 
-    mpbuf = (Q_WORDDATA *)UNCACHED(mpbufw[mes_swap]);
+    mpbuf = (Q_WORDDATA *)mpbufw[mes_swap];
 
-    mmp = (void *)(mes_swap * 0x60000 + 0x720000); // what's this ??
-    pbuf = (Q_WORDDATA *)UNCACHED(mmp);
+    if (mes_swap == 0)
+    {
+        mmp = (void *)((int64_t)pbuf - 0x60000);
+    }
+    else
+    {
+        mmp = (void *)((int64_t)pbuf + 0x60000);
+    }
+
+    pbuf = (Q_WORDDATA *)mmp;
 
     SetG2DTopPkt((int64_t)pbuf);
 
-    if (dbg_wrk.oth_pkt_num_sw == 0)
+    if (dbg_wrk.oth_pkt_num_sw == 1)
     {
         SetPanel2(0x20, 44.0f, 360.0f, 580.0f, 396.0f, 0, 0x0, 0x0, 0x0, 0x80);
         SetString2(0x10, 48.0f, 364.0f, 1, 0x80, 0x80, 0x80, "2D Chain  Num : %4d", nch);
@@ -889,28 +900,6 @@ void DrawAll2DMes_P2()
         SetString2(0x10, 320.0f, 364.0f, 1, 0x80, 0x80, 0x80, "Mes Chain  Num : %4d", mch);
         SetString2(0x10, 320.0f, 380.0f, 1, 0x80, 0x80, 0x80, "Mes Packet Num : %4d", mpk);
     }
-}
-
-void UploadFontTexture(int ftype)
-{
-    int64_t addr = FontTextAddress;
-
-    if (!IsFirstUploadDone())
-    {
-        return;
-    }
-
-    int texnum = ((int*)addr)[0];
-    int* offtop = &((int*)addr)[4];
-    u_int* pkt_addr = (u_int*)fnt_pkt;
-
-    MakeTim2ClutDirect2(pkt_addr, (u_int *)(addr + offtop[ftype]), -1, -1);
-
-    for (int i = 0; i < texnum; i++)
-    {
-        //MakeTim2ClutDirect2(pkt_addr, (u_int *)(addr + offtop[i]), -1, -1);
-    }
-
 }
 
 #ifdef BUILD_EU_VERSION

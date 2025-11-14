@@ -680,13 +680,7 @@ void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotati
         
         bak = ndpkt;
         
-        /// pbuf[ndpkt++].ul128 = (u_long128)0;
-
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
-        ndpkt++;
+        pbuf[ndpkt++].ul128 = (u_long128)0;
         
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1056,13 +1050,7 @@ void GusObjDraw(/* a0 4 */ int leaf_num, /* a1 5 */ int area, /* a2 6 */ int fal
 
     bak = ndpkt;
     
-    /// pbuf[ndpkt++].ul128 = (u_long128)0;
-
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
-    ndpkt++;
+    pbuf[ndpkt++].ul128 = (u_long128)0;
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1428,13 +1416,7 @@ void HoleGusDraw(/* s5 21 */ int leaf_no)
         
         bak = ndpkt;
         
-        /// pbuf[ndpkt++].ul128 = (u_long128)0;
-
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
-        ndpkt++;
+        pbuf[ndpkt++].ul128 = (u_long128)0;
         
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -2103,13 +2085,7 @@ void LineGusDraw(/* s6 22 */ int leaf_no, /* s5 21 */ int line_num)
         
         bak = ndpkt;
         
-        /// pbuf[ndpkt++].ul128 = (u_long128)0;
-
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
-        ndpkt++;
+        pbuf[ndpkt++].ul128 = (u_long128)0;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -2397,7 +2373,7 @@ int CallMissionClear()
     return ret_num;
 }
 
-int CallMissionFailed()
+uint64_t CallMissionFailed()
 {
 	/* sdata 35641b */ static u_char now_pos = 0;
 	/* 0x0(sp) */ u_char alpha_res[3] = { 30, 30, 30 };

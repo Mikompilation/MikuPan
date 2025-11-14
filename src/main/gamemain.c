@@ -188,16 +188,17 @@ int GameInitLoad()
         {
             return 0;
         }
+
         MakeFontTexSendPacket();
         SetETIM2File(EFFECT_ADDRESS);
         sys_wrk.load_mode = INGAME_INIT_LOAD_CAME;
     case INGAME_INIT_LOAD_CAME:
 #ifdef BUILD_EU_VERSION
-        init_load_id = SeFileLoadAndSet(SSYSTEM_BD, 0);
-        init_load_id = SeFileLoadAndSet(SGY000_BD, 1);
+        init_load_id = SeFileLoadAndSet(SSYSTEM_BD, SE_ADDRNO_STATIC);
+        init_load_id = SeFileLoadAndSet(SGY000_BD, SE_ADDRNO_BTLHIT);
 #else
-        init_load_id = SeFileLoadAndSet(SSYSTEM_BD, 0);
-        init_load_id = SeFileLoadAndSet(SGY000_BD, 1);
+        init_load_id = SeFileLoadAndSet(SSYSTEM_BD, SE_ADDRNO_STATIC);
+        init_load_id = SeFileLoadAndSet(SGY000_BD, SE_ADDRNO_BTLHIT);
 #endif
         sys_wrk.load_mode = INGAME_INIT_WAIT_CAME;
     break;
@@ -219,37 +220,37 @@ void GameModeChange(u_char mode)
 {
     switch (mode)
     {
-    case 0:
+    case GAME_MODE_INIT:
         MovieInitWrk();
         sys_wrk.game_mode = GAME_MODE_INGAME;
-        ingame_wrk.mode = 0;
+        ingame_wrk.mode = INGAME_MODE_FIRST_LOAD;
     break;
-    case 1:
+    case GAME_MODE_MCCHECK:
         sys_wrk.game_mode = GAME_MODE_OUTGAME;
-        if (ingame_wrk.game == 1)
+        if (ingame_wrk.game == INGAME_MODE_INIT)
         {
-            title_wrk.mode = 11;
-            outgame_wrk.mode = 6;
+            title_wrk.mode = TITLE_INIT_FROM_IN;
+            outgame_wrk.mode = OUTGAME_MODE_BATTLE;
             BattleModeNext();
         }
         else
         {
-            title_wrk.mode = 11;
-            outgame_wrk.mode = 3;
+            title_wrk.mode = TITLE_INIT_FROM_IN;
+            outgame_wrk.mode = OUTGAME_MODE_TITLE_TOP;
         }
         SetReverbVolume(0x2fff);
     break;
-    case 2:
+    case GAME_MODE_OUTGAME:
         sys_wrk.game_mode = GAME_MODE_OUTGAME;
-        if (ingame_wrk.game != 1)
+        if (ingame_wrk.game != INGAME_MODE_INIT)
         {
-            title_wrk.mode = 11;
+            title_wrk.mode = TITLE_INIT_FROM_IN;
         }
         SetReverbVolume(0x2fff);
     break;
-    case 3:
+    case GAME_MODE_INGAME:
         sys_wrk.game_mode = GAME_MODE_OUTGAME;
-        title_wrk.mode = 11;
+        title_wrk.mode = TITLE_INIT_FROM_IN;
         SetReverbVolume(0x2fff);
     break;
     }

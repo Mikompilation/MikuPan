@@ -139,13 +139,7 @@ void SetETOCircleTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, float w, float h, u_cha
 
         bak = ndpkt;
 
-        /// pbuf[ndpkt++].ul128 = (u_long128)0;
-
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
-        ndpkt++;
+        pbuf[ndpkt++].ul128 = (u_long128)0;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -426,13 +420,7 @@ int SetCamFont(int no, int fl)
 
     bak = ndpkt;
 
-    /// pbuf[ndpkt++].ul128 = (u_long128)0;
-
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
-    ndpkt++;
+    pbuf[ndpkt++].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TEX0_1(0x5, 2, SCE_GS_PSMCT32, 0, 0, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 16, 0);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1674,13 +1662,7 @@ void RunCamSlow2(int o, float hrt, float rrt, u_int alp)
 
     bak = ndpkt;
 
-    /// pbuf[ndpkt++].ul128 = (u_long128)0;
-
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
-    ndpkt++;
+    pbuf[ndpkt++].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(3, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -2536,12 +2518,7 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
 
     n = ndpkt;
 
-    //pbuf[ndpkt++].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
-    ndpkt++;
+    pbuf[ndpkt++].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -3150,12 +3127,7 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
 
         bak = ndpkt;
 
-        /// pbuf[ndpkt++].ul128 = (u_long128)0;
-        pbuf[ndpkt].ul128[0] = 0;
-        pbuf[ndpkt].ul128[1] = 0;
-        pbuf[ndpkt].ul128[2] = 0;
-        pbuf[ndpkt].ul128[3] = 0;
-        ndpkt++;
+        pbuf[ndpkt++].ul128 = (u_long128)0;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -3929,7 +3901,7 @@ void LoadEneDmgTex(int no, u_int *addr)
         return;
     }
 
-    LoadReq(texno, (u_int)addr);
+    LoadReq(texno, (uint64_t)addr);
 
     for (i = 0; i < 10; i++)
     {
@@ -3937,7 +3909,7 @@ void LoadEneDmgTex(int no, u_int *addr)
         {
             edmg_tex_wrk[i].tex_no = texno;
             edmg_tex_wrk[i].mdl_no = no + count;
-            edmg_tex_wrk[i].addr = (int)addr;
+            edmg_tex_wrk[i].addr = (uint64_t)addr;
 
             if (no != 42)
             {
@@ -4321,13 +4293,7 @@ void SetEneDmgEffect1_Sub2(int num)
 
     bak = ndpkt;
 
-    /// pbuf[ndpkt++].ul128 = (u_long128)0;
-
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
-    ndpkt++;
+    pbuf[ndpkt++].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(5, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;

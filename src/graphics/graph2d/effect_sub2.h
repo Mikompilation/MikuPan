@@ -5,6 +5,8 @@
 
 #include "graphics/graph2d/sprt.h"
 
+#include <stdint.h>
+
 typedef struct { // 0x14
     /* 0x00 */ short int x_trans;
     /* 0x02 */ short int y_trans;
@@ -113,7 +115,7 @@ void InitCallAnm();
 int CallReadyGo();
 void ResultDisp();
 int CallMissionClear();
-int CallMissionFailed();
+uint64_t CallMissionFailed();
 int CallMissionAllClear();
 int CallStoryClear();
 int BtlAnmInit(int anm_no);

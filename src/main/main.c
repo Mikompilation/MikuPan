@@ -2,43 +2,26 @@
 #include "typedefs.h"
 #include "enums.h"
 #include "main.h"
-
-#include "graphics/graph2d/g2d_debug.h"
-
 #include <string.h>
-
 #include "main/glob.h"
 #include "main/gamemain.h"
 #include "outgame/title.h"
 #include "os/system.h"
 #include "os/eeiop/eeiop.h"
 #include "os/eeiop/eese.h"
-#include "os/eeiop/se_cmd.h"
 #include "graphics/mov/movie.h"
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph2d/g2d_main.h"
-#include "graphics/graph2d/message.h"
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/gra3d.h"
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "rendering/sdl_renderer.h"
-// #include "os/eeiop/adpcm/ea_cmd.h"
-
-int sceGsSyncPath(int mode, u_short timeout);
 
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-
-/// CPP Extern Functions ///
 #include "graphics/ui/imgui_window_c.h"
-void InitImGuiWindow(SDL_Window *window, SDL_Renderer *renderer);
-void ShutDownImGuiWindow();
-void RenderImGuiWindow(SDL_Renderer *renderer);
-void DrawImGuiWindow();
-void NewFrameImGuiWindow();
-void ProcessEventImGui(SDL_Event *event);
-/// CPP Extern Functions ///
+#include "os/eeiop/se_cmd.h"
 
 const int TARGET_FPS = 60;
 const double TARGET_FRAME_TIME = 1000.0 / TARGET_FPS; // milliseconds per frame
@@ -48,10 +31,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     SDL_AppResult result = MikuPan_Init();
 
     /// GAME LOGIC ///
-    SDL_Log("Initializing Systems");
     InitSystem();
-
-    SDL_Log("Initializing Game");
     InitGameFirst();
 
     return result;
@@ -59,7 +39,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
-    if (event->type == SDL_EVENT_QUIT) {
+    if (event->type == SDL_EVENT_QUIT)
+        {
         return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
     }
 
@@ -102,7 +83,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             DrawAll2DMes_P2();
             //FlushModel(1);
             //ClearTextureCache();
-            //SeCtrlMain();
+            SeCtrlMain();
         }
     }
     else
@@ -119,7 +100,9 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     double frameTime = (double)(frameEnd - frameStart);
 
     if (frameTime < TARGET_FRAME_TIME)
+    {
         SDL_Delay((Uint32)(TARGET_FRAME_TIME - frameTime));
+    }
 
     return SDL_APP_CONTINUE;
 }
@@ -185,14 +168,13 @@ void CallSoftReset()
 
 int SoftResetChk()
 {
-    /// TODO: Re-enable once pad is implemented
     if (
-        *key_now[8] && *key_now[9] && *key_now[10] &&
-        *key_now[11] && *key_now[12] && *key_now[13]
+        /* L1 */ *key_now[8] && /* L2 */ *key_now[9] && /* R1 */ *key_now[10] &&
+        /* R2 */ *key_now[11] && /* START */ *key_now[12] && /* SELECT */ *key_now[13]
     )
     {
         // Re-enabled for debug purposes
-        sys_wrk.sreset_count = 1;
+        sys_wrk.sreset_count += 1;
     }
     else
     {

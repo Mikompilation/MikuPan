@@ -2,6 +2,7 @@
 #define GRAPHICS_GRAPH2D_EFFECT_ENE_H
 
 #include "typedefs.h"
+#include <stdint.h>
 
 typedef struct {
 	sceVu0FVECTOR npos;
@@ -48,7 +49,7 @@ typedef struct {
 typedef struct { // 0x8
 	/* 0x0 */ u_char mdl_no;
 	/* 0x2 */ u_short tex_no;
-	/* 0x4 */ int addr;
+	/* 0x4 */ int64_t addr;
 } EDMG_TEX_WRK;
 
 typedef struct {

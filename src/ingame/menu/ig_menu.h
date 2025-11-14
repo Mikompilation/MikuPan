@@ -5,6 +5,8 @@
 
 #include "graphics/graph2d/message.h"
 
+#include <stdint.h>
+
 extern STR_DAT ig_menu_str;
 extern int get_time_once;
 extern SPRT_DAT sozai;
@@ -18,7 +20,7 @@ void IngameMenuOpenStart();
 void IngameMenuMain();
 void IngameMenuModeSlct();
 int Get4Byte(u_char *addr);
-int GetIngameMSGAddr(u_char type, int msg_no);
+uint64_t GetIngameMSGAddr(u_char type, int msg_no);
 void IngameMenuModeSlctDispInit();
 void IngameMenuModeSlctDisp();
 void DspTopMenu(short int pos_x, short int pos_y, short int alpha, u_short anm);

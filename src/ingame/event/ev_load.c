@@ -9,6 +9,7 @@ void MissionTitleInit(int msn_no)
 
 int MissionTitleMain(int msn_no)
 {
+    return 1;
 }
 
 int MissionTitleLoad(int msn_no)

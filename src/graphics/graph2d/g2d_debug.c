@@ -2,6 +2,8 @@
 #include "typedefs.h"
 #include "g2d_debug.h"
 
+#include "common/memory_addresses.h"
+
 #include <string.h>
 
 #include "sce/libpc.h"
@@ -367,7 +369,15 @@ void gra2dDrawDbgMenuSub(DEBUG_MENU *wlp)
     int var1;
     int var2;
 
-start:
+    if (wlp == NULL)
+    {
+        return;
+    }
+
+    /// Changed the code to be recursive so that parents get drawn first
+    /// this avoids the parent writing over the child
+    gra2dDrawDbgMenuSub(dbgmenu_tbl[wlp->parent]);
+
     bx = (wlp->kai * 32);
     by = (wlp->kai * 32);
     sw = (wlp->max * 12) + 12;
@@ -428,17 +438,6 @@ start:
     var1 = sh;
 
     SetSquareSN((((0x30 - wlp->kai) & 0xff) * 16) - 6, bx + 7, (by + sh) - 2, (bx + sw) + 20, (var2 + var1) + 12, 0x40, 0x40, 0x80, 0x40);
-
-    if (wlp->parent == -1)
-    {
-        return;
-    }
-
-    wlp = dbgmenu_tbl[wlp->parent];
-
-    return;
-
-    goto start;
 }
 
 void gra2dDrawDbgMenu()
@@ -882,7 +881,6 @@ void StopPerformanceCounter()
 {
 	static u_char ow = 0;
 	static int cnt = 0;
-	// int ctr0;
 
     perf_sec = scePcGetCounter0();
     scePcStop();
@@ -962,7 +960,6 @@ void DrawPerformanceCounter()
         SetString2(16, 12.0f, 401.0f / d, 1, 0x80, 0x80, 0x80, "%4d/224", (int)(perf_sec * 224.0f / 4860800.0f));
     }
 
-    //                                                      EUC-JP !! 2534648ea5253264252500 (%4d･%2d%%)
     SetString2(16, 12.0f, 416.0f / d, 1, 0x80, 0x80, 0x80, "%4d\x8e\xa5%2d%%", (int)(perf_sec * 100.0f / 4860800.0f), (int)(perf_sec * 10000.0f / 4860800.0f) % 100);
     SetString2(16, 12.0f, 431.0f / d, 1, 0x80, 0x80, 0x80, "%4d\x8e\xa5%2d%%", (int)(perf_max * 100.0f), (int)(perf_max * 10000.0f) % 100);
 }
@@ -1038,8 +1035,8 @@ void CheckHintTex()
         g2d_load_flg.hint = LoadReq(hint_tbl[num], 0x1e90000);
     }
 
-    MakeTim2ClutDirect4(0x1e90000, 0, -1, -1, 0);
-    MakeTim2ClutDirect4(0x1e90000, 1, -1, -1, 0);
+    MakeTim2ClutDirect4((int64_t)EFFECT_ADDRESS, 0, -1, -1, 0);
+    MakeTim2ClutDirect4((int64_t)EFFECT_ADDRESS, 1, -1, -1, 0);
 
     if (*key_now[9] != 0)
     {

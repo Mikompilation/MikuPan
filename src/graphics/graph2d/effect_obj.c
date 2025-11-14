@@ -427,11 +427,7 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
 
     ppbuf = Get2DPacketBufferAddress();
 
-    /// ppbuf[0].ul128 = (u_long128)0;
-    ppbuf[0].ul128[0] = 0;
-    ppbuf[0].ul128[1] = 0;
-    ppbuf[0].ul128[2] = 0;
-    ppbuf[0].ul128[3] = 0;
+    ppbuf[0].ul128 = (u_long128)0;
 
     ppbuf[1].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     ppbuf[1].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1896,11 +1892,7 @@ void SetStarRay(float *bpos, int tp, float sc, int num, float aang)
 
     Reserve2DPacket(0x1000);
 
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt++].ui32[0] = num * 8 + DMAend + 5 ;
 
@@ -2005,13 +1997,7 @@ void SetNegaCircle(EFFECT_CONT *ec)
 
     bak = ndpkt;
 
-    /// pbuf[ndpkt++].ul128 = (u_long128)0;
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
-    ndpkt++;
-
+    pbuf[ndpkt++].ul128 = (u_long128)0;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(3, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;

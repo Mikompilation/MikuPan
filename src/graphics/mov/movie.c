@@ -33,6 +33,8 @@
 #include "os/eeiop/eese.h"
 #include "graphics/graph3d/sglib.h"
 // #include "ingame/map/map_area.h"
+#include "common/memory_addresses.h"
+
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -238,7 +240,7 @@ static void termMov();
 static void usage();
 static void iopGetArea(int *pd0, int *d0, int *pd1, int *d1, AudioDec *ad, int pos);
 static int sendToIOP2area(int pd0, int d0, int pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1);
-static int sendToIOP(int dst, u_char *src, int size);
+static int sendToIOP(int64_t dst, u_char *src, int size);
 static void changeMasterVolume(u_int val);
 static void changeInputVolume(u_int val);
 static int copy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1);
@@ -545,14 +547,14 @@ void initMov(char *bsfilename)
     ThreadParam th_param;
     void *val;
 
-    *REG_DMAC_CTRL |= 3;
-    *REG_DMAC_STAT = 4;
+    //*REG_DMAC_CTRL |= 3;
+    //*REG_DMAC_STAT = 4;
 
     scePcStop();
 
     if (movie_wrk.play_event_sta == 6 || movie_wrk.play_event_sta == 7)
     {
-        mpegWork = (u_char *)0x14b0000;
+        mpegWork = (u_char *)MPEG_WORK_ADDRESS;
     }
     else
     {
@@ -1108,14 +1110,14 @@ int audioDecCreate(AudioDec *ad, u_char *buff, int buffSize, int iopBuffSize)
     ad->data = buff;
     ad->size = buffSize;
     ad->iopBuffSize = iopBuffSize;
-    ad->iopBuff = (int)sceSifAllocIopHeap(iopBuffSize);
+    ad->iopBuff = (int64_t)sceSifAllocIopHeap(iopBuffSize);
 
     if (ad->iopBuff < 0)
     {
         return 0;
     }
 
-    ad->iopZero = (int)sceSifAllocIopHeap(0x800);
+    ad->iopZero = (int64_t)sceSifAllocIopHeap(0x800);
 
     if (ad->iopZero < 0)
     {
@@ -1363,7 +1365,7 @@ static int sendToIOP2area(int pd0, int d0, int pd1, int d1, u_char *ps0, int s0,
     return s0 + s1;
 }
 
-static int sendToIOP(int dst, u_char *src, int size)
+static int sendToIOP(int64_t dst, u_char *src, int size)
 {
     sceSifDmaData transData;
     int did;
@@ -1373,7 +1375,7 @@ static int sendToIOP(int dst, u_char *src, int size)
         return 0;
     }
 
-    transData.data = (u_int)src;
+    transData.data = (int64_t)src;
     transData.addr = dst;
     transData.size = size;
     transData.mode = 0;
@@ -1415,7 +1417,7 @@ void clearGsMem(int r, int g, int b, int disp_width, int disp_height)
 
     dmaGif = sceDmaGetChan(SCE_DMA_GIF);
 
-    /// SCE_GIF_CLEAR_TAG(&db.giftag0);
+    SCE_GIF_CLEAR_TAG(&db.giftag0);
 
     db.giftag0.NLOOP = 8;
     db.giftag0.EOP = SCE_GS_TRUE;

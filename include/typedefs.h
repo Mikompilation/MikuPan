@@ -13,8 +13,8 @@ typedef int s_int;
 typedef int s_long128[4];
 
 /// TODO: CHECK FOR PROPER IMPLEMENTATION OF MODE TI
-//typedef unsigned int u_long128 __attribute__ ((mode (TI)));
-typedef unsigned int u_long128[4];
+typedef unsigned int u_long128 __attribute__ ((mode (TI)));
+//typedef unsigned int u_long128[4];
 
 typedef unsigned long long u_long;
 typedef unsigned short u_short;

@@ -3,6 +3,7 @@ project(MikuPan LANGUAGES C CXX)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=x86-64 -Wno-implicit-function-declaration -Wno-int-conversion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64 -Wno-implicit-function-declaration -Wno-int-conversion")
+set(CMAKE_EXE_LINKER_FLAGS "-static")
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)
@@ -205,7 +206,12 @@ set(MIKUPAN_SOURCES "src/common/file_loading.cpp"
         src/gs/texture_manager.h
         src/gs/gs_server_c.h
         src/gs/texture_manager_c.h
-        src/graphics/ui/imgui_window_c.h)
+        src/graphics/ui/imgui_window_c.h
+        src/common/logging.cpp
+        src/common/logging.h
+        src/common/logging_c.h
+        src/gs/gs_packet_handler.c
+        src/gs/gs_packet_handler.h)
 
 add_executable(MikuPan ${MIKUPAN_SOURCES})
 

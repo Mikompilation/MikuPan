@@ -4,7 +4,7 @@
 #include "ee/eestruct.h"
 #include "sce/libgraph.h"
 
-void GsUpload(sceGsLoadImage* tex0, unsigned char* image);
+void GsUpload(sceGsLoadImage* image_load, unsigned char* image);
 unsigned char* DownloadGsTexture(sceGsTex0* tex0);
 
 #endif //MIKUPAN_GS_SERVER_C_H

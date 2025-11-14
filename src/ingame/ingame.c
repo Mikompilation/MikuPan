@@ -3,6 +3,7 @@
 #include "enums.h"
 #include "ingame.h"
 
+#include "common/memory_addresses.h"
 #include "main/glob.h" // *
 #include "mc/mc_main.h"
 #include "ingame/map/furn_ctl.h" //
@@ -41,6 +42,7 @@
 #include "main/gamemain.h"
 #include "map/item_ctl.h"
 #include "map/map_area.h"
+#include "menu/gameover.h"
 #include "menu/ig_spd_menu.h"
 #include "menu/item.h"
 #include "menu/pause.h"
@@ -88,7 +90,7 @@ void InGameCtrl(void)
                     ingame_wrk.mode = INGAME_MODE_MSN_TITLE;
                     if (ingame_wrk.msn_no == 0)
                     {
-                        MoviePlay(0);
+                        MoviePlay(SCENE_NO_0_01_0);
                     }
                     
                     MissionTitleInit(ingame_wrk.msn_no);
@@ -140,13 +142,13 @@ int InGameFirstLoad(void)
         init_load_id = LoadReqLanguage(PL_MTOP_E_PK2, 0x1d10000);
         init_load_id = LoadReqLanguage(N_LOAD_E_PK2, 0x1f1c000);
 #else
-        init_load_id = LoadReq(PL_SMAP_PK2, 0x1e05b00);
-        init_load_id = LoadReq(PL_PLAY_PK2, 0x1e2f700);
-        init_load_id = LoadReq(PL_STTS_PK2, 0x1ce0000);
-        init_load_id = LoadReq(PL_BGBG_PK2, 0x1d05140);
-        init_load_id = LoadReq(PL_PLDT_PK2, 0x1d266c0);
-        init_load_id = LoadReq(PL_MTOP_PK2, 0x1d15600);
-        init_load_id = LoadReq(N_LOAD_PK2, 0x1f1c000);
+        init_load_id = LoadReq(PL_SMAP_PK2, &PL_SMAP_PK2_ADDRESS);
+        init_load_id = LoadReq(PL_PLAY_PK2, &PL_PLAY_PK2_ADDRESS);
+        init_load_id = LoadReq(PL_STTS_PK2, &PL_STTS_PK2_ADDRESS);
+        init_load_id = LoadReq(PL_BGBG_PK2, &PL_BGBG_PK2_ADDRESS);
+        init_load_id = LoadReq(PL_PLDT_PK2, &PL_PLDT_PK2_ADDRESS);
+        init_load_id = LoadReq(PL_MTOP_PK2, &PL_MTOP_PK2_ADDRESS);
+        init_load_id = LoadReq(N_LOAD_PK2, &N_LOAD_PK2_ADDRESS);
 #endif
         sys_wrk.load_mode = INGAME_INIT_WAIT_MENU;
     break;
@@ -158,8 +160,8 @@ int InGameFirstLoad(void)
         sys_wrk.load_mode = INGAME_INIT_LOAD_EFCT;
       
     case INGAME_INIT_LOAD_EFCT:
-        init_load_id = LoadReq(HAND_PK2, 0x1fc8000);
-        init_load_id = LoadReq(EFF001_PK2, 0x1e90000);
+        init_load_id = LoadReq(HAND_PK2, &HAND_PK2_ADDRESS);
+        init_load_id = LoadReq(EFF001_PK2, &EFFECT_ADDRESS);
         sys_wrk.load_mode = INGAME_INIT_WAIT_EFCT;
     break;
       
@@ -167,11 +169,11 @@ int InGameFirstLoad(void)
         if (IsLoadEnd(init_load_id) == 0) {
           return 0;
         }
-        SetETIM2File(0x1e90000);
+        SetETIM2File(EFFECT_ADDRESS);
         sys_wrk.load_mode = INGAME_INIT_LOAD_CAME;
       
     case INGAME_INIT_LOAD_CAME:
-        init_load_id = LoadReq(ENEDMG_PK2, 0x1fa8000);
+        init_load_id = LoadReq(ENEDMG_PK2, &ENEDMG_PK2_ADDRESS);
         sys_wrk.load_mode = INGAME_INIT_WAIT_CAME;
     break;
       
@@ -182,7 +184,7 @@ int InGameFirstLoad(void)
         sys_wrk.load_mode = INGAME_INIT_LOAD_PHOTO;
       
     case INGAME_INIT_LOAD_PHOTO:
-        init_load_id = LoadReq(PHOTO001_PK2, 0x1e85000);
+        init_load_id = LoadReq(PHOTO001_PK2, &PHOTO001_PK2_ADDRESS);
         sys_wrk.load_mode = INGAME_INIT_WAIT_PHOTO;
     break;
       
@@ -197,8 +199,8 @@ int InGameFirstLoad(void)
         init_load_id = LoadReqLanguage(PL_FNDR_E_PK2, 0x1d83000);
         init_load_id = LoadReqLanguage(PL_LIFE_E_PK2, 0x1ded000);
 #else
-        init_load_id = LoadReq(PL_FNDR_PK2, 0x1d88100);
-        init_load_id = LoadReq(PL_LIFE_PK2, 0x1df2100);
+        init_load_id = LoadReq(PL_FNDR_PK2, &PL_FNDR_PK2_ADDRESS);
+        init_load_id = LoadReq(PL_LIFE_PK2, &PL_LIFE_PK2_ADDRESS);
 #endif
         sys_wrk.load_mode = INGAME_INIT_WAIT_FNDR;
     break;
@@ -210,7 +212,7 @@ int InGameFirstLoad(void)
         sys_wrk.load_mode = INGAME_INIT_LOAD_BHSE;
       
     case INGAME_INIT_LOAD_BHSE:
-        init_load_id = SeFileLoadAndSet(SGY000_BD, 1);
+        init_load_id = SeFileLoadAndSet(SGY000_BD, SE_ADDRNO_BTLHIT);
         sys_wrk.load_mode = INGAME_INIT_WAIT_BHSE;
     break;
       

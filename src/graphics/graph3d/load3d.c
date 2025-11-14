@@ -36,14 +36,14 @@ static int room_load_num;
 static int room_req_id;
 
 static ROOM_LOAD_BLOCK backup_block;
-static int room_load_id[32];
+static int64_t room_load_id[32];
 
 static int LoadFDCheck(u_short id, char flg);
 
 u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no, u_char sereq_type)
 {
     ROOM_LOAD_BLOCK *rlb;
-    int next_addr;
+    int64_t next_addr;
     int i;
     int file_no;
     int tmp_load_id;
@@ -60,7 +60,7 @@ u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no,
         addr = (u_int *)(blk_no * 0x2f0000 + 0x14b0000);
     }
 
-    next_addr = (u_int)addr;
+    next_addr = (int64_t)addr;
 
     now_load_block = blk_no;
 

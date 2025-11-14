@@ -11,8 +11,11 @@
 
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sglib.h"
+#include "gs/gs_packet_handler.h"
 #include "gs/gs_server_c.h"
 #include "rendering/sdl_renderer.h"
+
+#include <stdlib.h>
 
 // borrowed and adapted from FF2 symbols
 typedef struct {
@@ -967,7 +970,7 @@ u_int Tim2LoadClut2(TIM2_PICTUREHEADER *ph, u_int cbp, u_int offset)
 
                 FlushCache(WRITEBACK_DCACHE);
 
-                //sceGsExecLoadImage(&li, pClut);
+                sceGsExecLoadImage(&li, pClut);
                 sceGsSyncPath(0, 0);
 
                 if ((ph->ClutType & 0x3F) == TIM2_RGB16)
@@ -1169,7 +1172,7 @@ void Tim2LoadTexture(int psm, u_int tbp, int tbw, int w, int h, u_long128 *pImag
 
         FlushCache(WRITEBACK_DCACHE);
 
-        //sceGsExecLoadImage(&li, p);
+        sceGsExecLoadImage(&li, p);
         sceGsSyncPath(0, 0);
     }
 }
@@ -1348,17 +1351,16 @@ void InitTIM2Files()
     InitTIM2Addr();
 
     /// TODO : CHECK THE ACTUAL PACKET BUFFER SIZE, ALLOCATING 1MB FOR NOW
-    PBUF_ADDRESS = malloc(1024 * 1024);
-
-    pbuf = (Q_WORDDATA *)PBUF_ADDRESS;
+    pbuf = malloc(sizeof(Q_WORDDATA)* 24576*2);
     mpbuf = mpbufw[0];
+
     mes_swap = 0;
     ndpkt = 0;
     ndpri = 0;
     nmdpkt = 0;
     nmdpri = 0;
 
-    SetG2DTopPkt(PBUF_ADDRESS);
+    SetG2DTopPkt(pbuf);
     LoadTIM2File();
 }
 
@@ -1383,13 +1385,7 @@ static void FlushTextureCache()
 {
     Q_WORDDATA pflsh[8];
 
-    /// pflsh[0].ul128 = (u_long128)0;
-
-    pflsh[0].ul128[0] = 0;
-    pflsh[0].ul128[1] = 0;
-    pflsh[0].ul128[2] = 0;
-    pflsh[0].ul128[3] = 0;
-
+    pflsh[0].ul128 = (u_long128)0;
 
     pflsh[0].ui32[0] = DMAend | 2;
 
@@ -1499,13 +1495,12 @@ void DrawOne2D_P2(Q_WORDDATA *packet_buf)
         packet_buf->ui32[3] = DMAcall | s;
     }
 
-
     DmaVif = sceDmaGetChan(1);
     DmaVif->chcr.TTE = 1;
 
     FlushCache(0);
 
-    sceDmaSend(DmaVif, (void *)((u_int)packet_buf & 0x0fffffff));
+    sceDmaSend(DmaVif, packet_buf);
     sceDmaSync(DmaVif, 0, 0);
     sceGsSyncPath(0, 0);
 }
@@ -1529,8 +1524,9 @@ void DrawAll2D_P2()
             if (pbuf[n].uc8[3] == 0x70) // upper part of 0x70000000 (DMAend) ??
             {
                 pbuf[n].uc8[3] = 0x20; // upper part of 0x20000000 (DMAnext) ??
-                pbuf[n].ui32[1] = (u_int)&pbuf[m] & 0x0fffffff;
-                pbuf[n].ui32[2] = 0;
+                *(uint64_t*)&pbuf[n].ui32[1] = (uint64_t)&pbuf[m];
+                //pbuf[n].ui32[1] = (u_int)&pbuf[m] & 0x0fffffff;
+                //pbuf[n].ui32[2] = 0;
 
                 if (s != 0)
                 {
@@ -1547,8 +1543,9 @@ void DrawAll2D_P2()
         if (pbuf[n].uc8[3] == 0x70) // upper part of 0x70000000 (DMAend) ??
         {
             pbuf[n].uc8[3] = 0x20; // upper part of 0x20000000 (DMAnext) ??
-            pbuf[n].ui32[1] = (u_int)&pbuf[m] & 0x0fffffff;
-            pbuf[n].ui32[2] = 0;
+            *(uint64_t*)&pbuf[n].ui32[1] = (uint64_t)&pbuf[m];
+            //pbuf[n].ui32[1] = (u_int)&pbuf[m] & 0x0fffffff;
+            //pbuf[n].ui32[2] = 0;
 
             if (s != 0)
             {
@@ -1588,8 +1585,9 @@ void* DrawAllMes_P2(int64_t ret_addr)
                 s = mpbuf[n].us16[0];
 
                 mpbuf[n].uc8[3] = 0x20;
-                mpbuf[n].ui32[1] = (u_int)&mpbuf[m] & 0x0fffffff;
-                mpbuf[n].ui32[2] = 0;
+                *(uint64_t*)& mpbuf[n].ui32[1] = (uint64_t)&mpbuf[m];
+                //mpbuf[n].ui32[1] = (u_int)&mpbuf[m] & 0x0fffffff;
+                //mpbuf[n].ui32[2] = 0;
                 mpbuf[n].ui32[3] = s | DMAcall;
         }
 
@@ -1600,7 +1598,8 @@ void* DrawAllMes_P2(int64_t ret_addr)
         if (ret_addr != 0)
         {
             mpbuf[n].uc8[3] = 0x20;
-            mpbuf[n].ui32[1] = ret_addr & 0xfffffff;
+            *(uint64_t*)& mpbuf[n].ui32[1] = (uint64_t)ret_addr;
+            //mpbuf[n].ui32[1] = ret_addr & 0xfffffff;
         }
         else
         {
@@ -1611,7 +1610,7 @@ void* DrawAllMes_P2(int64_t ret_addr)
         mpbuf[n].ui32[3] = s | DMAcall;
         mpbuf[n].ui32[2] = 0;
 
-        ret = (void *)((int64_t)&mpbuf[draw_mpri[0][1]] & 0x0fffffff);
+        ret = (void *)((int64_t)&mpbuf[draw_mpri[0][1]]);
     }
     else
     {
@@ -1712,13 +1711,7 @@ void SetScissor(int pri, int x, int y, int w, int h)
 
     Reserve2DPacket(pri);
 
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
-
+    pbuf[ndpkt].ul128 = (u_long128)0;
     pbuf[ndpkt++].ui32[0] = DMAend | 2;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -1732,12 +1725,7 @@ void ResetScissor(int pri)
 {
     Reserve2DPacket(pri);
 
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt++].ui32[0] = DMAend | 2;
 
@@ -2004,12 +1992,7 @@ void DispSprD(DISP_SPRT *s)
 
     Reserve2DPacket(mpri);
 
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt++].ui32[0] = DMAend | 24;
 
@@ -2076,18 +2059,18 @@ void DispSprD(DISP_SPRT *s)
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_TRUE, mgftg, SCE_GIF_PACKED, 12);
     pbuf[ndpkt++].ul64[1] = 0 \
-        | (long)SCE_GS_UV    << (4 *  0)
-        | (long)SCE_GS_RGBAQ << (4 *  1)
-        | (long)SCE_GS_XYZF2 << (4 *  2)
-        | (long)SCE_GS_UV    << (4 *  3)
-        | (long)SCE_GS_RGBAQ << (4 *  4)
-        | (long)SCE_GS_XYZF2 << (4 *  5)
-        | (long)SCE_GS_UV    << (4 *  6)
-        | (long)SCE_GS_RGBAQ << (4 *  7)
-        | (long)SCE_GS_XYZF2 << (4 *  8)
-        | (long)SCE_GS_UV    << (4 *  9)
-        | (long)SCE_GS_RGBAQ << (4 * 10)
-        | (long)SCE_GS_XYZF2 << (4 * 11);
+        | (long long)SCE_GS_UV    << (4 *  0)
+        | (long long)SCE_GS_RGBAQ << (4 *  1)
+        | (long long)SCE_GS_XYZF2 << (4 *  2)
+        | (long long)SCE_GS_UV    << (4 *  3)
+        | (long long)SCE_GS_RGBAQ << (4 *  4)
+        | (long long)SCE_GS_XYZF2 << (4 *  5)
+        | (long long)SCE_GS_UV    << (4 *  6)
+        | (long long)SCE_GS_RGBAQ << (4 *  7)
+        | (long long)SCE_GS_XYZF2 << (4 *  8)
+        | (long long)SCE_GS_UV    << (4 *  9)
+        | (long long)SCE_GS_RGBAQ << (4 * 10)
+        | (long long)SCE_GS_XYZF2 << (4 * 11);
 
     for (i = 0; i < 4; i++)
     {
@@ -2387,17 +2370,16 @@ void DispSqrD(DISP_SQAR *s)
 
     Reserve2DPacket(mpri);
 
-    //unsigned char* image = DownloadGsTexture(&mtexa, s->, s->h);
-    //SDL_Render2DTexture(s, image);
+    //DISP_SPRT sprite;
+    //sprite.r = mr[i];
+    //sprite.g = mg[i];
+    //sprite.b = mb[i];
+    //sprite.alpha = ma;
+    //sprite.rot = mrot;
+    //unsigned char* image = DownloadGsTexture((sceGsTex0*)&mtexa);
+    //MikuPan_Render2DTexture(&sprite, image);
 
-    return;
-
-    /// pbuf[ndpkt].ul128 = (u_long128)0;
-
-    pbuf[ndpkt].ul128[0] = 0;
-    pbuf[ndpkt].ul128[1] = 0;
-    pbuf[ndpkt].ul128[2] = 0;
-    pbuf[ndpkt].ul128[3] = 0;
+    pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt++].ui32[0] = DMAend | 14;
 
