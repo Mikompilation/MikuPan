@@ -6,7 +6,9 @@ if (NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64 -Wno-implicit-function-declaration -Wno-int-conversion")
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "-static")
+if(WIN32)
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
+endif()
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)

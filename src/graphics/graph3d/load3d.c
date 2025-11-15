@@ -587,7 +587,7 @@ int LoadInitFurnModel(ROOM_LOAD_BLOCK *rlb)
 
         LoadFDCheck(furn_id, 0);
 
-        addr = LoadReqGetAddr(F000_CLOCK_L_SGD + furn_id, (u_int)rlb->load_addr, &load_id);
+        addr = LoadReqGetAddr(F000_CLOCK_L_SGD + furn_id, (u_int)rlb->load_addr, (int64_t *)&load_id);
 
         furn_addr_tbl[furn_id] = rlb->load_addr;
 
@@ -649,7 +649,7 @@ int LoadInitDoorModel(ROOM_LOAD_BLOCK *rlb)
 
         LoadFDCheck(door_id, 1);
 
-        addr = LoadReqGetAddr(D000_GEN1_SGD + door_id, (u_int)rlb->load_addr, &load_id);
+        addr = LoadReqGetAddr(D000_GEN1_SGD + door_id, (u_int)rlb->load_addr, (int64_t *)&load_id);
 
         door_addr_tbl[door_id] = rlb->load_addr;
 
