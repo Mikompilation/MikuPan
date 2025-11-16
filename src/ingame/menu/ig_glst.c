@@ -1,8 +1,20 @@
 #include "common.h"
 #include "ig_glst.h"
+#include <string.h>
+
+GLIST_INDEX glist_index[108];
+static MENU_GLST menu_glist;
 
 void NewgameMenuGlstInit()
-{
+{	
+    u_int i;
+
+    memset(&menu_glist, 0, sizeof(menu_glist));
+    for (i = 0; i < 108; i++)
+    {
+        glist_index[i].new_flg = 1;
+        glist_index[i].disp_flg = 0;
+    }
 }
 
 void StartGlstModeInit()

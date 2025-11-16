@@ -1,8 +1,25 @@
 #include "common.h"
 #include "ig_camra.h"
+#include "main/glob.h"
 
 void CameraCustomNewgameInit()
-{
+{    
+    cam_custom_wrk = (CAM_CUSTOM_WRK){0};
+
+    cam_custom_wrk.set_spe = 0xff;
+    cam_custom_wrk.set_sub = 0xff;
+
+    cam_custom_wrk.func_sub[0] = 1;
+    cam_custom_wrk.func_sub[1] = 1;
+    cam_custom_wrk.func_sub[2] = 1;    
+    cam_custom_wrk.func_sub[3] = 1;
+    cam_custom_wrk.func_sub[4] = 1;
+
+    cam_custom_wrk.func_spe[0] = 0;
+    cam_custom_wrk.func_spe[1] = 0;
+    cam_custom_wrk.func_spe[2] = 0;
+    cam_custom_wrk.func_spe[3] = 0;    
+    cam_custom_wrk.func_spe[4] = 0;
 }
 
 void CameraCustomInit()

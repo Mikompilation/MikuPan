@@ -15,6 +15,14 @@ void BattleModeInit()
 
 void ClearStageWrk()
 {
+    int i;
+
+    memset(&stage_wrk, 0, sizeof(stage_wrk));
+
+    for (i = 0; i <= 19; i++)
+    {
+        stage_wrk[i].best_time = 0x8c64;
+    }
 }
 
 void BattleModeMain()

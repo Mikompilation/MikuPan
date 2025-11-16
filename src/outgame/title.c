@@ -980,8 +980,8 @@ void TitleWaitMode()
 }
 
 void TitleStartSlct()
-{
-        char *str_o = "o";
+{    
+    char *str_o = "o";
 	/* s0 16 */ char *str1 = "ZERO HOUR";
 	/* s1 17 */ char *str2 = "NEW GAME";
 	/* s2 18 */ char *str3 = "LOAD GAME";
@@ -1037,7 +1037,7 @@ void TitleStartSlct()
         {
             NewGameInit();
 
-            title_wrk.mode = 9;
+            title_wrk.mode = TITLE_MODE_SEL;
             title_wrk.csr = 0;
         }
 

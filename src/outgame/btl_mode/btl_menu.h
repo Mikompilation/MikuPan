@@ -2,6 +2,7 @@
 #define OUTGAME_BTL_MODE_BTL_MENU_H
 
 #include "typedefs.h"
+#include "btl_mode.h"
 
 // extern MSN_LOAD_DAT stage_load_dat0[0];
 // extern MSN_LOAD_DAT stage_load_dat1[0];

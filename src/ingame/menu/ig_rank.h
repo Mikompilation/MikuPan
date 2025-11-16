@@ -19,8 +19,16 @@ typedef struct {
 	u_short pic_num;
 	u_short best_score;
 } SAVE_RANK;
+ 
+typedef struct { // 0x5
+  /* 0x0 */ u_char mode;
+  /* 0x1 */ u_char csr_bak;
+  /* 0x2 */ u_char star;
+  /* 0x3 */ u_char cnt;
+  /* 0x4 */ char exist_s_rank;
+} MENU_RANK;
 
-// extern SAVE_RANK save_rank;
+extern SAVE_RANK save_rank;
 
 void NewgameMenuRankInit();
 void LoadgameMenuRankInit();
