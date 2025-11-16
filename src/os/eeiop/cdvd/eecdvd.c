@@ -251,14 +251,6 @@ static int GetFreeId()
 unsigned char* LoadImgHdFile();
 IMG_ARRANGEMENT *GetImgArrangementP(int file_no)
 {
-    /// Done~!
-    /// TODO: 0x12f0000 is the DVD address for IMG_HD.BIN, needs to have loaded before access
-    /// We cannot directly access the file on PC, need to load it first
-    if (ImgHdAddress == NULL)
-    {
-        ImgHdAddress = LoadImgHdFile();
-    }
-
     return &((IMG_ARRANGEMENT*)ImgHdAddress)[file_no];
 }
 

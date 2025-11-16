@@ -2,8 +2,11 @@
 #include <stdio.h>
 
 #include "enums.h"
-#include "common/logging_c.h"
 #include "os/eeiop/eeiop.h"
+#include "iop/iopsys.h"
+
+#include <stdlib.h>
+#include <string.h>
 
 void sceSifInitRpc(unsigned int mode)
 {
@@ -43,33 +46,9 @@ void ReadFileInArchive(int sector, int size, int64_t address);
 int sceSifCallRpc(sceSifClientData* client, unsigned int rpc_number, unsigned int mode, void* send, int ssize,
                   void* receive, int rsize, sceSifEndFunc end_function, void* end_param)
 {
-    if (rpc_number == 1 && mode == 1)
-    {
-        IOP_COMMAND* send_cmd = (IOP_COMMAND*)send;
-        int total_cmd = rsize / sizeof(IOP_COMMAND);
-
-        for (int i = 0; i < total_cmd; i++)
-        {
-            info_log("IOP server received command number: %d", send_cmd[i].cmd_no);
-
-            switch (send_cmd[i].cmd_no)
-            {
-            default: info_log("Error: Command %d not yet implemented!", send_cmd[i].cmd_no); break;
-            case IC_CDVD_INIT:  break;
-            case IC_CDVD_LOAD_SECT:
-                    /// Indicates file load
-                    if (send_cmd[i].data5 == 0)
-                    {
-                        ReadFileInArchive(send_cmd[i].data2, send_cmd[i].data3, send_cmd[i].data4);
-                    }
-                    /// TODO : Implement SoundEffect Loading
-                    /// Sound Effect load request
-                    else if (send_cmd[i].data5 == 2)
-                    {}
-
-                    break;
-            }
-        }
+    if (client == &ei_sys.gcd) {
+        void *ret = IopDrvFunc(rpc_number, send, ssize);
+        memcpy(receive, ret, rsize);
     }
 
     return 1;
