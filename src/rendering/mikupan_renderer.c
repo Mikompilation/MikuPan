@@ -55,30 +55,20 @@ void MikuPan_UpdateWindowSize(int width, int height)
     window_height = height;
 }
 
-void MikuPan_Render2DTexture(DISP_SPRT* sprite, unsigned char* image)
+void MikuPan_Render2DTexture(DISP_SPRT* sprite)
 {
-    sceGsTex0 tex0 = *(sceGsTex0*)&sprite->tex0;
-    int texture_width = 1<<tex0.TW;
-    int texture_height = 1<<tex0.TH;
-
     if (!IsFirstUploadDone())
     {
         return;
     }
 
+    sceGsTex0 tex0 = *(sceGsTex0*)&sprite->tex0;
+
     SDL_Texture* texture = (SDL_Texture*)GetSDLTexture(&tex0);
 
     if (texture == NULL)
     {
-        SDL_Surface *surface = SDL_CreateSurfaceFrom(
-        texture_width, texture_height,
-        SDL_PIXELFORMAT_ABGR8888, image,
-        texture_width * 4);
-
-        texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_DestroySurface(surface);
-
-        AddSDLTexture(&tex0, (void*)texture);
+        texture = MikuPan_CreateTexture(&tex0);
     }
 
     SDL_FRect dst_rect;
@@ -148,7 +138,12 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r, u_char
 {
     SDL_SetRenderDrawColor(renderer, r, g, b, 255.0f * a / 128.0f);
 
-    SDL_RenderLine(renderer, 300.0f+x1, 200.0f+y1, 300.0f+x2, 200.0f+y2);
+    float dst_x1 = (float)window_width *  (300.0f+x1) / PS2_RESOLUTION_X_FLOAT;
+    float dst_y1 = (float)window_height * (200.0f+y1) / PS2_RESOLUTION_Y_FLOAT;
+    float dst_x2 = (float)window_width *  (300.0f+x2) / PS2_RESOLUTION_X_FLOAT;
+    float dst_y2 = (float)window_height * (200.0f+y2) / PS2_RESOLUTION_Y_FLOAT;
+
+    SDL_RenderLine(renderer, dst_x1, dst_y1, dst_x2, dst_y2);
 }
 
 void MikuPan_SetupFntTexture()

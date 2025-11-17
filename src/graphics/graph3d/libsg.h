@@ -1,11 +1,15 @@
 #ifndef GRAPHICS_GRAPH3D_LIBSG_H
 #define GRAPHICS_GRAPH3D_LIBSG_H
 
+#include "common.h"
 #include "typedefs.h"
-
+#include "common/logging_c.h"
 #include "graphics/graph3d/sglib.h"
-
 #include <stdlib.h>
+
+extern u32 g_vu0_r;
+
+u32 rnext(void);
 
 // line 26
 static inline void load_matrix_0(sceVu0FMATRIX m0)
@@ -47,19 +51,16 @@ static inline void copy_skinned_data(sceVu0FVECTOR *vb, float *s0, float *s1)
 }
 
 // Line 151
-static inline float vu0Rand()
+static inline float vu0Rand(void)
 {
-    float r = (float)rand() / (float)64000;
+#ifdef WIN32
+    float r = (float)rand() / ((float) RAND_MAX * 2);
+#else
+    u_int rnd = rnext();
+    float r = (*(float *) &rnd) - 1.0f;
+#endif
 
-    /*
-    asm volatile("                      \n\
-        vrnext.x    $vf12, R            \n\
-        vsubw.x     $vf12, $vf12, $vf0w \n\
-        qmfc2       %0,    $vf12        \n\
-        ":"=r"(r)
-    );
-    */
-
+    info_log("Random value: %f", r);
     return r;
 }
 

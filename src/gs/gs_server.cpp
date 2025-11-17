@@ -187,7 +187,7 @@ void GS::GSHelper::Clear() {
 
 void GsUpload(sceGsLoadImage* image_load, unsigned char* image)
 {
-    spdlog::info("GS upload request for DBP {:#x} DPSM {} ", (unsigned long long)image_load->bitbltbuf.DBP, (unsigned long long)image_load->bitbltbuf.DPSM);
+    spdlog::debug("GS upload request for DBP {:#x} DPSM {} ", (unsigned long long)image_load->bitbltbuf.DBP, (unsigned long long)image_load->bitbltbuf.DPSM);
 
     FirstUploadDone();
 
@@ -222,7 +222,7 @@ void GsUpload(sceGsLoadImage* image_load, unsigned char* image)
                              image);
             break;
         }
-        default: spdlog::info("Texture Transfer Upload Info: DPSM {:#x}", (int)image_load->bitbltbuf.DPSM); break;
+        default: spdlog::debug("Texture Transfer Upload Info: DPSM {:#x}", (int)image_load->bitbltbuf.DPSM); break;
     }
 }
 
@@ -237,7 +237,7 @@ unsigned char* DownloadGsTexture(sceGsTex0* tex0)
     int width = (1<<tex0->TW);
     int height = (1<<tex0->TH);
 
-    //spdlog::info("GS download request for DBP {:#x} CBP {:#x} DPSM {} ", (unsigned long long)tex0->TBP0, (unsigned long long)tex0->CBP, (unsigned long long)tex0->PSM);
+    spdlog::debug("GS download request for DBP {:#x} CBP {:#x} DPSM {} ", (unsigned long long)tex0->TBP0, (unsigned long long)tex0->CBP, (unsigned long long)tex0->PSM);
 
     auto texture = GetTexture(tex0);
     if (texture != nullptr)
@@ -272,7 +272,7 @@ unsigned char* DownloadGsTexture(sceGsTex0* tex0)
               -1
               );
             break;
-        default: spdlog::info("Texture Transfer Upload Failed, Unsupported Format: DPSM {:#x}", (int)tex0->PSM); break;
+        default: spdlog::debug("Texture Transfer Upload Failed, Unsupported Format: DPSM {:#x}", (int)tex0->PSM); break;
     }
 
     /// TODO: Move code somewhere prettier

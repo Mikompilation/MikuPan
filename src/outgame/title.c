@@ -32,6 +32,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* sdata 3576a0 */ int opening_movie_type;
@@ -1757,8 +1758,7 @@ void MakeOutDither()
     /* bss 402d80 */ /*static*/ sceGsLoadImage gs_limage1;
     /* bss 402de0 */ /*static*/ sceGsLoadImage gs_limage2;
 
-#define RAND_MAX 2147483647
-    SetVURand(rand() / (float)RAND_MAX);
+    SetVURand((float)rand() / (float)RAND_MAX);
 
     for (i = 0; i < 0x4000; i++)
     {

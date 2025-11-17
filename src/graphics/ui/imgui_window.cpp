@@ -8,6 +8,7 @@
 
 extern "C"
 {
+#include "os/pad.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/message.h"
 }
@@ -124,11 +125,13 @@ private:
     double sum_ms_ = 0.0; // reserved for future use
 };
 
-FrameTimeGraph g_frame_graph(600); // keep last 240 frames (~4s at 60fps)
+FrameTimeGraph g_frame_graph(600);
 
 bool show_fps = true;
 bool show_menu_bar = false;
 bool show_frame_time_graph = false;
+bool controller_config = false;
+bool controller_rumble_test = false;
 
 void InitImGuiWindow(SDL_Window *window, SDL_Renderer *renderer)
 {
@@ -167,8 +170,6 @@ void DrawImGuiWindow()
     }
 
     g_frame_graph.update(1000.0f / ImGui::GetIO().Framerate);
-    //ImGui::ShowDebugLogWindow();
-    //ImGui::ShowMetricsWindow();
 
     if (show_menu_bar && ImGui::BeginMainMenuBar())
     {
@@ -179,9 +180,22 @@ void DrawImGuiWindow()
             ImGui::Toggle("Ingame Debug Menu", (bool*)&dbg_wrk.mode_on, ImGuiToggleFlags_Animated);
             ImGui::Toggle("Performance Info", (bool*)&dbg_wrk.oth_perf, ImGuiToggleFlags_Animated);
             ImGui::Toggle("Packet Count", (bool*)&dbg_wrk.oth_pkt_num_sw, ImGuiToggleFlags_Animated);
+            ImGui::Toggle("Controller Config", &controller_config, ImGuiToggleFlags_Animated);
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
+    }
+
+    if (controller_config)
+    {
+        ImGui::Begin("Controller");
+        ImGui::Toggle("Rumble", &controller_rumble_test, ImGuiToggleFlags_Animated);
+        ImGui::End();
+    }
+
+    if (controller_rumble_test)
+    {
+        //VibrateRequest2(0x80, 0x80);
     }
 
     if (dbg_wrk.mode_on == 1)

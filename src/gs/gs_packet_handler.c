@@ -26,6 +26,11 @@ void ReadPacket(Q_WORDDATA *packet)
 {
     //printf("packet of type type %#x\n", packet->ui32[2]);
 
+    if (packet == NULL)
+    {
+        return;
+    }
+
     if (packet->uc8[3] == u8DMAend)
     {
         return;
@@ -35,12 +40,11 @@ void ReadPacket(Q_WORDDATA *packet)
     {
         info_log("Found packet chain!");
 
-        Q_WORDDATA *packet_chain = (Q_WORDDATA*)*(int64_t*)&(((int*)&packet->ui32[1])[0]);
-
-        if (packet->ui32[2] == VU0_ADDRESS || packet->ui32[2] == VU0_ADDRESS || packet_chain == NULL)
-        {
-            return;
-        }
+        //Q_WORDDATA *packet_chain = (Q_WORDDATA*)*(int64_t*)&(((int*)&packet->ui32[1])[0]);
+        //if (packet->ui32[2] == VU0_ADDRESS || packet->ui32[2] == VU0_ADDRESS || packet_chain == NULL)
+        //{
+        //    return;
+        //}
 
         /// Until I understand better, not worth the risk
         //ReadAllPackets(packet_chain);

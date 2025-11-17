@@ -194,11 +194,13 @@ char *mpegName[] = {
     "cdrom0:\\MOVIE\\SCN9200.PSS;1",
 };
 #endif
+
 u_char mpeg_vol_rate[] = {
     95,  90,  75,  90,  100, 100, 100, 90,  100, 100, 90, 100, 100, 100,
     100, 100, 100, 100, 100, 100, 100, 100, 100, 90,  90, 90,  100, 80,
     100, 100, 100, 100, 100, 100, 100, 100, 85,  90,  85, 70
 };
+
 VoBuf voBuf = {0};
 StrFile infile = {0};
 VideoDec videoDec = {0};
@@ -207,7 +209,9 @@ sceGsDBuff db = {0};
 
 static VoData *voBufData = (VoData *)0x00470100;
 static VoTag *voBufTag = (VoTag *)0x006d8100;
-ReadBuf *readBuf = (ReadBuf *)0x00420000;
+
+/// 0x00420000
+ReadBuf *readBuf = NULL;
 static u_char *audioBuff = (u_char *)0x006c8100;
 static char *videoDecStack = (u_char *)0x006d4100;
 u_int scene_bg_color = 0;
@@ -573,11 +577,11 @@ void initMov(char *bsfilename)
     sceSdRemote(1, rSdInit, SD_INIT_COLD);
 
     audioDecCreate(&audioDec, audioBuff, 0xc000, IOP_BUFF_SIZE);
-    videoDecSetStream(&videoDec, 0, 0, (sceMpegCallback)videoCallback, readBuf);
+    videoDecSetStream(&videoDec, sceMpegStrM2V, 0, (sceMpegCallback)videoCallback, readBuf);
 
     if (isWithAudio != 0)
     {
-        videoDecSetStream(&videoDec, 2, 0, (sceMpegCallback)pcmCallback, readBuf);
+        videoDecSetStream(&videoDec, sceMpegStrPCM, 0, (sceMpegCallback)pcmCallback, readBuf);
     }
 
     voBufCreate(&voBuf, UncAddr(voBufData), voBufTag, N_GSBUF);
@@ -668,12 +672,12 @@ int MoviePlay(int scene_no)
 
     while (checkIOP() != 0)
     {
-        //vfunc();
+        vfunc();
     }
 
     AdpcmShiftMovie();
     SeStopAll();
-    //vfunc();
+    vfunc();
 
     do
     {
@@ -1454,6 +1458,8 @@ void clearGsMem(int r, int g, int b, int disp_width, int disp_height)
     sceGifPkTerminate(&packet);
 
     FlushCache(0);
+    /// TODO : FIGURE OUT WHY THIS PACKET IS NORMALLY NOT NULL
+    packet.pBase = NULL;
 
     sceGsSyncPath(0, 0);
     sceDmaSend(dmaGif, packet.pBase);
@@ -1782,6 +1788,11 @@ static int copy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0, int 
 
 void readBufCreate(ReadBuf *b)
 {
+    if (b == NULL)
+    {
+        b = (ReadBuf*)malloc(sizeof(ReadBuf));
+    }
+
     b->put = b->count = 0;
     b->size = READBUF_BUFF_SIZE;
 }

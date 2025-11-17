@@ -2026,8 +2026,6 @@ void DispSprD(DISP_SPRT *s)
     pbuf[ndpkt].ul64[0] = 0;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEXFLUSH;
 
-    u_char* image;
-
     sceGsTex0 tex0;
     tex0 = *(sceGsTex0 *)&mtex0;
 
@@ -2039,8 +2037,6 @@ void DispSprD(DISP_SPRT *s)
         pbuf[ndpkt].ul64[0] = *(u_long *)&tex0;
         pbuf[ndpkt++].ul64[1] = SCE_GS_TEX0_1;
 
-        image = DownloadGsTexture(&tex0);
-
         tex0 = *(sceGsTex0 *)&mtex0;
         tex0.CSA = 0;
         tex0.CLD = 0;
@@ -2049,8 +2045,6 @@ void DispSprD(DISP_SPRT *s)
     }
     else
     {
-        image = DownloadGsTexture(&tex0);
-
         pbuf[ndpkt].ul64[0] = mtex0;
         pbuf[ndpkt++].ul64[1] = SCE_GS_TEX0_1;
 
@@ -2058,7 +2052,7 @@ void DispSprD(DISP_SPRT *s)
         pbuf[ndpkt++].ul64[1] = SCE_GS_NOP;
     }
 
-    MikuPan_Render2DTexture(s, image);
+    MikuPan_Render2DTexture(s);
 
     pbuf[ndpkt].ul64[0] = mtex1;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEX1_1;

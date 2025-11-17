@@ -221,6 +221,7 @@ set(MIKUPAN_SOURCES "src/common/file_loading.cpp"
         extern/imgui_toggle/imgui_toggle_palette.cpp
         extern/imgui_toggle/imgui_toggle_presets.cpp
         extern/imgui_toggle/imgui_toggle_renderer.cpp
+        src/graphics/graph3d/libsg.c
 )
 
 add_executable(MikuPan ${MIKUPAN_SOURCES})

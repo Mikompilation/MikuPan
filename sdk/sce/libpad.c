@@ -1,9 +1,6 @@
 #include "libpad.h"
-
 #include "os/pad.h"
-
 #include <SDL3/SDL_gamepad.h>
-
 #include <stddef.h>
 
 SDL_Gamepad *gamepad = NULL;
@@ -30,6 +27,8 @@ int scePadPortOpen(int port, int slot, void* addr)
     }
 
     gamepad = SDL_OpenGamepad(joysticks_id[0]);
+
+    SDL_free(joysticks_id);
     return 1;
 }
 
@@ -50,6 +49,10 @@ int scePadGetState(int port, int slot)
 
 int scePadRead(int port, int slot, unsigned char* rdata)
 {
+    if (gamepad == NULL)
+    {
+        return 0;
+    }
     for (int i = 1; i < 32; i++)
     {
         rdata[i] = 0xFF;
@@ -107,8 +110,17 @@ int scePadInfoPressMode(int port, int slot)
 
 int scePadEnterPressMode(int port, int slot)
 {
+    return 1;
 }
 
 int scePadSetActDirect(int port, int slot, const unsigned char* data)
 {
+    if (gamepad == NULL)
+    {
+        return 0;
+    }
+
+    SDL_RumbleGamepad(gamepad, 0xFFFF, 0xFFFF, 1000);
+
+    return 1;
 }

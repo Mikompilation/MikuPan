@@ -100,6 +100,11 @@ static int init_pdef2;
 
 static EFF_PARTSBLUR eff_partsblur;
 
+void SetVURand(float x)
+{
+    g_vu0_r = 0x3f800000 | (*(u32*)&x & 0x7fffff);
+}
+
 void InitEffectObj()
 {
     int i;
@@ -351,15 +356,6 @@ void SetPartsDeform(EFFECT_CONT *ec)
     {
         ResetEffects(ec);
     }
-}
-
-void SetVURand(float x)
-{
-    //asm __volatile__(
-    //    "qmtc2    $2,$vf12\n"
-    //    "vrinit    R,$vf12x\n"
-    //    : :"r"(x):"memory"
-    //);
 }
 
 int CalcPartsDeformXYZ(sceVu0IVECTOR vi, sceVu0FVECTOR vf)

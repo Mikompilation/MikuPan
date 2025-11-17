@@ -1526,23 +1526,20 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
         Change.CLD = 0;
     }
 
-    unsigned char* img = DownloadGsTexture(&sd->g_GsTex0);
-
     DISP_SPRT s;
     s.tex0 = *(u_long*)&sd->g_GsTex0;
     s.r = sd->r;
     s.g = sd->g;
     s.b = sd->b;
     s.alpha = sd->alpha;
-
     s.x = mx + 320;
     s.y = my + 224;
-    s.u = 0;
-    s.v = 0;
+    s.u = tw[0];
+    s.v = th[0];
     s.w = sd->size_w;
     s.h = sd->size_h;
 
-    MikuPan_Render2DTexture(&s, img);
+    MikuPan_Render2DTexture(&s);
 
     Reserve2DPacket(pri);
     

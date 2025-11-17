@@ -2,6 +2,9 @@
 #define GRAPHICS_GRAPH2D_EFFECT_OBJ_H
 
 #include "typedefs.h"
+#include "common/logging_c.h"
+
+#include <stdlib.h>
 
 typedef struct {
 	float r;
