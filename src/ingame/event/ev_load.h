@@ -2,6 +2,7 @@
 #define INGAME_EVENT_EV_LOAD_H
 
 #include "typedefs.h"
+#include "graphics/graph2d/sprt.h"
 
 typedef struct {
 	u_short file_no;
@@ -9,6 +10,29 @@ typedef struct {
 	u_char tmp_no;
 	u_int addr;
 } MSN_LOAD_DAT;
+
+typedef struct { // 0x8
+	/* 0x0 */ u_char mode;
+	/* 0x1 */ u_char load_mode;
+	/* 0x2 */ u_char load_count;
+	/* 0x3 */ u_char time;
+	/* 0x4 */ int load_id;
+} MSN_TITLE_WRK;
+
+typedef struct { // 0x8
+  /* 0x0 */ u_char mode;
+  /* 0x1 */ u_char count;
+  /* 0x4 */ int load_id;
+} EVENT_LOAD_WRK;
+
+enum {
+	MSN_TITLE_MODE_READY = 0,
+	MSN_TITLE_MODE_IN = 1,
+	MSN_TITLE_MODE_LOAD = 2,
+	MSN_TITLE_MODE_OUT = 3,
+	MSN_TITLE_MODE_END_PRE = 4,
+	MSN_TITLE_MODE_END = 5
+};
 
 // extern MSN_LOAD_DAT msn0_title_load_dat[0];
 // extern MSN_LOAD_DAT scn0022_load[0];
@@ -132,11 +156,11 @@ typedef struct {
 // extern MSN_LOAD_DAT scn4070_load[0];
 // extern u_short scn4070_del_dat[0];
 // extern SCN_LOAD_DAT scn_load4[0];
-// extern MSN_LOAD_DAT *msn_title_load_dat[0];
+extern MSN_LOAD_DAT *msn_title_load_dat[];
 // extern u_char msn_start_floor[0];
-// extern u_char msn_start_room[0];
+extern u_char msn_start_room[];
 // extern SCN_LOAD_DAT *scn_load[0];
-// extern SPRT_SDAT msn_title_sp_bak[0];
+extern SPRT_SDAT msn_title_sp_bak[];
 // extern SPRT_SDAT msn_title00_sp_flr[0];
 // extern SPRT_SDAT msn_title00_sp_ttl[0];
 // extern SPRT_SDAT msn_title01_sp_flr[0];
@@ -147,18 +171,18 @@ typedef struct {
 // extern SPRT_SDAT msn_title03_sp_ttl[0];
 // extern SPRT_SDAT msn_title04_sp_flr[0];
 // extern SPRT_SDAT msn_title04_sp_ttl[0];
-// extern u_char msn_title_sp_flr_no[0];
-// extern u_char msn_title_flr_sp_num[0];
-// extern u_char msn_title_sp_ttl_no[0];
-// extern u_char msn_title_ttl_sp_num[0];
-// extern SPRT_SDAT *msn_title_sp_flr[0];
-// extern SPRT_SDAT *msn_title_sp_ttl[0];
+extern u_char msn_title_sp_flr_no[];
+extern u_char msn_title_flr_sp_num[];
+extern u_char msn_title_sp_ttl_no[];
+extern u_char msn_title_ttl_sp_num[];
+extern SPRT_SDAT *msn_title_sp_flr[];
+extern SPRT_SDAT *msn_title_sp_ttl[];
 // extern SPRT_SDAT stg_title_sp_bak[0];
 // extern SPRT_SDAT stg_title_sp_flr[0];
 // extern SPRT_SDAT stg_title_sp_ttl[0];
 extern MSN_LOAD_DAT load_dat_wrk[40];
-// extern MSN_TITLE_WRK mttl_wrk;
-// extern EVENT_LOAD_WRK ev_load_wrk;
+extern MSN_TITLE_WRK mttl_wrk;
+extern EVENT_LOAD_WRK ev_load_wrk;
 
 void MissionTitleInit(int msn_no);
 int MissionTitleMain(int msn_no);

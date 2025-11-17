@@ -1,5 +1,7 @@
 #include "common.h"
 #include "ev_spcl.h"
+#include "typedefs.h"
+
 
 void SpecialEventInit(u_char spev_no)
 {
@@ -15,10 +17,92 @@ int GetSpecialEventMessageAddr(short int msg_no)
 
 void SimpleDispSprt(SPRT_SDAT* ssd, u_int addr, int sp_no, SPRT_SROT* srot, SPRT_SSCL* sscl, u_char alp_rate)
 {
+    /* 0x0(sp) */ DISP_SPRT ds;
+	/* 0x90(sp) */ SPRT_DAT sd;
+
+    sd.tex0 = GetTex0Reg(addr, sp_no, 0);
+    
+    sd.u = ssd->u;
+    sd.v = ssd->v;
+    
+    sd.w = ssd->w;
+    sd.h = ssd->h;
+    
+    sd.x = ssd->x;
+    sd.y = ssd->y;
+    
+    sd.pri = ssd->pri << 12;
+    
+    if (alp_rate == 0xFF) 
+    {
+        ds.alphar = 72;
+    }
+    else 
+    {
+        sd.alpha = (ssd->alp * alp_rate) / 100;
+    }
+    
+    CopySprDToSpr(&ds, &sd);
+    
+    if (srot != NULL)
+    {
+        if (srot->cx != 0x7FFF)
+        {
+            ds.rot = srot->rot;
+            
+            ds.crx = srot->cx;
+            ds.cry = srot->cy;
+        }
+        else 
+        {
+            ds.att |= srot->cy;
+        }
+    }
+    
+    if (sscl != NULL) 
+    {
+        ds.scw = sscl->sw / 100.0f;
+        ds.sch = sscl->sh / 100.0f;
+        
+        ds.csx = sscl->cx;
+        ds.csy = sscl->cy;
+    }
+    
+    DispSprD(&ds);
 }
 
-void SimpleDispAlphaSprt(u_int addr, int sp_no, u_char alp_rate, u_char alp_type)
+void SimpleDispAlphaSprt(SPRT_SDAT *ssd, int64_t addr, int sp_no, u_char alp_rate, u_char alp_type)
 {
+    /* 0x0(sp) */ DISP_SPRT ds;
+	/* 0x90(sp) */ SPRT_DAT sd;
+
+    sd.tex0 = GetTex0Reg(addr, sp_no, 0);
+    
+    sd.u = ssd->u;
+    sd.v = ssd->v;
+    
+    sd.w = ssd->w;
+    sd.h = ssd->h;
+    
+    sd.x = ssd->x;
+    sd.y = ssd->y;
+    
+    sd.pri = ssd->pri << 12;
+    
+    if (alp_type != 0) 
+    {
+        ds.alphar = 72;
+    }
+    else 
+    {
+        ds.alphar = 68;
+    }
+    
+    sd.alpha = (ssd->alp * alp_rate) / 100;
+    
+    CopySprDToSpr(&ds, &sd);
+    
+    DispSprD(&ds);
 }
 
 void SimpleDispSprtRGB(u_int addr, int sp_no, u_char alp_rate, u_char rr, u_char gg, int bb)

@@ -88,6 +88,12 @@ extern void* TEST_ROOM_CHECK_ADDRESS;
 /// 0x14b0000
 extern void* MPEG_WORK_ADDRESS;
 
+/// 0x1e90000
+extern void* MISSION_TITLE_CARD_ADDRESS;
+
+/// 0x1e90000
+extern void* MTTL_WRK_LOAD_ID_ADDR;
+
 #define VNBufferAddress     0x00420000
 #define CachedBuffer        0x20000000
 #define UnCachedBuffer      0x30000000
