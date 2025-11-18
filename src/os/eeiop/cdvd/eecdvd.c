@@ -7,6 +7,7 @@
 #include "enums.h"
 #include "common/memory_addresses.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 typedef struct {
@@ -68,6 +69,8 @@ int LoadReq(int file_no, uint64_t addr)
 {
     IMG_ARRANGEMENT *img_arng;
     
+    printf("File No: %d \n", file_no);
+   
     img_arng = GetImgArrangementP(file_no);
 
     return LoadReqNSector(file_no, img_arng->start, img_arng->size, addr);
@@ -78,6 +81,7 @@ int64_t LoadReqGetAddr(int file_no, uint64_t addr, int64_t *id)
     IMG_ARRANGEMENT *img_arng;
     int64_t ret;
     
+
     img_arng = GetImgArrangementP(file_no);
     *id = LoadReqNSector(file_no, img_arng->start, img_arng->size, &addr);
     ret = addr + img_arng->size;

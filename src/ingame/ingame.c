@@ -90,7 +90,7 @@ void InGameCtrl(void)
                     ingame_wrk.mode = INGAME_MODE_MSN_TITLE;
                     if (ingame_wrk.msn_no == 0)
                     {
-                        MoviePlay(SCENE_NO_0_01_0);
+                        //MoviePlay(SCENE_NO_0_01_0);
                     }
                     
                     MissionTitleInit(ingame_wrk.msn_no);

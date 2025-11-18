@@ -30,7 +30,7 @@ sceDmaChan* sceDmaGetChan(int id)
 
 void sceDmaSend(sceDmaChan* d, void* tag)
 {
-    ReadPacket((Q_WORDDATA*)tag);
+    //ReadPacket((Q_WORDDATA*)tag);
 }
 
 int sceDmaSync(sceDmaChan* d, int mode, int timeout)
