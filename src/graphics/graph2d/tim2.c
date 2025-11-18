@@ -2393,14 +2393,18 @@ void DispSqrD(DISP_SQAR *s)
 
     Reserve2DPacket(mpri);
 
-    //DISP_SPRT sprite;
-    //sprite.r = mr[i];
-    //sprite.g = mg[i];
-    //sprite.b = mb[i];
-    //sprite.alpha = ma;
-    //sprite.rot = mrot;
-    //unsigned char* image = DownloadGsTexture((sceGsTex0*)&mtexa);
-    //MikuPan_Render2DTexture(&sprite, image);
+    DISP_SPRT sprite;
+    sprite.r = mr[i];
+    sprite.g = mg[i];
+    sprite.b = mb[i];
+    sprite.alpha = ma;
+    sprite.rot = mrot;
+    sprite.tex0 = mtexa;
+    sprite.u = s->crx;
+    sprite.v = s->cry;
+    sprite.w = s->csx;
+    sprite.h = s->csy;
+    MikuPan_Render2DTexture(&sprite);
 
     pbuf[ndpkt].ul128 = (u_long128)0;
 

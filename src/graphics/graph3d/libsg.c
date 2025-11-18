@@ -9,7 +9,7 @@ u32 rnext(void)
     s32 y = (r>>22)&1;
     r <<= 1;
     r ^= (x^y);
-    r &=  0x3f800000|(r&0x7fffff); /*23bit*/
+    r =  0x3f800000|(r&0x7fffff); /*23bit*/
     g_vu0_r = r;
     return r;
 }

@@ -1,6 +1,7 @@
 #include "common.h"
 #include "ig_menu.h"
 
+#include <common/memory_addresses.h>
 #include <stdint.h>
 
 /* data 33d8c8 */ STR_DAT ig_menu_str;
@@ -31,10 +32,18 @@ void IngameMenuModeSlct()
 
 int Get4Byte(u_char* addr)
 {
+    return ((u_int)addr[3] << 24) + ((u_int)addr[2] << 16) + ((u_int)addr[1] << 8) + (u_int)*addr;
 }
 
 uint64_t GetIngameMSGAddr(u_char type, int msg_no)
 {
+    int64_t addr;
+
+    addr = ((u_char*)IG_MSG_OBJ_ADDRESS) + type * 4;
+    addr = ((u_char*)IG_MSG_OBJ_ADDRESS) + Get4Byte((u_char *)addr) + msg_no * 4;
+    addr = Get4Byte((u_char *)addr);
+
+    return ((u_char*)IG_MSG_OBJ_ADDRESS) + addr;
 }
 
 void IngameMenuModeSlctDispInit()

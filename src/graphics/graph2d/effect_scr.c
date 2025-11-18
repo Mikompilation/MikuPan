@@ -19,18 +19,20 @@
 #include "sce/libgraph.h"
 #include "sce/libvu0.h"
 
-#include "main/glob.h"
+#include "graphics/graph2d/effect.h"
+#include "graphics/graph2d/effect_obj.h"
+#include "graphics/graph2d/effect_sub.h"
+#include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/sprt.h"
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
-#include "graphics/graph2d/effect.h"
-#include "graphics/graph2d/g2d_debug.h"
-#include "graphics/graph2d/effect_sub.h"
-#include "graphics/graph2d/effect_obj.h"
-#include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/libsg.h"
+#include "graphics/graph3d/sglib.h"
+#include "main/glob.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
+
+#include <common/memory_addresses.h>
 
 typedef struct { // 0x28
 	/* 0x00 */ u_int flow;
@@ -4182,7 +4184,7 @@ int SetGameOver()
         
         if (cnt >= sec5)
         {
-            cnt = LoadReq(G_OVER_PK2, 0x1e90000);
+            cnt = LoadReq(G_OVER_PK2, &MISSION_TITLE_CARD_ADDRESS);
             gameover_flow = 2;
         }
     break;

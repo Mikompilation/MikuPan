@@ -21,8 +21,8 @@ int window_height = 448;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
-SDL_Texture *fnt_0_texture = NULL;
-SDL_Texture *fnt_1_texture = NULL;
+SDL_Texture* fnt_texture[6] = {};
+SDL_Texture *curr_fnt_texture = NULL;
 
 SDL_AppResult MikuPan_Init()
 {
@@ -95,11 +95,26 @@ void MikuPan_Render2DTexture(DISP_SPRT* sprite)
     SDL_SetTextureAlphaMod(texture, AdjustAlpha(sprite->alpha));
     SDL_SetTextureColorMod(texture, AdjustAlpha(sprite->r), AdjustAlpha(sprite->g), AdjustAlpha(sprite->b));
 
-    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_ADD);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
     SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
 }
 
-void MikuPan_Render2DMessage(DISP_SPRT *sprite, int font)
+int GetTextureIndex(int fnt)
+{
+    if (fnt == 1)
+    {
+        return 0;
+    }
+
+    if (fnt == 0)
+    {
+        return 1;
+    }
+
+    return fnt;
+}
+
+void MikuPan_Render2DMessage(DISP_SPRT *sprite)
 {
     SDL_FRect dst_rect;
     SDL_FRect src_rect;
@@ -116,7 +131,7 @@ void MikuPan_Render2DMessage(DISP_SPRT *sprite, int font)
     dst_rect.w = (float)window_width * (sprite->w / PS2_RESOLUTION_X_FLOAT);
     dst_rect.h = (float)window_height * (sprite->h / PS2_RESOLUTION_Y_FLOAT);
 
-    SDL_Texture* texture = font == 1 ? fnt_0_texture : fnt_1_texture;
+    SDL_Texture* texture = curr_fnt_texture;
 
     SDL_SetTextureAlphaMod(texture, AdjustAlpha(sprite->alpha));
     SDL_SetTextureColorMod(texture, AdjustAlpha(sprite->r), AdjustAlpha(sprite->g), AdjustAlpha(sprite->b));
@@ -152,33 +167,35 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r, u_char
 
 void MikuPan_SetupFntTexture()
 {
-    if (fnt_0_texture == NULL)
+    for (int i = 0; i < 6; i++)
     {
-        fnt_0_texture = MikuPan_CreateTexture((sceGsTex0*)&fntdat[0].tex0);
-    }
-
-    if (fnt_1_texture == NULL)
-    {
-        fnt_1_texture = MikuPan_CreateTexture((sceGsTex0*)&fntdat[1].tex0);
+        if (fnt_texture[i] == NULL)
+        {
+            fnt_texture[i] = MikuPan_CreateTexture((sceGsTex0*)&fntdat[i].tex0);
+        }
     }
 }
 
-SDL_Texture * MikuPan_CreateTexture(sceGsTex0 *tex0)
+SDL_Texture *MikuPan_CreateTexture(sceGsTex0 *tex0)
 {
-    int texture_width = 1<<tex0->TW;
-    int texture_height = 1<<tex0->TH;
+    int texture_width = 1 << tex0->TW;
+    int texture_height = 1 << tex0->TH;
 
-    unsigned char* image = DownloadGsTexture(tex0);
+    unsigned char *image = DownloadGsTexture(tex0);
 
-    SDL_Surface *surface = SDL_CreateSurfaceFrom(
-        texture_width, texture_height,
-        SDL_PIXELFORMAT_RGBA32, image,
-        texture_width * 4);
+    SDL_Surface *surface =
+        SDL_CreateSurfaceFrom(texture_width, texture_height,
+                              SDL_PIXELFORMAT_RGBA32, image, texture_width * 4);
 
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_DestroySurface(surface);
 
     AddSDLTexture(tex0, texture);
 
     return texture;
+}
+
+void MikuPan_SetFontTexture(int fnt)
+{
+    curr_fnt_texture = fnt_texture[fnt];
 }

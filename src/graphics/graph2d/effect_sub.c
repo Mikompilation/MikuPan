@@ -131,7 +131,7 @@ void SetSquare(int pri, float x1, float y1, float x2, float y2, float x3, float 
     y[2] = (y3 / div + 2048.0f) * 16.0f;
     y[3] = (y4 / div + 2048.0f) * 16.0f;
 
-    MikuPan_RenderSquare(x1, y1, x2, y2, x3, y3, x4, y4, r, g, b, a);
+    MikuPan_RenderSquare(x1+320.0f, y1+224.0f, x2, y2, x3, y3, x4+320.0f, y4+224.0f, r, g, b, a);
 
     z = 0x0fffffff - mpri;
 

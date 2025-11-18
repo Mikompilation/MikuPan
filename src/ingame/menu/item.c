@@ -1,5 +1,8 @@
-#include "common.h"
 #include "item.h"
+#include "common.h"
+#include "ig_menu.h"
+
+#include <graphics/graph2d/message.h>
 
 void ItemCntInit(void) {
 }
@@ -88,6 +91,52 @@ void RGBtoCLR(int rgb, u_char* r, u_char* g, u_char* b)
 void PutStringYW(u_char msg_knd, u_char msg_no, short int pos_x, short int pos_y, int rgb, u_char alpha, int pri,
                  u_char type)
 {
+    /* 0x0(sp) */ DISP_STR ds;
+    /* 0x40(sp) */ STR_DAT sd = {
+        .str = NULL,
+        .pos_x = 0,
+        .pos_y = 0,
+        .type = 0,
+        .r = 0xFF,
+        .g = 0xFF,
+        .b = 0xFF,
+        .alpha = 0x80,
+        .pri = 0,
+    };
+    /* v1 3 */ int cnt_ofs;
+
+    sd.str = (u_char *)GetIngameMSGAddr(msg_knd, msg_no);
+
+    CopyStrDToStr(&ds, &sd);
+
+    ds.r = (u_int)rgb >> 16 & 0xff;
+    ds.g = ((u_int)rgb & 0xff00) >> 8;
+    ds.b = (u_int)rgb & 0xff;
+
+    ds.alpha = alpha;
+    ds.pri = pri;
+
+    switch (type)
+    {
+        case 0:
+            ds.pos_x = pos_x;
+        ds.pos_y = pos_y;
+        break;
+        case 1:
+            cnt_ofs = ChkChrNumUS(msg_knd, msg_no);
+
+        ds.pos_x = pos_x - cnt_ofs / 2;
+        ds.pos_y = pos_y;
+        break;
+        case 2:
+            cnt_ofs = ChkChrNumUS(msg_knd, msg_no);
+
+        ds.pos_x = pos_x - cnt_ofs;
+        ds.pos_y = pos_y;
+        break;
+    }
+
+    SetMessageV2(&ds);
 }
 
 void RstMessageYW()
@@ -104,6 +153,9 @@ char ChkChrNumYW(u_char msg_knd, u_char msg_no)
 
 int ChkChrNumUS(u_char msg_knd, u_char msg_no)
 {
+    u_char *str = (u_char *) GetIngameMSGAddr(msg_knd, msg_no);
+
+    return GetStrWidth(str);
 }
 
 char ChkPageYW(u_char msg_knd, u_char msg_no)

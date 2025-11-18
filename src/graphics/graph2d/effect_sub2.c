@@ -2341,9 +2341,9 @@ int CallMissionClear()
         
         alpha_res[now_pos] = 80;
         
-        DispSprt2(&btl_rslt[10], 0x1e90000, 1, NULL, NULL, alpha_res[0]);
-        DispSprt2(&btl_rslt[11], 0x1e90000, 1, NULL, NULL, alpha_res[1]);
-        DispSprt2(&btl_rslt[12], 0x1e90000, 1, NULL, NULL, alpha_res[2]);
+        DispSprt2(&btl_rslt[10], MISSION_TITLE_CARD_ADDRESS, 1, NULL, NULL, alpha_res[0]);
+        DispSprt2(&btl_rslt[11], MISSION_TITLE_CARD_ADDRESS, 1, NULL, NULL, alpha_res[1]);
+        DispSprt2(&btl_rslt[12], MISSION_TITLE_CARD_ADDRESS, 1, NULL, NULL, alpha_res[2]);
         
         if (btl_clear_disp == 2)
         {
@@ -2468,9 +2468,9 @@ uint64_t CallMissionFailed()
         
         alpha_res[now_pos] = 100;
         
-        DispSprt2(&btl_rslt[10], 0x1e90000, 1, NULL, NULL, alpha_res[0]);
-        DispSprt2(&btl_rslt[11], 0x1e90000, 1, NULL, NULL, alpha_res[1]);
-        DispSprt2(&btl_rslt[12], 0x1e90000, 1, NULL, NULL, alpha_res[2]);
+        DispSprt2(&btl_rslt[10], MISSION_TITLE_CARD_ADDRESS, 1, NULL, NULL, alpha_res[0]);
+        DispSprt2(&btl_rslt[11], MISSION_TITLE_CARD_ADDRESS, 1, NULL, NULL, alpha_res[1]);
+        DispSprt2(&btl_rslt[12], MISSION_TITLE_CARD_ADDRESS, 1, NULL, NULL, alpha_res[2]);
     break;
     case 6:
         if (IsEndAdpcmBtlmode())
@@ -2603,8 +2603,8 @@ int CallMissionAllClear()
         
         alpha_res[now_pos] = 100;
         
-        DispSprt2(&btl_rslt[11], 0x1e90000, 1, NULL, NULL, alpha_res[0]);
-        DispSprt2(&btl_rslt[12], 0x1e90000, 1, NULL, NULL, alpha_res[1]);
+        DispSprt2(&btl_rslt[11], MISSION_TITLE_CARD_ADDRESS, 1, NULL, NULL, alpha_res[0]);
+        DispSprt2(&btl_rslt[12], MISSION_TITLE_CARD_ADDRESS, 1, NULL, NULL, alpha_res[1]);
 
         if (clear_anime_timer != 0)
         {
@@ -2850,7 +2850,7 @@ int BtlAnmInit(/* s0 16 */ int anm_no)
 #ifdef BUILD_EU_VERSION
             LoadReqLanguage(M_SLCT_STY_DMY_E_PK2, 0x1e90000);
 #else
-            LoadReq(M_SLCT_STY_DMY_PK2, 0x1e90000);
+            LoadReq(M_SLCT_STY_DMY_PK2, &MISSION_TITLE_CARD_ADDRESS);
 #endif
             anm_load_id = 1;
             break;
@@ -2858,7 +2858,7 @@ int BtlAnmInit(/* s0 16 */ int anm_no)
 #ifdef BUILD_EU_VERSION
             LoadReqLanguage(TX_BTL_DMY_E_PK2, 0x1e90000);
 #else
-            LoadReq(TX_BTL_DMY_PK2, 0x1e90000);
+            LoadReq(TX_BTL_DMY_PK2, &MISSION_TITLE_CARD_ADDRESS);
 #endif
             LoadReq(TX_BTL_RES_PK2, 0x1f108b0);
             anm_load_id = 1;
@@ -2868,7 +2868,7 @@ int BtlAnmInit(/* s0 16 */ int anm_no)
 #ifdef BUILD_EU_VERSION
             LoadReqLanguage(M_SLCT_BTL_CHR_E_PK2, 0x1e90000);
 #else
-            LoadReq(M_SLCT_BTL_CHR_PK2, 0x1e90000);
+            LoadReq(M_SLCT_BTL_CHR_PK2, &MISSION_TITLE_CARD_ADDRESS);
 #endif
             anm_load_id = 1;
             break;
@@ -2876,7 +2876,7 @@ int BtlAnmInit(/* s0 16 */ int anm_no)
 #ifdef BUILD_EU_VERSION
             LoadReqLanguage(M_SLCT_STY_DMY_E_PK2, 0x1e90000);
 #else
-            LoadReq(M_SLCT_STY_DMY_PK2, 0x1e90000);
+            LoadReq(M_SLCT_STY_DMY_PK2, &MISSION_TITLE_CARD_ADDRESS);
 #endif
             LoadReq(S_MODE_CLEARBG_PK2, 0x14b0000);
             anm_load_id = 1;
@@ -2886,7 +2886,7 @@ int BtlAnmInit(/* s0 16 */ int anm_no)
 #ifdef BUILD_EU_VERSION
             LoadReqLanguage(TX_BTL_DMY_E_PK2, 0x1e90000);
 #else
-            LoadReq(TX_BTL_DMY_PK2, 0x1e90000);
+            LoadReq(TX_BTL_DMY_PK2, &MISSION_TITLE_CARD_ADDRESS);
 #endif
             do { anm_load_id = 1; } while (0); // HACK: fixes a reg-swap
             break;
@@ -2898,15 +2898,15 @@ int BtlAnmInit(/* s0 16 */ int anm_no)
         switch (anm_no)
         {
         case 3:
-            SetSprFile(0x1e90000);
+            SetSprFile(MISSION_TITLE_CARD_ADDRESS);
             SetSprFile(0x1f108b0);
         break;
         case 5:
-            SetSprFile(0x1e90000);
+            SetSprFile(MISSION_TITLE_CARD_ADDRESS);
             SetSprFile(0x14b0000);
         break;
         default:
-            SetSprFile(0x1e90000);
+            SetSprFile(MISSION_TITLE_CARD_ADDRESS);
         }
 
         i = anm_wrk.start_num;

@@ -884,8 +884,8 @@ char ModeSlctPad(u_char mode)
             SetSprFile(0x1ce0000);
             SetSprFile(0x1d10000);
 #else
-            SetSprFile(0x1d573b0);
-            SetSprFile(0x1ce0000);
+            SetSprFile(PL_PHOT_PK2_ADDRESS);
+            SetSprFile(PL_STTS_PK2_ADDRESS);
             SetSprFile(PL_MTOP_PK2_ADDRESS);
 #endif
             IngameMenuAlbum(1);
@@ -893,7 +893,7 @@ char ModeSlctPad(u_char mode)
         else
         {
             dsp_ms.next_mode = 2;
-            OutGameModeChange(8);
+            OutGameModeChange(OUTGAME_MODE_MODESEL);
             rtrn = 1;
         }
     break;
@@ -901,7 +901,7 @@ char ModeSlctPad(u_char mode)
         if (SavePointMenuMain(3))
         {
             dsp_ms.next_mode = 2;
-            OutGameModeChange(8);
+            OutGameModeChange(OUTGAME_MODE_MODESEL);
             rtrn = 1;
         }
     break;
@@ -1021,7 +1021,7 @@ void DspModeSlect(u_char alp)
     PutChrOne(0x48, 0, 0, dsp_rgb[3], dsp_alp[3], 0x0);
     PutChrOne(0x49, 0, 0, dsp_rgb[4], dsp_alp[4], 0x0);
     
-    SetSprFile(0x1ce0000);
+    SetSprFile(PL_STTS_PK2_ADDRESS);
     DispCaption(3, alp);
 }
 
@@ -1170,7 +1170,7 @@ void DspStoryMode(u_char alp, float flsh)
     break;
     }
     
-    SetSprFile(0x1ce0000);
+    SetSprFile(PL_STTS_PK2_ADDRESS);
     DispCaption(3, alp);
 }
 
@@ -1256,7 +1256,7 @@ void DspBattleMode(u_char alp, float flsh)
     break;
     }
     
-    SetSprFile(0x1ce0000);
+    SetSprFile(PL_STTS_PK2_ADDRESS);
     DispCaption(3, alp);
 }
 
@@ -1387,7 +1387,7 @@ void DspMissionSelect(u_char alp)
         }
     }
 
-    SetSprFile(0x1ce0000);
+    SetSprFile(PL_STTS_PK2_ADDRESS);
     DispCaption(4, alp);
 }
 
@@ -1624,10 +1624,10 @@ void MsLoadCtrl(u_char mode)
         ms_load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
         ms_load_id = LoadReqLanguage(PL_CAME_E_PK2, 0x1e90000);
 #else
-        ms_load_id = LoadReq(PL_BGBG_PK2, 0x1d05140);
+        ms_load_id = LoadReq(PL_BGBG_PK2, &PL_BGBG_PK2_ADDRESS);
         ms_load_id = LoadReq(PL_MTOP_PK2, PL_MTOP_PK2_ADDRESS);
-        ms_load_id = LoadReq(PL_STTS_PK2, 0x1ce0000);
-        ms_load_id = LoadReq(PL_CAME_PK2, 0x1e90000);
+        ms_load_id = LoadReq(PL_STTS_PK2, &PL_STTS_PK2_ADDRESS);
+        ms_load_id = LoadReq(PL_CAME_PK2, &MISSION_TITLE_CARD_ADDRESS);
 #endif
     break;
     case 9:
@@ -1637,10 +1637,10 @@ void MsLoadCtrl(u_char mode)
         ms_load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
         ms_load_id = LoadReqLanguage(PL_PHOT_E_PK2, 0x1d51db0);
 #else
-        ms_load_id = LoadReq(PL_BGBG_PK2, 0x1d05140);
-        ms_load_id = LoadReq(PL_MTOP_PK2, 0x1d15600);
-        ms_load_id = LoadReq(PL_STTS_PK2, 0x1ce0000);
-        ms_load_id = LoadReq(PL_PHOT_PK2, 0x1d573b0);
+        ms_load_id = LoadReq(PL_BGBG_PK2, &PL_BGBG_PK2_ADDRESS);
+        ms_load_id = LoadReq(PL_MTOP_PK2, &PL_MTOP_PK2_ADDRESS);
+        ms_load_id = LoadReq(PL_STTS_PK2, &PL_STTS_PK2_ADDRESS);
+        ms_load_id = LoadReq(PL_PHOT_PK2, &PL_PHOT_PK2_ADDRESS);
 #endif
         StartAlbumModeInit();
         OutGameInitPhoto();
@@ -1650,7 +1650,7 @@ void MsLoadCtrl(u_char mode)
 #ifdef BUILD_EU_VERSION
         ms_load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
 #else
-        ms_load_id = LoadReq(PL_BGBG_PK2, 0x1d05140);
+        ms_load_id = LoadReq(PL_BGBG_PK2, &PL_BGBG_PK2_ADDRESS);
 #endif
         BtlModSaveInit();
     break;

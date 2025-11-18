@@ -144,6 +144,7 @@ int SetMessage()
     SetMessageV3(save_mes_addr, 0x64000);
     return MesStatusCheck();
 }
+
 void MessageWaitOff()
 {
     return;
@@ -699,7 +700,7 @@ static void SetFontPacketHeader(int n, int type, u_char alp)
         Change.CLD = 0;
     }
 
-    //MakeFontTexSendPacket();
+    MikuPan_SetFontTexture(type);
 
     mpbuf[nmdpkt].ul128 = (u_long128)0;
 
@@ -842,9 +843,7 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     //    return;
     //}
 
-    //unsigned char* image = DownloadGsTexture(&Load);
-    MikuPan_Render2DMessage(&s, type);
-    //MikuPan_Render2DTexture(&s, image);
+    MikuPan_Render2DMessage(&s);
 
     mpbuf[nmdpkt].ui32[0] = r;
     mpbuf[nmdpkt].ui32[1] = g;
@@ -921,6 +920,8 @@ static void SetFontTex(int flg, int bank)
     {
         return;
     }
+
+    MikuPan_SetFontTexture(bank);
 
     obank = bank;
 
@@ -1045,10 +1046,27 @@ static void SetFontPat(int pri, int fn, int x, int y, int fw, u_char r, u_char g
     px2 = dx + dw;
     py2 = dy + dh;
 
-    tw1 = ((fn % Num_W) * Font_W) * 16;
+    tw1 = ((fn % Num_W) * Font_W)       * 16;
     th1 = (((fn / Num_W) * Font_W)) * 16;
     tw2 = (((fn % Num_W) * Font_W) + fw) * 16;
     th2 = (((fn / Num_W) * Font_W)) * 16 + (Font_W * 16);
+
+
+    DISP_SPRT dq;
+
+    dq.r = r;
+    dq.g = g;
+    dq.b = b;
+    dq.alpha = a;
+
+    dq.x = x;
+    dq.y = y;
+    dq.w = Font_W;
+    dq.h = Font_W;
+    dq.u = tw1/16;
+    dq.v = th1/16;
+
+    MikuPan_Render2DMessage(&dq);
 
 #ifdef BUILD_EU_VERSION
     if (path == 1)
@@ -1892,8 +1910,6 @@ int SetMessageV2(DISP_STR *s)
     }
 
     s->brnch_num = selnum;
-
-    //SDL_Render2DTexture2(&dq);
 
     i = draw_mpri[nmdpri][1];
     mpbuf[i].ul128 = (u_long128)0;

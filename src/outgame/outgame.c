@@ -15,6 +15,8 @@
 #include "outgame/btl_mode/btl_menu.h"
 #include "graphics/graph2d/message.h"
 // #include "graphics/graph2d/g2d_main.h" // gra2dInitST() should be undeclared
+#include "sound_test.h"
+
 #include <stdio.h>
 
 #include "common/memory_addresses.h"
@@ -110,6 +112,8 @@ void OutGameModeChange(u_char mode)
         case OUTGAME_MODE_OPTION:
             ModeSlctInit(3, 9);
         break;
+        case OUTGAME_MODE_SOUND_TEST:
+            SoundTestForModeSlectInit();
         case OUTGAME_MODE_SCENE_TEST:
             scn_test_wrk.mode = 0;
         break;

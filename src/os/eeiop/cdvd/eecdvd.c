@@ -69,7 +69,7 @@ int LoadReq(int file_no, uint64_t addr)
 {
     IMG_ARRANGEMENT *img_arng;
     
-    printf("File No: %d \n", file_no);
+    info_log("File No: %d", file_no);
    
     img_arng = GetImgArrangementP(file_no);
 
