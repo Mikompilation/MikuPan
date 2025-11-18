@@ -15,7 +15,7 @@ int GetSpecialEventMessageAddr(short int msg_no)
 {
 }
 
-void SimpleDispSprt(SPRT_SDAT* ssd, u_int addr, int sp_no, SPRT_SROT* srot, SPRT_SSCL* sscl, u_char alp_rate)
+void SimpleDispSprt(SPRT_SDAT* ssd, int64_t addr, int sp_no, SPRT_SROT* srot, SPRT_SSCL* sscl, u_char alp_rate)
 {
     /* 0x0(sp) */ DISP_SPRT ds;
 	/* 0x90(sp) */ SPRT_DAT sd;
