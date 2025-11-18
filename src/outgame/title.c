@@ -558,9 +558,9 @@ SPRT_DAT title_sprt[11] = {
             title_wrk.sub_mode = 7;
         }
 
-        SetSprFile(SPRITE_ADDR_4);
-        SetSprFile(SPRITE_ADDR_2);
-        SetSprFile(SPRITE_ADDR_3);
+        SetSprFile(PL_PSVP_PK2_ADDRESS);
+        SetSprFile(PL_SAVE_PK2_ADDRESS);
+        SetSprFile(SV_PHT_PK2_ADDRESS);
 
         switch (McAtLoadChk(1))
         {
@@ -642,7 +642,7 @@ SPRT_DAT title_sprt[11] = {
         }
     break;
     case TITLE_ALBM_LOAD0:
-        if (IsEndAdpcmFadeOut() != 0)
+        //if (IsEndAdpcmFadeOut() != 0)
         {
             EAdpcmCmdPlay(0, 1, AB018_STR, 0, GetAdpcmVol(AB018_STR), 0x280, 0xfff, 0);
 
@@ -650,9 +650,9 @@ SPRT_DAT title_sprt[11] = {
         }
     break;
     case TITLE_ALBM_LOAD1:
-        SetSprFile(SPRITE_ADDR_4);
-        SetSprFile(SPRITE_ADDR_2);
-        SetSprFile(SPRITE_ADDR_3);
+        SetSprFile(PL_PSVP_PK2_ADDRESS);
+        SetSprFile(PL_SAVE_PK2_ADDRESS);
+        SetSprFile(SV_PHT_PK2_ADDRESS);
 
         switch (McAtLoadChk(2))
         {
@@ -664,7 +664,7 @@ SPRT_DAT title_sprt[11] = {
             mc_slot1 = mc_ctrl.port + 1;
             mc_file1 = mc_ctrl.sel_file + 1;
 
-            memcpy((void *)0xE80000, (void *)0x5a0000, 0x180000);
+            //memcpy((void *)0xE80000, (void *)0x5a0000, 0x180000);
 
             mcInit(6, (u_int *)MC_WORK_ADDRESS, 0);
 
@@ -679,8 +679,8 @@ SPRT_DAT title_sprt[11] = {
         }
     break;
     case TITLE_ALBM_LOAD2:
-        SetSprFile(SPRITE_ADDR_2);
-        SetSprFile(SPRITE_ADDR_3);
+        SetSprFile(PL_SAVE_PK2_ADDRESS);
+        SetSprFile(SV_PHT_PK2_ADDRESS);
 
         switch (McAtLoadChk(2))
         {
@@ -695,14 +695,14 @@ SPRT_DAT title_sprt[11] = {
             mc_slot2 = mc_ctrl.port + 1;
             //mc_file2 = mc_ctrl.sel_file + 1;
 
-            memcpy((void *)0x1000000, (void *)0x5a0000, 0x180000);
+            //memcpy((void *)0x1000000, (void *)0x5a0000, 0x180000);
 
             MemAlbmInit(1, mc_pnum1, mc_pnum2, mc_atyp1, mc_atyp2, mc_slot1, mc_slot2, mc_file1, mc_file2 & 0xff);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_FSM_PK2, SPRITE_ADDR_1);
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &SPRITE_ADDR_2);
-            title_wrk.load_id = AlbmDesignLoad(0, mc_atyp1);
-            title_wrk.load_id = AlbmDesignLoad(1, mc_atyp2);
+            title_wrk.load_id = LoadReq(PL_ALBM_FSM_PK2, &PL_ALBM_FSM_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &PL_SAVE_PK2_ADDRESS);
+            title_wrk.load_id = AlbmDesignLoad(0, 0/* mc_atyp1 */);
+            title_wrk.load_id = AlbmDesignLoad(1, 1 /* mc_atyp2 */);
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
@@ -717,8 +717,8 @@ SPRT_DAT title_sprt[11] = {
             //MemAlbmInit(1, mc_pnum1, mc_pnum2, mc_atyp1, mc_atyp2, mc_slot1, mc_slot2, mc_file1, mc_file2 & 0xff);
             NewAlbumInit(1);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_FSM_PK2, SPRITE_ADDR_1);
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &SPRITE_ADDR_2);
+            title_wrk.load_id = LoadReq(PL_ALBM_FSM_PK2, &PL_ALBM_FSM_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &PL_SAVE_PK2_ADDRESS);
             title_wrk.load_id = AlbmDesignLoad(0, mc_atyp1);
             title_wrk.load_id = AlbmDesignLoad(1, mc_atyp2);
 
@@ -732,14 +732,14 @@ SPRT_DAT title_sprt[11] = {
         }
     break;
     case TITLE_ALBM_MAIN_PRE:
-        if (IsLoadEnd(title_wrk.load_id) != 0)
+        //if (IsLoadEnd(title_wrk.load_id) != 0)
         {
             title_wrk.mode = TITLE_ALBM_MAIN;
         }
     break;
     case TITLE_ALBM_MAIN:
-        SetSprFile(SPRITE_ADDR_1);
-        SetSprFile(SPRITE_ADDR_2);
+        SetSprFile(PL_ALBM_FSM_PK2_ADDRESS);
+        SetSprFile(PL_SAVE_PK2_ADDRESS);
 
         switch(SweetMemories(1, 0x80))
         {
@@ -753,9 +753,9 @@ SPRT_DAT title_sprt[11] = {
 
             title_wrk.load_side = 0;
 
-            title_wrk.load_id = LoadReq(PL_PSVP_PK2, SPRITE_ADDR_4);
-            title_wrk.load_id = LoadReq(PL_SAVE_PK2, &SPRITE_ADDR_2);
-            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SPRITE_ADDR_3);
+            title_wrk.load_id = LoadReq(PL_PSVP_PK2, &PL_PSVP_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_SAVE_PK2, &PL_SAVE_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, &SV_PHT_PK2_ADDRESS);
 
             title_wrk.mode = TITLE_ALBM_SAVE_PRE;
         break;
@@ -766,16 +766,16 @@ SPRT_DAT title_sprt[11] = {
 
             title_wrk.load_side = 1;
 
-            title_wrk.load_id = LoadReq(PL_PSVP_PK2, SPRITE_ADDR_4);
-            title_wrk.load_id = LoadReq(PL_SAVE_PK2, &SPRITE_ADDR_2);
-            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SPRITE_ADDR_3);
+            title_wrk.load_id = LoadReq(PL_PSVP_PK2, &PL_PSVP_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_SAVE_PK2, &PL_SAVE_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, &SV_PHT_PK2_ADDRESS);
 
             title_wrk.mode = TITLE_ALBM_SAVE_PRE;
         break;
         case 3:
-            title_wrk.load_id = LoadReq(PL_PSVP_PK2, SPRITE_ADDR_4);
-            title_wrk.load_id = LoadReq(PL_SAVE_PK2, &SPRITE_ADDR_2);
-            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SPRITE_ADDR_3);
+            title_wrk.load_id = LoadReq(PL_PSVP_PK2, &PL_PSVP_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_SAVE_PK2, &PL_SAVE_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, &SV_PHT_PK2_ADDRESS);
 
             title_wrk.load_side = 0;
 
@@ -784,9 +784,9 @@ SPRT_DAT title_sprt[11] = {
             title_wrk.mode = TITLE_ALBM_LOAD_MODE_PRE;
         break;
         case 4:
-            title_wrk.load_id = LoadReq(PL_PSVP_PK2, SPRITE_ADDR_4);
-            title_wrk.load_id = LoadReq(PL_SAVE_PK2, &SPRITE_ADDR_2);
-            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SPRITE_ADDR_3);
+            title_wrk.load_id = LoadReq(PL_PSVP_PK2, &PL_PSVP_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_SAVE_PK2, &PL_SAVE_PK2_ADDRESS);
+            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, &SV_PHT_PK2_ADDRESS);
 
             title_wrk.load_side = 1;
 
@@ -813,9 +813,9 @@ SPRT_DAT title_sprt[11] = {
         }
     break;
     case TITLE_ALBM_LOAD_MODE:
-        SetSprFile(SPRITE_ADDR_4);
-        SetSprFile(SPRITE_ADDR_2);
-        SetSprFile(SPRITE_ADDR_3);
+        SetSprFile(PL_PSVP_PK2_ADDRESS);
+        SetSprFile(PL_SAVE_PK2_ADDRESS);
+        SetSprFile(SV_PHT_PK2_ADDRESS);
 
         switch (McAtLoadChk(2))
         {
@@ -853,7 +853,7 @@ SPRT_DAT title_sprt[11] = {
 
             title_wrk.load_id = AlbmDesignLoad(0, mc_atyp1);
             title_wrk.load_id = AlbmDesignLoad(1, mc_atyp2);
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &SPRITE_ADDR_2);
+            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &PL_SAVE_PK2_ADDRESS);
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
@@ -862,7 +862,7 @@ SPRT_DAT title_sprt[11] = {
             AlbmDesignLoad(0, mc_atyp1);
             AlbmDesignLoad(1, mc_atyp2);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &SPRITE_ADDR_2);
+            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &PL_SAVE_PK2_ADDRESS);
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
@@ -875,9 +875,9 @@ SPRT_DAT title_sprt[11] = {
         }
     break;
     case TITLE_ALBM_SAVE:
-        SetSprFile(SPRITE_ADDR_4);
-        SetSprFile(SPRITE_ADDR_2);
-        SetSprFile(SPRITE_ADDR_3);
+        SetSprFile(PL_PSVP_PK2_ADDRESS);
+        SetSprFile(PL_SAVE_PK2_ADDRESS);
+        SetSprFile(SV_PHT_PK2_ADDRESS);
 
         switch (McAtAlbmChk())
         {
@@ -907,7 +907,7 @@ SPRT_DAT title_sprt[11] = {
             AlbmDesignLoad(0, mc_atyp1);
             AlbmDesignLoad(1, mc_atyp2);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &SPRITE_ADDR_2);
+            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &PL_SAVE_PK2_ADDRESS);
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
@@ -917,7 +917,7 @@ SPRT_DAT title_sprt[11] = {
             AlbmDesignLoad(0, mc_atyp1);
             AlbmDesignLoad(1, mc_atyp2);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &SPRITE_ADDR_2);
+            title_wrk.load_id = LoadReq(PL_ALBM_PK2, &PL_SAVE_PK2_ADDRESS);
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
@@ -1750,15 +1750,13 @@ void InitOutDither()
 
 void MakeOutDither()
 {
-    /* 0x0(sp) */ u_char pat[0x4000];
-    /* 0x4000(sp) */ u_int pal[0x100];
-    /* a3 7 */ int i;
-    // /* f0 38 */ float r;
-    // /* f0 38 */ float r;
-    /* bss 402d80 */ /*static*/ sceGsLoadImage gs_limage1;
-    /* bss 402de0 */ /*static*/ sceGsLoadImage gs_limage2;
+    u_char pat[0x4000];
+    u_int pal[0x100];
+    int i;
+    static sceGsLoadImage gs_limage1;
+    static sceGsLoadImage gs_limage2;
 
-    SetVURand((float)rand() / ((float) RAND_MAX * 4.0f));
+    SetVURand((float)rand() / (float) RAND_MAX);
 
     for (i = 0; i < 0x4000; i++)
     {
@@ -1767,7 +1765,6 @@ void MakeOutDither()
 
     for (i = 0; i < 0x100; i++)
     {
-
         pal[i] = (u_char)(out_dither.colmx * vu0Rand());
         pal[i] = 0 \
             | i      << 24 \
@@ -1886,17 +1883,17 @@ void DispOutDither()
 
 int AlbmDesignLoad(u_char side, u_char type)
 {
-    /* a2 6 */ u_int addr;
+    /* a2 6 */ int64_t addr;
     /* v0 2 */ int load_id;
 
     if (side == 0)
     {
-        addr = 0x1d88100;
+        addr = &PL_FNDR_PK2_ADDRESS;
     }
 
     else if (side == 1)
     {
-        addr = 0x1dc8570;
+        addr = &PL_ALBM_SIDE_1_ADDRESS;
     }
 
     switch(type)

@@ -862,9 +862,9 @@ char ModeSlctPad(u_char mode)
             SetSprFile(0x1ce0000);
             SetSprFile(0x1d10000);
 #else
-            SetSprFile(0x1e90000);
-            SetSprFile(0x1ce0000);
-            SetSprFile(0x1d15600);
+            SetSprFile(MISSION_TITLE_CARD_ADDRESS);
+            SetSprFile(PL_STTS_PK2_ADDRESS);
+            SetSprFile(PL_MTOP_PK2_ADDRESS);
 #endif
             CameraCustomMain();
         }
@@ -886,7 +886,7 @@ char ModeSlctPad(u_char mode)
 #else
             SetSprFile(0x1d573b0);
             SetSprFile(0x1ce0000);
-            SetSprFile(0x1d15600);
+            SetSprFile(PL_MTOP_PK2_ADDRESS);
 #endif
             IngameMenuAlbum(1);
         }
@@ -1625,7 +1625,7 @@ void MsLoadCtrl(u_char mode)
         ms_load_id = LoadReqLanguage(PL_CAME_E_PK2, 0x1e90000);
 #else
         ms_load_id = LoadReq(PL_BGBG_PK2, 0x1d05140);
-        ms_load_id = LoadReq(PL_MTOP_PK2, 0x1d15600);
+        ms_load_id = LoadReq(PL_MTOP_PK2, PL_MTOP_PK2_ADDRESS);
         ms_load_id = LoadReq(PL_STTS_PK2, 0x1ce0000);
         ms_load_id = LoadReq(PL_CAME_PK2, 0x1e90000);
 #endif

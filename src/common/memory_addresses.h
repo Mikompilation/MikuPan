@@ -94,17 +94,18 @@ extern void* MISSION_TITLE_CARD_ADDRESS;
 /// 0x9a0000
 extern void* PLYR_FILE_ADDRESS;
 
+/// 0x0c80000
+extern void* PL_ALBM_FSM_PK2_ADDRESS;
+
+/// 0x1dc8570
+extern void* PL_ALBM_SIDE_1_ADDRESS;
+
 #define VNBufferAddress     0x00420000
 #define CachedBuffer        0x20000000
 #define UnCachedBuffer      0x30000000
 #define VU0_ADDRESS         0x11000000
 
 #define MC_WORK_ADDRESS 0x420000
-
-#define SPRITE_ADDR_1 0x0c80000
-#define SPRITE_ADDR_2 PL_SAVE_PK2_ADDRESS
-#define SPRITE_ADDR_3 0x1d28c80
-#define SPRITE_ADDR_4 0x1d59630
 
 
 

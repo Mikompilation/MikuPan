@@ -6,21 +6,22 @@
 
 #include <string.h>
 
-#include "ingame/menu/item.h"
-#include "ingame/menu/ig_camra.h"
-#include "ingame/menu/ig_menu.h"
-#include "ingame/menu/ig_album.h"
-#include "ingame/menu/ig_file.h"
-#include "graphics/graph2d/message.h"
 #include "graphics/graph2d/compress.h"
+#include "graphics/graph2d/message.h"
+#include "graphics/graph2d/tim2.h"
+#include "graphics/graph3d/sglib.h"
+#include "ingame/menu/ig_album.h"
+#include "ingame/menu/ig_camra.h"
+#include "ingame/menu/ig_file.h"
+#include "ingame/menu/ig_menu.h"
+#include "ingame/menu/item.h"
+#include "ingame/photo/pht_make.h"
 #include "main/glob.h"
 #include "mc/mc_exec.h"
 #include "mc/mc_main.h"
-#include "ingame/photo/pht_make.h"
-#include "graphics/graph3d/sglib.h"
 #include "os/eeiop/eese.h"
-#include "ingame/menu/ig_menu.h"
-#include "graphics/graph2d/tim2.h"
+
+#include <common/memory_addresses.h>
 
 MC_ALBUM_SAVE mc_album_save = {0};
 MC_ALBUM_SAVE album_save_dat[2] = {0};
@@ -850,8 +851,8 @@ char NmlPadInTopPage()
                     }
                 }
                 else if (
-                    *key_now[0] == 1 ||
-                    (*key_now[0] > 0x19 && (*key_now[0] % 5 == 1)) ||
+                    DPAD_UP_PRESSED() == 1 ||
+                    (DPAD_UP_PRESSED() > 0x19 && (DPAD_UP_PRESSED() % 5 == 1)) ||
                     Ana2PadDirCnt(0) == 1 ||
                     (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5 == 1))
                 )
@@ -1398,8 +1399,8 @@ char MenuPadCmn()
             }
         }
         else if (
-            *key_now[0] == 1 ||
-            (*key_now[0] >= 0x1a && (*key_now[0] % 5) == 1) ||
+            DPAD_UP_PRESSED() == 1 ||
+            (DPAD_UP_PRESSED() >= 0x1a && (DPAD_UP_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(0) == 1 ||
             (Ana2PadDirCnt(0) >= 0x1a && (Ana2PadDirCnt(0) % 5) == 1)
         )
@@ -1949,8 +1950,8 @@ void BuffPadMnu()
         }
     }
     else if (
-            (*key_now[0] == 1) ||
-            (*key_now[0] > 0x19 && (*key_now[0] % 5) == 1) ||
+            (DPAD_UP_PRESSED() == 1) ||
+            (DPAD_UP_PRESSED() > 0x19 && (DPAD_UP_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(0)  == 1 ||
             (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
         )
@@ -2091,7 +2092,7 @@ void DspOgAlbumTop1(u_char alp, u_char alp0, u_char alp1)
 #ifdef BUILD_EU_VERSION
             SetSprFile(0x1d83000);
 #else
-            SetSprFile(0x1d88100);
+            SetSprFile(PL_FNDR_PK2_ADDRESS);
 #endif
         break;
         case 1:
@@ -2110,14 +2111,14 @@ void DspOgAlbumTop1(u_char alp, u_char alp0, u_char alp1)
 #ifdef BUILD_EU_VERSION
             SetSprFile(0x1d83000);
 #else
-            SetSprFile(0x1d88100);
+            SetSprFile(PL_FNDR_PK2_ADDRESS);
 #endif
         break;
         case 1:
 #ifdef BUILD_EU_VERSION
             SetSprFile(0x1dc3470);
 #else
-            SetSprFile(0x1dc8570);
+            SetSprFile(PL_ALBM_SIDE_1_ADDRESS);
 #endif
         break;
         }
@@ -2254,7 +2255,7 @@ void DspOgAlbumBig(u_char alp)
 #ifdef BUILD_EU_VERSION
                 SetSprFile(0x1d83000);
 #else
-                SetSprFile(0x1d88100);
+                SetSprFile(PL_FNDR_PK2_ADDRESS);
 #endif
             break;
             case 1:
@@ -2273,14 +2274,14 @@ void DspOgAlbumBig(u_char alp)
 #ifdef BUILD_EU_VERSION
                 SetSprFile(0x1d83000);
 #else
-                SetSprFile(0x1d88100);
+                SetSprFile(PL_FNDR_PK2_ADDRESS);
 #endif
             break;
             case 1:
 #ifdef BUILD_EU_VERSION
                 SetSprFile(0x1dc3470);
 #else
-                SetSprFile(0x1dc8570);
+                SetSprFile(PL_ALBM_SIDE_1_ADDRESS);
 #endif
             break;
             }
@@ -2623,7 +2624,7 @@ void Navion(u_char type, u_char sw, u_char alp)
         }
     }
     
-    SetSprFile(0x1ce0000);  // Line 2193
+    SetSprFile(PL_STTS_PK2_ADDRESS);  // Line 2193
 
     switch (type)  // Line 2194
     {
@@ -3007,11 +3008,11 @@ void BtnExt(u_char mode, u_char alp)
         switch (mode)
         {
             case 0:
-                SetSprFile(0x1ce0000);
+                SetSprFile(PL_STTS_PK2_ADDRESS);
                 DispCaption(0x16, alp);
                 break;
             case 1:
-                SetSprFile(0x1ce0000);
+                SetSprFile(PL_STTS_PK2_ADDRESS);
                 DispCaption(0x16, alp);
             break;
             case 2:

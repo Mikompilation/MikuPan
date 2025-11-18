@@ -6,9 +6,10 @@
 #include "imgui_internal.h"
 #include "imgui_toggle/imgui_toggle.h"
 
+
 extern "C"
 {
-#include "os/pad.h"
+#include "sce/libpad.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/message.h"
 }
@@ -195,7 +196,7 @@ void DrawImGuiWindow()
 
     if (controller_rumble_test)
     {
-        //VibrateRequest2(0x80, 0x80);
+        scePadSetActDirect(0, 0, NULL);
     }
 
     if (dbg_wrk.mode_on == 1)
@@ -207,7 +208,7 @@ void DrawImGuiWindow()
     {
         ImGui::Begin("Frame Time Graph");
 
-        g_frame_graph.draw("Frame Time", ImVec2(0,100));
+        g_frame_graph.draw("Frame Time");
         ImGui::End();
     }
 

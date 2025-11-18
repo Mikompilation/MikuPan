@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.2)
+cmake_minimum_required(VERSION 3.28.0)
 project(MikuPan LANGUAGES C CXX)
 
 if (NOT MSVC)

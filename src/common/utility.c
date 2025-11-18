@@ -19,3 +19,13 @@ char *StrToLower(char *str)
     
     return str;
 }
+
+u_char AdjustAlpha(u_char alpha)
+{
+    if (alpha <= 127)
+    {
+        return alpha << 1;
+    }
+
+    return 0xFF;
+}

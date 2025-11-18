@@ -2,6 +2,7 @@
 
 #include "SDL3/SDL_init.h"
 #include "SDL3/SDL_log.h"
+#include "common/utility.h"
 #include "graphics/graph2d/message.h"
 #include "gs/texture_manager_c.h"
 #include "graphics/ui/imgui_window_c.h"
@@ -28,7 +29,7 @@ SDL_AppResult MikuPan_Init()
     SDL_SetAppMetadata("MikuPan", "1.0", "mikupan");
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC))
-        {
+    {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -41,6 +42,9 @@ SDL_AppResult MikuPan_Init()
 
     SDL_SetRenderLogicalPresentation(renderer, window_width, window_height, SDL_LOGICAL_PRESENTATION_DISABLED);
     InitImGuiWindow(window, renderer);
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderVSync(renderer, 1);
 
     return SDL_APP_CONTINUE;
 }
@@ -88,12 +92,11 @@ void MikuPan_Render2DTexture(DISP_SPRT* sprite)
     dst_rect.w = (float)window_width * (sprite->w / PS2_RESOLUTION_X_FLOAT);
     dst_rect.h = (float)window_height * (sprite->h / PS2_RESOLUTION_Y_FLOAT);
 
-    SDL_SetTextureAlphaMod(texture, (char)(255.0f * (sprite->alpha / 128.0f)));
-    SDL_SetTextureColorMod(texture, sprite->r, sprite->g, sprite->b);
-    SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
+    SDL_SetTextureAlphaMod(texture, AdjustAlpha(sprite->alpha));
+    SDL_SetTextureColorMod(texture, AdjustAlpha(sprite->r), AdjustAlpha(sprite->g), AdjustAlpha(sprite->b));
 
-    //SDL_DestroyTexture(texture);
-    //free(image);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_ADD);
+    SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
 }
 
 void MikuPan_Render2DMessage(DISP_SPRT *sprite, int font)
@@ -115,16 +118,15 @@ void MikuPan_Render2DMessage(DISP_SPRT *sprite, int font)
 
     SDL_Texture* texture = font == 1 ? fnt_0_texture : fnt_1_texture;
 
-    SDL_SetTextureAlphaMod(texture, sprite->alpha);
-    SDL_SetTextureColorMod(texture, sprite->r, sprite->g, sprite->b);
+    SDL_SetTextureAlphaMod(texture, AdjustAlpha(sprite->alpha));
+    SDL_SetTextureColorMod(texture, AdjustAlpha(sprite->r), AdjustAlpha(sprite->g), AdjustAlpha(sprite->b));
     SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
 }
 
 void MikuPan_RenderSquare(float x1, float y1, float x2, float y2, float x3,
                           float y3, float x4, float y4, u_char r, u_char g, u_char b, u_char a)
 {
-    SDL_SetRenderDrawColor(renderer, r, g, b, 255.0f * a / 128.0f);
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, AdjustAlpha(r), AdjustAlpha(g), AdjustAlpha(b), AdjustAlpha(a));
 
     SDL_FRect rect;
 
@@ -138,7 +140,7 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2, float x3,
 
 void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r, u_char g, u_char b, u_char a)
 {
-    SDL_SetRenderDrawColor(renderer, r, g, b, 255.0f * a / 128.0f);
+    SDL_SetRenderDrawColor(renderer, r, g, b, AdjustAlpha(a));
 
     float dst_x1 = (float)window_width *  (300.0f+x1) / PS2_RESOLUTION_X_FLOAT;
     float dst_y1 = (float)window_height * (200.0f+y1) / PS2_RESOLUTION_Y_FLOAT;
@@ -170,7 +172,7 @@ SDL_Texture * MikuPan_CreateTexture(sceGsTex0 *tex0)
 
     SDL_Surface *surface = SDL_CreateSurfaceFrom(
         texture_width, texture_height,
-        SDL_PIXELFORMAT_ABGR8888, image,
+        SDL_PIXELFORMAT_RGBA32, image,
         texture_width * 4);
 
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);

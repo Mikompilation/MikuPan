@@ -237,7 +237,6 @@ void EAdpcmFadeOut(u_short fout_flm)
 
 u_char IsEndAdpcmFadeOut()
 {
-
     if (EAGetRetStat() == 1 || EAGetRetStat() == 2)
     {
         return 1;

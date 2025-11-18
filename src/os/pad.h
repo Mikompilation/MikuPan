@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-#include "sce/libpad.h"
-
 typedef struct {
 	int port;
 	int slot;

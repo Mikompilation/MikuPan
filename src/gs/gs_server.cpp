@@ -1,6 +1,12 @@
 #include "gs_server.h"
 
 #include "texture_manager.h"
+
+extern "C"
+{
+    #include "common/utility.h"
+}
+
 #include "spdlog/spdlog.h"
 
 #include <cstring>
@@ -239,6 +245,7 @@ unsigned char* DownloadGsTexture(sceGsTex0* tex0)
     spdlog::debug("GS download request for DBP {:#x} CBP {:#x} DPSM {} ", (unsigned long long)tex0->TBP0, (unsigned long long)tex0->CBP, (unsigned long long)tex0->PSM);
 
     auto texture = GetTexture(tex0);
+
     if (texture != nullptr)
     {
         return texture;
@@ -294,7 +301,7 @@ unsigned char* DownloadGsTexture(sceGsTex0* tex0)
         for (auto k = 0; k < width; k++)
         {
             auto pixel = (RGBA*) &rawPixel[(i * width + k)];
-            pixel->a = (unsigned char) (255.0f * (pixel->a / 128.0f));
+            pixel->a = AdjustAlpha(pixel->a);
             image_data[(i * width + k)] = *(unsigned int*) pixel;
         }
     }

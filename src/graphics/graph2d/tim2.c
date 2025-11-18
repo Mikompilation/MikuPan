@@ -1683,6 +1683,11 @@ void LoadSprFileToMainD(int no, int64_t addr)
 
 void SetSprFile(int64_t addr)
 {
+    if (addr == 0)
+    {
+        return;
+    }
+
     SetSprFile2(addr, 0);
 }
 

@@ -45,8 +45,8 @@
 #define GS_X_COORD(x) ((2048 - (SCR_WIDTH / 2) + x) * 16)
 #define GS_Y_COORD(y) ((2048 - (SCR_HEIGHT / 2) + y) * 16)
 
-#define UNCACHED(ptr)          ((void*)((u_int)(ptr) | CachedBuffer))
-#define UNCACHED_ACCEL(ptr)    ((void*)((u_int)(ptr) | 0x30000000))
+#define UNCACHED(ptr)          ((void*)((int64_t)(ptr) | CachedBuffer))
+#define UNCACHED_ACCEL(ptr)    ((void*)((int64_t)(ptr) | 0x30000000))
 
 extern unsigned int dma /* __attribute__((section(".vutext"))) */;
 
@@ -260,12 +260,12 @@ void ChoudoPreRender(FURN_WRK* furn) {
 
     cp = hs->coordp;
 
-    if ((int)cp->matrix % 16) // check for sceVu0FMATRIX address alignment (should be aligned 16)
+    if ((int64_t)cp->matrix % 16) // check for sceVu0FMATRIX address alignment (should be aligned 16)
     {
         return;
     }
 
-    if (abs((int)cp->matrix - (int)hs) <= 512) // matrix can't be too far from the header it's being used in ???
+    if (abs((int64_t)cp->matrix - (int64_t)hs) <= 512) // matrix can't be too far from the header it's being used in ???
     {
         sceVu0RotMatrixX(cp->matrix, runit_mtx, PI);
 
@@ -1701,9 +1701,11 @@ void DrawRoomShadow()
         return;
     }
 
-    cp = hs->coordp;
+    //cp = hs->coordp;
+    cp = GetCoordP(hs);
 
-    *cp = *((HeaderSection *)room_addr_tbl[disp_room].near_sgd)->coordp;
+    // *((HeaderSection *)room_addr_tbl[disp_room].near_sgd)->coordp;
+    *cp = *GetCoordP(((HeaderSection *)room_addr_tbl[disp_room].near_sgd));
 
     CalcCoordinate(cp, hs->blocks - 1);
 
@@ -1794,9 +1796,9 @@ void DrawFurniture(int disp_room)
 
             acs_flg = furn_dat[furn_wrk[j].id].acs_flg;
 
-            if (((u_int)cp->matrix % 16) == 0) // pointer alignment check
+            if (((int64_t)cp->matrix % 16) == 0) // pointer alignment check
             {
-                if (__builtin_abs((int)cp - (int)tmpModelp) <= 512)
+                if (__builtin_abs((int64_t)cp - (int64_t)tmpModelp) <= 512)
                 {
                     sceVu0RotMatrixX(cp->matrix, runit_mtx, PI);
                     grot = furn_wrk[j].rotate[1] + PI;

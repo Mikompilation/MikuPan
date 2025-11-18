@@ -53,6 +53,7 @@ int scePadRead(int port, int slot, unsigned char* rdata)
     {
         return 0;
     }
+
     for (int i = 1; i < 32; i++)
     {
         rdata[i] = 0xFF;

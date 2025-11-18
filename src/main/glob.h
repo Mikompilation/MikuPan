@@ -481,6 +481,21 @@ typedef struct {
 	int param_camera;
 } DEBUG_NUMBERS;
 
+
+#define DPAD_UP_PRESSED() *key_now[0]
+#define DPAD_DOWN_PRESSED() *key_now[1]
+#define DPAD_LEFT_PRESSED() *key_now[2]
+#define DPAD_RIGHT_PRESSED() *key_now[3]
+#define TRIANGLE_PRESSED() *key_now[4]
+#define CROSS_PRESSED() *key_now[5]
+#define SQUARE_PRESSED() *key_now[6]
+#define CIRCLE_PRESSED() *key_now[7]
+#define L1_PRESSED() *key_now[8]
+#define L2_PRESSED() *key_now[9]
+#define R1_PRESSED() *key_now[10]
+#define R2_PRESSED() *key_now[11]
+#define START_PRESSED() *key_now[12]
+#define SELECT_PRESSED() *key_now[13]
 #define L3_PRESSED() *key_now[14]
 #define R3_PRESSED() *key_now[15]
 

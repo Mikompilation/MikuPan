@@ -18,10 +18,12 @@
 #include "rendering/mikupan_renderer.h"
 
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
 #include "graphics/ui/imgui_window_c.h"
 #include "os/eeiop/se_cmd.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+
+#include <sce/libpad.h>
 
 const int TARGET_FPS = 60;
 const double TARGET_FRAME_TIME = 1000.0 / TARGET_FPS; // milliseconds per frame
@@ -169,8 +171,8 @@ void CallSoftReset()
 int SoftResetChk()
 {
     if (
-        /* L1 */ *key_now[8] && /* L2 */ *key_now[9] && /* R1 */ *key_now[10] &&
-        /* R2 */ *key_now[11] && /* START */ *key_now[12] && /* SELECT */ *key_now[13]
+        /* L1 */ L1_PRESSED() && /* L2 */ L2_PRESSED() && /* R1 */ R1_PRESSED() &&
+        /* R2 */ R2_PRESSED() && /* START */ START_PRESSED() && /* SELECT */ SELECT_PRESSED()
     )
     {
         // Re-enabled for debug purposes

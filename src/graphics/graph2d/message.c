@@ -1497,7 +1497,7 @@ int SetMessageV2_2(DISP_STR *s)
         {
             if (s->type != 0)
             {
-                if (*key_now[0] == 1)
+                if (DPAD_UP_PRESSED() == 1)
                 {
                     s->csr = s->csr > 0 ? s->csr - 1 : selnum - 1;
                 }
@@ -1830,7 +1830,7 @@ int SetMessageV2(DISP_STR *s)
         {
             if (s->type != 0)
             {
-                if (*key_now[0] == 1)
+                if (DPAD_UP_PRESSED() == 1)
                 {
                     s->csr = s->csr > 0 ? s->csr - 1 : selnum - 1;
                 }
@@ -2314,7 +2314,7 @@ int SubMessageV3(u_char *s, int pri, int delflg)
         {
             if (msdat.seltype != 0)
             {
-                if (*key_now[0] == 1)
+                if (DPAD_UP_PRESSED() == 1)
                 {
                     msdat.csr = msdat.csr > 0 ? msdat.csr - 1 : msdat.selnum - 1;
                 }

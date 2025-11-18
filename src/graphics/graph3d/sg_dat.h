@@ -3,6 +3,8 @@
 
 #include "typedefs.h"
 
+#include <stdint.h>
+
 typedef struct {
 	int num;
 	int lnum[3];
@@ -103,11 +105,25 @@ typedef struct {
 	u_char kind;
 	u_short materials;
 	SgCOORDUNIT *coordp;
+	//int coordp;
 	SgMaterial *matp;
+	//int matp;
 	u_int *phead;
+	//u_int phead;
 	u_int blocks;
 	u_int **primitives;
+	//u_int **primitives;
 } HeaderSection;
+
+inline static SgCOORDUNIT * GetCoordP(HeaderSection *hs)
+{
+    return (SgCOORDUNIT *)((int64_t)hs->coordp + (int64_t)hs);
+}
+
+inline static SgMaterial* GetMatP(HeaderSection *hs)
+{
+    return (SgMaterial *)((int64_t)hs->matp + (int64_t)hs);
+}
 
 typedef struct {
     short int vnum;

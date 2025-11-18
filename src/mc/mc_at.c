@@ -3,6 +3,7 @@
 
 char McAtLoadChk(u_char type)
 {
+    return 1;
 }
 
 char McAtSaveChk()

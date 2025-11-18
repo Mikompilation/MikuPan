@@ -237,8 +237,8 @@ void SgMapUnit(void *sgd_top)
     int i;
     int j;
     int size;
-    u_int *intpointer;
-    u_int *nextprim;
+    int64_t *intpointer;
+    int64_t *nextprim;
     u_int *pk;
     u_int *vuvnprim;
     HeaderSection *hs;
@@ -261,12 +261,12 @@ void SgMapUnit(void *sgd_top)
 
     if ((u_int)hs->coordp - 1 < 0x2fffffff)
     {
-        hs->coordp = (SgCOORDUNIT *)((u_int)hs->coordp + (int)sgd_top);
+        //hs->coordp = (SgCOORDUNIT *)((u_int)hs->coordp + (int)sgd_top);
     }
 
     if ((u_int)hs->matp - 1 < 0x2fffffff)
     {
-        hs->matp = (SgMaterial *)((u_int)hs->matp + (int)sgd_top);
+        //hs->matp = (SgMaterial *)((u_int)hs->matp + (int)sgd_top);
     }
 
     hs->phead = (u_int *)((u_int)hs->phead + (int)sgd_top);
@@ -277,28 +277,28 @@ void SgMapUnit(void *sgd_top)
     {
         if (pk[i] != 0)
         {
-            pk[i] = pk[i] + (int)sgd_top;
+            pk[i] = pk[i] + (int64_t)sgd_top;
         }
     }
 
-    cp = hs->coordp;
+    cp = GetCoordP(hs);
 
     if (cp != 0)
     {
         for (i = 0; i < hs->blocks - 1; i++)
         {
-            if ((int)cp[i].parent < 0)
+            if ((int64_t)cp[i].parent < 0)
             {
                 cp[i].parent = NULL;
             }
-            else if ((int)cp[i].parent < (u_int)cp)
+            else if ((int64_t)cp[i].parent < (int64_t)cp)
             {
-                cp[i].parent = (int)cp[i].parent + cp;
+                cp[i].parent = (int64_t)cp[i].parent + cp;
             }
         }
     }
 
-    intpointer = (u_int *)((int)hs->phead);
+    intpointer = (u_int *)((int64_t)hs->phead);
     intpointer++;
 
     for (i = 0; i < hs->phead[0]; i++)
@@ -309,7 +309,7 @@ void SgMapUnit(void *sgd_top)
         {
             if (*intpointer != 0)
             {
-                *intpointer = *intpointer + (int)sgd_top;
+                *intpointer = *intpointer + (int64_t)sgd_top;
             }
         }
     }

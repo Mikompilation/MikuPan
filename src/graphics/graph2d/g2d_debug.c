@@ -529,7 +529,7 @@ void gra2dDrawDbgMenu()
         }
     }
 
-    if (*key_now[0] == 1)
+    if (DPAD_UP_PRESSED() == 1)
     {
         nlp->pos = nlp->pos < 1 ? nlp->mnum - 1 : nlp->pos - 1;
 
