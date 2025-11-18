@@ -725,7 +725,7 @@ u_int* acsInitCloth(CLOTH_CTRL *cloth_top, u_int *mpk_p, u_int *top_addr, u_int 
 
         ph = GetFileInPak(mpk_p, cloth->cdat->sgd_id);
         //vtx = (sceVu0FVECTOR *)ph->pUniqList[2];
-        vtx = ((sceVu0FVECTOR *)GetOffsetPtr(ph, ph->pUniqList))[2];
+        vtx = &((sceVu0FVECTOR *)GetOffsetPtr(ph, ph->pUniqList))[2];
 
         if (dat->type == 0)
         {
@@ -976,7 +976,7 @@ void acsClothCtrl(ANI_CTRL* ani_ctrl, u_int* mpk_p, u_int mdl_no, u_char scene_f
 
         ph = GetFileInPak(mpk_p, cdat->sgd_id);
         //vtx = (sceVu0FVECTOR*)ph->pUniqList[2];
-        vtx = ((sceVu0FVECTOR *)GetOffsetPtr(ph, ph->pUniqList))[2];
+        vtx = &((sceVu0FVECTOR *)GetOffsetPtr(ph, ph->pUniqList))[2];
 
         if (scene_flg != 0)
         {

@@ -27,14 +27,408 @@
 
 MSN_TITLE_WRK mttl_wrk;
 EVENT_LOAD_WRK ev_load_wrk;
-u_char msn_start_room[];
-MSN_LOAD_DAT load_dat_wrk[40];
-u_char msn_title_sp_flr_no[];
-u_char msn_title_flr_sp_num[];
-u_char msn_title_sp_ttl_no[];
-u_char msn_title_ttl_sp_num[];
-SPRT_SDAT *msn_title_sp_flr[];
-SPRT_SDAT *msn_title_sp_ttl[];
+u_char msn_start_room[] = {0, 0, 40, 29, 35};
+MSN_LOAD_DAT load_dat_wrk[] = {
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+    {
+        .file_no = 0,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+};
+
+u_char msn_title_sp_flr_no[] = {12, 12, 12, 12, 12};
+u_char msn_title_flr_sp_num[] = {1, 2, 1, 1, 1};
+u_char msn_title_sp_ttl_no[] = {11, 11, 11, 11, 11};
+u_char msn_title_ttl_sp_num[] = {2, 1, 1, 1, 1};
+
+SPRT_SDAT msn_title00_sp_flr[] = {
+    {
+        .u = 0,
+        .v = 0,
+        .w = 384,
+        .h = 168,
+        .x = 256,
+        .y = 251,
+        .pri = 20,
+        .alp = 128,
+    },
+};
+
+SPRT_SDAT msn_title00_sp_ttl[] = {
+    {
+        .u = 0,
+        .v = 0,
+        .w = 256,
+        .h = 72,
+        .x = 343,
+        .y = 274,
+        .pri = 10,
+        .alp = 128,
+    },
+    {
+        .u = 100,
+        .v = 75,
+        .w = 128,
+        .h = 53,
+        .x = 436,
+        .y = 349,
+        .pri = 10,
+        .alp = 128,
+    },
+};
+
+
+SPRT_SDAT msn_title01_sp_flr[] = {
+    {
+        .u = 1,
+        .v = 2,
+        .w = 510,
+        .h = 194,
+        .x = 96,
+        .y = 233,
+        .pri = 20,
+        .alp = 128,
+    },
+    {
+        .u = 1,
+        .v = 198,
+        .w = 34,
+        .h = 194,
+        .x = 606,
+        .y = 233,
+        .pri = 20,
+        .alp = 128,
+    },
+};
+
+SPRT_SDAT msn_title01_sp_ttl[] = {
+    {
+        .u = 0,
+        .v = 0,
+        .w = 456,
+        .h = 154,
+        .x = 160,
+        .y = 248,
+        .pri = 10,
+        .alp = 128,
+    },
+};
+
+SPRT_SDAT msn_title02_sp_flr[] = {
+    {
+        .u = 0,
+        .v = 0,
+        .w = 432,
+        .h = 168,
+        .x = 0,
+        .y = 272,
+        .pri = 20,
+        .alp = 128,
+    },
+};
+
+SPRT_SDAT msn_title02_sp_ttl[] = {
+    {
+        .u = 0,
+        .v = 0,
+        .w = 323,
+        .h = 137,
+        .x = 13,
+        .y = 296,
+        .pri = 10,
+        .alp = 128,
+    },
+};
+
+SPRT_SDAT msn_title03_sp_flr[] = {
+    {
+        .u = 0,
+        .v = 0,
+        .w = 408,
+        .h = 200,
+        .x = 232,
+        .y = 22,
+        .pri = 20,
+        .alp = 128,
+    },
+};
+
+SPRT_SDAT msn_title03_sp_ttl[] = {
+    {
+        .u = 0,
+        .v = 0,
+        .w = 340,
+        .h = 136,
+        .x = 288,
+        .y = 64,
+        .pri = 10,
+        .alp = 128,
+    },
+};
+
+SPRT_SDAT msn_title04_sp_flr[] = {
+    {
+        .u = 0,
+        .v = 0,
+        .w = 352,
+        .h = 168,
+        .x = 0,
+        .y = 280,
+        .pri = 20,
+        .alp = 128,
+    },
+};
+
+SPRT_SDAT msn_title04_sp_ttl[] = {
+    {
+        .u = 0,
+        .v = 0,
+        .w = 272,
+        .h = 128,
+        .x = 17,
+        .y = 306,
+        .pri = 10,
+        .alp = 128,
+    },
+};
+
+SPRT_SDAT *msn_title_sp_flr[] = { msn_title00_sp_flr, msn_title01_sp_flr, msn_title02_sp_flr, msn_title03_sp_flr, msn_title04_sp_flr };
+SPRT_SDAT *msn_title_sp_ttl[] = { msn_title00_sp_ttl, msn_title01_sp_ttl, msn_title02_sp_ttl, msn_title03_sp_ttl, msn_title04_sp_ttl };
 SPRT_SDAT msn_title_sp_bak[] = {
     {
         .u = 0,
@@ -148,7 +542,7 @@ SPRT_SDAT msn_title_sp_bak[] = {
     },
 };
 
-MSN_LOAD_DAT msn0_title_load_dat[22] = {
+MSN_LOAD_DAT msn0_title_load_dat[] = {
     {
         .file_no = 26,
         .file_type = 3,
@@ -283,7 +677,7 @@ MSN_LOAD_DAT msn0_title_load_dat[22] = {
     },
 };
 
-MSN_LOAD_DAT msn1_title_load_dat[10] = {
+MSN_LOAD_DAT msn1_title_load_dat[] = {
     {
         .file_no = 26,
         .file_type = 3,
@@ -346,7 +740,7 @@ MSN_LOAD_DAT msn1_title_load_dat[10] = {
     },
 };
 
-MSN_LOAD_DAT msn2_title_load_dat[10] = {
+MSN_LOAD_DAT msn2_title_load_dat[] = {
     {
         .file_no = 27,
         .file_type = 3,
@@ -409,7 +803,7 @@ MSN_LOAD_DAT msn2_title_load_dat[10] = {
     },
 };
 
-MSN_LOAD_DAT msn3_title_load_dat[13] = {
+MSN_LOAD_DAT msn3_title_load_dat[] = {
     {
         .file_no = 28,
         .file_type = 3,
@@ -490,8 +884,7 @@ MSN_LOAD_DAT msn3_title_load_dat[13] = {
     },
 };
 
-
-MSN_LOAD_DAT msn4_title_load_dat[20] = {
+MSN_LOAD_DAT msn4_title_load_dat[] = {
     {
         .file_no = 28,
         .file_type = 3,
@@ -614,11 +1007,11 @@ MSN_LOAD_DAT msn4_title_load_dat[20] = {
     },
 };
 
-MSN_LOAD_DAT *msn_title_load_dat[5] = {
-    &msn0_title_load_dat, &msn1_title_load_dat, &msn2_title_load_dat, &msn3_title_load_dat, &msn4_title_load_dat,
+MSN_LOAD_DAT *msn_title_load_dat[] = {
+    msn0_title_load_dat, msn1_title_load_dat, msn2_title_load_dat, msn3_title_load_dat, msn4_title_load_dat,
 };
 
-static u_char msn_start_floor[9];
+static u_char msn_start_floor[] = {1, 1, 1, 0, 2};
 
 void MissionTitleInit(int msn_no)
 {

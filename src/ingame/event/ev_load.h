@@ -36,11 +36,11 @@ enum {
 	MSN_TITLE_MODE_END = 5
 };
 
-// extern MSN_LOAD_DAT msn0_title_load_dat[0];
+extern MSN_LOAD_DAT msn0_title_load_dat[];
 // extern MSN_LOAD_DAT scn0022_load[0];
 // extern u_short scn0022_del_dat[0];
 // extern SCN_LOAD_DAT scn_load0[0];
-// extern MSN_LOAD_DAT msn1_title_load_dat[0];
+extern MSN_LOAD_DAT msn1_title_load_dat[];
 // extern MSN_LOAD_DAT scn1010_load[0];
 // extern u_short scn1010_del_dat[0];
 // extern MSN_LOAD_DAT scn1030_load[0];
@@ -84,7 +84,7 @@ enum {
 // extern MSN_LOAD_DAT scn1410_load[0];
 // extern u_short scn1410_del_dat[0];
 // extern SCN_LOAD_DAT scn_load1[0];
-// extern MSN_LOAD_DAT msn2_title_load_dat[0];
+extern MSN_LOAD_DAT msn2_title_load_dat[];
 // extern MSN_LOAD_DAT scn2013_load[0];
 // extern u_short scn2013_del_dat[0];
 // extern MSN_LOAD_DAT scn2160_load[0];
@@ -122,7 +122,7 @@ enum {
 // extern MSN_LOAD_DAT scn2150_load[0];
 // extern u_short scn2150_del_dat[0];
 // extern SCN_LOAD_DAT scn_load2[0];
-// extern MSN_LOAD_DAT msn3_title_load_dat[0];
+extern MSN_LOAD_DAT msn3_title_load_dat[];
 // extern MSN_LOAD_DAT scn3020_load[0];
 // extern u_short scn3020_del_dat[0];
 // extern MSN_LOAD_DAT scn3030_load[0];
@@ -142,7 +142,7 @@ enum {
 // extern MSN_LOAD_DAT scn4901_load[0];
 // extern u_short scn4901_del_dat[0];
 // extern SCN_LOAD_DAT scn_load3[0];
-// extern MSN_LOAD_DAT msn4_title_load_dat[0];
+extern MSN_LOAD_DAT msn4_title_load_dat[];
 // extern MSN_LOAD_DAT scn4011_load[0];
 // extern u_short scn4011_del_dat[0];
 // extern MSN_LOAD_DAT scn4020_load[0];
@@ -163,16 +163,16 @@ extern MSN_LOAD_DAT *msn_title_load_dat[];
 extern u_char msn_start_room[];
 // extern SCN_LOAD_DAT *scn_load[0];
 extern SPRT_SDAT msn_title_sp_bak[];
-// extern SPRT_SDAT msn_title00_sp_flr[0];
-// extern SPRT_SDAT msn_title00_sp_ttl[0];
-// extern SPRT_SDAT msn_title01_sp_flr[0];
-// extern SPRT_SDAT msn_title01_sp_ttl[0];
-// extern SPRT_SDAT msn_title02_sp_flr[0];
-// extern SPRT_SDAT msn_title02_sp_ttl[0];
-// extern SPRT_SDAT msn_title03_sp_flr[0];
-// extern SPRT_SDAT msn_title03_sp_ttl[0];
-// extern SPRT_SDAT msn_title04_sp_flr[0];
-// extern SPRT_SDAT msn_title04_sp_ttl[0];
+extern SPRT_SDAT msn_title00_sp_flr[];
+extern SPRT_SDAT msn_title00_sp_ttl[];
+extern SPRT_SDAT msn_title01_sp_flr[];
+extern SPRT_SDAT msn_title01_sp_ttl[];
+extern SPRT_SDAT msn_title02_sp_flr[];
+extern SPRT_SDAT msn_title02_sp_ttl[];
+extern SPRT_SDAT msn_title03_sp_flr[];
+extern SPRT_SDAT msn_title03_sp_ttl[];
+extern SPRT_SDAT msn_title04_sp_flr[];
+extern SPRT_SDAT msn_title04_sp_ttl[];
 extern u_char msn_title_sp_flr_no[];
 extern u_char msn_title_flr_sp_num[];
 extern u_char msn_title_sp_ttl_no[];
