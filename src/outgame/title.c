@@ -988,11 +988,11 @@ void TitleStartSlct()
 	/* s3 19 */ char *str4 = "ALBUM";
 	/* s4 20 */ char *csr0 = "MISSION";
 
-    SetASCIIString(70.0f, 110.0f, str4);
+    SetASCIIString(70.0f, 110.0f, str1);
 
-    SetASCIIString(160.0f, 190.0f, str1);
-    SetASCIIString(160.0f, 230.0f, str2);
-    SetASCIIString(160.0f, 270.0f, str3);
+    SetASCIIString(160.0f, 190.0f, str2);
+    SetASCIIString(160.0f, 230.0f, str3);
+    SetASCIIString(160.0f, 270.0f, str4);
     SetASCIIString(230.0f, 350.0f, csr0);
 
     SetInteger2(0, 350.0f, 350.0f, 0, 0x80, 0x80, 0x80, ingame_wrk.msn_no);
