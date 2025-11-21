@@ -4675,7 +4675,7 @@ void SetScreenSaver()
                 hand_wrk.top = (hand_wrk.top + 1) % 16;
             }
             
-            SetSprFile2(0x1fc8000, 0);
+            SetSprFile2(HAND_PK2_ADDRESS, 0);
             
             for (i = 0; i < 16; i++)
             {

@@ -1201,7 +1201,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         return;
     }
 
-    if (*key_now[5] == 1 || *key_now[12] == 1)
+    if (CROSS_PRESSED() == 1 || START_PRESSED() == 1)
     {
         ingame_wrk.clear_count = 0;
         ingame_wrk.ghost_cnt = 0;

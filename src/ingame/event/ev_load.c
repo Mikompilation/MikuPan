@@ -547,31 +547,31 @@ MSN_LOAD_DAT msn0_title_load_dat[] = {
         .file_no = 26,
         .file_type = 3,
         .tmp_no = 0,
-        .addr = 8323072,
+        .addr = 8323072, // 7F0000
     },
     {
         .file_no = 29,
         .file_type = 4,
         .tmp_no = 0,
-        .addr = 8323072,
+        .addr = 8323072, // 7F0000
     },
     {
         .file_no = 32,
         .file_type = 5,
         .tmp_no = 0,
-        .addr = 8323072,
+        .addr = 8323072, // 7F0000
     },
     {
         .file_no = 35,
         .file_type = 6,
         .tmp_no = 0,
-        .addr = 8323072,
+        .addr = 8323072,// 7F0000
     },
     {
         .file_no = 15,
         .file_type = 1,
         .tmp_no = 0,
-        .addr = 8323072,
+        .addr = 8323072, // 7F0000
     },
     {
         .file_no = 21,
@@ -613,7 +613,7 @@ MSN_LOAD_DAT msn0_title_load_dat[] = {
         .file_no = 857,
         .file_type = 8,
         .tmp_no = 0,
-        .addr = 13107200,
+        .addr = &M_SLCT_CMN_PK2_ADDRESS,
     },
     {
         .file_no = 901,
@@ -1419,7 +1419,7 @@ void MissionTitleDisp(int msn_no)
 	/* 0x0(sp) */ SPRT_SDAT ssd;
     SPRT_SDAT *p;
 
-    SetSprFile(MISSION_TITLE_CARD_ADDRESS);
+    SetSprFile((int64_t)MISSION_TITLE_CARD_ADDRESS);
     
     if (mttl_wrk.mode == 1)
     {

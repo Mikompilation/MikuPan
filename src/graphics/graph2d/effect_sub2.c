@@ -2878,7 +2878,7 @@ int BtlAnmInit(/* s0 16 */ int anm_no)
 #else
             LoadReq(M_SLCT_STY_DMY_PK2, &MISSION_TITLE_CARD_ADDRESS);
 #endif
-            LoadReq(S_MODE_CLEARBG_PK2, 0x14b0000);
+            LoadReq(S_MODE_CLEARBG_PK2, &MPEG_WORK_ADDRESS);
             anm_load_id = 1;
             break;
         case 0:
@@ -2903,7 +2903,7 @@ int BtlAnmInit(/* s0 16 */ int anm_no)
         break;
         case 5:
             SetSprFile(MISSION_TITLE_CARD_ADDRESS);
-            SetSprFile(0x14b0000);
+            SetSprFile(MPEG_WORK_ADDRESS);
         break;
         default:
             SetSprFile(MISSION_TITLE_CARD_ADDRESS);

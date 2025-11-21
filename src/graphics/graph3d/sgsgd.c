@@ -428,10 +428,10 @@ void SgMapUnit(void *sgd_top)
     if (hs->materials == 0)
     {
         size = 0;
-        matp = hs->matp;
-        phead = hs->phead;
+        matp = GetMaterialPtr(hs, 0);
+        phead = GetPHead(hs);
 
-        while ((u_int)matp < (u_int)phead)
+        while ((int64_t)matp < (int64_t)phead)
         {
             size++;
             matp++;
@@ -459,7 +459,8 @@ u_int *GetPrimitiveAddr(void *sgd_top, int num)
 
     pk = (u_int *)&hs->primitives;
 
-    return (pk[num] != 0) ? (u_int *)pk[num] : &pk[num];
+    //return (pk[num] != 0) ? (u_int *)pk[num] : &pk[num];
+    return (pk[num] != 0) ? GetTopProcUnitHeaderPtr(hs, num) : &pk[num];
 }
 
 u_int *GetStartPacketAddr(void *sgd_top, int num)

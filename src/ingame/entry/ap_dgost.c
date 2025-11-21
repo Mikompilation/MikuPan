@@ -3,18 +3,21 @@
 #include "enums.h"
 #include "ap_dgost.h"
 
-#include "main/glob.h"
 #include "common/ul_math.h"
+#include "graphics/graph2d/effect_ene.h"
+#include "ingame/enemy/ene_ctl.h"
+#include "ingame/entry/ap_fgost.h"
+#include "ingame/entry/entry.h"
+#include "ingame/event/ev_load.h"
+#include "ingame/event/ev_main.h"
+#include "ingame/map/door_ctl.h"
+#include "ingame/plyr/unit_ctl.h"
+#include "main/glob.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
-#include "graphics/graph2d/effect_ene.h"
-#include "ingame/event/ev_main.h"
-#include "ingame/event/ev_load.h"
-#include "ingame/plyr/unit_ctl.h"
-#include "ingame/enemy/ene_ctl.h"
-#include "ingame/map/door_ctl.h"
-#include "ingame/entry/entry.h"
-#include "ingame/entry/ap_fgost.h"
+
+#include <common/memory_addresses.h>
+#include <graphics/motion/motion.h>
 // #include "graphics/motion/motion.h"
 
 u_char dgst_room[] = {
@@ -136,16 +139,16 @@ int DeadGhostLoad()
         dgst_wrk.load_mode = DGLOAD_MODE_START;
     break;
     case DGLOAD_MODE_START:
-        LoadReq(M055_SYOUALL_MDL, 0xc80000);
+        LoadReq(M055_SYOUALL_MDL, &M_SLCT_CMN_PK2_ADDRESS);
 
         dgst_wrk.load_mode = DGLOAD_MODE_MDL;
     break;
     case DGLOAD_MODE_MDL:
         if (IsLoadEndAll() != 0)
         {
-            motInitEnemyMdl((u_int *)0xc80000, M055_SYOUALL);
-            LoadEneDmgTex(42, (u_int *)0xac8000);
-            LoadReq(M042_SYOUKI2_ANM, 0xa30000);
+            motInitEnemyMdl((u_int *)M_SLCT_CMN_PK2_ADDRESS, M055_SYOUALL);
+            LoadEneDmgTex(42, (u_int *)&ENE_DMG_TEX_ADDRESS);
+            LoadReq(M042_SYOUKI2_ANM, &SPRITE_ADDRESS);
 
             dgst_wrk.load_mode = DGLOAD_MODE_MOT;
         }
@@ -153,7 +156,7 @@ int DeadGhostLoad()
     case DGLOAD_MODE_MOT:
         if (IsLoadEndAll() != 0)
         {
-            motInitEnemyAnm((u_int *)0xa30000, M055_SYOUALL, A042_SYOUKIA);
+            motInitEnemyAnm((u_int *)SPRITE_ADDRESS, M055_SYOUALL, A042_SYOUKIA);
             SeFileLoadAndSetFGhost(SG046_SYOUKI1_BD, 16);
 
             ap_wrk.fg_se_empty[0] = 1;

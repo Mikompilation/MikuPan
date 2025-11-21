@@ -86,7 +86,7 @@ typedef struct {
 typedef unsigned char TIM2_UCHAR8;
 typedef u_int TIM2_UINT32;
 typedef short unsigned int TIM2_UINT16;
-typedef long unsigned int TIM2_UINT64;
+typedef long long unsigned int TIM2_UINT64;
 
 typedef struct {
 	TIM2_UCHAR8 FileId[4];
