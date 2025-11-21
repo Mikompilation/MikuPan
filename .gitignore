@@ -20,5 +20,6 @@ config/**/[A-Z][A-Z][A-Z][A-Z]_[0-9][0-9][0-9].[0-9][0-9]
 .idea/
 .vscode/
 cmake-build-debug-mingw/
+cmake-build-release-mingw/
 resources/
 /.vs

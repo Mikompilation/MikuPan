@@ -8,7 +8,7 @@
 IOP_STAT iop_stat;
 IOP_MASTER_VOL iop_mv;
 IOP_SYS_CTRL iop_sys_ctrl;
-
+static int request_shutdown = 0;
 static void IopInitDevice();
 static int IopInitMain();
 static SDLCALL int IopMain(void *);
@@ -88,7 +88,7 @@ static int IopInitMain()
 
 static SDLCALL int IopMain(void *data)
 {
-    while (1)
+    while (!request_shutdown)
     {
         // The thread was originally woken up by an IOP timer handler
         SDL_DelayNS(4167000);
@@ -99,4 +99,11 @@ static SDLCALL int IopMain(void *data)
     }
 
     return 0;
+}
+
+void IopShutDown()
+{
+    request_shutdown = 1;
+
+    SDL_WaitThread(iop_sys_ctrl.thread, NULL);
 }

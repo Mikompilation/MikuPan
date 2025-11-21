@@ -42,7 +42,7 @@ void InitModelLoad();
 void DelSameMdlID(u_short *mdl_id, int *mdl_num);
 void SetPreRenderR022(int flg);
 void LoadItemModel(u_int *tmpp);
-void ItemLoadAfterInit(int item_no, int addr);
+void ItemLoadAfterInit(int item_no, int64_t addr);
 int InitializeRoomUnder(RMDL_ADDR *room_tbl);
 int LoadInitFurnModel(ROOM_LOAD_BLOCK *rlb);
 int LoadInitDoorModel(ROOM_LOAD_BLOCK *rlb);

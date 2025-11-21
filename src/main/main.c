@@ -22,6 +22,7 @@
 #include "os/eeiop/se_cmd.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <iop/iopsys.h>
 
 #include <sce/libpad.h>
 
@@ -111,6 +112,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
+    IopShutDown();
     ShutDownImGuiWindow();
 }
 

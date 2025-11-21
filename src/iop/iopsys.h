@@ -42,5 +42,6 @@ typedef struct
 extern IOP_STAT iop_stat;
 
 void *IopDrvFunc(unsigned int command, void *data, int size);
+void IopShutDown();
 
 #endif// IOPSYS_H_

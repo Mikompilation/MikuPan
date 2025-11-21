@@ -461,7 +461,7 @@ void LoadItemModel(u_int *tmpp)
     }
 }
 
-void ItemLoadAfterInit(int item_no, int addr)
+void ItemLoadAfterInit(int item_no, int64_t addr)
 {
     void *sgd_top = (void *)addr;
 
