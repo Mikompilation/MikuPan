@@ -2329,8 +2329,8 @@ int CallMissionClear()
         }
         
         if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -2456,8 +2456,8 @@ uint64_t CallMissionFailed()
         }
         
         if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -2591,8 +2591,8 @@ int CallMissionAllClear()
         }
         
         if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )

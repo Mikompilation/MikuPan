@@ -337,8 +337,8 @@ char ModeSlctPad(u_char mode)
         else
         {
             if (
-                *key_now[0] == 1 ||
-                (*key_now[0] > 0x19 && (*key_now[0] % 5) == 1) ||
+                DPAD_UP_PRESSED() == 1 ||
+                (DPAD_UP_PRESSED() > 0x19 && (DPAD_UP_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(0) == 1 ||
                 (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
             )
@@ -354,8 +354,8 @@ char ModeSlctPad(u_char mode)
                 }
             }
             else if (
-                *key_now[1] == 1 ||
-                (*key_now[1] > 0x19 && (*key_now[1] % 5) == 1) ||
+                DPAD_DOWN_PRESSED() == 1 ||
+                (DPAD_DOWN_PRESSED() > 0x19 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(2) == 1 ||
                 (Ana2PadDirCnt(2) > 0x19 && Ana2PadDirCnt(2) % 5 == 1)
             )
@@ -466,8 +466,8 @@ char ModeSlctPad(u_char mode)
             {
             case 0:
                 if (
-                    *key_now[0] == 1 ||
-                    (*key_now[0] > 0x19 && (*key_now[0] % 5) == 1) ||
+                    DPAD_UP_PRESSED() == 1 ||
+                    (DPAD_UP_PRESSED() > 0x19 && (DPAD_UP_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(0) == 1 ||
                     (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
                 )
@@ -483,8 +483,8 @@ char ModeSlctPad(u_char mode)
                     }
                 }
                 else if (
-                    *key_now[1] == 1 ||
-                    (*key_now[1] > 0x19 && (*key_now[1] % 5) == 1) ||
+                    DPAD_DOWN_PRESSED() == 1 ||
+                    (DPAD_DOWN_PRESSED() > 0x19 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(2) == 1 ||
                     (Ana2PadDirCnt(2) > 0x19 && (Ana2PadDirCnt(2) % 5) == 1)
                 )
@@ -502,8 +502,8 @@ char ModeSlctPad(u_char mode)
             break;
             case 1:
                 if (
-                    *key_now[2] == 1 ||
-                     (*key_now[2] > 0x19 && (*key_now[2] % 5) == 1) ||
+                    DPAD_LEFT_PRESSED() == 1 ||
+                     (DPAD_LEFT_PRESSED() > 0x19 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(3) == 1 ||
                     (Ana2PadDirCnt(3) > 0x19 && (Ana2PadDirCnt(3) % 5) == 1)
                 )
@@ -619,8 +619,8 @@ char ModeSlctPad(u_char mode)
             {
             case 0:
                 if (
-                    *key_now[0] == 1 ||
-                     (*key_now[0] > 0x19 && (*key_now[0] % 5) == 1) ||
+                    DPAD_UP_PRESSED() == 1 ||
+                     (DPAD_UP_PRESSED() > 0x19 && (DPAD_UP_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(0) == 1 ||
                     (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
                 )
@@ -636,8 +636,8 @@ char ModeSlctPad(u_char mode)
                     }
                 }
                 else if (
-                    *key_now[1] == 1 ||
-                    (*key_now[1] > 0x19 && (*key_now[1] % 5) == 1) ||
+                    DPAD_DOWN_PRESSED() == 1 ||
+                    (DPAD_DOWN_PRESSED() > 0x19 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(2) == 1 ||
                     (Ana2PadDirCnt(2) > 0x19 && (Ana2PadDirCnt(2) % 5) == 1)
                 )
@@ -655,8 +655,8 @@ char ModeSlctPad(u_char mode)
             break;
             case 1:
                 if (
-                    *key_now[2] == 1 ||
-                    (*key_now[2] > 0x19 && (*key_now[2] % 5) == 1) ||
+                    DPAD_LEFT_PRESSED() == 1 ||
+                    (DPAD_LEFT_PRESSED() > 0x19 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(3) == 1 ||
                     (Ana2PadDirCnt(3) > 0x19 && (Ana2PadDirCnt(3) % 5) == 1)
                 )
@@ -784,8 +784,8 @@ char ModeSlctPad(u_char mode)
         else
         {
             if (
-                *key_now[0] == 1 ||
-                (*key_now[0] > 0x19 && (*key_now[0] % 5) == 1) ||
+                DPAD_UP_PRESSED() == 1 ||
+                (DPAD_UP_PRESSED() > 0x19 && (DPAD_UP_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(0) == 1 ||
                 (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
             )
@@ -804,8 +804,8 @@ char ModeSlctPad(u_char mode)
             else
             {
                 if (
-                    *key_now[1] == 1 ||
-                    (*key_now[1] > 0x19 && (*key_now[1] % 5) == 1) ||
+                    DPAD_DOWN_PRESSED() == 1 ||
+                    (DPAD_DOWN_PRESSED() > 0x19 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(2) == 1 ||
                     (Ana2PadDirCnt(2) > 0x19 && (Ana2PadDirCnt(2) % 5) == 1)
                 )
@@ -824,8 +824,8 @@ char ModeSlctPad(u_char mode)
                 else
                 {
                     if (
-                        *key_now[2] == 1 ||
-                        (*key_now[2] > 0x19 && (*key_now[2] % 5) == 1) ||
+                        DPAD_LEFT_PRESSED() == 1 ||
+                        (DPAD_LEFT_PRESSED() > 0x19 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                         Ana2PadDirCnt(3) == 1 ||
                         (Ana2PadDirCnt(3) > 0x19 && (Ana2PadDirCnt(3) % 5) == 1)
                     )

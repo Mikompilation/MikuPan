@@ -623,7 +623,7 @@ char NmlPadInTopPage()
                 }
             }
         }
-        else if ((*key_now[2] == 1) || (Ana2PadDirCnt(3) == 1))
+        else if ((DPAD_LEFT_PRESSED() == 1) || (Ana2PadDirCnt(3) == 1))
         {
             SeStartFix(0, 0, 0x1000, 0x1000, 0);
             if (dm_albm.side == 0 && dm_albm.is_title == 0)
@@ -813,8 +813,8 @@ char NmlPadInTopPage()
                     }
                 }
                 else if (
-                    *key_now[2] == 1 ||
-                    (*key_now[2] > 0x19 && (*key_now[2] % 5 == 1)) ||
+                    DPAD_LEFT_PRESSED() == 1 ||
+                    (DPAD_LEFT_PRESSED() > 0x19 && (DPAD_LEFT_PRESSED() % 5 == 1)) ||
                     Ana2PadDirCnt(3) == 1 ||
                     (Ana2PadDirCnt(3) > 0x19 && (Ana2PadDirCnt(3) % 5 == 1))
                 )
@@ -826,8 +826,8 @@ char NmlPadInTopPage()
                     }
                 }
                 else if (
-                        *key_now[1] == 1 ||
-                        (*key_now[1] > 0x19 && *key_now[1] % 5 == 1) ||
+                        DPAD_DOWN_PRESSED() == 1 ||
+                        (DPAD_DOWN_PRESSED() > 0x19 && DPAD_DOWN_PRESSED() % 5 == 1) ||
                         Ana2PadDirCnt(2) == 1 ||
                         (Ana2PadDirCnt(2) > 0x19 && (Ana2PadDirCnt(2) % 5 == 1))
                     )
@@ -1006,8 +1006,8 @@ char AbnPadInBigPage(u_char alp)
             dm_albm.mode = 0;
         }
         else if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 0x19 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 0x19 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 0x19 && (Ana2PadDirCnt(3) % 5 == 1))
         )
@@ -1367,8 +1367,8 @@ char MenuPadCmn()
             }
         }
         else if (
-            *key_now[1] == 1 ||
-            (*key_now[1] >= 0x1a && (*key_now[1] % 5) == 1) ||
+            DPAD_DOWN_PRESSED() == 1 ||
+            (DPAD_DOWN_PRESSED() >= 0x1a && (DPAD_DOWN_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(2) == 1 ||
             (Ana2PadDirCnt(2) >= 0x1a && (Ana2PadDirCnt(2) % 5) == 1)
         )
@@ -1512,7 +1512,7 @@ char MenuPadCmn()
                     dm_albm.csr[4] = 0;
                 }
             }
-            else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
+            else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1)
             {
                 SeStartFix(0, 0, 0x1000, 0x1000, 0);
                 if (dm_albm.side == 0 && dm_albm.is_title == 0)
@@ -1573,7 +1573,7 @@ char MenuPadCmn()
                 // this uses the asm generated in case 3, so it must be exactly the same code
                 else if (
                     *key_now[3] == 1 || Ana2PadDirCnt(1) == 1 ||
-                    *key_now[2] == 1 || Ana2PadDirCnt(3) == 1
+                    DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1
                 )
                 {
                     SeStartFix(0, 0, 0x1000, 0x1000, 0);
@@ -1627,7 +1627,7 @@ char MenuPadCmn()
                 }
                 else if (
                     *key_now[3] == 1 || Ana2PadDirCnt(1) == 1 ||
-                    *key_now[2] == 1 || Ana2PadDirCnt(3) == 1
+                    DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1
                 )
                 {
                     SeStartFix(0, 0, 0x1000, 0x1000, 0);
@@ -1682,7 +1682,7 @@ char PasteCtrl()
         }
         else if (( // Line 1470
             *key_now[3] == one || Ana2PadDirCnt(1) == one ||
-            *key_now[2] == one || Ana2PadDirCnt(3) == one
+            DPAD_LEFT_PRESSED() == one || Ana2PadDirCnt(3) == one
         ))
         {
             SeStartFix(0, 0, 0x1000, 0x1000, 0); // Line 1471
@@ -1800,8 +1800,8 @@ void BuffPadCmn()
             dm_albm.csr[dm_albm.side] = GetAlbumCurPos(dm_albm.side);
         }
         else if (
-            *key_now[0] == 1 || 
-            (*key_now[0] > 0x19 && (*key_now[0] % 5) == 1) ||
+            DPAD_UP_PRESSED() == 1 ||
+            (DPAD_UP_PRESSED() > 0x19 && (DPAD_UP_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(0) == 1 ||
             (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
         )
@@ -1810,8 +1810,8 @@ void BuffPadCmn()
             dm_albm.csr_mode = 0;
         }
         else if (
-            (*key_now[2] == 1) ||
-            (*key_now[2] > 0x19 && (*key_now[2] % 5) == 1) ||
+            (DPAD_LEFT_PRESSED() == 1) ||
+            (DPAD_LEFT_PRESSED() > 0x19 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3)  == 1 ||
             (Ana2PadDirCnt(3) > 0x19 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -1933,8 +1933,8 @@ void BuffPadMnu()
         }
     }
     else if (
-            (*key_now[1] == 1) ||
-            (*key_now[1] > 0x19 && (*key_now[1] % 5) == 1) ||
+            (DPAD_DOWN_PRESSED() == 1) ||
+            (DPAD_DOWN_PRESSED() > 0x19 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(2)  == 1 ||
             (Ana2PadDirCnt(2) > 0x19 && (Ana2PadDirCnt(2) % 5) == 1)
         )
@@ -3027,15 +3027,15 @@ char InKeyTamusi()
     u_char hit;
 
     hit = 0;
-    if ((*key_now[0] != 0) || Ana2PadDirCnt(0))
+    if ((DPAD_UP_PRESSED() != 0) || Ana2PadDirCnt(0))
     {
         hit = 1;
     }
-    if ((*key_now[1] != 0) || Ana2PadDirCnt(2))
+    if ((DPAD_DOWN_PRESSED() != 0) || Ana2PadDirCnt(2))
     {
         hit = hit + 1;
     }
-    if ((*key_now[2] != 0) || Ana2PadDirCnt(3))
+    if ((DPAD_LEFT_PRESSED() != 0) || Ana2PadDirCnt(3))
     {
         hit = hit + 1;
     }

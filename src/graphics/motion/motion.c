@@ -765,6 +765,7 @@ void* GetFileInPak(void *pak_head, int num)
 
 void* GetPakTaleAddr(void *pak_head)
 {
+    return malloc(1024*1024);
     int file_num;
     int file_size;
     int i;

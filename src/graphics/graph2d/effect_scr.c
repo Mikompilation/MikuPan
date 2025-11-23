@@ -4663,9 +4663,9 @@ void SetScreenSaver()
             (__builtin_abs(pad[0].analog[3] - 0x80) >= 32);
         
         pad_all = 
-            *key_now[0] + 
-            *key_now[1] + 
-            *key_now[2] + 
+            DPAD_UP_PRESSED() +
+            DPAD_DOWN_PRESSED() +
+            DPAD_LEFT_PRESSED() +
             *key_now[3] + 
             *key_now[4] + 
             *key_now[5] + 

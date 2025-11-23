@@ -1520,14 +1520,14 @@ int SetMessageV2_2(DISP_STR *s)
                     s->csr = s->csr > 0 ? s->csr - 1 : selnum - 1;
                 }
 
-                if (*key_now[1] == 1)
+                if (DPAD_DOWN_PRESSED() == 1)
                 {
                     s->csr = s->csr >= selnum - 1 ? 0 : s->csr + 1;
                 }
             }
             else
             {
-                if (*key_now[2] == 1)
+                if (DPAD_LEFT_PRESSED() == 1)
                 {
                     s->csr = s->csr > 0 ? s->csr - 1 : selnum - 1;
                 }
@@ -1853,14 +1853,14 @@ int SetMessageV2(DISP_STR *s)
                     s->csr = s->csr > 0 ? s->csr - 1 : selnum - 1;
                 }
 
-                if (*key_now[1] == 1)
+                if (DPAD_DOWN_PRESSED() == 1)
                 {
                     s->csr = s->csr >= selnum - 1 ? 0 : s->csr + 1;
                 }
             }
             else
             {
-                if (*key_now[2] == 1)
+                if (DPAD_LEFT_PRESSED() == 1)
                 {
                     s->csr = s->csr > 0 ? s->csr - 1 : selnum - 1;
                 }
@@ -2335,14 +2335,14 @@ int SubMessageV3(u_char *s, int pri, int delflg)
                     msdat.csr = msdat.csr > 0 ? msdat.csr - 1 : msdat.selnum - 1;
                 }
 
-                if (*key_now[1] == 1)
+                if (DPAD_DOWN_PRESSED() == 1)
                 {
                     msdat.csr = msdat.csr >= msdat.selnum - 1 ? 0 : msdat.csr + 1;
                 }
             }
             else
             {
-                if (*key_now[2] == 1)
+                if (DPAD_LEFT_PRESSED() == 1)
                 {
                     msdat.csr = msdat.csr > 0 ? msdat.csr - 1 : msdat.selnum - 1;
                 }

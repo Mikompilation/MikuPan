@@ -1273,8 +1273,8 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         SeStartFix(3, 0, 0x1000, 0x1000, 0);
     }
     else if (
-        *key_now[1] == 1 ||
-        (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+        DPAD_DOWN_PRESSED() == 1 ||
+        (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
         Ana2PadDirCnt(2) == 1 ||
         (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
     )
@@ -1291,8 +1291,8 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         SeStartFix(0, 0, 0x1000, 0x1000, 0);
     }
     else if (
-        *key_now[0] == 1 ||
-        (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+        DPAD_UP_PRESSED() == 1 ||
+        (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
         Ana2PadDirCnt(0) == 1 ||
         (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
     )
@@ -1340,8 +1340,8 @@ void TitleSelectMode()
 
 
     if (
-        *key_now[0] == 1 ||
-        (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+        DPAD_UP_PRESSED() == 1 ||
+        (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
         Ana2PadDirCnt(0) == 1 ||
         (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
     )
@@ -1358,8 +1358,8 @@ void TitleSelectMode()
         SeStartFix(0, 0, 0x1000, 0x1000, 0);
     }
     else if (
-        *key_now[1] == 1 ||
-        (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+        DPAD_DOWN_PRESSED() == 1 ||
+        (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
         Ana2PadDirCnt(2) == 1 ||
         (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
     )
@@ -1560,8 +1560,8 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
         SeStartFix(3, 0, 0x1000, 0x1000, 0);
     }
     else if (
-        *key_now[1] == 1 ||
-        (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+        DPAD_DOWN_PRESSED() == 1 ||
+        (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
         Ana2PadDirCnt(2) == 1 ||
         (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
     )
@@ -1578,8 +1578,8 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
         SeStartFix(0, 0, 0x1000, 0x1000, 0);
     }
     else if (
-        *key_now[0] == 1 ||
-        (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+        DPAD_UP_PRESSED() == 1 ||
+        (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
         Ana2PadDirCnt(0) == 1 ||
         (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
     )
@@ -1692,8 +1692,8 @@ void TitleSelectDifficultyYW()
         SeStartFix(0, 0, 0x1000, 0x1000, 0);
     }
     else if (
-        *key_now[2] == 1 ||
-        (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+        DPAD_LEFT_PRESSED() == 1 ||
+        (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
         Ana2PadDirCnt(3) == 1 ||
         (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
     )

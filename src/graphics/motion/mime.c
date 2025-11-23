@@ -4,18 +4,20 @@
 
 #include "sce/libvu0.h"
 
-#include "os/pad.h"
-#include "os/eeiop/eese.h"
-#include "main/glob.h"
-#include "ingame/map/furn_dat.h"
+#include "graphics/graph3d/libsg.h"
+#include "graphics/graph3d/load3d.h"
 #include "graphics/graph3d/sg_dat.h"
 #include "graphics/graph3d/sgsu.h"
-#include "graphics/graph3d/load3d.h"
-#include "graphics/graph3d/libsg.h"
-#include "graphics/motion/motion.h"
-#include "graphics/motion/mim_dat.h"
 #include "graphics/motion/mdldat.h"
 #include "graphics/motion/mdlwork.h"
+#include "graphics/motion/mim_dat.h"
+#include "graphics/motion/motion.h"
+#include "ingame/map/furn_dat.h"
+#include "main/glob.h"
+#include "os/eeiop/eese.h"
+#include "os/pad.h"
+
+#include <string.h>
 
 typedef struct {
     u_char file_id[4];
@@ -482,15 +484,20 @@ u_int* mimSetMimeDat(MIME_DAT *mdat, u_int *mim_p, u_int *tmp_buf, u_int *mdl_p)
 {
     PHEAD *ph;
 
-    ph = (PHEAD *)mdl_p[4];
+    //ph = mdl_p[4];
+    ph = (PHEAD *)GetPHead((HeaderSection*)mdl_p);
 
     mdat->dat = mim_p;
-    mdat->pkt = ph->pUniqVertex;
-    mdat->vtx = (sceVu0FVECTOR *)tmp_buf;
+    //mdat->pkt = ph->pUniqVertex;
+    mdat->pkt = GetOffsetPtr((HeaderSection*)mdl_p, ph->pUniqVertex);
+    //mdat->vtx = (sceVu0FVECTOR *)tmp_buf;
 
+    mdat->vtx = malloc((ph->pUniqNormal - ph->pUniqVertex));
     // count how many `sceVu0FVECTOR` is `pUniqVertex` made of by subtracting it's start address
     // `mdat->pkt` (actually `ph->pUniqVertex`) from it's end address `ph->pUniqNormal`
-    mdat->vtx_num = (*(u_int *)&ph->pUniqNormal - *(u_int *)&mdat->pkt) / sizeof(sceVu0FVECTOR);
+    //mdat->vtx_num = (*(u_int *)&ph->pUniqNormal - *(u_int *)&mdat->pkt) / sizeof(sceVu0FVECTOR);
+
+    mdat->vtx_num = (u_int)((ph->pUniqNormal - ph->pUniqVertex) / sizeof(sceVu0FVECTOR));
 
     return (u_int *)&mdat->vtx[mdat->vtx_num];
 }
@@ -1091,6 +1098,7 @@ sceVu0FVECTOR* mimGetKeymdlTop(u_int *mim_top, u_int key_no)
     return ((sceVu0FVECTOR **)vtx_addr)[0];
 }
 
+/// TODO: ADAPT THIS FOR 64bits
 void mimAddressMapping(u_int *top_addr)
 {
     MIM_FILE_HEADER *head_p;

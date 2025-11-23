@@ -748,7 +748,7 @@ char MsnInitPlyr()
             break;
         }
 
-        //motInitPlayerAnm(plyr_mdl_no);
+        motInitPlayerAnm(plyr_mdl_no);
         motInitMsn();
         return 1;
     }

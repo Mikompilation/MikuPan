@@ -525,7 +525,7 @@ void gra2dDrawDbgMenu()
     l = strlen(nlp->title);
     nlp->max = nlp->max < l ? l : nlp->max;
 
-    if (*key_now[1] == 1)
+    if (DPAD_DOWN_PRESSED() == 1)
     {
         nlp->pos = nlp->pos < nlp->mnum -1 ? nlp->pos + 1 : 0;
 
@@ -616,7 +616,7 @@ void gra2dDrawDbgMenu()
 
             if (nlp->submenu[nlp->pos].subnum & 0x10000)
             {
-                ok = *key_now[2] != 1 ? ok : 1;
+                ok = DPAD_LEFT_PRESSED() != 1 ? ok : 1;
             }
 
             if ((nlp->submenu[nlp->pos].subnum & 0x10000) == 0 && nlp->submenu[nlp->pos].subnum & 0xa000)
@@ -652,7 +652,7 @@ void gra2dDrawDbgMenu()
                 }
                 else if (nlp->submenu[nlp->pos].subnum & 0x2000)
                 {
-                    if (*key_now[2] == 1)
+                    if (DPAD_LEFT_PRESSED() == 1)
                     {
                         *dbgmenu_inttbl[n] = MIN0(*dbgmenu_inttbl[n] - pad, nlp->submenu[nlp->pos].nmax);
                     }
