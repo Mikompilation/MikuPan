@@ -145,9 +145,6 @@ extern void* MSN_TITLE_DAT_ADDRESS_8;
 /// 0x1020000 16908288
 extern void* MSN_TITLE_DAT_ADDRESS_9;
 
-/// 0x1e90000
-extern void* SPR_FILE_ADDRESS;
-
 #define VNBufferAddress     0x00420000
 #define CachedBuffer        0x20000000
 #define UnCachedBuffer      0x30000000

@@ -3226,7 +3226,7 @@ void StageTitleDisp(int msn_no)
 	u_char alp_rate;
 	SPRT_SDAT ssd;
 
-    SetSprFile(SPR_FILE_ADDRESS);
+    SetSprFile(MISSION_TITLE_CARD_ADDRESS);
 
     if (mttl_wrk.mode == 1)
     {
@@ -3244,7 +3244,7 @@ void StageTitleDisp(int msn_no)
   
     for (i = 0; i < 11; i++)
     {
-        SimpleDispSprt(&stg_title_sp_bak[i], SPR_FILE_ADDRESS, i, NULL, NULL, alp_rate);
+        SimpleDispSprt(&stg_title_sp_bak[i], MISSION_TITLE_CARD_ADDRESS, i, NULL, NULL, alp_rate);
     } 
   
     return;
@@ -3400,7 +3400,7 @@ void MikuCGDisp()
 
     for (i = 0; i < 11; i ++)
     {
-        SimpleDispSprt(&msn_title_sp_bak[i], SPR_FILE_ADDRESS, i, NULL, NULL, 0x64);
+        SimpleDispSprt(&msn_title_sp_bak[i], MISSION_TITLE_CARD_ADDRESS, i, NULL, NULL, 0x64);
     }
 }
 
