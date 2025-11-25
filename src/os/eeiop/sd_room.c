@@ -1,8 +1,9 @@
-#include "common.h"
-#include "typedefs.h"
-#include "enums.h"
 #include "sd_room.h"
+#include "common.h"
+#include "enums.h"
+#include "typedefs.h"
 
+#include "eese.h"
 #include "main/glob.h"
 
 #define MAX_VOL 0x2fff

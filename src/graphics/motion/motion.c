@@ -38,7 +38,7 @@ typedef struct {
 } MOT_ID_TABLE;
 
 typedef struct {
-    u_int *frame_addr;
+    u_int frame_addr;
 } MOT_ADDR_TABLE;
 
 ENE_PKT_CTRL ene_pkt_ctrl[4] = {0};
@@ -765,7 +765,8 @@ void* GetFileInPak(void *pak_head, int num)
 
 void* GetPakTaleAddr(void *pak_head)
 {
-    return malloc(1024*1024);
+    // Allocate 5mb to avoid issues
+    return malloc(1024*1024*5);
     int file_num;
     int file_size;
     int i;
@@ -1531,7 +1532,8 @@ static void motAddressMapping(u_int *top_addr)
 
     for (i = 0; i < frame_num; i++)
     {
-        tbl_p->frame_addr = (u_int *)((int)top_addr + (int)tbl_p->frame_addr);
+        GetOffsetPtr(top_addr, tbl_p->frame_addr);
+        //tbl_p->frame_addr = (u_int *)((int)top_addr + (int)tbl_p->frame_addr);
         tbl_p++;
     }
 
@@ -1652,7 +1654,7 @@ static void motGetFrameDataRT(RST_DATA *rst, u_int *top_addr, u_int frame, u_int
 
 static u_int motGetTransId(u_int *top_addr, u_int id)
 {
-    top_addr = (u_int *)((int)top_addr + 0x21);
+    top_addr = (u_int *)((int64_t)top_addr + 0x21);
 
     return ((u_char *)top_addr)[id * 2];
 }

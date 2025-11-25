@@ -46,7 +46,8 @@ void ReadFileInArchive(int sector, int size, int64_t address)
 
     if ((int64_t*)*(int64_t*)address != nullptr)
     {
-        MikuPan_FlushTextureCache();
+        //MikuPan_FlushTextureCache();
+        MikuPan_RequestFlushTextureCache();
         free((int64_t*)*(int64_t*)address);
     }
 

@@ -40,6 +40,7 @@ static int64_t room_load_id[32];
 
 static int LoadFDCheck(u_short id, char flg);
 
+/// TODO: ADAPT THE LOAD LOGIC
 u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no, u_char sereq_type)
 {
     ROOM_LOAD_BLOCK *rlb;
@@ -112,6 +113,7 @@ u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no,
     {
         if (LoadFDCheck(rlb->furn_id[i], 0) == 0)
         {
+            /// Furniture Load Request
             next_addr = LoadReqGetAddr(F000_CLOCK_L_SGD + rlb->furn_id[i], next_addr, &room_load_id[room_load_num]);
             furn_addr_tbl[rlb->furn_id[i]] = addr;
             addr = (u_int *)next_addr;
@@ -123,6 +125,7 @@ u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no,
     {
         if (LoadFDCheck(rlb->door_id[i], 1) == 0)
         {
+            /// Door Load Request
             next_addr = LoadReqGetAddr(D000_GEN1_SGD + rlb->door_id[i], next_addr, &room_load_id[room_load_num]);
             rlb->door_addr[i] = addr;
             addr = (u_int *)next_addr;
@@ -132,6 +135,7 @@ u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no,
 
     if (mimchodo_tbl[rlb->room_no].dat != NULL)
     {
+        /// Door Load Request
         next_addr = LoadReqGetAddr(R000_GENKAN_MIM + rlb->room_no, next_addr, &room_load_id[room_load_num]);
         mimchodo_tbl[rlb->room_no].addr = addr;
         addr = (u_int *)next_addr;
@@ -572,7 +576,7 @@ int LoadInitFurnModel(ROOM_LOAD_BLOCK *rlb)
     static int load_id;
     int ret;
     u_short furn_id;
-    u_int addr;
+    uint64_t addr;
 
     ret = 0;
 
@@ -588,7 +592,7 @@ int LoadInitFurnModel(ROOM_LOAD_BLOCK *rlb)
 
         LoadFDCheck(furn_id, 0);
 
-        addr = LoadReqGetAddr(F000_CLOCK_L_SGD + furn_id, (u_int)rlb->load_addr, (int64_t *)&load_id);
+        addr = LoadReqGetAddr(F000_CLOCK_L_SGD + furn_id, (uint64_t)rlb->load_addr, (int64_t *)&load_id);
 
         furn_addr_tbl[furn_id] = rlb->load_addr;
 
@@ -634,7 +638,7 @@ int LoadInitDoorModel(ROOM_LOAD_BLOCK *rlb)
     u_short door_id;
 
     // the following var is not from the debugging symbols
-    u_int addr;
+    uint64_t addr;
 
     ret = 0;
 
@@ -650,7 +654,7 @@ int LoadInitDoorModel(ROOM_LOAD_BLOCK *rlb)
 
         LoadFDCheck(door_id, 1);
 
-        addr = LoadReqGetAddr(D000_GEN1_SGD + door_id, (u_int)rlb->load_addr, (int64_t *)&load_id);
+        addr = LoadReqGetAddr(D000_GEN1_SGD + door_id, (uint64_t)rlb->load_addr, (int64_t *)&load_id);
 
         door_addr_tbl[door_id] = rlb->load_addr;
 

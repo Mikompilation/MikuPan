@@ -10,6 +10,7 @@ extern "C"
 std::unordered_map<unsigned long long, unsigned char*> texture_atlas;
 std::unordered_map<unsigned long long, void*> sdl_texture_atlas;
 bool first_upload_done = false;
+bool request_texture_cache_flush = false;
 
 #define CONVERT_TEX0_TO_ULONG(tex0) *(u_long*)tex0
 
@@ -63,8 +64,18 @@ void *GetSDLTexture(sceGsTex0 *tex0)
 
     return nullptr;
 }
+
+/**
+ * Flushes the texture cache by freeing all stored textures.
+ * SHOULD ONLY BE CALLED FROM THE MAIN THREAD!
+ */
 void MikuPan_FlushTextureCache()
 {
+    if (!request_texture_cache_flush)
+    {
+        return;
+    }
+
     for (auto t : texture_atlas)
     {
         free(t.second);
@@ -78,4 +89,11 @@ void MikuPan_FlushTextureCache()
     }
 
     sdl_texture_atlas.clear();
+
+    request_texture_cache_flush = false;
+}
+
+void MikuPan_RequestFlushTextureCache()
+{
+    request_texture_cache_flush = true;
 }

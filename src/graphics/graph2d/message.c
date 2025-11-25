@@ -2604,6 +2604,7 @@ void DrawMessageBox(u_int pri, float x, float y, float sizew, float sizeh, u_cha
         py[5] + ssh - SCR_HEIGHT + msy,
         0x0b, 0x08, 0x07, alp1);
 
+    // Renders corners and edges
     for (i = 0; i < 4; i++)
     {
         CopySprDToSpr(&ds, &mesbox[i]);
@@ -2619,7 +2620,8 @@ void DrawMessageBox(u_int pri, float x, float y, float sizew, float sizeh, u_cha
         DispSprD(&ds);
     }
 
-    for (i = 0; i < 4; i++)
+    // Renders stretched edges
+    for (i = 1; i < 4; i++)
     {
         CopySprDToSpr(&ds, &mesbox[i+4]);
 
@@ -2632,6 +2634,31 @@ void DrawMessageBox(u_int pri, float x, float y, float sizew, float sizeh, u_cha
         ds.y = py[i+4];
         ds.scw = sw[i];
         ds.sch = sh[i];
+
+        if (i == 0)
+        {
+            //ds.w = ssw;
+            //ds.h = p1h;
+        }
+
+        if (i == 1)
+        {
+            //ds.w = ssw;
+            //ds.h = ssh;
+        }
+
+        if (i == 2)
+        {
+            //ds.w = px[i+4] + ssw - px[i+4];
+            //ds.h = py[i+4] + p1h - py[i+4];
+        }
+
+        if (i == 3)
+        {
+            //ds.w = px[i+4] + p1w - px[i+4];
+            //ds.h = py[i+4] + ssh - py[i+4];
+        }
+
         ds.csx = px[i+4];
         ds.csy = py[i+4];
 

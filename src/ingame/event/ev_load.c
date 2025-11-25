@@ -1263,7 +1263,7 @@ void RoomLoadReq(int load_room)
     {
         if (plyr_wrk.pr_info.room_no != area_wrk.room[i]) // Line 915
         {
-            RoomMdlLoadReq(0, i, ingame_wrk.msn_no, load_room, 2); // Line 917
+            RoomMdlLoadReq(NULL, i, ingame_wrk.msn_no, load_room, 2); // Line 917
             FloatGhostAppearTypeSet(ap_wrk.fgst_no, i, load_room); // Line 919
             area_wrk.room[i] = load_room;
             break;

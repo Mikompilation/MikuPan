@@ -17,6 +17,7 @@ extern "C"
     void FirstUploadDone();
     bool IsFirstUploadDone();
     void MikuPan_FlushTextureCache();
+    void MikuPan_RequestFlushTextureCache();
 }
 
 

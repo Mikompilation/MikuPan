@@ -347,7 +347,6 @@ void InGameInit2()
     
     if (ingame_wrk.mode == 0x5)
     {
-        
         if (ingame_wrk.game == 0)
         {
             MapMissionChange(ingame_wrk.msn_no);

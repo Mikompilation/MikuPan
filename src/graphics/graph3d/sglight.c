@@ -1169,7 +1169,8 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Iligh
 
     if (sgd_top != NULL)
     {
-        cp = ((HeaderSection *)sgd_top)->coordp;
+        //cp = ((HeaderSection *)sgd_top)->coordp;
+        cp = GetCoordP(sgd_top);
     }
 
     if (cp != NULL)
@@ -1184,11 +1185,13 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Iligh
         scale = 1.0f;
     }
 
-    pk = (u_int *)&((HeaderSection *)light_top)->primitives;
+    //pk = (u_int *)&((HeaderSection *)light_top)->primitives;
+    pk = GetPrimitiveAddr(light_top, 0);
 
     if (light_top == NULL)
     {
-        pk = (u_int *)&((HeaderSection *)sgd_top)->primitives;
+        //pk = (u_int *)&((HeaderSection *)sgd_top)->primitives;
+        pk = GetPrimitiveAddr(sgd_top, 0);
     }
 
     if (Ilight != NULL)
@@ -1208,9 +1211,10 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Iligh
 
     Vu0ZeroVector(Ambient);
 
-    prim = (u_int *)*pk;
+    //prim = (u_int *)*pk;
+    prim = GetTopProcUnitHeaderPtr(light_top == NULL ? sgd_top : light_top, 0);
 
-    while (*prim != NULL)
+    while (prim != NULL)
     {
         if (prim[1] == 11)
         {
@@ -1353,7 +1357,8 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Iligh
             }
         }
 
-        prim = (u_int *)*prim;
+        //prim = (u_int *)*prim;
+        prim = GetNextProcUnitHeaderPtr(prim);
     }
 }
 
@@ -1900,7 +1905,8 @@ void SgPreRender(void *sgd_top, int pnum)
 
     hs = (HeaderSection *)sgd_top;
 
-    pk = (u_int *)&hs->primitives;
+    //pk = (u_int *)&hs->primitives;
+    pk = GetPrimitiveAddr(hs, 0);
     lcp = GetCoordP(hs);
     blocksm = hs->blocks;
 
@@ -1911,12 +1917,14 @@ void SgPreRender(void *sgd_top, int pnum)
     {
         for (i = 1; i < blocksm; i++)
         {
-            SgPreRenderPrim((u_int *)pk[i]);
+            //SgPreRenderPrim((u_int *)pk[i]);
+            SgPreRenderPrim(GetTopProcUnitHeaderPtr(hs, i));
         }
     }
     else if (pnum != 0)
     {
-        SgPreRenderPrim((u_int *)pk[pnum]);
+        //SgPreRenderPrim((u_int *)pk[pnum]);
+        SgPreRenderPrim(GetTopProcUnitHeaderPtr(hs, pnum));
     }
 }
 

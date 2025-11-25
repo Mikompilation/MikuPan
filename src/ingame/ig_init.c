@@ -195,7 +195,7 @@ int LoadStartDataSet()
         }
 
         AreaRoomAllLoadInit();
-        RoomMdlLoadReq(0, 0, ingame_wrk.msn_no, plyr_wrk.pr_info.room_no, 1);
+        RoomMdlLoadReq(NULL, 0, ingame_wrk.msn_no, plyr_wrk.pr_info.room_no, 1);
 
         area_wrk.room[0] = plyr_wrk.pr_info.room_no;
         area_wrk.room[1] = 0xff;

@@ -14,24 +14,35 @@ typedef struct {
 typedef struct {
 	u_int HeaderSections;
 	u_int UniqHeaderSize;
+
 	//sceVu0FVECTOR *pUniqVertex;
 	int pUniqVertex;
+
 	//sceVu0FVECTOR *pUniqNormal;
 	int pUniqNormal;
+
 	//u_int *pUniqList;
+	/// (sceVu0FVECTOR *)GetOffsetPtr(&ph->pUniqList, ph->pUniqList)
 	u_int pUniqList;
 	u_int CommonHeaderSize;
+
 	//sceVu0FVECTOR *pCommonVertex;
 	int pCommonVertex;
+
 	//sceVu0FVECTOR *pCommonNormal;
 	int pCommonNormal;
+
 	//u_int *pCommonList;
+
 	int pCommonList;
 	u_int WeightedHeaderSize;
+
 	//sceVu0FVECTOR *pWeightedVertex;
 	int pWeightedVertex;
+
 	//sceVu0FVECTOR *pWeightedNormal;
 	int pWeightedNormal;
+
 	//u_int *pWeightedList;
 	int pWeightedList;
 } PHEAD;
@@ -174,11 +185,11 @@ inline static u_int* GetTopProcUnitHeaderPtr(HeaderSection *hs, int index)
 	return NULL;
 }
 
-static inline u_int* GetNextProcUnitHeaderPtr(const u_int *pHead)
+static inline u_int* GetNextProcUnitHeaderPtr(const u_int *prim)
 {
-	if (pHead[0] != 0x0)
+	if (prim[0] != 0x0)
 	{
-		return (u_int *) ((int64_t) pHead + pHead[0]);
+		return (u_int *) ((int64_t) prim + prim[0]);
 	}
 
 	return NULL;

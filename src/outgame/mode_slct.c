@@ -278,7 +278,7 @@ void ModeSlctCtrl(u_char mode)
         else if (dsp_ms.next_mode == 12)
         {
             ingame_wrk.game = 0;
-            GameModeChange(0);
+            GameModeChange(GAME_MODE_INIT);
             title_bgm_no = -1;
         }
         else

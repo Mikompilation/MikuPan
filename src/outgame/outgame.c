@@ -176,7 +176,7 @@ void RoomSizeCheckCtrl()
 
         if (rsc_menu_csr == 2)
         {
-            LoadReq(rsc_no[0] + 10, &TEST_ROOM_CHECK_ADDRESS);
+            LoadReq(rsc_no[0] + MSN00MAP_OBJ, &TEST_ROOM_CHECK_ADDRESS);
 
             end_addr = RoomMdlLoadReq(TEST_ROOM_CHECK_ADDRESS, 0, rsc_no[0], rsc_no[1], 0);
 
