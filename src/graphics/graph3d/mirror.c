@@ -28,7 +28,8 @@ static float mzmin;
 #define GET_MESH_GLOOPS(intpointer) ((int)((char*)intpointer)[14])
 #define GET_MESH_UNK(intpointer) (((short*)intpointer)[11])
 
-#define SCRATCHPAD ((u_char *)0x70000000)
+#define SCRATCHPAD ((u_char *)ps2_virtual_scratchpad)
+
 
 static inline void inline_asm__mirror_c_line_38(sceVu0FMATRIX m0) {
     //asm volatile("\n\

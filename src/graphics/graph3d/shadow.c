@@ -14,7 +14,7 @@
 
 #include "graphics/graph3d/sglib.h"
 
-#define SCRATCHPAD ((u_char *)0x70000000)
+#define SCRATCHPAD ((u_char *)ps2_virtual_scratchpad)
 
 #include "data/scamera.h" // SgCAMERA scamera;
 

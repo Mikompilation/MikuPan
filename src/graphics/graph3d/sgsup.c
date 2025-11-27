@@ -31,7 +31,7 @@ extern void DP2_PROLOGUE() __attribute__((section(".vutext")));
 
 #define GET_MESH_TYPE(intpointer) (char)((char*)intpointer)[13]
 
-#define SCRATCHPAD ((u_char *)0x70000000)
+#define SCRATCHPAD ((u_char *)ps2_virtual_scratchpad)
 
 void SgSuPDbgOn()
 {

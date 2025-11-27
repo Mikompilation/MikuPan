@@ -19,7 +19,7 @@ float tanf(float x);
 sceVu0FVECTOR clip_volume = {1920.0f, 896.0f, 256.0f, 16777000.0f};
 static sceVu0FVECTOR clip_volumev = {320.0f, 112.0f, 0.1f, 16777000.0f};
 
-#define SCRATCHPAD ((u_char *)0x70000000)
+#define SCRATCHPAD ((u_char *)ps2_virtual_scratchpad)
 
 void SetViewScreenClipMatrix(SgCAMERA *camera, float scrz)
 {

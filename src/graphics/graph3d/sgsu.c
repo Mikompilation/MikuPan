@@ -25,7 +25,7 @@ extern SgSourceChainTag SgSuP2_dma_start() __attribute__((section(".vutext")));
 extern SgSourceChainTag SgSu_dma_starts() __attribute__((section(".vutext")));
 
 #define Q12_4(i, f) (((i) << 4) | ((f) & 0xF))
-#define SCRATCHPAD ((u_int *)0x70000000)
+#define SCRATCHPAD ((u_int *)ps2_virtual_scratchpad)
 
 static int write_flg = 0;
 static int write_counter = 0;
@@ -305,7 +305,7 @@ u_int* SetVUVNDataPost(u_int *prim)
     switch (vh->vtype)
     {
     case 2:
-        if (lphead->pWeightedList != NULL)
+        if (lphead->pWeightedList != 0)
         {
             for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
             {
@@ -326,7 +326,7 @@ u_int* SetVUVNDataPost(u_int *prim)
         }
     break;
     case 3:
-        if (lphead->pWeightedList != NULL)
+        if (lphead->pWeightedList != 0)
         {
             for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
             {
@@ -532,7 +532,7 @@ void SgSortUnitPrim(u_int *prim)
         return;
     }
 
-    while (prim[0] != NULL)
+    while (prim[0] != 0)
     {
         switch(prim[1])
         {

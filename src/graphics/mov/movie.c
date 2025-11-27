@@ -558,7 +558,7 @@ void initMov(char *bsfilename)
 
     if (movie_wrk.play_event_sta == 6 || movie_wrk.play_event_sta == 7)
     {
-        mpegWork = (u_char *)MPEG_WORK_ADDRESS;
+        mpegWork = (u_char *)MikuPan_GetHostAddress(MPEG_WORK_ADDRESS);
     }
     else
     {
