@@ -4,17 +4,16 @@
 
 #include <stdio.h>
 
-// gcc/src/newlib/libm/math/sf_tan.c
-float tanf(float x);
-
 #include "ee/eeregs.h"
 #include "ee/eestruct.h"
 #include "sce/libvu0.h"
 
-#include "graphics/graph3d/sgsu.h"
-#include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sgdma.h"
+#include "graphics/graph3d/sglib.h"
+#include "graphics/graph3d/sgsu.h"
+
+#include <math.h>
 
 sceVu0FVECTOR clip_volume = {1920.0f, 896.0f, 256.0f, 16777000.0f};
 static sceVu0FVECTOR clip_volumev = {320.0f, 112.0f, 0.1f, 16777000.0f};

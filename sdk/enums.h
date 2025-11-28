@@ -4019,6 +4019,21 @@ enum
     SE_FUSUMA_OPN = 30
 };
 
+enum {
+    GRA2D_CALL_OG = 0,
+    GRA2D_CALL_IG0 = 1,
+    GRA2D_CALL_IG1 = 2,
+    GRA2D_CALL_IG0E = 3,
+    GRA2D_CALL_IG1E = 4,
+    GRA2D_CALL_IG2 = 5,
+    GRA2D_CALL_IG3 = 6,
+    GRA2D_CALL_IG31 = 7,
+    GRA2D_CALL_IG32 = 8,
+    GRA2D_LOAD_FONT = 9,
+    GRA2D_CACHE_DRAW = 10,
+    GRA2D_RESETDEF = 11
+};
+
 enum SE_TRANS_MODE
 {
     STMODE_READY = 0,

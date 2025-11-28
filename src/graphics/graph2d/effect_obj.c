@@ -2,24 +2,23 @@
 #include "typedefs.h"
 #include "effect_obj.h"
 
-// gcc/src/newlib/libm/math/sf_tan.c
-float tanf(float x);
-
 #include "ee/kernel.h"
 #include "ee/eestruct.h"
 #include "sce/libvu0.h"
 #include "sce/libgraph.h"
 
-#include "main/glob.h"
-#include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/effect.h"
-#include "graphics/graph2d/tim2_new.h"
-#include "graphics/graph2d/effect_sub.h"
 #include "graphics/graph2d/effect_oth.h"
-#include "graphics/graph3d/sglib.h"
+#include "graphics/graph2d/effect_sub.h"
+#include "graphics/graph2d/tim2.h"
+#include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/libsg.h"
-#include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sgcam.h"
+#include "graphics/graph3d/sgdma.h"
+#include "graphics/graph3d/sglib.h"
+#include "main/glob.h"
+
+#include <math.h>
 
 static inline void Vu0Func0000(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {

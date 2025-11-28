@@ -1672,20 +1672,20 @@ void motSetHierarchy(SgCOORDUNIT *coord, u_int *top_addr)
 
     bone_num = motGetBoneNum(top_addr);
 
-    coord[0].parent = -1;
+    coord[0].parent = 0;
 
     for (i = 0; i < bone_num; i++)
     {
         parent_id = motGetParentId(top_addr, i);
 
-        /// TODO: POTENTIALLY WRONG 64bits COVNERSION
         if (parent_id == 0xff)
         {
-            //coord[i+1].parent = NULL;
+            coord[i+1].parent = 0;
         }
         else
         {
             //coord[i+1].parent = &coord[parent_id];
+            coord[i+1].parent = MikuPan_GetPs2OffsetFromHostPointer(&coord[parent_id]);
         }
     }
 }

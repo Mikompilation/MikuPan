@@ -4,20 +4,22 @@
 
 #include <stdlib.h>
 
-#include "main/glob.h"
-#include "ingame/menu/pause.h"
-#include "ingame/info/inf_disp.h"
-#include "ingame/photo/pht_make.h"
-#include "ingame/menu/ig_spd_menu.h"
-#include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/effect.h"
-#include "graphics/graph2d/message.h"
-#include "graphics/graph2d/tim2_new.h"
-#include "graphics/graph2d/g2d_debug.h"
-#include "graphics/graph2d/effect_oth.h"
 #include "graphics/graph2d/effect_obj.h"
-#include "graphics/graph2d/effect_sub.h"
+#include "graphics/graph2d/effect_oth.h"
 #include "graphics/graph2d/effect_scr.h"
+#include "graphics/graph2d/effect_sub.h"
+#include "graphics/graph2d/g2d_debug.h"
+#include "graphics/graph2d/message.h"
+#include "graphics/graph2d/tim2.h"
+#include "graphics/graph2d/tim2_new.h"
+#include "ingame/info/inf_disp.h"
+#include "ingame/menu/ig_spd_menu.h"
+#include "ingame/menu/pause.h"
+#include "ingame/photo/pht_make.h"
+#include "main/glob.h"
+
+#include <enums.h>
 
 #ifdef BUILD_EU_VERSION
 #include "graphics/graph2d/subtitles.h"
@@ -116,28 +118,28 @@ void gra2dDraw(int fl)
 
     switch (fl)
     {
-        case 0:
+        case GRA2D_CALL_OG:
             gra2dSubO();
         break;
-        case 1:
-        case 3:
+        case GRA2D_CALL_IG0:
+        case GRA2D_CALL_IG0E:
             gra2dSubG0(fl);
         break;
-        case 2:
-        case 4:
+        case GRA2D_CALL_IG1:
+        case GRA2D_CALL_IG1E:
             gra2dSubG1(fl);
         break;
-        case 5:
+        case GRA2D_CALL_IG2:
             gra2dSubG2(fl);
         break;
-        case 6:
+        case GRA2D_CALL_IG3:
             gra2dSubG3(fl);
         break;
-        case 9:
+        case GRA2D_LOAD_FONT:
         break;
-        case 10:
+        case GRA2D_CACHE_DRAW:
         break;
-        case 11:
+        case GRA2D_RESETDEF:
         break;
         case 0xff:
         break;

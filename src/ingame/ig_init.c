@@ -237,7 +237,7 @@ int LoadStartDataSet()
     {
         if (GuardGhostLoad())
         {
-            printf("GuardGhostLoadend\n");
+            info_log("GuardGhostLoadend");
 
             load_start_wrk.mode = 0x9;
         }

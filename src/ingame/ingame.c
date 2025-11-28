@@ -345,7 +345,7 @@ void InGameInit2()
 {
     int mode = 0;
     
-    if (ingame_wrk.mode == 0x5)
+    if (ingame_wrk.mode == INGAME_MODE_MSN_TITLE)
     {
         if (ingame_wrk.game == 0)
         {
@@ -369,7 +369,7 @@ void InGameInit2()
         EventInit();
         if (mode)
         {
-            ingame_wrk.stts = ingame_wrk.stts | 0x20;
+            ingame_wrk.stts |= 0x20;
         }
     }
     else
@@ -400,7 +400,7 @@ void InGameMain()
 {
     /* s1 17 */ u_char tmp_room_no;
     
-    if ((ingame_wrk.stts & 0x90) == 0 && ingame_wrk.mode == 6)
+    if ((ingame_wrk.stts & 0x90) == 0 && ingame_wrk.mode == INGAME_MODE_NOMAL)
     {
         MapCtrlMain();
     }
@@ -413,7 +413,7 @@ void InGameMain()
     {
         CameraMain();
     }
-    
+
     if ((ingame_wrk.stts & 0x20) == 0 || furn_disp_flg == 1)
     {
         PointLightCtrl();
@@ -427,7 +427,7 @@ void InGameMain()
         
         NakasuHazeSet();
         gra3dDraw();
-        gra2dDraw(5);
+        gra2dDraw(GRA2D_CALL_IG2);
         
         room_wrk.disp_no[1] = tmp_room_no;
     }
@@ -436,7 +436,7 @@ void InGameMain()
     
     switch(ingame_wrk.mode)
     {
-    case 6:
+    case INGAME_MODE_NOMAL:
         if (start_msn != 0)
         {
             start_msn = 0;
@@ -475,7 +475,7 @@ void InGameMain()
                     
                     if (ItemGetMain())
                     {
-                        ingame_wrk.mode = 14;
+                        ingame_wrk.mode = INGAME_MODE_GET_ITEM;
                         break;
                     }
                     else if (
@@ -523,39 +523,39 @@ void InGameMain()
             }
         }
     break;
-    case 7:
+    case INGAME_MODE_EVENT:
         EventMain();
     break;
-    case 10:
+    case INGAME_MODE_MENU:
         IngameMenuMain();
     break;
-    case 0x10:
+    case INGAME_MODE_SAVE_POINT:
         SavePointMenuMain(0);
     break;
-    case 8:
+    case INGAME_MODE_SPECIAL_EVENT:
         SpecialEventMain();
     break;
-    case 0x11:
+    case INGAME_MODE_PHOTO_AFTER:
         PhotoCtrl();
     break;
-    case 0xe:
+    case INGAME_MODE_GET_ITEM:
         PlyrCtrlMain();
     break;
-    case 0x14:
+    case INGAME_MODE_GAME_OVER:
         GameOverMenuMain();
     break;
-    case 0x15:
+    case INGAME_MODE_GAME_OVER_ALBUM:
         if (AlbumModeInGameOver())
         {
             ReturnGameOver();
         }
     break;
-    case 5:
+    case INGAME_MODE_MSN_TITLE:
         if (MissionTitleMain(ingame_wrk.msn_no))
         {
             InGameInit2();
             
-            ingame_wrk.mode = 6;
+            ingame_wrk.mode = INGAME_MODE_NOMAL;
             start_msn = 1;
             
             if (ingame_wrk.game != 1)
@@ -569,41 +569,41 @@ void InGameMain()
             }
         }
     break;
-    case 4:
+    case INGAME_MODE_LOAD_START:
         if (LoadStartDataSet())
         {
             InGameInit2();
         }
     break;
-    case 9:
+    case INGAME_MODE_AREA_MOVE:
         MapAreaMain();
     break;
-    case 0x12:
+    case INGAME_MODE_GHOST_DEAD:
         GhostDeadMain();
     break;
-    case 0x13:
+    case INGAME_MODE_SGST_DISP:
         SettleGhostMain();
     break;
-    case 0xf:
+    case INGAME_MODE_WANDER_SOUL:
         WanderSoulCtrl();
     break;
-    case 0xc:
+    case INGAME_MODE_SPD_MAP:
         SpdMapMain();
     break;
-    case 0xd:
+    case INGAME_MODE_SPD_OPT:
         SpdOptMain();
     break;
-    case 0x16:
+    case INGAME_MODE_INTER_MSN:
         InterMissionMain();
     break;
-    case 0x17:
+    case INGAME_MODE_ENDING:
         EndingMain();
     break;
     }
     
     if (ingame_wrk.game != 1 || isBattleModeGame())
     {
-        if (ingame_wrk.mode != 4 && ingame_wrk.mode != 5)
+        if (ingame_wrk.mode != INGAME_MODE_LOAD_START && ingame_wrk.mode != INGAME_MODE_MSN_TITLE)
         {
             EntryMain();
         }
@@ -612,7 +612,7 @@ void InGameMain()
         GameTimeCtrl();
     }
     
-    gra2dDraw(6);
+    gra2dDraw(GRA2D_CALL_IG3);
     AdpcmMapCtrl();
     
     if (dbg_wrk.mode_on == 2)

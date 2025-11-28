@@ -1112,8 +1112,8 @@ void mimAddressMapping(u_int *top_addr)
     {
         for (i = 0; i < head_p->key_num; i++)
         {
-            tbl_p->wav_addr = (u_int *)((u_int)head_p + (u_int)tbl_p->wav_addr);
-            tbl_p->key_addr = (u_int *)((u_int)head_p + (u_int)tbl_p->key_addr);
+            tbl_p->wav_addr = (u_int *)((int64_t)head_p + (u_int)tbl_p->wav_addr);
+            tbl_p->key_addr = (u_int *)((int64_t)head_p + (u_int)tbl_p->key_addr);
 
             tbl_p++;
         }
