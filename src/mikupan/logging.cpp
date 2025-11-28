@@ -1,6 +1,6 @@
 #include "logging.h"
 
-#include "../../cmake-build-debug-mingw/_deps/spdlog-src/include/spdlog/spdlog.h"
+#include "spdlog/spdlog.h"
 
 #include <cstdarg>
 

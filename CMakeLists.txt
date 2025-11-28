@@ -229,4 +229,4 @@ set(MIKUPAN_SOURCES "src/mikupan/file_loading.cpp"
 add_executable(MikuPan ${MIKUPAN_SOURCES})
 
 target_include_directories(MikuPan PRIVATE "sdk/" "src" "resources/" "extern/" ${SDL3_INCLUDE_DIR})
-target_link_libraries(MikuPan PRIVATE m imgui SDL3::SDL3 spdlog) # Link Math.h
+target_link_libraries(MikuPan PRIVATE m imgui SDL3::SDL3 spdlog::spdlog) # Link Math.h

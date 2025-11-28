@@ -11,6 +11,7 @@ extern "C"
 
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
 
 static inline std::vector<int> file_loaded_address;
 
