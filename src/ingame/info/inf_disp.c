@@ -1,6 +1,8 @@
 #include "common.h"
 #include "inf_disp.h"
 
+char point_get_end;
+
 void InformationDispInit()
 {
 }
