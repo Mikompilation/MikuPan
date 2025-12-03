@@ -1,7 +1,17 @@
 #include "common.h"
 #include "ap_rgost.h"
+#include "rgst_dat.h"
 
-/* data 3228e0 */ RGOST_DSP_WRK rg_dsp_wrk[3];
+RGOST_DSP_WRK rg_dsp_wrk[3];
+RGOST_AP_DAT rg_ap_dat[];
+RGOST_DAT rg_dat[];
+sceVu0FVECTOR *rgc_dat[];
+RG_DISP_DAT rg_start_dat[];
+RG_DISP_DAT rg_inter_dat[];
+RG_DISP_DAT rg_end_dat[];
+RG_ALP_DAT *rg_alp_start[];
+RG_ALP_DAT *rg_alp_inter[];
+RG_ALP_DAT *rg_alp_end[];
 
 void RareGhostInit()
 {

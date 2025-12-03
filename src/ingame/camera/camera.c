@@ -3214,8 +3214,7 @@ void PlyrDmgCameraCtrl()
 
         camera.i[1] -= 500.0f;
 
-        //GetTrgtRotFromPlyr(camera.p, tr, 3);
-        GetTrgtRotFromPlyr(camera.p, tr);
+        GetTrgtRotFromPlyr(camera.p, tr, 3);
 
         tv[0] = 0.0f;
         tv[1] = 0.0f;

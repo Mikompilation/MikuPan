@@ -872,10 +872,10 @@ void gra3dInitFirst()
 int64_t PlayerModelInit()
 {
     int i;
-    u_int *tmpp;
-    u_int *p;
+    int64_t *tmpp;
+    int64_t *p;
 
-    tmpp = (u_int *)MikuPan_GetHostAddress(PLYR_FILE_ADDRESS);
+    tmpp = (int64_t *)MikuPan_GetHostAddress(PLYR_FILE_ADDRESS);
 
     pmanmodel[0] = &tmpp[0];
     pmanmpk[0] = &tmpp[0];
@@ -890,7 +890,7 @@ int64_t PlayerModelInit()
 
         if (i == 0)
         {
-            pgirlbase = p;
+            pgirlbase = (u_int *)p;
         }
 
         i++;
@@ -2620,7 +2620,7 @@ int DrawFlyMove(int work_no)
     }
 
     no = fly_wrk[work_no].dat->mdl_no;
-    tmpModelp = pmanmodel[no];
+    tmpModelp = (u_int *)pmanmodel[no];
 
     if (tmpModelp == NULL)
     {
