@@ -106,5 +106,5 @@
 /* data 339d30 */ sceVu0FVECTOR furn_photo_center100[0];
 /* data 339d40 */ sceVu0FVECTOR furn_photo_center101[0];
 /* data 339d50 */ sceVu0FVECTOR furn_photo_center102[0];
-/* data 339d60 */ sceVu0FVECTOR *fpc_dat[0];
+/* data 339d60 */ sceVu0FVECTOR *fpc_dat[];
 /* data 339f00 */ u_char fpc_rot_dat[0][8];

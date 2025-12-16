@@ -4901,4 +4901,13 @@ enum {
     REIKON000 = 25
 };
 
+enum
+{
+  PWARP_MODE_NO_REQ = 0,
+  PWARP_MODE_IN_REQ = 1,
+  PWARP_MODE_ROOM_LOAD = 2,
+  PWARP_MODE_OUT_REQ = 3,
+  PWARP_MODE_END = 4
+};
+
 #endif // ENUMS_H
