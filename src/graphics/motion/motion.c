@@ -205,7 +205,7 @@ void motInitMultiFlyMdl(u_int *mpk_p, u_int mdl_no)
 
 void motInitOneFlyMdl(u_int *sgd_p, u_int mdl_no)
 {
-    pmanmodel[mdl_no] = sgd_p;
+    pmanmodel[mdl_no] = (int64_t *)sgd_p;
     SgMapUnit(sgd_p);
 }
 
