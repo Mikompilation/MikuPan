@@ -7,7 +7,7 @@ typedef struct {
 	u_short score;
 	u_char efct_no;
 	u_char room;
-	short int pos[3];
+	short pos[3];
 } PGOST_DAT;
 
 typedef struct {
@@ -18,9 +18,9 @@ typedef struct {
 	u_char time;
 } PGOST_WRK;
 
-// extern PGOST_DAT pg_dat[0];
+extern PGOST_DAT pg_dat[];
 // extern int test_rg_no;
-// extern PGOST_WRK pg_wrk;
+extern PGOST_WRK pg_wrk;
 
 void PuzzleGhostInit();
 void PuzzleGhostLoadReq(u_char pg_no);
