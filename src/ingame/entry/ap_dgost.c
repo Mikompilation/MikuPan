@@ -23,7 +23,27 @@
 u_char dgst_room[] = {
     3, 7, 16, 21, 22, 23, 25, 27, 28, 0xFF,
 };
-#include "data/dgst_load.h" // MSN_LOAD_DAT dgst_load[3];
+
+MSN_LOAD_DAT dgst_load[] = {
+    {
+        .file_no = 854,
+        .file_type = 8,
+        .tmp_no = 0,
+        .addr = 13107200,
+    },
+    {
+        .file_no = 897,
+        .file_type = 9,
+        .tmp_no = 55,
+        .addr = 10682368,
+    },
+    {
+        .file_no = 1379,
+        .file_type = 2,
+        .tmp_no = 1,
+        .addr = 16,
+    },
+};
 
 DGST_WRK dgst_wrk = {0};
 

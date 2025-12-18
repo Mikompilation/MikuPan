@@ -411,11 +411,11 @@ void SceneInitManMdl(SCN_ANM_MDL *sam, u_int *mot_addr, u_int *mim_addr, u_int m
 
     if (sam->mdl_no == 1 && sc->chapter_no == 0)
     {
-        sam->mdl_addr = pmanmodel[0];
+        sam->mdl_addr = (u_int *)pmanmodel[0];
     }
     else
     {
-        sam->mdl_addr = pmanmodel[sam->mdl_no];
+        sam->mdl_addr = (u_int *)pmanmodel[sam->mdl_no];
     }
 
     sam->ene_efct = SceneGetEneEfctAddr(sc, sam->mdl_no);
