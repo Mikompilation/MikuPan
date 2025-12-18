@@ -12,16 +12,7 @@
 #include "ingame/map/map_area.h"
 #include "ingame/map/map_ctrl.h"
 
-RGOST_DSP_WRK rg_dsp_wrk[3];
-RGOST_AP_DAT rg_ap_dat[];
-RGOST_DAT rg_dat[];
-sceVu0FVECTOR *rgc_dat[];
-RG_DISP_DAT rg_start_dat[];
-RG_DISP_DAT rg_inter_dat[];
-RG_DISP_DAT rg_end_dat[];
-RG_ALP_DAT *rg_alp_start[];
-RG_ALP_DAT *rg_alp_inter[];
-RG_ALP_DAT *rg_alp_end[];
+RGOST_DSP_WRK rg_dsp_wrk[3] = {0};
 RGOST_WRK rg_wrk[200] = {0};
 
 #define ENE_START_ADDRESS 0x1c90000
