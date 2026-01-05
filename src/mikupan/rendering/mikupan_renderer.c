@@ -34,6 +34,7 @@ SDL_Texture *curr_fnt_texture = NULL;
 SDL_AppResult MikuPan_Init()
 {
     SDL_SetAppMetadata("MikuPan", "1.0", "mikupan");
+    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
 
     if (!SDL_Init(
         SDL_INIT_VIDEO |

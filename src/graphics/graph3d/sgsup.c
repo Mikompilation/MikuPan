@@ -13,12 +13,14 @@
 #include "sce/libvu0.h"
 #include "sce/libgraph.h"
 
-#include "graphics/graph3d/sgsu.h"
+#include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sgcam.h"
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
-#include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sglight.h"
+#include "graphics/graph3d/sgsu.h"
+
+#include <enums.h>
 
 static int write_flg = 0;
 static int write_counter = 0;
@@ -287,7 +289,7 @@ void SetVUMeshDataP(u_int *prim)
     break;
     case 18:
     case 0x32:
-        LoadSgProg(2);
+        LoadSgProg(VUPROG_SG_PRESET2);
 
         addr = (u_int)&vuvnprim[4];
         AppendDmaTag(addr, *(u_char *)&vuvnprim[3]);

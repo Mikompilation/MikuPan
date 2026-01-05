@@ -29,5 +29,6 @@ void MikuPan_DeleteTexture(void* texture);
 void MikuPan_Camera(const SgCAMERA *camera);
 void MikuPan_Shutdown();
 void MikuPan_EndFrame();
+void MikuPan_RenderIMTF_2();
 
 #endif //MIKUPAN_SDL_RENDERER_H
