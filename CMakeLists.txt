@@ -8,12 +8,14 @@ endif()
 
 if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "-static")
+    #option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 endif()
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)
 
 include(sdl3)
+include(shadercross)
 include(imgui)
 include(spdlog)
 
@@ -229,5 +231,10 @@ set(MIKUPAN_SOURCES "src/mikupan/file_loading.cpp"
 
 add_executable(MikuPan ${MIKUPAN_SOURCES})
 
-target_include_directories(MikuPan PRIVATE "sdk/" "src" "resources/" "extern/" ${SDL3_INCLUDE_DIR})
-target_link_libraries(MikuPan PRIVATE m imgui SDL3::SDL3 spdlog::spdlog) # Link Math.h
+target_include_directories(MikuPan PRIVATE "sdk/" "src" "resources/" "extern/" ${SDL3_INCLUDE_DIR} ${SHADERCROSS_INCLUDE_DIR})
+target_link_libraries(MikuPan PRIVATE m imgui SDL3_shadercross::SDL3_shadercross SDL3::SDL3 spdlog::spdlog)
+
+
+add_custom_command(TARGET MikuPan POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:MikuPan>/shaders
+)

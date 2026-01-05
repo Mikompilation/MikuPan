@@ -30,5 +30,13 @@ void MikuPan_Camera(const SgCAMERA *camera);
 void MikuPan_Shutdown();
 void MikuPan_EndFrame();
 void MikuPan_RenderIMTF_2();
+SDL_GPUShader* MikuPan_LoadShader(
+    SDL_GPUDevice* device,
+    const char* shaderFilename,
+    u_int samplerCount,
+    u_int uniformBufferCount,
+    u_int storageBufferCount,
+    u_int storageTextureCount
+);
 
 #endif //MIKUPAN_SDL_RENDERER_H
