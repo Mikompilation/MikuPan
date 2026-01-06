@@ -1,0 +1,1 @@
+static sceVu0FVECTOR ef_smoke_pos21 = {25220.0f, -40.0f, 12710.0f, 1.0f};

@@ -83,7 +83,6 @@ void MikuPan_Clear()
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
     command_buffer = SDL_AcquireGPUCommandBuffer(device);
-
 }
 
 void MikuPan_UpdateWindowSize(int width, int height)

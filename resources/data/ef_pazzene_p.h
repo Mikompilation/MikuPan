@@ -1,0 +1,1 @@
+static sceVu0FVECTOR ef_pazzene_p = {25720.0f, -180.0f, 7558.0f, 1.0f};
