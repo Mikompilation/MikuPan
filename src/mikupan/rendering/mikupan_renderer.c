@@ -24,7 +24,6 @@ int window_width = 640;
 int window_height = 448;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
-SDL_GPUDevice* device = NULL;
 SDL_GPURenderPass* render_pass = NULL;
 SDL_GPUCommandBuffer* command_buffer = NULL;
 SDL_GPUTexture* swapchain_texture = NULL;
@@ -48,17 +47,19 @@ SDL_AppResult MikuPan_Init()
         return SDL_APP_FAILURE;
     }
 
-    window = SDL_CreateWindow("MikuPan", window_width, window_height, SDL_WINDOW_RESIZABLE);
+    int num_rend = SDL_GetNumRenderDrivers();
 
-    device = SDL_CreateGPUDevice(
-        SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL,
-        true,
-        NULL
-        );
+    for (int i = 0; i < num_rend; i++)
+    {
+        info_log("Available Renderer: %s", SDL_GetRenderDriver(i));
+    }
 
-    renderer = SDL_CreateGPURenderer(device, window);
+    window = SDL_CreateWindow("MikuPan", window_width, window_height,
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
-    if (window == NULL || renderer == NULL || device == NULL)
+    renderer = SDL_CreateRenderer(window, "opengl");
+
+    if (window == NULL || renderer == NULL)
     {
         info_log(SDL_GetError());
         return SDL_APP_FAILURE;
@@ -82,7 +83,6 @@ void MikuPan_Clear()
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
-    command_buffer = SDL_AcquireGPUCommandBuffer(device);
 }
 
 void MikuPan_UpdateWindowSize(int width, int height)
@@ -247,7 +247,6 @@ void MikuPan_DeleteTexture(void *texture)
 void MikuPan_Camera(const SgCAMERA *camera)
 {
     struct GRA3DSCRATCHPADLAYOUT * scratchpad = (struct GRA3DSCRATCHPADLAYOUT *)ps2_virtual_scratchpad;
-    return;
     //unsigned int viewLoc = gl_context->GetUniformLocation(shaderProgram, "view");
     //gl_context->UniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -258,8 +257,7 @@ void MikuPan_Camera(const SgCAMERA *camera)
 
 void MikuPan_Shutdown()
 {
-    // destroy the GPU device
-    SDL_DestroyGPUDevice(device);
+    SDL_DestroyRenderer(renderer);
 
     // destroy the window
     SDL_DestroyWindow(window);
