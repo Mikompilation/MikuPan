@@ -140,7 +140,7 @@ void motInitOneEnemyMdl(u_int *mdl_p, u_int mdl_no)
     u_int *top;
 
     pack_num = *mdl_p;
-    pmanmodel[mdl_no] = mdl_p;
+    pmanmodel[mdl_no] = (int64_t *)mdl_p;
 
     for (i = 0; i < pack_num; i++)
     {
@@ -151,15 +151,15 @@ void motInitOneEnemyMdl(u_int *mdl_p, u_int mdl_no)
             // do nothing
         break;
         case 5:
-            pmanmpk[mdl_no] = top;
+            pmanmpk[mdl_no] = (int64_t *)top;
         break;
         case 6:
-            pmanpk2[mdl_no] = top;
+            pmanpk2[mdl_no] =  (int64_t *)top;
         break;
         }
     }
 
-    MpkMapUnit(pmanmpk[mdl_no]);
+    MpkMapUnit((u_int *)pmanmpk[mdl_no]);
 }
 
 void motInitMultiEnemyMdl(u_int *mdl_addr, u_int mdl_no)

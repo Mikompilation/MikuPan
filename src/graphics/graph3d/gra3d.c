@@ -877,8 +877,8 @@ int64_t PlayerModelInit()
 
     tmpp = (u_int *)MikuPan_GetHostAddress(PLYR_FILE_ADDRESS);
 
-    pmanmodel[0] = &tmpp[0];
-    pmanmpk[0] = &tmpp[0];
+    pmanmodel[0] = (int64_t *)&tmpp[0];
+    pmanmpk[0] = (int64_t *)&tmpp[0];
 
     tmpp = &tmpp[4];
 
