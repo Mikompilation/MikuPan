@@ -2620,7 +2620,7 @@ int DrawFlyMove(int work_no)
     }
 
     no = fly_wrk[work_no].dat->mdl_no;
-    tmpModelp = pmanmodel[no];
+    tmpModelp = (u_int *)pmanmodel[no];
 
     if (tmpModelp == NULL)
     {

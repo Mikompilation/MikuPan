@@ -65,7 +65,7 @@ void motInitPlayerAnm(char mdl_no)
 
     pkt_p = (u_int *)GetPakTaleAddr((void *)MikuPan_GetHostAddress(PLAYER_ANM_ADDRESS));
 
-    motInitAniCtrl(ani_mdl, (u_int *)MikuPan_GetHostAddress(PLAYER_ANM_ADDRESS), pmanmpk[0], pkt_p, mdl_no, A000_MIKU);
+    motInitAniCtrl(ani_mdl, (u_int *)MikuPan_GetHostAddress(PLAYER_ANM_ADDRESS), (u_int *)pmanmpk[0], pkt_p, mdl_no, A000_MIKU);
     mimLNigiriReq(M001_MIM_LHAND_NIGIRI, 0);
 
     ani_mdl[0].mot.reso = 1;
@@ -93,7 +93,7 @@ void motInitOneEnemyAnm(u_int *anm_p, u_int mdl_no, u_int anm_no)
     ret = motSetAniMdlBuf(anm_no, anm_p);
 
     ani_ctrl = &ani_mdl[ret];
-    mdl_p = pmanmodel[mdl_no];
+    mdl_p = (u_int *)pmanmodel[mdl_no];
     pkt_p = GetPakTaleAddr(anm_p);
     pkt_p = &pkt_p[ani_mdl_ctrl[ret].pkt_no * 0x4000];
 

@@ -253,7 +253,7 @@ void *SetEffects(int id, int fl, ...)
     int ret;
     va_list ap;
     EFFECT_CONT *ec;
-    return;
+    return NULL;
     if (
         (ingame_wrk.stts & 0x20) &&
         ev_wrk.movie_on != 4 &&
