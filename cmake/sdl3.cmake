@@ -9,7 +9,7 @@ else()
         FetchContent_Declare(
                 sdl3
                 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-                GIT_TAG aae2f74ae611652b2858393fdf6e4d6d6cb85384
+                GIT_TAG release-3.4.0
         )
 
         FetchContent_MakeAvailable(sdl3)

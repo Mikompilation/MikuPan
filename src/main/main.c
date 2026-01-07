@@ -101,13 +101,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     MikuPan_EndFrame();
 
-    //uint64_t frameEnd = SDL_GetTicks();
-    //double frameTime = (double)(frameEnd - frameStart);
-    //if (frameTime < TARGET_FRAME_TIME)
-    //{
-    //    SDL_Delay((Uint32)(TARGET_FRAME_TIME - frameTime));
-    //}
-
     return SDL_APP_CONTINUE;
 }
 

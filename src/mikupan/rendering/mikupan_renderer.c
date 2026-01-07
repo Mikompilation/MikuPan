@@ -54,7 +54,6 @@ GLuint shaderProgram;
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
-GladGLContext *glad_context = NULL;
 SDL_Texture *fnt_texture[6] = {0};
 SDL_Texture *curr_fnt_texture = NULL;
 
@@ -94,9 +93,7 @@ SDL_AppResult MikuPan_Init()
         return SDL_APP_FAILURE;
     }
 
-    glad_context = (GladGLContext *) calloc(1, sizeof(GladGLContext));
-
-    int version = gladLoadGLContext(glad_context, SDL_GL_GetProcAddress);
+    int version = gladLoadGL(SDL_GL_GetProcAddress);
 
     SDL_SetRenderLogicalPresentation(renderer, window_width, window_height,
                                      SDL_LOGICAL_PRESENTATION_DISABLED);
@@ -106,37 +103,37 @@ SDL_AppResult MikuPan_Init()
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderVSync(renderer, 1);
 
-    GLuint vertexShader = glad_context->CreateShader(GL_VERTEX_SHADER);
-    glad_context->ShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    GLuint vertexShader = glad_glCreateShader(GL_VERTEX_SHADER);
+    glad_glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 
     // Compile the Vertex Shader into machine code
-    glad_context->CompileShader(vertexShader);
+    glad_glCompileShader(vertexShader);
 
     // Create Fragment Shader Object and get its reference
-    GLuint fragmentShader = glad_context->CreateShader(GL_FRAGMENT_SHADER);
+    GLuint fragmentShader = glad_glCreateShader(GL_FRAGMENT_SHADER);
 
     // Attach Fragment Shader source to the Fragment Shader Object
-    glad_context->ShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glad_glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
 
     // Compile the Vertex Shader into machine code
-    glad_context->CompileShader(fragmentShader);
+    glad_glCompileShader(fragmentShader);
 
     // Create Shader Program Object and get its reference
-    shaderProgram = glad_context->CreateProgram();
+    shaderProgram = glad_glCreateProgram();
 
     // Attach the Vertex and Fragment Shaders to the Shader Program
-    glad_context->AttachShader(shaderProgram, vertexShader);
-    glad_context->AttachShader(shaderProgram, fragmentShader);
+    glad_glAttachShader(shaderProgram, vertexShader);
+    glad_glAttachShader(shaderProgram, fragmentShader);
 
     // Wrap-up/Link all the shaders together into the Shader Program
-    glad_context->LinkProgram(shaderProgram);
+    glad_glLinkProgram(shaderProgram);
 
     // Delete the now useless Vertex and Fragment Shader objects
-    glad_context->DeleteShader(vertexShader);
-    glad_context->DeleteShader(fragmentShader);
+    glad_glDeleteShader(vertexShader);
+    glad_glDeleteShader(fragmentShader);
 
     // Tell OpenGL which Shader Program we want to use
-    glad_context->UseProgram(shaderProgram);
+    glad_glUseProgram(shaderProgram);
 
     return SDL_APP_CONTINUE;
 }
@@ -331,22 +328,22 @@ void MikuPan_Camera(const SgCAMERA *camera)
         mtx);
 
     unsigned int viewLoc =
-        glad_context->GetUniformLocation(shaderProgram, "view");
+        glad_glGetUniformLocation(shaderProgram, "view");
 
-    glad_context->UniformMatrix4fv(
+    glad_glUniformMatrix4fv(
         viewLoc, 1, GL_FALSE,
-        &mtx);
+        (float*)mtx);
 
     // Projection
     mat4 projection = {0};
     glm_perspective(camera->fov, (float)window_width / (float)window_height, camera->nearz, camera->farz, projection);
 
     unsigned int projectionLoc =
-        glad_context->GetUniformLocation(shaderProgram, "projection");
+        glad_glGetUniformLocation(shaderProgram, "projection");
 
-    glad_context->UniformMatrix4fv(
+    glad_glUniformMatrix4fv(
         projectionLoc, 1, GL_FALSE,
-        &projection);
+        (float*)projection);
 }
 
 void MikuPan_Shutdown()
@@ -367,11 +364,11 @@ void MikuPan_EndFrame()
 void MikuPan_SetModelTransform(unsigned int *prim)
 {
     unsigned int modelLoc =
-        glad_context->GetUniformLocation(shaderProgram, "model");
+        glad_glGetUniformLocation(shaderProgram, "model");
 
-    glad_context->UniformMatrix4fv(
+    glad_glUniformMatrix4fv(
         modelLoc, 1, GL_FALSE,
-        &lcp[prim[2]].matrix);
+        (float*)&lcp[prim[2]].matrix[0]);
 }
 
 void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN, struct SGDPROCUNITHEADER *pPUHead)
@@ -401,38 +398,38 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN, struct SGDPROCU
 
         GLuint VAO, VBO;
 
-        glad_context->GenVertexArrays(1, &VAO);
-        glad_context->GenBuffers(1, &VBO);
+        glad_glGenVertexArrays(1, &VAO);
+        glad_glGenBuffers(1, &VBO);
 
         // Make the VAO the current Vertex Array Object by binding it
-        glad_context->BindVertexArray(VAO);
+        glad_glBindVertexArray(VAO);
 
         // Bind the VBO specifying it's a GL_ARRAY_BUFFER
-        glad_context->BindBuffer(GL_ARRAY_BUFFER, VBO);
+        glad_glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         // Introduce the vertices into the VBO
-        glad_context->BufferData(GL_ARRAY_BUFFER,
+        glad_glBufferData(GL_ARRAY_BUFFER,
                                  pVMCD->VifUnpack.NUM * sizeof(float[3]),
                                  vertices, GL_STATIC_DRAW);
 
         // Configure the Vertex Attribute so that OpenGL knows how to read the VBO
-        glad_context->VertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+        glad_glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
         // Enable the Vertex Attribute so that OpenGL knows to use it
-        glad_context->EnableVertexAttribArray(0);
+        glad_glEnableVertexAttribArray(0);
 
         // Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
-        glad_context->BindBuffer(GL_ARRAY_BUFFER, 0);
-        glad_context->BindVertexArray(0);
+        glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glad_glBindVertexArray(0);
 
         // Bind the VAO so OpenGL knows to use it
-        glad_context->BindVertexArray(VAO);
+        glad_glBindVertexArray(VAO);
 
         // Draw the triangle using the GL_TRIANGLE_STRIP primitive
-        glad_context->DrawArrays(GL_LINE_STRIP, 0, pVMCD->VifUnpack.NUM);
+        glad_glDrawArrays(GL_LINE_STRIP, 0, pVMCD->VifUnpack.NUM);
 
-        glad_context->DeleteVertexArrays(1, &VAO);
-        glad_context->DeleteBuffers(1, &VBO);
+        glad_glDeleteVertexArrays(1, &VAO);
+        glad_glDeleteBuffers(1, &VBO);
 
         vertexOffset += pVMCD->VifUnpack.NUM;
         pVMCD = (struct _SGDVUMESHCOLORDATA *) &pVMCD->avColor[pVMCD->VifUnpack.NUM];
@@ -457,42 +454,42 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
 
         GLuint VAO, VBO;
 
-        glad_context->GenVertexArrays(1, &VAO);
-        glad_context->GenBuffers(1, &VBO);
+        glad_glGenVertexArrays(1, &VAO);
+        glad_glGenBuffers(1, &VBO);
 
         // Make the VAO the current Vertex Array Object by binding it
-        glad_context->BindVertexArray(VAO);
+        glad_glBindVertexArray(VAO);
 
         // Bind the VBO specifying it's a GL_ARRAY_BUFFER
-        glad_context->BindBuffer(GL_ARRAY_BUFFER, VBO);
+        glad_glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         // Introduce the vertices into the VBO
-        glad_context->BufferData(
+        glad_glBufferData(
             GL_ARRAY_BUFFER,
             pMeshInfo[i].uiPointNum * sizeof(struct SGDMESHVERTEXDATA_TYPE2),
             &pVUVNData->avt2[vertexOffset], GL_STATIC_DRAW);
 
         // Configure the Vertex Attribute so that OpenGL knows how to read the VBO
-        glad_context->VertexAttribPointer(
+        glad_glVertexAttribPointer(
             0, 3, GL_FLOAT, GL_FALSE, sizeof(struct SGDMESHVERTEXDATA_TYPE2),
             NULL);
 
         // Enable the Vertex Attribute so that OpenGL knows to use it
-        glad_context->EnableVertexAttribArray(0);
+        glad_glEnableVertexAttribArray(0);
 
         // Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
-        glad_context->BindBuffer(GL_ARRAY_BUFFER, 0);
-        glad_context->BindVertexArray(0);
+        glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glad_glBindVertexArray(0);
 
         // Bind the VAO so OpenGL knows to use it
-        glad_context->BindVertexArray(VAO);
+        glad_glBindVertexArray(VAO);
 
         // Draw the triangle using the GL_TRIANGLE_STRIP primitive
         auto render_type = true ? GL_LINE_STRIP : GL_TRIANGLE_STRIP;
-        glad_context->DrawArrays(render_type, 0, pMeshInfo[i].uiPointNum);
+        glad_glDrawArrays(render_type, 0, pMeshInfo[i].uiPointNum);
 
-        glad_context->DeleteVertexArrays(1, &VAO);
-        glad_context->DeleteBuffers(1, &VBO);
+        glad_glDeleteVertexArrays(1, &VAO);
+        glad_glDeleteBuffers(1, &VBO);
 
         vertexOffset += pMeshInfo[i].uiPointNum;
     }

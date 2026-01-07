@@ -16,9 +16,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)
 include(sdl3)
 include(imgui)
 include(spdlog)
-include(glad)
 include(cglm)
-glad_add_library(glad_gl_core_mx_33 REPRODUCIBLE MX API gl:core=3.3)
 
 set(MIKUPAN_SOURCES "src/mikupan/file_loading.cpp"
         "src/common/ul_math.c"
@@ -230,9 +228,12 @@ set(MIKUPAN_SOURCES "src/mikupan/file_loading.cpp"
         extern/imgui_toggle/imgui_toggle_renderer.cpp
         src/graphics/graph3d/libsg.c
         src/mikupan/mikupan_types.h
+
+        extern/glad/src/gl.c
 )
 
 add_executable(MikuPan ${MIKUPAN_SOURCES})
 
-target_include_directories(MikuPan PRIVATE "sdk/" "src" "resources/" "extern/" ${SDL3_INCLUDE_DIR})
-target_link_libraries(MikuPan PRIVATE m glad_gl_core_mx_33 imgui SDL3::SDL3 spdlog::spdlog cglm) # Link Math.h
+target_include_directories(MikuPan PRIVATE "sdk/" "src" "resources/" "extern/" "extern/glad/include/" ${SDL3_INCLUDE_DIR})
+
+target_link_libraries(MikuPan PRIVATE m imgui SDL3::SDL3 spdlog::spdlog cglm)

@@ -416,7 +416,7 @@ void ScnTestMdlLoadReq(u_int *addr)
         {
             next_addr = LoadReqGetAddr(sam->mdl_no + M000_MIKU_MDL, (int64_t)addr, (int64_t *)&scn_test_load_id[scn_test_load_num]);
 
-            pmanmodel[sam->mdl_no] = (int64_t *)addr;
+            pmanmodel[sam->mdl_no] = addr;
             addr = (u_int *)next_addr;
 
             scn_test_load_num++;
@@ -472,8 +472,8 @@ int ScnTestMdlLoadWait()
         {
             addr = (int *)pmanmodel[sam->mdl_no];
 
-            pmanmpk[sam->mdl_no] = (int64_t *)GetFileInPak(addr, 0);
-            pmanpk2[sam->mdl_no] = (int64_t *)GetFileInPak(addr, 1);
+            pmanmpk[sam->mdl_no] = GetFileInPak(addr, 0);
+            pmanpk2[sam->mdl_no] = GetFileInPak(addr, 1);
 
             MpkMapUnit((u_int *)pmanmpk[sam->mdl_no]);
         }

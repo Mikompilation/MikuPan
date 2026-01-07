@@ -57,9 +57,9 @@ u_int fly_display[3] = {0, 0, 0};
 #include "data/fog_param_finder.h" // sceVu0FVECTOR fog_param_finder[64];
 #include "data/fog_rgb_finder.h"   // sceVu0IVECTOR fog_rgb_finder[64];
 u_char mimchodo_num[] = {6, 7, 8, 13, 14, 36};
-int64_t *pmanmodel[70] = {NULL};
-int64_t *pmanmpk[70] = {NULL};
-int64_t *pmanpk2[70] = {NULL};
+u_int *pmanmodel[70] = {NULL};
+u_int *pmanmpk[70] = {NULL};
+u_int *pmanpk2[70] = {NULL};
 
 static u_int *ptexture = 0;
 static u_int *ctexture = 0;

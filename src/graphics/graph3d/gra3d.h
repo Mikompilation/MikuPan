@@ -21,9 +21,9 @@ extern sceVu0FVECTOR fog_param_finder[64];
 extern sceVu0IVECTOR fog_rgb_finder[64];
 extern int disp_frame_counter;
 extern u_char mimchodo_num[];
-extern int64_t *pmanmodel[70];
-extern int64_t *pmanmpk[70];
-extern int64_t *pmanpk2[70];
+extern u_int *pmanmodel[70];
+extern u_int *pmanmpk[70];
+extern u_int *pmanpk2[70];
 extern u_int *pgirlbase;
 extern u_int *pgirlshadow;
 extern u_int *pgirlacs[]; // [2] wrong declaration
