@@ -1,5 +1,8 @@
 #include "common.h"
 #include "furn_spe.h"
+
+FURN_DAT_SAVE f_dat_save[430];
+
 void NewgameFActInit()
 {
 }

@@ -1,6 +1,8 @@
 #include "common.h"
 #include "wan_soul.h"
 
+WANDER_SOUL_WRK wander_soul_wrk[1];
+
 sceVu0FVECTOR* SetFirstDestination(sceVu0FVECTOR* destination, float* pos)
 {
 }

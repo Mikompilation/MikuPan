@@ -1,6 +1,8 @@
 #include "common.h"
 #include "map_ctrl.h"
 
+u_char room_pass[42];
+
 int MissonMapDataLoad(u_char msn_no)
 {
 }

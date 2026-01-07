@@ -31,7 +31,7 @@ typedef struct {
 #include "ingame/enemy/move_ctl.h"
 
 // extern sceVu0FVECTOR special_furn_pos[0];
-// extern FURN_DAT_SAVE f_dat_save[430];
+extern FURN_DAT_SAVE f_dat_save[430];
 // extern FURN_ACT_WRK f_act_wrk[20];
 // extern TREMBLE_H_WRK tremble_h_wrk[5];
 // extern u_char fspe_miku_act;
@@ -54,8 +54,8 @@ void FActWrkMain();
 int SearchRegisterFW2FAW(u_short fw_id, u_short fact_no);
 void ExchangeFAWFWID(int fw_id1, int fw_id2);
 void FSpeFinishFlgOff(u_short furn_id);
-void FurnActOffEve(u_short furn_id); // `EventMain` in ev_main.c needs them to implicitly declared
-void FurnActOnEve(u_short furn_id); // `EventMain` in ev_main.c needs them to implicitly declared
+// void FurnActOffEve(u_short furn_id); `EventMain` in ev_main.c needs them to implicitly declared
+// void FurnActOnEve(u_short furn_id); `EventMain` in ev_main.c needs them to implicitly declared
 int SearchFActWrkIDFromFurnID(u_short furn_id);
 void AddRotVector(float *rot, float *rot1);
 void FActCheckExec();
