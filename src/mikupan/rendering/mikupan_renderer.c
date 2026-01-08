@@ -68,7 +68,6 @@ SDL_AppResult MikuPan_Init()
 
     SDL_SetAppMetadata("MikuPan", "1.0", "mikupan");
     SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
-    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                         SDL_GL_CONTEXT_PROFILE_CORE);
@@ -86,9 +85,15 @@ SDL_AppResult MikuPan_Init()
     window = SDL_CreateWindow("MikuPan", window_width, window_height,
                               SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
+    if (window == NULL)
+    {
+        info_log(SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
     renderer = SDL_CreateRenderer(window, "opengl");
 
-    if (window == NULL || renderer == NULL)
+    if (renderer == NULL)
     {
         info_log(SDL_GetError());
         return SDL_APP_FAILURE;

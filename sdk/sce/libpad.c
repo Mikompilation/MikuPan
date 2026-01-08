@@ -1,6 +1,7 @@
 #include "libpad.h"
 #include "os/pad.h"
 #include <SDL3/SDL_gamepad.h>
+#include <SDL3/SDL_keyboard.h>
 #include <stddef.h>
 
 SDL_Gamepad *gamepad = NULL;
@@ -39,10 +40,10 @@ int scePadInit(int mode)
 
 int scePadGetState(int port, int slot)
 {
-    if (gamepad == NULL)
-    {
-        return scePadStateDiscon;
-    }
+    //if (gamepad == NULL)
+    //{
+    //    return scePadStateDiscon;
+    //}
 
     return scePadStateStable;
 }
@@ -54,30 +55,49 @@ int scePadRead(int port, int slot, unsigned char* rdata)
         rdata[i] = 0xFF;
     }
 
-    if (gamepad == NULL)
-    {
-        return 0;
-    }
-
     u_short* data = (u_short*)rdata;
     rdata[0] = 0;
 
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_NORTH)          ? sce_pad[0] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_SOUTH)          ? sce_pad[1] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_WEST)           ? sce_pad[2] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_EAST)           ? sce_pad[3] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP)        ? sce_pad[4] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN)      ? sce_pad[5] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT)      ? sce_pad[6] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT)     ? sce_pad[7] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_RIGHT_STICK)    ? sce_pad[8] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_BACK)           ? sce_pad[9] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_START)          ? sce_pad[10] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_STICK)     ? sce_pad[11] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) ? sce_pad[12] : 0;
-    data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER)       ? sce_pad[13] : 0;
-    data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)      ? sce_pad[14] : 0;
-    data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)  ? sce_pad[15] : 0;
+    if (gamepad != NULL)
+    {
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_NORTH)          ? sce_pad[0] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_SOUTH)          ? sce_pad[1] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_WEST)           ? sce_pad[2] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_EAST)           ? sce_pad[3] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP)        ? sce_pad[4] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN)      ? sce_pad[5] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT)      ? sce_pad[6] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT)     ? sce_pad[7] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_RIGHT_STICK)    ? sce_pad[8] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_BACK)           ? sce_pad[9] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_START)          ? sce_pad[10] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_STICK)     ? sce_pad[11] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) ? sce_pad[12] : 0;
+        data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER)       ? sce_pad[13] : 0;
+        data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)      ? sce_pad[14] : 0;
+        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)  ? sce_pad[15] : 0;
+    }
+    else
+    {
+        const bool *key_states = SDL_GetKeyboardState(NULL);
+
+        data[1] ^= key_states[SDL_SCANCODE_I]           ? sce_pad[0] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_K]           ? sce_pad[1] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_J]           ? sce_pad[2] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_L]           ? sce_pad[3] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_UP]          ? sce_pad[4] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_DOWN]        ? sce_pad[5] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_LEFT]        ? sce_pad[6] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_RIGHT]       ? sce_pad[7] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_M]           ? sce_pad[8] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_BACKSPACE]   ? sce_pad[9] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_ESCAPE]      ? sce_pad[10] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_N]           ? sce_pad[11] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_O]           ? sce_pad[12] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_8]           ? sce_pad[13] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_9]           ? sce_pad[14] : 0;
+        data[1] ^= key_states[SDL_SCANCODE_U]           ? sce_pad[15] : 0;
+    }
 
     return 1;
 }

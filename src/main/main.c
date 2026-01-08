@@ -19,6 +19,7 @@
 
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include "graphics/ui/imgui_window_c.h"
+#include "iop/iopmain.h"
 #include "mikupan/gs/texture_manager_c.h"
 #include "os/eeiop/se_cmd.h"
 #include <SDL3/SDL.h>
