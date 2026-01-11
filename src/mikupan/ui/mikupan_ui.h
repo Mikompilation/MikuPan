@@ -15,5 +15,6 @@ extern "C"
     void ShutDownImGuiWindow();
     void ProcessEventImGui(SDL_Event *event);
     float GetFrameRate();
+    int IsWireframeRendering();
 }
 #endif //MIKUPAN_IMGUI_WINDOW_H

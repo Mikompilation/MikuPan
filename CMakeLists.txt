@@ -207,7 +207,7 @@ set(MIKUPAN_SOURCES "src/mikupan/file_loading.cpp"
         "src/mc/mc_at.c"
         "src/graphics/graph3d/vu_program.c"
         "src/mikupan/mikupan_memory.c"
-        src/graphics/ui/imgui_window.cpp
+        src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/rendering/mikupan_renderer.c
         src/mikupan/rendering/mikupan_renderer.h
         src/mikupan/gs/gs_server.cpp
@@ -216,7 +216,7 @@ set(MIKUPAN_SOURCES "src/mikupan/file_loading.cpp"
         src/mikupan/gs/texture_manager.h
         src/mikupan/gs/gs_server_c.h
         src/mikupan/gs/texture_manager_c.h
-        src/graphics/ui/imgui_window_c.h
+        src/mikupan/ui/mikupan_ui.h
         src/mikupan/logging.cpp
         src/mikupan/logging.h
         src/mikupan/logging_c.h

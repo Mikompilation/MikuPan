@@ -101,8 +101,8 @@ void SgSetRefCamera(SgCAMERA *camera)
 
     scrz = clip_volumev[1] / tanf(camera->fov * 0.5f) * 2;
 
-    sceVu0SubVector(camera->zd,camera->i,camera->p);
-    sceVu0SubVector(ieye,camera->p,camera->i);
+    sceVu0SubVector(camera->zd, camera->i, camera->p);
+    sceVu0SubVector(ieye, camera->p, camera->i);
 
     camera->yd[0] = 0.0f;
     camera->yd[1] = -1.0f;
@@ -111,12 +111,12 @@ void SgSetRefCamera(SgCAMERA *camera)
 
     sceVu0UnitMatrix(tmpmat);
     sceVu0RotMatrixZ(tmpmat,tmpmat,-camera->roll);
-    sceVu0ApplyMatrix(camera->yd,tmpmat,camera->yd);
-    SetViewScreenClipMatrix(camera,scrz);
-    sceVu0CameraMatrix(camera->wv,camera->p,camera->zd,camera->yd);
-    sceVu0MulMatrix(camera->ws,camera->vs,camera->wv);
-    sceVu0MulMatrix(camera->wc,camera->vc,camera->wv);
-    sceVu0MulMatrix(camera->wcv,camera->vcv,camera->wv);
+    sceVu0ApplyMatrix(camera->yd, tmpmat,camera->yd);
+    SetViewScreenClipMatrix(camera, scrz);
+    sceVu0CameraMatrix(camera->wv, camera->p, camera->zd ,camera->yd);
+    sceVu0MulMatrix(camera->ws, camera->vs, camera->wv);
+    sceVu0MulMatrix(camera->wc, camera->vc, camera->wv);
+    sceVu0MulMatrix(camera->wcv, camera->vcv, camera->wv);
 
     SgSetWsMtx(camera->ws);
     SgSetClipMtx(camera->wc);

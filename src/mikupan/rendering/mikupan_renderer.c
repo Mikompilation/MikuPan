@@ -2,23 +2,23 @@
 #include "../mikupan_types.h"
 #include "SDL3/SDL_hints.h"
 #include "SDL3/SDL_init.h"
-#include "SDL3/SDL_log.h"
 #include "common/utility.h"
 #include "graphics/graph2d/message.h"
-#include "graphics/ui/imgui_window_c.h"
+#include "mikupan/ui/mikupan_ui_c.h"
 #include "mikupan/gs/gs_server_c.h"
 #include "mikupan/gs/texture_manager_c.h"
 #include "mikupan/logging_c.h"
-
-#include <SDL3/SDL_gpu.h>
 #include <mikupan/mikupan_memory.h>
 #include <stdlib.h>
 #include "cglm/cglm.h"
 
 #define GLAD_GL_IMPLEMENTATION
+#include "graphics/graph3d/sgcam.h"
+#include "graphics/graph3d/sglib.h"
+#include "graphics/graph3d/sglight.h"
+#include "graphics/graph3d/sgsu.h"
+
 #include <glad/gl.h>
-#include <graphics/graph3d/sglight.h>
-#include <graphics/graph3d/sgsu.h>
 
 #define PS2_RESOLUTION_X_FLOAT 640.0f
 #define PS2_RESOLUTION_X_INT 640
@@ -359,19 +359,33 @@ void MikuPan_Camera(const SgCAMERA *camera)
 
     GLint id;
     glGetIntegerv(GL_CURRENT_PROGRAM,&id);
-
     glad_glUseProgram(shaderProgram);
-    mat4 mtx = {0};
-    vec3 cam = {camera->p[1], camera->p[1], camera->p[2]};
-    vec3 center = {cam[0] - camera->i[0], cam[1] - camera->i[1], cam[2] - camera->i[2]};
-    vec3 up = {0.0f, 1.0f, 0.0f};
 
+    mat4 mtx = {0};
+
+    vec3 cam = {camera->p[0], camera->p[1], camera->p[2]};
+
+    // camera->zd
+    vec3 zd = {camera->i[0] - cam[0], camera->i[1] - cam[1], camera->i[2] - cam[2]};
+    vec3 center = {0};
+    glm_vec3_add(cam, zd, center);
+
+    // === Default up vector (PS2 uses Y-down) ===
+    vec3 default_up = {0.0f, 1.0f, 0.0f};
+    vec3 up = {0};
+
+    // === Apply roll (rotation around Z) ===
+    mat4 roll = {0};
+    vec3 axis = {0.0f, 0.0f, 1.0f};
+    glm_mat4_identity(roll);
+    glm_rotate(roll, -camera->roll, axis);
+    glm_mat4_mulv3(roll, default_up, 0.0f, up);
+
+    // === View matrix (equivalent to sceVu0CameraMatrix) ===
     glm_lookat(cam,
         center,
         up,
         mtx);
-
-    //glm_rotate(mtx, camera->roll, up);
 
     int viewLoc =
         glad_glGetUniformLocation(shaderProgram, "view");
@@ -382,7 +396,8 @@ void MikuPan_Camera(const SgCAMERA *camera)
 
     // Projection
     mat4 projection = {0};
-    glm_perspective(camera->fov, (float)window_width / (float)window_height, camera->nearz, camera->farz, projection);
+    float aspect = (float)window_width / (float)window_height;
+    glm_perspective(camera->fov, aspect, camera->nearz, camera->farz, projection);
 
     int projectionLoc =
         glad_glGetUniformLocation(shaderProgram, "projection");
@@ -455,8 +470,9 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN, struct SGDPROCU
         // Bind the VAO so OpenGL knows to use it
         glad_glBindVertexArray(VAO);
 
-        // Draw the triangle using the GL_TRIANGLE_STRIP primitive
-        glad_glDrawArrays(GL_LINE_STRIP, 0, pVMCD->VifUnpack.NUM);
+        // Draw the triangle using the GL_TRIANGLE_STRIP/GL_LINE_STRIP primitive
+
+        glad_glDrawArrays(IsWireframeRendering() ? GL_LINE_STRIP : GL_TRIANGLE_STRIP, 0, pVMCD->VifUnpack.NUM);
 
         glad_glDeleteVertexArrays(1, &VAO);
         glad_glDeleteBuffers(1, &VBO);

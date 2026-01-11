@@ -8,5 +8,6 @@ void RenderImGuiWindow(SDL_Renderer *renderer);
 void DrawImGuiWindow();
 void NewFrameImGuiWindow();
 void ProcessEventImGui(SDL_Event *event);
+int IsWireframeRendering();
 
 #endif //MIKUPAN_IMGUI_WINDOW_C_H

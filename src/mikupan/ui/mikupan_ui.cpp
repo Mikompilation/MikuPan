@@ -1,11 +1,10 @@
-#include "imgui_window.h"
+#include "mikupan_ui.h"
 
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 #include "main/glob.h"
 #include "imgui_internal.h"
 #include "imgui_toggle/imgui_toggle.h"
-
 
 extern "C"
 {
@@ -135,6 +134,8 @@ bool show_menu_bar = false;
 bool show_frame_time_graph = false;
 bool controller_config = false;
 bool controller_rumble_test = false;
+bool camera_debug = false;
+int render_wireframe = 1;
 
 void InitImGuiWindow(SDL_Window *window, SDL_Renderer *renderer)
 {
@@ -185,6 +186,8 @@ void DrawImGuiWindow()
             ImGui::Toggle("Packet Count", (bool*)&dbg_wrk.oth_pkt_num_sw, ImGuiToggleFlags_Animated);
             ImGui::Toggle("Controller Config", &controller_config, ImGuiToggleFlags_Animated);
             ImGui::Toggle("Clear Game", (bool*)&ingame_wrk.clear_count, ImGuiToggleFlags_Animated);
+            ImGui::Toggle("Camera", (bool*)&camera_debug, ImGuiToggleFlags_Animated);
+            ImGui::Toggle("Wireframe", (bool*)&render_wireframe, ImGuiToggleFlags_Animated);
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -205,6 +208,11 @@ void DrawImGuiWindow()
     if (dbg_wrk.mode_on == 1)
     {
         gra2dDrawDbgMenu();
+    }
+
+    if (camera_debug)
+    {
+        //ImGui::InputFloat("Angle Snap", &snap.x);
     }
 
     if (show_frame_time_graph)
@@ -236,4 +244,9 @@ void ProcessEventImGui(SDL_Event *event)
 float GetFrameRate()
 {
     return ImGui::GetIO().Framerate;
+}
+
+int IsWireframeRendering()
+{
+    return render_wireframe;
 }
