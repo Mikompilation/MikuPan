@@ -43,7 +43,7 @@ const char *fragmentShaderSource =
     "out vec4 FragColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+    "   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
     "}\n\0";
 
 float game_aspect_ratio = 4.0f / 3.0f;

@@ -951,7 +951,8 @@ void acsClothCtrl(ANI_CTRL* ani_ctrl, u_int* mpk_p, u_int mdl_no, u_char scene_f
     }
 
     no = 0;
-    cp = (SgCOORDUNIT*)mpk_p[10];
+    //cp = (SgCOORDUNIT*)mpk_p[10];
+    cp = (SgCOORDUNIT*)MikuPan_GetHostAddress(mpk_p[10]);
 
     Vu0CopyVector(pos, cp[manmdl_dat[mdl_no].waist_id].lwmtx[3]);
     sceVu0SubVector(sub, pos, ani_ctrl->pbak);

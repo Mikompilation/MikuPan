@@ -45,7 +45,6 @@
 #include "graphics/scene/scene_dat.h"
 #include "ingame/map/map_area.h"
 #include "graphics/scene/scene.h"
-#include "data/scene_movie_no.h"
 
 #ifdef BUILD_EU_VERSION
 char *mpegName[][40] = {

@@ -9,6 +9,7 @@
 #include "sce/libvu0.h"
 
 #include "common/ul_math.h"
+
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_scr.h"
 #include "graphics/graph2d/effect_sub.h"
@@ -573,7 +574,7 @@ void SceneDraw(int scene_no)
 
     for (i = 0; i < sc->man_mdl_num; i++)
     {
-        SceneDrawManMdl(sc, i);
+        //SceneDrawManMdl(sc, i);
     }
 
     for (i = 0; i < sc->furn_num; i++)
