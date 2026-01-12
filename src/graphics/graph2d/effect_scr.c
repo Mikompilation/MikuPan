@@ -4698,7 +4698,7 @@ void SetScreenSaver()
                 hand_wrk.top = (hand_wrk.top + 1) % 16;
             }
             
-            SetSprFile2(HAND_PK2_ADDRESS, 0);
+            SetSprFile2(MikuPan_GetHostAddress(HAND_PK2_ADDRESS), 0);
             
             for (i = 0; i < 16; i++)
             {

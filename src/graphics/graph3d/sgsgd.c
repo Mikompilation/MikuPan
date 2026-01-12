@@ -2,7 +2,7 @@
 #include "common.h"
 #include "typedefs.h"
 
-#include "../../mikupan/logging_c.h"
+#include "../../mikupan/mikupan_logging_c.h"
 
 #include <stdio.h>
 

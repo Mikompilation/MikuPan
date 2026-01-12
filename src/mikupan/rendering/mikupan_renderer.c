@@ -2,22 +2,21 @@
 #include "../mikupan_types.h"
 #include "SDL3/SDL_hints.h"
 #include "SDL3/SDL_init.h"
+#include "cglm/cglm.h"
 #include "common/utility.h"
 #include "graphics/graph2d/message.h"
-#include "mikupan/ui/mikupan_ui_c.h"
-#include "mikupan/gs/gs_server_c.h"
-#include "mikupan/gs/texture_manager_c.h"
-#include "mikupan/logging_c.h"
-#include <mikupan/mikupan_memory.h>
-#include <stdlib.h>
-#include "cglm/cglm.h"
-
-#define GLAD_GL_IMPLEMENTATION
 #include "graphics/graph3d/sgcam.h"
-#include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sglight.h"
 #include "graphics/graph3d/sgsu.h"
+#include "mikupan/gs/gs_server_c.h"
+#include "mikupan/gs/texture_manager_c.h"
+#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/ui/mikupan_ui_c.h"
+#include "mikupan_shader.h"
+#include <mikupan/mikupan_memory.h>
+#include <stdlib.h>
 
+#define GLAD_GL_IMPLEMENTATION
 #include <glad/gl.h>
 
 #define PS2_RESOLUTION_X_FLOAT 640.0f
@@ -25,32 +24,8 @@
 #define PS2_RESOLUTION_Y_FLOAT 448.0f
 #define PS2_RESOLUTION_Y_INT 448
 
-// Vertex Shader source code
-const char *vertexShaderSource =
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "uniform mat4 model;\n"
-    "uniform mat4 view;\n"
-    "uniform mat4 projection;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
-    "}\0";
-
-//Fragment Shader source code
-const char *fragmentShaderSource =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
-    "}\n\0";
-
-float game_aspect_ratio = 4.0f / 3.0f;
 int window_width = 640;
 int window_height = 448;
-
-GLuint shaderProgram;
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -104,42 +79,12 @@ SDL_AppResult MikuPan_Init()
     SDL_SetRenderLogicalPresentation(renderer, window_width, window_height,
                                      SDL_LOGICAL_PRESENTATION_DISABLED);
 
-    InitImGuiWindow(window, renderer);
+    MikuPan_InitUi(window, renderer);
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderVSync(renderer, 1);
 
-    GLuint vertexShader = glad_glCreateShader(GL_VERTEX_SHADER);
-    glad_glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-
-    // Compile the Vertex Shader into machine code
-    glad_glCompileShader(vertexShader);
-
-    // Create Fragment Shader Object and get its reference
-    GLuint fragmentShader = glad_glCreateShader(GL_FRAGMENT_SHADER);
-
-    // Attach Fragment Shader source to the Fragment Shader Object
-    glad_glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-
-    // Compile the Vertex Shader into machine code
-    glad_glCompileShader(fragmentShader);
-
-    // Create Shader Program Object and get its reference
-    shaderProgram = glad_glCreateProgram();
-
-    // Attach the Vertex and Fragment Shaders to the Shader Program
-    glad_glAttachShader(shaderProgram, vertexShader);
-    glad_glAttachShader(shaderProgram, fragmentShader);
-
-    // Wrap-up/Link all the shaders together into the Shader Program
-    glad_glLinkProgram(shaderProgram);
-
-    // Delete the now useless Vertex and Fragment Shader objects
-    glad_glDeleteShader(vertexShader);
-    glad_glDeleteShader(fragmentShader);
-
-    // Tell OpenGL which Shader Program we want to use
-    glad_glUseProgram(shaderProgram);
+    MikuPan_InitShaders();
 
     return SDL_APP_CONTINUE;
 }
@@ -331,25 +276,22 @@ void MikuPan_Shutdown()
 
 void MikuPan_EndFrame()
 {
-    DrawImGuiWindow();
-    RenderImGuiWindow(renderer);
+    MikuPan_DrawUi();
+    MikuPan_RenderUi(renderer);
     SDL_RenderPresent(renderer);
 }
 
 void MikuPan_SetModelTransform(unsigned int *prim)
 {
-    GLint id;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &id);
+    MikuPan_SetShaderProgramWithBackup(DEFAULT_SHADER);
+    u_int current_program = MikuPan_GetCurrentShaderProgram();
 
-    glad_glUseProgram(shaderProgram);
-    int modelLoc =
-        glad_glGetUniformLocation(shaderProgram, "model");
+    int modelLoc = glad_glGetUniformLocation(current_program, "model");
 
-    glad_glUniformMatrix4fv(
-        modelLoc, 1, GL_FALSE,
-        (float*)&lcp[prim[2]].lwmtx[0]);
+    glad_glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
+                            (float *) &lcp[prim[2]].lwmtx[0]);
 
-    glad_glUseProgram(id);
+    MikuPan_RestoreCurrentShaderProgram();
 }
 
 void MikuPan_Camera(const SgCAMERA *camera)
@@ -357,16 +299,14 @@ void MikuPan_Camera(const SgCAMERA *camera)
     struct GRA3DSCRATCHPADLAYOUT *scratchpad =
         (struct GRA3DSCRATCHPADLAYOUT *) ps2_virtual_scratchpad;
 
-    GLint id;
-    glGetIntegerv(GL_CURRENT_PROGRAM,&id);
-    glad_glUseProgram(shaderProgram);
+    MikuPan_SetShaderProgramWithBackup(DEFAULT_SHADER);
 
     mat4 mtx = {0};
-
     vec3 cam = {camera->p[0], camera->p[1], camera->p[2]};
 
     // camera->zd
-    vec3 zd = {camera->i[0] - cam[0], camera->i[1] - cam[1], camera->i[2] - cam[2]};
+    vec3 zd = {camera->i[0] - cam[0], camera->i[1] - cam[1],
+               camera->i[2] - cam[2]};
     vec3 center = {0};
     glm_vec3_add(cam, zd, center);
 
@@ -382,59 +322,55 @@ void MikuPan_Camera(const SgCAMERA *camera)
     glm_mat4_mulv3(roll, default_up, 0.0f, up);
 
     // === View matrix (equivalent to sceVu0CameraMatrix) ===
-    glm_lookat(cam,
-        center,
-        up,
-        mtx);
+    glm_lookat(cam, center, up, mtx);
 
-    int viewLoc =
-        glad_glGetUniformLocation(shaderProgram, "view");
+    u_int current_program = MikuPan_GetCurrentShaderProgram();
 
-    glad_glUniformMatrix4fv(
-        viewLoc, 1, GL_FALSE,
-        (float*)&mtx);
+    int viewLoc = glad_glGetUniformLocation(current_program, "view");
+
+    glad_glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *) &mtx);
 
     // Projection
     mat4 projection = {0};
-    float aspect = (float)window_width / (float)window_height;
-    glm_perspective(camera->fov, aspect, camera->nearz, camera->farz, projection);
+    float aspect = (float) window_width / (float) window_height;
+    glm_perspective(camera->fov, aspect, camera->nearz, camera->farz,
+                    projection);
 
     int projectionLoc =
-        glad_glGetUniformLocation(shaderProgram, "projection");
+        glad_glGetUniformLocation(current_program, "projection");
 
-    glad_glUniformMatrix4fv(
-        projectionLoc, 1, GL_FALSE,
-        (float*)&projection);
+    glad_glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, (float *) &projection);
 
-    glad_glUseProgram(id);
+    MikuPan_RestoreCurrentShaderProgram();
 }
 
-void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN, struct SGDPROCUNITHEADER *pPUHead)
+void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
+                                struct SGDPROCUNITHEADER *pPUHead)
 {
-    //glad_glEnable(GL_DEPTH_TEST);
-
-    GLint id;
-    glad_glGetIntegerv(GL_CURRENT_PROGRAM, &id);
-
-    glad_glUseProgram(shaderProgram);
+    MikuPan_SetShaderProgramWithBackup(DEFAULT_SHADER);
 
     union SGDPROCUNITDATA *pVUVNData = (union SGDPROCUNITDATA *) &pVUVN[1];
-    union SGDPROCUNITDATA * pProcData = (union SGDPROCUNITDATA *) &pPUHead[1];
+    union SGDPROCUNITDATA *pProcData = (union SGDPROCUNITDATA *) &pPUHead[1];
 
     struct SGDVUMESHPOINTNUM *pMeshInfo =
         (struct SGDVUMESHPOINTNUM *) &pPUHead[4];
 
-    struct SGDVUMESHSTDATA *sgdMeshData = (struct SGDVUMESHSTDATA *)((int64_t)pVUVNData + (pVUVNData->VUMeshData_Preset.sOffsetToST - 1) * 4);
+    struct SGDVUMESHSTDATA *sgdMeshData =
+        (struct SGDVUMESHSTDATA *) ((int64_t) pVUVNData
+                                    + (pVUVNData->VUMeshData_Preset.sOffsetToST
+                                       - 1)
+                                          * 4);
 
-    struct _SGDVUMESHCOLORDATA * pVMCD =
-        (struct _SGDVUMESHCOLORDATA *) (&pPUHead->pNext
-                                 + pProcData->VUMeshData_Preset.sOffsetToPrim);
+    struct _SGDVUMESHCOLORDATA *pVMCD =
+        (struct _SGDVUMESHCOLORDATA
+             *) (&pPUHead->pNext + pProcData->VUMeshData_Preset.sOffsetToPrim);
 
     int vertexOffset = 0;
 
     for (int i = 0; i < GET_NUM_MESH(pPUHead); i++)
     {
-        pVMCD = (struct _SGDVUMESHCOLORDATA *) GetNextUnpackAddr((u_int *) pVMCD);
+        pVMCD =
+            (struct _SGDVUMESHCOLORDATA *) GetNextUnpackAddr((u_int *) pVMCD);
 
         GLfloat *vertices =
             (GLfloat *) (pVUVNData->VUVNData_Preset.aui
@@ -454,8 +390,8 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN, struct SGDPROCU
 
         // Introduce the vertices into the VBO
         glad_glBufferData(GL_ARRAY_BUFFER,
-                                 pVMCD->VifUnpack.NUM * sizeof(float[3]),
-                                 vertices, GL_STATIC_DRAW);
+                          pVMCD->VifUnpack.NUM * sizeof(float[3]), vertices,
+                          GL_STATIC_DRAW);
 
         // Configure the Vertex Attribute so that OpenGL knows how to read the VBO
         glad_glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
@@ -471,21 +407,24 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN, struct SGDPROCU
         glad_glBindVertexArray(VAO);
 
         // Draw the triangle using the GL_TRIANGLE_STRIP/GL_LINE_STRIP primitive
-
-        glad_glDrawArrays(IsWireframeRendering() ? GL_LINE_STRIP : GL_TRIANGLE_STRIP, 0, pVMCD->VifUnpack.NUM);
+        glad_glDrawArrays(MikuPan_IsWireframeRendering() ? GL_LINE_STRIP
+                                                         : GL_TRIANGLE_STRIP,
+                          0, pVMCD->VifUnpack.NUM);
 
         glad_glDeleteVertexArrays(1, &VAO);
         glad_glDeleteBuffers(1, &VBO);
 
         vertexOffset += pVMCD->VifUnpack.NUM;
-        pVMCD = (struct _SGDVUMESHCOLORDATA *) &pVMCD->avColor[pVMCD->VifUnpack.NUM];
+        pVMCD = (struct _SGDVUMESHCOLORDATA *) &pVMCD
+                    ->avColor[pVMCD->VifUnpack.NUM];
     }
 
-    glad_glUseProgram(id);
+    MikuPan_RestoreCurrentShaderProgram();
 }
 
 void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
 {
+    return;
     struct SGDVUVNDATA_PRESET *pVUVNData = (struct SGDVUVNDATA_PRESET *) &(
         ((struct SGDPROCUNITHEADER *) pVUVN)[1]);
     struct SGDVUMESHPOINTNUM *pMeshInfo = (struct SGDVUMESHPOINTNUM *) &(
@@ -493,9 +432,7 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
 
     int vertexOffset = 0;
 
-    GLint id;
-    glGetIntegerv(GL_CURRENT_PROGRAM,&id);
-    glad_glUseProgram(shaderProgram);
+    MikuPan_SetShaderProgramWithBackup(DEFAULT_SHADER);
 
     for (int i = 0; i < GET_NUM_MESH(pPUHead); i++)
     {
@@ -516,15 +453,14 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
         glad_glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         // Introduce the vertices into the VBO
-        glad_glBufferData(
-            GL_ARRAY_BUFFER,
-            pMeshInfo[i].uiPointNum * sizeof(struct SGDMESHVERTEXDATA_TYPE2),
-            &pVUVNData->avt2[vertexOffset], GL_STATIC_DRAW);
+        glad_glBufferData(GL_ARRAY_BUFFER,
+                          pMeshInfo[i].uiPointNum
+                              * sizeof(struct SGDMESHVERTEXDATA_TYPE2),
+                          &pVUVNData->avt2[vertexOffset], GL_STATIC_DRAW);
 
         // Configure the Vertex Attribute so that OpenGL knows how to read the VBO
-        glad_glVertexAttribPointer(
-            0, 3, GL_FLOAT, GL_FALSE, sizeof(float[3]),
-            NULL);
+        glad_glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float[3]),
+                                   NULL);
 
         // Enable the Vertex Attribute so that OpenGL knows to use it
         glad_glEnableVertexAttribArray(0);
@@ -537,7 +473,8 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
         glad_glBindVertexArray(VAO);
 
         // Draw the triangle using the GL_TRIANGLE_STRIP primitive
-        int render_type = IsWireframeRendering() ? GL_LINE_STRIP : GL_TRIANGLE_STRIP;
+        int render_type =
+            MikuPan_IsWireframeRendering() ? GL_LINE_STRIP : GL_TRIANGLE_STRIP;
         glad_glDrawArrays(render_type, 0, pMeshInfo[i].uiPointNum);
 
         glad_glDeleteVertexArrays(1, &VAO);
@@ -546,5 +483,23 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
         vertexOffset += pMeshInfo[i].uiPointNum;
     }
 
-    glad_glUseProgram(id);
+    MikuPan_RestoreCurrentShaderProgram();
+}
+
+void MikuPan_RenderMeshType0x2(unsigned int *pVUVN, unsigned int *pPUHead)
+{
+    u_int *vector_data = (u_int *) &(
+        ((struct SGDPROCUNITHEADER *) pVUVN)[3]);
+
+    float* vertex = ((sceVu0FVECTOR *)MikuPan_GetHostAddress(VNBufferAddress))[0];
+    float* vertex_list = (float*)&vector_data[GET_NUM_MESH(pPUHead) + 2];
+
+    // auto pVectorData = (_VECTORDATA  *) &s_ppuhVUVN[3];
+    // const auto pVectorInfo = GetVectorInfoPtr(sgdCurr);
+    // const auto pSVAUniqueVertex = RelOffsetToPtr<Vector4>(
+    //     sgdCurr, pVectorInfo->aAddress[SVA_UNIQUE].pvVertex);
+    // const auto pSVAUniqueNormal = RelOffsetToPtr<Vector4>(
+    //     sgdCurr, pVectorInfo->aAddress[SVA_UNIQUE].pvNormal);
+    // auto wVertex =
+    //     pSVAUniqueVertex[pVectorData[meshIndex].vIndex.uiVertexId];
 }

@@ -2,9 +2,9 @@
 #define GRAPHICS_GRAPH3D_LIBSG_H
 
 #include "common.h"
-#include "typedefs.h"
-#include "mikupan/logging_c.h"
 #include "graphics/graph3d/sglib.h"
+#include "mikupan/mikupan_logging_c.h"
+#include "typedefs.h"
 #include <stdlib.h>
 
 extern u32 g_vu0_r;

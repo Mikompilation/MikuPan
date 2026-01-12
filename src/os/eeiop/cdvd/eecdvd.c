@@ -1,9 +1,9 @@
 #include "eecdvd.h"
 #include "common.h"
-#include "mikupan/mikupan_memory.h"
 #include "enums.h"
 #include "main/glob.h"
-#include "mikupan/logging_c.h"
+#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/mikupan_memory.h"
 #include "os/eeiop/eeiop.h"
 #include "typedefs.h"
 #include <stdint.h>

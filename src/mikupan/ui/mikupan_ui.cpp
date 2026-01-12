@@ -137,7 +137,7 @@ bool controller_rumble_test = false;
 bool camera_debug = false;
 int render_wireframe = 1;
 
-void InitImGuiWindow(SDL_Window *window, SDL_Renderer *renderer)
+void MikuPan_InitUi(SDL_Window *window, SDL_Renderer *renderer)
 {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -148,20 +148,20 @@ void InitImGuiWindow(SDL_Window *window, SDL_Renderer *renderer)
     ImGui_ImplSDLRenderer3_Init(renderer);
 }
 
-void RenderImGuiWindow(SDL_Renderer* renderer)
+void MikuPan_RenderUi(SDL_Renderer* renderer)
 {
     ImGui::Render();
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
 }
 
-void NewFrameImGuiWindow()
+void MikuPan_StartFrameUi()
 {
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 }
 
-void DrawImGuiWindow()
+void MikuPan_DrawUi()
 {
     if (ImGui::IsKeyPressed(ImGuiKey_F1))
     {
@@ -225,28 +225,28 @@ void DrawImGuiWindow()
 
     if (show_fps)
     {
-        SetString2(0x10, 0.0f, 420.0f, 1, 0x80, 0x80, 0x80, (char*)"FPS %d", (int)GetFrameRate());
+        SetString2(0x10, 0.0f, 420.0f, 1, 0x80, 0x80, 0x80, (char*)"FPS %d", (int)MikuPan_GetFrameRate());
     }
 }
 
-void ShutDownImGuiWindow()
+void MikuPan_ShutDownUi()
 {
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 }
 
-void ProcessEventImGui(SDL_Event *event)
+void MikuPan_ProcessEventUi(SDL_Event *event)
 {
     ImGui_ImplSDL3_ProcessEvent(event);
 }
 
-float GetFrameRate()
+float MikuPan_GetFrameRate()
 {
     return ImGui::GetIO().Framerate;
 }
 
-int IsWireframeRendering()
+int MikuPan_IsWireframeRendering()
 {
     return render_wireframe;
 }

@@ -141,7 +141,7 @@ int scePadSetActDirect(int port, int slot, const unsigned char* data)
         return 0;
     }
 
-    SDL_RumbleGamepad(gamepad, 0xFFF, 0xFFF, 1);
+    //SDL_RumbleGamepad(gamepad, 0xFFF, 0xFFF, 1);
 
     return 1;
 }

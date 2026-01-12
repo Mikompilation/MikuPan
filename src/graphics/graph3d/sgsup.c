@@ -261,7 +261,7 @@ void SetVUMeshDataP(u_int *prim)
     mtype = GET_MESH_TYPE(prim);
 
     switch (mtype) {
-    case 16:
+    case 0x10:
         LoadSgProg(VUPROG_SG_PRESET0);
 
         AppendDmaTag((u_int)&prim[8], prim[2]);
@@ -288,7 +288,7 @@ void SetVUMeshDataP(u_int *prim)
 
         AppendDmaBuffer(1);
     break;
-    case 18:
+    case 0x12:
     case 0x32:
         LoadSgProg(VUPROG_SG_PRESET2);
 
@@ -321,10 +321,8 @@ void SetVUMeshDataP(u_int *prim)
         AppendDmaBuffer(1);
         FlushModel(0);
     break;
-    case 82:
-    case 114:
-        MikuPan_RenderMeshType0x82(vuvnprim, prim);
-
+    case 0x52:
+    case 0x72:
         if (edge_check == 0)
         {
             AppendDmaTag((u_int)&prim[4], prim[2]);
@@ -489,6 +487,7 @@ void SgSortPreProcessP(u_int *prim)
             {
                 LoadTRI2Files(save_tri2_pointer);
             }
+
             LoadTextureAnimation(prim);
         break;
         case 14:
@@ -512,9 +511,9 @@ void SgSortUnitP(void *sgd_top, int pnum)
 
     lcp = GetCoordP(hs);
 
-    if (((u_int)lcp & 0xf) != 0)
+    if (((int64_t)lcp & 0xf) != 0)
     {
-        printf("SgSortUnitP Data broken. %x\n", (u_int)hs);
+        printf("SgSortUnitP Data broken. %x\n", (int64_t)hs);
         return;
     }
 
@@ -595,9 +594,9 @@ void SgSortGroupP(void *sgd_top, int gnum)
 
     lcp = GetCoordP(hs);
 
-    if (((u_int)lcp & 0xf) != 0)
+    if (((int64_t)lcp & 0xf) != 0)
     {
-        printf("SgSortGroupP Data broken. %x\n", (u_int)hs);
+        printf("SgSortGroupP Data broken. %x\n", (int64_t)hs);
         return;
     }
 

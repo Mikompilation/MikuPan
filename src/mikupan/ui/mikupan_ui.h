@@ -8,13 +8,13 @@ extern bool show_menu_bar;
 
 extern "C"
 {
-    void InitImGuiWindow(SDL_Window *window, SDL_Renderer *renderer);
-    void RenderImGuiWindow(SDL_Renderer *renderer);
-    void NewFrameImGuiWindow();
-    void DrawImGuiWindow();
-    void ShutDownImGuiWindow();
-    void ProcessEventImGui(SDL_Event *event);
-    float GetFrameRate();
-    int IsWireframeRendering();
+    void MikuPan_InitUi(SDL_Window *window, SDL_Renderer *renderer);
+    void MikuPan_RenderUi(SDL_Renderer *renderer);
+    void MikuPan_StartFrameUi();
+    void MikuPan_DrawUi();
+    void MikuPan_ShutDownUi();
+    void MikuPan_ProcessEventUi(SDL_Event *event);
+    float MikuPan_GetFrameRate();
+    int MikuPan_IsWireframeRendering();
 }
 #endif //MIKUPAN_IMGUI_WINDOW_H

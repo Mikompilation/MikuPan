@@ -33,5 +33,6 @@ void MikuPan_EndFrame();
 void MikuPan_SetModelTransform(unsigned int *prim);
 void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN, struct SGDPROCUNITHEADER *pPUHead);
 void MikuPan_RenderMeshType0x82(unsigned int* pVUVN, unsigned int *pPUHead);
+void MikuPan_RenderMeshType0x2(unsigned int* pVUVN, unsigned int *pPUHead);
 
 #endif //MIKUPAN_SDL_RENDERER_H

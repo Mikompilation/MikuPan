@@ -652,6 +652,8 @@ static void GetATanf(sceVu0FVECTOR *tmpv)
 
 float SgAtanf(float x)
 {
+    return atanf(x);
+
     sceVu0FVECTOR tmpv[3];
 
     // the followings are most likely polynomial coefficients

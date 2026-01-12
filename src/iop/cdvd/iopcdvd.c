@@ -1,9 +1,10 @@
 #include "iopcdvd.h"
 
-#include "../../mikupan/logging_c.h"
+#include "../../mikupan/mikupan_logging_c.h"
 #include "SDL3/SDL_mutex.h"
 #include "enums.h"
 #include "iop/iopmain.h"
+#include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "os/eeiop/eeiop.h"
 
@@ -15,15 +16,6 @@ CDVD_REQ_BUF cdvd_req[32];
 CDVD_LOAD_STAT load_stat[32];
 CDVD_TRANS_STAT cdvd_trans[2];
 u_int *load_buf_table[2];
-
-void ICdvdInit(int reset);
-void ICdvdBreak();
-static void ICdvdInitOnce();
-static void ICdvdInitSoftReset();
-static void ICdvdAddCmd(IOP_COMMAND *icp);
-static void ICdvdTransSe(IOP_COMMAND *icp);
-static void ICdvdTransSeInit();
-static void ICdvdSetRetStat(int id, u_char stat);
 
 void ICdvdCmd(IOP_COMMAND *icp)
 {
@@ -57,7 +49,6 @@ void ICdvdInit(int reset)
         ICdvdInitOnce();
 }
 
-void LoadImgHdFile();
 void ICdvdInitOnce()
 {
     memset(&cdvd_stat, 0, sizeof(cdvd_stat));
@@ -75,7 +66,7 @@ void ICdvdInitOnce()
     cdvd_stat.fp = fopen("\\IMG.BD.BIN", "r");
     cdvd_stat.lock = SDL_CreateMutex();
 
-    LoadImgHdFile();
+    MikuPan_LoadImgHdFile();
 }
 
 void ICdvdInitSoftReset()
@@ -86,13 +77,12 @@ void ICdvdInitSoftReset()
 }
 
 // --- these functions are more heavily modified for PC ---
-void ReadFileInArchive(int sector, int size, u_int *address);
 void ICdvdDoTransfer(CDVD_REQ_BUF *rq)
 {
     switch (rq->tmem)
     {
         case TRANS_MEM_EE:// EE
-            ReadFileInArchive(rq->start_sector, rq->size_sector, rq->taddr);
+            MikuPan_ReadFileInArchive(rq->start_sector, rq->size_sector, rq->taddr);
             break;
         case TRANS_MEM_IOP:// IOP
             info_log("CDVD transfer to IOP unimplemented");

@@ -30,8 +30,8 @@ typedef struct {
 } MIM_FILE_HEADER;
 
 typedef struct {
-    u_int *wav_addr;
-    u_int *key_addr;
+    u_int wav_addr;
+    u_int key_addr;
 } MIM_ADDR_TABLE;
 
 static u_int plyr_mepati_cnt = 0;
@@ -219,10 +219,6 @@ void mimInitLoop(ANI_CTRL *ani_ctrl)
         for (i = 0; i < ani_ctrl->mim_num; i++)
         {
             ani_ctrl->mim[i].loop = 0;
-
-            asm volatile ("nop");
-            asm volatile ("nop");
-            asm volatile ("nop");
         }
     }
 }
@@ -430,9 +426,10 @@ void mimCalcVertex(MIME_CTRL *m_ctrl, WMIM_CTRL *wmim, u_char clear_vtx_flg)
 
         koblock_num = ((u_int *)key_top)[0];
 
-        pkt = &mdat->pkt[ko_top[1]];
-
         ko_top = (u_int *)&key_top[1];
+
+        /// Had to swap it it was causing random crashes
+        pkt = &mdat->pkt[ko_top[1]];
 
         for (j = 0; j < koblock_num; j++)
         {
@@ -1074,12 +1071,12 @@ float mimGetWavdata(u_int *mim_top, u_int key_no, u_int frame)
 
     if (mim_top[1] == 0)
     {
-        wav_addr = (u_int *)((int64_t)wav_addr + (int64_t)mim_top);
+        //wav_addr = (u_int *)((int)wav_addr + (int)mim_top);
+        wav_addr = (u_int *)(MikuPan_GetPs2OffsetFromHostPointer(wav_addr) + (int64_t)mim_top);
     }
 
-    /// TODO: Possible that the 64 bits pointers have overwritten the original 32 bits pointers?
-    //wav_addr = (u_int *)MikuPan_GetHostPointer(wav_addr[0]);
-    wav_addr = (u_int *)((int64_t*) wav_addr)[0];
+    // wav_addr = (u_int *)((int64_t*) wav_addr)[0];
+    wav_addr = (u_int *)MikuPan_GetHostPointer((int)wav_addr[0]);
 
     return ((float *)wav_addr)[frame];
 }
@@ -1096,10 +1093,10 @@ sceVu0FVECTOR* mimGetKeymdlTop(u_int *mim_top, u_int key_no)
         vtx_addr = (u_int *)((int64_t)vtx_addr + (int64_t)mim_top);
     }
 
-    return ((sceVu0FVECTOR **)vtx_addr)[0];
+    //return ((sceVu0FVECTOR **)vtx_addr)[0];
+    return ((sceVu0FVECTOR *)MikuPan_GetHostPointer((int)vtx_addr[0]));
 }
 
-/// TODO: ADAPT THIS FOR 64bits
 void mimAddressMapping(u_int *top_addr)
 {
     MIM_FILE_HEADER *head_p;
@@ -1110,12 +1107,15 @@ void mimAddressMapping(u_int *top_addr)
 
     tbl_p = (MIM_ADDR_TABLE *)(head_p + 1);
 
-    if (*top_addr == /* EMIM */ 0x454D494D && head_p->map_flg != 1) // 0x454d494d is "EMIM" if interpreted as chars
+    if (*top_addr == /* MIME */ 0x454D494D && head_p->map_flg != 1) // 0x454d494d is "MIME" if interpreted as chars
     {
         for (i = 0; i < head_p->key_num; i++)
         {
-            tbl_p->wav_addr = (u_int *)((int64_t)head_p + (u_int)tbl_p->wav_addr);
-            tbl_p->key_addr = (u_int *)((int64_t)head_p + (u_int)tbl_p->key_addr);
+            //tbl_p->wav_addr = (u_int *)((int64_t)head_p + (u_int)tbl_p->wav_addr);
+            tbl_p->wav_addr = MikuPan_GetPs2OffsetFromHostPointer(head_p) + (u_int)tbl_p->wav_addr;
+
+            //tbl_p->key_addr = (u_int *)((int64_t)head_p + (u_int)tbl_p->key_addr);
+            tbl_p->key_addr = MikuPan_GetPs2OffsetFromHostPointer(head_p) + (u_int)tbl_p->key_addr;
 
             tbl_p++;
         }

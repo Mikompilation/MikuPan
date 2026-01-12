@@ -1,8 +1,8 @@
 #ifndef GRAPHICS_GRAPH2D_EFFECT_OBJ_H
 #define GRAPHICS_GRAPH2D_EFFECT_OBJ_H
 
+#include "mikupan/mikupan_logging_c.h"
 #include "typedefs.h"
-#include "mikupan/logging_c.h"
 
 #include <stdlib.h>
 

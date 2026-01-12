@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "../../mikupan/logging_c.h"
+#include "../../mikupan/mikupan_logging_c.h"
 #include "graphics/graph2d/effect_sub.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/message.h"

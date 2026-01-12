@@ -104,7 +104,12 @@ void ICdvdInit(int reset);
 void ICdvdCmd(IOP_COMMAND* icp);
 void ICdvdMain();
 void ICdvdBreak();
-
 void ICdvdLoadReqAdpcm(int lsn, u_int size_now, void* buf, u_char channel, int req_type, int endld_flg);
+static void ICdvdInitOnce();
+static void ICdvdInitSoftReset();
+static void ICdvdAddCmd(IOP_COMMAND *icp);
+static void ICdvdTransSe(IOP_COMMAND *icp);
+static void ICdvdTransSeInit();
+static void ICdvdSetRetStat(int id, u_char stat);
 
 #endif // IOPCDVD_H_

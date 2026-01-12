@@ -574,7 +574,7 @@ void SceneDraw(int scene_no)
 
     for (i = 0; i < sc->man_mdl_num; i++)
     {
-        //SceneDrawManMdl(sc, i);
+        SceneDrawManMdl(sc, i);
     }
 
     for (i = 0; i < sc->furn_num; i++)
@@ -1182,7 +1182,7 @@ void SceneDrawManMdl(SCENE_CTRL *sc, u_int mdl_id)
     hs = (HeaderSection *) base_p;
 
     SceneSetCoordFrame(&sam->mdl_anm, fc->now_frame - 1, 0);
-    //SceneMimSetVertex(&sam->mdl_anm, fc->now_frame - 1);
+    SceneMimSetVertex(&sam->mdl_anm, fc->now_frame - 1);
 
     cp = GetCoordP(hs);
 

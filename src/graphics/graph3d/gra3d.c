@@ -855,7 +855,6 @@ void gra3dInitFirst()
     runit_mtx[1][1] = 25.0f;
     runit_mtx[2][2] = 25.0f;
 
-    /// TODO : Correctly assign the VUVN buffers here
     SgSetPacketBuffer(MikuPan_GetHostAddress(OBJ_WRK_ADDRESS), 0x17830, tag_buffer, 0x1800);
     SgSetVNBuffer((sceVu0FVECTOR *)MikuPan_GetHostAddress(VNBufferAddress), 4000);
 

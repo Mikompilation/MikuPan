@@ -61,15 +61,14 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         scePadPortOpen(0, 0 ,0);
     }
 
-    ProcessEventImGui(event);
+    MikuPan_ProcessEventUi(event);
 
     return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    uint64_t frameStart = SDL_GetTicks();
-    NewFrameImGuiWindow();
+    MikuPan_StartFrameUi();
 
     MikuPan_Clear();
 
@@ -103,7 +102,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
     IopShutDown();
-    ShutDownImGuiWindow();
+    MikuPan_ShutDownUi();
     MikuPan_Shutdown();
 }
 

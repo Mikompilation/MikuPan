@@ -1027,6 +1027,10 @@ static void motInterpAnm(ANI_CTRL *ani_ctrl, sceVu0FMATRIX *start, sceVu0FMATRIX
     if (m_ctrl->inp_allcnt != 0)
     {
         rate = (float)m_ctrl->inp_cnt / (float)m_ctrl->inp_allcnt;
+        if (rate == 0)
+        {
+            rate = 1.0f;
+        }
     }
     else
     {

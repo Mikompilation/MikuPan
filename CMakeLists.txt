@@ -18,7 +18,7 @@ include(imgui)
 include(spdlog)
 include(cglm)
 
-set(MIKUPAN_SOURCES "src/mikupan/file_loading.cpp"
+set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         "src/common/ul_math.c"
         "src/common/utility.c"
         "src/edit/test_2d.c"
@@ -209,26 +209,16 @@ set(MIKUPAN_SOURCES "src/mikupan/file_loading.cpp"
         "src/mikupan/mikupan_memory.c"
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/rendering/mikupan_renderer.c
-        src/mikupan/rendering/mikupan_renderer.h
+        src/mikupan/rendering/mikupan_shader.c
         src/mikupan/gs/gs_server.cpp
         src/mikupan/gs/gs_server.h
         src/mikupan/gs/texture_manager.cpp
-        src/mikupan/gs/texture_manager.h
-        src/mikupan/gs/gs_server_c.h
-        src/mikupan/gs/texture_manager_c.h
-        src/mikupan/ui/mikupan_ui.h
-        src/mikupan/logging.cpp
-        src/mikupan/logging.h
-        src/mikupan/logging_c.h
-        src/mikupan/gs/gs_packet_handler.c
-        src/mikupan/gs/gs_packet_handler.h
+        src/mikupan/mikupan_logging.cpp
         extern/imgui_toggle/imgui_toggle.cpp
         extern/imgui_toggle/imgui_toggle_palette.cpp
         extern/imgui_toggle/imgui_toggle_presets.cpp
         extern/imgui_toggle/imgui_toggle_renderer.cpp
         src/graphics/graph3d/libsg.c
-        src/mikupan/mikupan_types.h
-
         extern/glad/src/gl.c
 )
 
@@ -237,3 +227,7 @@ add_executable(MikuPan ${MIKUPAN_SOURCES})
 target_include_directories(MikuPan PRIVATE "sdk/" "src" "resources/" "extern/" "extern/glad/include/" ${SDL3_INCLUDE_DIR})
 
 target_link_libraries(MikuPan PRIVATE m imgui SDL3::SDL3 spdlog::spdlog cglm)
+
+add_custom_command(TARGET MikuPan POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:MikuPan>/shaders
+)

@@ -1,9 +1,7 @@
 #include "common.h"
 #include "title.h"
 
-#include "mikupan/logging_c.h"
 #include "btl_mode/btl_menu.h"
-#include "mikupan/mikupan_memory.h"
 #include "ee/kernel.h"
 #include "enums.h"
 #include "graphics/graph2d/effect_obj.h"
@@ -12,7 +10,6 @@
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/motion/mdlwork.h"
 #include "graphics/mov/movie.h"
-#include "mikupan/gs/gs_server_c.h"
 #include "ingame/menu/ig_album.h"
 #include "ingame/menu/ig_camra.h"
 #include "ingame/menu/ig_glst.h"
@@ -22,13 +19,16 @@
 #include "mc/mc_at.h"
 #include "mc/mc_main.h"
 #include "memory_album.h"
+#include "mikupan/gs/gs_server_c.h"
+#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/mikupan_memory.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
 #include "os/eeiop/adpcm/ea_dat.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 #include "outgame.h"
-#include "mikupan/rendering/mikupan_renderer.h"
 
 #include <math.h>
 #include <stdio.h>

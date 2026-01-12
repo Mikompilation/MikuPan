@@ -1,12 +1,12 @@
-#include "common.h"
-#include "typedefs.h"
-#include "enums.h"
 #include "sgsu.h"
+#include "common.h"
+#include "enums.h"
+#include "typedefs.h"
 
 #include <stdio.h>
 
-#include "sgsup.h"
 #include "ee/eestruct.h"
+#include "sgsup.h"
 
 #include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sgcam.h"
@@ -26,7 +26,7 @@ extern SgSourceChainTag SgSuP2_dma_start() __attribute__((section(".vutext")));
 extern SgSourceChainTag SgSu_dma_starts() __attribute__((section(".vutext")));
 
 #define Q12_4(i, f) (((i) << 4) | ((f) & 0xF))
-#define SCRATCHPAD ((u_int *)ps2_virtual_scratchpad)
+#define SCRATCHPAD ((u_int *) ps2_virtual_scratchpad)
 
 static int write_flg = 0;
 static int write_counter = 0;
@@ -69,10 +69,12 @@ void PutDebugSign()
     {
         pedraw_buf = getObjWrk() + 1;
 
-        ((u_long *)pedraw_buf)[0] = SCE_GIF_SET_TAG(2, SCE_GS_TRUE, SCE_GS_TRUE, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 1, 0, 0, 1, 0, 0, 0, 0), SCE_GIF_PACKED, 2);
-        ((u_long *)pedraw_buf)[1] = 0 \
-            | SCE_GS_RGBAQ << (0 * 4) \
-            | SCE_GS_XYZF2 << (1 * 4);
+        ((u_long *) pedraw_buf)[0] = SCE_GIF_SET_TAG(
+            2, SCE_GS_TRUE, SCE_GS_TRUE,
+            SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 1, 0, 0, 1, 0, 0, 0, 0),
+            SCE_GIF_PACKED, 2);
+        ((u_long *) pedraw_buf)[1] =
+            0 | SCE_GS_RGBAQ << (0 * 4) | SCE_GS_XYZF2 << (1 * 4);
 
         pedraw_buf[1][0] = 0x80;
         pedraw_buf[1][1] = 0x80;
@@ -119,7 +121,8 @@ int CheckCoordCache(int cn)
 
     if (ccahe.cache_on != -1 && ccahe.edge_check == edge_check)
     {
-        if (ccahe.Point.num == SgPointGroupNum && ccahe.Spot.num == SgSpotGroupNum)
+        if (ccahe.Point.num == SgPointGroupNum
+            && ccahe.Spot.num == SgSpotGroupNum)
         {
             if (SgPointGroupNum != 0)
             {
@@ -136,7 +139,7 @@ int CheckCoordCache(int cn)
             {
                 for (i = 0; i < 3; i++)
                 {
-                    if (ccahe.Spot.lnum[i] !=  SgSpotGroup[0].lnum[i])
+                    if (ccahe.Spot.lnum[i] != SgSpotGroup[0].lnum[i])
                     {
                         goto label;
                     }
@@ -145,12 +148,10 @@ int CheckCoordCache(int cn)
 
             for (i = 0; i < 4; i++)
             {
-                if (
-                    lcp[cn].lwmtx[i][0] != lcp[ccahe.cn0].lwmtx[i][0] ||
-                    lcp[cn].lwmtx[i][1] != lcp[ccahe.cn0].lwmtx[i][1] ||
-                    lcp[cn].lwmtx[i][2] != lcp[ccahe.cn0].lwmtx[i][2] ||
-                    lcp[cn].lwmtx[i][3] != lcp[ccahe.cn0].lwmtx[i][3]
-                )
+                if (lcp[cn].lwmtx[i][0] != lcp[ccahe.cn0].lwmtx[i][0]
+                    || lcp[cn].lwmtx[i][1] != lcp[ccahe.cn0].lwmtx[i][1]
+                    || lcp[cn].lwmtx[i][2] != lcp[ccahe.cn0].lwmtx[i][2]
+                    || lcp[cn].lwmtx[i][3] != lcp[ccahe.cn0].lwmtx[i][3])
                 {
                     goto label;
                 }
@@ -187,8 +188,8 @@ void SetVU1Header()
     sceVu0FVECTOR *dvec;
     int i;
 
-    svec = (sceVu0FVECTOR *)SCRATCHPAD;
-    dvec = (sceVu0FVECTOR *)getObjWrk();
+    svec = (sceVu0FVECTOR *) SCRATCHPAD;
+    dvec = (sceVu0FVECTOR *) getObjWrk();
 
     for (i = 0; i < 13; i++)
     {
@@ -227,7 +228,7 @@ void CalcVertexBuffer(u_int *prim)
     }
 
     //vli = (VERTEXLIST *)lphead->pWeightedList;
-    vli = (VERTEXLIST*)MikuPan_GetHostAddress(lphead->pWeightedList);
+    vli = (VERTEXLIST *) MikuPan_GetHostAddress(lphead->pWeightedList);
 
     if (vli == NULL)
     {
@@ -235,7 +236,7 @@ void CalcVertexBuffer(u_int *prim)
     }
 
     //vps = lphead->pWeightedVertex;
-    vps = (sceVu0FVECTOR *)MikuPan_GetHostAddress(lphead->pWeightedVertex);
+    vps = (sceVu0FVECTOR *) MikuPan_GetHostAddress(lphead->pWeightedVertex);
     vpd = vertex_buffer;
 
     for (i = 0; i < vli->list_num; i++)
@@ -243,54 +244,54 @@ void CalcVertexBuffer(u_int *prim)
         load_matrix_0(lcp[vli->lists[i].cn0].workm);
         load_matrix_1(lcp[vli->lists[i].cn1].workm);
 
-        for (j = 0; j < vli->lists[i].vIdx; j++, vpd +=1, vps += 2)
+        for (j = 0; j < vli->lists[i].vIdx; j++, vpd += 1, vps += 2)
         {
             calc_skinned_position(*vpd, *vps);
         }
     }
 
     //vps = lphead->pWeightedNormal;
-    vps = (sceVu0FVECTOR *)MikuPan_GetHostAddress(lphead->pWeightedNormal);
+    vps = (sceVu0FVECTOR *) MikuPan_GetHostAddress(lphead->pWeightedNormal);
     vpd = normal_buffer;
 
-    vli = (VERTEXLIST *)&vli->lists[vli->list_num];
+    vli = (VERTEXLIST *) &vli->lists[vli->list_num];
 
     for (i = 0; i < vli->list_num; i++)
     {
         load_matrix_0(lcp[vli->lists[i].cn0].workm);
         load_matrix_1(lcp[vli->lists[i].cn1].workm);
 
-        for (j = 0; j < vli->lists[i].vIdx; j++, vpd +=1, vps += 2)
+        for (j = 0; j < vli->lists[i].vIdx; j++, vpd += 1, vps += 2)
         {
             calc_skinned_normal(*vpd, *vps);
         }
     }
 }
 
-u_int* SetVUVNData(u_int *prim)
+u_int *SetVUVNData(u_int *prim)
 {
     int i;
     VUVN_PRIM *vh;
     sceVu0FVECTOR *vp;
-    sceVu0FVECTOR tmpvec; // unused
+    sceVu0FVECTOR tmpvec;// unused
 
-    vh = (VUVN_PRIM *)&prim[2];
-    vp = (sceVu0FVECTOR *)getObjWrk();
+    vh = (VUVN_PRIM *) &prim[2];
+    vp = (sceVu0FVECTOR *) getObjWrk();
 
-    copy_skinned_data(vp, (float *)&prim[4], (float *)&prim[8]);
+    copy_skinned_data(vp, (float *) &prim[4], (float *) &prim[8]);
 
     vp += 2;
     prim += 12;
 
     for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
     {
-        copy_skinned_data(vp, (float *)prim[0], (float *)prim[1]);
+        copy_skinned_data(vp, (float *) prim[0], (float *) prim[1]);
     }
 
-    return (u_int *)vp;
+    return (u_int *) vp;
 }
 
-u_int* SetVUVNDataPost(u_int *prim)
+u_int *SetVUVNDataPost(u_int *prim)
 {
     int i;
     VUVN_PRIM *vh;
@@ -298,76 +299,75 @@ u_int* SetVUVNDataPost(u_int *prim)
     sceVu0FVECTOR tmpvec;
     char *cn;
 
-    vh = (VUVN_PRIM *)&prim[2];
-    vp = (sceVu0FVECTOR *)getObjWrk();
+    vh = (VUVN_PRIM *) &prim[2];
+    vp = (sceVu0FVECTOR *) getObjWrk();
 
-    copy_skinned_data(vp, (float *)&prim[4], (float *)&prim[8]);
+    copy_skinned_data(vp, (float *) &prim[4], (float *) &prim[8]);
 
     vp += 2;
     prim += 12;
 
     switch (vh->vtype)
     {
-    case 2:
+        case 2:
 
-        if (MikuPan_GetHostAddress(lphead->pWeightedList) != 0)
-        {
-            for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
+            if (MikuPan_GetHostAddress(lphead->pWeightedList) != 0)
             {
-                copy_skinned_data(vp, (float *)prim[0], (float *)prim[1]);
+                for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
+                {
+                    copy_skinned_data(vp, (float *) prim[0], (float *) prim[1]);
+                }
             }
-        }
-        else
-        {
-            cn = (char *)prim[0];
-
-            load_matrix_0(lcp[cn[0x1c]].workm);
-            load_matrix_1(lcp[cn[0x1d]].workm);
-
-            for (i = 0; i < vh->vnum; vp += 2, prim += 2, i++)
+            else
             {
-                calc_skinned_data(vp, (float *)prim[0], (float *)prim[1]);
-            }
-        }
-    break;
-    case 3:
-        if (MikuPan_GetHostAddress(lphead->pWeightedList) != 0)
-        {
-            for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
-            {
-                copy_skinned_data(vp, (float *)prim[0], (float *)prim[1]);
-            }
-        }
-        else
-        {
-            for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
-            {
-                cn = (char *)prim[0];
+                cn = (char *) prim[0];
 
                 load_matrix_0(lcp[cn[0x1c]].workm);
                 load_matrix_1(lcp[cn[0x1d]].workm);
-                calc_skinned_data(vp, (float *)prim[0], (float *)prim[1]);
+
+                for (i = 0; i < vh->vnum; vp += 2, prim += 2, i++)
+                {
+                    calc_skinned_data(vp, (float *) prim[0], (float *) prim[1]);
+                }
             }
-        }
-    break;
-    default:
-        for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
-        {
-            copy_skinned_data(vp, (float *)prim[0], (float *)prim[1]);
-        }
+            break;
+        case 3:
+            if (MikuPan_GetHostAddress(lphead->pWeightedList) != 0)
+            {
+                for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
+                {
+                    copy_skinned_data(vp, (float *) prim[0], (float *) prim[1]);
+                }
+            }
+            else
+            {
+                for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
+                {
+                    cn = (char *) prim[0];
+
+                    load_matrix_0(lcp[cn[0x1c]].workm);
+                    load_matrix_1(lcp[cn[0x1d]].workm);
+                    calc_skinned_data(vp, (float *) prim[0], (float *) prim[1]);
+                }
+            }
+            break;
+        default:
+            for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
+            {
+                copy_skinned_data(vp, (float *) prim[0], (float *) prim[1]);
+            }
     }
 
-    return (u_int *)vp;
+    return (u_int *) vp;
 }
 
 void printTEX0(sceGsTex0 *tex0)
 {
-    info_log("TBP0 %x TBW %d PSM %x TW %d TH %d TCC %d\n",
-           tex0->TBP0, tex0->TBW, tex0->PSM, tex0->TW, tex0->TH, tex0->TCC);
+    info_log("TBP0 %x TBW %d PSM %x TW %d TH %d TCC %d\n", tex0->TBP0,
+             tex0->TBW, tex0->PSM, tex0->TW, tex0->TH, tex0->TCC);
 
-    info_log("TFX %d CBP %x CPSM %x CSM %d CSA %d CLD %x\n",
-           tex0->TFX, tex0->CBP, tex0->CPSM, tex0->CSM, tex0->CSA, tex0->CLD);
-
+    info_log("TFX %d CBP %x CPSM %x CSM %d CSA %d CLD %x\n", tex0->TFX,
+             tex0->CBP, tex0->CPSM, tex0->CSM, tex0->CSA, tex0->CLD);
 }
 
 void SetVUMeshData(u_int *prim)
@@ -375,80 +375,83 @@ void SetVUMeshData(u_int *prim)
     int mtype;
     u_int *read_p;
 
-    mtype = ((char *)prim)[13];
+    mtype = ((char *) prim)[13];
 
-    switch (mtype & (0x1 | 0x2 | 0x10 | 0x40 | 0x80)) // 0xd3
+    switch (mtype & (0x1 | 0x2 | 0x10 | 0x40 | 0x80))// 0xd3
     {
-    case 0:
-        read_p = SetVUVNData(vuvnprim);
+        case 0:
+            read_p = SetVUVNData(vuvnprim);
 
-        read_p[0] = 0x14000000 | ((u_int)DRAWTYPE0 >> 3);
-        read_p[1] = 0x17000000;
-        read_p[2] = 0x11000000;
-        read_p[3] = 0x17000000;
+            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE0 >> 3);
+            read_p[1] = 0x17000000;
+            read_p[2] = 0x11000000;
+            read_p[3] = 0x17000000;
 
-        AppendDmaTag((u_int)&prim[4], prim[2]);
-        AppendDmaBuffer(((u_char *)vuvnprim)[12]);
-        FlushModel(0);
-    break;
-    case 2:
-        read_p = SetVUVNData(vuvnprim);
+            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaBuffer(((u_char *) vuvnprim)[12]);
+            FlushModel(0);
+            break;
+        case 2:
+            read_p = SetVUVNData(vuvnprim);
+            MikuPan_RenderMeshType0x2(vuvnprim, prim);
 
-        read_p[0] = 0x14000000 | ((u_int)DRAWTYPE2 >> 3);
-        read_p[1] = 0x17000000;
-        read_p[2] = 0x11000000;
-        read_p[3] = 0x17000000;
+            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE2 >> 3);
+            read_p[1] = 0x17000000;
+            read_p[2] = 0x11000000;
+            read_p[3] = 0x17000000;
 
-        AppendDmaTag((u_int)&prim[4], prim[2]);
-        AppendDmaBuffer(((u_char *)vuvnprim)[12]);
-        FlushModel(0);
-    break;
-    case 0x80:
-        AppendDmaTag((u_int)&prim[4], prim[2]);
-        AppendDmaTag((u_int)&((u_char *)vuvnprim)[16], ((u_char *)vuvnprim)[12]);
+            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaBuffer(((u_char *) vuvnprim)[12]);
+            FlushModel(0);
+            break;
+        case 0x80:
+            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
+                         ((u_char *) vuvnprim)[12]);
 
-        read_p = (u_int *)getObjWrk();
+            read_p = (u_int *) getObjWrk();
 
-        read_p[0] = 0x14000000 | ((u_int)DRAWTYPE0 >> 3);
-        read_p[1] = 0x17000000;
-        read_p[2] = 0x11000000;
-        read_p[3] = 0x17000000;
+            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE0 >> 3);
+            read_p[1] = 0x17000000;
+            read_p[2] = 0x11000000;
+            read_p[3] = 0x17000000;
 
-        AppendDmaBuffer(1);
-        FlushModel(0);
-    break;
-    case 0x82:
+            AppendDmaBuffer(1);
+            FlushModel(0);
+            break;
+        case 0x82:
             MikuPan_RenderMeshType0x82(vuvnprim, prim);
-        AppendDmaTag((u_int)&prim[4], prim[2]);
-        AppendDmaTag((u_int)&((u_char *)vuvnprim)[16], ((u_char *)vuvnprim)[12]);
+            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
+                         ((u_char *) vuvnprim)[12]);
 
-        read_p = (u_int *)getObjWrk();
+            read_p = (u_int *) getObjWrk();
 
-        read_p[0] = 0x14000000 | ((u_int)DRAWTYPE2 >> 3);
-        read_p[1] = 0x17000000;
-        read_p[2] = 0x11000000;
-        read_p[3] = 0x17000000;
+            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE2 >> 3);
+            read_p[1] = 0x17000000;
+            read_p[2] = 0x11000000;
+            read_p[3] = 0x17000000;
 
-        AppendDmaBuffer(1);
-        FlushModel(0);
-    break;
-    case 0x42:
-        AppendDmaTag((u_int)&prim[4], prim[2]);
+            AppendDmaBuffer(1);
+            FlushModel(0);
+            break;
+        case 0x42:
+            AppendDmaTag((u_int) &prim[4], prim[2]);
 
-        read_p = (u_int *)getObjWrk();
+            read_p = (u_int *) getObjWrk();
 
-        read_p[0] = 0x14000000 | ((u_int)MULTI_PROLOGUE >> 3);
-        read_p[1] = 0x17000000;
-        read_p[2] = 0x11000000;
-        read_p[3] = 0x17000000;
+            read_p[0] = 0x14000000 | ((u_int) MULTI_PROLOGUE >> 3);
+            read_p[1] = 0x17000000;
+            read_p[2] = 0x11000000;
+            read_p[3] = 0x17000000;
 
-        AppendDmaBuffer(1);
-        FlushModel(0);
-    break;
+            AppendDmaBuffer(1);
+            FlushModel(0);
+            break;
 
-    default:
-        printf("Illegal Packet %d\n", mtype);
-    break;
+        default:
+            printf("Illegal Packet %d\n", mtype);
+            break;
     }
 }
 
@@ -457,50 +460,50 @@ void SetVUMeshDataPost(u_int *prim)
     int mtype;
     u_int *read_p;
 
-    mtype = ((char *)prim)[13];
+    mtype = ((char *) prim)[13];
 
-    switch (mtype & (0x1 | 0x2 | 0x10 | 0x40)) // 0x53
+    switch (mtype & (0x1 | 0x2 | 0x10 | 0x40))// 0x53
     {
-    case 0:
-        read_p = SetVUVNDataPost(vuvnprim);
+        case 0:
+            read_p = SetVUVNDataPost(vuvnprim);
 
-        read_p[0] = 0x14000000 | ((u_int)DRAWTYPE0 >> 3);
-        read_p[1] = 0x17000000;
-        read_p[2] = 0x11000000;
-        read_p[3] = 0x17000000;
+            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE0 >> 3);
+            read_p[1] = 0x17000000;
+            read_p[2] = 0x11000000;
+            read_p[3] = 0x17000000;
 
-        AppendDmaTag((u_int)&prim[4], prim[2]);
-        AppendDmaBuffer(((u_char *)vuvnprim)[12]);
-        FlushModel(0);
-    break;
-    case 2:
-        read_p = SetVUVNDataPost(vuvnprim);
+            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaBuffer(((u_char *) vuvnprim)[12]);
+            FlushModel(0);
+            break;
+        case 2:
+            read_p = SetVUVNDataPost(vuvnprim);
 
-        read_p[0] = 0x14000000 | ((u_int)DRAWTYPE2W >> 3);
-        read_p[1] = 0x17000000;
-        read_p[2] = 0x11000000;
-        read_p[3] = 0x17000000;
+            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE2W >> 3);
+            read_p[1] = 0x17000000;
+            read_p[2] = 0x11000000;
+            read_p[3] = 0x17000000;
 
-        AppendDmaTag((u_int)&prim[4], prim[2]);
-        AppendDmaBuffer(((u_char *)vuvnprim)[12]);
-        FlushModel(0);
-    break;
-    case 0x42:
-        AppendDmaTag((u_int)&prim[4], prim[2]);
+            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaBuffer(((u_char *) vuvnprim)[12]);
+            FlushModel(0);
+            break;
+        case 0x42:
+            AppendDmaTag((u_int) &prim[4], prim[2]);
 
-        read_p = (u_int *)getObjWrk();
+            read_p = (u_int *) getObjWrk();
 
-        read_p[0] = 0x14000000 | ((u_int)MULTI_PROLOGUE >> 3);
-        read_p[1] = 0x17000000;
-        read_p[2] = 0x11000000;
-        read_p[3] = 0x17000000;
+            read_p[0] = 0x14000000 | ((u_int) MULTI_PROLOGUE >> 3);
+            read_p[1] = 0x17000000;
+            read_p[2] = 0x11000000;
+            read_p[3] = 0x17000000;
 
-        AppendDmaBuffer(1);
-        FlushModel(0);
-    break;
-    default:
-        printf("Illegal Packet %d\n", mtype);
-    break;
+            AppendDmaBuffer(1);
+            FlushModel(0);
+            break;
+        default:
+            printf("Illegal Packet %d\n", mtype);
+            break;
     }
 }
 
@@ -540,36 +543,36 @@ void SgSortUnitPrim(u_int *prim)
 
     while (prim[0] != 0)
     {
-        switch(prim[1])
+        switch (prim[1])
         {
-        case 0:
-            vuvnprim = prim;
-        break;
-        case 1:
-            SetVUMeshData(prim);
-        break;
-        case 2:
-            SetMaterialDataVU(prim);
-        break;
-        case 4:
-            if (CheckBoundingBox(prim) == 0)
-            {
-                return;
-            }
+            case 0:
+                vuvnprim = prim;
+                break;
+            case 1:
+                SetVUMeshData(prim);
+                break;
+            case 2:
+                SetMaterialDataVU(prim);
+                break;
+            case 4:
+                if (CheckBoundingBox(prim) == 0)
+                {
+                    return;
+                }
 
-            write_coord++;
+                write_coord++;
 
-            SetMaterialPointerCoordVU();
+                SetMaterialPointerCoordVU();
 
-            if (CheckCoordCache(prim[2]) == 0)
-            {
-                SetLightData(&lcp[prim[2]], NULL);
-                SetVU1Header();
-            }
-        break;
-        case 5:
-            GsImageProcess(prim);
-        break;
+                if (CheckCoordCache(prim[2]) == 0)
+                {
+                    SetLightData(&lcp[prim[2]], NULL);
+                    SetVU1Header();
+                }
+                break;
+            case 5:
+                GsImageProcess(prim);
+                break;
         }
 
         prim = GetNextProcUnitHeaderPtr(prim);
@@ -585,17 +588,17 @@ void SgSortUnitPrimPost(u_int *prim)
 
     while (prim[0] != 0)
     {
-        switch(prim[1])
+        switch (prim[1])
         {
             case 0:
                 vuvnprim = prim;
-            break;
+                break;
             case 1:
                 SetVUMeshDataPost(prim);
                 break;
             case 2:
                 SetMaterialDataVU(prim);
-            break;
+                break;
             case 3:
                 SetMaterialPointerCoordVU();
                 SetCoordData(prim);
@@ -606,10 +609,10 @@ void SgSortUnitPrimPost(u_int *prim)
                 CalcVertexBuffer(prim);
 
                 write_coord++;
-            break;
+                break;
             case 5:
                 GsImageProcess(prim);
-            break;
+                break;
         }
 
         prim = GetNextProcUnitHeaderPtr(prim);
@@ -634,18 +637,18 @@ void SgSortPreProcess(u_int *prim)
     {
         switch (prim[1])
         {
-        case 5:
-            GsImageProcess(prim);
-        break;
-        case 10:
-            LoadTRI2Files(prim);
-        break;
-        case 13:
-            if (loadbw_flg != 0)
-            {
+            case 5:
+                GsImageProcess(prim);
+                break;
+            case 10:
                 LoadTRI2Files(prim);
-            }
-        break;
+                break;
+            case 13:
+                if (loadbw_flg != 0)
+                {
+                    LoadTRI2Files(prim);
+                }
+                break;
         }
 
         prim = GetNextProcUnitHeaderPtr(prim);
@@ -661,10 +664,13 @@ int write_coord = 0;
 
 void AppendVUProgTag(u_int *prog)
 {
-    while(((SgSourceChainTag *)prog)->ID != 7) /* so long as it's not DmaEnd */
+    while (((SgSourceChainTag *) prog)->ID
+           != 7) /* so long as it's not DmaEnd */
     {
-        AppendDmaTag((u_int)(((SgSourceChainTag *)prog)+1), ((SgSourceChainTag *)prog)->QWC);
-        prog = (u_int *)&(((u_long *)prog)[((SgSourceChainTag *)prog)->QWC * 2 + 2]);
+        AppendDmaTag((u_int) (((SgSourceChainTag *) prog) + 1),
+                     ((SgSourceChainTag *) prog)->QWC);
+        prog = (u_int *) &(
+            ((u_long *) prog)[((SgSourceChainTag *) prog)->QWC * 2 + 2]);
         FlushModel(0);
     }
 }
@@ -684,23 +690,23 @@ void LoadSgProg(int load_prog)
         return;
     }
 
-    switch(load_prog)
+    switch (load_prog)
     {
-    case VUPROG_SG:
-        AppendVUProgTag((u_int *)SgSu_dma_start);
-    break;
-    case VUPROG_SG_PRESET0:
-        AppendVUProgTag((u_int *)SgSuP0_dma_start);
-    break;
-    case VUPROG_SG_PRESET2:
-        AppendVUProgTag((u_int *)SgSuP2_dma_start);
-    break;
-    case VUPROG_SG_SHADOW:
-        AppendVUProgTag((u_int *)SgSu_dma_starts);
-    break;
+        case VUPROG_SG:
+            AppendVUProgTag((u_int *) SgSu_dma_start);
+            break;
+        case VUPROG_SG_PRESET0:
+            AppendVUProgTag((u_int *) SgSuP0_dma_start);
+            break;
+        case VUPROG_SG_PRESET2:
+            AppendVUProgTag((u_int *) SgSuP2_dma_start);
+            break;
+        case VUPROG_SG_SHADOW:
+            AppendVUProgTag((u_int *) SgSu_dma_starts);
+            break;
     }
 
-    AppendDmaTag((u_int)pk, 1);
+    AppendDmaTag((u_int) pk, 1);
 
     vu_prog_num = load_prog;
 
@@ -761,24 +767,24 @@ void SetUpSortUnit()
     datap[30] = 0x412;
     datap[31] = 0;
 
-    Vu0CopyMatrix(*(sceVu0FMATRIX *)&datap[32], SgWSMtx);
-    Vu0CopyMatrix(*(sceVu0FMATRIX *)&datap[48], SgCMtx);
+    Vu0CopyMatrix(*(sceVu0FMATRIX *) &datap[32], SgWSMtx);
+    Vu0CopyMatrix(*(sceVu0FMATRIX *) &datap[48], SgCMtx);
 
-    Vu0CopyVector(*(sceVu0FVECTOR *)&SCRATCHPAD[4], vf12reg[0]);
-    Vu0CopyVector(*(sceVu0FVECTOR *)&SCRATCHPAD[8], vf12reg[1]);
+    Vu0CopyVector(*(sceVu0FVECTOR *) &SCRATCHPAD[4], vf12reg[0]);
+    Vu0CopyVector(*(sceVu0FVECTOR *) &SCRATCHPAD[8], vf12reg[1]);
 
     datap[8] = 0x60;
     datap[9] = 0x230;
 
-    Vu0CopyVector(*(sceVu0FVECTOR *)&datap[96], fog_value);
+    Vu0CopyVector(*(sceVu0FVECTOR *) &datap[96], fog_value);
 
-    datap = (u_int *)getObjWrk();
+    datap = (u_int *) getObjWrk();
 
     datap[0] = 0x30000000;
     datap[1] = 0;
     datap[2] = 0;
-    ((float *)datap)[3] = 1.0f;
-    ((float *)datap)[4] = 1.0f;
+    ((float *) datap)[3] = 1.0f;
+    ((float *) datap)[4] = 1.0f;
     datap[5] = 0;
     datap[6] = 0;
     datap[7] = 0;
@@ -791,12 +797,12 @@ void SgSortUnit(void *sgd_top, int pnum)
     u_int *pk;
     HeaderSection *hs;
 
-    hs = (HeaderSection *)sgd_top;
+    hs = (HeaderSection *) sgd_top;
 
     wscissor_flg = 0;
     lcp = GetCoordP(hs);
 
-    if (((u_int)lcp & 0xf) != 0)
+    if (((u_int) lcp & 0xf) != 0)
     {
         printf("SgSortUnit Data broken. %x lcp %x\n", sgd_top, lcp);
         return;
@@ -804,7 +810,7 @@ void SgSortUnit(void *sgd_top, int pnum)
 
     blocksm = hs->blocks;
     //lphead = (PHEAD *)hs->phead;
-    lphead = (PHEAD *)MikuPan_GetHostAddress(hs->phead);
+    lphead = (PHEAD *) MikuPan_GetHostAddress(hs->phead);
 
     sgd_top_addr = sgd_top;
 
@@ -814,9 +820,9 @@ void SgSortUnit(void *sgd_top, int pnum)
 
     ClearMaterialCache(hs);
     SetUpSortUnit();
-    LoadSgProg(0);
+    LoadSgProg(VUPROG_SG);
 
-    pk = (u_int *)&hs->primitives;
+    pk = (u_int *) &hs->primitives;
 
     if (pnum < 0)
     {
@@ -851,15 +857,15 @@ void SgSortUnitKind(void *sgd_top, int num)
 {
     HeaderSection *hs;
 
-    hs = (HeaderSection *)sgd_top;
+    hs = (HeaderSection *) sgd_top;
 
     if (hs->kind & 1)
     {
-        SgSortUnitP(sgd_top,num);
+        SgSortUnitP(sgd_top, num);
     }
     else
     {
-        SgSortUnit(sgd_top,num);
+        SgSortUnit(sgd_top, num);
     }
 }
 
