@@ -13,6 +13,7 @@
 #include "ingame/event/ev_main.h"
 #include "ingame/map/door_ctl.h"
 // #include "graphics/motion/motion.h" // motInitEnemyAnm and motInitEnemyMdl
+#include "graphics/graph2d/effect_ene.h"
 #include "graphics/motion/mdlwork.h"
 // #include "graphics/graph2d/effect_ene.h" // LoadEneDmgTex
 
@@ -47,9 +48,7 @@ int gg_room_ = 0;
 int gg_load_mode = 0;
 int gg_room_bak = 0;
 
-#define MODEL_ADDRESS 0xd80000
-#define ANIM_ADDRESS 0xb90000
-#define ENE_DMG_ADDRESS 0xc28000
+
 
 int GuardGhostAppearSet(void) {
     int i;
@@ -201,7 +200,7 @@ int GuardGhostLoad()
     case 2:
         if (ap_wrk.ggst_cnt != 0)
         {
-            motReleaseAniMdlBuf(fene_dat[ingame_wrk.msn_no][ap_wrk.ggst_no].anm_no, (u_int *)ANIM_ADDRESS);
+            motReleaseAniMdlBuf(fene_dat[ingame_wrk.msn_no][ap_wrk.ggst_no].anm_no, (u_int *)MikuPan_GetHostAddress(ANIM_ADDRESS));
 
             ap_wrk.ggst_no = ggst_dat[dat_no]->ggst[ap_wrk.ggst_cnt];
         }
@@ -218,8 +217,8 @@ int GuardGhostLoad()
     case 4:
         if (IsLoadEndAll() != 0)
         {
-            motInitEnemyMdl((u_int *)MODEL_ADDRESS, fene_dat[ingame_wrk.msn_no][gg_no].mdl_no);
-            LoadEneDmgTex(fene_dat[ingame_wrk.msn_no][gg_no].mdl_no, (u_int *)ENE_DMG_ADDRESS);
+            motInitEnemyMdl((u_int *)MikuPan_GetHostAddress(MODEL_ADDRESS), fene_dat[ingame_wrk.msn_no][gg_no].mdl_no);
+            LoadEneDmgTex(fene_dat[ingame_wrk.msn_no][gg_no].mdl_no, (u_int *)MikuPan_GetHostAddress(ENE_DMG_ADDRESS));
             LoadReq(fene_dat[ingame_wrk.msn_no][gg_no].anm_no + M000_MIKU_ANM, ANIM_ADDRESS);
 
             gg_load_mode = 5;
@@ -228,7 +227,7 @@ int GuardGhostLoad()
     case 5:
         if (IsLoadEndAll() != 0)
         {
-            motInitEnemyAnm((u_int *)ANIM_ADDRESS, fene_dat[ingame_wrk.msn_no][gg_no].mdl_no, fene_dat[ingame_wrk.msn_no][gg_no].anm_no);
+            motInitEnemyAnm((u_int *)MikuPan_GetHostAddress(ANIM_ADDRESS), fene_dat[ingame_wrk.msn_no][gg_no].mdl_no, fene_dat[ingame_wrk.msn_no][gg_no].anm_no);
             SeFileLoadAndSetFGhost(fene_dat[ingame_wrk.msn_no][gg_no].se_no, 18);
 
             gg_load_mode = 6;

@@ -63,6 +63,13 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define MC_WORK_ADDRESS                 0x00420000
 #define OBJ_WRK_ADDRESS                 0x0042fa00
 #define MIM_BUF_BASE_ADDRESS            0x01310000
+#define ENEMY_ANM_ADDR                  0x01330000
+#define ENEMY_DMG_TEX_ADDR              0x013c8000
+#define ENEMY_MDL_ADDR                  0x013e0000
+#define FLOAT_GHOST_SE_LOAD_ADDR        0x01460000
+#define MODEL_ADDRESS                   0x00d80000
+#define ANIM_ADDRESS                    0x00b90000
+#define ENE_DMG_ADDRESS                 0x00c28000
 
 /* DEVKIT EXTANDED RAM */
 #define TEST2D_PK2_ADDRESS              0x007F0000 /* 0x04300000 */

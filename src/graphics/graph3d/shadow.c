@@ -388,7 +388,8 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
     switch (((char *) vh)[5])
     {
         case 0:
-            _SetLWMatrix0((float (*)[4]) 0x70000430);
+            //_SetLWMatrix0((float (*)[4]) 0x70000430);
+            _SetLWMatrix0((float (*)[4]) &ps2_virtual_scratchpad[0x430]);
 
             for (i = 0; i < vh->vnum; vp++, prim += 2, i++)
             {
@@ -396,7 +397,7 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
             }
             break;
         case 2:
-            if (lphead->pWeightedList != NULL)
+            if (lphead->pWeightedList != 0)
             {
                 for (i = 0; i < vh->vnum; i++, vp++, prim += 2)
                 {
@@ -417,7 +418,7 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
             }
             break;
         case 3:
-            if (lphead->pWeightedList != NULL)
+            if (lphead->pWeightedList != 0)
             {
                 for (i = 0; i < vh->vnum; i++, vp++, prim += 2)
                 {
@@ -484,7 +485,7 @@ void ShadowModelMesh(u_int *prim)
             AppendDmaBuffer(tmp[4] + 3);
             FlushModel(0);
             break;
-        case 128:
+        case 0x80:
             AppendDmaTag((u_int) &prim[4], prim[2]);
             AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
@@ -498,7 +499,7 @@ void ShadowModelMesh(u_int *prim)
             AppendDmaBuffer(1);
             FlushModel(0);
             break;
-        case 130:
+        case 0x82:
             MikuPan_RenderMeshType0x82(vuvnprim, prim);
             AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
@@ -566,7 +567,8 @@ void DrawShadowModelPrim(u_int *prim)
                 break;
         }
 
-        prim = (u_int *) prim[0];
+        //prim = (u_int *) prim[0];
+        prim = GetNextProcUnitHeaderPtr(prim);
     }
 }
 
@@ -643,20 +645,24 @@ void DrawShadowModel(void *sgd_top, int pnum)
 
     if (pnum < 0)
     {
-        SgSortPreProcess((u_int *) pk[0]);
+        //SgSortPreProcess((u_int *) pk[0]);
+        SgSortPreProcess((u_int *) GetTopProcUnitHeaderPtr(hs, 0));
 
         for (i = 1; i < blocksm; i++)
         {
-            DrawShadowModelPrim((u_int *) pk[i]);
+            //DrawShadowModelPrim((u_int *) pk[i]);
+            DrawShadowModelPrim(GetTopProcUnitHeaderPtr(hs, i));
         }
     }
     else if (pnum == 0)
     {
-        SgSortPreProcess((u_int *) pk[0]);
+        //SgSortPreProcess((u_int *) pk[0]);
+        SgSortPreProcess(GetTopProcUnitHeaderPtr(hs, 0));
     }
     else
     {
-        DrawShadowModelPrim((u_int *) pk[pnum]);
+        //DrawShadowModelPrim((u_int *) pk[pnum]);
+        DrawShadowModelPrim(GetTopProcUnitHeaderPtr(hs, pnum));
     }
 }
 
@@ -673,7 +679,12 @@ void ShadowMeshDataVU(u_int *prim)
             // values other than 0 are also ok
             break;
         case 18:
-        case 50:
+        case 0x32:
+            if (mtype == 0x32)
+            {
+                MikuPan_RenderMeshType0x32((struct SGDPROCUNITHEADER *)vuvnprim, (struct SGDPROCUNITHEADER *)prim);
+            }
+
             AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
             AppendDmaTag((u_int) &prim[8], prim[2]);

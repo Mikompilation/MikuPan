@@ -2142,8 +2142,11 @@ int CheckModelBoundingBox(sceVu0FMATRIX lwmtx, sceVu0FVECTOR *bbox)
     sceVu0FMATRIX tmpmat;
     float fog_max;
 
-    tmpvec = (sceVu0FVECTOR *)0x70000620;
-    ed = (sceVu0FVECTOR *)0x700006a0; // `ed[i]` can be replaced with `tmpvec[8+i]`
+    //tmpvec = (sceVu0FVECTOR *)0x70000620;
+    //ed = (sceVu0FVECTOR *)0x700006a0; // `ed[i]` can be replaced with `tmpvec[8+i]`
+
+    tmpvec = (sceVu0FVECTOR *)&ps2_virtual_scratchpad[0x620];
+    ed = (sceVu0FVECTOR *)&ps2_virtual_scratchpad[0x6a0]; // `ed[i]` can be replaced with `tmpvec[8+i]`
 
     _SetMulMatrix(SgCMVtx,lwmtx);
 

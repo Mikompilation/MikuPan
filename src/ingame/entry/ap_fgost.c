@@ -3,29 +3,28 @@
 #include "enums.h"
 #include "ap_fgost.h"
 
-#include "main/glob.h"
 #include "common/ul_math.h"
-#include "os/eeiop/se_trans.h"
-#include "os/eeiop/cdvd/eecdvd.h"
-#include "ingame/plyr/unit_ctl.h"
-#include "ingame/entry/entry.h"
+#include "graphics/graph2d/effect_ene.h"
+#include "graphics/motion/mdlwork.h"
+#include "graphics/motion/motion.h"
 #include "ingame/enemy/ene_ctl.h"
-#include "ingame/entry/fgst_dat.h"
 #include "ingame/entry/ap_dgost.h"
+#include "ingame/entry/entry.h"
+#include "ingame/entry/fgst_dat.h"
 #include "ingame/event/ev_main.h"
 #include "ingame/map/map_area.h"
-#include "graphics/motion/motion.h"
-#include "graphics/graph2d/effect_ene.h"
+#include "ingame/plyr/unit_ctl.h"
+#include "main/glob.h"
+#include "os/eeiop/cdvd/eecdvd.h"
+#include "os/eeiop/se_trans.h"
+#include "sce/libvu0.h"
 
 int load_mdl_addr[] = { 0xC80000, 0xD00000, 0xD80000, 0 };
 int load_mot_addr[] = { 0xA30000, 0xAE0000, 0xB90000, 0 };
 int load_se_addr[] = { 0x10, 0x11, 0x12, 0 };
 FG_LOAD_WRK fg_load_wrk = {0};
 
-#define ENEMY_ANM_ADDR 0x1330000
-#define ENEMY_DMG_TEX_ADDR 0x13c8000
-#define ENEMY_MDL_ADDR 0x13e0000
-#define FLOAT_GHOST_SE_LOAD_ADDR 0x1460000
+
 
 void FloatGhostAppearInit()
 {
@@ -374,7 +373,7 @@ int FloatGhostLoadSet()
 
     if (ap_wrk.fgst_no != 0xff)
     {
-        motReleaseAniMdlBuf(fene_dat[ingame_wrk.msn_no][ap_wrk.fgst_no].anm_no, (u_int *)ENEMY_ANM_ADDR);
+        motReleaseAniMdlBuf(fene_dat[ingame_wrk.msn_no][ap_wrk.fgst_no].anm_no, (u_int *)MikuPan_GetHostAddress(ENEMY_ANM_ADDR));
     }
 
     return 1;
@@ -399,19 +398,19 @@ void GetFloatGhostModelLoad()
 
 void GetFloatGhostModelLoadAfter()
 {
-    motInitEnemyMdl((u_int *)ENEMY_MDL_ADDR, fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].mdl_no);
+    motInitEnemyMdl((u_int *)MikuPan_GetHostAddress(ENEMY_MDL_ADDR), fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].mdl_no);
 }
 
 void GetFloatGhostMotionLoad()
 {
-    LoadEneDmgTex(fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].mdl_no, (u_int *)ENEMY_DMG_TEX_ADDR);
-    LoadReq(fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].anm_no + M000_MIKU_ANM, ENEMY_ANM_ADDR);
+    LoadEneDmgTex(fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].mdl_no, (u_int *)MikuPan_GetHostAddress(ENEMY_DMG_TEX_ADDR));
+    LoadReq(fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].anm_no + M000_MIKU_ANM, MikuPan_GetHostAddress(ENEMY_ANM_ADDR));
 }
 
 void GetFloatGhostMotionLoadAfter()
 {
   motInitEnemyAnm(
-    (u_int *)ENEMY_ANM_ADDR,
+    (u_int *)MikuPan_GetHostAddress(ENEMY_ANM_ADDR),
     fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].mdl_no,
     fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].anm_no);
 }
