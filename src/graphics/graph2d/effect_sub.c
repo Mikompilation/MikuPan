@@ -131,7 +131,7 @@ void SetSquare(int pri, float x1, float y1, float x2, float y2, float x3, float 
     y[2] = (y3 / div + 2048.0f) * 16.0f;
     y[3] = (y4 / div + 2048.0f) * 16.0f;
 
-    MikuPan_RenderSquare(x1+320.0f, y1+224.0f, x2, y2, x3, y3, x4+320.0f, y4+224.0f, r, g, b, a);
+    MikuPan_RenderSquare(x1, y1, x2, y2, x3, y3, x4, y4, r, g, b, a);
 
     z = 0x0fffffff - mpri;
 
@@ -224,7 +224,10 @@ void SetSquare2s(int pri, float x1, float y1, float x4, float y4, u_char r1, u_c
     
     z = 0x0fffffff - mpri;
 
-    MikuPan_RenderSquare(x1, y1, 0, 0, 0, 0, x4, y4, r1, g1, b1, a);
+    float w = x4 - x1;
+    float h = y4 - y1;
+    // x, y, x + w, y, x, y + h, x + w, y + h
+    //MikuPan_RenderSquare(x1, y1, 0, 0, 0, 0, x4, y4, r1, g1, b1, a);
     
     pbuf[ndpkt].ul128 = (u_long128)0;
 

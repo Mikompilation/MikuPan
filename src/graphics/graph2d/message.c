@@ -781,7 +781,7 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
         Font_H = 14;
         Num_W = 42;
         off_w = 8;
-        off_ht = 1;
+        off_ht = 0;
         off_hd = -1;
         ft = 0;
     }
@@ -835,13 +835,7 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     s.u = tw1;
     s.v = th1;
     s.w = Font_W;
-    s.h = Font_H - 1;
-
-    /// If font texture has not been loaded yet, avoid requesting the texture
-    //if (!IsFirstUploadDone())
-    //{
-    //    return;
-    //}
+    s.h = Font_H;
 
     MikuPan_Render2DMessage(&s);
 

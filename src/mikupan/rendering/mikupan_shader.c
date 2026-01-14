@@ -10,6 +10,8 @@ u_int shader_list[MAX_SHADER_PROGRAMS] = {0};
 
 const char* shader_file_name[MAX_SHADER_PROGRAMS][2] = {
     {"./shaders/default.vert", "./shaders/default.frag"},
+    {"./shaders/ui_sprite.vert", "./shaders/ui_sprite.frag"},
+    {"./shaders/untextured_sprite.vert", "./shaders/untextured_sprite.frag"},
     {"./shaders/simple_textured.vert", "./shaders/simple_textured.frag"}
 };
 

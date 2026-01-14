@@ -244,7 +244,7 @@ unsigned char* DownloadGsTexture(sceGsTex0* tex0)
 
     spdlog::debug("GS download request for DBP {:#x} CBP {:#x} DPSM {} ", (unsigned long long)tex0->TBP0, (unsigned long long)tex0->CBP, (unsigned long long)tex0->PSM);
 
-    auto texture = GetTexture(tex0);
+    auto texture = MikuPan_GetTexturePixelBuffer(tex0);
 
     if (texture != nullptr)
     {
@@ -306,7 +306,7 @@ unsigned char* DownloadGsTexture(sceGsTex0* tex0)
         }
     }
 
-    AddTexture(tex0, (unsigned char*)image_data);
+    MikuPan_AddTexturePixelBuffer(tex0, (unsigned char*)image_data);
 
     return (unsigned char*)image_data;
 }

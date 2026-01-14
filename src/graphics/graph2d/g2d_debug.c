@@ -748,7 +748,7 @@ void gra2dDrawDbgMenu()
 
     /// TODO: Reimplement some missing features
     ingame_wrk.clear_count = 1;//dbg_wrk.oth_sub_menu;
-    SgPreRenderDbgOn();
+    //SgPreRenderDbgOn();
 }
 
 void SetMaxNumber(int num1, int num2, int nmax)

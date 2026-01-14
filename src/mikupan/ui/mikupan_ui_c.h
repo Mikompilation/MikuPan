@@ -1,8 +1,8 @@
 #ifndef MIKUPAN_IMGUI_WINDOW_C_H
 #define MIKUPAN_IMGUI_WINDOW_C_H
 
-void MikuPan_InitUi(SDL_Window *window, SDL_Renderer *renderer);
-void MikuPan_RenderUi(SDL_Renderer *renderer);
+void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer);
+void MikuPan_RenderUi();
 void MikuPan_StartFrameUi();
 void MikuPan_DrawUi();
 void MikuPan_ShutDownUi();

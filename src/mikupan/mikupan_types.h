@@ -2,6 +2,7 @@
 #define MIKUPAN_TYPES_H
 
 #define GET_NUM_MESH(intpointer) (char)((char*)intpointer)[14]
+#include "typedefs.h"
 
 typedef float LMATRIX[3][4];
 typedef float VECTOR3[3];
