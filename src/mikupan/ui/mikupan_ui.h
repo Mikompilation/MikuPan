@@ -1,7 +1,8 @@
 #ifndef MIKUPAN_IMGUI_WINDOW_H
 #define MIKUPAN_IMGUI_WINDOW_H
-#include "SDL3/SDL_render.h"
+
 #include "SDL3/SDL_video.h"
+#include "SDL3/SDL_events.h"
 
 extern bool show_fps;
 extern bool show_menu_bar;

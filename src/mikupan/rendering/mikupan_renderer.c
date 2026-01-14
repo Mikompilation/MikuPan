@@ -23,6 +23,8 @@
 #define PS2_RESOLUTION_X_INT 640
 #define PS2_RESOLUTION_Y_FLOAT 448.0f
 #define PS2_RESOLUTION_Y_INT 448
+#define PS2_CENTER_X 320.0f
+#define PS2_CENTER_Y 224.0f
 
 int window_width = 640;
 int window_height = 448;
@@ -32,6 +34,7 @@ MikuPan_TextureInfo* fnt_texture[6] = {0};
 MikuPan_TextureInfo* curr_fnt_texture = NULL;
 GLuint VAO, VBO = 0;
 GLuint gSpriteVAO, gSpriteVBO = 0;
+GLuint gShapeVAO, gShapeVBO = 0;
 
 SDL_AppResult MikuPan_Init()
 {
@@ -111,6 +114,15 @@ SDL_AppResult MikuPan_Init()
     glad_glEnableVertexAttribArray(1);
 
     glad_glBindVertexArray(0);
+
+    /// Buffers for line and square
+    glad_glGenVertexArrays(1, &gShapeVAO);
+    glad_glGenBuffers(1, &gShapeVBO);
+
+    glad_glBindVertexArray(gShapeVAO);
+    glad_glBindBuffer(GL_ARRAY_BUFFER, gShapeVBO);
+    glad_glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+    glad_glEnableVertexAttribArray(0);
 
     return SDL_APP_CONTINUE;
 }
@@ -281,9 +293,6 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2, float x3,
     rect.w = (float) window_width * ((x4 - x1) / PS2_RESOLUTION_X_FLOAT);
     rect.h = (float) window_height * ((y4 - y1) / PS2_RESOLUTION_Y_FLOAT);
 
-#define PS2_CENTER_X 320.0f
-#define PS2_CENTER_Y 224.0f
-
     /* 1. Apply PS2 screen center offset */
     x1 += PS2_CENTER_X;  y1 += PS2_CENTER_Y;
     x2 += PS2_CENTER_X;  y2 += PS2_CENTER_Y;
@@ -336,25 +345,14 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2, float x3,
         sblx * 2.0f - 1.0f, 1.0f - sbly * 2.0f
     };
 
-    static GLuint vao = 0, vbo = 0;
-    if (!vao) {
-        glad_glGenVertexArrays(1, &vao);
-        glad_glGenBuffers(1, &vbo);
-
-        glad_glBindVertexArray(vao);
-        glad_glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glad_glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
-        glad_glEnableVertexAttribArray(0);
-    }
-
     MikuPan_SetCurrentShaderProgram(UNTEXTURED_SPRITE_SHADER);
     glad_glUseProgram(MikuPan_GetCurrentShaderProgram()); // same shader as lines
-    glad_glBindVertexArray(vao);
-    glad_glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glad_glBindVertexArray(gShapeVAO);
+    glad_glBindBuffer(GL_ARRAY_BUFFER, gShapeVBO);
 
     glad_glBufferData(GL_ARRAY_BUFFER, sizeof(vtx), vtx, GL_DYNAMIC_DRAW);
 
-    glad_glUniform4f(glGetUniformLocation(MikuPan_GetCurrentShaderProgram(), "uColor"),
+    glad_glUniform4f(glad_glGetUniformLocation(MikuPan_GetCurrentShaderProgram(), "uColor"),
                 r / 255.0f,
                 g / 255.0f,
                 b / 255.0f,
@@ -397,26 +395,16 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
         ndc_x2, ndc_y2
     };
 
-    static GLuint vao = 0, vbo = 0;
-    if (!vao) {
-        glad_glGenVertexArrays(1, &vao);
-        glad_glGenBuffers(1, &vbo);
-
-        glad_glBindVertexArray(vao);
-        glad_glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glad_glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
-        glad_glEnableVertexAttribArray(0);
-    }
-
     MikuPan_SetCurrentShaderProgram(UNTEXTURED_SPRITE_SHADER);
-    glad_glUseProgram(MikuPan_GetCurrentShaderProgram());
-    glad_glBindVertexArray(vao);
-    glad_glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    u_int program = MikuPan_GetCurrentShaderProgram();
+    glad_glUseProgram(program);
+    glad_glBindVertexArray(gShapeVAO);
+    glad_glBindBuffer(GL_ARRAY_BUFFER, gShapeVBO);
 
     glad_glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
     // Color + alpha (SDL-compatible)
-    glad_glUniform4f(glGetUniformLocation(MikuPan_GetCurrentShaderProgram(), "uColor"),
+    glad_glUniform4f(glad_glGetUniformLocation(program, "uColor"),
                 r / 255.0f,
                 g / 255.0f,
                 b / 255.0f,
