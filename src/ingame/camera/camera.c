@@ -1258,8 +1258,8 @@ void SetCamPos2(SgCAMERA *tc, MAP_CAM_INFO *mci)
 
 void SetCamPos3(SgCAMERA *tc, MAP_CAM_INFO *mci)
 {
-    sceVu0FVECTOR tv2;
-    sceVu0FVECTOR bv;
+    sceVu0FVECTOR tv2 = {0};
+    sceVu0FVECTOR bv = {0};
     float per;
     static sceVu0FVECTOR tv = { 0.0f, 0.0f, 0.0f, 0.0f };
 

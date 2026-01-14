@@ -2,6 +2,8 @@
 #include "typedefs.h"
 #include "gra3d.h"
 
+#include "enums.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -1646,7 +1648,7 @@ u_int* SearchBoundingBoxPacket(u_int *prim)
         return NULL;
     }
 
-    while (*prim != NULL)
+    while (*prim != 0)
     {
         if (prim[1] == 4)
         {
@@ -2024,7 +2026,6 @@ void gra3dDraw()
     MakeDebugValue();
     SgSetRefCamera(&camera);
 
-    disp3d_all = 1;
     if (disp3d_all == 0)
     {
         return;
@@ -2098,7 +2099,7 @@ void gra3dDraw()
 
     if (disp3d_2ddraw != 0)
     {
-        gra2dDraw(1);
+        gra2dDraw(GRA2D_CALL_IG0);
     }
 
     PlyrAcsAlphaCtrl();
@@ -2109,7 +2110,7 @@ void gra3dDraw()
 
     if (disp3d_2ddraw != 0)
     {
-        gra2dDraw(2);
+        gra2dDraw(GRA2D_CALL_IG1);
     }
 
     SetEnvironment();

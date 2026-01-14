@@ -342,10 +342,10 @@ int FloatGhostLoadMain()
         FGTransInit();
     case FG_LOAD_SE_TRANS:
         SeFGhostTransCtrl();
-        if (IsEndFgTrans() == 0)
-        {
-            break;
-        }
+        //if (IsEndFgTrans() == 0)
+        //{
+        //    break;
+        //}
         fg_load_wrk.mode = FG_LOAD_MODE_END;
     case FG_LOAD_MODE_END:
         return 1;

@@ -1,3 +1,4 @@
+#include "typedefs.h"
 #include "mikupan_ui.h"
 #include "glad/gl.h"
 #include "imgui_impl_opengl3.h"
@@ -204,7 +205,7 @@ void MikuPan_DrawUi()
 
     if (controller_rumble_test)
     {
-        scePadSetActDirect(0, 0, NULL);
+        //scePadSetActDirect(0, 0, NULL);
     }
 
     if (dbg_wrk.mode_on == 1)

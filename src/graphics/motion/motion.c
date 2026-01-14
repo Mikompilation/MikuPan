@@ -20,6 +20,7 @@
 #include "mdlact.h"
 
 #include <mikupan/mikupan_memory.h>
+#include <string.h>
 
 typedef struct {
     u_char file_id[4];
@@ -1368,7 +1369,7 @@ void movGetMoveval(ANI_CTRL *ani_ctrl, u_int frame_num)
 
         if (movGetFrameNum(mov_p) <= frame_num)
         {
-            frame_num = movGetFrameNum(mov_p) - 1;
+            frame_num = movGetFrameNum(mov_p) == 0 ? 0 : movGetFrameNum(mov_p) - 1;
         }
 
         p1 = &((float *)mov_p)[2];

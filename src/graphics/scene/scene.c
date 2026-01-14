@@ -85,7 +85,7 @@ int SceneAllLoad(int scene_no, u_int *load_addr)
             scn_load_status = 3;
             break;
         case 3:
-            if (IsAdpcmScenePreLoadEnd() == 1 || IsAdpcmScenePreLoadEnd() == -1)
+            //if (IsAdpcmScenePreLoadEnd() == 1 || IsAdpcmScenePreLoadEnd() == -1)
             {
                 scn_load_status = 0;
                 ret = 1;

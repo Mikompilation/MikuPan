@@ -11,7 +11,7 @@
 
 #include "data/rand_ita_tbl.h" // SE_FOOT_RAND_ITA rand_ita_tbl[] = { ... };
 
-#define DVD_DATA_ADDR ((u_char *)0x7f8000)
+#define DVD_DATA_ADDR (0x7f8000)
 
 int SeReqFootStep(sceVu0FVECTOR pos)
 {
@@ -41,11 +41,11 @@ int SeReqFootStep(sceVu0FVECTOR pos)
     {
         if (PosInAreaJudge1(8, room_no, i, pz, px) != 0) 
         {
-            addr = (int *)(((int *)map_wrk.dat_adr)[8] + DVD_DATA_ADDR);
-            addr = (int *)((++addr)[room_no] + DVD_DATA_ADDR);
-            addr = (int *)((++addr)[i] + DVD_DATA_ADDR);
+            addr = (u_int *)MikuPan_GetHostAddress(((int *)map_wrk.dat_adr)[8] + DVD_DATA_ADDR);
+            addr = (u_int *)MikuPan_GetHostAddress((++addr)[room_no] + DVD_DATA_ADDR);
+            addr = (u_int *)MikuPan_GetHostAddress((++addr)[i] + DVD_DATA_ADDR);
 
-            call_no = ((u_short *)(addr[0] + DVD_DATA_ADDR))[0];
+            call_no = ((u_short *)MikuPan_GetHostAddress(addr[0] + DVD_DATA_ADDR))[0];
             break;
         }
     }
@@ -158,11 +158,11 @@ u_char IsKarehaZone(sceVu0FVECTOR pos)
     {
         if (PosInAreaJudge1(8, room_no, i, px, pz))
         {
-            addr = (int *)(((int *)map_wrk.dat_adr)[8] + DVD_DATA_ADDR);
-            addr = (int *)((++addr)[room_no] + DVD_DATA_ADDR);
-            addr = (int *)((++addr)[i] + DVD_DATA_ADDR);
+            addr = (u_int *)MikuPan_GetHostAddress(((int *)map_wrk.dat_adr)[8] + DVD_DATA_ADDR);
+            addr = (u_int *)MikuPan_GetHostAddress((++addr)[room_no] + DVD_DATA_ADDR);
+            addr = (u_int *)MikuPan_GetHostAddress((++addr)[i] + DVD_DATA_ADDR);
 
-            call_no = ((u_short *)(addr[0] + DVD_DATA_ADDR))[0];
+            call_no = ((u_short *)MikuPan_GetHostAddress(addr[0] + DVD_DATA_ADDR))[0];
             
             break;
         }
@@ -191,11 +191,11 @@ u_char IsTakenohaZone(sceVu0FVECTOR pos)
     {
         if (PosInAreaJudge1(8, room_no, i, px, pz))
         {
-            addr = (int *)(((int *)map_wrk.dat_adr)[8] + DVD_DATA_ADDR);
-            addr = (int *)((++addr)[room_no] + DVD_DATA_ADDR);
-            addr = (int *)((++addr)[i] + DVD_DATA_ADDR);
+            addr = (u_int *)MikuPan_GetHostAddress(((int *)map_wrk.dat_adr)[8] + DVD_DATA_ADDR);
+            addr = (u_int *)MikuPan_GetHostAddress((++addr)[room_no] + DVD_DATA_ADDR);
+            addr = (u_int *)MikuPan_GetHostAddress((++addr)[i] + DVD_DATA_ADDR);
 
-            call_no = ((u_short *)(addr[0] + DVD_DATA_ADDR))[0];
+            call_no = ((u_short *)MikuPan_GetHostAddress(addr[0] + DVD_DATA_ADDR))[0];
             
             break;
         }

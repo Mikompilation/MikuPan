@@ -57,8 +57,6 @@ EVENT_WRK ev_wrk = {0};
 
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
 
-#define DVD_DATA_ADDR ((u_char*)MikuPan_GetHostPointer(MSN_TITLE_DAT_ADDRESS))
-
 void EventWrkInit()
 {
     memset(&ev_wrk, 0, sizeof(ev_wrk));
@@ -106,8 +104,8 @@ void EventMain()
 
     addr = (int *)MikuPan_GetHostPointer(MSN_TITLE_DAT_ADDRESS);
     addr++;
-    addr = (int *)(*addr + DVD_DATA_ADDR + ev_wrk.evt_no * 4);
-    dat_adr = (u_char *)(*addr + DVD_DATA_ADDR);
+    addr = (int *)MikuPan_GetHostPointer(*addr + MSN_TITLE_DAT_ADDRESS + ev_wrk.evt_no * 4);
+    dat_adr = (u_char *)MikuPan_GetHostPointer(*addr + MSN_TITLE_DAT_ADDRESS);
 
     loop = 1;
 
@@ -860,9 +858,9 @@ u_char EventOpenJudge(short int event_no)
         return 0;
     }
 
-    addr = (int *)(DVD_DATA_ADDR);
+    addr = (int *)MikuPan_GetHostPointer(MSN_TITLE_DAT_ADDRESS);
     addr = (int *)(*addr + (event_no * 4 + (int64_t)addr));
-    addr = (int *)(*addr + DVD_DATA_ADDR);
+    addr = (int *)MikuPan_GetHostPointer(*addr + MSN_TITLE_DAT_ADDRESS);
 
     if (ap_wrk.zh_mode != 0 && ((u_char *)addr)[3] != 202)
     {
@@ -971,11 +969,11 @@ int64_t GetEventMessageAddr(short int msg_no)
 {
     u_char *addr;
 
-    addr = (u_char *)Get4Byte((u_char *)DVD_DATA_ADDR + 2 * 4);
-    addr += DVD_DATA_ADDR[msg_no * 4];
-    addr = (u_char *)Get4Byte(addr);
+    addr = (u_char *)MikuPan_GetHostPointer(Get4Byte((u_char *)MikuPan_GetHostPointer(MSN_TITLE_DAT_ADDRESS + 2 * 4)));
+    addr += msg_no * 4 + MSN_TITLE_DAT_ADDRESS;
+    addr = (u_char *)MikuPan_GetHostPointer(Get4Byte(addr));
 
-    return (int64_t)addr + DVD_DATA_ADDR;
+    return (int64_t)addr + MSN_TITLE_DAT_ADDRESS;
 }
 
 void EventEnemySet(u_char *addr)
@@ -1105,7 +1103,7 @@ int EventSceneCtrl(short int scene_no)
 
                 if(SceneDecisionMovie(scene_no) == 0)
                 {
-                    if (SceneAllLoad(scene_no, SCENE_LOAD_ADDRESS) != 0)
+                    if (SceneAllLoad(scene_no, MikuPan_GetHostPointer(SCENE_LOAD_ADDRESS)) != 0)
                     {
                         ev_wrk.movie_on = 4;
                         change_efbank = 0;

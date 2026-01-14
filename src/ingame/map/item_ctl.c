@@ -17,6 +17,7 @@ void FileDateInit()
 
 int ItemGetMain()
 {
+    return 0;
 }
 
 void ItemCtrl()

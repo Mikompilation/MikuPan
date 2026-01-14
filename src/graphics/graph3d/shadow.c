@@ -1674,6 +1674,7 @@ void SetShadowCamera(float *center, sceVu0FVECTOR *bbox, SgCOORDUNIT *cp)
 
 void DrawShadow(ShadowHandle *shandle, EnvFuncCallback env_func)
 {
+    return;
     SgCOORDUNIT oldcoord;
     sceVu0FMATRIX tmpmat;
     sceVu0FMATRIX quat;

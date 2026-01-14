@@ -37,7 +37,7 @@ u_char msn_title_sp_ttl_no[] = {11, 11, 11, 11, 11};
 u_char msn_title_ttl_sp_num[] = {2, 1, 1, 1, 1};
 
 SPRT_SDAT stg_title_sp_bak[];
-SCN_LOAD_DAT *scn_load[];
+SCN_LOAD_DAT *scn_load[] = {scn_load0, scn_load1, scn_load2, scn_load3};
 
 SPRT_SDAT msn_title00_sp_flr[] = {
     {

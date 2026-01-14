@@ -25,7 +25,7 @@ void RoomPassInit();
 void RoomPass(u_char room_id);
 int IsRoomPass(u_char room_id);
 void MapFloorChange(u_char new_floor);
-int GetFloorTopAddr(u_char floor);
+int64_t GetFloorTopAddr(u_char floor);
 void InitMap();
 void MapCtrlMain();
 void GetNewRoomData();

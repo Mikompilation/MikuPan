@@ -37,10 +37,10 @@
 #include "graphics/graph3d/load3d.h"
 #include "graphics/graph3d/sglib.h"
 
-#include <math.h>
-#include <string.h>
 #include <common/ul_math.h>
-
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
 
 float photo_rng_tbl[] = {
     5000.0f
@@ -332,7 +332,7 @@ void PlyrFinderModeChk()
     {
         if (opt_wrk.key_type == 0 || opt_wrk.key_type == 1 || opt_wrk.key_type == 4 || opt_wrk.key_type == 5)
         {
-            pad_finder = *key_now[7];
+            pad_finder = CIRCLE_PRESSED();
 
             if (pad_finder != 0 && pad[0].push[5] < 7)
             {
@@ -341,7 +341,7 @@ void PlyrFinderModeChk()
         }
         else
         {
-            pad_finder = *key_now[10];
+            pad_finder = R1_PRESSED();
 
             if (pad_finder != 0 && pad[0].push[9] < 7)
             {
@@ -4088,7 +4088,7 @@ float GetMovePad(u_char id)
 
             if (dir != 0xff)
             {
-                rot = dir * DEG2RAD(45.0f) - PI;
+                rot = (float)dir * (float)DEG2RAD(45.0f) - (float)PI;
             }
         }
 

@@ -7,6 +7,7 @@ void SpdMenuInit()
 
 char SpdMenuCtrl()
 {
+    return 0;
 }
 
 void SpdMapMain()
