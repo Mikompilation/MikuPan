@@ -1,10 +1,10 @@
 #include "mikupan_ui.h"
-
+#include "glad/gl.h"
+#include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl3.h"
-#include "imgui_impl_sdlrenderer3.h"
-#include "main/glob.h"
 #include "imgui_internal.h"
 #include "imgui_toggle/imgui_toggle.h"
+#include "main/glob.h"
 
 extern "C"
 {
@@ -137,26 +137,28 @@ bool controller_rumble_test = false;
 bool camera_debug = false;
 int render_wireframe = 1;
 
-void MikuPan_InitUi(SDL_Window *window, SDL_Renderer *renderer)
+void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
 {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer3_Init(renderer);
+    ImGui_ImplSDL3_InitForOpenGL(window, renderer);
+    ImGui_ImplOpenGL3_Init("#version 130");
 }
 
-void MikuPan_RenderUi(SDL_Renderer* renderer)
+void MikuPan_RenderUi()
 {
     ImGui::Render();
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+    glad_glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
+    //glad_glClear(GL_COLOR_BUFFER_BIT);
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void MikuPan_StartFrameUi()
 {
-    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 }
@@ -231,7 +233,7 @@ void MikuPan_DrawUi()
 
 void MikuPan_ShutDownUi()
 {
-    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 }

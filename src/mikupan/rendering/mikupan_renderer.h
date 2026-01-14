@@ -14,7 +14,7 @@ extern int window_height;
 
 /* We will use this renderer to draw into this window every frame. */
 extern SDL_Window *window;
-extern SDL_Renderer *renderer;
+//extern SDL_Renderer *renderer;
 
 SDL_AppResult MikuPan_Init();
 void MikuPan_Clear();

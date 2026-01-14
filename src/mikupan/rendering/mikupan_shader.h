@@ -5,6 +5,7 @@
 enum ShaderPrograms
 {
     DEFAULT_SHADER,
+    HUD_SHADER,
     SIMPLE_TEXTURED_SHADER,
     MAX_SHADER_PROGRAMS
 };
