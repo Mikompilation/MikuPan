@@ -119,6 +119,12 @@ int scePadInfoAct(int port, int slot, int actno, int term)
 
 int scePadSetActAlign(int port, int slot, const unsigned char* data)
 {
+    if (gamepad == NULL)
+    {
+        return 0;
+    }
+
+    return SDL_RumbleGamepad(gamepad, data[0] * 32896, data[1] * 257, 100);
 }
 
 int scePadGetReqState(int port, int slot)
@@ -141,7 +147,6 @@ int scePadSetActDirect(int port, int slot, const unsigned char* data)
         return 0;
     }
 
-    //SDL_RumbleGamepad(gamepad, 0xFFF, 0xFFF, 1);
 
-    return 1;
+    return SDL_RumbleGamepad(gamepad, data[0] * 32896, data[1] * 257, 100);
 }
