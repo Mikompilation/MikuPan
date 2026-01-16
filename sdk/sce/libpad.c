@@ -48,6 +48,18 @@ int scePadGetState(int port, int slot)
     return scePadStateStable;
 }
 
+static inline uint8_t SDL_AxisToPS2_Deadzone(int sdl_axis, int deadzone)
+{
+    if (abs(sdl_axis) < deadzone)
+        sdl_axis = 0;
+
+    if (sdl_axis < -32768) sdl_axis = -32768;
+    if (sdl_axis >  32767) sdl_axis =  32767;
+
+    int ps2 = (sdl_axis + 32768) * 255 / 65535;
+    return (uint8_t)ps2;
+}
+
 int scePadRead(int port, int slot, unsigned char* rdata)
 {
     for (int i = 1; i < 32; i++)
@@ -57,6 +69,9 @@ int scePadRead(int port, int slot, unsigned char* rdata)
 
     u_short* data = (u_short*)rdata;
     rdata[0] = 0;
+
+    // Status 0x79: Is a DualShock 2.
+    rdata[1] = 0x79;
 
     if (gamepad != NULL)
     {
@@ -73,9 +88,15 @@ int scePadRead(int port, int slot, unsigned char* rdata)
         data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_START)          ? sce_pad[10] : 0;
         data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_STICK)     ? sce_pad[11] : 0;
         data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) ? sce_pad[12] : 0;
-        data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER)       ? sce_pad[13] : 0;
-        data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)      ? sce_pad[14] : 0;
+        data[1] ^= SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER), 0) ? sce_pad[13] : 0;
+        data[1] ^= SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER), 0) ? sce_pad[14] : 0;
         data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)  ? sce_pad[15] : 0;
+
+        rdata[5] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTY) * -1, 0);
+        rdata[4] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTX) * -1, 0);
+        rdata[7] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY) * -1, 0);        
+        rdata[6] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX) * -1, 0);
+
     }
     else
     {
@@ -99,7 +120,7 @@ int scePadRead(int port, int slot, unsigned char* rdata)
         data[1] ^= key_states[SDL_SCANCODE_U]           ? sce_pad[15] : 0;
     }
 
-    return 1;
+    return 32;
 }
 
 /// 4: STANDARD CONTROLLER (Dualshock)
