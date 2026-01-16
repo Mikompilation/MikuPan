@@ -51,8 +51,8 @@ u_char mim_nigiri_l_id = 0;
 u_char mim_nigiri_r_id = 0;
 float now_frot_x = 0.0f;
 
-static sceVu0FMATRIX m_start[60];
-static sceVu0FMATRIX m_end[60];
+static sceVu0FMATRIX m_start[60] = {0};
+static sceVu0FMATRIX m_end[60] = {0};
 
 
 #define PI 3.1415927f
@@ -973,7 +973,6 @@ void motInitInterpAnime(ANI_CTRL *ani_ctrl, int flame)
 
 static void motSetInterpMatrix(ANI_CTRL *ani_ctrl, sceVu0FMATRIX *start, sceVu0FMATRIX *end)
 {
-    
     HeaderSection *hs;
     sceVu0FMATRIX m0;
     sceVu0FMATRIX m1;
@@ -1029,10 +1028,6 @@ static void motInterpAnm(ANI_CTRL *ani_ctrl, sceVu0FMATRIX *start, sceVu0FMATRIX
     if (m_ctrl->inp_allcnt != 0)
     {
         rate = (float)m_ctrl->inp_cnt / (float)m_ctrl->inp_allcnt;
-        if (rate == 0)
-        {
-            rate = 1.0f;
-        }
     }
     else
     {
@@ -1370,11 +1365,11 @@ void movGetMoveval(ANI_CTRL *ani_ctrl, u_int frame_num)
 
         if (movGetFrameNum(mov_p) <= frame_num)
         {
-            frame_num = movGetFrameNum(mov_p) == 0 ? 0 : movGetFrameNum(mov_p) - 1;
+            frame_num = movGetFrameNum(mov_p) - 1;
         }
 
         p1 = &((float *)mov_p)[2];
-        p1 = &p1[frame_num * 2];
+        p1 = &p1[(int)frame_num * 2];
 
         dist = p1[0];
         height = p1[1];
@@ -1583,23 +1578,23 @@ static void motGetFrameDataRST(RST_DATA *rst, u_int *top_addr, u_int frame)
         frame = motGetFrameNum(top_addr) - 1;
     }
 
-    pkt = (float *)motGetFrameDataAddr(top_addr, frame);
+    pkt = (float *)MikuPan_GetHostPointer(*(int*)motGetFrameDataAddr(top_addr, frame));
 
     bone_num = motGetBoneNum(top_addr);
 
     for (i = 0; i < bone_num; i++)
     {
-            rst[i].rot[0] = *pkt++;
-            rst[i].rot[1] = *pkt++;
-            rst[i].rot[2] = *pkt++;
+        rst[i].rot[0] = *pkt++;
+        rst[i].rot[1] = *pkt++;
+        rst[i].rot[2] = *pkt++;
 
-            rst[i].scale[0] = *pkt++;
-            rst[i].scale[1] = *pkt++;
-            rst[i].scale[2] = *pkt++;
+        rst[i].scale[0] = *pkt++;
+        rst[i].scale[1] = *pkt++;
+        rst[i].scale[2] = *pkt++;
 
-            rst[i].trans[0] = *pkt++;
-            rst[i].trans[1] = *pkt++;
-            rst[i].trans[2] = *pkt++;
+        rst[i].trans[0] = *pkt++;
+        rst[i].trans[1] = *pkt++;
+        rst[i].trans[2] = *pkt++;
     }
 }
 
@@ -1629,9 +1624,9 @@ static void motGetFrameDataRT(RST_DATA *rst, u_int *top_addr, u_int frame, u_int
         }
     }
 
-    pkt = (float *)motGetFrameDataAddr(top_addr, frame);
+    pkt = (float*)MikuPan_GetHostPointer(*(int *)motGetFrameDataAddr(top_addr, frame));
 
-    if (pkt == (float *)motGetFrameDataAddr(top_addr, 0))
+    if (pkt == (float *)MikuPan_GetHostPointer(*(int*)motGetFrameDataAddr(top_addr, 0)))
     {
         return;
     }

@@ -9,6 +9,7 @@
 #include <ingame/map/map_ctrl.h>
 #include <ingame/menu/sp_menu.h>
 #include <ingame/plyr/unit_ctl.h>
+#include <math.h>
 #include <sce/libvu0.h>
 #include <sce/sifdev.h>
 
@@ -1004,7 +1005,7 @@ void NormalCameraCtrl()
 
         tc2 = tc;
 
-        //CompleCameraPos(&tc, &oc, &mci);
+        CompleCameraPos(&tc, &oc, &mci);
 
         oc = tc2;
     }
