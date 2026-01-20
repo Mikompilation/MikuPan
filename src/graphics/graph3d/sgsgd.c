@@ -313,13 +313,13 @@ void SgMapUnit(void *sgd_top)
     cp = GetCoordP(hs);
 
     /// Maps CoordP parents
-    if (cp != 0)
+    //if (cp != 0)
+    if (hs->coordp != 0)
     {
         for (i = 0; i < hs->blocks - 1; i++)
         {
             if (cp[i].parent < 0)
             {
-                /// Overwrites data for 64bits PTR. -1 is our only indicator of no parent
                 cp[i].parent = 0;
             }
             else if (cp[i].parent < MikuPan_GetPs2OffsetFromHostPointer(cp))

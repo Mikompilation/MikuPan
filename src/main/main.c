@@ -38,7 +38,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     fenv_t env;
     fegetenv(&env);
 
-    env.__control_word &= ~(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+    env.__control_word &= ~(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
     fesetenv(&env);
 
     /* Enable SSE exceptions */

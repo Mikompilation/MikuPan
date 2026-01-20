@@ -395,7 +395,8 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
 
             for (i = 0; i < vh->vnum; vp++, prim += 2, i++)
             {
-                Vu0CopyVector(vp[0], *(sceVu0FVECTOR *) *prim);
+                //Vu0CopyVector(vp[0], *(sceVu0FVECTOR *) *prim);
+                Vu0CopyVector(vp[0], *(sceVu0FVECTOR *) MikuPan_GetHostPointer(*prim));
             }
             break;
         case 2:
@@ -403,7 +404,8 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
             {
                 for (i = 0; i < vh->vnum; i++, vp++, prim += 2)
                 {
-                    Vu0CopyVector(vp[0], *(sceVu0FVECTOR *) *prim);
+                    //Vu0CopyVector(vp[0], *(sceVu0FVECTOR *) *prim);
+                    Vu0CopyVector(vp[0], *(sceVu0FVECTOR *) MikuPan_GetHostPointer(*prim));
                 }
             }
             else
@@ -415,7 +417,8 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
 
                 for (i = 0; i < vh->vnum; i++, vp++, prim += 2)
                 {
-                    _CalcWeightedVertexSM(*vp, *(sceVu0FVECTOR *) *prim);
+                    //_CalcWeightedVertexSM(*vp, *(sceVu0FVECTOR *) *prim);
+                    _CalcWeightedVertexSM(*vp, *(sceVu0FVECTOR *) MikuPan_GetHostPointer(*prim));
                 }
             }
             break;
@@ -424,7 +427,7 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
             {
                 for (i = 0; i < vh->vnum; i++, vp++, prim += 2)
                 {
-                    Vu0CopyVector(vp[0], *(sceVu0FVECTOR *) *prim);
+                    Vu0CopyVector(vp[0], *(sceVu0FVECTOR *) MikuPan_GetHostPointer(*prim));
                 }
             }
             else
@@ -434,7 +437,7 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
                     cn = (char *) *prim;
                     _SetLWMatrix0(lcp[cn[0x1c]].workm);
                     _SetLWMatrix1(lcp[cn[0x1d]].workm);
-                    _CalcWeightedVertexSM(*vp, *(sceVu0FVECTOR *) *prim);
+                    _CalcWeightedVertexSM(*vp, *(sceVu0FVECTOR *) MikuPan_GetHostPointer(*prim));
                     vp++;
                     prim += 2;
                 }
@@ -443,7 +446,7 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
         default:
             for (i = 0; i < vh->vnum; i++, vp++, prim += 2)
             {
-                Vu0CopyVector(*vp, *(sceVu0FVECTOR *) *prim);
+                Vu0CopyVector(*vp, *(sceVu0FVECTOR *) MikuPan_GetHostPointer(*prim));
             }
             break;
     }
@@ -1674,7 +1677,6 @@ void SetShadowCamera(float *center, sceVu0FVECTOR *bbox, SgCOORDUNIT *cp)
 
 void DrawShadow(ShadowHandle *shandle, EnvFuncCallback env_func)
 {
-    return;
     SgCOORDUNIT oldcoord;
     sceVu0FMATRIX tmpmat;
     sceVu0FMATRIX quat;
