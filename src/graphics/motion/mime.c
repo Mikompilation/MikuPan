@@ -140,10 +140,6 @@ void mimInitAcsCtrl(ANI_CTRL *ani_ctrl, u_short mdl_no)
     for (i = wmim_num; i < 10; i++)
     {
         ani_ctrl->wmim[i].wdat = NULL;
-
-        asm volatile ("nop");
-        asm volatile ("nop");
-        asm volatile ("nop");
     }
 
     ani_ctrl->wmim_num = wmim_num;

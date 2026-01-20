@@ -1655,7 +1655,8 @@ u_int* SearchBoundingBoxPacket(u_int *prim)
             return prim;
         }
 
-        prim = *(u_int **)prim;
+        //prim = *(u_int **)prim;
+        prim = GetNextProcUnitHeaderPtr(prim);
     }
 
     return NULL;
@@ -1663,7 +1664,6 @@ u_int* SearchBoundingBoxPacket(u_int *prim)
 
 void DrawRoomShadow()
 {
-    return;
     int i;
     int disp_room;
     SgCOORDUNIT *cp;
@@ -1722,7 +1722,8 @@ void DrawRoomShadow()
 
     for (i = 1; i < hs->blocks - 1; i++)
     {
-        prim = SearchBoundingBoxPacket(pprim[i]);
+        //prim = SearchBoundingBoxPacket(pprim[i]);
+        prim = SearchBoundingBoxPacket(GetTopProcUnitHeaderPtr(hs, i));
 
         if (prim != NULL)
         {

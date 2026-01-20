@@ -5,6 +5,8 @@
 
 #include "os/pad.h"
 
+#include <stdint.h>
+
 typedef struct ENE_WRK ENE_WRK;
 
 #include "os/system.h"

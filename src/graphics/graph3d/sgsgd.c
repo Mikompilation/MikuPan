@@ -134,6 +134,7 @@ void MappingTYPE0(int gloops, u_int *prim)
         prim = prim + ((prim[0] & 0x7fff) * 8 + 4);
     }
 }
+
 int MappingTYPE2(int gloops, u_int *prim)
 {
     int j;
@@ -158,7 +159,6 @@ int MappingTYPE2(int gloops, u_int *prim)
 
     return hsize;
 }
-
 
 void MappingMeshData(u_int *intpointer, u_int *vuvnprim, HeaderSection *hs)
 {

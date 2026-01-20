@@ -29,6 +29,8 @@ typedef struct {
 
 	/// World Clip matrix
 	sceVu0FMATRIX wc;
+
+    /// World Clip View matrix
 	sceVu0FMATRIX wcv;
 
 	/// Look direction vectors

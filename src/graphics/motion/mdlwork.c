@@ -1,24 +1,25 @@
-#include "common.h"
-#include "typedefs.h"
-#include "enums.h"
-#include "mikupan/mikupan_memory.h"
 #include "mdlwork.h"
-#include "sce/misc/diei.h"
-#include "main/glob.h"
-#include "main/gamemain.h"
-#include "os/eeiop/eese.h"
-#include "os/eeiop/cdvd/eecdvd.h"
-#include "graphics/motion/motion.h"
-#include "graphics/motion/mdlact.h"
+#include "common.h"
+#include "data/plyr_file_id.h"// static PLYR_FILE_ID plyr_file_id[];
+#include "enums.h"
+#include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/gra3d.h"
-#include "graphics/graph3d/sglight.h"
 #include "graphics/graph3d/sglib.h"
+#include "graphics/graph3d/sglight.h"
 #include "graphics/graph3d/sgsu.h"
 #include "graphics/graph3d/sgsup.h"
 #include "graphics/motion/accessory.h"
-#include "graphics/graph2d/tim2_new.h"
+#include "graphics/motion/mdlact.h"
+#include "graphics/motion/motion.h"
+#include "main/gamemain.h"
+#include "main/glob.h"
+#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/mikupan_memory.h"
+#include "os/eeiop/cdvd/eecdvd.h"
+#include "os/eeiop/eese.h"
 #include "outgame/mode_slct.h"
-#include "data/plyr_file_id.h" // static PLYR_FILE_ID plyr_file_id[];
+#include "sce/misc/diei.h"
+#include "typedefs.h"
 
 void ManmdlSetAlpha(void *sgd_top, u_char alpha)
 {
@@ -185,22 +186,26 @@ void SortUnitRefCoordP(void *sgd_top, SgCOORDUNIT *coordp, int pnum)
 
     if (pnum < 0)
     {
-        SgSortPreProcessP((u_int *)pk[0]);
+        //SgSortPreProcessP((u_int *)pk[0]);
+        SgSortPreProcessP(GetTopProcUnitHeaderPtr(hs, 0));
 
         for (i = 1; i < blocksm; i++)
         {
-            SgSortUnitPrimP((u_int *)pk[i]);
+            //SgSortUnitPrimP((u_int *)pk[i]);
+            SgSortUnitPrimP(GetTopProcUnitHeaderPtr(hs, i));
         }
     }
     else if (pnum == 0)
     {
         save_tri2_pointer = (u_int *)0xffffffff; // an "invalid" pointer value?
         save_bw_pointer = (u_int *)0xffffffff;   // probably a #define
-        SgSortPreProcessP((u_int *)pk[0]);
+        //SgSortPreProcessP((u_int *)pk[0]);
+        SgSortPreProcessP(GetTopProcUnitHeaderPtr(hs, 0));
     }
     else
     {
-        SgSortUnitPrimP((u_int *)pk[pnum]);
+        //SgSortUnitPrimP((u_int *)pk[pnum]);
+        SgSortUnitPrimP(GetTopProcUnitHeaderPtr(hs, pnum));
     }
 }
 
@@ -225,7 +230,7 @@ void SortUnitRefCoord(void *sgd_top, SgCOORDUNIT *coordp, int pnum)
 
     SetUpSortUnit();
 
-    LoadSgProg(0);
+    LoadSgProg(VUPROG_SG);
 
     if (pnum < 0)
     {
@@ -303,10 +308,6 @@ void SetEneTexture(u_int work_id)
         {
             return;
         }
-
-        asm volatile ("nop");
-        asm volatile ("nop");
-        asm volatile ("nop");
     }
 
     for (i = 0; i < 4; i++)

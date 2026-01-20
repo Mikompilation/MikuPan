@@ -1,6 +1,6 @@
+#include "sglib.h"
 #include "common.h"
 #include "typedefs.h"
-#include "sglib.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -10,20 +10,25 @@
 #include "sce/libvu0.h"
 
 #include "graphics/graph3d/sg_dat.h"
-#include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sgcam.h"
+#include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/shadow.h"
+#include "mikupan/mikupan_logging_c.h"
 
 #define PI 3.1415925f
+#define POW2(x) ((x) * (x))
+
+sceVu0FVECTOR work_vf01;
+sceVu0FVECTOR work_vf02;
 
 sceVu0FVECTOR vf12reg[2] = {
     {1.0f, 1.0f, 1.0f, -1.0f},
-    {1.0f, 0.0f, 0.0f, 0.0f},
+    {1.0f, 0.0f, 0.0f,  0.0f},
 };
-static sceVu0FVECTOR trad = {0.0f, 1/(PI * 2), -2 * PI, PI/ 180.0f};
+static sceVu0FVECTOR trad = {0.0f, 1 / (PI * 2), -2 * PI, PI / 180.0f};
 static sceVu0FVECTOR tgsinf[2] = {
-    {0.0f, -1.0f/6.0f, 1.0f/120.0f, 0.0f},
-    {-1.0f/5040.0f, 1.0f/362880.0f, 1.0f, 0.0f},
+    {           0.0f,     -1.0f / 6.0f, 1.0f / 120.0f, 0.0f},
+    {-1.0f / 5040.0f, 1.0f / 362880.0f,          1.0f, 0.0f},
 };
 sceVu0FMATRIX SgWSMtx = {0};
 sceVu0FMATRIX SgCMtx = {0};
@@ -58,150 +63,48 @@ int set_bw_color = 0;
 
 static inline float asm_1(float rad)
 {
-    /*
-    __asm__ volatile("\n\
-        lqc2     $vf12,0(%0)\n\
-        qmtc2    %1,$vf13\n\
-        ": : "r" (trad), "r" (rad) : "v1"
-    );
-
-    __asm__ volatile("\n\
-        vmulx.y  $vf13y,$vf12y,$vf13x\n\
-        vftoi0.y $vf13y,$vf13y\n\
-        vitof0.y $vf13y,$vf13y\n\
-        vmulz.y  $vf13y,$vf13y,$vf12z\n\
-        vaddy.x  $vf13x,$vf13x,$vf13y\n\
-    ");
-
-    __asm__ volatile("\n\
-        qmfc2    %0,$vf13\n\
-        ": "=r" (ret) : : "v0"
-    );
-    */
-
-    return rad + ((float)(int)(trad[1] * rad)) * trad[2];
+    return rad + (truncf(trad[1] * rad)) * trad[2];
 }
 
 static inline float asm_2(float rad)
 {
-    /*
-    float ret;
+    float t, z, ret;
 
-    __asm__ volatile("\n\
-        qmtc2     %1,$vf14\n\
-        lqc2      $vf12,0(%0)\n\
-        lqc2      $vf13,0x10(%0)\n\
-        ": : "r" (tgsinf), "r" (rad) : "v1"
-    );
+    t = rad;
+    z = POW2(rad);
 
-    __asm__ volatile("\n\
-        vmove.x   $vf12x,$vf14x\n\
-        vmulx.x   $vf14x,$vf12x,$vf12x\n\
-        vmulaw.x  ACCx,$vf12x,$vf0w\n\
-        vsubw.z   $vf14z,$vf0z,$vf0w\n\
-        vmulx.x   $vf15x,$vf14x,$vf12x\n\
-        vmadday.x ACCx,$vf15x,$vf12y\n\
-        vmulx.x   $vf15x,$vf15x,$vf14x\n\
-        vmaddaz.x ACCx,$vf15x,$vf12z\n\
-        vmulx.x   $vf15x,$vf15x,$vf14x\n\
-        vmaddax.x ACCx,$vf15x,$vf13x\n\
-        vmulx.x   $vf15x,$vf15x,$vf14x\n\
-        vmaddy.x  $vf12x,$vf15x,$vf13y\n\
-        vminiw.x  $vf12x,$vf12x,$vf0w\n\
-        vmaxz.x   $vf12x,$vf12x,$vf14z\n\
-    ");
+    ret = t;
+    t *= z;
+    ret += t * tgsinf[0][1];
+    t *= z;
+    ret += t * tgsinf[0][2];
+    t *= z;
+    ret += t * tgsinf[1][0];
+    t *= z;
+    ret += t * tgsinf[1][1];
 
-     __asm__ volatile("\n\
-        qmfc2     %0,$vf12\n\
-        ": "=r" (ret) : : "v0"
-    );
-
-    return ret;
-    */
-
-    const float c1 = -1.0f / 6.0f;
-    const float c2 =  1.0f / 120.0f;
-    const float c3 = -1.0f / 5040.0f;
-    const float c4 =  1.0f / 362880.0f;
-
-    // Polynomial approximation of sin(rad)
-    float x  = rad;
-    float x2 = x * x;
-    float x3 = x2 * x;
-    float x5 = x3 * x2;
-    float x7 = x5 * x2;
-    float x9 = x7 * x2;
-
-    float ret = x + c1 * x3 + c2 * x5 + c3 * x7 + c4 * x9;
-
-    if (ret > 1.0f) ret = 1.0f;
-    else if (ret < -1.0f) ret = -1.0f;
+    if (ret > 1.0f)
+        ret = 1.0f;
+    if (ret < -1.0f)
+        ret = -1.0f;
 
     return ret;
 }
 
 static inline float asm_3(float degree)
 {
-    /*
-    float ret;
-
-    __asm__ volatile("\n\
-        lqc2     $vf12,0(%0)\n\
-        qmtc2    %1,$vf13\n\
-        ": : "r" (trad), "r" (degree) : "v1"
-    );
-
-    __asm__ volatile("\n\
-        vmulw.x  $vf13x,$vf13x,$vf12w\n\
-        vmulx.y  $vf13y,$vf12y,$vf13x\n\
-        vftoi0.y $vf13y,$vf13y\n\
-        vitof0.y $vf13y,$vf13y\n\
-        vmulz.y  $vf13y,$vf13y,$vf12z\n\
-        vaddy.x  $vf13x,$vf13x,$vf13y\n\
-    ");
-
-    __asm__ volatile("\n\
-        qmfc2    %0,$vf13\n\
-        ": "=r" (ret) : : "v0"
-    );
-
-    return ret;
-    */
-
-    // Constants from trad
-    const float inv2pi = 1.0f / (PI * 2.0f);
-    const float neg2pi = -2.0f * PI;
-    const float deg2rad = PI / 180.0f;
-
-    // Convert degrees to radians
-    float rad = degree * deg2rad;
-    // Find how many full rotations it represents
-    float turns = rad * inv2pi;
-    // Truncate (round toward zero) the number of full turns
-    turns = (float)((int)turns);
-    // Subtract full turns to wrap the angle into [0, 2π)
-    float wrapped = rad + turns * neg2pi;
-    return wrapped;
+    float rad = degree * trad[3];
+    return rad + (truncf(rad * trad[1]) * trad[2]);
 }
 
-void _GetNormalVectorFromVector(sceVu0FVECTOR norm, sceVu0FVECTOR p0, sceVu0FVECTOR p1)
+void _GetNormalVectorFromVector(sceVu0FVECTOR norm, sceVu0FVECTOR p0,
+                                sceVu0FVECTOR p1)
 {
-    /*
-    __asm__ volatile("\n\
-    lqc2        vf12,0x0(%1)\n\
-    lqc2        vf13,0x0(%2)\n\
-    vopmula.xyz ACC,vf12,vf13\n\
-    vopmsub.xyz vf12,vf13,vf12\n\
-    sqc2        vf12,0x0(%0)\n\
-    ": : "r" (norm) , "r" (p0) ,"r" (p1));
-    */
-
     // Compute cross product p1 × p0
-    norm[0] = p1[1] * p0[2] - p1[2] * p0[1];  // X
-    norm[1] = p1[2] * p0[0] - p1[0] * p0[2];  // Y
-    norm[2] = p1[0] * p0[1] - p1[1] * p0[0];  // Z
-    norm[3] = 0.0f;                           // PS2 VU typically keeps W = 0 for direction vectors
-
+    norm[0] = p0[1] * p1[2] - p1[1] * p0[2];// X
+    norm[1] = p0[2] * p1[0] - p1[2] * p0[0];// Y
+    norm[2] = p0[0] * p1[1] - p1[0] * p0[1];// Z
+    // norm[3] = 0.0f;                           // PS2 VU typically keeps W = 0 for direction vectors
 }
 
 void WaitVU1()
@@ -230,22 +133,15 @@ void Set12Register()
 {
     sceVu0FVECTOR vf[2] = {0};
 
-    vf[0][0] = 1.0f;
-    vf[0][1] = 1.0f;
-    vf[0][2] = 1.0f;
-    vf[0][3] = -1.0f;
+    work_vf01[0] = 1.0f;
+    work_vf01[1] = 1.0f;
+    work_vf01[2] = 1.0f;
+    work_vf01[3] = -1.0f;
 
-    vf[1][0] = 1.0f;
-    vf[1][1] = 0.0f;
-    vf[1][2] = 0.0f;
-    vf[1][3] = 0.0f;
-
-    /*
-    __asm__ volatile("\n\
-        lqc2 $vf1,0x0(%0)\n\
-        lqc2 $vf2,0x10(%0)\n\
-    ": :"r"(vf));
-    */
+    work_vf02[0] = 1.0f;
+    work_vf02[1] = 0.0f;
+    work_vf02[2] = 0.0f;
+    work_vf02[3] = 0.0f;
 }
 
 void SetVF2Register(sceVu0FVECTOR vf2reg)
@@ -272,7 +168,7 @@ void printMat(sceVu0FMATRIX m0)
 {
     int i;
 
-    for(i = 0; i < 4; i++)
+    for (i = 0; i < 4; i++)
     {
         info_log("%f %f %f %f", m0[0][i], m0[1][i], m0[2][i], m0[3][i]);
     }
@@ -288,11 +184,11 @@ void printLMatC(sceVu0FMATRIX m0, char *str)
 {
     int i;
 
-    info_log("%s",str);
+    info_log("%s", str);
 
-    for(i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++)
     {
-        info_log("%f %f %f",m0[0][i], m0[1][i], m0[2][i]);
+        info_log("%f %f %f", m0[0][i], m0[1][i], m0[2][i]);
     }
 }
 
@@ -345,50 +241,25 @@ void SgSetWorkBase(qword *base)
     SgWorkBase = base;
 }
 
-qword* SgGetWorkBase()
+qword *SgGetWorkBase()
 {
     return SgWorkBase;
 }
 
 void SgSetProjection(float scrz)
 {
-    sceVu0FVECTOR tmp;
-
-    tmp[3] = scrz;
-
-    /*
-    __asm__ volatile ("\n\
-        lqc2    $vf12,0(%0)\n\
-        vdiv    Q,$vf0w,$vf12w\n\
-        vwaitq  \n\
-        vmulq.w $vf1w,$vf0w,Q\n\
-        ": : "r" (tmp));
-        */
-
     // Avoid division by zero
     if (scrz == 0.0f)
         return;
 
-    float reciprocal = 1.0f / scrz;
-
     // On PS2, vf1.w would now hold this value globally;
-    // here we just simulate setting it somewhere.
-    // For example, you might store it in a static or global variable:
-    static float vf1w = 1.0f;
-    vf1w = reciprocal;
-
-    // (In actual PS2 code, vf1.w was used in projection transformations.)
+    // here we just simulate setting it in __work_vf01.
+    work_vf01[3] = 1.0f / scrz;
 }
 
 float SgGetProjection()
 {
-    sceVu0FVECTOR tmp = {0};
-
-    //__asm__ volatile ("\n\
-    //    sqc2 $vf1,0(%0)\n\
-    //    ": : "r" (tmp));
-
-    return tmp[3];
+    return work_vf01[3];
 }
 
 void SgInit3D()
@@ -461,48 +332,16 @@ void GetMatrixFromQuaternion(sceVu0FMATRIX quat, sceVu0FVECTOR qvert)
     lmat[3][2] = +qvert[2];
     lmat[3][3] = +qvert[3];
 
-    //__asm__ volatile ("\n\
-    //    lqc2         $vf12,0(%1)\n\
-    //    lqc2         $vf13,0x10(%1)\n\
-    //    lqc2         $vf14,0x20(%1)\n\
-    //    lqc2         $vf15,0x30(%1)\n\
-    //    lqc2         $vf16,0(%2)\n\
-    //    lqc2         $vf17,0x10(%2)\n\
-    //    lqc2         $vf18,0x20(%2)\n\
-    //    lqc2         $vf19,0x30(%2)\n\
-    //    vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf16x\n\
-    //    vmadday.xyzw ACCxyzw,$vf13xyzw,$vf16y\n\
-    //    vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf16z\n\
-    //    vmaddw.xyzw  $vf16xyzw,$vf15xyzw,$vf16w\n\
-    //    vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf17x\n\
-    //    vmadday.xyzw ACCxyzw,$vf13xyzw,$vf17y\n\
-    //    vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf17z\n\
-    //    vmaddw.xyzw  $vf17xyzw,$vf15xyzw,$vf17w\n\
-    //    vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf18x\n\
-    //    vmadday.xyzw ACCxyzw,$vf13xyzw,$vf18y\n\
-    //    vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf18z\n\
-    //    vmaddw.xyzw  $vf18xyzw,$vf15xyzw,$vf18w\n\
-    //    vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf19x\n\
-    //    vmadday.xyzw ACCxyzw,$vf13xyzw,$vf19y\n\
-    //    vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf19z\n\
-    //    vmaddw.xyzw  $vf19xyzw,$vf15xyzw,$vf19w\n\
-    //    sqc2         $vf16,0(%0)\n\
-    //    sqc2         $vf17,0x10(%0)\n\
-    //    sqc2         $vf18,0x20(%0)\n\
-    //    sqc2         $vf19,0x30(%0)\n\
-    //    ": : "r" (quat), "r" (rmat), "r" (lmat)
-    //);
-
-
-    // Multiply rmat × lmat → quat
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            quat[i][j] =
-                rmat[i][0] * lmat[0][j] +
-                rmat[i][1] * lmat[1][j] +
-                rmat[i][2] * lmat[2][j] +
-                rmat[i][3] * lmat[3][j];
-        }
+    for (int i = 0; i < 4; ++i)
+    {
+        quat[i][0] = (rmat[0][0] * lmat[i][0]) + (rmat[1][0] * lmat[i][1])
+                     + (rmat[2][0] * lmat[i][2]) + (rmat[3][0] * lmat[i][3]);
+        quat[i][1] = (rmat[0][1] * lmat[i][0]) + (rmat[1][1] * lmat[i][1])
+                     + (rmat[2][1] * lmat[i][2]) + (rmat[3][1] * lmat[i][3]);
+        quat[i][2] = (rmat[0][2] * lmat[i][0]) + (rmat[1][2] * lmat[i][1])
+                     + (rmat[2][2] * lmat[i][2]) + (rmat[3][2] * lmat[i][3]);
+        quat[i][3] = (rmat[0][3] * lmat[i][0]) + (rmat[1][3] * lmat[i][1])
+                     + (rmat[2][3] * lmat[i][2]) + (rmat[3][3] * lmat[i][3]);
     }
 }
 
@@ -581,79 +420,41 @@ float SgACosf(float ccos)
     float sqrt;
 
     sqrt = SgSqrtf(1.0f - ccos * ccos);
+
+    if (isnan(sqrt))
+    {
+        sqrt = 0.0f;
+    }
+
     return SgAtan2f(sqrt, ccos);
 }
 
 static void GetATanf(sceVu0FVECTOR *tmpv)
 {
-    /*
-     __asm__ volatile("\n\
-        lqc2      $vf12,0(%0)\n\
-        lqc2      $vf13,0x10(%0)\n\
-        lqc2      $vf16,0x20(%0)\n\
-        vaddw.x   $vf15x,$vf12x,$vf0w\n\
-        vsubw.x   $vf14x,$vf12x,$vf0w\n\
-        vdiv      Q,$vf14x,$vf15x\n\
-        vwaitq    \n\
-        vaddq.x   $vf12x,$vf0x,Q\n\
-        vmulx.x   $vf14x,$vf12x,$vf12x\n\
-        vmulay.x  ACCx,$vf12x,$vf12y\n\
-        vmulx.x   $vf15x,$vf14x,$vf12x\n\
-        vmaddaz.x ACCx,$vf15x,$vf12z\n\
-        vmulx.x   $vf15x,$vf15x,$vf14x\n\
-        vmaddaw.x ACCx,$vf15x,$vf12w\n\
-        vmulx.x   $vf15x,$vf15x,$vf14x\n\
-        vmaddax.x ACCx,$vf15x,$vf13x\n\
-        vmulx.x   $vf15x,$vf15x,$vf14x\n\
-        vmadday.x ACCx,$vf15x,$vf13y\n\
-        vmulx.x   $vf15x,$vf15x,$vf14x\n\
-        vmaddaz.x ACCx,$vf15x,$vf13z\n\
-        vmulx.x   $vf15x,$vf15x,$vf14x\n\
-        vmaddaw.x ACCx,$vf15x,$vf13w\n\
-        vmulx.x   $vf15x,$vf15x,$vf14x\n\
-        vmaddx.x  $vf12x,$vf15x,$vf16x\n\
-        vaddy.x   $vf12x,$vf12x,$vf16y\n\
-        sqc2      $vf12,0(%0)\n\
-        ": :"r" (tmpv)
-    );
-    */
+    float t, z, p;
+    t = (tmpv[0][0] - 1.0f) / (tmpv[0][0] + 1.0f);
+    z = POW2(t);
 
-    float *v12 = (*tmpv);         // first vector (input/output)
-    float *v13 = (*tmpv + 4);     // second vector (coefficients)
-    float *v16 = (*tmpv + 8);     // third vector (constants)
-
-    float x = v12[0];
-
-    // Map domain via (x - 1)/(x + 1)
-    float q = (x - 1.0f) / (x + 1.0f);
-    x = q + 1.0f;
-
-    // Polynomial coefficients (read from the same memory layout)
-    float a1 = v12[1];
-    float a2 = v12[2];
-    float a3 = v12[3];
-    float b1 = v13[0];
-    float b2 = v13[1];
-    float b3 = v13[2];
-    float b4 = v13[3];
-    float c1 = v16[0];
-    float offset = v16[1];   // final offset (likely π/4)
-
-    // Evaluate polynomial in powers of x²
-    float x2 = x * x;
-    float result = ((((((b4 * x2 + b3) * x2 + b2) * x2 + b1) * x2 + a3) * x2 + a2) * x2 + a1) * x + c1;
-
-    // Add constant offset (π/4)
-    result += offset;
-
-    // Store result back
-    v12[0] = result;
+    p = t * tmpv[0][1];
+    t *= z;
+    p += t * tmpv[0][2];
+    t *= z;
+    p += t * tmpv[0][3];
+    t *= z;
+    p += t * tmpv[1][0];
+    t *= z;
+    p += t * tmpv[1][1];
+    t *= z;
+    p += t * tmpv[1][2];
+    t *= z;
+    p += t * tmpv[1][3];
+    t *= z;
+    p += t * tmpv[2][0];
+    tmpv[0][0] = p + tmpv[2][1];
 }
 
 float SgAtanf(float x)
 {
-    return atanf(x);
-
     sceVu0FVECTOR tmpv[3];
 
     // the followings are most likely polynomial coefficients
@@ -700,7 +501,6 @@ float SgAtanf(float x)
     {
         return -SgAtanf(-x);
     }
-
 }
 
 float SgAtan2f(float y, float x)
@@ -736,75 +536,19 @@ float SgAtan2f(float y, float x)
 
 float SgSqrtf(float len)
 {
-    /*
-    float ret;
-
-    __asm__ volatile("\n\
-        qmtc2   %0,$vf12\n\
-        ": :"r" (len) : "v0"
-    );
-
-    __asm__ volatile("\n\
-        vsqrt   Q,$vf12x\n\
-        vwaitq  \n\
-        vaddq.x $vf12x,$vf0x,Q\n\
-    ");
-
-    __asm__ volatile("\n\
-        qmfc2   %0,$vf12\n\
-        ": "=r"(ret)
-    );
-
-    return ret;
-    */
-
-    float vf12x = len;     // emulate VU0 register
-    float Q = sqrtf(vf12x); // emulate vsqrt Q
-    vf12x = 0.0f + Q;       // emulate vaddq.x
-    return vf12x;
+    return sqrtf(len);
 }
 
 float SgRSqrtf(float len)
 {
-    /*
-    float ret;
-
-    __asm__ volatile("\n\
-        qmtc2   %0,$vf12\n\
-        ": :"r" (len) : "v0"
-    );
-
-    __asm__ volatile("\n\
-        vrsqrt   Q,$vf0w,$vf12x\n\
-        vwaitq  \n\
-        vaddq.x $vf12x,$vf0x,Q\n\
-    ");
-
-    __asm__ volatile("\n\
-        qmfc2   %0,$vf12\n\
-        ": "=r"(ret)
-    );
-
-    return ret;
-    */
-
-    if (len == 0.0f) return INFINITY; // handle divide by zero
+    if (len == 0.0f)
+        return INFINITY;// handle divide by zero
     return 1.0f / sqrtf(len);
 }
 
 static void GetSgCalclen(sceVu0FVECTOR tmpv)
 {
-    //__asm__ volatile("\n\
-    //    lqc2     $vf12,0(%0)\n\
-    //    vmul.xyz $vf12xyz,$vf12xyz,$vf12xyz\n\
-    //    vaddy.x  $vf12x,$vf12x,$vf12y\n\
-    //    vaddz.x  $vf12x,$vf12x,$vf12z\n\
-    //    vsqrt    Q,$vf12x\n\
-    //    vwaitq   \n\
-    //    vaddq.x  $vf12x,$vf0x,Q\n\
-    //    sqc2     $vf12,0(%0)\n\
-    //    ": : "r"(tmpv)
-    //);
+    tmpv[0] = sqrtf(POW2(tmpv[0]) + POW2(tmpv[1]) + POW2(tmpv[2]));
 }
 
 float SgCalcLen(float x, float y, float z)
@@ -823,236 +567,125 @@ float SgCalcLen(float x, float y, float z)
 float _CalcLen(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
     sceVu0FVECTOR tmpv;
+    // basically an exact copy of _CalcLenASM,
+    // this one does just return the first
+    // element of the vector however
 
-    /*
-    __asm__ volatile("\n\
-        lqc2     $vf12,0(%0)\n\
-        lqc2     $vf13,0(%1)\n\
-        vsub.xyz $vf14xyz,$vf12xyz,$vf13xyz\n\
-        vmul.xyz $vf14xyz,$vf14xyz,$vf14xyz\n\
-        vaddy.x  $vf14x,$vf14x,$vf14y\n\
-        vaddz.x  $vf14x,$vf14x,$vf14z\n\
-        vsqrt    Q, $vf14x\n\
-        vwaitq   \n\
-        vaddq.x  $vf14x,$vf0x,Q\n\
-        sqc2     $vf14,0(%2)\n\
-        ": : "r"(v0), "r"(v1), "r"(tmpv)
-    );
-    */
-
-    //return tmpv[0];
-
-    float dx = v0[0] - v1[0];
-    float dy = v0[1] - v1[1];
-    float dz = v0[2] - v1[2];
-
-    return sqrtf(dx*dx + dy*dy + dz*dz);
+    return sqrtf(POW2(v0[0] - v1[0]) + POW2(v0[1] - v1[1])
+                 + POW2(v0[2] - v1[2]));
 }
 
 void _MulRotMatrix(sceVu0FMATRIX ans, sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 {
-    /*
-    __asm__ volatile("\n\
-        lqc2        $vf12,0(%0)\n\
-        lqc2        $vf13,0x10(%0)\n\
-        lqc2        $vf14,0x20(%0)\n\
-        lqc2        $vf15,0(%1)\n\
-        lqc2        $vf16,0x10(%1)\n\
-        lqc2        $vf17,0x20(%1)\n\
-        vmulax.xyz  ACCxyz,$vf12xyz,$vf15x\n\
-        vmadday.xyz ACCxyz,$vf13xyz,$vf15y\n\
-        vmaddz.xyz  $vf15xyz,$vf14xyz,$vf15z\n\
-        vmulax.xyz  ACCxyz,$vf12xyz,$vf16x\n\
-        vmadday.xyz ACCxyz,$vf13xyz,$vf16y\n\
-        vmaddz.xyz  $vf16xyz,$vf14xyz,$vf16z\n\
-        vmulax.xyz  ACCxyz,$vf12xyz,$vf17x\n\
-        vmadday.xyz ACCxyz,$vf13xyz,$vf17y\n\
-        vmaddz.xyz  $vf17xyz,$vf14xyz,$vf17z\n\
-        sqc2        $vf15,0(%2)\n\
-        sqc2        $vf16,0x10(%2)\n\
-        sqc2        $vf17,0x20(%2)\n\
-        ": : "r"(m0), "r"(m1), "r"(ans)
-    );
-    */
-
-    for (int i = 0; i < 3; ++i) {        // rows of result
-        for (int j = 0; j < 3; ++j) {    // columns of result
-            ans[i][j] =
-                m0[i][0] * m1[0][j] +
-                m0[i][1] * m1[1][j] +
-                m0[i][2] * m1[2][j];
-        }
+    for (int i = 0; i < 3; ++i)
+    {
+        ans[i][0] = (m0[0][0] * m1[i][0]) + (m0[1][0] * m1[i][1])
+                    + (m0[2][0] * m1[i][2]);
+        ans[i][1] = (m0[0][1] * m1[i][0]) + (m0[1][1] * m1[i][1])
+                    + (m0[2][1] * m1[i][2]);
+        ans[i][2] = (m0[0][2] * m1[i][0]) + (m0[1][2] * m1[i][1])
+                    + (m0[2][2] * m1[i][2]);
     }
 
     // Optional: preserve last row as identity (for 4x4)
-    ans[3][0] = 0.0f;
-    ans[3][1] = 0.0f;
-    ans[3][2] = 0.0f;
-    ans[3][3] = 1.0f;
+    // ans[3][0] = 0.0f;
+    // ans[3][1] = 0.0f;
+    // ans[3][2] = 0.0f;
+    // ans[3][3] = 1.0f;
 }
 
 void _MulMatrix(sceVu0FMATRIX ans, sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 {
-    /*
-    __asm__ volatile("\n\
-        lqc2         $vf12,0(%0)\n\
-        lqc2         $vf13,0x10(%0)\n\
-        lqc2         $vf14,0x20(%0)\n\
-        lqc2         $vf15,0x30(%0)\n\
-        lqc2         $vf16,0(%1)\n\
-        lqc2         $vf17,0x10(%1)\n\
-        lqc2         $vf18,0x20(%1)\n\
-        lqc2         $vf19,0x30(%1)\n\
-        vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf16x\n\
-        vmadday.xyzw ACCxyzw,$vf13xyzw,$vf16y\n\
-        vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf16z\n\
-        vmaddw.xyzw  $vf16xyzw,$vf15xyzw,$vf16w\n\
-        vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf17x\n\
-        vmadday.xyzw ACCxyzw,$vf13xyzw,$vf17y\n\
-        vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf17z\n\
-        vmaddw.xyzw  $vf17xyzw,$vf15xyzw,$vf17w\n\
-        vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf18x\n\
-        vmadday.xyzw ACCxyzw,$vf13xyzw,$vf18y\n\
-        vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf18z\n\
-        vmaddw.xyzw  $vf18xyzw,$vf15xyzw,$vf18w\n\
-        vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf19x\n\
-        vmadday.xyzw ACCxyzw,$vf13xyzw,$vf19y\n\
-        vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf19z\n\
-        vmaddw.xyzw  $vf19xyzw,$vf15xyzw,$vf19w\n\
-        sqc2         $vf16,0(%2)\n\
-        sqc2         $vf17,0x10(%2)\n\
-        sqc2         $vf18,0x20(%2)\n\
-        sqc2         $vf19,0x30(%2)\n\
-        ": : "r"(m0), "r"(m1), "r"(ans)
-    );
-    */
-
-    for (int i = 0; i < 4; ++i) {      // rows of result
-        for (int j = 0; j < 4; ++j) {  // columns of result
-            ans[i][j] =
-                m0[i][0] * m1[0][j] +
-                m0[i][1] * m1[1][j] +
-                m0[i][2] * m1[2][j] +
-                m0[i][3] * m1[3][j];
-        }
+    for (int i = 0; i < 4; ++i)
+    {
+        ans[i][0] = (m0[0][0] * m1[i][0]) + (m0[1][0] * m1[i][1])
+                    + (m0[2][0] * m1[i][2]) + (m0[3][0] * m1[i][3]);
+        ans[i][1] = (m0[0][1] * m1[i][0]) + (m0[1][1] * m1[i][1])
+                    + (m0[2][1] * m1[i][2]) + (m0[3][1] * m1[i][3]);
+        ans[i][2] = (m0[0][2] * m1[i][0]) + (m0[1][2] * m1[i][1])
+                    + (m0[2][2] * m1[i][2]) + (m0[3][2] * m1[i][3]);
+        ans[i][3] = (m0[0][3] * m1[i][0]) + (m0[1][3] * m1[i][1])
+                    + (m0[2][3] * m1[i][2]) + (m0[3][3] * m1[i][3]);
     }
 }
 
 void _SetMulMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 {
-    /*
-    __asm__ volatile("\n\
-        lqc2         $vf12,0(%0)\n\
-        lqc2         $vf13,0x10(%0)\n\
-        lqc2         $vf14,0x20(%0)\n\
-        lqc2         $vf15,0x30(%0)\n\
-        lqc2         $vf16,0(%1)\n\
-        lqc2         $vf17,0x10(%1)\n\
-        lqc2         $vf18,0x20(%1)\n\
-        lqc2         $vf19,0x30(%1)\n\
-        vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf16x\n\
-        vmadday.xyzw ACCxyzw,$vf13xyzw,$vf16y\n\
-        vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf16z\n\
-        vmaddw.xyzw  $vf4xyzw,$vf15xyzw,$vf16w\n\
-        vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf17x\n\
-        vmadday.xyzw ACCxyzw,$vf13xyzw,$vf17y\n\
-        vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf17z\n\
-        vmaddw.xyzw  $vf5xyzw,$vf15xyzw,$vf17w\n\
-        vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf18x\n\
-        vmadday.xyzw ACCxyzw,$vf13xyzw,$vf18y\n\
-        vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf18z\n\
-        vmaddw.xyzw  $vf6xyzw,$vf15xyzw,$vf18w\n\
-        vmulax.xyzw  ACCxyzw,$vf12xyzw,$vf19x\n\
-        vmadday.xyzw ACCxyzw,$vf13xyzw,$vf19y\n\
-        vmaddaz.xyzw ACCxyzw,$vf14xyzw,$vf19z\n\
-        vmaddw.xyzw  $vf7xyzw,$vf15xyzw,$vf19w\n\
-        ": : "r"(m0), "r"(m1)
-    );
-    */
+    // This is the same as _MulMatrix, but it "returns"
+    sceVu0FVECTOR *wk0 = work_matrix_0;// in [vf4:vf7]
+
+    for (int i = 0; i < 4; ++i)
+    {
+        wk0[i][0] = (m0[0][0] * m1[i][0]) + (m0[1][0] * m1[i][1])
+                    + (m0[2][0] * m1[i][2]) + (m0[3][0] * m1[i][3]);
+        wk0[i][1] = (m0[0][1] * m1[i][0]) + (m0[1][1] * m1[i][1])
+                    + (m0[2][1] * m1[i][2]) + (m0[3][1] * m1[i][3]);
+        wk0[i][2] = (m0[0][2] * m1[i][0]) + (m0[1][2] * m1[i][1])
+                    + (m0[2][2] * m1[i][2]) + (m0[3][2] * m1[i][3]);
+        wk0[i][3] = (m0[0][3] * m1[i][0]) + (m0[1][3] * m1[i][1])
+                    + (m0[2][3] * m1[i][2]) + (m0[3][3] * m1[i][3]);
+    }
 }
 
 void _CalcLenASM(sceVu0FVECTOR out, sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
-    /*
-    __asm__ volatile("\n\
-        lqc2     $vf12,0(%0)\n\
-        lqc2     $vf13,0(%1)\n\
-        vsub.xyz $vf14xyz,$vf12xyz,$vf13xyz\n\
-        vmul.xyz $vf14xyz,$vf14xyz,$vf14xyz\n\
-        vaddy.x  $vf14x,$vf14x,$vf14y\n\
-        vaddz.x  $vf14x,$vf14x,$vf14z\n\
-        vsqrt    Q, $vf14x\n\
-        vwaitq   \n\
-        vaddq.x  $vf14x,$vf0x,Q\n\
-        sqc2     $vf14,0(%2)\n\
-        ": : "r"(v0), "r"(v1), "r"(out)
-    );
-    */
+    // Classic Euclidean distance formula, even though the whole vf14
+    // is saved into `out` at the end I think it only makes sense for
+    // `x` ([0]) to be used after this function returns. If the other
+    // values are used (for some reason) they are:
+    // out[1] = POW2(v0[1] - v1[1]);
+    // out[2] = POW2(v0[2] - v1[2])
+    // out[3] = undefined
+
+    out[0] =
+        sqrtf(POW2(v0[0] - v1[0]) + POW2(v0[1] - v1[1]) + POW2(v0[2] - v1[2]));
 }
 
 void _NormalizeVector(sceVu0FVECTOR v, sceVu0FVECTOR v0)
 {
-    /*
-    __asm__ volatile("\n\
-        lqc2      $vf12,0(%0)\n\
-        vmul.xyz  $vf13xyz,$vf12xyz,$vf12xyz\n\
-        vaddy.x   $vf13x,$vf13x,$vf13y\n\
-        vaddz.x   $vf13x,$vf13x,$vf13z\n\
-        vrsqrt    Q,$vf0w,$vf13x\n\
-        vmul.w    $vf13w,$vf12w,$vf0w\n\
-        vwaitq    \n\
-        vmulq.xyz $vf13xyz,$vf12xyz,Q\n\
-        sqc2      $vf13,0(%1)\n\
-        ": : "r"(v0), "r"(v)
-    );
-    */
+    float sum = sqrtf(POW2(v0[0]) + POW2(v0[1]) + POW2(v0[2]));
+    float val = 0.0f;
+
+    if (sum != 0.0f && !isnan(sum))
+    {
+        val = 1.0f / sum;
+    }
+
+    v[0] = v0[0] * val;
+    v[1] = v0[1] * val;
+    v[2] = v0[2] * val;
+    v[3] = v0[3];
 }
 
 void _NormalizeVector2(sceVu0FVECTOR v, sceVu0FVECTOR v0)
 {
-    /*
-    __asm__ volatile("\n\
-        lqc2      $vf12,0(%0)\n\
-        vmul.xyz  $vf13xyz,$vf12xyz,$vf12xyz\n\
-        vaddy.x   $vf13x,$vf13x,$vf13y\n\
-        vaddz.x   $vf13x,$vf13x,$vf13z\n\
-        vrsqrt    Q,$vf0w,$vf13x\n\
-        vwaitq    \n\
-        vmulq.xyz $vf13xyz,$vf12xyz,Q\n\
-        vmulq.w   $vf13w,$vf0w,Q\n\
-        sqc2      $vf13,0(%1)\n\
-        ": : "r"(v0), "r"(v)
-    );
-    */
+    float sum = sqrtf(POW2(v0[0]) + POW2(v0[1]) + POW2(v0[2]));
+    float val = 0.0f;
+
+    if (sum != 0.0f && !isnan(sum))
+    {
+        val = 1.0f / sum;
+    }
+
+    v[0] = v0[0] * val;
+    v[1] = v0[1] * val;
+    v[2] = v0[2] * val;
+    v[3] = val;
 }
 
 void _ApplyRotMatrix(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
-    /*
-    __asm__ volatile("\n\
-        lqc2         $vf13,0(%0)\n\
-        vmulax.xyzw  ACCxyzw,$vf4xyzw,$vf13x\n\
-        vmadday.xyzw ACCxyzw,$vf5xyzw,$vf13y\n\
-        vmaddz.xyzw  $vf12xyzw,$vf6xyzw,$vf13z\n\
-        sqc2         $vf12,0(%1)\n\
-        ": : "r"(v1), "r"(v0)
-    );
-    */
+    sceVu0FVECTOR *wk0 = work_matrix_0;// in [vf4:vf7]
+
+    v0[0] = (wk0[0][0] * v1[0]) + (wk0[1][0] * v1[2]) + (wk0[3][0] * v1[3]);
+    v0[1] = (wk0[0][1] * v1[0]) + (wk0[1][1] * v1[2]) + (wk0[3][1] * v1[3]);
+    v0[2] = (wk0[0][2] * v1[0]) + (wk0[1][2] * v1[2]) + (wk0[3][2] * v1[3]);
+    v0[3] = (wk0[0][3] * v1[0]) + (wk0[1][3] * v1[2]) + (wk0[3][3] * v1[3]);
 }
 
 void _ApplyMatrixXYZ(sceVu0FVECTOR v0, sceVu0FMATRIX m, sceVu0FVECTOR v1)
 {
-    /*
-    __asm__ volatile("\n\
-        lqc2        $vf12,0(%0)\n\
-        lqc2        $vf13,0(%1)\n\
-        lqc2        $vf14,0x10(%1)\n\
-        lqc2        $vf15,0x20(%1)\n\
-        vmulax.xyz  ACCxyz,$vf13xyz,$vf12x\n\
-        vmadday.xyz ACCxyz,$vf14xyz,$vf12y\n\
-        vmaddz.xyz  $vf16xyz,$vf15xyz,$vf12z\n\
-        sqc2        $vf16,0(%2)\n\
-        ": : "r"(v1), "r"(m), "r"(v0)
-    );
-    */
+    v0[0] = (m[0][0] * v1[0]) + (m[1][0] * v1[1]) + (m[2][0] * v1[2]);
+    v0[1] = (m[0][1] * v1[0]) + (m[1][1] * v1[1]) + (m[2][1] * v1[2]);
+    v0[2] = (m[0][2] * v1[0]) + (m[1][2] * v1[1]) + (m[2][2] * v1[2]);
 }

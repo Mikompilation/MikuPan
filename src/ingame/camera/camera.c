@@ -1,4 +1,5 @@
 #include "common.h"
+#include "graphics/graph3d/sglib.h"
 
 #include <common/ul_math.h>
 #include <graphics/graph2d/effect.h>
@@ -1681,7 +1682,11 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                     tc0[3] = 0.0f;
 
                     tca1 = GetDistV(tc0, tc1);
-                    sceVu0DivVector(comple_adjr, tc1, tca1 / tca0);
+
+                    if (tca0 != 0.0f && !isnan(tca0))
+                    {
+                        sceVu0DivVector(comple_adjr, tc1, tca1 / tca0);
+                    }
                 }
             }
         }

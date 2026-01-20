@@ -40,7 +40,7 @@ void SgSortUnitKind(void *sgd_top, int num);
 void _SetLWMatrix0(sceVu0FMATRIX m0);
 void _SetLWMatrix1(sceVu0FMATRIX m0);
 void _SetRotTransPersMatrix(sceVu0FMATRIX m0);
-void _CalcVertex(float *dp, float *v, float *n);
+void _CalcVertex(sceVu0FVECTOR *dp, float *v, float *n);
 void _vfito0(int *v0);
 
 #endif // GRAPHICS_GRAPH3D_SGSU_H

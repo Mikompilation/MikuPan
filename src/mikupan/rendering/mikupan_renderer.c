@@ -353,9 +353,9 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2, float x3,
     glad_glBufferData(GL_ARRAY_BUFFER, sizeof(vtx), vtx, GL_DYNAMIC_DRAW);
 
     glad_glUniform4f(glad_glGetUniformLocation(MikuPan_GetCurrentShaderProgram(), "uColor"),
-                r / 255.0f,
-                g / 255.0f,
-                b / 255.0f,
+                AdjustAlpha(r) / 255.0f,
+                AdjustAlpha(g) / 255.0f,
+                AdjustAlpha(b) / 255.0f,
                 AdjustAlpha(a) / 255.0f);
 
     glad_glEnable(GL_BLEND);
@@ -405,9 +405,9 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
 
     // Color + alpha (SDL-compatible)
     glad_glUniform4f(glad_glGetUniformLocation(program, "uColor"),
-                r / 255.0f,
-                g / 255.0f,
-                b / 255.0f,
+                AdjustAlpha(r) / 255.0f,
+                AdjustAlpha(g) / 255.0f,
+                AdjustAlpha(b) / 255.0f,
                 AdjustAlpha(a) / 255.0f);
 
     glad_glEnable(GL_BLEND);
@@ -551,8 +551,15 @@ void MikuPan_SetModelTransform(unsigned int *prim)
 
     int modelLoc = glad_glGetUniformLocation(current_program, "model");
 
+    //lcp[prim[2]].lwmtx[1][2] = 0.0f;
+    //lcp[prim[2]].lwmtx[2][1] = 0.0f;
+    //lcp[prim[2]].lwmtx[3][0] = 0.0f;
+    //lcp[prim[2]].lwmtx[3][1] = 0.0f;
+    //lcp[prim[2]].lwmtx[3][2] = 0.0f;
+    //lcp[prim[2]].lwmtx[3][3] = 1.0f;
+
     glad_glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
-                            (float *) &lcp[prim[2]].lwmtx[0]);
+                            (float *) &lcp[prim[1]].lwmtx[0]);
 
     MikuPan_RestoreCurrentShaderProgram();
 }

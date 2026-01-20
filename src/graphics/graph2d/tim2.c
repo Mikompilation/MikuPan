@@ -1876,8 +1876,8 @@ void DispSprD(DISP_SPRT *s)
     u_int yy[4];
     u_int uu[4];
     u_int vv[4];
-    sceVu0IVECTOR itmp;
-    sceVu0FVECTOR ftmp;
+    sceVu0IVECTOR itmp = {0};
+    sceVu0FVECTOR ftmp = {0};
 
     matt = s->att;
     mu = s->u;

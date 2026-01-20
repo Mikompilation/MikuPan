@@ -22,13 +22,37 @@
 #include "iop/iopmain.h"
 #include "mikupan/gs/texture_manager_c.h"
 #include "os/eeiop/se_cmd.h"
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <mikupan/mikupan_memory.h>
 #include <sce/libpad.h>
 
+#include <fenv.h>
+#include <xmmintrin.h>
+
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
+//#if _DEBUG
+
+    fenv_t env;
+    fegetenv(&env);
+
+    env.__control_word &= ~(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+    fesetenv(&env);
+
+    /* Enable SSE exceptions */
+    unsigned int mxcsr = _mm_getcsr();
+    mxcsr &= ~(
+        _MM_MASK_DIV_ZERO |
+        _MM_MASK_INVALID |
+        _MM_MASK_OVERFLOW
+    );
+
+    _mm_setcsr(mxcsr);
+
+//#endif
+
     SDL_AppResult result = MikuPan_Init();
     MikuPan_InitPs2Memory();
 

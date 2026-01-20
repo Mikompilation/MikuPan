@@ -1325,7 +1325,6 @@ void motInversKinematics(SgCOORDUNIT *cp, sceVu0FVECTOR target, u_int *top_addr,
         sceVu0ScaleVector(end_root, end_root, dist);
         sceVu0AddVector(end_eff, end_root, root);
 
-
     } while (parent_id != 1);
 }
 
