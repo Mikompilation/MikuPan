@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-#include <stdint.h>
-
 typedef struct {
 	u_int *sgd_room;
 	u_int *sgd_furn[30];
@@ -31,8 +29,8 @@ typedef struct {
 	u_int padding;
 } AREA_WRK;
 
-// extern u_char area_dat[11][6];
-// extern u_char one_room_load_ok;
+extern u_char area_dat[11][6];
+extern u_char one_room_load_ok;
 extern AREA_WRK area_wrk;
 
 void MapAreaInit();
@@ -43,7 +41,7 @@ u_char GetRoomArea(u_char room_id);
 int SetAreaLoadRoom(u_char mode, u_char area_no);
 void AreaRoomAllLoadInit();
 int AreaRoomAllLoad(u_char area_no);
-int64_t GetEmptyRoomAddr();
+int GetEmptyRoomAddr();
 // void ClearDispRoom(int wrk_no);
 
 #endif // INGAME_MAP_MAP_AREA_H
