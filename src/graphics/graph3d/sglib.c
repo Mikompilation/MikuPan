@@ -536,7 +536,7 @@ float SgAtan2f(float y, float x)
 
 float SgSqrtf(float len)
 {
-    return sqrtf(len);
+    return sqrt(fabs(len));
 }
 
 float SgRSqrtf(float len)

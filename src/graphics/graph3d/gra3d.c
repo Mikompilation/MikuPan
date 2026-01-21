@@ -2259,7 +2259,7 @@ void CalcGirlCoord()
         }
         else if (motSetCoord(ani_mdl, 0xff) != 0)
         {
-            plyr_wrk.sta = plyr_wrk.sta | 0x20;
+            plyr_wrk.sta |= 0x20;
             plyr_wrk.mvsta &= ~0x200000;
         }
 

@@ -58,8 +58,26 @@ void sceVu0Normalize(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
     v0[3] = v1[3];  // Preserve W
 }
 
+static u_char vectorIsEqual(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
+{
+    int len = memcmp(v0, v1, sizeof(v0));
+    if (!len)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 float sceVu0InnerProduct(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
+    if (vectorIsEqual(v0, v1))
+    {
+        return 0.0f;
+    }
+
     return v0[0] * v1[0] +
        v0[1] * v1[1] +
        v0[2] * v1[2] +

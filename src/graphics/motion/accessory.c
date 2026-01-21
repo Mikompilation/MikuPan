@@ -25,7 +25,7 @@
 #include "graphics/motion/mdldat.h"
 #include "graphics/motion/acs_dat.h"
 
-#include <c++/math.h>
+#include <math.h>
 #include <string.h>
 
 // #include <cstdlib.h>
