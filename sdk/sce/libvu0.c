@@ -12,7 +12,7 @@ void sceVu0ScaleVectorXYZ(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float s)
     //v0[0] = v1[0] * s;  // X
     //v0[1] = v1[1] * s;  // Y
     //v0[2] = v1[2] * s;  // Z
-    //v0[3] = v1[3];      // W (unchanged)
+    v0[3] = v1[3];      // W (unchanged)
 }
 
 void sceVu0AddVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1, sceVu0FVECTOR v2)
@@ -125,10 +125,10 @@ void sceVu0MulMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FMATRIX m2)
 
 void sceVu0InversMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 {
-    glm_mat4_inv(m1, m0);
+    //glm_mat4_inv_fast(m1, m0);
+    //glm_mat4_inv(m1, m0);
 
-    /*
-    sceVu0FMATRIX rotT;  // temporary transpose of rotation part
+    sceVu0FMATRIX rotT = {0};  // temporary transpose of rotation part
 
     // Transpose the upper-left 3x3 rotation part
     rotT[0][0] = m1[0][0];
@@ -164,7 +164,6 @@ void sceVu0InversMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
     m0[3][1] = 0.0f;
     m0[3][2] = 0.0f;
     m0[3][3] = 1.0f;
-    */
 }
 
 void sceVu0CopyMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)

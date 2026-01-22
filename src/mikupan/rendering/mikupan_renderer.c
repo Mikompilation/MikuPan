@@ -83,7 +83,7 @@ SDL_AppResult MikuPan_Init()
 
     // Allocate max size once (no data yet)
     glad_glBufferData(GL_ARRAY_BUFFER,
-                      1024*1024,
+                      1024*32,
                       NULL,
                       GL_DYNAMIC_DRAW);
 
