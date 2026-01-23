@@ -2,8 +2,6 @@
 
 #include "cglm/call/mat4.h"
 #include "graphics/graph3d/sglib.h"
-
-#include <intrin.h>
 #include <math.h>
 
 void sceVu0ScaleVectorXYZ(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float s)
