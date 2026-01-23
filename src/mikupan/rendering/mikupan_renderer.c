@@ -35,6 +35,7 @@ MikuPan_TextureInfo* curr_fnt_texture = NULL;
 GLuint VAO, VBO = 0;
 GLuint gSpriteVAO, gSpriteVBO = 0;
 GLuint gShapeVAO, gShapeVBO = 0;
+GLuint gBBVAO, gBBVBO = 0;
 
 SDL_AppResult MikuPan_Init()
 {
@@ -123,6 +124,26 @@ SDL_AppResult MikuPan_Init()
     glad_glBindBuffer(GL_ARRAY_BUFFER, gShapeVBO);
     glad_glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
     glad_glEnableVertexAttribArray(0);
+
+    /// BoundingBox
+    glad_glGenVertexArrays(1, &gBBVAO);
+    glad_glGenBuffers(1, &gBBVBO);
+
+    glad_glBindVertexArray(gBBVAO);
+    glad_glBindBuffer(GL_ARRAY_BUFFER, gBBVBO);
+
+    glad_glBufferData(GL_ARRAY_BUFFER,
+                 sizeof(float[4]) * 24,
+                 NULL,
+                 GL_DYNAMIC_DRAW);
+
+    // position only
+    glad_glEnableVertexAttribArray(0);
+    glad_glVertexAttribPointer(
+        0, 4, GL_FLOAT, GL_FALSE,
+        sizeof(float[4]),
+        (void *)0
+    );
 
     return SDL_APP_CONTINUE;
 }
@@ -419,6 +440,30 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
     glad_glUseProgram(0);
 }
 
+void MikuPan_RenderBoundingBox(sceVu0FVECTOR* vertices)
+{
+    MikuPan_SetShaderProgramWithBackup(BOUNDING_BOX_SHADER);
+
+    glad_glBindVertexArray(gBBVAO);
+    glad_glBindBuffer(GL_ARRAY_BUFFER, gBBVBO);
+
+    glad_glBufferSubData(GL_ARRAY_BUFFER, 0,
+                    sizeof(float[4]) * 24,
+                    vertices);
+
+    glad_glDisable(GL_CULL_FACE);
+    glad_glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    for (int i = 0; i < 6; i++)
+    {
+        glad_glDrawArrays(GL_LINE_LOOP, i * 4, 4);
+    }
+
+    glad_glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    MikuPan_RestoreCurrentShaderProgram();
+}
+
 void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
                           u_char g, u_char b, u_char a, MikuPan_TextureInfo* texture_info)
 {
@@ -544,6 +589,27 @@ void MikuPan_EndFrame()
     SDL_GL_SwapWindow(window);
 }
 
+void MikuPan_SetModelTransformMatrix(sceVu0FVECTOR* m)
+{
+    MikuPan_SetShaderProgramWithBackup(DEFAULT_SHADER);
+    u_int current_program = MikuPan_GetCurrentShaderProgram();
+
+    int modelLoc = glad_glGetUniformLocation(current_program, "model");
+
+    glad_glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
+                            (float *) m);
+
+    MikuPan_SetCurrentShaderProgram(BOUNDING_BOX_SHADER);
+    current_program = MikuPan_GetCurrentShaderProgram();
+
+    modelLoc = glad_glGetUniformLocation(current_program, "model");
+
+    glad_glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
+                            (float *) m);
+
+    MikuPan_RestoreCurrentShaderProgram();
+}
+
 void MikuPan_SetModelTransform(unsigned int *prim)
 {
     MikuPan_SetShaderProgramWithBackup(DEFAULT_SHADER);
@@ -551,12 +617,13 @@ void MikuPan_SetModelTransform(unsigned int *prim)
 
     int modelLoc = glad_glGetUniformLocation(current_program, "model");
 
-    //lcp[prim[2]].lwmtx[1][2] = 0.0f;
-    //lcp[prim[2]].lwmtx[2][1] = 0.0f;
-    //lcp[prim[2]].lwmtx[3][0] = 0.0f;
-    //lcp[prim[2]].lwmtx[3][1] = 0.0f;
-    //lcp[prim[2]].lwmtx[3][2] = 0.0f;
-    //lcp[prim[2]].lwmtx[3][3] = 1.0f;
+    glad_glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
+                            (float *) &lcp[prim[1]].lwmtx[0]);
+
+    MikuPan_SetShaderProgramWithBackup(BOUNDING_BOX_SHADER);
+    current_program = MikuPan_GetCurrentShaderProgram();
+
+    modelLoc = glad_glGetUniformLocation(current_program, "model");
 
     glad_glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
                             (float *) &lcp[prim[1]].lwmtx[0]);
@@ -572,16 +639,10 @@ void MikuPan_Camera(const SgCAMERA *camera)
     MikuPan_SetShaderProgramWithBackup(DEFAULT_SHADER);
 
     mat4 mtx = {0};
-    vec3 cam = {camera->p[0], camera->p[1], camera->p[2]};
-
-    // camera->zd
-    vec3 zd = {camera->i[0] - cam[0], camera->i[1] - cam[1],
-               camera->i[2] - cam[2]};
     vec3 center = {0};
-    glm_vec3_add(cam, zd, center);
+    glm_vec3_add(camera->p, camera->zd, center);
 
     // === Default up vector (PS2 uses Y-down) ===
-    vec3 default_up = {0.0f, 1.0f, 0.0f};
     vec3 up = {0};
 
     // === Apply roll (rotation around Z) ===
@@ -589,15 +650,13 @@ void MikuPan_Camera(const SgCAMERA *camera)
     vec3 axis = {0.0f, 0.0f, 1.0f};
     glm_mat4_identity(roll);
     glm_rotate(roll, -camera->roll, axis);
-    glm_mat4_mulv3(roll, default_up, 0.0f, up);
+    glm_mat4_mulv3(roll, camera->yd, 1.0f, up);
 
     // === View matrix (equivalent to sceVu0CameraMatrix) ===
-    glm_lookat(cam, center, up, mtx);
+    glm_lookat(camera->p, center, up, mtx);
 
     u_int current_program = MikuPan_GetCurrentShaderProgram();
-
     int viewLoc = glad_glGetUniformLocation(current_program, "view");
-
     glad_glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *) &mtx);
 
     // Projection
@@ -607,6 +666,17 @@ void MikuPan_Camera(const SgCAMERA *camera)
                     projection);
 
     int projectionLoc =
+        glad_glGetUniformLocation(current_program, "projection");
+
+    glad_glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, (float *) &projection);
+
+    MikuPan_SetCurrentShaderProgram(BOUNDING_BOX_SHADER);
+
+    viewLoc = glad_glGetUniformLocation(current_program, "view");
+
+    glad_glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *) &mtx);
+
+    projectionLoc =
         glad_glGetUniformLocation(current_program, "projection");
 
     glad_glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, (float *) &projection);

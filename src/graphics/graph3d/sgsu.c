@@ -532,6 +532,7 @@ void SetCoordData(u_int *prim)
 
         if (abs == 0.0f)
         {
+            llp->workm[3][3] = 0.0f;
             continue;
         }
 

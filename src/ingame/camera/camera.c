@@ -945,8 +945,8 @@ void FinderInCameraCtrl()
 void NormalCameraCtrl()
 {
     MAP_CAM_INFO mci;
-    SgCAMERA tc;
-    SgCAMERA tc2;
+    SgCAMERA tc = {0};
+    SgCAMERA tc2 = {0};
     static SgCAMERA oc;
 
     if (dbg_wrk.cam_mode == 2)
@@ -1370,7 +1370,6 @@ void SetCamPos4(SgCAMERA *tc, MAP_CAM_INFO *mci)
         tc->roll = mci->mcd->roll[0] + bv[0];
 
         RotLimitChk(&tc->roll);
-
     }
     else
     {

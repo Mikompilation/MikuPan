@@ -44,6 +44,7 @@ void DspMemSavePoint(u_char msk, u_char msg, u_char fdt, u_char svp, u_char alt,
 
 char SaveCamChk()
 {
+    return 0;
 }
 
 char AlbmSlct(u_char csr3, u_char step, u_char alp_max, u_char ini)

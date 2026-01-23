@@ -154,4 +154,5 @@ void CallSoulTellingCameraIn(float* soul_pos, float* mic_eye_pos, int time)
 
 int SoulTellingCameraInCtrl()
 {
+    return 0;
 }

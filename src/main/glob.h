@@ -199,6 +199,8 @@ typedef struct {
 	sceVu0FVECTOR mv;
 	sceVu0FVECTOR op;
 	sceVu0FVECTOR rock_adj;
+
+    /// Model Waist Position
 	sceVu0FVECTOR bwp;
 	sceVu0FVECTOR cp_old;
 	sceVu0FVECTOR soulp;

@@ -1,6 +1,7 @@
 #include "sgcam.h"
 #include "cglm/call/mat4.h"
 #include "common.h"
+#include "sgsup.h"
 #include "typedefs.h"
 
 #include <stdio.h>
@@ -13,6 +14,7 @@
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sgsu.h"
+#include "mikupan/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #include <math.h>
@@ -42,7 +44,8 @@ void SetViewScreenClipMatrix(SgCAMERA *camera, float scrz)
     float zmax;
     float farz;
     float nearz;
-    sceVu0FMATRIX mt;
+    sceVu0FMATRIX mt = {0};
+    mat4 vs_copy = {0};
 
     zmin = camera->zmin;
     zmax = camera->zmax;
@@ -78,7 +81,9 @@ void SetViewScreenClipMatrix(SgCAMERA *camera, float scrz)
     mt[3][1] = camera->cy;
     mt[3][2] = cz;
 
-    sceVu0MulMatrix(camera->vs, mt, camera->vs);
+    glm_mat4_copy(camera->vs, vs_copy);
+
+    sceVu0MulMatrix(camera->vs, mt, vs_copy);
 
     sceVu0UnitMatrix(camera->vc);
 
@@ -106,6 +111,11 @@ void SgSetRefCamera(SgCAMERA *camera)
     float scrz;
 
     nowcamera = camera;
+
+    if (camera->fov == 0.0f)
+    {
+        camera->fov = 90.0f;
+    }
 
     scrz = clip_volumev[1] / tanf(camera->fov * 0.5f) * 2;
 
@@ -238,7 +248,7 @@ void SetClipValue(float minx, float maxx, float miny, float maxy)
 
 void printClipValue()
 {
-    printf("clip_value_check %d\n", clip_value_check);
+    info_log("clip_value_check %d\n", clip_value_check);
 
     printVectorC(clip_value, "clip_value");
 }
@@ -336,15 +346,6 @@ void printBoundingBox(u_int *prim)
 
     printVectorC(*(sceVu0FVECTOR *) &prim[4], "min");
     printVectorC(*(sceVu0FVECTOR *) &prim[32], "max");
-
-    if (0)
-    {
-        // this string is part of .rodata but it's not
-        // referenced anywhere. this looks like a
-        // reasonable place for it, as it may have
-        // been used to debug min and/or max vectors.
-        printf("%d:%x %x %x %x\n");
-    }
 }
 
 SgCAMERA *nowcamera = NULL;
@@ -516,9 +517,10 @@ int CheckBoundingBox(u_int *prim)
     vec_6e0 = (sceVu0FVECTOR *) &SCRATCHPAD[0x6e0];
 
     MikuPan_SetModelTransform(prim);
+    //DrawBoundingBox((sceVu0FVECTOR*)&prim[4]);
 
     // Re-enable this line to have stuff render, right now, nothing is within BoundingBox
-    //return 1;
+    return 1;
 
     lcp[prim[2]].camin = 0;
 

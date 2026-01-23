@@ -196,13 +196,15 @@ void DrawBoundingBox(sceVu0FVECTOR *box)
     {
         Vu0CopyVector((float *)datap, (float *)&box[boxmesh[i]]);
 
-        ((float *)datap)[4] = 0.0f;
-        ((float *)datap)[5] = 1.0f;
-        ((float *)datap)[6] = 0.0f;
-        ((float *)datap)[7] = 1.0f;
+        //((float *)datap)[4] = 0.0f;
+        //((float *)datap)[5] = 1.0f;
+        //((float *)datap)[6] = 0.0f;
+        //((float *)datap)[7] = 1.0f;
 
-        datap += 8;
+        datap += 4;
     }
+
+    MikuPan_RenderBoundingBox((sceVu0FVECTOR*)&startp[8]);
 
     for (i = 0; i < 6; i++)
     {

@@ -19,8 +19,20 @@
 #include "main/glob.h"
 #include "mdlact.h"
 
+#include <math.h>
 #include <mikupan/mikupan_memory.h>
 #include <string.h>
+
+#define SineCosineSafetyCheck(sine, cosine) \
+if (fabsf(cosine) == 1.0f)\
+{\
+sine = 0.0f;\
+}\
+\
+if (fabsf(sine) == 1.0f)\
+{\
+cosine = 0.0f;\
+}\
 
 typedef struct {
     u_char file_id[4];
@@ -427,7 +439,7 @@ u_char motSetCoord(ANI_CTRL *ani_ctrl, u_char work_id)
 
     m_ctrl = &ani_ctrl->mot;
 
-    motSetInterpMatrix(ani_ctrl, m_start, m_end);
+    //motSetInterpMatrix(ani_ctrl, m_start, m_end);
     motInterpAnm(ani_ctrl, m_start, m_end);
 
     ani_end = 0;
@@ -1083,6 +1095,8 @@ void motInterpMatrix(sceVu0FMATRIX interp, sceVu0FMATRIX m0, sceVu0FMATRIX m1, f
         cos = SgCosf(r);
         sin = SgSinf(r);
 
+        SineCosineSafetyCheck(sin, cos);
+
         val = 1.0f - cos;
 
         sceVu0UnitMatrix(m);
@@ -1228,23 +1242,31 @@ void LocalRotMatrixX(sceVu0FMATRIX m0, sceVu0FMATRIX m1, float rx)
     rot[1][1] = SgCosf(rx);
     rot[2][1] = -SgSinf(rx);
 
+    SineCosineSafetyCheck(rot[2][1], rot[1][1]);
+
     rot[1][2] = SgSinf(rx);
     rot[2][2] = SgCosf(rx);
+
+    SineCosineSafetyCheck(rot[1][2], rot[2][2]);
 
     sceVu0MulMatrix(m0, m1, rot);
 }
 
 void LocalRotMatrixY(sceVu0FMATRIX m0, sceVu0FMATRIX m1, float ry)
 {
-    sceVu0FMATRIX rot;
+    sceVu0FMATRIX rot = {0};
 
     sceVu0UnitMatrix(rot);
 
     rot[0][0] = SgCosf(ry);
     rot[0][2] = SgSinf(ry);
 
+    SineCosineSafetyCheck(rot[0][2],  rot[0][0]);
+
     rot[2][0] = -SgSinf(ry);
     rot[2][2] = SgCosf(ry);
+
+    SineCosineSafetyCheck(rot[2][0],  rot[2][2]);
 
     sceVu0MulMatrix(m0,m1,rot);
 }
@@ -1258,8 +1280,12 @@ void LocalRotMatrixZ(sceVu0FMATRIX m0, sceVu0FMATRIX m1, float rz)
     rot[0][0] = SgCosf(rz);
     rot[1][0] = -SgSinf(rz);
 
+    SineCosineSafetyCheck(rot[1][0],  rot[0][0]);
+
     rot[0][1] = SgSinf(rz);
     rot[1][1] = SgCosf(rz);
+
+    SineCosineSafetyCheck(rot[0][1],  rot[1][1]);
 
     sceVu0MulMatrix(m0, m1, rot);
 }

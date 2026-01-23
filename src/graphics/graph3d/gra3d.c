@@ -12,34 +12,35 @@
 #include "sce/libdma.h"
 #include "sce/sifdev.h"
 
-#include "os/system.h"
-#include "main/glob.h"
+#include "graphics/graph2d/effect_ene.h"
+#include "graphics/graph2d/g2d_main.h"
+#include "graphics/graph2d/tim2.h"
+#include "graphics/graph3d/libsg.h"
+#include "graphics/graph3d/load3d.h"
+#include "graphics/graph3d/mirror.h"
+#include "graphics/graph3d/object.h"
+#include "graphics/graph3d/sgcam.h"
+#include "graphics/graph3d/sgdma.h"/// Normally not included for matching
+#include "graphics/graph3d/sglib.h"
+#include "graphics/graph3d/sglight.h"
+#include "graphics/graph3d/sgsgd.h"
+#include "graphics/graph3d/sgsu.h"
+#include "graphics/graph3d/sgsup.h"
+#include "graphics/graph3d/shadow.h"
+#include "graphics/motion/accessory.h"
+#include "graphics/motion/acs_dat.h"
+#include "graphics/motion/mdlact.h"
+#include "graphics/motion/mdldat.h"
+#include "graphics/motion/mdlwork.h"
+#include "graphics/motion/mime.h"
+#include "graphics/motion/motion.h"
+#include "graphics/scene/scene.h"
 #include "ingame/ig_glob.h"
 #include "ingame/map/door_ctl.h"
 #include "ingame/map/furn_dat.h"
-#include "graphics/scene/scene.h"
-#include "graphics/motion/mime.h"
-#include "graphics/motion/motion.h"
-#include "graphics/motion/mdldat.h"
-#include "graphics/motion/mdlact.h"
-#include "graphics/motion/acs_dat.h"
-#include "graphics/motion/mdlwork.h"
-#include "graphics/motion/accessory.h"
-#include "graphics/graph2d/tim2.h"
-#include "graphics/graph2d/effect_ene.h"
-#include "graphics/graph3d/sgsu.h"
-#include "graphics/graph3d/sgcam.h"
-#include "graphics/graph3d/libsg.h"
-#include "graphics/graph3d/sglib.h"
-#include "graphics/graph3d/shadow.h"
-#include "graphics/graph2d/g2d_main.h"
-#include "graphics/graph3d/sgdma.h" /// Normally not included for matching
-#include "graphics/graph3d/sglight.h"
-#include "graphics/graph3d/mirror.h"
-#include "graphics/graph3d/load3d.h"
-#include "graphics/graph3d/sgsgd.h"
-#include "graphics/graph3d/sgsup.h"
-#include "graphics/graph3d/object.h"
+#include "main/glob.h"
+#include "mikupan/rendering/mikupan_renderer.h"
+#include "os/system.h"
 
 #define SCR_WIDTH 640
 #define SCR_HEIGHT 224
@@ -2149,7 +2150,12 @@ int CheckModelBoundingBox(sceVu0FMATRIX lwmtx, sceVu0FVECTOR *bbox)
     tmpvec = (sceVu0FVECTOR *)&ps2_virtual_scratchpad[0x620];
     ed = (sceVu0FVECTOR *)&ps2_virtual_scratchpad[0x6a0]; // `ed[i]` can be replaced with `tmpvec[8+i]`
 
-    _SetMulMatrix(SgCMVtx,lwmtx);
+    _SetMulMatrix(SgCMVtx, lwmtx);
+
+    //MikuPan_SetModelTransformMatrix((sceVu0FVECTOR*)work_matrix_0);
+    //DrawBoundingBox(bbox);
+
+    return 1;
 
     if (clip_value_check != 0)
     {
@@ -2340,7 +2346,6 @@ void DrawGirl(int in_mirror)
 
     if (((plyr_wrk.sta & 0x10) == 0 || in_mirror != 0) && CheckModelBoundingBox(transmtx, tgirlbox) != 0)
     {
-
         SetMyLightObj(&girls_light, &plyr_wrk.mylight, camera.zd, plyr_wrk.bwp);
 
         if (disp3d_girl == 0)
@@ -2352,9 +2357,11 @@ void DrawGirl(int in_mirror)
         SgSortUnitKind(hs, -1);
         DrawGirlSubObj(ani_mdl[0].mpk_p, 0x7f);
 
+        MikuPan_SetModelTransformMatrix(cp->lwmtx);
+        DrawBoundingBox(girlbox);
+
         if (in_mirror != 0 || plyr_wrk.mode != 1)
         {
-
             DispPlyrAcs(pgirlbase, pgirlacs[0], &plyracs_ctrl[0], 6);
         }
 
@@ -2368,7 +2375,6 @@ void DrawGirl(int in_mirror)
 
     if (room_wrk.disp_no[0] == 0x18 || (room_wrk.disp_no[0] == 0x3 && plyr_wrk.move_box.pos[1] <= -1200.0f))
     {
-
         SetShadowAssignGroup(1);
     }
     else

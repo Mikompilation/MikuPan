@@ -1,4 +1,5 @@
 #include "sglib.h"
+#include "cglm/mat4.h"
 #include "common.h"
 #include "typedefs.h"
 
@@ -593,17 +594,19 @@ void _MulRotMatrix(sceVu0FMATRIX ans, sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 
 void _MulMatrix(sceVu0FMATRIX ans, sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 {
-    for (int i = 0; i < 4; ++i)
-    {
-        ans[i][0] = (m0[0][0] * m1[i][0]) + (m0[1][0] * m1[i][1])
-                    + (m0[2][0] * m1[i][2]) + (m0[3][0] * m1[i][3]);
-        ans[i][1] = (m0[0][1] * m1[i][0]) + (m0[1][1] * m1[i][1])
-                    + (m0[2][1] * m1[i][2]) + (m0[3][1] * m1[i][3]);
-        ans[i][2] = (m0[0][2] * m1[i][0]) + (m0[1][2] * m1[i][1])
-                    + (m0[2][2] * m1[i][2]) + (m0[3][2] * m1[i][3]);
-        ans[i][3] = (m0[0][3] * m1[i][0]) + (m0[1][3] * m1[i][1])
-                    + (m0[2][3] * m1[i][2]) + (m0[3][3] * m1[i][3]);
-    }
+    glm_mat4_mul(m0, m1, ans);
+
+    //for (int i = 0; i < 4; ++i)
+    //{
+    //    ans[i][0] = (m0[0][0] * m1[i][0]) + (m0[1][0] * m1[i][1])
+    //                + (m0[2][0] * m1[i][2]) + (m0[3][0] * m1[i][3]);
+    //    ans[i][1] = (m0[0][1] * m1[i][0]) + (m0[1][1] * m1[i][1])
+    //                + (m0[2][1] * m1[i][2]) + (m0[3][1] * m1[i][3]);
+    //    ans[i][2] = (m0[0][2] * m1[i][0]) + (m0[1][2] * m1[i][1])
+    //                + (m0[2][2] * m1[i][2]) + (m0[3][2] * m1[i][3]);
+    //    ans[i][3] = (m0[0][3] * m1[i][0]) + (m0[1][3] * m1[i][1])
+    //                + (m0[2][3] * m1[i][2]) + (m0[3][3] * m1[i][3]);
+    //}
 }
 
 void _SetMulMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
@@ -611,17 +614,19 @@ void _SetMulMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
     // This is the same as _MulMatrix, but it "returns"
     sceVu0FVECTOR *wk0 = work_matrix_0;// in [vf4:vf7]
 
-    for (int i = 0; i < 4; ++i)
-    {
-        wk0[i][0] = (m0[0][0] * m1[i][0]) + (m0[1][0] * m1[i][1])
-                    + (m0[2][0] * m1[i][2]) + (m0[3][0] * m1[i][3]);
-        wk0[i][1] = (m0[0][1] * m1[i][0]) + (m0[1][1] * m1[i][1])
-                    + (m0[2][1] * m1[i][2]) + (m0[3][1] * m1[i][3]);
-        wk0[i][2] = (m0[0][2] * m1[i][0]) + (m0[1][2] * m1[i][1])
-                    + (m0[2][2] * m1[i][2]) + (m0[3][2] * m1[i][3]);
-        wk0[i][3] = (m0[0][3] * m1[i][0]) + (m0[1][3] * m1[i][1])
-                    + (m0[2][3] * m1[i][2]) + (m0[3][3] * m1[i][3]);
-    }
+    glm_mat4_mul(m0, m1, work_matrix_0);
+
+    //for (int i = 0; i < 4; ++i)
+    //{
+    //    wk0[i][0] = (m0[0][0] * m1[i][0]) + (m0[1][0] * m1[i][1])
+    //                + (m0[2][0] * m1[i][2]) + (m0[3][0] * m1[i][3]);
+    //    wk0[i][1] = (m0[0][1] * m1[i][0]) + (m0[1][1] * m1[i][1])
+    //                + (m0[2][1] * m1[i][2]) + (m0[3][1] * m1[i][3]);
+    //    wk0[i][2] = (m0[0][2] * m1[i][0]) + (m0[1][2] * m1[i][1])
+    //                + (m0[2][2] * m1[i][2]) + (m0[3][2] * m1[i][3]);
+    //    wk0[i][3] = (m0[0][3] * m1[i][0]) + (m0[1][3] * m1[i][1])
+    //                + (m0[2][3] * m1[i][2]) + (m0[3][3] * m1[i][3]);
+    //}
 }
 
 void _CalcLenASM(sceVu0FVECTOR out, sceVu0FVECTOR v0, sceVu0FVECTOR v1)
@@ -640,34 +645,14 @@ void _CalcLenASM(sceVu0FVECTOR out, sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 
 void _NormalizeVector(sceVu0FVECTOR v, sceVu0FVECTOR v0)
 {
-    float sum = sqrtf(POW2(v0[0]) + POW2(v0[1]) + POW2(v0[2]));
-    float val = 0.0f;
-
-    if (sum != 0.0f && !isnan(sum))
-    {
-        val = 1.0f / sum;
-    }
-
-    v[0] = v0[0] * val;
-    v[1] = v0[1] * val;
-    v[2] = v0[2] * val;
-    v[3] = v0[3];
+    glm_vec3_normalize_to(v0, v);
+    v[3] = v0[3];  // Preserve W
 }
 
 void _NormalizeVector2(sceVu0FVECTOR v, sceVu0FVECTOR v0)
 {
-    float sum = sqrtf(POW2(v0[0]) + POW2(v0[1]) + POW2(v0[2]));
-    float val = 0.0f;
-
-    if (sum != 0.0f && !isnan(sum))
-    {
-        val = 1.0f / sum;
-    }
-
-    v[0] = v0[0] * val;
-    v[1] = v0[1] * val;
-    v[2] = v0[2] * val;
-    v[3] = val;
+    glm_vec3_normalize_to(v0, v);
+    v[3] = 0.0f;  // Preserve W
 }
 
 void _ApplyRotMatrix(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
