@@ -188,8 +188,6 @@ void MappingMeshData(u_int *intpointer, u_int *vuvnprim, HeaderSection *hs)
             return;
         }
     }
-
-    return;
 }
 
 void MappingCoordinateData(u_int *intpointer, HeaderSection *hs)

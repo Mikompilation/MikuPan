@@ -530,6 +530,11 @@ void SetCoordData(u_int *prim)
         abs += SgCalcLen(llp->workm[0][1], llp->workm[1][1], llp->workm[2][1]);
         abs += SgCalcLen(llp->workm[0][2], llp->workm[1][2], llp->workm[2][2]);
 
+        if (abs == 0.0f)
+        {
+            continue;
+        }
+
         llp->workm[3][3] = 3.0f / abs;
     }
 

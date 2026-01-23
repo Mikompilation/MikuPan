@@ -235,6 +235,7 @@ void DrawBoundingBox(sceVu0FVECTOR *box)
             datap += 8;
         }
     }
+
     datap[0] = 0x11000000;
     datap[1] = 0x14000000 | ((u_int)DIVP0_PROLOGUE_and_DIVP2_PROLOGUE >> 3);
     datap[2] = 0x11000000;

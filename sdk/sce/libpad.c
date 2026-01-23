@@ -92,10 +92,10 @@ int scePadRead(int port, int slot, unsigned char* rdata)
         data[1] ^= SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER), 0) ? sce_pad[14] : 0;
         data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)  ? sce_pad[15] : 0;
 
-        rdata[5] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTY) * -1, 0);
-        rdata[4] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTX) * -1, 0);
-        rdata[7] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY) * -1, 0);        
-        rdata[6] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX) * -1, 0);
+        rdata[5] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTY), 0);
+        rdata[4] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTX), 0);
+        rdata[7] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY), 0);
+        rdata[6] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX), 0);
 
     }
     else
