@@ -1,515 +1,410 @@
 #include "iopadpcm.h"
 #include "typedefs.h"
+#include "common.h"
+#include "iop/iopmain.h"
+#include "iop/cdvd/iopcdvd.h"
+#include "enums.h"
+#include "mikupan/mikupan_file_c.h"
+#include "SDL3/SDL_audio.h"
 
-void IAdpcmPlay(ADPCM_CMD* acp)
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+#define clamp(val, min, max)                                                   \
+    (((val) > (max)) ? (max) : (((val) < (min)) ? (min) : (val)))
+
+
+
+IOP_ADPCM iop_adpcm[2];
+ADPCM_CMD now_cmd;
+ADPCM_CMD cmd_buf[8];
+
+SDL_Mutex *cmd_lock;
+
+/* ADPCM Notes
+ * 
+ * double buffered
+ * Chunk size is 0x800
+ * 
+ */
+
+/* ADPCM volume fade timer is 0x1047 usec
+ * i.e. every 200.016 audio frames at 48000 */
+
+enum
 {
-    u_char channel = acp->channel;
+    IA_PLAY = 1,
+    IA_PRELOAD = 2,
+    IA_STOP = 3,
+    IA_PAUSE = 4,
+    IA_RESTART = 5,
+};
 
-    if (iop_adpcm[channel].stat == ADPCM_STAT_PRELOAD_END) {
-        iop_adpcm[channel].loop_end = 0;
-        sceSdSetCoreAttr(iop_adpcm[channel].core | 4, 0);
-        IaSetWrkVolPanPitch(channel, acp->pan, acp->vol, acp->pitch);
-        IaSetRegVol(channel);
-        IaSetRegPitch(channel);
-        IaSetRegAdsr(channel);
-        IaSetRegSsa(channel);
-        sceSdSetTransIntrHandler(channel, AdpcmTransCB, 0);
-        sceSdSetSpu2IntrHandler((sceSdSpu2IntrHandler)AdpcmSpu2IntrHander, iop_adpcm);
-        sceSdSetAddr(iop_adpcm[channel].core | SD_A_IRQA, (u_int)(AdpcmSpuBuf[channel] + 2048) & 0xFFFFFFF0);
-        IaSetRegKon(channel);
-        sceSdSetCoreAttr(iop_adpcm[channel].core | 4, 1u);
-        iop_adpcm[channel].stat = ADPCM_STAT_PLAY;
+static const s32 tbl_adpcm_filter[16][2] = {
+    {  0,   0},
+    { 60,   0},
+    {115, -52},
+    { 98, -55},
+    {122, -60}
+};
 
-        return;
+static void adpcm_decode_block(s16 *buffer, s16 *block, s32 *prev1, s32 *prev2)
+{
+    const s32 header = *block;
+    const s32 shift = (header & 0xF) + 16;
+    const int id = header >> 4 & 0xF;
+    const s32 pred1 = tbl_adpcm_filter[id][0];
+    const s32 pred2 = tbl_adpcm_filter[id][1];
+
+    const s8 *blockbytes = (s8 *) &block[1];
+    const s8 *blockend = &blockbytes[13];
+
+    for (; blockbytes <= blockend; ++blockbytes)
+    {
+        s32 data = ((*blockbytes) << 28) & 0xF0000000;
+        s32 pcm =
+            (data >> shift) + (((pred1 * *prev1) + (pred2 * *prev2) + 32) >> 6);
+
+        pcm = clamp(pcm, -0x8000, 0x7fff);
+        *(buffer++) = pcm;
+
+        data = ((*blockbytes) << 24) & 0xF0000000;
+        s32 pcm2 =
+            (data >> shift) + (((pred1 * pcm) + (pred2 * *prev1) + 32) >> 6);
+
+        pcm2 = clamp(pcm2, -0x8000, 0x7fff);
+        *(buffer++) = pcm2;
+
+        *prev2 = pcm;
+        *prev1 = pcm2;
     }
 }
 
-void IAdpcmStop(ADPCM_CMD* acp)
+int IAdpcmPreLoad(ADPCM_CMD *cmd)
 {
-    u_char channel;
+    static s16 dec_buf[2][3584];
+    void *dec[2] = {dec_buf[0], dec_buf[1]};
 
-    channel = acp->channel;
-    sceSdSetCoreAttr(iop_adpcm[channel].core | 4, 0);
-    IaSetWrkFadeInit(channel);
+    s32 histL[2] = {}, histR[2] = {};
 
-    if (iop_adpcm[channel].stat == ADPCM_STAT_NOPLAY) {
-        if (iop_adpcm[channel].use) {
-            iop_adpcm[channel].use = 0;
+    cmd->f_size = (cmd->f_size + (0x800 - 1)) & ~(0x800 - 1);
+    int chunks = cmd->f_size / 0x800 / 2;
+
+    iop_adpcm[0].tune_no = cmd->file_no;
+
+    info_log("adpcm read(%x, %x, %p)", cmd->f_start, cmd->f_size,
+             &iop_adpcm[0].data);
+    info_log("p: %x", cmd->pitch);
+    MikuPan_ReadFileInArchive64(cmd->f_start, cmd->f_size, &iop_adpcm[0].data);
+
+    info_log("chunks: %d", chunks);
+
+    s16 *src = iop_adpcm[0].data;
+    s16 *dst;
+
+    for (int i = 0; i < chunks; i++)
+    {
+        dst = dec_buf[0];
+        for (int j = 0; j < 128; j++)
+        {
+
+            adpcm_decode_block(dst, src, &histL[0], &histL[1]);
+            dst += 28;
+            src += 8;
         }
-    } else {
-        if (iop_adpcm[channel].stat == ADPCM_STAT_PRELOAD) {
-            ICdvdBreak();
-            iop_adpcm[channel].use = 0;
-        } else if (iop_adpcm[channel].stat == ADPCM_STAT_PRELOAD_END) {
-            iop_adpcm[channel].use = 0;
-        } else {
-            if (cdvd_stat.stat == ADPCM_STAT_LOOPEND_STOP)
-                ICdvdBreak();
-            IaSetRegKoff(channel);
-            sceSdSetTransIntrHandler(channel, 0, 0);
-            sceSdVoiceTransStatus(channel, 1);
-            iop_adpcm[channel].use = 0;
+
+        dst = dec_buf[1];
+        for (int j = 0; j < 128; j++)
+        {
+
+            adpcm_decode_block(dst, src, &histR[0], &histR[1]);
+            dst += 28;
+            src += 8;
         }
+
+        SDL_PutAudioStreamPlanarData(iop_adpcm[0].stream, (void *) dec, 2,
+                                     3584);
     }
 
-    if (IAdpcmChkCmdExist()) {
-        iop_adpcm[channel].stat = ADPCM_STAT_NOPLAY;
-    } else {
-        iop_adpcm[channel].stat = ADPCM_STAT_NOPLAY;
-    }
+    SDL_SetAudioStreamFrequencyRatio(iop_adpcm[0].stream,
+                                     (float) cmd->pitch / (float) 0x1000);
+    SDL_ResumeAudioStreamDevice(iop_adpcm[0].stream);
 
-    iop_adpcm[channel].tune_no = 0;
+    return 0;
 }
 
-static void IAdpcmFadeVol(IOP_COMMAND* iop) {}
-
-static void IAdpcmPos(IOP_COMMAND* icp)
+int IAdpcmStop(ADPCM_CMD *cmd)
 {
-    int channel;
-
-    channel = icp->data3;
-    IaSetWrkVolPanPitch(channel, (icp->data5 >> 16) & 0xffff, icp->data5 & 0xffff, icp->data6 & 0xffff);
-    IaSetRegVol(channel);
-    IaSetRegPitch(channel);
+    return 0;
 }
 
-static void IAdpcmMvol(IOP_COMMAND* icp)
-{
-    u_short mvol = icp->data1 & 0xffff;
-
-    IaSetMasterVol(mvol);
-}
-
-static void AdpcmSpu2IntrHander(int core_bit, void* data)
-{
-    IOP_ADPCM* ia = data;
-
-    if (iop_adpcm[0].stat == ADPCM_STAT_PLAY)
-        sceSdSetCoreAttr(iop_adpcm[0].core | SD_C_IRQ_ENABLE, 0);
-
-    if (iop_adpcm[1].stat == ADPCM_STAT_PLAY)
-        sceSdSetCoreAttr(iop_adpcm[1].core | SD_C_IRQ_ENABLE, 0);
-
-    if ((core_bit & 1) != 0)
-        iWakeupThread(ia[0].thread_id);
-
-    if ((core_bit & 2) != 0)
-        iWakeupThread(ia[1].thread_id);
-}
-
-static int AdpcmTransCB(int channel, void* common)
-{
-    if (iop_adpcm[channel].stat == ADPCM_STAT_LTRANS) {
-        iop_adpcm[channel].pos += 2048;
-        iop_adpcm[channel].str_tpos += 2048;
-        iop_adpcm[channel].stat = ADPCM_STAT_RTRANS;
-        while (sceSdVoiceTrans(
-                   channel,
-                   0,
-                   &AdpcmIopBuf[channel][iop_adpcm[channel].pos],
-                   (u_int)((iop_adpcm[channel].dbids * 2048) + AdpcmSpuBuf[channel] + 4096),
-                   0x800u)
-            < 0)
-            ;
-    } else if (iop_adpcm[channel].stat == ADPCM_STAT_RTRANS) {
-        iop_adpcm[channel].pos += 2048;
-        iop_adpcm[channel].str_tpos += 2048;
-        sceSdSetAddr(
-            iop_adpcm[channel].core | SD_A_IRQA,
-            ((u_int)AdpcmSpuBuf[channel] + (iop_adpcm[channel].dbids * 2048)) & 0xFFFFFFF0);
-        iop_adpcm[channel].dbids ^= 1u;
-        iop_adpcm[channel].stat = ADPCM_STAT_PLAY;
-        sceSdSetCoreAttr(iop_adpcm[channel].core | 4, 1u);
-
-        if (iop_adpcm[channel ^ 1].stat >= 4)
-            sceSdSetCoreAttr(iop_adpcm[channel ^ 1].core | 4, 1u);
-    } else {
-    }
-
-    return 1;
-}
-
-void IAdpcmReadCh0()
-{
-    int count = 0;
-    int start;
-    u_int remain_t;
-    u_int remain_l;
-    u_short tmp_tune_no;
-    ADPCM_CMD cmd;
-    u_char loop_ok;
-
-    while (1) {
-        SleepThread();
-        if (iop_adpcm[0].stat >= ADPCM_STAT_PRELOAD_TRANS) {
-            iop_adpcm[0].count++;
-
-            remain_t = iop_adpcm[0].szFile - iop_adpcm[0].str_tpos;
-            if (remain_t > 0x1000) {
-                if (iop_adpcm[0].pos == (iop_adpcm[0].dbidi + 1) * 0x20000) {
-                    remain_l = iop_adpcm[0].szFile - iop_adpcm[0].str_lpos;
-                    start = iop_adpcm[0].start;
-
-                    if (remain_l > 0x20000) {
-                        iop_adpcm[0].lreq_size = 0x20000;
-                        ICdvdLoadReqAdpcm(
-                            start,
-                            iop_adpcm[0].lreq_size,
-                            (u_int*)&AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi],
-                            0,
-                            2u,
-                            0);
-                    } else if (remain_l) {
-                        iop_adpcm[0].lreq_size = remain_l;
-                        ICdvdLoadReqAdpcm(
-                            start,
-                            iop_adpcm[0].lreq_size,
-                            (u_int*)&AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi],
-                            0,
-                            2u,
-                            1u);
-                    }
-
-                    if (iop_adpcm[0].dbidi)
-                        iop_adpcm[0].pos = 0;
-
-                    iop_adpcm[0].dbidi ^= 1;
-                }
-
-                // ????
-                if (iop_adpcm[0].stat != ADPCM_STAT_PLAY) {
-                }
-
-                if (!sceSdVoiceTransStatus(0, SD_TRANS_STATUS_CHECK))
-                    sceSdVoiceTransStatus(0, SD_TRANS_STATUS_WAIT);
-
-                iop_adpcm[0].stat = ADPCM_STAT_LTRANS;
-
-                while (sceSdVoiceTrans(
-                           0,
-                           0,
-                           &AdpcmIopBuf[0][iop_adpcm[0].pos],
-                           (u_int)((iop_adpcm[0].dbids * 0x800) + AdpcmSpuBuf[0]),
-                           0x800u)
-                    < 0) {
-
-                    count++;
-                    if (count > 100000)
-                        count = 0;
-                }
-            } else {
-                loop_ok = 0;
-                if (!IAdpcmChkCmdExist()) {
-                    loop_ok = 1;
-                }
-
-                cmd.cmd_type = 3;
-                cmd.fade_flm = 0;
-                cmd.tune_no = 0;
-                cmd.channel = 0;
-                tmp_tune_no = iop_adpcm[0].tune_no;
-                IAdpcmStop(&cmd);
-                if (iop_adpcm[0].loop && loop_ok) {
-                    if (iop_adpcm[0].fade_mode == ADPCM_FADE_NO) {
-                        if (!IAdpcmChkCmdExist()) {
-                            cmd.cmd_type = AC_PLAY;
-                            cmd.fade_flm = 0;
-                            cmd.start_cnt = 0;
-                            cmd.tune_no = tmp_tune_no;
-                            cmd.vol = iop_adpcm[0].vol;
-                            cmd.target_vol = cmd.vol;
-                            cmd.pan = iop_adpcm[0].pan;
-                            cmd.pitch = iop_adpcm[0].pitch;
-                            cmd.loop = 1;
-                            cmd.channel = 0;
-                            cmd.first = iop_adpcm[0].first;
-                            cmd.size = iop_adpcm[0].szFile_bk;
-                            now_cmd = cmd;
-                        }
-                    } else {
-                        if (iop_adpcm[0].target_vol && !IAdpcmChkCmdExist()) {
-                            cmd.cmd_type = AC_PLAY;
-                            cmd.fade_flm = 0;
-                            cmd.start_cnt = 0;
-                            cmd.tune_no = tmp_tune_no;
-                            cmd.vol = iop_adpcm[0].target_vol;
-                            cmd.target_vol = cmd.vol;
-                            cmd.pan = iop_adpcm[0].pan;
-                            cmd.pitch = iop_adpcm[0].pitch;
-                            cmd.loop = 1;
-                            cmd.channel = 0;
-                            cmd.first = iop_adpcm[0].first;
-                            cmd.size = iop_adpcm[0].szFile_bk;
-
-                            now_cmd = cmd;
-                        }
-                    }
-                } else {
-                    iop_adpcm[0].loop_end = 1;
-                }
-            }
-        } else {
-        }
-    }
-}
-
-void IAdpcmTuneEndStop(u_char channel)
-{
-    ADPCM_CMD cmd;
-
-    cmd.cmd_type = 3;
-    cmd.fade_flm = 0;
-    cmd.tune_no = 0;
-    cmd.channel = channel;
-    IAdpcmStop(&cmd);
-}
-
-void IAdpcmTuneEndLoop(u_char channel, u_char fade, u_short tune_no)
-{
-    ADPCM_CMD cmd;
-
-    cmd.cmd_type = AC_PLAY;
-    cmd.fade_flm = 0;
-    cmd.start_cnt = 0;
-    cmd.tune_no = tune_no;
-
-    if (fade) {
-        cmd.vol = iop_adpcm[channel].target_vol;
-        cmd.target_vol = cmd.vol;
-    } else {
-        cmd.vol = iop_adpcm[channel].vol;
-        cmd.target_vol = cmd.vol;
-    }
-
-    cmd.pan = iop_adpcm[channel].pan;
-    cmd.pitch = iop_adpcm[channel].pitch;
-    cmd.loop = 1;
-    cmd.channel = channel;
-    cmd.first = iop_adpcm[channel].first;
-    cmd.size = iop_adpcm[channel].szFile_bk;
-
-    now_cmd = cmd;
-}
-
-void IAdpcmReadCh1()
-{
-    int count = 0;
-    int start;
-    u_int remain_t;
-    u_int remain_l;
-    u_short tmp_tune_no;
-    ADPCM_CMD cmd;
-    u_char loop_ok;
-
-    while (1) {
-        SleepThread();
-        if (iop_adpcm[1].stat >= ADPCM_STAT_PRELOAD_TRANS) {
-            iop_adpcm[1].count++;
-
-            remain_t = iop_adpcm[1].szFile - iop_adpcm[1].str_tpos;
-            if (remain_t > 0x1000) {
-                if (iop_adpcm[1].pos == (iop_adpcm[1].dbidi + 1) * 0x20000) {
-                    remain_l = iop_adpcm[1].szFile - iop_adpcm[1].str_lpos;
-                    start = iop_adpcm[1].start;
-
-                    if (remain_l > 0x20000) {
-                        iop_adpcm[1].lreq_size = 0x20000;
-                        ICdvdLoadReqAdpcm(
-                            start,
-                            iop_adpcm[1].lreq_size,
-                            (u_int*)&AdpcmIopBuf[1][0x20000 * iop_adpcm[1].dbidi],
-                            1,
-                            2u,
-                            0);
-                    } else if (remain_l) {
-                        iop_adpcm[1].lreq_size = remain_l;
-                        ICdvdLoadReqAdpcm(
-                            start,
-                            iop_adpcm[1].lreq_size,
-                            (u_int*)&AdpcmIopBuf[1][0x20000 * iop_adpcm[1].dbidi],
-                            1,
-                            2u,
-                            1u);
-                    }
-
-                    if (iop_adpcm[1].dbidi)
-                        iop_adpcm[1].pos = 0;
-
-                    iop_adpcm[1].dbidi ^= 1;
-                }
-
-                // ????
-                if (iop_adpcm[1].stat != ADPCM_STAT_PLAY) {
-                }
-
-                if (!sceSdVoiceTransStatus(1, SD_TRANS_STATUS_CHECK))
-                    sceSdVoiceTransStatus(1, SD_TRANS_STATUS_WAIT);
-
-                iop_adpcm[1].stat = ADPCM_STAT_LTRANS;
-
-                while (sceSdVoiceTrans(
-                           1,
-                           0,
-                           &AdpcmIopBuf[1][iop_adpcm[1].pos],
-                           (u_int)((iop_adpcm[1].dbids * 0x800) + AdpcmSpuBuf[1]),
-                           0x800u)
-                    < 0) {
-
-                    count++;
-                    if (count > 100000)
-                        count = 0;
-                }
-            } else {
-                loop_ok = 0;
-                if (!IAdpcmChkCmdExist()) {
-                    loop_ok = 1;
-                }
-
-                cmd.cmd_type = 3;
-                cmd.fade_flm = 0;
-                cmd.tune_no = 0;
-                cmd.channel = 1;
-                tmp_tune_no = iop_adpcm[1].tune_no;
-                IAdpcmStop(&cmd);
-                if (iop_adpcm[1].loop && loop_ok) {
-                    if (iop_adpcm[1].fade_mode == ADPCM_FADE_NO) {
-                        if (!IAdpcmChkCmdExist()) {
-                            cmd.cmd_type = AC_PLAY;
-                            cmd.fade_flm = 0;
-                            cmd.start_cnt = 0;
-                            cmd.tune_no = tmp_tune_no;
-                            cmd.vol = iop_adpcm[1].vol;
-                            cmd.target_vol = cmd.vol;
-                            cmd.pan = iop_adpcm[1].pan;
-                            cmd.pitch = iop_adpcm[1].pitch;
-                            cmd.loop = 1;
-                            cmd.channel = 1;
-
-                            now_cmd = cmd;
-                        }
-                    } else {
-                        if (iop_adpcm[1].target_vol && !IAdpcmChkCmdExist()) {
-                            cmd.cmd_type = AC_PLAY;
-                            cmd.fade_flm = 0;
-                            cmd.start_cnt = 0;
-                            cmd.tune_no = tmp_tune_no;
-                            cmd.vol = iop_adpcm[1].target_vol;
-                            cmd.target_vol = cmd.vol;
-                            cmd.pan = iop_adpcm[1].pan;
-                            cmd.pitch = iop_adpcm[1].pitch;
-                            cmd.loop = 1;
-                            cmd.channel = 1;
-
-                            now_cmd = cmd;
-                        }
-                    }
-                }
-            }
-        } else {
-        }
-    }
-}
-
-static void SetLoopFlag(u_int* st_addr, u_int szvag, u_char st_end)
+void IAdpcmCmdSlide()
 {
     int i;
-    u_char* lpflgp = (u_char*)st_addr;
 
-    lpflgp++;
-    for (i = 0; i < szvag >> 4; ++i) {
-        *lpflgp = 2;
-        lpflgp += 16;
+    SDL_LockMutex(cmd_lock);
+
+    now_cmd = cmd_buf[0];
+    for (i = 0; i < 7; i++)
+    {
+        cmd_buf[i] = cmd_buf[i + 1];
     }
 
-    if ((st_end & 2) != 0) {
-        lpflgp -= 16;
-        *lpflgp |= 1u;
-    }
+    cmd_buf[7].action = 0;
 
-    if ((st_end & 1) != 0) {
-        lpflgp = (u_char*)st_addr;
-        lpflgp++;
-        *lpflgp |= 4;
-    }
+    SDL_UnlockMutex(cmd_lock);
 }
 
-static void SetLoopFlgAll(u_short core)
+int IAdpcmCmdPlay()
 {
-    u_char* pos;
-    int i;
-    int times;
+    info_log("IAdpcmCmdPlay");
 
-    pos = 0;
-    times = 32;
-    for (i = 0; i < times; i++, pos += 0x2000) {
-        SetLoopFlag(&AdpcmIopBuf[core][(u_int)pos] + 0x0000, 0x800u, 1u);
-        SetLoopFlag(&AdpcmIopBuf[core][(u_int)pos] + 0x0800, 0x800u, 1u);
-        SetLoopFlag(&AdpcmIopBuf[core][(u_int)pos] + 0x1000, 0x800u, 2u);
-        SetLoopFlag(&AdpcmIopBuf[core][(u_int)pos] + 0x1800, 0x800u, 2u);
+    if (now_cmd.file_no != iop_adpcm[0].tune_no)
+    {
+        IAdpcmPreLoad(&now_cmd);
+        return 0;
     }
+
+    return 0;
 }
 
-static void SetLoopFlgAll2(u_short core)
+int IAdpcmCmdPreLoad()
 {
-    u_char* pos;
-    int i;
-    int times;
-
-    pos = 0;
-    times = 32;
-    for (i = 0; i < times; i++, pos += 0x2000) {
-        SetLoopFlag(&AdpcmIopBuf[core][(u_int)pos] + 0x0000, 0x800u, 1u);
-        SetLoopFlag(&AdpcmIopBuf[core][(u_int)pos] + 0x0800, 0x800u, 1u);
-        SetLoopFlag(&AdpcmIopBuf[core][(u_int)pos] + 0x1000, 0x800u, 2u);
-        SetLoopFlag(&AdpcmIopBuf[core][(u_int)pos] + 0x1800, 0x800u, 2u);
-    }
-}
-
-void SetLoopFlgSize(u_int size_byte, u_int* start, u_short core)
-{
-    int i;
-    int j;
-    int k;
-    int lt0;
-    int lt1;
-    u_char* lpflgp;
-
-    lpflgp = (u_char*)start;
-    lt0 = size_byte / 0x2000;
-    lt1 = 0x80;
-    lpflgp++;
-
-    for (i = 0; i < lt0; i++) {
-        for (j = 0; j < 2; j++) {
-            for (k = 0; k < lt1; k++) {
-                if (!k)
-                    *lpflgp = 6;
-                else
-                    *lpflgp = 2;
-
-                lpflgp += 16;
-            }
-        }
-        for (j = 0; j < 2; j++) {
-            for (k = 0; k < lt1; k++) {
-                if (k == lt1 - 1)
-                    *lpflgp = 3;
-                else
-                    *lpflgp = 2;
-
-                lpflgp += 16;
-            }
+    info_log("IAdpcmCmdPreLoad");
+    if (now_cmd.file_no == iop_adpcm[0].tune_no)
+    {
+        if (iop_adpcm[0].state == 5)
+        {
+            now_cmd.action = 0;
         }
     }
+
+    switch (iop_adpcm[0].state)
+    {
+        case 4:
+            return 0;
+        case 0:
+        case 5:
+            IAdpcmPreLoad(&now_cmd);
+            break;
+    }
+
+    if (iop_adpcm[0].f_mode != 2)
+    {
+        ADPCM_CMD cmd;
+        cmd.action = 3;
+        cmd.channel = 0;
+        cmd.file_no = iop_adpcm[0].tune_no;
+        IAdpcmStop(&cmd);
+    }
+
+    return 0;
 }
 
-void IAdpcmLoadEndStream(int channel)
+int IAdpcmCmdStop()
 {
-    iop_adpcm[channel].str_lpos += iop_adpcm[channel].lreq_size;
-    iop_adpcm[channel].start += (iop_adpcm[channel].lreq_size + 2047) / 2048;
+    info_log("IAdpcmCmdStop");
+
+    switch (iop_adpcm[0].state)
+    {
+        case 0:
+            now_cmd.action = 0;
+            break;
+        case 5:
+        case 7:
+        case 8:
+        case 9:
+            break;
+    }
+
+    return 0;
 }
 
-void IAdpcmLoadEndPreOnly(int channel)
+int IAdpcmCmdPause()
 {
-    IAdpcmPreLoadEnd(channel);
+    info_log("IAdpcmCmdPause");
+    return 0;
+}
+
+int IAdpcmCmdRestart()
+{
+    //?? seems like it might do nothing
+    return 0;
+}
+
+void IAdpcmMain2()
+{
+    if (!now_cmd.action)
+    {
+        IAdpcmCmdSlide();
+    }
+    else
+    {
+        switch (now_cmd.action)
+        {
+            case 1:
+                IAdpcmCmdPlay();
+                break;
+            case 2:
+                IAdpcmCmdPreLoad();
+                break;
+            case 3:
+                IAdpcmCmdStop();
+                break;
+            case 4:
+                IAdpcmCmdPause();
+                break;
+            case 5:
+                IAdpcmCmdRestart();
+                break;
+        }
+    }
+
+    if (iop_adpcm[0].state)
+    {
+        iop_adpcm[0].state_timeout = 0;
+    }
+    else
+    {
+        iop_adpcm[0].state_timeout = min(iop_adpcm[0].state_timeout + 1, 16);
+    }
+
+    if (iop_adpcm[0].state_timeout < 16)
+    {
+        iop_stat.adpcm.status = iop_adpcm[0].state;
+    }
+    else
+    {
+        iop_stat.adpcm.status = 1;
+    }
+}
+
+void IAdpcmInit(int mode)
+{
+    SDL_AudioSpec spec;
+
+    spec.channels = 2;
+    spec.format = SDL_AUDIO_S16;
+    spec.freq = 48000;
+
+    iop_adpcm[0].stream = SDL_CreateAudioStream(&spec, NULL);
+    SDL_BindAudioStream(audio_dev, iop_adpcm[0].stream);
+    cmd_lock = SDL_CreateMutex();
+}
+
+void IAdpcmAddCmd(IOP_COMMAND *cmd)
+{
+    ADPCM_CMD adpcm = {};
+    int i;
+
+    adpcm.action = 0;
+    switch (cmd->cmd_no)
+    {
+        case IC_ADPCM_PLAY:
+            adpcm.action = IA_PLAY;
+            adpcm.fin_flm = cmd->data6;
+            adpcm.f_start = cmd->data2;
+            adpcm.f_size = cmd->data3;
+            adpcm.start_flm = cmd->data7;
+            adpcm.file_no = cmd->data1;
+            adpcm.voll = cmd->data5;
+            adpcm.volr = adpcm.voll;
+            adpcm.pan = cmd->data5 >> 16;
+            adpcm.pitch = cmd->data6 >> 16;
+            adpcm.field_1B = cmd->data4 & 2;
+            adpcm.channel = cmd->data4 & 1;
+            if (adpcm.fin_flm)
+            {
+                adpcm.field_1D = 1;
+                adpcm.voll = 0;
+            }
+            else
+            {
+                adpcm.field_1D = 0;
+            }
+            break;
+        case IC_ADPCM_PRELOAD:
+            adpcm.action = IA_PRELOAD;
+            adpcm.file_no = cmd->data1;
+            adpcm.f_start = cmd->data2;
+            adpcm.f_size = cmd->data3;
+            adpcm.start_flm = cmd->data7;
+            adpcm.channel = cmd->data4 & 1;
+            break;
+        case IC_ADPCM_LOADEND_PLAY:
+            adpcm.action = IA_PLAY;
+            adpcm.fin_flm = cmd->data6;
+            adpcm.start_flm = cmd->data7;
+            adpcm.file_no = cmd->data1;
+            adpcm.voll = cmd->data5;
+            adpcm.volr = adpcm.voll;
+            adpcm.pan = cmd->data5 >> 16;
+            adpcm.pitch = cmd->data6 >> 16;
+            adpcm.field_1B = cmd->data4 & 2;
+            adpcm.channel = cmd->data4 & 1;
+            if (adpcm.fin_flm)
+            {
+                adpcm.field_1D = 1;
+                adpcm.voll = 0;
+            }
+            else
+            {
+                adpcm.field_1D = 0;
+            }
+            break;
+        case IC_ADPCM_STOP:
+            adpcm.action = IA_STOP;
+            adpcm.fin_flm = cmd->data6;
+            adpcm.file_no = cmd->data1;
+            adpcm.channel = cmd->data4 & 1;
+            break;
+        case IC_ADPCM_PAUSE:
+            adpcm.action = IA_PAUSE;
+            adpcm.fin_flm = cmd->data6;
+            adpcm.file_no = cmd->data1;
+            adpcm.channel = cmd->data4 & 1;
+            break;
+        case IC_ADPCM_RESTART:
+            adpcm.action = IA_RESTART;
+            adpcm.fin_flm = cmd->data6;
+            adpcm.file_no = cmd->data1;
+            adpcm.channel = cmd->data4 & 1;
+            break;
+        default:
+            break;
+    }
+
+    // Insert into cmd buffer
+    if (adpcm.action)
+    {
+        SDL_LockMutex(cmd_lock);
+        for (i = 0; i < 8; i++)
+        {
+            if (cmd_buf[i].action == 0)
+            {
+                info_log("adpcm: inserted command %d", adpcm.action);
+                cmd_buf[i] = adpcm;
+                break;
+            }
+        }
+        SDL_UnlockMutex(cmd_lock);
+    }
+}
+
+void IAdpcmCmd(IOP_COMMAND *cmd)
+{
+    switch (cmd->cmd_no)
+    {
+        case IC_ADPCM_PLAY:
+        case IC_ADPCM_PRELOAD:
+        case IC_ADPCM_LOADEND_PLAY:
+        case IC_ADPCM_STOP:
+        case IC_ADPCM_PAUSE:
+        case IC_ADPCM_RESTART:
+            IAdpcmAddCmd(cmd);
+            break;
+        default:
+            info_log("Error: ADPCM Command %d not yet implemented!",
+                     cmd->cmd_no);
+            break;
+    }
 }

@@ -77,6 +77,36 @@ void MikuPan_ReadFileInArchive(int sector, int size, u_int *address)
     infile.close();
 }
 
+void MikuPan_ReadFileInArchive64(int sector, int size, int64_t address)
+{
+    if (!std::filesystem::exists("./IMG_BD.BIN"))
+    {
+        return;
+    }
+
+    if (address == 0)
+    {
+        return;
+    }
+
+    if ((int64_t*)*(int64_t*)address != nullptr)
+    {
+        free((int64_t*)*(int64_t*)address);
+    }
+
+    void* file_ptr = malloc(size);
+
+    *((int64_t*)address) = (int64_t)file_ptr;
+
+    std::ifstream infile("./IMG_BD.BIN", std::ios::binary);
+    infile.seekg(sector * 0x800, std::ios::beg);
+    infile.read((char*)file_ptr, size);
+
+    infile.close();
+}
+
+
+
 u_int MikuPan_GetFileSize(const char *filename)
 {
     if (!std::filesystem::exists(filename))

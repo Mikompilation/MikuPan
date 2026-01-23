@@ -1,11 +1,13 @@
-#include "adpcm/iopadpcm.h"
+#include "iopadpcm.h"
 
-#include "se/iopse.h"
+#include "iop/se/iopse.h"
 
-#include "libsd.h"
+//#include "libsd.h"
 #include "memory.h"
-#include "sysmem.h"
-#include "thread.h"
+#include "os/system.h"
+#include "ee/eekernel.h"
+#include "iopdefs.h"
+#include "iop/iopmain.h"
 
 void GetPosCalc(ADPCM_POS_CALC* calcp);
 
@@ -18,7 +20,7 @@ void IaInitDev(u_char channel)
     while (IAdpcmMakeThread(channel))
         ;
 
-    AdpcmIopBuf[channel] = (u_char*)AllocSysMemory(0, 266240, 0);
+   // AdpcmIopBuf[channel] = (u_char*)AllocSysMemory(0, 266240, 0);
     if (!AdpcmIopBuf[channel]) {
         while (1)
             ;
@@ -39,7 +41,7 @@ void IaInitDev(u_char channel)
 
 static int IAdpcmMakeThread(u_char channel)
 {
-    struct ThreadParam param;
+    ThreadParam param;
 
     param.attr = 0x2000000;
 

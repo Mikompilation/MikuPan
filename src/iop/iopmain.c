@@ -1,14 +1,18 @@
 #include "iopmain.h"
+#include "iop/adpcm/iopadpcm.h"
 #include "cdvd/iopcdvd.h"
 #include "enums.h"
 #include "os/eeiop/eeiop.h"
 #include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_init.h>
 
 IOP_STAT iop_stat;
 IOP_MASTER_VOL iop_mv;
 IOP_SYS_CTRL iop_sys_ctrl;
 
 static int request_shutdown = 0;
+
+SDL_AudioDeviceID audio_dev;
 
 void *IopDrvFunc(unsigned int command, void *data, int size)
 {
@@ -51,7 +55,7 @@ void *IopDrvFunc(unsigned int command, void *data, int size)
             else if (icp->cmd_no >= IC_ADPCM_INIT
                      && icp->cmd_no <= IC_ADPCM_QUIT)
             {
-                //IAdpcmCmd(icp);
+                IAdpcmCmd(icp);
             }
 
             icp->cmd_no = 0;
@@ -70,10 +74,25 @@ void *IopDrvFunc(unsigned int command, void *data, int size)
 
 static void IopInitDevice()
 {
+    SDL_AudioSpec spec;
+
+    SDL_Init(SDL_INIT_AUDIO);
+    spec.channels = 2;
+    spec.format = SDL_AUDIO_S16;
+    spec.freq = 48000;
+
+    audio_dev = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+
+    if (!audio_dev)
+    {
+        info_log("%s", SDL_GetError());
+    }
+    SDL_ResumeAudioDevice(audio_dev);
+
     //sceSdInit(0);
     ICdvdInit(0);
     //ISeInit(0);
-    //IAdpcmInit(0);
+    IAdpcmInit(0);
 }
 
 static int IopInitMain()
@@ -92,7 +111,7 @@ static SDLCALL int IopMain(void *data)
 
         //ISeMain();
         ICdvdMain();
-        //IAdpcmMain2();
+        IAdpcmMain2();
     }
 
     return 0;

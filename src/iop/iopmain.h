@@ -4,6 +4,7 @@
 #include "os/eeiop/eeiop.h"
 #include "typedefs.h"
 #include "SDL3/SDL_thread.h"
+#include "SDL3/SDL_audio.h"
 
 enum IOP_STEREO_SET {
     IS_STEREO = 0,
@@ -42,6 +43,8 @@ typedef struct { // 0x4
 extern IOP_STAT iop_stat;
 extern IOP_MASTER_VOL iop_mv;
 extern IOP_SYS_CTRL iop_sys_ctrl;
+
+extern SDL_AudioDeviceID audio_dev;
 
 IOP_STAT* GetIopStatP();
 void *IopDrvFunc(unsigned int command, void *data, int size);
