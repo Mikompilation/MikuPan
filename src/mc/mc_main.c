@@ -16,6 +16,8 @@
 #include "mc/mc_exec.h"
 #include "mc/mc_icon.h"
 
+#include <string.h>
+
 MC_CTRL mc_ctrl = {0};
 MC_HEADER mc_header = {0};
 MC_HEADER mc_header_buf[16] = {0};

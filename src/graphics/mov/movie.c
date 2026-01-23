@@ -269,6 +269,7 @@ void ReqMpegEvent(int no)
 
 int PlayMpegEvent()
 {
+    return 0;
     int i;
     int ret;
 
@@ -2036,6 +2037,9 @@ void setD4_CHCR(u_int val)
 
 void scTag2(QWORD *q, void *addr, u_int id, u_int qwc)
 {
+    return;
+    addr = MikuPan_GetHostPointer((int)addr);
+    q = MikuPan_GetHostPointer((int)q);
     q->l[0] = (u_long)(u_int)addr << 32 | (u_long)id << 28 | (u_long)qwc << 0;
 }
 
@@ -2085,7 +2089,7 @@ int viBufReset(ViBuf *f)
     for (i = 0; i < f->n; i++)
     {
         scTag2(
-            (QWORD*)MikuPan_GetHostPointer(f->tag + i),
+            (QWORD*)(f->tag + i),
             DmaAddr((char*)f->data + VIBUF_ELM_SIZE * i),
             DMA_ID_REF,
             VIBUF_ELM_SIZE / 16

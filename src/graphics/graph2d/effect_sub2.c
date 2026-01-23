@@ -2173,7 +2173,7 @@ int CallReadyGo()
         anm_init = 1;
     break;
     case 1:
-        if (IsEndAdpcmBtlmode())
+        //if (IsEndAdpcmBtlmode())
         {
             anm_init = 2;
         }
@@ -2187,7 +2187,7 @@ int CallReadyGo()
         }
     break;
     case 3:
-        if (IsPreLoadEndAdpcmBtlmode())
+        //if (IsPreLoadEndAdpcmBtlmode())
         {
             anm_init = 4;
         }
@@ -3359,11 +3359,12 @@ void SimpleMaskDraw(/* a0 4 */ u_char alpha)
     SetSquareS(0xf000, -320.0f, -224.0f, 320.0f, 224.0f, 0, 0, 0, alpha);
 }
 
-void DispSprt2(/* s0 16 */ SPRT_SDAT *ssd, /* a1 5 */ u_int addr, /* a2 6 */ int sp_no, /* s2 18 */ SPRT_SROT *srot, /* s3 19 */ SPRT_SSCL *sscl, /* t1 9 */ u_char alp_rate)
+void DispSprt2(/* s0 16 */ SPRT_SDAT *ssd, /* a1 5 */ int64_t addr, /* a2 6 */ int sp_no, /* s2 18 */ SPRT_SROT *srot, /* s3 19 */ SPRT_SSCL *sscl, /* t1 9 */ u_char alp_rate)
 {
 	/* 0x0(sp) */ DISP_SPRT ds;
 	/* 0x90(sp) */ SPRT_DAT sd;
-    
+    addr = MikuPan_GetHostAddress((int)addr);
+
     sd.tex0 = GetTex0Reg(addr, sp_no, 0);
     sd.u = ssd->u;
     sd.v = ssd->v;
@@ -3405,7 +3406,7 @@ void DispSprt2(/* s0 16 */ SPRT_SDAT *ssd, /* a1 5 */ u_int addr, /* a2 6 */ int
     DispSprD(&ds);
 }
 
-void DispSprt3(/* s0 16 */ SPRT_SDAT *ssd, /* a1 5 */ u_int addr, /* a2 6 */ int sp_no, /* s1 17 */ SPRT_SROT *srot, /* s2 18 */ SPRT_SSCL *sscl, /* t1 9 */ u_char alp_rate)
+void DispSprt3(/* s0 16 */ SPRT_SDAT *ssd, /* a1 5 */ int64_t addr, /* a2 6 */ int sp_no, /* s1 17 */ SPRT_SROT *srot, /* s2 18 */ SPRT_SSCL *sscl, /* t1 9 */ u_char alp_rate)
 {
 	/* 0x0(sp) */ DISP_SPRT ds;
 	/* 0x90(sp) */ SPRT_DAT sd;
@@ -3453,7 +3454,7 @@ void DispSprt3(/* s0 16 */ SPRT_SDAT *ssd, /* a1 5 */ u_int addr, /* a2 6 */ int
     DispSprD(&ds);
 }
 
-void DispSprtTemp(/* s1 17 */ SPRT_SDAT *ssd, /* a1 5 */ u_int addr, /* a2 6 */ int sp_no, /* s2 18 */ SPRT_SROT *srot, /* s3 19 */ SPRT_SSCL *sscl, /* s4 20 */ u_char alp_rate)
+void DispSprtTemp(/* s1 17 */ SPRT_SDAT *ssd, /* a1 5 */ int64_t addr, /* a2 6 */ int sp_no, /* s2 18 */ SPRT_SROT *srot, /* s3 19 */ SPRT_SSCL *sscl, /* s4 20 */ u_char alp_rate)
 {
 	/* 0x0(sp) */ DISP_SPRT ds;
 	/* 0x90(sp) */ SPRT_DAT sd;

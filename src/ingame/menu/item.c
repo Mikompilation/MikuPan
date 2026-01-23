@@ -1,6 +1,8 @@
 #include "item.h"
 #include "common.h"
+#include "graphics/graph2d/tim2.h"
 #include "ig_menu.h"
+#include "mikupan/mikupan_memory.h"
 
 #include <graphics/graph2d/message.h>
 
@@ -192,6 +194,17 @@ void XYAdefaultYW(u_char no)
 
 void BgFusumaYW(int rgb, float pos_x, float alpha, int pri)
 {
+    /* f21 59 */ float scl_x;
+    /* f22 60 */ float scl_y;
+
+    SetSprFile(PL_BGBG_PK2_ADDRESS);
+
+    scl_x = 2.5396826f;
+    scl_y = 2.516854f;
+
+    PutSpriteYW(396, 396, -pos_x, 0.0f, 0.0f, rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
+    PutSpriteYW(397, 397, +pos_x, 0.0f, 0.0f, rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
+
 }
 
 u_int FromPKZ(u_int pkz_addr, u_char pk2_no)

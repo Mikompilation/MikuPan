@@ -594,7 +594,9 @@ void _MulRotMatrix(sceVu0FMATRIX ans, sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 
 void _MulMatrix(sceVu0FMATRIX ans, sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 {
-    glm_mat4_mul(m0, m1, ans);
+    mat4 out = {0};
+    glm_mat4_mul(m0, m1, out);
+    glm_mat4_copy(out, ans);
 
     //for (int i = 0; i < 4; ++i)
     //{

@@ -1960,7 +1960,6 @@ void motPrintVector(char *str, sceVu0FVECTOR vec)
 void sceRotMatrixXYZ(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FVECTOR rot)
 {
     sceVu0FMATRIX mat = {0};
-
     sceVu0CopyMatrix(mat, m1);
 
     sceVu0RotMatrixX(mat, mat, rot[0]);

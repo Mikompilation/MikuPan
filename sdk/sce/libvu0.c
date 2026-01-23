@@ -242,7 +242,10 @@ void sceVu0RotMatrixY(sceVu0FMATRIX m0, sceVu0FMATRIX m1, float ry)
 
 void sceVu0TransMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FVECTOR tv)
 {
-    glm_translate_to(m1, tv, m0);
+    mat4 out = {0};
+    glm_translate_to(m1, tv, out);
+
+    glm_mat4_copy(out, m0);
 
     // Copy rotation/scale part unchanged
     //for (int i = 0; i < 3; i++) {
