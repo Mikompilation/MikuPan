@@ -4,6 +4,7 @@
 #include "typedefs.h"
 #include "os/eeiop/eeiop.h"
 #include "SDL3/SDL_audio.h"
+#include "SDL3/SDL_thread.h"
 
 typedef struct { // 0x2c
     /* 0x00:00 */ unsigned int fsize : 32;
@@ -78,20 +79,20 @@ typedef struct { // 0x60
 
 typedef struct 
 {
-    int f_start;
-    int f_size;
-    int start_flm;
-    short fin_flm;
-    short file_no;
-    short voll;
-    short field_12;
-    short volr;
-    short pan;
-    short pitch;
-    char action;
-    char field_1B;
-    char channel;
-    char field_1D;
+    /* 0x00 */ int first;
+    /* 0x04 */ int size;
+    /* 0x08 */ int start_cnt;
+    /* 0x0c */ u_short fade_flm;
+    /* 0x0e */ u_short tune_no;
+    /* 0x10 */ u_short vol;
+    /* 0x12 */ u_short start_vol;
+    /* 0x14 */ u_short target_vol;
+    /* 0x16 */ u_short pan;
+    /* 0x18 */ u_short pitch;
+    /* 0x1a */ u_char cmd_type;
+    /* 0x1b */ u_char loop;
+    /* 0x1c */ u_char channel;
+    /* 0x1d */ u_char fade_mode;
 } ADPCM_CMD;
 
 typedef struct { // 0xc
@@ -139,6 +140,8 @@ extern u_char* AdpcmSpuBuf[2];
 extern ADPCM_CMD now_cmd;
 extern ADPCM_CMD cmd_buf[8];
 
+extern SDL_Mutex *cmd_lock;
+
 void IAdpcmInit(int dev_init);
 void IAdpcmCmd(IOP_COMMAND* icp);
 void IAdpcmMain();
@@ -151,8 +154,8 @@ void IAdpcmLoadEndStream(int channel);
 void IAdpcmLoadEndPreOnly(int channel);
 
 void IAdpcmPlay(ADPCM_CMD* acp);
-int IAdpcmStop(ADPCM_CMD* acp);
-int IAdpcmPreLoad(ADPCM_CMD* acp);
+void IAdpcmStop(ADPCM_CMD* acp);
+void IAdpcmPreLoad(ADPCM_CMD* acp);
 void IaSetWrkVolPanPitch(u_char channel, u_short pan, u_short master_vol, u_short pitch);
 void IaSetWrkFadeParam(u_char channel, int fade_flm, u_short target_vol);
 void IaSetWrkFadeMode(u_char channel, u_char mode, u_short target_vol, int fade_flm);
@@ -178,10 +181,10 @@ void IaSetMasterVol(u_short mvol);
 u_char IAdpcmChkCmdExist();
 void InitAdpcmCmdBuf();
 void IAdpcmCmdSlide();
-int IAdpcmCmdPlay();
-int IAdpcmCmdStop();
-int IAdpcmCmdPreLoad();
-int IAdpcmCmdPause();
-int IAdpcmCmdRestart();
+void IAdpcmCmdPlay();
+void IAdpcmCmdStop();
+void IAdpcmCmdPreLoad();
+void IAdpcmCmdPause();
+void IAdpcmCmdRestart();
 
 #endif // IOPADPCM_H_
