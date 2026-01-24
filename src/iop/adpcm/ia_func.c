@@ -6,8 +6,11 @@
 #include "memory.h"
 #include "os/system.h"
 #include "ee/eekernel.h"
-#include "iopdefs.h"
 #include "iop/iopmain.h"
+#include "iop/se/iopse.h"
+
+// TO DO: Refactor with SDL_MIXER, or something similarish
+
 
 void GetPosCalc(ADPCM_POS_CALC* calcp);
 
@@ -21,7 +24,7 @@ void IaInitDev(u_char channel)
         ;
 
    // AdpcmIopBuf[channel] = (u_char*)AllocSysMemory(0, 266240, 0);
-    if (!AdpcmIopBuf[channel]) {
+   /* if (!AdpcmIopBuf[channel]) {
         while (1)
             ;
     }
@@ -36,7 +39,7 @@ void IaInitDev(u_char channel)
         iop_adpcm[1].core = 1;
         iop_adpcm[1].vl = 44;
         iop_adpcm[1].vr = 46;
-    }
+    } */
 }
 
 static int IAdpcmMakeThread(u_char channel)
@@ -64,12 +67,12 @@ static int IAdpcmMakeThread(u_char channel)
 
 void IaInitEffect()
 {
-    sceSdSetCoreAttr(SD_C_EFFECT_ENABLE | SD_CORE_0, 0);
+    //sceSdSetCoreAttr(SD_C_EFFECT_ENABLE | SD_CORE_0, 0);
 }
 
 void IaInitVolume()
 {
-    sceSdSetParam(SD_P_MVOLL | SD_CORE_0, iop_mv.vol);
+    /*sceSdSetParam(SD_P_MVOLL | SD_CORE_0, iop_mv.vol);
     sceSdSetParam(SD_P_MVOLR | SD_CORE_0, iop_mv.vol);
     sceSdSetSwitch(SD_S_VMIXL | SD_CORE_0, 0xFFFFFFu);
     sceSdSetSwitch(SD_S_VMIXR | SD_CORE_0, 0xFFFFFFu);
@@ -78,64 +81,64 @@ void IaInitVolume()
     sceSdSetParam(SD_VP_VOLL | SD_VOICE(0) | SD_CORE_0, 0);
     sceSdSetParam(SD_VP_VOLR | SD_VOICE(0) | SD_CORE_0, 0);
     sceSdSetParam(SD_VP_VOLL | SD_VOICE(1) | SD_CORE_0, 0);
-    sceSdSetParam(SD_VP_VOLR | SD_VOICE(1) | SD_CORE_0, 0);
+    sceSdSetParam(SD_VP_VOLR | SD_VOICE(1) | SD_CORE_0, 0);*/
 }
 
 void IaDbgMemoryCheck()
 {
     int tmp;
 
-    tmp = QueryMemSize();
-    tmp = QueryTotalFreeMemSize();
-    tmp = QueryMaxFreeMemSize();
+    //tmp = QueryMemSize();
+    //tmp = QueryTotalFreeMemSize();
+    //tmp = QueryMaxFreeMemSize();
 }
 
 void IaSetRegSsa(u_char channel)
 {
-    sceSdSetAddr(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VA_SSA, (u_int)AdpcmSpuBuf[channel]);
-    sceSdSetAddr(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VA_SSA, (u_int)(AdpcmSpuBuf[channel] + 4096));
+    //sceSdSetAddr(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VA_SSA, (u_int)AdpcmSpuBuf[channel]);
+    //sceSdSetAddr(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VA_SSA, (u_int)(AdpcmSpuBuf[channel] + 4096));
 }
 
 void IaSetRegAdsr(u_char channel)
 {
-    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_ADSR1, 0xFu);
+    /*sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_ADSR1, 0xFu);
     sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_ADSR2, 0x1FC0u);
     sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_ADSR1, 0xFu);
-    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_ADSR2, 0x1FC0u);
+    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_ADSR2, 0x1FC0u);*/
 }
 
 void IaSetRegVol(u_char channel)
 {
-    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_VOLL, iop_adpcm[channel].vol_ll);
+    /*sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_VOLL, iop_adpcm[channel].vol_ll);
     sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_VOLR, iop_adpcm[channel].vol_lr);
     sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_VOLL, iop_adpcm[channel].vol_rl);
-    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_VOLR, iop_adpcm[channel].vol_rr);
+    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_VOLR, iop_adpcm[channel].vol_rr);*/
 }
 
 void IaSetRegPitch(u_char channel)
 {
-    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_PITCH, iop_adpcm[channel].pitch);
-    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_PITCH, iop_adpcm[channel].pitch);
+    /*sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_PITCH, iop_adpcm[channel].pitch);
+    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_PITCH, iop_adpcm[channel].pitch);*/
 }
 
 void IaSetRegKon(u_char channel)
 {
     // What is even going on here? these seems completely wrong
-    if (channel) {
+    /*if (channel) {
         sceSdSetSwitch(iop_adpcm[channel].core | SD_S_KON, 0xC00000u);
     } else {
         sceSdSetSwitch(iop_adpcm[channel].core | SD_S_KON, 3);
-    }
+    }*/
 }
 
 void IaSetRegKoff(u_char channel)
 {
     // What is even going on here? these seems completely wrong
-    if (channel) {
+    /*if (channel) {
         sceSdSetSwitch(iop_adpcm[channel].core | SD_S_KOFF, 0xC00000u);
     } else {
         sceSdSetSwitch(iop_adpcm[channel].core | SD_S_KOFF, 3);
-    }
+    }*/
 }
 
 void IaSetWrkVolPanPitch(u_char channel, u_short pan, u_short master_vol, u_short pitch)
@@ -204,7 +207,7 @@ void IaSetSteMono()
     IaSetRegVol(0);
 }
 
-void IaSetStopBlock(u_char channel)
+static void IaSetStopBlock(u_char channel)
 {
     u_char sb_tbl[64];
 
@@ -213,13 +216,13 @@ void IaSetStopBlock(u_char channel)
     sb_tbl[17] = 7;
     sb_tbl[33] = 7;
     sb_tbl[49] = 7;
-    while (sceSdVoiceTrans(channel, 0, sb_tbl, snd_buf_top[2 * channel + 26], 0x40u) < 0)
-        ;
-    sceSdVoiceTransStatus(channel, 1);
+    //while (sceSdVoiceTrans(channel, 0, sb_tbl, snd_buf_top[2 * channel + 26], 0x40u) < 0)
+       // ;
+    //sceSdVoiceTransStatus(channel, 1);
 }
 
 void IaSetMasterVol(u_short mvol)
 {
-    sceSdSetParam(SD_P_MVOLL, mvol & 0x3FFF);
-    sceSdSetParam(SD_P_MVOLR, mvol & 0x3FFF);
+    //sceSdSetParam(SD_P_MVOLL, mvol & 0x3FFF);
+    //sceSdSetParam(SD_P_MVOLR, mvol & 0x3FFF);
 }

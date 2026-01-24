@@ -1,6 +1,6 @@
-#include "adpcm/iopadpcm.h"
-
+#include "iopadpcm.h"
 #include "memory.h"
+
 
 void InitAdpcmCmdBuf()
 {
@@ -10,19 +10,19 @@ void InitAdpcmCmdBuf()
 
 void IAdpcmCmdSlide()
 {
-    ADPCM_CMD* ac0;
-    ADPCM_CMD* ac1;
     int i;
 
-    now_cmd = cmd_buf[0];
-    ac0 = &cmd_buf[0];
-    ac1 = &cmd_buf[1];
+    SDL_LockMutex(cmd_lock);
 
-    for (i = 0; i < 7; i++) {
-        *ac0++ = *ac1++;
+    now_cmd = cmd_buf[0];
+    for (i = 0; i < 7; i++)
+    {
+        cmd_buf[i] = cmd_buf[i + 1];
     }
 
-    ac0->cmd_type = 0;
+    cmd_buf[7].cmd_type = 0;
+
+    SDL_UnlockMutex(cmd_lock);
 }
 
 u_char IAdpcmChkCmdExist()
