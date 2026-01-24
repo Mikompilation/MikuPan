@@ -11,11 +11,11 @@ typedef struct {
     u_char sq_num;
 } CAMERA4_DATA_POP;
 
-// extern u_char floor_exist[5][4];
+extern const u_char floor_exist[5][4];
 extern u_char room_pass[42];
-// extern u_char gtmp_cam_type;
-// extern u_char gtmp_room;
-// extern u_short gtmp_cam_no;
+extern u_char gtmp_cam_type;
+extern u_char gtmp_room;
+extern u_short gtmp_cam_no;
 
 int MissonMapDataLoad(u_char msn_no);
 void InitMapStatus(u_char msn_no);

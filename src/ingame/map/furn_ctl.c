@@ -1,6 +1,8 @@
 #include "common.h"
 #include "furn_ctl.h"
 
+int furn_disp_flg;
+
 void FurnCtrlMain()
 {
 }
