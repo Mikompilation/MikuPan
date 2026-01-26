@@ -1133,8 +1133,6 @@ void GetCameraData(u_char kind, MAP_CAM_INFO *mci)
     }
 }
 
-float GetMCLocalPosPer(u_short cn, u_char kind, u_char id);
-
 void SetCamPos0(SgCAMERA *tc, MAP_CAM_INFO *mci)
 {
     sceVu0FVECTOR tv;

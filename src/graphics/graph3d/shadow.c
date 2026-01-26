@@ -1055,7 +1055,8 @@ void AssignShadowPreProcess(u_int *prim)
             pGroupPacket = prim;
         }
 
-        prim = (u_int *) prim[0];
+        //prim = (u_int *) prim[0];
+        prim = GetNextProcUnitHeaderPtr(prim);
     }
 }
 

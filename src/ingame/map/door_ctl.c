@@ -32,6 +32,7 @@
 #include "os/eeiop/se_srund.h"
 #include "os/eeiop/se_trans.h"
 
+#include <math.h>
 #include <string.h>
 
 static short int SearchAcDoor(int door_id);
@@ -1092,13 +1093,26 @@ static void DoorCtrlOpen()
             }
         }
 
+            float f1 = SgCosf(tmp_rot);
+            float f2 = SgSinf(tmp_rot);
+
+            if (fabsf(f1) == 1.0f)
+            {
+                f2 = 0.0f;
+            }
+
+            if (fabsf(f2) == 1.0f)
+            {
+                f1 = 0.0f;
+            }
+
         door_open_ctrl.epos[0] =
-             dmotionp->sx * SgCosf(tmp_rot) + dmotionp->sy * SgSinf(tmp_rot) + door_wrk[dsmtnp->dwno_base].pos[0];
+             dmotionp->sx * f1 + dmotionp->sy * f2 + door_wrk[dsmtnp->dwno_base].pos[0];
 
         door_open_ctrl.epos[1] = plyr_wrk.move_box.pos[1];
 
         door_open_ctrl.epos[2] =
-             (dmotionp->sy * SgCosf(tmp_rot) - dmotionp->sx * SgSinf(tmp_rot)) + door_wrk[dsmtnp->dwno_base].pos[2];
+             (dmotionp->sy * f1 - dmotionp->sx * f2) + door_wrk[dsmtnp->dwno_base].pos[2];
 
         door_open_ctrl.door_pre = tmp_rot;
         door_open_ctrl.srot = plyr_wrk.move_box.rot[1] - tmp_rot;
@@ -1842,7 +1856,7 @@ void AllCloseConnectDoor()
 
                 if (room_no != 0xff && room_no != now_rid && IsRotType(dwp->type) == 0)
                 {
-                    DoorSttsChange(dwp->door_id, 1);
+                    DoorSttsChange(dwp->door_id, DOOR_STTS_CLOSE);
                 }
             }
         }
@@ -4380,6 +4394,16 @@ int ChkDoorIsInsite2(sceVu0FVECTOR dpos, float dpre_rot, u_short door_id)
     tmp_cos = SgCosf(cam_rot);
     tmp_sin = SgSinf(cam_rot);
 
+    if (fabsf(tmp_cos) == 1.0f)
+    {
+        tmp_sin = 0.0f;
+    }
+
+    if (fabsf(tmp_sin) == 1.0f)
+    {
+        tmp_cos = 0.0f;
+    }
+
     vr1[0] = tvr1[0] * tmp_cos + tvr1[2] * tmp_sin + vp[0];
     vr1[1] = vp[1];
     vr1[2] = tvr1[2] * tmp_cos - tvr1[0] * tmp_sin + vp[2];
@@ -4396,9 +4420,22 @@ int ChkDoorIsInsite2(sceVu0FVECTOR dpos, float dpre_rot, u_short door_id)
     vpb[1] = vp[1];
     vpb[2] = tvpb[2] * tmp_cos - tvpb[0] * tmp_sin + vp[2];
 
-    dp2[0] = (SgCosf(dpre_rot) * 450.0f) + dpos[0];
+    float f1 = SgCosf(dpre_rot);
+    float f2 = SgSinf(dpre_rot);
+
+    if (fabsf(f1) == 1.0f)
+    {
+        f2 = 0.0f;
+    }
+
+    if (fabsf(f2) == 1.0f)
+    {
+        f1 = 0.0f;
+    }
+
+    dp2[0] = (f1 * 450.0f) + dpos[0];
     dp2[1] = dpos[1];
-    dp2[2] = -(SgSinf(dpre_rot) * 450.0f) + dpos[2];
+    dp2[2] = -(f2 * 450.0f) + dpos[2];
 
     if (ChkLineCross(vpb[0], vpb[2], vr1[0], vr1[2], dpos[0], dpos[2], dp2[0], dp2[2]) != 0)
     {
@@ -4414,8 +4451,6 @@ int ChkDoorIsInsite2(sceVu0FVECTOR dpos, float dpre_rot, u_short door_id)
     {
         return 1;
     }
-
-    asm(""); // debug code?
 
     return 0;
 }

@@ -1,0 +1,1 @@
+ANI_CODE* arei_anm_tbl[] = { arei_anm, NULL, };

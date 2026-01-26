@@ -129,3 +129,4 @@ static ROOM_DOOR_SE rm_door[] = {
         .fno = {1478, 1474, 4294967295},
     },
 };
+

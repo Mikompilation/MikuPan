@@ -44,3 +44,4 @@ SE_FOOT_RAND_ITA rand_ita_tbl[] = {
         .rate = {0, 0, 0, 0},
     },
 };
+

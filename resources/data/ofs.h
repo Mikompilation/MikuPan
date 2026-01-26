@@ -1,1 +1,1 @@
-static sceVu0FVECTOR ofs = {26.0f, 24.0f, -114.0f, 0.0f};
+static sceVu0FVECTOR ofs = { 26.0f, 24.0f, -114.0f, 0.0f };

@@ -72,3 +72,4 @@ static RARE_ENE_DAT pazz_ene[] = {
         .pat = 1,
     },
 };
+

@@ -1,0 +1,1 @@
+u_char msn_title_sp_ttl_no[] = { 11, 11, 11, 11, 11 };

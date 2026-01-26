@@ -1,0 +1,1 @@
+ANI_CODE* m018anm_tbl[] = { m018anm000, arei_anm, arei_anm, m018anm003, m018anm004, arei_anm, m018anm006, m018anm007, m018anm008, m018anm009, m018anm010, m018anm011, m018anm012, m018anm013, m018anm014, m018anm015, m018anm016, NULL, };

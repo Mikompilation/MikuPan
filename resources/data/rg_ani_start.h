@@ -1,0 +1,1 @@
+RG_ANI_DAT* rg_ani_start[] = { rg_ani_start00, rg_ani_start01, };

@@ -156,3 +156,4 @@ WANDER_SOUL_DAT wander_soul_dat[] = {
         .adpcm_id = 65535,
     },
 };
+

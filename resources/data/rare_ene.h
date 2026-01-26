@@ -88,3 +88,4 @@ static RARE_ENE_DAT rare_ene[] = {
         .pat = 2,
     },
 };
+

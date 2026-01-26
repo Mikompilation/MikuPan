@@ -1,0 +1,1 @@
+ANI_CODE arei_anm[] = { 9216, 0 };

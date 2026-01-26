@@ -24,3 +24,4 @@ CLOTH_DAT m016_cloth[] = {
         .flg = 0,
     },
 };
+

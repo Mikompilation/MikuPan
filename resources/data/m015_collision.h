@@ -15,3 +15,4 @@ COLLISION_DAT m015_collision[] = {
         .bone_id = 0,
     },
 };
+

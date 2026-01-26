@@ -1,0 +1,1 @@
+u_char msn_title_sp_flr_no[] = { 12, 12, 12, 12, 12 };

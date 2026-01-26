@@ -42,3 +42,4 @@ PLYR_FURI_DAT plyr_act_furi3[] = {
         .move_type = 65535,
     },
 };
+

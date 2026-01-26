@@ -48,3 +48,4 @@ CLOTH_DAT m034_cloth[] = {
         .flg = 0,
     },
 };
+

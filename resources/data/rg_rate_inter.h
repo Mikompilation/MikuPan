@@ -1,0 +1,1 @@
+RG_RATE_DAT* rg_rate_inter[] = { rg_rate_inter00, rg_rate_inter01, };

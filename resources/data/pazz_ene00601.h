@@ -22,3 +22,4 @@ static SPRT_DAT pazz_ene00601[] = {
         .alpha = 128,
     },
 };
+

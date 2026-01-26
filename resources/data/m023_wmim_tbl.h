@@ -8,3 +8,4 @@ WMIM_DAT m023_wmim_tbl[] = {
         .bone_id = 0,
     },
 };
+

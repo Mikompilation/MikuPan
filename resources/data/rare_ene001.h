@@ -8,3 +8,4 @@ static RARE_ENE_1DAT rare_ene001[] = {
         .num = 2,
     },
 };
+

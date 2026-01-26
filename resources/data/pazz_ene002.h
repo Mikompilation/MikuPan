@@ -4,3 +4,4 @@ static RARE_ENE_1DAT pazz_ene002[] = {
         .num = 1,
     },
 };
+

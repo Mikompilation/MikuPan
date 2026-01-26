@@ -1,0 +1,48 @@
+RGOST_AP_DAT rg_ap_dat[] = {
+    {
+        .room = 2,
+        .ap_step0 = 236,
+        .ap_step1 = {0, 0, 0, 0},
+        .ap_step2 = {0, 0, 10, 0, 0, 0},
+        .ap_near = 3000,
+        .ap_far = 30000,
+        .ap_stts = 32768,
+    },
+    {
+        .room = 0,
+        .ap_step0 = 236,
+        .ap_step1 = {0, 0, 0, 0},
+        .ap_step2 = {0, 0, 99, 0, 0, 0},
+        .ap_near = 1700,
+        .ap_far = 30000,
+        .ap_stts = 32768,
+    },
+    {
+        .room = 3,
+        .ap_step0 = 236,
+        .ap_step1 = {0, 0, 0, 0},
+        .ap_step2 = {10, 0, 99, 0, 0, 0},
+        .ap_near = 1000,
+        .ap_far = 20000,
+        .ap_stts = 32768,
+    },
+    {
+        .room = 0,
+        .ap_step0 = 236,
+        .ap_step1 = {0, 0, 0, 0},
+        .ap_step2 = {0, 0, 99, 0, 0, 0},
+        .ap_near = 1700,
+        .ap_far = 30000,
+        .ap_stts = 32768,
+    },
+    {
+        .room = 3,
+        .ap_step0 = 236,
+        .ap_step1 = {0, 0, 0, 0},
+        .ap_step2 = {10, 0, 50, 0, 0, 0},
+        .ap_near = 1000,
+        .ap_far = 20000,
+        .ap_stts = 8192,
+    },
+};
+

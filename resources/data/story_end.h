@@ -121,3 +121,4 @@ SPRT_DAT story_end[11] = {
         .alpha = 128,
     },
 };
+

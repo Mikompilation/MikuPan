@@ -1,0 +1,1 @@
+SPRT_SDAT* msn_title_sp_ttl[] = { msn_title00_sp_ttl, msn_title01_sp_ttl, msn_title02_sp_ttl, msn_title03_sp_ttl, msn_title04_sp_ttl, };

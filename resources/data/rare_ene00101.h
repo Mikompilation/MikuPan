@@ -44,3 +44,4 @@ static SPRT_DAT rare_ene00101[] = {
         .alpha = 128,
     },
 };
+

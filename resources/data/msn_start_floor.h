@@ -1,0 +1,1 @@
+u_char msn_start_floor[] = { 1, 1, 1, 0, 2 };

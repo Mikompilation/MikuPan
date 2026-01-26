@@ -179,9 +179,16 @@ void MirrorInterPNode(MNODE *dst, MNODE *inner, MNODE *outer, ClipData *cldata)
     float alpha;
     float ialpha;
 
-    alpha = (inner->clip[cldata->xyz] - cldata->sgn * inner->clip[3])
-            / ((outer->clip[cldata->xyz] - cldata->sgn * outer->clip[3])
+    float lower = ((outer->clip[cldata->xyz] - cldata->sgn * outer->clip[3])
                - (inner->clip[cldata->xyz] - cldata->sgn * inner->clip[3]));
+
+    if (lower <= 0.0f)
+    {
+        lower = 1.0f;
+    }
+
+    alpha = (inner->clip[cldata->xyz] - cldata->sgn * inner->clip[3])
+            / lower;
 
     alpha = __builtin_fabsf(alpha);
 

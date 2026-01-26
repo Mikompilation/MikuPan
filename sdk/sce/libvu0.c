@@ -55,7 +55,9 @@ void sceVu0UnitMatrix(sceVu0FMATRIX m)
 
 void sceVu0TransposeMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 {
-    glmc_mat4_transpose_to(m1, m0);
+    mat4 out = {0};
+    glmc_mat4_transpose_to(m1, out);
+    glm_mat4_copy(out, m0);
 }
 
 void sceVu0CameraMatrix(sceVu0FMATRIX m, sceVu0FVECTOR p, sceVu0FVECTOR zd,
@@ -105,6 +107,8 @@ void sceVu0InversMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
 {
     //glm_mat4_inv(m1, m0);
 
+    mat4 out = {0};
+
     sceVu0FMATRIX rotT = {0};// temporary transpose of rotation part
 
     // Transpose the upper-left 3x3 rotation part
@@ -129,23 +133,25 @@ void sceVu0InversMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
     {
         for (int j = 0; j < 3; j++)
         {
-            m0[i][j] = rotT[i][j];
+            out[i][j] = rotT[i][j];
         }
     }
 
     // Compute new translation = -R^T * T
-    m0[0][3] = -(rotT[0][0] * m1[0][3] + rotT[0][1] * m1[1][3]
+    out[0][3] = -(rotT[0][0] * m1[0][3] + rotT[0][1] * m1[1][3]
                  + rotT[0][2] * m1[2][3]);
-    m0[1][3] = -(rotT[1][0] * m1[0][3] + rotT[1][1] * m1[1][3]
+    out[1][3] = -(rotT[1][0] * m1[0][3] + rotT[1][1] * m1[1][3]
                  + rotT[1][2] * m1[2][3]);
-    m0[2][3] = -(rotT[2][0] * m1[0][3] + rotT[2][1] * m1[1][3]
+    out[2][3] = -(rotT[2][0] * m1[0][3] + rotT[2][1] * m1[1][3]
                  + rotT[2][2] * m1[2][3]);
 
     // Last row
-    m0[3][0] = 0.0f;
-    m0[3][1] = 0.0f;
-    m0[3][2] = 0.0f;
-    m0[3][3] = 1.0f;
+    out[3][0] = 0.0f;
+    out[3][1] = 0.0f;
+    out[3][2] = 0.0f;
+    out[3][3] = 1.0f;
+
+    sceVu0CopyMatrix(m0, out);
 }
 
 void sceVu0CopyMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)

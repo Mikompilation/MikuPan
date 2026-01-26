@@ -1,0 +1,1 @@
+u_char msn_title_ttl_sp_num[] = { 2, 1, 1, 1, 1 };

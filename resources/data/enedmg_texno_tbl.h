@@ -22,3 +22,4 @@ static SPRT_DAT enedmg_texno_tbl[] = {
         .alpha = 128,
     },
 };
+

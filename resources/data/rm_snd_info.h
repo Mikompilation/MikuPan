@@ -360,3 +360,4 @@ static ROOM_SOUND_INFO rm_snd_info[] = {
         .adpcm = {23, 23, 23, 23, 23},
     },
 };
+
