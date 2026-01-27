@@ -110,7 +110,7 @@ static void ICdvdAdpcmLoad()
         pos = 1;
     }
 
-    MikuPan_ReadFileInArchive64(cdvd_stat.adpcm[pos].start, cdvd_stat.adpcm[pos].size_now, &iop_adpcm[0].data);
+    MikuPan_ReadFileInArchive64(cdvd_stat.adpcm[pos].start, cdvd_stat.adpcm[pos].size_now, &AdpcmIopBuf[pos]);
 
     cdvd_stat.adpcm[0].now_load = 1;
     cdvd_stat.adpcm_req = 1;
@@ -257,7 +257,7 @@ void ICdvdLoadReqAdpcm(int lsn, u_int size_now, void* buf, u_char channel, int r
     cdvd_stat.adpcm[channel].start = lsn;
     cdvd_stat.adpcm[channel].size_now = size_now;
     cdvd_stat.adpcm[channel].read_now = 0;
-    cdvd_stat.adpcm[channel].taddr = buf;
+    cdvd_stat.adpcm[channel].taddr = &AdpcmIopBuf[channel];
     cdvd_stat.adpcm[channel].req_type = req_type;
     cdvd_stat.adpcm[channel].endld_flg = endld_flg;
     cdvd_stat.adpcm_req = 1;

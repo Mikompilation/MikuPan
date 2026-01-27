@@ -125,7 +125,7 @@ void IAdpcmPreLoad(ADPCM_CMD *acp)
     }
 
     ICdvdLoadReqAdpcm(iop_adpcm[channel].start, acp->size,
-                      (s16 *) AdpcmIopBuf[channel], channel, 1u, endld_flg);
+                      AdpcmIopBuf[channel], channel, 1u, endld_flg);
 }
 
 void IAdpcmPreLoadEnd(int channel)
@@ -157,15 +157,15 @@ void IAdpcmPlay(ADPCM_CMD *acp)
 
     s32 histL[2] = {}, histR[2] = {};
 
-    s16 *src = iop_adpcm[0].data;
+    s16 *src = AdpcmIopBuf[channel];
     s16 *dst;
 
     int chunks = acp->size / 0x800 / 2;
 
     // Prevent memleaks by not reading too much into the audio stream.
     // Let's make sure we're actually playing something first!!
-    if (SDL_GetAudioStreamQueued(iop_adpcm[0].stream) >= acp->size
-        && iop_adpcm[0].stat == ADPCM_STAT_PLAY)
+    if (SDL_GetAudioStreamQueued(iop_adpcm[channel].stream) >= acp->size
+        && iop_adpcm[channel].stat == ADPCM_STAT_PLAY)
     {
         return;
     }
@@ -190,25 +190,19 @@ void IAdpcmPlay(ADPCM_CMD *acp)
             src += 8;
         }
 
-        SDL_PutAudioStreamPlanarData(iop_adpcm[0].stream, (void *) dec, 2,
+        SDL_PutAudioStreamPlanarData(iop_adpcm[channel].stream, (void *) dec, 2,
                                      3584);
     }
 
-    SDL_SetAudioStreamFrequencyRatio(iop_adpcm[0].stream,
+    SDL_SetAudioStreamFrequencyRatio(iop_adpcm[channel].stream,
                                      (float) acp->pitch / (float) 0x1000);
-
-    // prevent memleaks by ensureing data buffer is clear when we're done with it
-    if (iop_adpcm[0].data != NULL)
-    {
-        //memset(iop_adpcm[0].data, 0, acp->size);
-    }
 
     if (iop_adpcm[channel].stat == ADPCM_STAT_PRELOAD_END)
     {
         iop_adpcm[channel].loop_end = 0;
         iop_adpcm[channel].stat = ADPCM_STAT_PLAY;
 
-        SDL_ResumeAudioStreamDevice(iop_adpcm[0].stream);
+        SDL_ResumeAudioStreamDevice(iop_adpcm[channel].stream);
     }
 
     return;

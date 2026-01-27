@@ -57,6 +57,7 @@ void AdpcmMapCtrlInit()
 void AdpcmMapUse()
 {
     adpcm_map.map.use = 1;
+    AdpcmMapCtrl(); // Hack
 }
 
 void AdpcmMapNoUse(void)
