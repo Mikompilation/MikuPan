@@ -10,17 +10,21 @@ void InitAdpcmCmdBuf()
 
 void IAdpcmCmdSlide()
 {
+    ADPCM_CMD* ac0;
+    ADPCM_CMD* ac1;
     int i;
 
     SDL_LockMutex(cmd_lock);
 
     now_cmd = cmd_buf[0];
-    for (i = 0; i < 7; i++)
-    {
-        cmd_buf[i] = cmd_buf[i + 1];
+    ac0 = &cmd_buf[0];
+    ac1 = &cmd_buf[1];
+
+    for (i = 0; i < 7; i++) {
+        *ac0++ = *ac1++;
     }
 
-    cmd_buf[7].cmd_type = 0;
+    ac0->cmd_type = 0;
 
     SDL_UnlockMutex(cmd_lock);
 }
@@ -44,7 +48,9 @@ void IAdpcmCmdPlay()
         case ADPCM_STAT_PRELOAD_END:
             DbgDispAdpcmCmdWrk(&now_cmd);
             if (now_cmd.fade_flm)
+            {
                 IaSetWrkFadeMode(now_cmd.channel, now_cmd.fade_mode, now_cmd.target_vol, 4 * now_cmd.fade_flm);
+            }
             IAdpcmPlay(&now_cmd);
             now_cmd.cmd_type = 0;
             break;

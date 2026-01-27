@@ -28,7 +28,7 @@ typedef struct { // 0x10
 } CDVD_PCM;
 
 typedef struct { // 0x18
-    /* 0x00 */ u_int* taddr;
+    /* 0x00 */ void* taddr;
     /* 0x04 */ int start;
     /* 0x08 */ int file_no;
     /* 0x0c */ int size_now;
