@@ -47,7 +47,7 @@ typedef struct {
 // extern FURN_EFCT_DEFORM fefct_deform[0];
 
 void FurnEfctSet(FURN_WRK *fwp);
-void FurnEfctFree();
+void FurnEfctFree(FURN_WRK *fwp);
 void FurnHintDeformCtrl();
 
 #endif // INGAME_MAP_FURN_EFF_H

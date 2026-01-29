@@ -1,8 +1,15 @@
 #include "common.h"
+#include "furn_ctl.h"
 
-INCLUDE_ASM(const s32, "ingame/map/furn_eff", FurnEfctSet);
+void FurnEfctSet(/* s3 19 */ FURN_WRK *fwp)
+{
 
-INCLUDE_ASM(const s32, "ingame/map/furn_eff", FurnEfctFree);
+}
+
+void FurnEfctFree(FURN_WRK *fwp)
+{
+
+}
 
 INCLUDE_ASM(const s32, "ingame/map/furn_eff", FurnEfctSetUse);
 
@@ -16,4 +23,7 @@ INCLUDE_ASM(const s32, "ingame/map/furn_eff", FurnEfctGetFefct);
 
 INCLUDE_ASM(const s32, "ingame/map/furn_eff", FurnEfctFreeFefct);
 
-INCLUDE_ASM(const s32, "ingame/map/furn_eff", FurnHintDeformCtrl);
+void FurnHintDeformCtrl()
+{
+    
+}
