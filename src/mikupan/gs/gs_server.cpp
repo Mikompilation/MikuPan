@@ -336,6 +336,7 @@ unsigned char *DownloadGsTexture(sceGsTex0 *tex0)
                 "Texture Transfer Upload Failed, Unsupported Format: DPSM "
                 "{:#x}",
                 (int) tex0->PSM);
+            return nullptr;
             break;
     }
 

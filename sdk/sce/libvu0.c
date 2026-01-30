@@ -37,7 +37,7 @@ void sceVu0Normalize(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 
 float sceVu0InnerProduct(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
-    return glm_vec4_dot(v0, v1);
+    return glm_vec3_dot(v0, v1);
 }
 
 void sceVu0OuterProduct(sceVu0FVECTOR v0, sceVu0FVECTOR v1, sceVu0FVECTOR v2)

@@ -540,6 +540,7 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
 
     glad_glEnable(GL_BLEND);
     glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glad_glDepthMask(GL_FALSE);
 
     float color[4] = {AdjustAlpha(r) / 255.0f, AdjustAlpha(g) / 255.0f,
                       AdjustAlpha(b) / 255.0f, AdjustAlpha(a) / 255.0f};
@@ -550,6 +551,8 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
 
     glad_glBindVertexArray(gSpriteVAO);
     glad_glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glad_glDepthMask(GL_TRUE);
 }
 
 void MikuPan_SetupFntTexture()
@@ -707,8 +710,8 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
 
     if (pProcData->VUMeshData.GifTag.NREG != 6)
     {
-        return;
-        mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x28);
+        //return;
+        // /mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x18);
     }
 
     MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(mesh_tex_reg);
@@ -718,8 +721,14 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
         texture_info = MikuPan_CreateGLTexture(mesh_tex_reg);
     }
 
+    glad_glDepthMask(GL_FALSE);
     glad_glActiveTexture(GL_TEXTURE0);
-    glad_glBindTexture(GL_TEXTURE_2D, texture_info->id);
+
+    if (texture_info != NULL)
+    {
+        glad_glBindTexture(GL_TEXTURE_2D, texture_info->id);
+    }
+
 
     for (int i = 0; i < GET_NUM_MESH(pPUHead); i++)
     {

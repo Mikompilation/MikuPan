@@ -136,7 +136,7 @@ bool show_frame_time_graph = false;
 bool controller_config = false;
 bool controller_rumble_test = false;
 bool camera_debug = false;
-int render_wireframe = 1;
+int render_wireframe = 0;
 
 void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
 {

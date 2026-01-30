@@ -892,6 +892,12 @@ void ResetRDPFire(u_short furn_id)
     ec = pfire_rsv[ret].adr;
 
     hh = ec->pnt[1];
+
+    if (hh == NULL)
+    {
+        return;
+    }
+
     hh->flag = 0;
 
     ResetEffects(ec);
