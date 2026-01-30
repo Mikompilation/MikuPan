@@ -42,9 +42,9 @@ typedef struct {
 
 #include "ingame/map/furn_ctl.h"
 
-// extern FURN_EFCT_FIRE fefct_fire[0];
-// extern FURN_EFCT_SUNSHINE fefct_sunshine[0];
-// extern FURN_EFCT_DEFORM fefct_deform[0];
+extern FURN_EFCT_FIRE fefct_fire[];
+extern FURN_EFCT_SUNSHINE fefct_sunshine[];
+extern FURN_EFCT_DEFORM fefct_deform[];
 
 void FurnEfctSet(FURN_WRK *fwp);
 void FurnEfctFree(FURN_WRK *fwp);
