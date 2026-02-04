@@ -192,6 +192,13 @@ void sceVu0RotMatrixY(sceVu0FMATRIX m0, sceVu0FMATRIX m1, float ry)
     sceVu0CopyMatrix(m0, out);
 }
 
+void sceVu0RotMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FVECTOR rot)
+{
+    sceVu0RotMatrixZ(m0, m1, rot[2]);
+    sceVu0RotMatrixY(m0, m0, rot[1]);
+    sceVu0RotMatrixX(m0, m0, rot[0]);
+}
+
 void sceVu0TransMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FVECTOR tv)
 {
     glm_mat4_copy(m1, m0);

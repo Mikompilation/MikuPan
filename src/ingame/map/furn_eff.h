@@ -3,6 +3,8 @@
 
 #include "typedefs.h"
 
+#include "furn_dat.h"
+
 typedef struct {
 	float pos_x;
 	float pos_y;
