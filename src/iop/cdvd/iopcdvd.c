@@ -296,7 +296,7 @@ void ICdvdMain()
 
         if (cdvd_stat.adpcm[pos].req_type == 1)
         {
-            IAdpcmLoadEndPreOnly(0);
+            IAdpcmLoadEndPreOnly(pos);
         }
 
         else

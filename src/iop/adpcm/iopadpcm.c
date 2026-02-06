@@ -9,12 +9,9 @@
 #include "mikupan/mikupan_logging_c.h"
 #include "typedefs.h"
 
-#include <stdlib.h>
+#include "common/audio_common.h"
 
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#define clamp(val, min, max)                                                   \
-    (((val) > (max)) ? (max) : (((val) < (min)) ? (min) : (val)))
+#include <stdlib.h>
 
 IOP_ADPCM iop_adpcm[2];
 ADPCM_CMD now_cmd;
@@ -42,46 +39,6 @@ enum
     IA_PAUSE = 4,
     IA_RESTART = 5,
 };
-
-static const s32 tbl_adpcm_filter[16][2] = {
-    {  0,   0},
-    { 60,   0},
-    {115, -52},
-    { 98, -55},
-    {122, -60}
-};
-
-static void adpcm_decode_block(s16 *buffer, s16 *block, s32 *prev1, s32 *prev2)
-{
-    const s32 header = *block;
-    const s32 shift = (header & 0xF) + 16;
-    const int id = header >> 4 & 0xF;
-    const s32 pred1 = tbl_adpcm_filter[id][0];
-    const s32 pred2 = tbl_adpcm_filter[id][1];
-
-    const s8 *blockbytes = (s8 *) &block[1];
-    const s8 *blockend = &blockbytes[13];
-
-    for (; blockbytes <= blockend; ++blockbytes)
-    {
-        s32 data = ((*blockbytes) << 28) & 0xF0000000;
-        s32 pcm =
-            (data >> shift) + (((pred1 * *prev1) + (pred2 * *prev2) + 32) >> 6);
-
-        pcm = clamp(pcm, -0x8000, 0x7fff);
-        *(buffer++) = pcm;
-
-        data = ((*blockbytes) << 24) & 0xF0000000;
-        s32 pcm2 =
-            (data >> shift) + (((pred1 * pcm) + (pred2 * *prev1) + 32) >> 6);
-
-        pcm2 = clamp(pcm2, -0x8000, 0x7fff);
-        *(buffer++) = pcm2;
-
-        *prev2 = pcm;
-        *prev1 = pcm2;
-    }
-}
 
 void IAdpcmPreLoad(ADPCM_CMD *acp)
 {
@@ -170,7 +127,7 @@ static void FillBuffer(int size, u_char channel, s16 **dec_buf)
             src += 8;
         }
 
-        SDL_PutAudioStreamPlanarData(iop_adpcm[channel].stream, (void *) dec, 2,
+        SDL_PutAudioStreamPlanarData(iop_adpcm[channel].stream, (void *) dec, CHANNELS,
                                      3584);
     }
 }
@@ -423,9 +380,9 @@ void IAdpcmInit(int dev_init)
     if (!dev_init)
         IaInitDev(0);
 
-    spec.channels = 2;
+    spec.channels = CHANNELS;
     spec.format = SDL_AUDIO_S16;
-    spec.freq = 48000;
+    spec.freq = SAMPLE_RATE;
     iop_adpcm[0].stream = SDL_CreateAudioStream(&spec, NULL);
     SDL_BindAudioStream(audio_dev, iop_adpcm[0].stream);
 
