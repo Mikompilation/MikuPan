@@ -360,6 +360,8 @@ u_int *SetVUVNDataPost(u_int *prim)
             }
     }
 
+    //MikuPan_RenderVertices((float*) getObjWrk(), vh->vnum);
+
     return (u_int *) vp;
 }
 

@@ -25,6 +25,7 @@
 #define PS2_RESOLUTION_Y_INT 448
 #define PS2_CENTER_X 320.0f
 #define PS2_CENTER_Y 224.0f
+#define GET_MESH_TYPE(intpointer) (char)((char*)intpointer)[13]
 
 int window_width = 640;
 int window_height = 448;
@@ -89,7 +90,7 @@ SDL_AppResult MikuPan_Init()
 
     // Position attribute
     glad_glEnableVertexAttribArray(0);
-    glad_glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+    glad_glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, /* 6 */ 3 * sizeof(float),
                                (void *) 0);
 
     glad_glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
@@ -729,19 +730,30 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
         glad_glBindTexture(GL_TEXTURE_2D, texture_info->id);
     }
 
-
     for (int i = 0; i < GET_NUM_MESH(pPUHead); i++)
     {
         pVMCD =
             (struct _SGDVUMESHCOLORDATA *) GetNextUnpackAddr((u_int *) pVMCD);
 
-        GLfloat *vertices =
+        GLfloat *vertices = NULL;
+
+        /// This one has the vertices buffer split from the normal
+        if (GET_MESH_TYPE(pPUHead) == 0x32)
+        {
+            vertices =
             (GLfloat *) (pVUVNData->VUVNData_Preset.aui
                          + (vertexOffset + pVUVN->VUVNDesc.sNumNormal) * 3
                          + 10);
+        }
+        else // 0x12
+        {
+            return;
+            /// This one has the vertex and normal buffer together: v,n
+            vertices = &((float *) &(((int*)pVUVN)[14]))[vertexOffset * 6];
+        }
 
         size_t vertexCount = pVMCD->VifUnpack.NUM;
-        size_t byteSize = vertexCount * sizeof(float[3]);
+        size_t byteSize = vertexCount * sizeof(float[/* 6 */ 3]);
 
         glad_glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
@@ -794,16 +806,16 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
             continue;
         }
 
-        GLuint VAO, VBO;
+        GLuint VAO2, VBO2;
 
-        glad_glGenVertexArrays(1, &VAO);
-        glad_glGenBuffers(1, &VBO);
+        glad_glGenVertexArrays(1, &VAO2);
+        glad_glGenBuffers(1, &VBO2);
 
         // Make the VAO the current Vertex Array Object by binding it
-        glad_glBindVertexArray(VAO);
+        glad_glBindVertexArray(VAO2);
 
         // Bind the VBO specifying it's a GL_ARRAY_BUFFER
-        glad_glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glad_glBindBuffer(GL_ARRAY_BUFFER, VBO2);
 
         // Introduce the vertices into the VBO
         glad_glBufferData(GL_ARRAY_BUFFER,
@@ -828,10 +840,10 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
         // Draw the triangle using the GL_TRIANGLE_STRIP primitive
         int render_type =
             MikuPan_IsWireframeRendering() ? GL_LINE_STRIP : GL_TRIANGLE_STRIP;
-        glad_glDrawArrays(GL_TRIANGLE_STRIP, 0, pMeshInfo[i].uiPointNum);
+        glad_glDrawArrays(render_type, 0, pMeshInfo[i].uiPointNum);
 
-        glad_glDeleteVertexArrays(1, &VAO);
-        glad_glDeleteBuffers(1, &VBO);
+        glad_glDeleteVertexArrays(1, &VAO2);
+        glad_glDeleteBuffers(1, &VBO2);
 
         vertexOffset += pMeshInfo[i].uiPointNum;
     }

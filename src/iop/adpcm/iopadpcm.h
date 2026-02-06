@@ -173,6 +173,7 @@ void IaSetRegPitch(u_char channel);
 void IaSetRegAdsr(u_char channel);
 void IaSetRegSsa(u_char channel);
 void IaSetRegKon(u_char channel);
+void IAdpcmAddCmd(IOP_COMMAND* icp);
 
 SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount);
 SDLCALL int IAdpcmReadCh1(void *data);

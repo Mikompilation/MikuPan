@@ -262,6 +262,10 @@ int BoundClip(sceVu0FVECTOR ed, sceVu0FVECTOR v)
     sceVu0FVECTOR *wk1 = work_matrix_1;// in [vf8:vf11]
     sceVu0FVECTOR v0 = {0};
 
+    glm_mat4_mulv(wk0, v, v0);
+    glm_mat4_mulv(wk1, v, ed);
+
+    /*
     v0[0] = (wk0[0][0] * v[0]) + (wk0[1][0] * v[1]) + (wk0[2][0] * v[2])
             + (wk0[3][0] * 1.0f);
     v0[1] = (wk0[0][1] * v[0]) + (wk0[1][1] * v[1]) + (wk0[2][1] * v[2])
@@ -279,6 +283,7 @@ int BoundClip(sceVu0FVECTOR ed, sceVu0FVECTOR v)
             + (wk1[3][2] * 1.0f);
     ed[3] = (wk1[0][3] * v[0]) + (wk1[1][3] * v[1]) + (wk1[2][3] * v[2])
             + (wk1[3][3] * 1.0f);
+    */
 
     if (v0[0] > +fabsf(v0[3]))
         ret |= VU0_CLIP_X_POS;
@@ -303,6 +308,10 @@ int BoundClipQ(sceVu0FVECTOR ed, sceVu0FVECTOR v0, sceVu0FVECTOR v1)
     sceVu0FVECTOR *wk0 = work_matrix_0;// in [vf4:vf7]
     sceVu0FVECTOR *wk1 = work_matrix_1;// in [vf8:vf11]
 
+    glm_mat4_mulv(wk0, v1, v0);
+    glm_mat4_mulv(wk1, v1, ed);
+
+    /*
     v0[0] = (wk0[0][0] * v1[0]) + (wk0[1][0] * v1[1]) + (wk0[2][0] * v1[2])
             + (wk0[3][0] * 1.0f);
     v0[1] = (wk0[0][1] * v1[0]) + (wk0[1][1] * v1[1]) + (wk0[2][1] * v1[2])
@@ -320,6 +329,7 @@ int BoundClipQ(sceVu0FVECTOR ed, sceVu0FVECTOR v0, sceVu0FVECTOR v1)
             + (wk1[3][2] * 1.0f);
     ed[3] = (wk1[0][3] * v1[0]) + (wk1[1][3] * v1[1]) + (wk1[2][3] * v1[2])
             + (wk1[3][3] * 1.0f);
+    */
 
     if (v0[0] > +fabsf(v0[3]))
         ret |= VU0_CLIP_X_POS;
@@ -422,6 +432,10 @@ static inline void asm_1__CheckBoundingBox(sceVu0FMATRIX m0, sceVu0FMATRIX m1,
     sceVu0FVECTOR *wk0 = work_matrix_0;// in [vf4:vf7]
     sceVu0FVECTOR *wk1 = work_matrix_1;// in [vf8:vf11]
 
+    glm_mat4_mul(m0, lw, wk0);
+    glm_mat4_mul(m0, m1, wk1);
+
+    /*
     wk0[0][0] = (m0[0][0] * lw[0][0]) + (m0[1][0] * lw[0][1])
                 + (m0[2][0] * lw[0][2]) + (m0[3][0] * lw[0][3]);
     wk0[0][1] = (m0[0][1] * lw[0][0]) + (m0[1][1] * lw[0][1])
@@ -493,6 +507,7 @@ static inline void asm_1__CheckBoundingBox(sceVu0FMATRIX m0, sceVu0FMATRIX m1,
                 + (m0[2][2] * m1[3][2]) + (m0[3][2] * m1[3][3]);
     wk1[3][3] = (m0[0][3] * m1[3][0]) + (m0[1][3] * m1[3][1])
                 + (m0[2][3] * m1[3][2]) + (m0[3][3] * m1[3][3]);
+    */
 }
 
 int CheckBoundingBox(u_int *prim)
@@ -718,6 +733,10 @@ void _SetMulMatrixBB(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FMATRIX lw)
     sceVu0FVECTOR *wk0 = work_matrix_0;// in [vf4:vf7]
     sceVu0FVECTOR *wk1 = work_matrix_1;// in [vf8:vf11]
 
+    glm_mat4_mul(m0, lw, wk0);
+    glm_mat4_mul(m0, m1, wk1);
+
+    /*
     wk0[0][0] = (m0[0][0] * lw[0][0]) + (m0[1][0] * lw[0][1])
                 + (m0[2][0] * lw[0][2]) + (m0[3][0] * lw[0][3]);
     wk0[0][1] = (m0[0][1] * lw[0][0]) + (m0[1][1] * lw[0][1])
@@ -789,4 +808,5 @@ void _SetMulMatrixBB(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FMATRIX lw)
                 + (m0[2][2] * m1[3][2]) + (m0[3][2] * m1[3][3]);
     wk1[3][3] = (m0[0][3] * m1[3][0]) + (m0[1][3] * m1[3][1])
                 + (m0[2][3] * m1[3][2]) + (m0[3][3] * m1[3][3]);
+    */
 }

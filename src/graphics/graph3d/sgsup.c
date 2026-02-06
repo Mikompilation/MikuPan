@@ -301,10 +301,7 @@ void SetVUMeshDataP(u_int *prim)
 
         datap = (u_int *)getObjWrk();
 
-        if (0x32 == mtype)
-        {
-            MikuPan_RenderMeshType0x32((struct SGDPROCUNITHEADER *)vuvnprim, (struct SGDPROCUNITHEADER *)prim);
-        }
+        MikuPan_RenderMeshType0x32((struct SGDPROCUNITHEADER *)vuvnprim, (struct SGDPROCUNITHEADER *)prim);
 
         if (edge_check != 0)
         {

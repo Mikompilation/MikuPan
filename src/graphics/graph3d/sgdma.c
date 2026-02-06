@@ -14,6 +14,7 @@
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sgsu.h"
 #include "mikupan/gs/gs_server_c.h"
+#include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_types.h"
 
 #define REG_VIF1_STAT        ((volatile u_int *)(0x10003c00))
@@ -345,7 +346,7 @@ void LoadTRI2Files(u_int *prim)
 
 void RebuildTRI2Files(u_int *prim)
 {
-    u_int next_pointer;
+    int64_t next_pointer;
     int tnum;
     int pads;
     int tri2size;
@@ -365,7 +366,7 @@ void RebuildTRI2Files(u_int *prim)
     sceGsStoreImage spi;
 
     fprim = prim;
-    next_pointer = prim[0];
+    next_pointer = (int64_t)GetNextProcUnitHeaderPtr(prim);
     tnum = prim[2];
     pads = prim[3];
     maxaddr = 0;
