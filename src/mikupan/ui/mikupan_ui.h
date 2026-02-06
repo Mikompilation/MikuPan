@@ -17,5 +17,6 @@ extern "C"
     void MikuPan_ProcessEventUi(SDL_Event *event);
     float MikuPan_GetFrameRate();
     int MikuPan_IsWireframeRendering();
+    int MikuPan_IsNormalsRendering();
 }
 #endif //MIKUPAN_IMGUI_WINDOW_H

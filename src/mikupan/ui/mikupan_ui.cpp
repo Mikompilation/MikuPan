@@ -137,13 +137,14 @@ bool controller_config = false;
 bool controller_rumble_test = false;
 bool camera_debug = false;
 int render_wireframe = 0;
+int render_normals = 0;
 
 void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
 {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
     ImGui_ImplSDL3_InitForOpenGL(window, renderer);
     ImGui_ImplOpenGL3_Init("#version 130");
@@ -191,6 +192,7 @@ void MikuPan_DrawUi()
             ImGui::Toggle("Clear Game", (bool*)&ingame_wrk.clear_count, ImGuiToggleFlags_Animated);
             ImGui::Toggle("Camera", (bool*)&camera_debug, ImGuiToggleFlags_Animated);
             ImGui::Toggle("Wireframe", (bool*)&render_wireframe, ImGuiToggleFlags_Animated);
+            ImGui::Toggle("Normals", (bool*)&render_normals, ImGuiToggleFlags_Animated);
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -252,4 +254,9 @@ float MikuPan_GetFrameRate()
 int MikuPan_IsWireframeRendering()
 {
     return render_wireframe;
+}
+
+int MikuPan_IsNormalsRendering()
+{
+    return render_normals;
 }

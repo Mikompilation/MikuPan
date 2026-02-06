@@ -1,14 +1,14 @@
+#include "sglight.h"
 #include "common.h"
 #include "typedefs.h"
-#include "sglight.h"
 
 #include "sce/libvu0.h"
 
 #include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
-#include "graphics/graph3d/sgsu.h"
 #include "graphics/graph3d/sglight.h"
+#include "graphics/graph3d/sgsu.h"
 
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
@@ -24,11 +24,11 @@ static SgLIGHT *stack_light[9];
 static sceVu0FVECTOR stack_eye[3];
 static int stack_light_num[9];
 
-#define GET_MESH_TYPE(intpointer) (char)((char*)intpointer)[13]
-#define GET_MESH_GLOOPS(intpointer) (int)((char*)intpointer)[14]
+#define GET_MESH_TYPE(intpointer) (char) ((char *) intpointer)[13]
+#define GET_MESH_GLOOPS(intpointer) (int) ((char *) intpointer)[14]
 
 //#define SCRATCHPAD ((u_char *)0x70000000)
-#define SCRATCHPAD ((u_char *)ps2_virtual_scratchpad)
+#define SCRATCHPAD ((u_char *) ps2_virtual_scratchpad)
 
 void SgPreRenderDbgOn()
 {
@@ -108,7 +108,8 @@ void SgSetDefaultLight(sceVu0FVECTOR eye, SgLIGHT *p0, SgLIGHT *p1, SgLIGHT *p2)
     DColorMtx[0][3] = 1.0f;
 }
 
-static void _SetColorMtx(sceVu0FMATRIX dc, sceVu0FMATRIX sc, sceVu0FVECTOR am, sceVu0FVECTOR v)
+static void _SetColorMtx(sceVu0FMATRIX dc, sceVu0FMATRIX sc, sceVu0FVECTOR am,
+                         sceVu0FVECTOR v)
 {
     //__asm__ volatile ("\n\
     //    lqc2      $vf16,0(%3)\n\
@@ -187,29 +188,29 @@ static int Tim2CalcBufWidth(int psm, int w)
 {
     switch (psm)
     {
-    case SCE_GS_PSMT8H:
-    case SCE_GS_PSMT4HL:
-    case SCE_GS_PSMT4HH:
-    case SCE_GS_PSMCT32:
-    case SCE_GS_PSMCT24:
-    case SCE_GS_PSMZ32:
-    case SCE_GS_PSMZ24:
-    case SCE_GS_PSMCT16:
-    case SCE_GS_PSMCT16S:
-    case SCE_GS_PSMZ16:
-    case SCE_GS_PSMZ16S:
-        return (w + 63) / 64;
-    break;
-    case SCE_GS_PSMT8:
-    case SCE_GS_PSMT4:
-        w = (w + 63) / 64;
+        case SCE_GS_PSMT8H:
+        case SCE_GS_PSMT4HL:
+        case SCE_GS_PSMT4HH:
+        case SCE_GS_PSMCT32:
+        case SCE_GS_PSMCT24:
+        case SCE_GS_PSMZ32:
+        case SCE_GS_PSMZ24:
+        case SCE_GS_PSMCT16:
+        case SCE_GS_PSMCT16S:
+        case SCE_GS_PSMZ16:
+        case SCE_GS_PSMZ16S:
+            return (w + 63) / 64;
+            break;
+        case SCE_GS_PSMT8:
+        case SCE_GS_PSMT4:
+            w = (w + 63) / 64;
 
-        if (w & 1)
-        {
-            w++;
-        }
-        return w;
-    break;
+            if (w & 1)
+            {
+                w++;
+            }
+            return w;
+            break;
     }
 
     return 0;
@@ -242,9 +243,10 @@ static void SetDecay(u_int decay)
 
     count = 0;
 
-    while (decay != 0) {
-            decay >>= 1;
-            count++;
+    while (decay != 0)
+    {
+        decay >>= 1;
+        count++;
     }
 
     _SetDevay_asm(count);
@@ -297,9 +299,9 @@ void SetBWLight(sceVu0FVECTOR col)
 
 void SetMaterialPointer()
 {
-    SgLightParallelp = (SgVULightParallel *)&SCRATCHPAD[0x300];
-    SgLightSpotp = (SgVULightSpot *)&SCRATCHPAD[0x370];
-    SgLightPointp = (SgVULightPoint *)&SCRATCHPAD[0x3f0];
+    SgLightParallelp = (SgVULightParallel *) &SCRATCHPAD[0x300];
+    SgLightSpotp = (SgVULightSpot *) &SCRATCHPAD[0x370];
+    SgLightPointp = (SgVULightPoint *) &SCRATCHPAD[0x3f0];
 }
 
 void ClearMaterialCache(HeaderSection *hs)
@@ -323,15 +325,16 @@ void SetMaterialDataVU(u_int *prim)
 
     if (old_tag_buf != tagswap)
     {
-        ClearMaterialCache((HeaderSection *)sgd_top_addr);
+        ClearMaterialCache((HeaderSection *) sgd_top_addr);
         old_tag_buf = tagswap;
     }
 
-    pmatC = (SgMaterialC *)MikuPan_GetHostPointer(prim[2]);
+    pmatC = (SgMaterialC *) MikuPan_GetHostPointer(prim[2]);
 
     if (pmatC->cache_on >= 0)
     {
-        if (pmatC->Point.num == SgPointGroupNum && pmatC->Spot.num == SgSpotGroupNum)
+        if (pmatC->Point.num == SgPointGroupNum
+            && pmatC->Spot.num == SgSpotGroupNum)
         {
             if (pmatC->Point.num != 0)
             {
@@ -348,7 +351,7 @@ void SetMaterialDataVU(u_int *prim)
             {
                 for (i = 0; i < 3; i++)
                 {
-                    if (pmatC->Spot.lnum[i] !=  SgSpotGroup[0].lnum[i])
+                    if (pmatC->Spot.lnum[i] != SgSpotGroup[0].lnum[i])
                     {
                         goto label;
                     }
@@ -369,27 +372,28 @@ void SetMaterialDataVU(u_int *prim)
         }
     }
 label:
-    base = (qword *)getObjWrk();
+    base = (qword *) getObjWrk();
 
     old_pmatC = pmatC;
-    pmatC->tagd_addr = (u_int)MikuPan_GetPs2OffsetFromHostPointer(base) & 0x0fffffff;
+    pmatC->tagd_addr =
+        (u_int) MikuPan_GetPs2OffsetFromHostPointer(base) & 0x0fffffff;
     qwc = 0;
 
     if (SgSpotGroupNum != 0)
     {
-        SgLightSpotp = (SgVULightSpot *)base;
+        SgLightSpotp = (SgVULightSpot *) base;
         base += 8;
         qwc += 8;
     }
 
     if (SgPointGroupNum != 0)
     {
-        SgLightPointp = (SgVULightPoint *)base;
+        SgLightPointp = (SgVULightPoint *) base;
         base += 8;
         qwc += 8;
     }
 
-    SgLightParallelp = (SgVULightParallel *)base;
+    SgLightParallelp = (SgVULightParallel *) base;
     qwc += 8;
 
     pmatC->qwc = qwc;
@@ -401,7 +405,8 @@ label:
         SgLightSpotp->SpotVif[0] = SCE_VIF1_SET_NOP(0);
         SgLightSpotp->SpotVif[1] = SCE_VIF1_SET_NOP(0);
         SgLightSpotp->SpotVif[2] = SCE_VIF1_SET_STCYCL(4, 4, 0);
-        SgLightSpotp->SpotVif[3] = SCE_VIF1_SET_UNPACK(0x35, 7, V4_32, 0); // VIF1_TOPS=0x35, count=7, V4_32, irq=0
+        SgLightSpotp->SpotVif[3] = SCE_VIF1_SET_UNPACK(
+            0x35, 7, V4_32, 0);// VIF1_TOPS=0x35, count=7, V4_32, irq=0
 
         pmatC->Spot.lnum[0] = SgSpotGroup[0].lnum[0];
         pmatC->Spot.lnum[1] = SgSpotGroup[0].lnum[1];
@@ -415,7 +420,8 @@ label:
         SgLightPointp->PointVif[0] = SCE_VIF1_SET_NOP(0);
         SgLightPointp->PointVif[1] = SCE_VIF1_SET_NOP(0);
         SgLightPointp->PointVif[2] = SCE_VIF1_SET_STCYCL(4, 4, 0);
-        SgLightPointp->PointVif[3] = SCE_VIF1_SET_UNPACK(0x3c, 7, V4_32, 0); // VIF1_TOPS=0x3c, count=7, V4_32, irq=0
+        SgLightPointp->PointVif[3] = SCE_VIF1_SET_UNPACK(
+            0x3c, 7, V4_32, 0);// VIF1_TOPS=0x3c, count=7, V4_32, irq=0
 
         pmatC->Point.lnum[0] = SgPointGroup[0].lnum[0];
         pmatC->Point.lnum[1] = SgPointGroup[0].lnum[1];
@@ -427,7 +433,8 @@ label:
     SgLightParallelp->ParallelVif[0] = SCE_VIF1_SET_NOP(0);
     SgLightParallelp->ParallelVif[1] = SCE_VIF1_SET_NOP(0);
     SgLightParallelp->ParallelVif[2] = SCE_VIF1_SET_STCYCL(4, 4, 0);
-    SgLightParallelp->ParallelVif[3] = SCE_VIF1_SET_UNPACK(0x2e, 7, V4_32, 0); // VIF1_TOPS=0x2e, count=7, V4_32, irq=0
+    SgLightParallelp->ParallelVif[3] = SCE_VIF1_SET_UNPACK(
+        0x2e, 7, V4_32, 0);// VIF1_TOPS=0x2e, count=7, V4_32, irq=0
 
     AppendDmaBuffer(qwc);
     FlushModel(0);
@@ -435,12 +442,12 @@ label:
 
 void SetMaterialPointerCoord()
 {
-    SgLightCoordp = (SgVULightCoord *)&SCRATCHPAD[0x1a0];
+    SgLightCoordp = (SgVULightCoord *) &SCRATCHPAD[0x1a0];
 }
 
 void SetMaterialPointerCoordVU()
 {
-    SgLightCoordp = (SgVULightCoord *)&((u_char *)getObjWrk())[0x1a0];
+    SgLightCoordp = (SgVULightCoord *) &((u_char *) getObjWrk())[0x1a0];
 }
 
 inline static void load_abmient(float *amb)
@@ -476,24 +483,28 @@ void SetMaterialData(u_int *prim)
     float max_color;
 
     //pmatC = (SgMaterialC *)prim[2];
-    pmatC = (SgMaterialC *)MikuPan_GetHostAddress(prim[2]);
+    pmatC = (SgMaterialC *) MikuPan_GetHostAddress(prim[2]);
     pmatC->cache_on = 1;
 
     if (pmatC->primtype != 0)
     {
         TAmbient[3] = 128.0f;
         DColorMtx[0][3] = 192.0f;
-        SColorMtx[1][3] = (pmatC->Specular[0] + pmatC->Specular[1] + pmatC->Specular[2]) * 43.0f;
+        SColorMtx[1][3] =
+            (pmatC->Specular[0] + pmatC->Specular[1] + pmatC->Specular[2])
+            * 43.0f;
     }
     else
     {
         TAmbient[3] = 255.0f;
         DColorMtx[0][3] = 255.0f;
-        SColorMtx[1][3] = (pmatC->Specular[0] + pmatC->Specular[1] + pmatC->Specular[2]) * 86.0f;
+        SColorMtx[1][3] =
+            (pmatC->Specular[0] + pmatC->Specular[1] + pmatC->Specular[2])
+            * 86.0f;
     }
 
     SColorMtx[2][3] = 255.0f;
-    dvec = (sceVu0FVECTOR *)&SCRATCHPAD[0x620];
+    dvec = (sceVu0FVECTOR *) &SCRATCHPAD[0x620];
 
     Vu0MulVectorXYZ(*dvec, TAmbient, pmatC->Ambient);
     Vu0AddVector(*dvec, *dvec, pmatC->Emission);
@@ -506,10 +517,12 @@ void SetMaterialData(u_int *prim)
     {
         Vu0MulVectorXYZ(*dvec, DColorMtx[i], pmatC->Diffuse);
         SetBWLight(*dvec);
-        Vu0MulVectorX(SgLightParallelp->Parallel_DColor[i], *dvec, DColorMtx[0][3]);
+        Vu0MulVectorX(SgLightParallelp->Parallel_DColor[i], *dvec,
+                      DColorMtx[0][3]);
         Vu0MulVectorXYZ(*dvec, SColorMtx[i], pmatC->Specular);
         SetBWLight(*dvec);
-        Vu0MulVectorX(SgLightParallelp->Parallel_SColor[i], *dvec, SColorMtx[1][3]);
+        Vu0MulVectorX(SgLightParallelp->Parallel_SColor[i], *dvec,
+                      SColorMtx[1][3]);
     }
 
     for (; i < 3; i++)
@@ -537,7 +550,8 @@ void SetMaterialData(u_int *prim)
 
             Vu0MulVectorXYZW(*dvec, ppg->SColorMtx[j], pmatC->Specular);
             SetBWLight(*dvec);
-            Vu0MulVectorX(SgLightPointp->Point_SColor[j], *dvec, SColorMtx[1][3] / max_color);
+            Vu0MulVectorX(SgLightPointp->Point_SColor[j], *dvec,
+                          SColorMtx[1][3] / max_color);
 
             SgLightPointp->Point_btimes[j] = ppg->btimes[j] * max_color;
             pmatC->Point.lnum[j] = ppg->lnum[j];
@@ -558,7 +572,8 @@ void SetMaterialData(u_int *prim)
 
             Vu0MulVectorXYZW(*dvec, spg->SColorMtx[j], pmatC->Specular);
             SetBWLight(*dvec);
-            Vu0MulVectorX(SgLightSpotp->Spot_SColor[j], *dvec, SColorMtx[1][3] / max_color);
+            Vu0MulVectorX(SgLightSpotp->Spot_SColor[j], *dvec,
+                          SColorMtx[1][3] / max_color);
 
             SgLightSpotp->Spot_btimes[j] = spg->btimes[j] * max_color;
             pmatC->Spot.lnum[j] = spg->lnum[j];
@@ -619,7 +634,8 @@ void SetPointGroup()
             Vu0CopyVector(SgLightCoordp->Point_pos[1], TmpLight->pos);
             Vu0CopyVector(SgLightCoordp->Point_pos[2], TmpLight->pos);
 
-            SgLightCoordp->Point_pos[1][3] = SgLightCoordp->Point_pos[2][3] = 10000000.0f;
+            SgLightCoordp->Point_pos[1][3] = SgLightCoordp->Point_pos[2][3] =
+                10000000.0f;
             break;
         }
     }
@@ -650,7 +666,11 @@ void SetPointGroup()
 
         if (TmpLight->intens != 0.0f)
         {
-            SgLightCoordp->Point_pos[gcount][3] = 1.0f / (TmpLight->power * TmpLight->intens * (TmpLight->diffuse[0] + TmpLight->diffuse[1] + TmpLight->diffuse[2]));
+            SgLightCoordp->Point_pos[gcount][3] =
+                1.0f
+                / (TmpLight->power * TmpLight->intens
+                   * (TmpLight->diffuse[0] + TmpLight->diffuse[1]
+                      + TmpLight->diffuse[2]));
         }
         else
         {
@@ -740,7 +760,8 @@ void SetSpotGroup(sceVu0FMATRIX wlmtx)
             SgLightCoordp->Spot_intens[gcount] = TmpLight->intens;
             SgLightCoordp->Spot_intens_b[gcount] = TmpLight->intens_b;
 
-            Vu0CopyVector(SgLightCoordp->Spot_WDLightMtx[gcount], TmpLight->direction);
+            Vu0CopyVector(SgLightCoordp->Spot_WDLightMtx[gcount],
+                          TmpLight->direction);
 
             if (wlmtx != NULL)
             {
@@ -797,7 +818,8 @@ void SetLightData(SgCOORDUNIT *cp0, SgCOORDUNIT *cp1)
             tmpv[1] = cp0->lwmtx[1][i];
             tmpv[2] = cp0->lwmtx[2][i];
 
-            scale[i] = SgRSqrtf(tmpv[0] * tmpv[0] + tmpv[1] * tmpv[1] + tmpv[2] * tmpv[2]);
+            scale[i] = SgRSqrtf(tmpv[0] * tmpv[0] + tmpv[1] * tmpv[1]
+                                + tmpv[2] * tmpv[2]);
 
             _NormalizeVector(tmpv, tmpv);
 
@@ -806,8 +828,8 @@ void SetLightData(SgCOORDUNIT *cp0, SgCOORDUNIT *cp1)
             tmp[2][i] = tmpv[2];
         }
 
-        Vu0CopyMatrix(*(sceVu0FMATRIX *)&SCRATCHPAD[0x150], cp0->lwmtx);
-        Vu0CopyMatrix(*(sceVu0FMATRIX *)&SCRATCHPAD[0x110], tmp);
+        Vu0CopyMatrix(*(sceVu0FMATRIX *) &SCRATCHPAD[0x150], cp0->lwmtx);
+        Vu0CopyMatrix(*(sceVu0FMATRIX *) &SCRATCHPAD[0x110], tmp);
 
         _MulRotMatrix(SgLightCoordp->Parallel_DLight, DLightMtx, tmp);
         _MulRotMatrix(SgLightCoordp->Parallel_SLight, SLightMtx, tmp);
@@ -837,16 +859,16 @@ void SetLightData(SgCOORDUNIT *cp0, SgCOORDUNIT *cp1)
         }
 
         sceVu0UnitMatrix(tmp);
-        Vu0CopyMatrix(*(sceVu0FMATRIX *)&SCRATCHPAD[0x150], tmp);
-        Vu0CopyMatrix(*(sceVu0FMATRIX *)&SCRATCHPAD[0x110], tmp);
+        Vu0CopyMatrix(*(sceVu0FMATRIX *) &SCRATCHPAD[0x150], tmp);
+        Vu0CopyMatrix(*(sceVu0FMATRIX *) &SCRATCHPAD[0x110], tmp);
         Vu0CopyMatrix(SgLightCoordp->Parallel_DLight, DLightMtx);
         Vu0CopyMatrix(SgLightCoordp->Parallel_SLight, SLightMtx);
         SetPointGroup();
         SetSpotGroup(NULL);
     }
 
-    *((int *)&SCRATCHPAD[0x64]) = SgSpotGroupNum;
-    *((int *)&SCRATCHPAD[0x68]) = SgPointGroupNum;
+    *((int *) &SCRATCHPAD[0x64]) = SgSpotGroupNum;
+    *((int *) &SCRATCHPAD[0x68]) = SgPointGroupNum;
 }
 
 void SgSetInfiniteLights(sceVu0FVECTOR eye, SgLIGHT *lights, int num)
@@ -856,18 +878,18 @@ void SgSetInfiniteLights(sceVu0FVECTOR eye, SgLIGHT *lights, int num)
 
     switch (num)
     {
-    case 0:
-        SgSetDefaultLight(eye, NULL, NULL, NULL);
-    break;
-    case 1:
-        SgSetDefaultLight(eye, &lights[0], NULL, NULL);
-    break;
-    case 2:
-        SgSetDefaultLight(eye, &lights[0], &lights[1], NULL);
-    break;
-    default:
-        SgSetDefaultLight(eye, &lights[0], &lights[1], &lights[2]);
-    break;
+        case 0:
+            SgSetDefaultLight(eye, NULL, NULL, NULL);
+            break;
+        case 1:
+            SgSetDefaultLight(eye, &lights[0], NULL, NULL);
+            break;
+        case 2:
+            SgSetDefaultLight(eye, &lights[0], &lights[1], NULL);
+            break;
+        default:
+            SgSetDefaultLight(eye, &lights[0], &lights[1], &lights[2]);
+            break;
     }
 }
 
@@ -1037,7 +1059,7 @@ void CalcPointLight()
 
     if (SgPointGroupNum > 0)
     {
-        _CalcPointA(SgLightCoordp->Point_pos, SgLightPointp->Point_btimes,len);
+        _CalcPointA(SgLightCoordp->Point_pos, SgLightPointp->Point_btimes, len);
 
         if (len[0] < SgLightCoordp->Point_pos[0][3])
         {
@@ -1152,7 +1174,9 @@ void CalcSpotLight()
     }
 }
 
-void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Ilight, int imax, SgLIGHT *Plight, int pmax, SgLIGHT *Slight, int smax)
+void SgReadLights(void *sgd_top, void *light_top, float *Ambient,
+                  SgLIGHT *Ilight, int imax, SgLIGHT *Plight, int pmax,
+                  SgLIGHT *Slight, int smax)
 {
     int num;
     int i;
@@ -1180,9 +1204,12 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Iligh
 
     if (cp != NULL)
     {
-        scale = SgSqrtf(inline_asm__libsg_g_line_463(cp->lwmtx[0], cp->lwmtx[0]));
-        scale += SgSqrtf(inline_asm__libsg_g_line_463(cp->lwmtx[1], cp->lwmtx[1]));
-        scale += SgSqrtf(inline_asm__libsg_g_line_463(cp->lwmtx[2], cp->lwmtx[2]));
+        scale =
+            SgSqrtf(inline_asm__libsg_g_line_463(cp->lwmtx[0], cp->lwmtx[0]));
+        scale +=
+            SgSqrtf(inline_asm__libsg_g_line_463(cp->lwmtx[1], cp->lwmtx[1]));
+        scale +=
+            SgSqrtf(inline_asm__libsg_g_line_463(cp->lwmtx[2], cp->lwmtx[2]));
         scale /= 3.0f;
     }
     else
@@ -1190,12 +1217,12 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Iligh
         scale = 1.0f;
     }
 
-    pk = (u_int *)&((HeaderSection *)light_top)->primitives;
+    pk = (u_int *) &((HeaderSection *) light_top)->primitives;
     //pk = GetPrimitiveAddr(light_top, 0);
 
     if (light_top == NULL)
     {
-        pk = (u_int *)&((HeaderSection *)sgd_top)->primitives;
+        pk = (u_int *) &((HeaderSection *) sgd_top)->primitives;
         //pk = GetPrimitiveAddr(sgd_top, 0);
     }
 
@@ -1217,7 +1244,7 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Iligh
     Vu0ZeroVector(Ambient);
 
     //prim = (u_int *)*pk;
-    prim = (u_int *)MikuPan_GetHostPointer((int)*pk);
+    prim = (u_int *) MikuPan_GetHostPointer((int) *pk);
 
     while (prim != NULL)
     {
@@ -1227,138 +1254,142 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Iligh
 
             switch (prim[2])
             {
-            case 0:
-                if (imax < num)
-                {
-                    num = imax;
-                }
-
-                pvec = (sceVu0FVECTOR *)&prim[4];
-
-                if (Ilight != NULL)
-                {
-                    Ilight->num = num;
-
-                    for (i = 0; i < num; i++)
+                case 0:
+                    if (imax < num)
                     {
-                        Vu0CopyVector(Ilight[i].diffuse, pvec[0]);
-                        Vu0CopyVector(Ilight[i].specular, pvec[0]);
-
-                        Ilight[i].ambient[0] = 0.0f;
-                        Ilight[i].ambient[1] = 0.0f;
-                        Ilight[i].ambient[2] = 0.0f;
-                        Ilight[i].ambient[3] = 0.0f;
-
-                        Vu0CopyVector(Ilight[i].direction, pvec[1]);
-
-                        Ilight[i].Enable = 0;
-
-                        pvec += 2;
+                        num = imax;
                     }
-                }
-            break;
-            case 1:
-                if (pmax < num)
-                {
-                    num = pmax;
-                }
 
-                pvec = (sceVu0FVECTOR *)&prim[4];
+                    pvec = (sceVu0FVECTOR *) &prim[4];
 
-                if (Plight != NULL)
-                {
-                    Plight->num = num;
-
-                    for (i = 0; i < num; i++)
+                    if (Ilight != NULL)
                     {
-                        Vu0CopyVector(Plight[i].diffuse, pvec[0]);
-                        Vu0CopyVector(Plight[i].specular, pvec[0]);
+                        Ilight->num = num;
 
-                        Plight[i].intens = pvec[0][3] * scale;
-                        Plight[i].ambient[0] = 0.0f;
-                        Plight[i].ambient[1] = 0.0f;
-                        Plight[i].ambient[2] = 0.0f;
-                        Plight[i].ambient[3] = 0.0f;
-
-                        if (cp != NULL)
+                        for (i = 0; i < num; i++)
                         {
-                            sceVu0ApplyMatrix(Plight[i].pos, cp->lwmtx, pvec[1]);
-                        }
-                        else
-                        {
-                            Vu0CopyVector(Plight[i].pos, pvec[1]);
-                        }
+                            Vu0CopyVector(Ilight[i].diffuse, pvec[0]);
+                            Vu0CopyVector(Ilight[i].specular, pvec[0]);
 
-                        Plight[i].power = _TransPPower(scale);
-                        Plight[i].ambient[0] = scale;
-                        Plight[i].Enable = 0;
+                            Ilight[i].ambient[0] = 0.0f;
+                            Ilight[i].ambient[1] = 0.0f;
+                            Ilight[i].ambient[2] = 0.0f;
+                            Ilight[i].ambient[3] = 0.0f;
 
-                        pvec += 2;
+                            Vu0CopyVector(Ilight[i].direction, pvec[1]);
+
+                            Ilight[i].Enable = 0;
+
+                            pvec += 2;
+                        }
                     }
-                }
-            break;
-            case 2:
-                if (smax < num)
-                {
-                    num = smax;
-                }
-
-                pvec = (sceVu0FVECTOR *)&prim[4];
-
-                if (Slight != NULL)
-                {
-                    Slight->num = num;
-
-                    for(i = 0; i < num; i++)
+                    break;
+                case 1:
+                    if (pmax < num)
                     {
-                        Vu0CopyVector(Slight[i].diffuse, pvec[0]);
-                        Vu0CopyVector(Slight[i].specular, pvec[0]);
-
-                        Slight[i].ambient[0] = 0.0f;
-                        Slight[i].ambient[1] = 0.0f;
-                        Slight[i].ambient[2] = 0.0f;
-                        Slight[i].ambient[3] = 0.0f;
-
-                        if (cp != NULL)
-                        {
-                            Vu0CopyVector(tmpvec, pvec[1]);
-                            tmpvec[3] = 1.0f;
-
-                            sceVu0ApplyMatrix(Slight[i].pos, cp->lwmtx, tmpvec);
-
-                            Vu0CopyVector(tmpvec, pvec[2]);
-                            tmpvec[3] = 1.0f;
-
-                            sceVu0ApplyMatrix(interest, cp->lwmtx, tmpvec);
-                            sceVu0SubVector(Slight[i].direction, Slight[i].pos, interest);
-                        }
-                        else
-                        {
-                            Vu0CopyVector(Slight[i].pos, pvec[1]);
-                            Slight[i].pos[3] = 1.0f;
-
-                            sceVu0SubVector(Slight[i].direction, pvec[1], pvec[2]);
-                        }
-
-                        cc = SgCosfd(pvec[1][3]);
-
-                        Slight[i].intens = cc * cc;
-                        Slight[i].power = _TransSPower(scale);
-                        Slight[i].ambient[0] = scale;
-                        Slight[i].ambient[1] = pvec[1][3];
-                        Slight[i].Enable = 0;
-
-                        pvec += 3;
+                        num = pmax;
                     }
-                }
-            break;
-            case 3:
-                if (Ambient != NULL)
-                {
-                    pvec = (sceVu0FVECTOR *)&prim[4];
-                    Vu0CopyVector(Ambient, pvec[0]);
-                }
-            break;
+
+                    pvec = (sceVu0FVECTOR *) &prim[4];
+
+                    if (Plight != NULL)
+                    {
+                        Plight->num = num;
+
+                        for (i = 0; i < num; i++)
+                        {
+                            Vu0CopyVector(Plight[i].diffuse, pvec[0]);
+                            Vu0CopyVector(Plight[i].specular, pvec[0]);
+
+                            Plight[i].intens = pvec[0][3] * scale;
+                            Plight[i].ambient[0] = 0.0f;
+                            Plight[i].ambient[1] = 0.0f;
+                            Plight[i].ambient[2] = 0.0f;
+                            Plight[i].ambient[3] = 0.0f;
+
+                            if (cp != NULL)
+                            {
+                                sceVu0ApplyMatrix(Plight[i].pos, cp->lwmtx,
+                                                  pvec[1]);
+                            }
+                            else
+                            {
+                                Vu0CopyVector(Plight[i].pos, pvec[1]);
+                            }
+
+                            Plight[i].power = _TransPPower(scale);
+                            Plight[i].ambient[0] = scale;
+                            Plight[i].Enable = 0;
+
+                            pvec += 2;
+                        }
+                    }
+                    break;
+                case 2:
+                    if (smax < num)
+                    {
+                        num = smax;
+                    }
+
+                    pvec = (sceVu0FVECTOR *) &prim[4];
+
+                    if (Slight != NULL)
+                    {
+                        Slight->num = num;
+
+                        for (i = 0; i < num; i++)
+                        {
+                            Vu0CopyVector(Slight[i].diffuse, pvec[0]);
+                            Vu0CopyVector(Slight[i].specular, pvec[0]);
+
+                            Slight[i].ambient[0] = 0.0f;
+                            Slight[i].ambient[1] = 0.0f;
+                            Slight[i].ambient[2] = 0.0f;
+                            Slight[i].ambient[3] = 0.0f;
+
+                            if (cp != NULL)
+                            {
+                                Vu0CopyVector(tmpvec, pvec[1]);
+                                tmpvec[3] = 1.0f;
+
+                                sceVu0ApplyMatrix(Slight[i].pos, cp->lwmtx,
+                                                  tmpvec);
+
+                                Vu0CopyVector(tmpvec, pvec[2]);
+                                tmpvec[3] = 1.0f;
+
+                                sceVu0ApplyMatrix(interest, cp->lwmtx, tmpvec);
+                                sceVu0SubVector(Slight[i].direction,
+                                                Slight[i].pos, interest);
+                            }
+                            else
+                            {
+                                Vu0CopyVector(Slight[i].pos, pvec[1]);
+                                Slight[i].pos[3] = 1.0f;
+
+                                sceVu0SubVector(Slight[i].direction, pvec[1],
+                                                pvec[2]);
+                            }
+
+                            cc = SgCosfd(pvec[1][3]);
+
+                            Slight[i].intens = cc * cc;
+                            Slight[i].power = _TransSPower(scale);
+                            Slight[i].ambient[0] = scale;
+                            Slight[i].ambient[1] = pvec[1][3];
+                            Slight[i].Enable = 0;
+
+                            pvec += 3;
+                        }
+                    }
+                    break;
+                case 3:
+                    if (Ambient != NULL)
+                    {
+                        pvec = (sceVu0FVECTOR *) &prim[4];
+                        Vu0CopyVector(Ambient, pvec[0]);
+                    }
+                    break;
             }
         }
 
@@ -1367,7 +1398,7 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient, SgLIGHT *Iligh
     }
 }
 
-u_int* GetNextUnpackAddr(u_int *prim)
+u_int *GetNextUnpackAddr(u_int *prim)
 {
     while (1)
     {
@@ -1380,7 +1411,8 @@ u_int* GetNextUnpackAddr(u_int *prim)
     }
 }
 
-inline static void asm_1__SetPreRenderTYPE0(sceVu0FVECTOR normal, sceVu0FVECTOR vertex)
+inline static void asm_1__SetPreRenderTYPE0(sceVu0FVECTOR normal,
+                                            sceVu0FVECTOR vertex)
 {
     //asm volatile("                              \n\
     //    lqc2            $vf13, 0x00(%0)         \n\
@@ -1428,9 +1460,9 @@ void SetPreRenderTYPE0(int gloops, u_int *prim)
     normal[3] = 1.0f;
     vertex[3] = 1.0f;
 
-    vp = (float *)&vuvnprim[14];
+    vp = (float *) &vuvnprim[14];
 
-    i = ((short *)prim)[11];
+    i = ((short *) prim)[11];
 
     if (i == 0)
     {
@@ -1443,7 +1475,7 @@ void SetPreRenderTYPE0(int gloops, u_int *prim)
     {
         prim = GetNextUnpackAddr(prim);
 
-        loops = ((u_char *)prim)[2];
+        loops = ((u_char *) prim)[2];
 
         prim = &prim[1];
 
@@ -1461,9 +1493,9 @@ void SetPreRenderTYPE0(int gloops, u_int *prim)
 
                 asm_1__SetPreRenderTYPE0(normal, vertex);
 
-                first[0] = ((float *)prim)[0];
-                first[1] = ((float *)prim)[1];
-                first[2] = ((float *)prim)[2];
+                first[0] = ((float *) prim)[0];
+                first[1] = ((float *) prim)[1];
+                first[2] = ((float *) prim)[2];
 
                 asm_2__SetPreRenderTYPE0(first);
 
@@ -1472,9 +1504,9 @@ void SetPreRenderTYPE0(int gloops, u_int *prim)
 
                 asm_3__SetPreRenderTYPE0(pcol);
 
-                ((float *)prim)[0] = pcol[0];
-                ((float *)prim)[1] = pcol[1];
-                ((float *)prim)[2] = pcol[2];
+                ((float *) prim)[0] = pcol[0];
+                ((float *) prim)[1] = pcol[1];
+                ((float *) prim)[2] = pcol[2];
             }
 
             vp += 6;
@@ -1501,9 +1533,9 @@ void SetPreRenderTYPE2(int gloops, u_int *prim)
     normal[3] = 1.0f;
     vertex[3] = 1.0f;
 
-    vp = (float *)&vuvnprim[14];
+    vp = (float *) &vuvnprim[14];
 
-    i = ((short *)prim)[11];
+    i = ((short *) prim)[11];
 
     if (i == 0)
     {
@@ -1516,7 +1548,7 @@ void SetPreRenderTYPE2(int gloops, u_int *prim)
     {
         prim = GetNextUnpackAddr(prim);
 
-        loops = ((u_char *)prim)[2];
+        loops = ((u_char *) prim)[2];
 
         prim = &prim[1];
 
@@ -1534,9 +1566,9 @@ void SetPreRenderTYPE2(int gloops, u_int *prim)
 
                 asm_1__SetPreRenderTYPE0(normal, vertex);
 
-                first[0] = ((float *)prim)[0];
-                first[1] = ((float *)prim)[1];
-                first[2] = ((float *)prim)[2];
+                first[0] = ((float *) prim)[0];
+                first[1] = ((float *) prim)[1];
+                first[2] = ((float *) prim)[2];
 
                 asm_2__SetPreRenderTYPE0(first);
 
@@ -1550,9 +1582,9 @@ void SetPreRenderTYPE2(int gloops, u_int *prim)
                     printf("%f %f %f\n", pcol[0], pcol[1], pcol[2]);
                 }
 
-                ((float *)prim)[0] = pcol[0];
-                ((float *)prim)[1] = pcol[1];
-                ((float *)prim)[2] = pcol[2];
+                ((float *) prim)[0] = pcol[0];
+                ((float *) prim)[1] = pcol[1];
+                ((float *) prim)[2] = pcol[2];
 
                 if ((prim[0] & 0xffff) == 1)
                 {
@@ -1585,11 +1617,11 @@ void SetPreRenderTYPE2F(int gloops, u_int *prim)
     vertex[3] = 1.0f;
     normal[3] = 1.0f;
 
-    np = (float *)&vuvnprim[14];
+    np = (float *) &vuvnprim[14];
 
-    vp = (float *)((int64_t)np + ((short *)vuvnprim)[5] * 12);
+    vp = (float *) ((int64_t) np + ((short *) vuvnprim)[5] * 12);
 
-    i = ((short *)prim)[11];
+    i = ((short *) prim)[11];
 
     if (i == 0)
     {
@@ -1602,7 +1634,7 @@ void SetPreRenderTYPE2F(int gloops, u_int *prim)
     {
         prim = GetNextUnpackAddr(prim);
 
-        loops = ((u_char *)prim)[2];
+        loops = ((u_char *) prim)[2];
 
         prim = &prim[1];
 
@@ -1622,9 +1654,9 @@ void SetPreRenderTYPE2F(int gloops, u_int *prim)
 
                 asm_1__SetPreRenderTYPE0(normal, vertex);
 
-                first[0] = ((float *)prim)[0];
-                first[1] = ((float *)prim)[1];
-                first[2] = ((float *)prim)[2];
+                first[0] = ((float *) prim)[0];
+                first[1] = ((float *) prim)[1];
+                first[2] = ((float *) prim)[2];
 
                 asm_2__SetPreRenderTYPE0(first);
 
@@ -1638,9 +1670,9 @@ void SetPreRenderTYPE2F(int gloops, u_int *prim)
                     info_log("%f %f %f", pcol[0], pcol[1], pcol[2]);
                 }
 
-                ((float *)prim)[0] = pcol[0];
-                ((float *)prim)[1] = pcol[1];
-                ((float *)prim)[2] = pcol[2];
+                ((float *) prim)[0] = pcol[0];
+                ((float *) prim)[1] = pcol[1];
+                ((float *) prim)[2] = pcol[2];
 
                 if ((prim[0] & 0xffff) == 1)
                 {
@@ -1664,15 +1696,15 @@ void SetPreRenderMeshData(u_int *prim)
 
     switch (mtype)
     {
-    case 16:
-        SetPreRenderTYPE0(gloops, prim);
-    break;
-    case 18:
-        SetPreRenderTYPE2(gloops, prim);
-    break;
-    case 50:
-        SetPreRenderTYPE2F(gloops, prim);
-    break;
+        case 16:
+            SetPreRenderTYPE0(gloops, prim);
+            break;
+        case 18:
+            SetPreRenderTYPE2(gloops, prim);
+            break;
+        case 50:
+            SetPreRenderTYPE2F(gloops, prim);
+            break;
     }
 }
 
@@ -1722,16 +1754,18 @@ void SelectLight(u_int *prim)
     int j;
     int k;
 
-    if (SgSpotNum == 0 && SgPointNum == 0) // Line 1614
+    if (SgSpotNum == 0 && SgPointNum == 0)// Line 1614
     {
         return;
     }
 
-    tmpvec = (sceVu0FVECTOR *)&SCRATCHPAD[0x620];
-    pvec = (sceVu0FVECTOR *)&prim[4];
+    tmpvec = (sceVu0FVECTOR *) &SCRATCHPAD[0x620];
+    pvec = (sceVu0FVECTOR *) &prim[4];
 
-    Vu0AddVector(*(sceVu0FVECTOR *)&SCRATCHPAD[0x6a0], *pvec, *(sceVu0FVECTOR *)&prim[32]);
-    Vu0MulVectorX(*(sceVu0FVECTOR *)&SCRATCHPAD[0x6a0], *(sceVu0FVECTOR *)&SCRATCHPAD[0x6a0], 0.5f);
+    Vu0AddVector(*(sceVu0FVECTOR *) &SCRATCHPAD[0x6a0], *pvec,
+                 *(sceVu0FVECTOR *) &prim[32]);
+    Vu0MulVectorX(*(sceVu0FVECTOR *) &SCRATCHPAD[0x6a0],
+                  *(sceVu0FVECTOR *) &SCRATCHPAD[0x6a0], 0.5f);
     Vu0LoadMatrix(lcp[prim[2]].lwmtx);
 
     for (i = 0; i < 8; i++)
@@ -1739,10 +1773,11 @@ void SelectLight(u_int *prim)
         Vu0ApplyVectorInline(tmpvec[i], pvec[i]);
     }
 
-    Vu0ApplyVectorInline(*(sceVu0FVECTOR *)&SCRATCHPAD[0x6a0], *(sceVu0FVECTOR *)&SCRATCHPAD[0x6a0]);
+    Vu0ApplyVectorInline(*(sceVu0FVECTOR *) &SCRATCHPAD[0x6a0],
+                         *(sceVu0FVECTOR *) &SCRATCHPAD[0x6a0]);
 
     maxpower[0] = maxpower[1] = maxpower[2] = 0.0f;
-    maxnum[0]   = maxnum[1]   = maxnum[2] = -1;
+    maxnum[0] = maxnum[1] = maxnum[2] = -1;
 
     for (i = 0; i < SgPointNum; i++)
     {
@@ -1751,8 +1786,13 @@ void SelectLight(u_int *prim)
         if (TmpLight->Enable == 0)
         {
             TmpLight->SEnable = 1;
-            colscale = (TmpLight->diffuse[0] + TmpLight->diffuse[1] + TmpLight->diffuse[2]) * TmpLight->power;
-            TmpLight->spower = colscale / _CalcLen(TmpLight->pos, *(sceVu0FVECTOR *)&SCRATCHPAD[0x6a0]);
+            colscale = (TmpLight->diffuse[0] + TmpLight->diffuse[1]
+                        + TmpLight->diffuse[2])
+                       * TmpLight->power;
+            TmpLight->spower =
+                colscale
+                / _CalcLen(TmpLight->pos,
+                           *(sceVu0FVECTOR *) &SCRATCHPAD[0x6a0]);
 
             for (j = 0; j < 3; j++)
             {
@@ -1760,8 +1800,8 @@ void SelectLight(u_int *prim)
                 {
                     for (k = 3; k > j; k--)
                     {
-                        maxpower[k] = maxpower[k-1];
-                        maxnum[k] = maxnum[k-1];
+                        maxpower[k] = maxpower[k - 1];
+                        maxnum[k] = maxnum[k - 1];
                     }
 
                     maxpower[j] = TmpLight->spower;
@@ -1784,7 +1824,7 @@ void SelectLight(u_int *prim)
     }
 
     maxpower[0] = maxpower[1] = maxpower[2] = 0.0f;
-    maxnum[0]   = maxnum[1]   = maxnum[2]   = -1;
+    maxnum[0] = maxnum[1] = maxnum[2] = -1;
 
     for (i = 0; i < SgSpotNum; i++)
     {
@@ -1802,7 +1842,8 @@ void SelectLight(u_int *prim)
 
             for (j = 0; j < 8; j++)
             {
-                spotvalue[j] = inline_asm__libsg_g_line_463(plain, tmpvec[j]) + plain[3];
+                spotvalue[j] =
+                    inline_asm__libsg_g_line_463(plain, tmpvec[j]) + plain[3];
                 if (spotvalue[j] * spotdir < 0.0f)
                 {
                     break;
@@ -1811,8 +1852,13 @@ void SelectLight(u_int *prim)
 
             if (j != 8)
             {
-                colscale = (TmpLight->diffuse[0] + TmpLight->diffuse[1] + TmpLight->diffuse[2]) * TmpLight->power;
-                TmpLight->spower = colscale /  _CalcLen(TmpLight->pos, *(sceVu0FVECTOR *)&SCRATCHPAD[0x6a0]);
+                colscale = (TmpLight->diffuse[0] + TmpLight->diffuse[1]
+                            + TmpLight->diffuse[2])
+                           * TmpLight->power;
+                TmpLight->spower =
+                    colscale
+                    / _CalcLen(TmpLight->pos,
+                               *(sceVu0FVECTOR *) &SCRATCHPAD[0x6a0]);
 
                 for (j = 0; j < 3; j++)
                 {
@@ -1820,8 +1866,8 @@ void SelectLight(u_int *prim)
                     {
                         for (k = 3; k > j; k--)
                         {
-                            maxpower[k] = maxpower[k-1];
-                            maxnum[k] = maxnum[k-1];
+                            maxpower[k] = maxpower[k - 1];
+                            maxnum[k] = maxnum[k - 1];
                         }
 
                         maxpower[j] = TmpLight->spower;
@@ -1854,47 +1900,50 @@ void SgPreRenderPrim(u_int *prim)
 
     while (prim[0] != 0)
     {
-        switch(prim[1])
+        switch (prim[1])
         {
-        case 0:
-            vuvnprim = prim;
-        break;
-        case 1:
-            nextprim = prim[0];
+            case 0:
+                vuvnprim = prim;
+                break;
+            case 1:
+                nextprim = prim[0];
 
-            SetPreRenderMeshData(prim);
-        break;
-        case 2:
-            SetMaterialData(prim);
-            SetMaterialDataPrerender();
+                SetPreRenderMeshData(prim);
+                break;
+            case 2:
+                SetMaterialData(prim);
+                SetMaterialDataPrerender();
 
-            if (dbg_flg != 0)
-            {
-                info_log("PNum %d(%d) SNum %d(%d)", SgPointGroupNum, SgPointNum, SgSpotGroupNum, SgSpotNum);
+                if (dbg_flg != 0)
+                {
+                    info_log("PNum %d(%d) SNum %d(%d)", SgPointGroupNum,
+                             SgPointNum, SgSpotGroupNum, SgSpotNum);
 
-                printVectorC(SgLightCoordp->Spot_pos[0], "pos0");
-                printVectorC(SgLightCoordp->Spot_pos[1], "pos1");
-                printVectorC(SgLightCoordp->Spot_pos[2], "pos2");
-                printVectorC(SgLightCoordp->Spot_intens, "intens");
-                printVectorC(SgLightCoordp->Spot_intens_b, "intens_b");
-                printLMatC(SgLightCoordp->Spot_WDLightMtx, "WDLightMtx");
-                printLMatC(SgLightCoordp->Spot_SLightMtx, "SLightMtx");
-                printVectorC(SgLightSpotp->Spot_btimes, "btimes");
-                printLMatC(SgLightSpotp->Spot_DColor, "DColor");
-                printLMatC(SgLightSpotp->Spot_SColor, "SColor");
-            }
-        break;
-        case 3:
-            Vu0CopyMatrix(*(sceVu0FMATRIX *)&SCRATCHPAD[0x430], lcp[prim[2]].lwmtx);
-            _MulMatrix(*(sceVu0FMATRIX *)&SCRATCHPAD[0x90], SgWSMtx, *(sceVu0FMATRIX *)&SCRATCHPAD[0x430]);
-            break;
-        case 4:
-            SelectLight(prim);
-            SetLightData(&lcp[prim[2]], NULL);
-        break;
+                    printVectorC(SgLightCoordp->Spot_pos[0], "pos0");
+                    printVectorC(SgLightCoordp->Spot_pos[1], "pos1");
+                    printVectorC(SgLightCoordp->Spot_pos[2], "pos2");
+                    printVectorC(SgLightCoordp->Spot_intens, "intens");
+                    printVectorC(SgLightCoordp->Spot_intens_b, "intens_b");
+                    printLMatC(SgLightCoordp->Spot_WDLightMtx, "WDLightMtx");
+                    printLMatC(SgLightCoordp->Spot_SLightMtx, "SLightMtx");
+                    printVectorC(SgLightSpotp->Spot_btimes, "btimes");
+                    printLMatC(SgLightSpotp->Spot_DColor, "DColor");
+                    printLMatC(SgLightSpotp->Spot_SColor, "SColor");
+                }
+                break;
+            case 3:
+                Vu0CopyMatrix(*(sceVu0FMATRIX *) &SCRATCHPAD[0x430],
+                              lcp[prim[2]].lwmtx);
+                _MulMatrix(*(sceVu0FMATRIX *) &SCRATCHPAD[0x90], SgWSMtx,
+                           *(sceVu0FMATRIX *) &SCRATCHPAD[0x430]);
+                break;
+            case 4:
+                SelectLight(prim);
+                SetLightData(&lcp[prim[2]], NULL);
+                break;
         }
 
-        prim = (u_int *)GetNextProcUnitHeaderPtr(prim);
+        prim = (u_int *) GetNextProcUnitHeaderPtr(prim);
     }
 }
 
@@ -1913,7 +1962,7 @@ void SgPreRender(void *sgd_top, int pnum)
 
     write_counter = 0;
 
-    hs = (HeaderSection *)sgd_top;
+    hs = (HeaderSection *) sgd_top;
 
     //pk = (u_int *)&hs->primitives;
     pk = GetPrimitiveAddr(hs, 0);
@@ -1947,10 +1996,10 @@ void ClearPreRenderMeshData(u_int *prim)
     int mtype;
     sceVu0FVECTOR first;
 
-    mtype = ((char *)prim)[0xd];
-    gloops = ((char *)prim)[0xe];
+    mtype = ((char *) prim)[0xd];
+    gloops = ((char *) prim)[0xe];
 
-    i = ((short *)prim)[11];
+    i = ((short *) prim)[11];
 
     if (i == 0)
     {
@@ -1961,55 +2010,53 @@ void ClearPreRenderMeshData(u_int *prim)
 
     switch (mtype)
     {
-    case 0x10:
-        for (j = 0; j < gloops; j++)
-        {
-            prim = GetNextUnpackAddr(prim);
-
-            loops = ((u_char *)prim)[2];
-
-            prim = &prim[1];
-
-            for (i = 0; i < loops; i++)
+        case 0x10:
+            for (j = 0; j < gloops; j++)
             {
-                if (prim[0] != 1)
+                prim = GetNextUnpackAddr(prim);
+
+                loops = ((u_char *) prim)[2];
+
+                prim = &prim[1];
+
+                for (i = 0; i < loops; i++)
                 {
-                    prim[0] = 0;
-                    prim[1] = 0;
-                    prim[2] = 0;
+                    if (prim[0] != 1)
+                    {
+                        prim[0] = 0;
+                        prim[1] = 0;
+                        prim[2] = 0;
+                    }
+
+                    prim = &prim[3];
                 }
-
-                prim = &prim[3];
             }
-        }
-    break;
-    case 0x12:
-    case 0x32:
-            if (0x32 == mtype)
+            break;
+        case 0x12:
+        case 0x32:
+            //MikuPan_RenderMeshType0x32((struct SGDPROCUNITHEADER *) vuvnprim, (struct SGDPROCUNITHEADER *) prim);
+
+            for (j = 0; j < gloops; j++)
             {
-                //MikuPan_RenderMeshType0x32((struct SGDPROCUNITHEADER *)vuvnprim, (struct SGDPROCUNITHEADER *)prim);
-            }
-        for (j = 0; j < gloops; j++)
-        {
-            prim = GetNextUnpackAddr(prim);
+                prim = GetNextUnpackAddr(prim);
 
-            loops = ((u_char *)prim)[2];
+                loops = ((u_char *) prim)[2];
 
-            prim = &prim[1];
+                prim = &prim[1];
 
-            for (i = 0; i < loops; i++)
-            {
-                if (prim[0] != 1)
+                for (i = 0; i < loops; i++)
                 {
-                    prim[0] = 0;
-                    prim[1] = 0;
-                    prim[2] = 0;
-                }
+                    if (prim[0] != 1)
+                    {
+                        prim[0] = 0;
+                        prim[1] = 0;
+                        prim[2] = 0;
+                    }
 
-                prim = &prim[3];
+                    prim = &prim[3];
+                }
             }
-        }
-    break;
+            break;
     }
 }
 
@@ -2028,7 +2075,7 @@ void SgClearPreRenderPrim(u_int *prim)
         }
 
         //prim = (u_int *)prim[0];
-        prim = (u_int *)GetNextProcUnitHeaderPtr(prim);
+        prim = (u_int *) GetNextProcUnitHeaderPtr(prim);
     }
 }
 
@@ -2043,10 +2090,10 @@ void SgClearPreRender(void *sgd_top, int pnum)
         return;
     }
 
-    hs = (HeaderSection *)sgd_top;
+    hs = (HeaderSection *) sgd_top;
 
     blocksm = hs->blocks;
-    pk = (u_int *)&hs->primitives;
+    pk = (u_int *) &hs->primitives;
 
     SetMaterialPointer();
     SetMaterialPointerCoord();

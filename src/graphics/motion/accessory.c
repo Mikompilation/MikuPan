@@ -945,14 +945,15 @@ void acsClothCtrl(ANI_CTRL* ani_ctrl, u_int* mpk_p, u_int mdl_no, u_char scene_f
     PHEAD* ph;
     u_int no;
     static sceVu0FVECTOR pbak = {0.0f, 0.0f, 0.0f, 0.0f};
-    sceVu0FVECTOR sub;
-    sceVu0FVECTOR pos;
+    sceVu0FVECTOR sub = {0};
+    sceVu0FVECTOR pos = {0};
     float val;
     float* v1;
     CLOTH_DAT* cdat;
     COLLISION_DAT* collision;
     float scale;
 
+    return;
     cloth = ani_ctrl->cloth_ctrl;
     limit = 0;
 
