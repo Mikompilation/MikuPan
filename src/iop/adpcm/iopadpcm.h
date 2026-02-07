@@ -1,14 +1,15 @@
 #ifndef IOPADPCM_H_
 #define IOPADPCM_H_
 
-#include "typedefs.h"
-#include "os/eeiop/eeiop.h"
 #include "SDL3/SDL_audio.h"
 #include "SDL3/SDL_thread.h"
+#include "os/eeiop/eeiop.h"
+#include "typedefs.h"
 
 #include "common.h"
 
-typedef struct { // 0x2c
+typedef struct
+{// 0x2c
     /* 0x00:00 */ unsigned int fsize : 32;
     /* 0x00:32 */ unsigned int asize : 32;
     /* 0x00:64 */ unsigned int offset : 32;
@@ -17,7 +18,7 @@ typedef struct { // 0x2c
     /* 0x14 */ int intr;
     /* 0x18 */ int file;
     /* 0x1c */ short int vol_reg;
-    /* 0x20 */ char* buf;
+    /* 0x20 */ char *buf;
     /* 0x24 */ unsigned char stat;
     /* 0x25 */ char pre_load;
     /* 0x26 */ char vol;
@@ -25,7 +26,8 @@ typedef struct { // 0x2c
     /* 0x28 */ char loop;
 } IOP_PCM;
 
-enum IOP_PCM_STAT {
+enum IOP_PCM_STAT
+{
     IPS_IDOL = 0,
     IPS_PRELOAD = 1,
     IPS_PRELOADED = 2,
@@ -35,7 +37,8 @@ enum IOP_PCM_STAT {
     IPS_STOP = 6
 };
 
-typedef struct { // 0x60
+typedef struct
+{// 0x60
     /* 0x00 */ int thread_id;
     /* 0x04 */ int first;
     /* 0x08 */ int start;
@@ -74,13 +77,13 @@ typedef struct { // 0x60
     int state;
     int state_timeout;
     int f_mode;
-    
+
     SDL_AudioStream *stream;
-    SDL_Thread* thread;
+    SDL_Thread *thread;
     void *data;
 } IOP_ADPCM;
 
-typedef struct 
+typedef struct
 {
     /* 0x00 */ int first;
     /* 0x04 */ int size;
@@ -98,7 +101,8 @@ typedef struct
     /* 0x1d */ u_char fade_mode;
 } ADPCM_CMD;
 
-typedef struct { // 0xc
+typedef struct
+{// 0xc
     /* 0x0 */ u_short ll;
     /* 0x2 */ u_short lr;
     /* 0x4 */ u_short rl;
@@ -107,14 +111,16 @@ typedef struct { // 0xc
     /* 0xa */ u_short pan;
 } ADPCM_POS_CALC;
 
-enum ADPCM_FADE_MODE {
+enum ADPCM_FADE_MODE
+{
     ADPCM_FADE_NO = 0,
     ADPCM_FADE_IN_PLAY = 1,
     ADPCM_FADE_OUT_STOP = 2,
     ADPCM_FADE = 3
 };
 
-enum ADPCM_CMD_TYPE {
+enum ADPCM_CMD_TYPE
+{
     AC_NONE = 0,
     AC_PLAY = 1,
     AC_PRELOAD = 2,
@@ -123,7 +129,8 @@ enum ADPCM_CMD_TYPE {
     AC_RESTART = 5
 };
 
-enum ADPCM_PLAY_STAT {
+enum ADPCM_PLAY_STAT
+{
     ADPCM_STAT_NOPLAY = 0,
     ADPCM_STAT_FULL_STOP = 1,
     ADPCM_STAT_LOOPEND_STOP = 2,
@@ -138,32 +145,34 @@ enum ADPCM_PLAY_STAT {
 };
 
 extern IOP_ADPCM iop_adpcm[2];
-extern void* AdpcmIopBuf[2];
-extern s16* AdpcmSpuBuf[2];
+extern s16 *AdpcmIopBuf[2];
+extern s16 *AdpcmSpuBuf[2];
 extern ADPCM_CMD now_cmd;
 extern ADPCM_CMD cmd_buf[8];
 
 extern SDL_Mutex *cmd_lock;
 
 void IAdpcmInit(int dev_init);
-void IAdpcmCmd(IOP_COMMAND* icp);
+void IAdpcmCmd(IOP_COMMAND *icp);
 void IAdpcmMain();
 void IAdpcmMain2();
 
 void IaSetSteMono();
 
-void SetLoopFlgSize(u_int size_byte, u_int* start, u_short core);
+void SetLoopFlgSize(u_int size_byte, u_int *start, u_short core);
 void IAdpcmLoadEndStream(int channel);
 void IAdpcmLoadEndPreOnly(int channel);
 
-void IAdpcmPlay(ADPCM_CMD* acp);
-void IAdpcmStop(ADPCM_CMD* acp);
-void IAdpcmPreLoad(ADPCM_CMD* acp);
-void IaSetWrkVolPanPitch(u_char channel, u_short pan, u_short master_vol, u_short pitch);
+void IAdpcmPlay(ADPCM_CMD *acp);
+void IAdpcmStop(ADPCM_CMD *acp);
+void IAdpcmPreLoad(ADPCM_CMD *acp);
+void IaSetWrkVolPanPitch(u_char channel, u_short pan, u_short master_vol,
+                         u_short pitch);
 void IaSetWrkFadeParam(u_char channel, int fade_flm, u_short target_vol);
-void IaSetWrkFadeMode(u_char channel, u_char mode, u_short target_vol, int fade_flm);
+void IaSetWrkFadeMode(u_char channel, u_char mode, u_short target_vol,
+                      int fade_flm);
 void IaSetRegVol(u_char channel);
-void DbgDispAdpcmCmdWrk(ADPCM_CMD* acp);
+void DbgDispAdpcmCmdWrk(ADPCM_CMD *acp);
 void IaDbgMemoryCheck();
 void IaSetRegKoff(u_char channel);
 void IaInitEffect();
@@ -173,9 +182,10 @@ void IaSetRegPitch(u_char channel);
 void IaSetRegAdsr(u_char channel);
 void IaSetRegSsa(u_char channel);
 void IaSetRegKon(u_char channel);
-void IAdpcmAddCmd(IOP_COMMAND* icp);
+void IAdpcmAddCmd(IOP_COMMAND *icp);
 
-SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount);
+SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream,
+                           int additional_amount, int total_amount);
 SDLCALL int IAdpcmReadCh1(void *data);
 
 void IaSetWrkFadeInit(u_char channel);
@@ -193,4 +203,4 @@ void IAdpcmCmdRestart();
 
 void CloseAudio();
 
-#endif // IOPADPCM_H_
+#endif// IOPADPCM_H_
