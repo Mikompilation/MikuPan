@@ -1,26 +1,21 @@
 #include "iopadpcm.h"
-#include "SDL3/SDL_audio.h"
 #include "SDL3/SDL_timer.h"
 #include "common.h"
 #include "enums.h"
 #include "iop/cdvd/iopcdvd.h"
 #include "iop/iopmain.h"
+#include "mikupan/mikupan_audio.h"
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "typedefs.h"
 
 #include <stdlib.h>
 
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#define clamp(val, min, max)                                                   \
-    (((val) > (max)) ? (max) : (((val) < (min)) ? (min) : (val)))
-
 IOP_ADPCM iop_adpcm[2];
 ADPCM_CMD now_cmd;
 ADPCM_CMD cmd_buf[8];
 s16 *AdpcmSpuBuf[2];
-void *AdpcmIopBuf[2];
+s16 *AdpcmIopBuf[2];
 
 SDL_Mutex *cmd_lock;
 
@@ -42,46 +37,6 @@ enum
     IA_PAUSE = 4,
     IA_RESTART = 5,
 };
-
-static const s32 tbl_adpcm_filter[16][2] = {
-    {  0,   0},
-    { 60,   0},
-    {115, -52},
-    { 98, -55},
-    {122, -60}
-};
-
-static void adpcm_decode_block(s16 *buffer, s16 *block, s32 *prev1, s32 *prev2)
-{
-    const s32 header = *block;
-    const s32 shift = (header & 0xF) + 16;
-    const int id = header >> 4 & 0xF;
-    const s32 pred1 = tbl_adpcm_filter[id][0];
-    const s32 pred2 = tbl_adpcm_filter[id][1];
-
-    const s8 *blockbytes = (s8 *) &block[1];
-    const s8 *blockend = &blockbytes[13];
-
-    for (; blockbytes <= blockend; ++blockbytes)
-    {
-        s32 data = ((*blockbytes) << 28) & 0xF0000000;
-        s32 pcm =
-            (data >> shift) + (((pred1 * *prev1) + (pred2 * *prev2) + 32) >> 6);
-
-        pcm = clamp(pcm, -0x8000, 0x7fff);
-        *(buffer++) = pcm;
-
-        data = ((*blockbytes) << 24) & 0xF0000000;
-        s32 pcm2 =
-            (data >> shift) + (((pred1 * pcm) + (pred2 * *prev1) + 32) >> 6);
-
-        pcm2 = clamp(pcm2, -0x8000, 0x7fff);
-        *(buffer++) = pcm2;
-
-        *prev2 = pcm;
-        *prev1 = pcm2;
-    }
-}
 
 void IAdpcmPreLoad(ADPCM_CMD *acp)
 {
@@ -133,48 +88,6 @@ void IAdpcmPreLoad(ADPCM_CMD *acp)
                       channel, 1u, endld_flg);
 }
 
-static void FillBuffer(int size, u_char channel, s16 **dec_buf)
-{
-    void *dec[2] = {dec_buf[0], dec_buf[1]};
-
-    s32 histL[2] = {}, histR[2] = {};
-
-    s16 *src = AdpcmIopBuf[channel];
-    s16 *dst;
-
-    int chunks = size / 0x800 / 2;
-
-    // Prevent memleaks by not reading too much into the audio stream.
-    if (SDL_GetAudioStreamQueued(iop_adpcm[channel].stream) >= size)
-    {
-        return;
-    }
-
-    for (int i = 0; i < chunks; i++)
-    {
-        dst = dec_buf[0];
-        for (int j = 0; j < 128; j++)
-        {
-
-            adpcm_decode_block(dst, src, &histL[0], &histL[1]);
-            dst += 28;
-            src += 8;
-        }
-
-        dst = dec_buf[1];
-        for (int j = 0; j < 128; j++)
-        {
-
-            adpcm_decode_block(dst, src, &histR[0], &histR[1]);
-            dst += 28;
-            src += 8;
-        }
-
-        SDL_PutAudioStreamPlanarData(iop_adpcm[channel].stream, (void *) dec, 2,
-                                     3584);
-    }
-}
-
 void IAdpcmPreLoadEnd(int channel)
 {
     int i;
@@ -186,7 +99,8 @@ void IAdpcmPreLoadEnd(int channel)
         iop_adpcm[channel].start +=
             (iop_adpcm[channel].lreq_size + 2047) / 2048;
         iop_adpcm[channel].str_lpos = iop_adpcm[channel].lreq_size;
-        FillBuffer(now_cmd.size, channel, AdpcmSpuBuf);
+        MikuPan_FillBuffer(now_cmd.size, channel, AdpcmIopBuf, AdpcmSpuBuf,
+                           iop_adpcm[channel].stream);
         iop_adpcm[channel].str_tpos = 0x2000;
         iop_adpcm[channel].pos = 0x2000;
     }
@@ -423,9 +337,9 @@ void IAdpcmInit(int dev_init)
     if (!dev_init)
         IaInitDev(0);
 
-    spec.channels = 2;
+    spec.channels = CHANNELS;
     spec.format = SDL_AUDIO_S16;
-    spec.freq = 48000;
+    spec.freq = SAMPLE_RATE;
     iop_adpcm[0].stream = SDL_CreateAudioStream(&spec, NULL);
     SDL_BindAudioStream(audio_dev, iop_adpcm[0].stream);
 
@@ -798,7 +712,7 @@ SDLCALL int IAdpcmReadCh1(void *data)
                     iop_adpcm[1].dbidi ^= 1;
                 }
 
-                FillBuffer(iop_adpcm[1].lreq_size, 1, AdpcmSpuBuf);
+                //MikuPan_FillBuffer(iop_adpcm[1].lreq_size, 1, AdpcmSpuBuf);
 
                 // ????
                 if (iop_adpcm[1].stat != ADPCM_STAT_PLAY)
@@ -870,7 +784,7 @@ SDLCALL int IAdpcmReadCh1(void *data)
     return 0;
 }
 
-static void SetLoopFlag(u_int *st_addr, u_int szvag, u_char st_end)
+static void SetLoopFlag(s16 *st_addr, u_int szvag, u_char st_end)
 {
     int i;
     u_char *lpflgp = (u_char *) st_addr;
