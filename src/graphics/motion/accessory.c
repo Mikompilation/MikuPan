@@ -26,6 +26,7 @@
 #include "graphics/motion/acs_dat.h"
 
 #include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
 // #include <cstdlib.h>
@@ -354,7 +355,7 @@ void acsCalcCoordinate(SgCOORDUNIT* cp, u_int block_num, FURN_WRK* f_wrk, ROPE_C
 {
     float grot;
     u_int i;
-    sceVu0FVECTOR trans[10];
+    sceVu0FVECTOR trans[10] = {0};
     sceVu0FVECTOR x = {1.0f, 0.0f, 0.0f, 0.0f};
     sceVu0FVECTOR y = {0.0f, 1.0f, 0.0f, 0.0f};
     sceVu0FVECTOR z = {0.0f, 0.0f, 1.0f, 0.0f};
@@ -736,7 +737,7 @@ u_int* acsInitCloth(CLOTH_CTRL *cloth_top, u_int *mpk_p, u_int *top_addr, u_int 
 
         ph = GetFileInPak(mpk_p, cloth->cdat->sgd_id);
         //vtx = (sceVu0FVECTOR *)ph->pUniqList[2];
-        vtx = &((sceVu0FVECTOR *)MikuPan_GetHostPointer(ph->pUniqList))[4];
+        vtx = &(((sceVu0FVECTOR *)MikuPan_GetHostPointer(ph->pUniqList))[4]);
 
         if (dat->type == 0)
         {

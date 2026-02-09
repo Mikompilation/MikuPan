@@ -6,7 +6,7 @@
 
 void sceVu0ScaleVectorXYZ(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float s)
 {
-    glm_vec4_scale(v1, s, v0);
+    glm_vec3_scale(v1, s, v0);
 }
 
 void sceVu0AddVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1, sceVu0FVECTOR v2)
@@ -93,6 +93,7 @@ void sceVu0InversMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
             out[i][j] = m1[j][i];
         }
     }
+
     out[3][0] = -(out[0][0]*m1[3][0] + out[1][0]*m1[3][1] + out[2][0]*m1[3][2]);
     out[3][1] = -(out[0][1]*m1[3][0] + out[1][1]*m1[3][1] + out[2][1]*m1[3][2]);
     out[3][2] = -(out[0][2]*m1[3][0] + out[1][2]*m1[3][1] + out[2][2]*m1[3][2]);
@@ -202,7 +203,7 @@ void sceVu0RotMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FVECTOR rot)
 void sceVu0TransMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FVECTOR tv)
 {
     glm_mat4_copy(m1, m0);
-    glm_vec4_add(tv, m0[3], m0[3]);
+    glm_vec3_add(tv, m0[3], m0[3]);
 }
 
 void sceVu0RotTransPers(sceVu0IVECTOR v0, sceVu0FMATRIX m0, sceVu0FVECTOR v1,
@@ -239,7 +240,7 @@ void sceVu0DivVectorXYZ(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float q)
         return;
     }
 
-    glm_vec3_divs(v1, q, v0);
+    glm_vec4_divs(v1, q, v0);
 }
 
 void sceVu0ClampVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float min, float max)
@@ -266,8 +267,8 @@ void sceVu0InterVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1, sceVu0FVECTOR v2,
 {
     float inv_r = 1.0f - r;
 
-    v0[0] = v1[0] * inv_r + v2[0] * r;
-    v0[1] = v1[1] * inv_r + v2[1] * r;
-    v0[2] = v1[2] * inv_r + v2[2] * r;
-    v0[3] = v1[3] * inv_r + v2[3] * r;
+    v0[0] = v1[0] * r + v2[0] * inv_r;
+    v0[1] = v1[1] * r + v2[1] * inv_r;
+    v0[2] = v1[2] * r + v2[2] * inv_r;
+    v0[3] = v1[3] * r + v2[3] * inv_r;
 }

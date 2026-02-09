@@ -18,7 +18,6 @@
 
 #define GLAD_GL_IMPLEMENTATION
 #include "main/glob.h"
-
 #include <glad/gl.h>
 
 #define PS2_RESOLUTION_X_FLOAT 640.0f
@@ -47,6 +46,11 @@ GLuint gBBVAO, gBBVBO = 0;
 
 SDL_AppResult MikuPan_Init()
 {
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
+
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_JOYSTICK
                   | SDL_INIT_HAPTIC))
     {
@@ -59,10 +63,7 @@ SDL_AppResult MikuPan_Init()
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                         SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
 
     window = SDL_CreateWindow("MikuPan", window_width, window_height,
                               SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
@@ -74,6 +75,13 @@ SDL_AppResult MikuPan_Init()
     }
 
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+
+    if (gl_context == NULL)
+    {
+        info_log(SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
     SDL_GL_MakeCurrent(window, gl_context);
 
     MikuPan_InitUi(window, gl_context);
@@ -211,6 +219,16 @@ void MikuPan_UpdateWindowSize(int width, int height)
 {
     window_width = width;
     window_height = height;
+}
+
+int MikuPan_GetWindowWidth()
+{
+    return window_width;
+}
+
+int MikuPan_GetWindowHeight()
+{
+    return window_height;
 }
 
 MikuPan_TextureInfo *MikuPan_CreateGLTexture(const sceGsTex0 *tex0)
@@ -734,9 +752,13 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
     {
         MikuPan_SetShaderProgramWithBackup(SIMPLE_TEXTURED_SHADER);
     }
-    else
+    else if (GET_MESH_TYPE(pPUHead) == 0x12)
     {
         MikuPan_SetShaderProgramWithBackup(MESH_0x12_SHADER);
+    }
+    else
+    {
+        return;
     }
 
 
@@ -772,10 +794,6 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
     {
         texture_info = MikuPan_CreateGLTexture(mesh_tex_reg);
     }
-
-    //glad_glDisable(GL_CULL_FACE);
-    //glad_glCullFace(GL_BACK);
-    //glad_glFrontFace(GL_CW);
 
     glad_glActiveTexture(GL_TEXTURE0);
 

@@ -147,7 +147,7 @@ void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
     ImGui_ImplSDL3_InitForOpenGL(window, renderer);
-    ImGui_ImplOpenGL3_Init("#version 130");
+    ImGui_ImplOpenGL3_Init("#version 330");
 }
 
 void MikuPan_RenderUi()

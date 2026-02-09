@@ -77,9 +77,9 @@ void motInitPlayerAnm(char mdl_no)
 {
     u_int *pkt_p;
 
-    pkt_p = (u_int *)GetPakTaleAddr((void *)MikuPan_GetHostAddress(PLAYER_ANM_ADDRESS));
+    pkt_p = (u_int *)GetPakTaleAddr((void *)MikuPan_GetHostPointer(PLAYER_ANM_ADDRESS));
 
-    motInitAniCtrl(ani_mdl, (u_int *)MikuPan_GetHostAddress(PLAYER_ANM_ADDRESS), (u_int *)pmanmpk[0], pkt_p, mdl_no, A000_MIKU);
+    motInitAniCtrl(ani_mdl, (u_int *)MikuPan_GetHostPointer(PLAYER_ANM_ADDRESS), (u_int *)pmanmpk[0], pkt_p, mdl_no, A000_MIKU);
     mimLNigiriReq(M001_MIM_LHAND_NIGIRI, 0);
 
     ani_mdl[0].mot.reso = 1;
@@ -1907,7 +1907,7 @@ void motSetInvMatrix(sceVu0FMATRIX m1, sceVu0FMATRIX m0)
     sceVu0FMATRIX rot;
     sceVu0FMATRIX scale;
     sceVu0FMATRIX trans;
-    sceVu0FVECTOR inv_inner;
+    sceVu0FVECTOR inv_inner = {0};
 
     sceVu0UnitMatrix(rot);
     sceVu0UnitMatrix(scale);

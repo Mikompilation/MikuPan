@@ -37,6 +37,9 @@
 #include "os/eeiop/eese.h"
 #include "os/pad.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 sceVu0FVECTOR special_furn_pos[] = {
     { 34885.0f, -4800.0f, 46059.0f, 1.0f },
     { 15101.0f, -1300.0f, 11048.0f, 1.0f },

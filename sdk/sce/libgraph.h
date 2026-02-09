@@ -218,15 +218,15 @@ typedef struct {
   u_int vifcode[4];
   sceGifTag giftag;
   sceGsBitbltbuf bitbltbuf;
-  long bitbltbufaddr;
+  unsigned long long bitbltbufaddr;
   sceGsTrxpos trxpos;
-  long trxposaddr;
+  unsigned long long trxposaddr;
   sceGsTrxreg trxreg;
-  long trxregaddr;
+  unsigned long long trxregaddr;
   sceGsFinish finish;
-  long finishaddr;
+  unsigned long long finishaddr;
   sceGsTrxdir trxdir;
-  long trxdiraddr;
+  unsigned long long trxdiraddr;
 } sceGsStoreImage __attribute__((aligned(16)));
 
 

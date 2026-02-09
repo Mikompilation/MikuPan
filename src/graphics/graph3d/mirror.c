@@ -874,8 +874,6 @@ void CalcMirrorMatrix(SgCAMERA *camera)
 void MirrorDraw(SgCAMERA *camera, void *sgd_top,
                 void (*render_func)(/* parameters unknown */))
 {
-    ///TODO: Re-enable once the scratchpad address works
-    //return;
     static sceVu0IVECTOR miccolor = {0x80, 0x80, 0x80, 0x80};
     qword *pedraw_buf;
     int i;
