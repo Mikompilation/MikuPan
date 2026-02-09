@@ -3,9 +3,15 @@
 
 #include "typedefs.h"
 
-// extern TAPE_DAT tape_dat[0];
-// extern int play_tape_timer;
-// extern char tape_play;
+typedef struct
+{ // 0x8
+  /* 0x0 */ int item_no;
+  /* 0x4 */ int adpcm_no;
+} TAPE_DAT;
+
+extern TAPE_DAT tape_dat[];
+extern int play_tape_timer;
+extern char tape_play;
 
 void ItemGet(u_char get_type, u_char get_no, u_char msg0_no, u_char msg1_no);
 int ItemGetCtrl();

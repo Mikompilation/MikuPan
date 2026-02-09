@@ -2,6 +2,7 @@
 #define INGAME_ENEMY_ENE_CTL_H
 
 #include "typedefs.h"
+#include "ingame/ig_glob.h"
 
 typedef struct {
 	u_int attr1;
@@ -51,12 +52,25 @@ typedef struct {
 	int se_foot;
 } AENE_INFO_DAT;
 
+#include "ingame/enemy/move_ctl.h"
+
 typedef struct {
 	u_short dmg;
 	u_short hit_rng;
 	u_short mdl_no;
 	u_short cond;
 } FLY_DATA;
+
+typedef struct {
+	u_short sta;
+	u_char ene;
+	u_char reserve;
+	MOVE_BOX move_box;
+	FLY_DATA *dat;
+	void *ep;
+	sceVu0FVECTOR adjp;
+	sceVu0FVECTOR adjmv;
+} FLY_WRK;
 
 typedef struct {
 	int flow;
@@ -67,6 +81,77 @@ typedef struct {
 	float rbrk[64];
 	u_char rscl[64];
 } SPAWAY;
+
+struct ENE_WRK {
+	u_int sta;
+	u_int sta2;
+	u_short hp;
+	u_short dmg;
+	u_short dmg_old;
+	u_short atk_tm;
+	u_char type;
+	u_char dat_no;
+	u_char act_no;
+	u_char anime_no;
+	MOVE_BOX move_box;
+	ENE_DAT *dat;
+	MPOS mpos;
+	LIGHT_PACK mylight;
+	float dist_p_e;
+	float dist_c_e;
+	float pra_per;
+	float pr_anime;
+	u_short pra_time;
+	u_short bloop;
+	u_char bjob_no;
+	u_char bpos_no;
+	u_char bwait_time;
+	u_char recog_tm;
+	P_INT bcomm_add;
+	long int bcomm_add_top;
+	u_char tr_rate;
+	u_char ajob_no;
+	u_char apos_no;
+	u_char await_time;
+	P_INT acomm_add;
+	long int acomm_add_top;
+	void *pdf;
+	float d_pd;
+	void *pdf2;
+	float d_pd2;
+	void *nee;
+	float nee_rate;
+	float nee_size;
+	u_int nee_col;
+	int se_omen[2];
+	sceVu0FVECTOR adjp;
+	sceVu0FVECTOR pp;
+	sceVu0FVECTOR sp;
+	sceVu0FVECTOR si;
+	sceVu0FVECTOR bep;
+	u_short in_finder_tm;
+	u_char area[6];
+	u_short tr_time;
+	u_char tr_max;
+	u_char dmg_type;
+	u_char room_no;
+	char se_area_no;
+	u_char ani_reso;
+	u_char ani_reso_tm;
+	short int fp[2];
+	short int fp2[3][2];
+	u_char eroot[2];
+	u_char plight_svo;
+	u_char slight_svo;
+	u_char plight_svm[2];
+	u_char slight_svm[2];
+	float pa_radius;
+	AENE_INFO_DAT *aie;
+	u_short stm_slow;
+	u_short stm_view;
+	u_short stm_stop;
+	u_char tr_rate2;
+};
 
 // extern ENE_DAT jene_dat0[0];
 // extern AENE_INFO_DAT aene_info_dat0[0];
@@ -93,8 +178,9 @@ extern int ene_dead_mode;
 // extern int erootd1[20][3];
 // extern int erootd2[20][3];
 // extern u_char er_max_tbl[3];
+extern FLY_WRK fly_wrk[10];
+extern ENE_WRK ene_wrk[4]; // Belongs in glob.h
 
-#include "ingame/ig_glob.h"
 
 void EneCtrlMain();
 void EneEntryChk(u_char no);
