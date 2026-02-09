@@ -1,6 +1,10 @@
 #include "common.h"
 #include "item_get.h"
 
+TAPE_DAT tape_dat[];
+int play_tape_timer;
+char tape_play;
+
 void ItemGet(u_char get_type, u_char get_no, u_char msg0_no, u_char msg1_no)
 {
 }

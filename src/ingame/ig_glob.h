@@ -31,20 +31,6 @@ typedef struct {
 	sceVu0FVECTOR pos;
 } ITEM_DISP_WRK;
 
-
-#include "ingame/enemy/move_ctl.h"
-
-typedef struct {
-	u_short sta;
-	u_char ene;
-	u_char reserve;
-	MOVE_BOX move_box;
-	FLY_DATA *dat;
-	void *ep;
-	sceVu0FVECTOR adjp;
-	sceVu0FVECTOR adjmv;
-} FLY_WRK;
-
 #include "graphics/graph3d/gra3d.h"
 #include "ingame/map/furn_ctl.h"
 
@@ -54,7 +40,6 @@ extern ITEM_DISP_WRK item_dsp_wrk[2][16];
 extern u_char ene_cam_req_checker[50];
 extern FURN_ATTR_FLG furn_attr_flg[500];
 extern DOOR_STTS_KEEP door_keep[300];
-extern FLY_WRK fly_wrk[10];
 extern u_char ep_sensor[3];
 extern int disp3d_room_req;
 extern int disp3d_furn_req;
