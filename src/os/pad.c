@@ -344,7 +344,7 @@ int PadReadFunc(PAD_STRUCT *psp, int p_id)
         }
     }
     
-    if ((psp->id & 0x70) == 112)
+    if ((psp->id & 0xf0) == 0x70)
     {
         for (j = 0; j < 4; j++)
         {

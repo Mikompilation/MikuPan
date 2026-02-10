@@ -1696,13 +1696,13 @@ void SetPreRenderMeshData(u_int *prim)
 
     switch (mtype)
     {
-        case 16:
+        case 0x10:
             SetPreRenderTYPE0(gloops, prim);
             break;
-        case 18:
+        case 0x12:
             SetPreRenderTYPE2(gloops, prim);
             break;
-        case 50:
+        case 0x32:
             SetPreRenderTYPE2F(gloops, prim);
             break;
     }

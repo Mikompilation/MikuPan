@@ -534,12 +534,12 @@ int CheckBoundingBox(u_int *prim)
     MikuPan_SetModelTransform(prim);
     //DrawBoundingBox((sceVu0FVECTOR*)&prim[4]);
 
-    // Re-enable this line to have stuff render, right now, nothing is within BoundingBox
-    //return 1;
-
     lcp[prim[2]].camin = 0;
 
     asm_1__CheckBoundingBox(SgCMVtx, SgCMtx, lcp[prim[2]].lwmtx);
+
+    // Re-enable this line to have stuff render, right now, nothing is within BoundingBox
+    return 1;
 
     pvec = (sceVu0FVECTOR *) &prim[4];
 

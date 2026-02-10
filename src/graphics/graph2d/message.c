@@ -821,7 +821,7 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     tw2 = ((no % Num_W) * Font_W + Font_W + off_w);     //tw2 *= 16;
     th2 = ((no / Num_W) * Font_H + Font_H + off_hd);    //th2 *= 16;
 
-    DISP_SPRT s;
+    DISP_SPRT s = {0};
     s.r = r;
     s.g = g;
     s.b = b;
@@ -1046,7 +1046,7 @@ static void SetFontPat(int pri, int fn, int x, int y, int fw, u_char r, u_char g
     th2 = (((fn / Num_W) * Font_W)) * 16 + (Font_W * 16);
 
 
-    DISP_SPRT dq;
+    DISP_SPRT dq = {0};
 
     dq.r = r;
     dq.g = g;

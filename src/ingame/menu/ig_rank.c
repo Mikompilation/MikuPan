@@ -1,6 +1,8 @@
 #include "common.h"
 #include "ig_rank.h"
 
+#include <string.h>
+
 SAVE_RANK save_rank;
 static MENU_RANK menu_rank;
 

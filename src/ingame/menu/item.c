@@ -23,6 +23,8 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 
+#include <string.h>
+
 #ifdef BUILD_EU_VERSION
 #include "graphics/graph2d/subtitles.h"
 #endif

@@ -16,6 +16,7 @@
 #include "mc/mc_exec.h"
 #include "mc/mc_icon.h"
 
+#include <stdio.h>
 #include <string.h>
 
 MC_CTRL mc_ctrl = {0};

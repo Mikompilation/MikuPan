@@ -89,15 +89,14 @@ int scePadRead(int port, int slot, unsigned char* rdata)
         data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_START)          ? sce_pad[10] : 0;
         data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_STICK)     ? sce_pad[11] : 0;
         data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) ? sce_pad[12] : 0;
-        data[1] ^= SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER), 0) ? sce_pad[13] : 0;
-        data[1] ^= SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER), 0) ? sce_pad[14] : 0;
+        data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER)       ? sce_pad[13] : 0;
+        data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)      ? sce_pad[14] : 0;
         data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)  ? sce_pad[15] : 0;
 
         rdata[5] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTY), 0);
         rdata[4] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTX), 0);
         rdata[7] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY), 0);
         rdata[6] = SDL_AxisToPS2_Deadzone(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX), 0);
-
     }
     else
     {
@@ -126,22 +125,24 @@ int scePadRead(int port, int slot, unsigned char* rdata)
         rdata[6] = 127;
     }
 
-    return 32;
+    return 1;
 }
 
 /// 4: STANDARD CONTROLLER (Dualshock)
 /// 7: ANALOG CONTROLLER (Dualshock 2)
 int scePadInfoMode(int port, int slot, int term, int offs)
 {
-    return 5;
+    return 7;
 }
 
 int scePadSetMainMode(int port, int slot, int offs, int lock)
 {
+    return scePadReqStateComplete;
 }
 
 int scePadInfoAct(int port, int slot, int actno, int term)
 {
+    return scePadReqStateComplete;
 }
 
 int scePadSetActAlign(int port, int slot, const unsigned char* data)
@@ -156,10 +157,12 @@ int scePadSetActAlign(int port, int slot, const unsigned char* data)
 
 int scePadGetReqState(int port, int slot)
 {
+    return scePadReqStateComplete;
 }
 
 int scePadInfoPressMode(int port, int slot)
 {
+    return scePadReqStateComplete;
 }
 
 int scePadEnterPressMode(int port, int slot)
@@ -173,7 +176,6 @@ int scePadSetActDirect(int port, int slot, const unsigned char* data)
     {
         return 0;
     }
-
 
     return SDL_RumbleGamepad(gamepad, data[0] * 32896, data[1] * 257, 100);
 }
