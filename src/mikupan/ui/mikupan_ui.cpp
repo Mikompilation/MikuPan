@@ -1,4 +1,5 @@
 #include "mikupan_ui.h"
+#include "typedefs.h"
 #include "glad/gl.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl3.h"
@@ -6,7 +7,6 @@
 #include "imgui_toggle/imgui_toggle.h"
 #include "main/glob.h"
 #include "mikupan/gs/texture_manager.h"
-#include "typedefs.h"
 
 extern "C"
 {

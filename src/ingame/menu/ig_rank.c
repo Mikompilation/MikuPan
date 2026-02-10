@@ -1,13 +1,13 @@
-#include "common.h"
 #include "ig_rank.h"
-
+#include "typedefs.h"
+#include "common.h"
 #include <string.h>
 
 SAVE_RANK save_rank;
 static MENU_RANK menu_rank;
 
 void NewgameMenuRankInit()
-{    
+{
     memset(&menu_rank, 0, sizeof(menu_rank));
     memset(&save_rank, 0, sizeof(save_rank));
 }
