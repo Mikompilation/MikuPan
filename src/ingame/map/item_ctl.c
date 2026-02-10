@@ -5,7 +5,7 @@
 
 #include "graphics/graph2d/effect.h"
 #include "ingame/event/ev_main.h"
-//#include "ingame/ig_glob.h"
+#include "ingame/ig_glob.h"
 #include "ingame/map/find_ctl.h"
 #include "ingame/map/item_ctl.h"
 #include "ingame/menu/item.h"

@@ -1,6 +1,7 @@
+#include "typedefs.h"
 #include "common.h"
 #include "furn_spe.h"
-#include "typedefs.h"
+#include <stdint.h>
 
 #define BASE_ADDRESS 0x7f8000
 

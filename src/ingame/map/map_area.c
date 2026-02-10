@@ -5,11 +5,12 @@
 
 #include "graphics/graph3d/load3d.h"
 #include "ingame/entry/ap_fgost.h"
-//#include "ingame/ig_glob.h" // Circular include
+#include "ingame/ig_glob.h"
 #include "ingame/map/door_ctl.h"
 #include "ingame/map/furn_ctl.h"
 #include "ingame/map/map_area.h"
-//#include "main/glob.h" // Circular include
+#include "main/glob.h"
+
 
 u_char area_dat[11][6] = {
     {   0,   1,   2,   3,   8,  38 },

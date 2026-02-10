@@ -3,6 +3,7 @@
 #include "main/glob.h"
 #include "enums.h"
 #include "ev_spcl.h"
+#include "ingame/ig_glob.h"
 #include "ingame/map/map_area.h"
 #include "ingame/entry/entry.h"
 #include "mikupan/mikupan_memory.h"

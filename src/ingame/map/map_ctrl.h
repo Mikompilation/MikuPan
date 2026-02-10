@@ -2,6 +2,7 @@
 #define INGAME_MAP_MAP_CTRL_H
 
 #include "typedefs.h"
+#include <stdint.h>
 
 typedef struct {
     u_short camera_no;

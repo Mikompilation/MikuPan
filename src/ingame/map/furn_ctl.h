@@ -4,10 +4,11 @@
 #include "typedefs.h"
 
 #include "graphics/graph3d/gra3d.h"
-#include "graphics/graph3d/light_dat.h"
+#include "graphics/graph3d/light_types.h"
 #include "ingame/map/furn_dat.h"
 
-typedef struct {
+typedef struct
+{
     u_int ck_item;
     u_int ck_rate;
     float distn;
@@ -20,12 +21,14 @@ typedef struct {
     u_short obj;
 } FACT_CHK_DAT;
 
-typedef struct {
+typedef struct
+{
     u_short type;
     u_short no;
 } FACT_EXEC_DAT;
 
-typedef struct {
+typedef struct
+{
     FACT_CHK_DAT *chk[2];
     FACT_EXEC_DAT *exec[2];
     float dist_tgt;
@@ -50,10 +53,11 @@ extern int furn_disp_flg;
 
 void FurnCtrlMain();
 void InitFurnDispFlg();
-FURN_WRK* FurnGetFurnWrk(u_char fw_no);
+FURN_WRK *FurnGetFurnWrk(u_char fw_no);
 u_char ChkFurnGetAlready(u_short furn_id);
 void FurnSetWrkNoUse(FURN_WRK *fwp, int no);
-int FurnSetFurnWork(FURN_DATA_POP *fdpp, int fw_no, u_char msn_no, u_char use, u_char room_id);
+int FurnSetFurnWork(FURN_DATA_POP *fdpp, int fw_no, u_char msn_no, u_char use,
+                    u_char room_id);
 int FurnIsPicDispOnly(u_short id, u_char msn_no);
 void FurnAplyAmbient();
 int GetRoomFurnID(u_char room_id, u_short *furn_id, u_char msn_no);
@@ -79,7 +83,8 @@ void InitFurnAttrFlg();
 void SetFurnAttrEve(u_short id, u_short flg, int on_flg);
 u_int GetFurnAttrF(FURN_WRK *fwp, u_char msn_no);
 u_int GetFurnAttr(u_short id, u_char msn_no);
-u_char FurnHitCheck(u_char *dx_max, u_char *dz_max, sceVu0FVECTOR pos, sceVu0FVECTOR dst, u_char div, u_char room);
+u_char FurnHitCheck(u_char *dx_max, u_char *dz_max, sceVu0FVECTOR pos,
+                    sceVu0FVECTOR dst, u_char div, u_char room);
 u_char FurnHitCheck2(u_short pos_x, u_short pos_y, u_char room_id);
 
-#endif // INGAME_MAP_FURN_CTL_H
+#endif// INGAME_MAP_FURN_CTL_H

@@ -2,71 +2,7 @@
 #define INGAME_CAMERA_CAMERA_H
 
 #include "typedefs.h"
-
-typedef struct {
-	sceVu0FVECTOR p;
-	sceVu0FVECTOR i;
-	float roll;
-	float fov;
-	float nearz;
-	float farz;
-	float ax;
-	float ay;
-	float cx;
-	float cy;
-	float zmin;
-	float zmax;
-	float pad[2];
-	sceVu0FMATRIX vs;
-	sceVu0FMATRIX vc;
-	sceVu0FMATRIX vcv;
-
-	/// World -> View matrix
-	sceVu0FMATRIX wv;
-
-	/// World -> Screen matrix
-	sceVu0FMATRIX ws;
-
-	/// World Clip matrix
-	sceVu0FMATRIX wc;
-
-    /// World Clip View matrix
-	sceVu0FMATRIX wcv;
-
-	/// Look direction vectors
-	sceVu0FVECTOR zd;
-	sceVu0FVECTOR yd;
-} SgCAMERA;
-
-typedef struct {
-	u_char type;
-	u_char id;
-	u_short p0[3];
-	u_short p1[3];
-	u_short p2[3];
-	u_short p3[3];
-	float roll[2];
-	float fov[2];
-} MAP_CAM_DAT;
-
-typedef struct
-{ // 0xc
-    /* 0x0 */ u_short no;
-    /* 0x2 */ u_short no_old;
-    /* 0x4 */ u_char kind;
-    /* 0x5 */ u_char type;
-    /* 0x6 */ u_char change;
-    /* 0x7 */ u_char pad;
-    /* 0x8 */ MAP_CAM_DAT *mcd;
-} MAP_CAM_INFO;
-
-typedef struct
-{ // 0x40
-  /* 0x00 */ sceVu0FVECTOR i;
-  /* 0x10 */ sceVu0FVECTOR p;
-  /* 0x20 */ sceVu0FVECTOR rot_y;
-  /* 0x30 */ sceVu0FVECTOR rot_x;
-} CAM_ID_MOVE;
+#include "camera_types.h"
 
 extern u_int ncam_000[];
 extern u_int ncam_001[];

@@ -4,24 +4,25 @@
 #include "ingame.h"
 
 #include "mikupan/mikupan_memory.h"
-#include "main/glob.h" // *
+#include "main/glob.h"
 #include "mc/mc_main.h"
-#include "ingame/map/furn_ctl.h" //
+#include "ingame/map/furn_ctl.h"
 #include "ingame/entry/entry.h"
 #include "ingame/event/ev_main.h"
 #include "ingame/map/map_ctrl.h"
 #include "ingame/map/map_ctrl.h"
 #include "os/eeiop/eese.h"
 #include "ingame/ig_init.h"
+#include "ingame/ig_glob.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
 #include "ingame/menu/ig_menu.h"
-#include "graphics/graph3d/gra3d.h" //
+#include "graphics/graph3d/gra3d.h"
 #include "outgame/btl_mode/btl_mode.h"
 #include "ingame/map/find_ctl.h"
 #include "ingame/photo/pht_main.h"
 #include "ingame/map/door_ctl.h"
 #include "ingame/map/door_ctl.h"
-#include "ingame/event/wan_soul.h" //
+#include "ingame/event/wan_soul.h"
 #include "os/eeiop/se_ev.h"
 #include "os/key_cnf.h"
 #include <string.h>
