@@ -17,6 +17,7 @@
 #include <stdlib.h>
 
 #define GLAD_GL_IMPLEMENTATION
+#include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
 #include <glad/gl.h>
 
@@ -659,8 +660,8 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
         {ndc_x0, ndc_y0, u0, v0}  // top-left
     };
 
-    float cosr = cosf((rotation * 3.1415926f) / 180.0f);
-    float sinr = sinf((rotation * 3.1415926f) / 180.0f);
+    float cosr = SgCosf((rotation * 3.1415927f) / 180.0f);
+    float sinr = SgSinf((rotation * 3.1415927f) / 180.0f);
     // Rotate only POSITION (x,y), not UVs
     for (int i = 0; i < 6; i++)
     {

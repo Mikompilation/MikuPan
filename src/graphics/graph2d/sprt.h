@@ -67,8 +67,14 @@ typedef struct {
     /// Absolute Y coordinate of the texture's (upper-left corner) on the screen
 	float y;
 	u_int z;
+
+    /// Frame's width multiplier
 	float scw;
+
+    /// Frame's height multiplier
 	float sch;
+
+    /// Rotation
 	float rot;
 	u_long gftg;
 	u_long tex0;
@@ -84,5 +90,72 @@ typedef struct {
 	u_char alpha;
 	u_char col;
 } DISP_SPRT;
+
+typedef struct {
+    u_int att;
+    float crx;
+    float cry;
+    float csx;
+    float csy;
+    int x[4];
+    int y[4];
+    u_int z;
+    float scw;
+    float sch;
+    float rot;
+    u_long texa;
+    u_long alphar;
+    u_long zbuf;
+    u_long test;
+    u_int pri;
+    u_char r[4];
+    u_char g[4];
+    u_char b[4];
+    u_char alpha;
+} DISP_SQAR;
+
+typedef struct {
+    u_int w;
+    u_int h;
+    int x;
+    int y;
+    u_int pri;
+    u_char r;
+    u_char g;
+    u_char b;
+    u_char alpha;
+} SQAR_DAT;
+
+typedef struct {
+    u_int w;
+    u_int h;
+    int x;
+    int y;
+    u_int pri;
+    u_char r[4];
+    u_char g[4];
+    u_char b[4];
+    u_char alpha;
+} GSQR_DAT;
+
+typedef struct {
+    int x[4];
+    int y[4];
+    u_int pri;
+    u_char r;
+    u_char g;
+    u_char b;
+    u_char alpha;
+} SQR4_DAT;
+
+typedef struct {
+    int x[4];
+    int y[4];
+    u_int pri;
+    u_char r[4];
+    u_char g[4];
+    u_char b[4];
+    u_char alpha;
+} GSQ4_DAT;
 
 #endif // GRAPHICS_GRAPH2D_SPRT_H
