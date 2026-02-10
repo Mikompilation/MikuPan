@@ -251,12 +251,15 @@ void sceVu0RotTransPers(sceVu0IVECTOR v0, sceVu0FMATRIX m0, sceVu0FVECTOR v1, in
     tmp[1] *= 1.0f / tmp[3];
     tmp[2] *= 1.0f / tmp[3];
 
-    if (mode == 0) {
+    if (mode == 0)
+    {
         v0[0] = FLT_TO_FIX4(tmp[0]);
         v0[1] = FLT_TO_FIX4(tmp[1]);
         v0[2] = FLT_TO_FIX4(tmp[2]);
         v0[3] = FLT_TO_FIX4(tmp[3]);
-    } else {
+    }
+    else
+    {
         v0[0] = (int)(tmp[0]);
         v0[1] = (int)(tmp[1]);
         v0[2] = (int)(tmp[2]);
