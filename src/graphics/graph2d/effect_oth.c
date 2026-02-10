@@ -491,9 +491,9 @@ void SetEffSQTex(int n, float *v, int tp, float w, float h, u_char r, u_char g, 
         pbuf[ndpkt].ui32[2] = 0;
         pbuf[ndpkt++].ui32[3] = 0;
 
-        pbuf[ndpkt].ui32[0] = (int)(xx[i % 2] * 16.0f);
-        pbuf[ndpkt].ui32[1] = (int)(yy[i / 2] * 16.0f);
-        pbuf[ndpkt].ui32[2] = (int)(v[2] * 16.0f);
+        //pbuf[ndpkt].ui32[0] = (int)(xx[i % 2] * 16.0f);
+        //pbuf[ndpkt].ui32[1] = (int)(yy[i / 2] * 16.0f);
+        //pbuf[ndpkt].ui32[2] = (int)(v[2] * 16.0f);
         pbuf[ndpkt++].ui32[3] = i > 1 ? 0 : 0x8000;
     }
 }
