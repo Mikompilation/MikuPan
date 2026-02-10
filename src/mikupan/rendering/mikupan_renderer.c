@@ -486,9 +486,9 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2,
 
     glad_glUniform4f(
         glad_glGetUniformLocation(MikuPan_GetCurrentShaderProgram(), "uColor"),
-        (r) / 255.0f,
-        (g) / 255.0f,
-        (b) / 255.0f,
+        AdjustAlpha(r) / 255.0f,
+        AdjustAlpha(g) / 255.0f,
+        AdjustAlpha(b) / 255.0f,
         AdjustAlpha(a) / 255.0f);
 
     glad_glEnable(GL_BLEND);
@@ -536,8 +536,8 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
 
     // Color + alpha (SDL-compatible)
     glad_glUniform4f(glad_glGetUniformLocation(program, "uColor"),
-                     (r) / 255.0f, (g) / 255.0f,
-                     (b) / 255.0f, AdjustAlpha(a) / 255.0f);
+                     AdjustAlpha(r) / 255.0f, AdjustAlpha(g) / 255.0f,
+                     AdjustAlpha(b) / 255.0f, AdjustAlpha(a) / 255.0f);
 
     glad_glEnable(GL_BLEND);
     glad_glBlendFunc(alpha_fac, alpha_calc);
@@ -697,8 +697,8 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
     glad_glDepthMask(GL_FALSE);
     glad_glDisable(GL_DEPTH_TEST);
 
-    float color[4] = {(r) / 255.0f, (g) / 255.0f,
-                      (b) / 255.0f, AdjustAlpha(a) / 255.0f};
+    float color[4] = {AdjustAlpha(r) / 255.0f, AdjustAlpha(g) / 255.0f,
+                      AdjustAlpha(b) / 255.0f, AdjustAlpha(a) / 255.0f};
 
     int gSpriteColorLoc =
         glad_glGetUniformLocation(MikuPan_GetCurrentShaderProgram(), "uColor");
