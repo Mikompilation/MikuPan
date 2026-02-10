@@ -9,6 +9,7 @@
 // #include "mc/mc_album.h" // mcAlbumSaveMain
 #include "mc/mc_disp.h"
 #include "mc/mc_main.h"
+#include "mc_album.h"
 
 typedef struct {
     u_char alp;

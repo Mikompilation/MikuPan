@@ -1750,8 +1750,8 @@ void InitOutDither()
 {
     out_dither.cnt = 0.0f;
     out_dither.spd = 8.0f;
-    out_dither.alp = 64.0f; // Looks way to visible unlike og hardware
-    //out_dither.alp = 20.0f;
+    //out_dither.alp = 64.0f; // Looks way to visible unlike og hardware
+    out_dither.alp = 20.0f;
     out_dither.alpmx = 0x40;
     out_dither.colmx = 0x40;
     out_dither.type = 7;

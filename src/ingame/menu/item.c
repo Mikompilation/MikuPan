@@ -972,7 +972,6 @@ void IngameMenuItemDisp()
     DispCaption(19, yw2d.io_a[4]);
     ItemModeInOut2();
     ItemCntRenew();
-
 }
 
 static void ItemUse(u_char item_no)

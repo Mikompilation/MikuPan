@@ -312,14 +312,14 @@ void MikuPan_Render2DTexture(DISP_SPRT *sprite)
         texture_info = MikuPan_CreateGLTexture(tex0);
     }
 
-    MikuPan_Rect dst_rect;
-    MikuPan_Rect src_rect;
+    MikuPan_Rect dst_rect = {0};
+    MikuPan_Rect src_rect = {0};
 
     src_rect.x = (float) sprite->u;
     src_rect.y = (float) sprite->v;
 
-    src_rect.w = (float) sprite->w;
-    src_rect.h = (float) sprite->h;
+    src_rect.w = (float) sprite->w * sprite->scw;
+    src_rect.h = (float) sprite->h * sprite->sch;
 
     dst_rect.x = (float) sprite->x;
     dst_rect.y = (float) sprite->y;

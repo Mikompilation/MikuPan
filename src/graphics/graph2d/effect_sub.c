@@ -1556,6 +1556,8 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
     s.w = sd->size_w;
     s.h = sd->size_h;
     s.rot = sd->angle;
+    s.scw = sd->scale_w;
+    s.sch = sd->scale_h;
 
     MikuPan_Render2DTexture(&s);
     //s.alpha = de->alpha;
