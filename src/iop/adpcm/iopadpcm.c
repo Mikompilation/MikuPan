@@ -511,8 +511,13 @@ SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream,
         iop_adpcm[0].count++;
 
         //AdpcmTransCB();
-        iop_adpcm[0].pos += additional_amount;
-        iop_adpcm[0].str_tpos += additional_amount;
+
+        int amountOffset = total_amount / sizeof(s16) / 2;
+
+        //info_log("AmtOffset: %d", amountOffset);
+
+        iop_adpcm[0].pos += amountOffset;
+        iop_adpcm[0].str_tpos += amountOffset;
 
         remain_t = iop_adpcm[0].szFile - iop_adpcm[0].str_tpos;
         if (remain_t > 0x1000)
@@ -526,7 +531,7 @@ SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream,
                 {
                     iop_adpcm[0].lreq_size = 0x20000;
                     ICdvdLoadReqAdpcm(
-                        start, iop_adpcm[0].lreq_size,
+                        start, total_amount,
                         (s16 *) &AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi],
                         0, 2u, 0);
                 }
@@ -534,7 +539,7 @@ SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream,
                 {
                     iop_adpcm[0].lreq_size = remain_l;
                     ICdvdLoadReqAdpcm(
-                        start, iop_adpcm[0].lreq_size,
+                        start, total_amount,
                         (s16 *) &AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi],
                         0, 2u, 1u);
                 }
