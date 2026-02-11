@@ -105,7 +105,7 @@ void MikuPan_ReadFileInArchive64(int sector, int size, int64_t address)
     infile.close();
 }
 
-u_char MikuPan_OpenFile(const char *filename, void *buffer)
+u_char MikuPan_OpenFile(const char *filename, void *buffer, int size)
 {
     std::filesystem::path filePath(filename);
     filePath = filePath.relative_path();
@@ -116,7 +116,9 @@ u_char MikuPan_OpenFile(const char *filename, void *buffer)
         MikuPan_SaveFile(filename, buffer, 0);
     }
     inFile.open(filePath);
-    inFile.read((char *)buffer, 180000);
+    inFile.read((char *)buffer, size);
+    inFile.close();
+    return inFile.bad() == 0;
 }
 
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size)
