@@ -49,9 +49,9 @@ static u_long128 *bufz;
 
 void InitEffectSub()
 {
-    buf = (u_long128 *)EFFECT_ADDRESS;
-    buf2 = (u_long128 *)0x01F1C000;
-    bufz = (u_long128 *)0x05000000;
+    buf = (u_long128 *)MikuPan_GetHostPointer(EFFECT_ADDRESS);
+    buf2 = (u_long128 *)MikuPan_GetHostPointer(0x01F1C000);
+    bufz = (u_long128 *)MikuPan_GetHostPointer(0x05000000);
     vib1_time = 0;
     vib2_time = 0;
     vib2_pow = 0;

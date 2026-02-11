@@ -8,6 +8,8 @@
 #include "main/glob.h"
 #include "mikupan/gs/texture_manager.h"
 
+#include <string>
+
 extern "C"
 {
 #include "sce/libpad.h"
@@ -139,6 +141,7 @@ bool controller_rumble_test = false;
 bool camera_debug = false;
 int render_wireframe = 0;
 int render_normals = 0;
+bool show_texture_list = 0;
 
 void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
 {
@@ -194,6 +197,7 @@ void MikuPan_DrawUi()
             ImGui::Toggle("Camera", (bool*)&camera_debug, ImGuiToggleFlags_Animated);
             ImGui::Toggle("Wireframe", (bool*)&render_wireframe, ImGuiToggleFlags_Animated);
             ImGui::Toggle("Normals", (bool*)&render_normals, ImGuiToggleFlags_Animated);
+            ImGui::Toggle("Textures", (bool*)&show_texture_list, ImGuiToggleFlags_Animated);
             if (ImGui::Button("Clear Texture Cache"))
             {
                 MikuPan_RequestFlushTextureCache();
@@ -230,6 +234,25 @@ void MikuPan_DrawUi()
         ImGui::Begin("Frame Time Graph");
 
         g_frame_graph.draw("Frame Time");
+        ImGui::End();
+    }
+
+    if (show_texture_list)
+    {
+        ImGui::Begin("OpenGL Texture");
+
+        for (auto texture : mikupan_render_texture_atlas)
+        {
+            std::string label = "Texture ID ";
+            label += std::to_string(texture.second->id);
+
+            if (ImGui::CollapsingHeader(label.c_str()))
+            {
+                ImGui::Text("%d: %d x %d", texture.second->id, texture.second->width, texture.second->height);
+                ImGui::Image((ImTextureID)(intptr_t)texture.second->id, ImVec2(texture.second->width, texture.second->height));
+            }
+        }
+
         ImGui::End();
     }
 

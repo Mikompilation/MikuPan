@@ -191,7 +191,7 @@ extern SPECIAL_EVENT_WRK spev_wrk;
 
 void SpecialEventInit(u_char spev_no);
 void SpecialEventMain();
-int GetSpecialEventMessageAddr(short int msg_no);
+int64_t GetSpecialEventMessageAddr(short int msg_no);
 void SimpleDispSprt(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SSCL *sscl, u_char alp_rate);
 void SimpleDispAlphaSprt(SPRT_SDAT *ssd, int64_t addr, int sp_no, u_char alp_rate, u_char alp_type);
 void SimpleDispSprtRGB(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SSCL *sscl, u_char alp_rate, u_char rr, u_char gg, u_char bb);

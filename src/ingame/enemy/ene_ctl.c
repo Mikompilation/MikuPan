@@ -1093,7 +1093,7 @@ void EneARatioDataSet(ENE_WRK *ew, u_char anime_no)
 
     ew->acomm_add_top = ADDRESS;
 
-    v0 = (int64_t)MikuPan_GetHostAddress((int64_t)(ew->type) * 2 + ADDRESS);
+    v0 = (int64_t)MikuPan_GetHostAddress((ew->type) * 2 + ADDRESS);
     v1 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v0))[0] | (((u_char *)((int64_t)v0))[1] << 8)))) + (u_long)(ew->dat_no * 2);
     v2 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v1))[0] | (((u_char *)((int64_t)v1))[1] << 8)))) + (u_long)(             2);
     v0 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v2))[0] | (((u_char *)((int64_t)v2))[1] << 8)))) + (u_long)(  anime_no * 2);

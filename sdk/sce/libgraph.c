@@ -5,6 +5,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 void sceGsSetDefDBuff(sceGsDBuff* dp, short psm, short w, short h, short ztest, short zpsm, short clear)
 {
@@ -78,6 +79,7 @@ int sceGsSetDefStoreImage(sceGsStoreImage* sp, short sbp, short sbw, short spsm,
 int sceGsExecStoreImage(sceGsStoreImage* sp, u_long128* dstaddr)
 {
     //GsUpload((sceGsLoadImage*)&sp->giftag, (unsigned char *)dstaddr);
+    //memcpy(dstaddr, sp, sizeof(sceGsStoreImage));
     return 1;
 }
 

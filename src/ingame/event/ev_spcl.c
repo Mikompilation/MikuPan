@@ -214,14 +214,14 @@ void SpecialEventMain()
     }
 }
 
-int GetSpecialEventMessageAddr(short int msg_no)
+int64_t GetSpecialEventMessageAddr(short int msg_no)
 {
     int addr;
 
-    addr = Get4Byte((u_char *)(BASE_ADDRESS + 0x10));
-    addr = Get4Byte((u_char *)(BASE_ADDRESS + addr + msg_no * 4));
+    addr = Get4Byte((u_char *)MikuPan_GetHostPointer(BASE_ADDRESS + 0x10));
+    addr = Get4Byte((u_char *)MikuPan_GetHostPointer(BASE_ADDRESS + addr + msg_no * 4));
 
-    return BASE_ADDRESS + addr;
+    return MikuPan_GetHostAddress(BASE_ADDRESS + addr);
 }
 
 void SimpleDispSprt(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SSCL *sscl, u_char alp_rate)

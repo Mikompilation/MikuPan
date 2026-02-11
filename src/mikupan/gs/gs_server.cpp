@@ -254,14 +254,17 @@ void GS::GSHelper::Clear()
 
 void GsUpload(sceGsLoadImage *image_load, unsigned char *image)
 {
-    spdlog::debug("GS upload request for DBP {:#x} DPSM {} ",
-                  (unsigned long long) image_load->bitbltbuf.DBP,
-                  (unsigned long long) image_load->bitbltbuf.DPSM);
+    spdlog::debug("GS upload request for DBP {:#x} DPSM {} X: {} Y: {}",
+                  (int) image_load->bitbltbuf.DBP,
+                  (int) image_load->bitbltbuf.DPSM,
+                  (int) image_load->trxreg.RRW,
+                  (int) image_load->trxreg.RRH);
 
     FirstUploadDone();
 
     switch ((PixelStorageFormat) image_load->bitbltbuf.DPSM)
     {
+        case PSMZ32:
         case PSMCT32:
             gsHelper.UploadPSMCT32(
                 image_load->bitbltbuf.DBP, image_load->bitbltbuf.DBW,
@@ -285,7 +288,7 @@ void GsUpload(sceGsLoadImage *image_load, unsigned char *image)
             break;
         }
         default:
-            spdlog::debug("Texture Transfer Upload Info: DPSM {:#x}",
+            spdlog::info("Texture Transfer Upload Info FAILED: DPSM {:#x}",
                           (int) image_load->bitbltbuf.DPSM);
             break;
     }
@@ -317,15 +320,18 @@ unsigned char *DownloadGsTexture(sceGsTex0 *tex0)
 
     switch (tex0->PSM)
     {
+        case PSMZ32:
         case PSMCT32:
             img = gsHelper.DownloadPSMCT32(tex0->TBP0, tex0->TBW, 0, 0, width,
                                            height);
             break;
+
         case PSMT4:
             img = gsHelper.DownloadImagePSMT4(tex0->TBP0, tex0->TBW, 0, 0,
                                               width, height, tex0->CBP,
                                               tex0->TBW, tex0->CSA, -1);
             break;
+        //default:
         case PSMT8:
             img =
                 gsHelper.DownloadImagePSMT8(tex0->TBP0, tex0->TBW, 0, 0, width,
@@ -359,6 +365,7 @@ unsigned char *DownloadGsTexture(sceGsTex0 *tex0)
         {
             auto pixel = (RGBA *) &rawPixel[(i * width + k)];
             pixel->a = AdjustAlpha(pixel->a);
+
             image_data[(i * width + k)] = *(unsigned int *) pixel;
         }
     }

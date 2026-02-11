@@ -352,7 +352,7 @@ void *SetEffects(int id, int fl, ...)
         ec->dat.fl32[3] = va_arg(ap, double);
         ec->dat.uc8[3] = (u_char) va_arg(ap, int);
         ec->dat.uc8[4] = (u_char) va_arg(ap, int);
-        
+
         if (fl & 4)
         {
             ec->in = va_arg(ap, u_int);
@@ -405,7 +405,7 @@ void *SetEffects(int id, int fl, ...)
         ec->dat.uc8[2] = (u_char) va_arg(ap, int);
         ec->dat.uc8[3] = (u_char) va_arg(ap, int);
         ec->dat.uc8[4] = 0;
-        
+
         if (fl & 4)
         {
             ec->flow = (ec->in == 0 ? (ec->keep == 0 ? ec->out != 0 ? 2 : 3 : 1) : 0);
@@ -478,7 +478,7 @@ void *SetEffects(int id, int fl, ...)
         ec->dat.uc8[1] = fl;
         ec->dat.uc8[2] = (u_char) va_arg(ap, int);
         ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-        
+
         if (fl & 4)
         {
             ec->in = va_arg(ap, u_int);
@@ -570,11 +570,11 @@ void *SetEffects(int id, int fl, ...)
         ec->dat.uc8[6] = (u_char) va_arg(ap, int);
         ec->dat.uc8[7] = (u_char) va_arg(ap, int);
         ec->dat.fl32[3] = va_arg (ap, double);
-        
+
         if (ec->flow == 3)
         {
             float r;
-            
+
             // inlined from effect.h
             r = vu0Rand();
             // end of inlined section
@@ -599,7 +599,7 @@ void *SetEffects(int id, int fl, ...)
         ec->dat.uc8[7] = (u_char) va_arg(ap, int);
         ec->dat.fl32[3] = va_arg (ap, double);
         ec->fw[0] = va_arg (ap, double);
-        
+
         if (ec->flow == 3)
         {
             float r;
@@ -619,7 +619,6 @@ void *SetEffects(int id, int fl, ...)
         ec->dat.uc8[2] = (u_char) va_arg(ap, int);
         ec->pnt[0] = va_arg(ap, void *);
         ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-        ec->dat.uc8[4] = (u_char) va_arg(ap, int);
         ec->dat.uc8[5] = (u_char) va_arg(ap, int);
         ec->dat.fl32[2] = va_arg(ap, double);
         ec->dat.uc8[6] = (u_char) va_arg(ap, int);
@@ -647,7 +646,7 @@ void *SetEffects(int id, int fl, ...)
         ec->dat.fl32[3] = va_arg (ap, double);
         ec->pnt[0] = va_arg (ap, void *);
         ec->pnt[1] = va_arg (ap, void *);
-        
+
         if (fl & 8)
         {
             ec->dat.uc8[7] = (u_char) va_arg(ap, int);
@@ -672,7 +671,7 @@ void *SetEffects(int id, int fl, ...)
         ec->pnt[4] = va_arg (ap, void *);
         ec->pnt[5] = NULL;
         ec->pnt[5] = va_arg (ap, void *);
-        
+
         if (fl & 4)
         {
             ec->flow = (ec->in == 0 ? (ec->keep == 0 ? ec->out != 0 ? 2 : 3 : 1) : 0);
@@ -691,7 +690,7 @@ void *SetEffects(int id, int fl, ...)
         ec->keep = va_arg(ap, u_int);
         ec->out = va_arg (ap, u_int);
         ec->max = 100;
-        
+
         if (fl & 4)
         {
             ec->flow = (ec->in == 0 ? (ec->keep == 0 ? ec->out != 0 ? 2 : 3 : 1) : 0);
@@ -1199,7 +1198,6 @@ void ResetEffectScrBuffer(int eno)
 
 void EffectControl(int no)
 {
-    return;
     static int fl;
     static void *ecw[3];
     EFFECT_CONT *ecm;

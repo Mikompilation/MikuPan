@@ -455,7 +455,7 @@ void FurnHintDeformCtrl()
                 scly = 0.7f;
             }
 
-            SetEffects(27, 1, 23, 80, sclx, scly, &ep[j], 0, 0, 0, 0, &spd, &rate, &trate);
+            SetEffects(EF_PDEFORM, 1, 23, 80, sclx, scly, &ep[j], 0, 0, 0, NULL, &spd, &rate, &trate);
 
             j++;
         }

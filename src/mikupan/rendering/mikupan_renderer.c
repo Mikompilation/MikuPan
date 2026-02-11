@@ -283,7 +283,7 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(const sceGsTex0 *tex0)
     /* ----------------------------------
        Optional mipmaps (disable if unwanted)
        ---------------------------------- */
-    // glGenerateMipmap(GL_TEXTURE_2D);
+    glad_glGenerateMipmap(GL_TEXTURE_2D);
 
     glad_glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -294,6 +294,7 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(const sceGsTex0 *tex0)
     texture_info->height = height;
     texture_info->width = width;
     texture_info->id = tex;
+    texture_info->data = pixels;
 
     MikuPan_AddTexture(tex0, texture_info);
 
@@ -878,7 +879,12 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
     if (pProcData->VUMeshData.GifTag.NREG != 6)
     {
         //return;
-        // /mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x18);
+        //mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x18);
+    }
+
+    if (mesh_tex_reg->PSM == 48 /* PSMZ32 */)
+    {
+        return;
     }
 
     MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(mesh_tex_reg);

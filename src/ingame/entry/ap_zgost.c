@@ -20,6 +20,7 @@
 #include "graphics/motion/motion.h"
 // #include "graphics/graph2d/effect_ene.h" // LoadEneDmgTex
 #include "graphics/graph2d/effect.h"
+#include "graphics/graph2d/effect_ene.h"
 #include "graphics/graph3d/load3d.h"
 
 ZHOUR_WRK zh_wrk = {0};

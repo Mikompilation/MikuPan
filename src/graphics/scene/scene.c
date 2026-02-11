@@ -990,7 +990,7 @@ void SceneSetEneEffect(SCN_ANM_MDL *sam)
             sam->efct_addr[1] = SetEffects(
                 EF_PDEFORM, 2, (u_char) sam->ene_efct->pdf1.type,
                 (u_char) sam->ene_efct->pdf1.alpha, sam->ene_efct->pdf1.sclx,
-                sam->ene_efct->pdf1.scly, &pos2, 0, 0, 0, 0, &spd,
+                sam->ene_efct->pdf1.scly, &pos2, 0, 0, 0, (void*)0, &spd,
                 &sam->ene_efct->pdf1.rate, &sam->ene_efct->pdf1.trate);
         }
     }
@@ -1003,7 +1003,7 @@ void SceneSetEneEffect(SCN_ANM_MDL *sam)
             sam->efct_addr[2] = SetEffects(
                 EF_PDEFORM, 2, (u_char) sam->ene_efct->pdf2.type,
                 (u_char) sam->ene_efct->pdf2.alpha, sam->ene_efct->pdf2.sclx,
-                sam->ene_efct->pdf2.scly, &pos2, 0, 0, 0, 0, &spd,
+                sam->ene_efct->pdf2.scly, &pos2, 0, 0, 0, (void*)0, &spd,
                 &sam->ene_efct->pdf2.rate, &sam->ene_efct->pdf2.trate);
         }
     }

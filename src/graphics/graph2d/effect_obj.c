@@ -2,10 +2,11 @@
 #include "typedefs.h"
 #include "effect_obj.h"
 
-#include "ee/kernel.h"
 #include "ee/eestruct.h"
-#include "sce/libvu0.h"
+#include "ee/kernel.h"
+#include "enums.h"
 #include "sce/libgraph.h"
+#include "sce/libvu0.h"
 
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_oth.h"
@@ -188,27 +189,27 @@ void ResetPartsBlur()
 
 void* CallPartsDeform2(int type, float scale, void *pos, u_int in, u_int keep, u_int out)
 {
-    return SetEffects(0x1b, 4, type, 100, scale, scale, pos, in, keep, out, 0, 0, 0, 0);
+    return SetEffects(EF_PDEFORM, 4, type, 100, scale, scale, pos, in, keep, out, NULL, NULL, NULL, NULL);
 }
 
 void* CallPartsDeform3(int type, float scale, void *pos, u_int in, u_int keep, u_int out, int alp)
 {
-    return SetEffects(0x1b, 4, type, alp, scale, scale, pos, in, keep, out, 0, 0, 0, 0);
+    return SetEffects(EF_PDEFORM, 4, type, alp, scale, scale, pos, in, keep, out, NULL, NULL, NULL, NULL);
 }
 
 void* CallPartsDeform3_2(int type, float sclx, float scly, void *pos, u_int in, u_int keep, u_int out, int alp)
 {
-    return SetEffects(0x1b, 4, type, alp, sclx, scly, pos, in, keep, out, 0, 0, 0, 0);
+    return SetEffects(EF_PDEFORM, 4, type, alp, sclx, scly, pos, in, keep, out, NULL, NULL, NULL, NULL);
 }
 
 void* CallPartsDeform4(int type, float scale, void *pos, float *vol)
 {
-    return SetEffects(0x1b, 2, type, 0x80, scale, scale, pos, 0, 0, 0, vol, 0, 0, 0);
+    return SetEffects(EF_PDEFORM, 2, type, 0x80, scale, scale, pos, 0, 0, 0, vol, NULL, NULL, NULL);
 }
 
 void* CallPartsDeform5(int type, float sclx, float scly, void *pos, float *vol)
 {
-    return SetEffects(0x1b, 2, type, 0x80, sclx, scly, pos, 0, 0, 0, vol, 0, 0, 0);
+    return SetEffects(EF_PDEFORM, 2, type, 0x80, sclx, scly, pos, 0, 0, 0, vol, NULL, NULL, NULL);
 }
 
 void SetPartsDeform(EFFECT_CONT *ec)

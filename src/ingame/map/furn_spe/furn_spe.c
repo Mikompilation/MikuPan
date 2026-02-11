@@ -508,7 +508,7 @@ int SetFurnActData(FURN_ACT_WRK *fawp, u_char fact_no)
     u_short temp;
     u_char *pointer;
 
-    pointer = MikuPan_GetHostPointer(FSpeGetTopAddr(fact_no));
+    pointer = FSpeGetTopAddr(fact_no);
 
     fawp->attribute = *pointer;
 

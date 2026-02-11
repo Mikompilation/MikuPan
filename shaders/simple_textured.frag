@@ -19,6 +19,10 @@ void main()
         float ndl = max(dot(normalize(vNormal), -lightDir), 0.0);
         vec4 tex = texture(uTexture, vUV);
         FragColor = vec4(tex.rgb, tex.a);
-    }
 
+        //if (tex.a == 1.0f)
+        //{
+        //    discard;
+        //}
+    }
 }

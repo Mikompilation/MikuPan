@@ -4,6 +4,42 @@
 #include "graphics/graph3d/sglib.h"
 #include <math.h>
 
+#define POW2(x) ((x) * (x))
+#define HALF_PI 1.57079637050628662109e0f
+static void _sceVu0ecossin(int sign, float t, float* sin, float* cos)
+{
+    // sin(x) expansion values seen in the very recent
+    // 1979 issue of BYTE magazine, it's an optimal set
+    // up to x^9, better than the McLaurin Coefficients
+    static const sceVu0FVECTOR S5432 = {
+        0.000002601887f,
+        -0.00019807414f,
+        0.0083330255f,
+        -0.16666657f,
+    };
+
+    float t2, s, c;
+
+    t2 = t * t; s = t;
+    t *= t2; s += S5432[3] * t; // s += k2
+    t *= t2; s += S5432[2] * t; // s += z
+    t *= t2; s += S5432[1] * t; // s += y
+    t *= t2; s += S5432[0] * t; // s += x
+
+    *cos = s;
+
+    c = sqrtf(fabsf(1.0f - POW2(s)));
+
+    if (sign == 0)
+    {
+        *sin = +c;
+    }
+    else
+    {
+        *sin = -c;
+    }
+}
+
 void sceVu0ScaleVectorXYZ(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float s)
 {
     glm_vec3_scale(v1, s, v0);
@@ -107,32 +143,6 @@ void sceVu0CopyMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1)
     glm_mat4_copy(m1, m0);
 }
 
-void sceVu0RotMatrixZ(sceVu0FMATRIX m0, sceVu0FMATRIX m1, float rz)
-{
-    mat4 out = {0};
-    float cos_r = SgCosf(rz);
-    float sin_r = SgSinf(rz);
-
-    if (fabsf(cos_r) == 1.0f)
-    {
-        sin_r = 0.0f;
-    }
-    if (fabsf(sin_r) == 1.0f)
-    {
-        cos_r = 0.0f;
-    }
-
-    for (int i = 0; i < 4; i++)
-    {
-        out[i][0] = m1[i][0] * cos_r - m1[i][1] * sin_r;
-        out[i][1] = m1[i][0] * sin_r + m1[i][1] * cos_r;
-        out[i][2] = m1[i][2];
-        out[i][3] = m1[i][3];
-    }
-
-    sceVu0CopyMatrix(m0, out);
-}
-
 void sceVu0ApplyMatrix(sceVu0FVECTOR v0, sceVu0FMATRIX m, sceVu0FVECTOR v1)
 {
     vec4 out = {0};
@@ -142,55 +152,94 @@ void sceVu0ApplyMatrix(sceVu0FVECTOR v0, sceVu0FMATRIX m, sceVu0FVECTOR v1)
 
 void sceVu0RotMatrixX(sceVu0FMATRIX m0, sceVu0FMATRIX m1, float rx)
 {
-    float cos_r = SgCosf(rx);
-    float sin_r = SgSinf(rx);
-
+    float sin; float cos;
+    int sign;
     mat4 out = {0};
 
-    if (fabsf(cos_r) == 1.0f)
+    if (rx < 0.0f)
     {
-        sin_r = 0.0f;
+        rx = HALF_PI + rx;
+        sign = 1;
     }
-    if (fabsf(sin_r) == 1.0f)
+    else
     {
-        cos_r = 0.0f;
+        rx = HALF_PI - rx;
+        sign = 0;
     }
+
+    _sceVu0ecossin(sign, rx, &sin, &cos);
 
     for (int i = 0; i < 4; i++)
     {
-        out[i][0] = m1[i][0];                           // X unchanged
-        out[i][1] = m1[i][1] * cos_r - m1[i][2] * sin_r;// Y
-        out[i][2] = m1[i][1] * sin_r + m1[i][2] * cos_r;// Z
-        out[i][3] = m1[i][3];                           // W unchanged
+        out[i][0] = 1.0f * m1[i][0] + 0.0f * m1[i][1] + 0.0f * m1[i][2] + 0.0f * m1[i][3];
+        out[i][1] = 0.0f * m1[i][0] +  cos * m1[i][1] + -sin * m1[i][2] + 0.0f * m1[i][3];
+        out[i][2] = 0.0f * m1[i][0] +  sin * m1[i][1] +  cos * m1[i][2] + 0.0f * m1[i][3];
+        out[i][3] = 0.0f * m1[i][0] + 0.0f * m1[i][1] + 0.0f * m1[i][2] + 1.0f * m1[i][3];
     }
 
-    sceVu0CopyMatrix(m0, out);
+    glm_mat4_copy(out, m0);
 }
 
 void sceVu0RotMatrixY(sceVu0FMATRIX m0, sceVu0FMATRIX m1, float ry)
 {
-    mat4 out = {0};
-    float cos_r = SgCosf(ry);
-    float sin_r = SgSinf(ry);
+    float sin; float cos;
+    int sign;
 
-    if (fabsf(cos_r) == 1.0f)
+    mat4 out = {0};
+
+    if (ry < 0.0f)
     {
-        sin_r = 0.0f;
+        ry = HALF_PI + ry;
+        sign = 1;
     }
-    if (fabsf(sin_r) == 1.0f)
+    else
     {
-        cos_r = 0.0f;
+        ry = HALF_PI - ry;
+        sign = 0;
     }
+
+    _sceVu0ecossin(sign, ry, &sin, &cos);
 
     for (int i = 0; i < 4; i++)
     {
-        out[i][0] = m1[i][0] * cos_r + m1[i][2] * sin_r; // X
-        out[i][1] = m1[i][1];                            // Y unchanged
-        out[i][2] = -m1[i][0] * sin_r + m1[i][2] * cos_r;// Z
-        out[i][3] = m1[i][3];                            // W unchanged
+        out[i][0] =  cos * m1[i][0] + 0.0f * m1[i][1] +  sin * m1[i][2] + 0.0f * m1[i][3];
+        out[i][1] = 0.0f * m1[i][0] + 1.0f * m1[i][1] + 0.0f * m1[i][2] + 0.0f * m1[i][3];
+        out[i][2] = -sin * m1[i][0] + 0.0f * m1[i][1] +  cos * m1[i][2] + 0.0f * m1[i][3];
+        out[i][3] = 0.0f * m1[i][0] + 0.0f * m1[i][1] + 0.0f * m1[i][2] + 1.0f * m1[i][3];
     }
 
-    sceVu0CopyMatrix(m0, out);
+    glm_mat4_copy(out, m0);
+}
+
+void sceVu0RotMatrixZ(sceVu0FMATRIX m0, sceVu0FMATRIX m1, float rz)
+{
+    float sin; float cos;
+    int sign;
+
+    mat4 out = {0};
+
+    if (rz < 0.0f)
+    {
+        rz = HALF_PI + rz;
+        sign = 1;
+    }
+    else
+    {
+        rz = HALF_PI - rz;
+        sign = 0;
+    }
+
+    _sceVu0ecossin(sign, rz, &sin, &cos);
+
+    for (int i = 0; i < 4; i++)
+    {
+        out[i][0] =  cos * m1[i][0] + -sin * m1[i][1] + 0.0f * m1[i][2] + 0.0f * m1[i][3];
+        out[i][1] =  sin * m1[i][0] +  cos * m1[i][1] + 0.0f * m1[i][2] + 0.0f * m1[i][3];
+        out[i][2] = 0.0f * m1[i][0] + 0.0f * m1[i][1] + 1.0f * m1[i][2] + 0.0f * m1[i][3];
+        out[i][3] = 0.0f * m1[i][0] + 0.0f * m1[i][1] + 0.0f * m1[i][2] + 1.0f * m1[i][3];
+    }
+
+    glm_mat4_copy(out, m0);
 }
 
 void sceVu0RotMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FVECTOR rot)
@@ -214,7 +263,8 @@ void sceVu0RotTransPersN(sceVu0IVECTOR *v0, sceVu0FMATRIX m0, sceVu0FVECTOR *v1,
     vec4 tmp = {0};
     // Always runs at least once, but code assumes n is non-zero so a for it is
     // Also technically clobbers vf4:vf7, but I don't think the game relies on that behavior
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++)
+    {
         tmp[0] = m0[0][0] * v1[i][0] + m0[1][0] * v1[i][1] + m0[2][0] * v1[i][2] + m0[3][0] * v1[i][3];
         tmp[1] = m0[0][1] * v1[i][0] + m0[1][1] * v1[i][1] + m0[2][1] * v1[i][2] + m0[3][1] * v1[i][3];
         tmp[2] = m0[0][2] * v1[i][0] + m0[1][2] * v1[i][1] + m0[2][2] * v1[i][2] + m0[3][2] * v1[i][3];
@@ -224,12 +274,15 @@ void sceVu0RotTransPersN(sceVu0IVECTOR *v0, sceVu0FMATRIX m0, sceVu0FVECTOR *v1,
         tmp[1] *= 1.0f / tmp[3];
         tmp[2] *= 1.0f / tmp[3];
 
-        if (mode == 0) {
+        if (mode == 0)
+        {
             v0[i][0] = FLT_TO_FIX4(tmp[0]);
             v0[i][1] = FLT_TO_FIX4(tmp[1]);
             v0[i][2] = FLT_TO_FIX4(tmp[2]);
             v0[i][3] = FLT_TO_FIX4(tmp[3]);
-        } else {
+        }
+        else
+        {
             v0[i][0] = (int)(tmp[0]);
             v0[i][1] = (int)(tmp[1]);
             v0[i][2] = (int)(tmp[2]);
