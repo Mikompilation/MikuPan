@@ -1,4 +1,6 @@
 #include "libmc.h"
+#include "mikupan/mikupan_file_c.h"
+#include "mikupan/mikupan_logging_c.h"
 
 int sceMcInit()
 {
@@ -10,7 +12,7 @@ int sceMcSync(int mode, int *cmd, int *result)
     return 0;
 }
 
-int sceMcDelete(int	port, int slot, const char *name)
+int sceMcDelete(int port, int slot, const char *name)
 {
     return 0;
 }
@@ -37,7 +39,7 @@ int sceMcWrite(int fd, const void *buffer, int size)
 
 int sceMcRead(int fd, void *buffer, int size)
 {
-    return 0;
+    return MikuPan_OpenFile("", buffer);
 }
 
 int sceMcClose(int fd)
@@ -47,10 +49,15 @@ int sceMcClose(int fd)
 
 int sceMcOpen(int port, int slot, const char *name, int mode)
 {
-    return 0;
+
+    info_log("CARD NAME: %s\n", name);
+
+    return 1;
 }
 
-int sceMcGetDir(int port, int slot, const char *name, unsigned mode, int maxent, sceMcTblGetDir *table)
+int sceMcGetDir(int port, int slot, const char *name, unsigned mode, int maxent,
+                sceMcTblGetDir *table)
 {
+    // Checks if files exist
     return 0;
 }
