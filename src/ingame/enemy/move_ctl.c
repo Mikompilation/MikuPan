@@ -26,6 +26,8 @@
 #include "graphics/graph2d/effect_scr.h"
 #include "graphics/graph3d/gra3d.h"
 
+#include <string.h>
+
 void (*CommJmpTbl[])(MOVE_BOX * mb) = {
     EJob000, EJob001, EJob002, EJob003, EJob004, EJob005, EJob006, EJob007,
     EJob008, EJob009, EJob00A, EJob00B, EJob00C, EJob00D, EJob00E, EJob00F,
@@ -56,16 +58,16 @@ void (*BCommJmpTbl[])(ENE_WRK *ew) = {
 
 // read a 16-bit little-endian value from an arbitrary (and potentially unaligned) address
 #define READ_LE16(addr) \
-    ( ((u_short)(*((u_char *)(int)(addr) + 1)) << 8) | \
-      ((u_short)(*((u_char *)(int)(addr) + 0))) )
+    ( ((u_short)(*((u_char *)(int64_t)(addr) + 1)) << 8) | \
+      ((u_short)(*((u_char *)(int64_t)(addr) + 0))) )
 
 // produce an address by combining base segment (e.g., 0x7E0000) + 16-bit offset
 #define SEGMENT_ADDR(base, offset) \
-    ((u_long)((base) | (offset)))
+    ((int64_t)((base) | (offset)))
 
 // add an index where each entry is 2 bytes (16-bit)
 #define INDEX16(base, no) \
-    ((u_long)(base) + ((no) * 2))
+    ((int64_t)(base) + ((no) * 2))
 
 #define COMM_ADD_TOP_ADDRESS 0x7e0000
 
@@ -1748,7 +1750,7 @@ void EJob028(MOVE_BOX *mb)
     u_char i;
     u_char id;
     u_short adj;
-    u_long addr; // not in STAB
+    int64_t addr; // not in STAB
 
     no = *mb->comm_add.pu8++;
     id = *mb->comm_add.pu8++;
@@ -1778,17 +1780,17 @@ void EJob028(MOVE_BOX *mb)
         fmb->pos[2] = ene_wrk[mb->idx].bep[2];
         fmb->pos[3] = ene_wrk[mb->idx].bep[3];
 
-        fmb->comm_add_top = COMM_ADD_TOP_ADDRESS;
+        fmb->comm_add_top = MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS);
         
         // addr = ((u_short *)COMM_ADD_TOP_ADDRESS)[3] + COMM_ADD_TOP_ADDRESS;
-        addr = INDEX16(COMM_ADD_TOP_ADDRESS, 3);
+        addr = INDEX16(MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS), 3);
         adj = READ_LE16(addr);
-        addr = SEGMENT_ADDR(COMM_ADD_TOP_ADDRESS, adj);
+        addr = SEGMENT_ADDR(MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS), adj);
 
         // fmb->comm_add.wrk = ((u_short *)addr)[no] + COMM_ADD_TOP_ADDRESS;
         addr = INDEX16(addr, no);
         adj = READ_LE16(addr);
-        fmb->comm_add.wrk = SEGMENT_ADDR(COMM_ADD_TOP_ADDRESS, adj);
+        fmb->comm_add.wrk = SEGMENT_ADDR(MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS), adj);
 
         fmb->pos_no = 0;
         fmb->wait_time = 1;

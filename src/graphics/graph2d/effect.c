@@ -1199,6 +1199,7 @@ void ResetEffectScrBuffer(int eno)
 
 void EffectControl(int no)
 {
+    return;
     static int fl;
     static void *ecw[3];
     EFFECT_CONT *ecm;

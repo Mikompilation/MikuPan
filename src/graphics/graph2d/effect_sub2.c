@@ -3411,6 +3411,8 @@ void DispSprt3(/* s0 16 */ SPRT_SDAT *ssd, /* a1 5 */ int64_t addr, /* a2 6 */ i
 	/* 0x0(sp) */ DISP_SPRT ds;
 	/* 0x90(sp) */ SPRT_DAT sd;
 
+    addr = MikuPan_GetHostAddress((int)addr);
+
     sd.tex0 = GetTex0Reg(addr, sp_no, 0);
     sd.u = ssd->u;
     sd.v = ssd->v;

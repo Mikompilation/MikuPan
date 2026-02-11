@@ -108,13 +108,13 @@ struct ENE_WRK {
 	u_char bwait_time;
 	u_char recog_tm;
 	P_INT bcomm_add;
-	long int bcomm_add_top;
+	int64_t bcomm_add_top;
 	u_char tr_rate;
 	u_char ajob_no;
 	u_char apos_no;
 	u_char await_time;
 	P_INT acomm_add;
-	long int acomm_add_top;
+	int64_t acomm_add_top;
 	void *pdf;
 	float d_pd;
 	void *pdf2;

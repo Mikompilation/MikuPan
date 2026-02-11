@@ -95,7 +95,7 @@ typedef union {
 	s_short *ps16;
 	int *ps32;
 	s_long *ps64;
-	long int wrk;
+	int64_t wrk;
 } P_INT;
 
 typedef struct {
@@ -114,7 +114,7 @@ typedef struct {
 	sceVu0FVECTOR trot;
 	sceVu0FVECTOR pos_mid;
 	P_INT comm_add;
-	long int comm_add_top;
+	int64_t comm_add_top;
 } MOVE_BOX;
 
 typedef struct {

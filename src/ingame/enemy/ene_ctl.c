@@ -1031,18 +1031,18 @@ void EneActSet(ENE_WRK *ew, u_char act_no)
 {
     MOVE_BOX *mb;
 
-    u_long v0, v1; // not in STAB
-    u_long t3;     // not in STAB but trivial to remove (keeping it for symmetry)
+    int64_t v0, v1; // not in STAB
+    int64_t t3;     // not in STAB but trivial to remove (keeping it for symmetry)
 
     mb = &ew->move_box;
 
     ew->act_no = act_no;
-    mb->comm_add_top = ADDRESS;
+    mb->comm_add_top = MikuPan_GetHostAddress(ADDRESS);
 
-    v1 = (u_int)((u_long)(ew->type) * 2 + ADDRESS);
-    v0 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[1] << 8)))) + (u_long)(ew->dat_no * 2);
-    v1 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v0))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v0))[1] << 8)))) + (u_long)(    act_no * 2);
-    t3 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[1] << 8))));
+    v1 = (int64_t)MikuPan_GetHostAddress((u_long)(ew->type) * 2 + ADDRESS);
+    v0 = (int64_t)MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v1))[0] | (((u_char *)((int64_t)v1))[1] << 8)))) + (int64_t)(ew->dat_no * 2);
+    v1 = (int64_t)MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v0))[0] | (((u_char *)((int64_t)v0))[1] << 8)))) + (int64_t)(    act_no * 2);
+    t3 = (int64_t)MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v1))[0] | (((u_char *)((int64_t)v1))[1] << 8))));
 
     mb->comm_add.wrk = t3;
     mb->pos_no = 0;
@@ -1071,15 +1071,15 @@ void EneActSet(ENE_WRK *ew, u_char act_no)
 
 void EneBlinkDataSet(ENE_WRK *ew)
 {
-    u_long v0, v1; // not in STAB
-    u_long a3;     // not in STAB but trivial to remove (keeping it for symmetry)
+    int64_t v0, v1; // not in STAB
+    int64_t a3;     // not in STAB but trivial to remove (keeping it for symmetry)
 
-    ew->bcomm_add_top = ADDRESS;
+    ew->bcomm_add_top = MikuPan_GetHostAddress(ADDRESS);
 
-    v1 = (u_int)((u_long)(ew->type) * 2 + ADDRESS);
-    v0 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[1] << 8)))) + (u_long)(ew->dat_no * 2);
-    v1 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v0))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v0))[1] << 8))));
-    a3 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[1] << 8))));
+    v1 = (int64_t)MikuPan_GetHostAddress((ew->type) * 2 + ADDRESS);
+    v0 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v1))[0] | (((u_char *)((int64_t)v1))[1] << 8)))) + (int64_t)(ew->dat_no * 2);
+    v1 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v0))[0] | (((u_char *)((int64_t)v0))[1] << 8))));
+    a3 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v1))[0] | (((u_char *)((int64_t)v1))[1] << 8))));
 
     ew->bcomm_add.wrk = a3;
     ew->bpos_no = 0;
@@ -1088,16 +1088,16 @@ void EneBlinkDataSet(ENE_WRK *ew)
 
 void EneARatioDataSet(ENE_WRK *ew, u_char anime_no)
 {
-    u_long v0, v1, v2; // not in STAB
-    u_long a3;         // not in STAB but trivial to remove (keeping it for symmetry)
+    int64_t v0, v1, v2; // not in STAB
+    int64_t a3;         // not in STAB but trivial to remove (keeping it for symmetry)
 
     ew->acomm_add_top = ADDRESS;
 
-    v0 = (u_int)((u_long)(ew->type) * 2 + ADDRESS);
-    v1 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v0))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v0))[1] << 8)))) + (u_long)(ew->dat_no * 2);
-    v2 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v1))[1] << 8)))) + (u_long)(             2);
-    v0 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v2))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v2))[1] << 8)))) + (u_long)(  anime_no * 2);
-    a3 = ((ADDRESS | (((u_char *)MikuPan_GetHostPointer((u_int)v0))[0] | (((u_char *)MikuPan_GetHostPointer((u_int)v0))[1] << 8))));
+    v0 = (int64_t)MikuPan_GetHostAddress((int64_t)(ew->type) * 2 + ADDRESS);
+    v1 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v0))[0] | (((u_char *)((int64_t)v0))[1] << 8)))) + (u_long)(ew->dat_no * 2);
+    v2 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v1))[0] | (((u_char *)((int64_t)v1))[1] << 8)))) + (u_long)(             2);
+    v0 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v2))[0] | (((u_char *)((int64_t)v2))[1] << 8)))) + (u_long)(  anime_no * 2);
+    a3 = MikuPan_GetHostAddress((ADDRESS | (((u_char *)((int64_t)v0))[0] | (((u_char *)((int64_t)v0))[1] << 8))));
 
     ew->acomm_add.wrk = a3;
     ew->apos_no = 0;
