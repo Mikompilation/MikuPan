@@ -15,7 +15,7 @@ static inline std::vector<int> file_loaded_address;
 void MikuPan_LoadImgHdFile()
 {
     return MikuPan_ReadFullFile("./IMG_HD.BIN",
-                        (char *) MikuPan_GetHostPointer(ImgHdAddress));
+                                (char *) MikuPan_GetHostPointer(ImgHdAddress));
 }
 
 void MikuPan_ReadFullFile(const char *filename, char *buffer)
@@ -89,23 +89,55 @@ void MikuPan_ReadFileInArchive64(int sector, int size, int64_t address)
         return;
     }
 
-    if ((int64_t*)*(int64_t*)address != nullptr)
+    if ((int64_t *) *(int64_t *) address != nullptr)
     {
-        free((int64_t*)*(int64_t*)address);
+        free((int64_t *) *(int64_t *) address);
     }
 
-    void* file_ptr = malloc(size);
+    void *file_ptr = malloc(size);
 
-    *((int64_t*)address) = (int64_t)file_ptr;
+    *((int64_t *) address) = (int64_t) file_ptr;
 
     std::ifstream infile("./IMG_BD.BIN", std::ios::binary);
     infile.seekg(sector * 0x800, std::ios::beg);
-    infile.read((char*)file_ptr, size);
+    infile.read((char *) file_ptr, size);
 
     infile.close();
 }
 
+u_char MikuPan_OpenFile(const char *filename, void *buffer, int size)
+{
+    std::filesystem::path filePath(filename);
+    filePath = filePath.relative_path();
+    std::ifstream inFile;
 
+    if (!std::filesystem::exists(filePath))
+    {
+        MikuPan_SaveFile(filename, buffer, 0);
+    }
+    inFile.open(filePath);
+    inFile.read((char *)buffer, size);
+    inFile.close();
+    return inFile.bad() == 0;
+}
+
+u_char MikuPan_SaveFile(const char *filename, void *buffer, int size)
+{
+    std::filesystem::path filePath(filename);
+    filePath = filePath.relative_path();
+    std::ofstream outFile;
+
+    if (!std::filesystem::exists(filePath))
+    {
+        std::filesystem::create_directories(filePath);
+    }
+
+    outFile.open(filePath, std::ios::binary);
+    outFile.write((char *) buffer, size);
+    outFile.close();
+
+    return outFile.bad() == 0;
+}
 
 u_int MikuPan_GetFileSize(const char *filename)
 {
