@@ -676,6 +676,7 @@ int write_coord = 0;
 
 void AppendVUProgTag(u_int *prog)
 {
+    return;
     while (((SgSourceChainTag *) prog)->ID
            != 7) /* so long as it's not DmaEnd */
     {

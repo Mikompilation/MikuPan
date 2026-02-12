@@ -289,8 +289,8 @@ void SetVUMeshDataP(u_int *prim)
 
             AppendDmaBuffer(1);
 
-            MikuPan_RenderMeshType0x32((struct SGDPROCUNITHEADER *) vuvnprim,
-                                       (struct SGDPROCUNITHEADER *) prim);
+            //MikuPan_RenderMeshType0x32((struct SGDPROCUNITHEADER *) vuvnprim,
+            //                           (struct SGDPROCUNITHEADER *) prim);
             break;
         case 0x12:
         case 0x32:

@@ -2,6 +2,8 @@
 #include "typedefs.h"
 #include "effect_rdr.h"
 
+#include "enums.h"
+
 #include <string.h>
 
 #include "sce/libvu0.h"
@@ -854,7 +856,7 @@ void SetRDPFire(sceVu0FVECTOR pos, u_short furn_id)
         return;
     }
 
-    pfire_rsv[ret].adr = SetEffects(25, 2, 3, pos, 0, 0);
+    pfire_rsv[ret].adr = SetEffects(EF_TORCH, 2, 3, pos, (void*)0, (void*)0);
 
     pfire_rsv[ret].furn_id = furn_id;
 }

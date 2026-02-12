@@ -531,7 +531,7 @@ int CheckBoundingBox(u_int *prim)
     ed = (sceVu0FVECTOR *) &SCRATCHPAD[0x6a0];
     vec_6e0 = (sceVu0FVECTOR *) &SCRATCHPAD[0x6e0];
 
-    MikuPan_SetModelTransform(prim);
+    MikuPan_SetModelTransform(&prim[1]);
     //DrawBoundingBox((sceVu0FVECTOR*)&prim[4]);
 
     lcp[prim[2]].camin = 0;

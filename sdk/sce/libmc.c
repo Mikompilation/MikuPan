@@ -39,7 +39,7 @@ int sceMcWrite(int fd, const void *buffer, int size)
 
 int sceMcRead(int fd, void *buffer, int size)
 {
-    return MikuPan_OpenFile("", buffer);
+    return MikuPan_OpenFile("", buffer, size);
 }
 
 int sceMcClose(int fd)

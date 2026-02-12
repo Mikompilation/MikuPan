@@ -315,11 +315,11 @@ void LoadTRI2Files(u_int *prim)
         SGDTRI2FILEHEADER * tri2 = (SGDTRI2FILEHEADER *) prim;
         tri2size = *(u_short *)(prim + 3);
 
-        info_log("GS upload request for DBP %x DPSM %x X: %d Y: %d",
-                  (int) tri2->gsli.bitbltbuf.DBP,
-                  (int) tri2->gsli.bitbltbuf.DPSM,
-                  (int) tri2->gsli.trxreg.RRW,
-                  (int) tri2->gsli.trxreg.RRH);
+        //info_log("GS upload request for DBP %x DPSM %x X: %d Y: %d",
+        //          (int) tri2->gsli.bitbltbuf.DBP,
+        //          (int) tri2->gsli.bitbltbuf.DPSM,
+        //          (int) tri2->gsli.trxreg.RRW,
+        //          (int) tri2->gsli.trxreg.RRH);
         GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
 
         //uint8_t* img = (uint8_t*)&tri2[1];

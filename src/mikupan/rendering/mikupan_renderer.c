@@ -19,6 +19,8 @@
 #define GLAD_GL_IMPLEMENTATION
 #include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
+#include "sce/libvu0.h"
+
 #include <glad/gl.h>
 
 #define PS2_RESOLUTION_X_FLOAT 640.0f
@@ -770,8 +772,29 @@ void MikuPan_SetModelTransformMatrix(sceVu0FVECTOR *m)
     }
 }
 
+inline static void dwawd(SgCOORDUNIT* cp, mat4 m)
+{
+    if (cp->parent == 0)
+    {
+        sceVu0CopyMatrix(m, cp->matrix);
+    }
+    else
+    {
+        dwawd(GetCoordPParent(cp), m);
+        sceVu0MulMatrix(m, GetCoordPParent(cp)->lwmtx, cp->matrix);
+    }
+}
+
 void MikuPan_SetModelTransform(unsigned int *prim)
 {
+    mat4 m = {0};
+    //dwawd(&lcp[prim[1]], m);
+
+    glm_rotate_x(lcp[prim[1]].lwmtx, lcp[prim[1]].rot[0], m);
+    glm_rotate_y(m, lcp[prim[1]].rot[1], m);
+    glm_rotate_z(m, lcp[prim[1]].rot[2], m);
+    //glm_mat4_mul(GetCoordPParent(&lcp[prim[1]])->lwmtx, m, m);
+
     for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
     {
         MikuPan_SetShaderProgramWithBackup(i);
@@ -779,7 +802,7 @@ void MikuPan_SetModelTransform(unsigned int *prim)
         u_int current_program = MikuPan_GetCurrentShaderProgram();
         glad_glUniformMatrix4fv(
             glad_glGetUniformLocation(current_program, "model"), 1, GL_FALSE,
-            (float *) lcp[prim[1]].lwmtx);
+            (float *) m);
     }
 }
 
@@ -993,15 +1016,45 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
 
 void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
 {
-    return;
     struct SGDVUVNDATA_PRESET *pVUVNData = (struct SGDVUVNDATA_PRESET *) &(
         ((struct SGDPROCUNITHEADER *) pVUVN)[1]);
     struct SGDVUMESHPOINTNUM *pMeshInfo = (struct SGDVUMESHPOINTNUM *) &(
         ((struct SGDPROCUNITHEADER *) pPUHead)[4]);
+    union SGDPROCUNITDATA *pProcData = (union SGDPROCUNITDATA *) &pPUHead[1];
+
+    struct SGDVUMESHSTREGSET* sgdVuMeshStRegSet = (struct SGDVUMESHSTREGSET *) &pMeshInfo[GET_NUM_MESH(pPUHead)];
+    struct SGDVUMESHSTDATA* sgdMeshData = (struct SGDVUMESHSTDATA *) &sgdVuMeshStRegSet->auiVifCode[3];
+
+    sceGsTex0 *mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x28);
+
+    if (pProcData->VUMeshData.GifTag.NREG != 6)
+    {
+        //return;
+        //mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x18);
+    }
+
+    if (mesh_tex_reg->PSM == 48 /* PSMZ32 */)
+    {
+        return;
+    }
+
+    MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(mesh_tex_reg);
+
+    if (texture_info == NULL)
+    {
+        texture_info = MikuPan_CreateGLTexture(mesh_tex_reg);
+    }
+
+    glad_glActiveTexture(GL_TEXTURE0);
+
+    if (texture_info != NULL)
+    {
+        glad_glBindTexture(GL_TEXTURE_2D, texture_info->id);
+    }
 
     int vertexOffset = 0;
 
-    MikuPan_SetShaderProgramWithBackup(DEFAULT_SHADER);
+    MikuPan_SetShaderProgramWithBackup(MESH_0x12_SHADER);
 
     for (int i = 0; i < GET_NUM_MESH(pPUHead); i++)
     {
@@ -1010,45 +1063,26 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
             continue;
         }
 
-        GLuint VAO2, VBO2;
+        glad_glBindBuffer(GL_ARRAY_BUFFER, MESH_0x12_VN_VBO);
+        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, pMeshInfo[i].uiPointNum * sizeof(struct SGDMESHVERTEXDATA_TYPE2), &pVUVNData->avt2[vertexOffset]);
 
-        glad_glGenVertexArrays(1, &VAO2);
-        glad_glGenBuffers(1, &VBO2);
+        /// UV
+        glad_glBindBuffer(GL_ARRAY_BUFFER, MESH_0x12_UV_VBO);
+        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, pMeshInfo[i].uiPointNum * sizeof(float[2]),
+                             sgdMeshData->astData);
 
-        // Make the VAO the current Vertex Array Object by binding it
-        glad_glBindVertexArray(VAO2);
-
-        // Bind the VBO specifying it's a GL_ARRAY_BUFFER
-        glad_glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-
-        // Introduce the vertices into the VBO
-        glad_glBufferData(GL_ARRAY_BUFFER,
-                          pMeshInfo[i].uiPointNum
-                              * sizeof(struct SGDMESHVERTEXDATA_TYPE2),
-                          &pVUVNData->avt2[vertexOffset], GL_STATIC_DRAW);
-
-        // Configure the Vertex Attribute so that OpenGL knows how to read the VBO
-        glad_glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float[3]),
-                                   NULL);
-
-        // Enable the Vertex Attribute so that OpenGL knows to use it
-        glad_glEnableVertexAttribArray(0);
-
-        // Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
-        glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glad_glBindVertexArray(0);
-
-        // Bind the VAO so OpenGL knows to use it
-        glad_glBindVertexArray(VAO);
+        u_int current_program = MikuPan_GetCurrentShaderProgram();
+        u_int loc = glad_glGetUniformLocation(current_program, "aNormal");
 
         // Draw the triangle using the GL_TRIANGLE_STRIP primitive
+        glad_glBindVertexArray(MESH_0x12_VAO);
         int render_type =
             MikuPan_IsWireframeRendering() ? GL_LINE_STRIP : GL_TRIANGLE_STRIP;
         glad_glDrawArrays(render_type, 0, pMeshInfo[i].uiPointNum);
 
-        glad_glDeleteVertexArrays(1, &VAO2);
-        glad_glDeleteBuffers(1, &VBO2);
 
+        sgdMeshData = (struct SGDVUMESHSTDATA *) &sgdMeshData
+                          ->astData[pMeshInfo[i].uiPointNum];
         vertexOffset += pMeshInfo[i].uiPointNum;
     }
 }
