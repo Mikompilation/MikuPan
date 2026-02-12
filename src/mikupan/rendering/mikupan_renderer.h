@@ -11,11 +11,8 @@ extern int window_height;
 #include "SDL3/SDL_video.h"
 #include "ee/eestruct.h"
 #include "graphics/graph2d/sprt.h"
-#include "graphics/graph2d/tim2.h"
 
-/* We will use this renderer to draw into this window every frame. */
 extern SDL_Window *window;
-//extern SDL_Renderer *renderer;
 
 SDL_AppResult MikuPan_Init();
 void MikuPan_Clear();

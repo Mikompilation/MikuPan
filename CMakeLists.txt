@@ -226,6 +226,7 @@ set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         src/graphics/graph3d/libsg.c
         extern/glad/src/gl.c
         src/ingame/map/find_dat.c
+        src/mikupan/rendering/mikupan_pipeline.c
 )
 
 add_executable(MikuPan ${MIKUPAN_SOURCES})

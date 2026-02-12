@@ -2,7 +2,10 @@
 #define MIKUPAN_TYPES_H
 
 #define GET_NUM_MESH(intpointer) (char)((char*)intpointer)[14]
+#define GET_MESH_TYPE(intpointer) (char) ((char *) intpointer)[13]
+
 #include "typedefs.h"
+#include "sce/libgraph.h"
 
 typedef float LMATRIX[3][4];
 typedef float VECTOR3[3];
