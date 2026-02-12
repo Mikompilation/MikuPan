@@ -976,7 +976,7 @@ void TitleWaitMode()
         title_wrk.mode = TITLE_TITLE_SEL_INIT;
         title_wrk.csr = 0;
 
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 4096, 4096, 0);
     }
 }
 
@@ -1042,13 +1042,13 @@ void TitleStartSlct()
             title_wrk.csr = 0;
         }
 
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
     }
     else if (TRIANGLE_PRESSED() == 1)
     {
         ttl_dsp.timer = 0;
         title_wrk.mode = TITLE_TITLE;
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
     else if (
         DPAD_UP_PRESSED() == 1 ||
@@ -1057,7 +1057,7 @@ void TitleStartSlct()
         (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
     ) {
         title_wrk.csr = 0;
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
     else if (
         DPAD_DOWN_PRESSED() == 1 ||
@@ -1066,7 +1066,7 @@ void TitleStartSlct()
         (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
     ) {
         title_wrk.csr = 1;
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
 }
 
@@ -1230,7 +1230,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
             title_wrk.mode = 9;
             title_wrk.csr = 0;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         break;
         case 1:
             title_wrk.load_id = LoadReq(PL_BGBG_PK2, PL_BGBG_PK2_ADDRESS);
@@ -1245,7 +1245,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
             title_wrk.mode = 6;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             EAdpcmFadeOut(60);
         break;
         case 2:
@@ -1261,7 +1261,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
             title_wrk.mode = 14;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             EAdpcmFadeOut(60);
         break;
         }
@@ -1271,7 +1271,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         ttl_dsp.timer = 0;
         title_wrk.mode = 2;
 
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
     else if (
         DPAD_DOWN_PRESSED() == 1 ||
@@ -1289,7 +1289,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
             title_wrk.csr = 0;
         }
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
     else if (
         DPAD_UP_PRESSED() == 1 ||
@@ -1307,7 +1307,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
             title_wrk.csr = 2;
         }
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
 }
 
@@ -1356,7 +1356,7 @@ void TitleSelectMode()
             title_wrk.csr = 0x8;
         }
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
     else if (
         DPAD_DOWN_PRESSED() == 1 ||
@@ -1374,13 +1374,13 @@ void TitleSelectMode()
             title_wrk.csr = 0;
         }
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
     else if (*key_now[4] == 1)
     {
         title_wrk.mode = 3;
 
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
     else if (*key_now[5] == 1)
     {
@@ -1416,7 +1416,7 @@ void TitleSelectMode()
                 break;
         }
 
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
     }
 }
 
@@ -1538,14 +1538,14 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
         {
         case 0:
             EAdpcmFadeOut(60);
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
             ingame_wrk.game = 0;
 
             GameModeChange(0);
         break;
         case 1:
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             ModeSlctInit(3, 5);
 
             title_wrk.mode = 27;
@@ -1558,7 +1558,7 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
     else if (*key_now[4] == 1)
     {
         title_wrk.mode = 23;
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
     else if (
         DPAD_DOWN_PRESSED() == 1 ||
@@ -1576,7 +1576,7 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
             title_wrk.csr = 0;
         }
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
     else if (
         DPAD_UP_PRESSED() == 1 ||
@@ -1594,7 +1594,7 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
             title_wrk.csr = 1;
         }
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
 }
 
@@ -1666,13 +1666,13 @@ void TitleSelectDifficultyYW()
     {
         title_wrk.mode = 9;
 
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
     }
     else if (*key_now[4] == 1)
     {
         title_wrk.mode = 9;
 
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
     else if (
         *key_now[3] == 1 ||
@@ -1690,7 +1690,7 @@ void TitleSelectDifficultyYW()
             title_wrk.csr = 0;
         }
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
     else if (
         DPAD_LEFT_PRESSED() == 1 ||
@@ -1708,7 +1708,7 @@ void TitleSelectDifficultyYW()
             title_wrk.csr = 0x2;
         }
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
 }
 

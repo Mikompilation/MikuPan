@@ -3,8 +3,10 @@
 #include "enums.h"
 #include "iop/adpcm/iopadpcm.h"
 #include "mikupan/mikupan_logging_c.h"
+#include "mikupan/mikupan_audio.h"
 #include "os/eeiop/eeiop.h"
 #include "iop/se/iopse.h"
+#include "iop/se/voice.h"
 
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_timer.h>
@@ -142,10 +144,10 @@ void *IopDrvFunc(unsigned int command, void *data, int size)
             icp++;
         }
 
-        //if (se_start_flg)
-        //    sceSdSetSwitch(SD_S_KON | SD_CORE_1, se_start_flg);
-        //if (se_stop_flg)
-        //    sceSdSetSwitch(SD_S_KOFF | SD_CORE_1, se_stop_flg);
+        if (se_start_flg)
+            sceSdSetSwitch(SD_S_KON | 1, se_start_flg);
+        if (se_stop_flg)
+            sceSdSetSwitch(SD_S_KOFF | 1, se_stop_flg);
     }
 
     ICdvdTransSeEnd();
@@ -188,7 +190,8 @@ static void IopInitDevice()
         }
     }
 
-    //sceSdInit(0);
+
+    VoicesInit(); // Normally done on the PS2 side, voices in the SPU initalized
     ICdvdInit(0);
     ISeInit(0);
     IAdpcmInit(0);
