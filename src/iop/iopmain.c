@@ -5,7 +5,11 @@
 #include "iop/adpcm/iopadpcm.h"
 #include "iop/se/iopse.h"
 #include "mikupan/mikupan_logging_c.h"
+#include "mikupan/mikupan_audio.h"
 #include "os/eeiop/eeiop.h"
+#include "iop/se/iopse.h"
+#include "iop/se/voice.h"
+#include "sce/libsd.h"
 
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_timer.h>
@@ -141,10 +145,10 @@ void *IopDrvFunc(unsigned int command, void *data, int size)
             icp++;
         }
 
-        //if (se_start_flg)
-        //    sceSdSetSwitch(SD_S_KON | SD_CORE_1, se_start_flg);
-        //if (se_stop_flg)
-        //    sceSdSetSwitch(SD_S_KOFF | SD_CORE_1, se_stop_flg);
+        if (se_start_flg)
+            sceSdSetSwitch(SD_S_KON | 1, se_start_flg);
+        if (se_stop_flg)
+            sceSdSetSwitch(SD_S_KOFF | 1, se_stop_flg);
     }
 
     ICdvdTransSeEnd();
@@ -155,6 +159,8 @@ static void IopInitDevice()
 {
     SDL_AudioSpec spec;
     SDL_zero(spec);
+
+    memset(spuRam, 0, (0x15160 * 10));
 
     if (!SDL_Init(SDL_INIT_AUDIO))
     {
@@ -187,7 +193,7 @@ static void IopInitDevice()
         }
     }
 
-    //sceSdInit(0);
+    VoicesInit();
     ICdvdInit(0);
     ISeInit(0);
     IAdpcmInit(0);

@@ -116,7 +116,7 @@ u_char MikuPan_OpenFile(const char *filename, void *buffer, int size)
         MikuPan_SaveFile(filename, buffer, 0);
     }
     inFile.open(filePath);
-    inFile.read((char *)buffer, size);
+    inFile.read((char *) buffer, size);
     inFile.close();
     return inFile.bad() == 0;
 }
@@ -124,7 +124,8 @@ u_char MikuPan_OpenFile(const char *filename, void *buffer, int size)
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size)
 {
     std::filesystem::path filePath(filename);
-    filePath = filePath.relative_path();
+    filePath = std::filesystem::absolute(filePath);
+    filePath = filePath.remove_filename();
     std::ofstream outFile;
 
     if (!std::filesystem::exists(filePath))
@@ -132,7 +133,10 @@ u_char MikuPan_SaveFile(const char *filename, void *buffer, int size)
         std::filesystem::create_directories(filePath);
     }
 
-    outFile.open(filePath, std::ios::binary);
+    std::filesystem::path fileName(filename);
+    fileName = std::filesystem::absolute(fileName);
+
+    outFile.open(fileName, std::ios::binary);
     outFile.write((char *) buffer, size);
     outFile.close();
 

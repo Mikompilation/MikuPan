@@ -153,7 +153,7 @@ void CallSoftReset()
 
     SeStopAll();
     InitSe();
-    SetIopCmdSm(1, 0, 0, 0);
+    SetIopCmdSm(IC_SE_INIT, 0, 0, 0);
     EAdpcmCmdStop(0, 0, 0);
 
     sys_wrk.reset = 0;

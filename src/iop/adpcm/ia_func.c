@@ -11,6 +11,8 @@
 #include "iop/se/iopse.h"
 #include "SDL3/SDL_thread.h"
 #include "mikupan/mikupan_memory.h"
+#include "sce/libsd.h"
+
 
 void GetPosCalc(ADPCM_POS_CALC* calcp);
 
@@ -116,21 +118,21 @@ void IaSetRegPitch(u_char channel)
 void IaSetRegKon(u_char channel)
 {
     // What is even going on here? these seems completely wrong
-    /*if (channel) {
+    if (channel) {
         sceSdSetSwitch(iop_adpcm[channel].core | SD_S_KON, 0xC00000u);
     } else {
         sceSdSetSwitch(iop_adpcm[channel].core | SD_S_KON, 3);
-    }*/
+    }
 }
 
 void IaSetRegKoff(u_char channel)
 {
     // What is even going on here? these seems completely wrong
-    /*if (channel) {
+    if (channel) {
         sceSdSetSwitch(iop_adpcm[channel].core | SD_S_KOFF, 0xC00000u);
     } else {
         sceSdSetSwitch(iop_adpcm[channel].core | SD_S_KOFF, 3);
-    }*/
+    }
 }
 
 void IaSetWrkVolPanPitch(u_char channel, u_short pan, u_short master_vol, u_short pitch)
@@ -208,8 +210,7 @@ static void IaSetStopBlock(u_char channel)
     sb_tbl[17] = 7;
     sb_tbl[33] = 7;
     sb_tbl[49] = 7;
-    //while (sceSdVoiceTrans(channel, 0, sb_tbl, snd_buf_top[2 * channel + 26], 0x40u) < 0)
-       // ;
+    while (sceSdVoiceTrans(channel, 0, sb_tbl, (u_int *)snd_buf_top[2 * channel + 26], 0x40u) < 0);
     //sceSdVoiceTransStatus(channel, 1);
 }
 

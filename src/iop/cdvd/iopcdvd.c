@@ -9,6 +9,7 @@
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "os/eeiop/eeiop.h"
+#include "sce/libsd.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +20,9 @@ CDVD_LOAD_STAT load_stat[32];
 CDVD_TRANS_STAT cdvd_trans[2];
 
 // UNUSED: ToDo Refractor and ... cast pointer in here?
-//u_int *load_buf_table[2];
+u_int *load_buf_table[2];
+
+static u_int *se_buff_addr;
 
 static void ICdvdInitOnce();
 static void ICdvdInitSoftReset();
@@ -77,13 +80,13 @@ void ICdvdInitOnce()
     memset(cdvd_req, 0, sizeof(cdvd_req));
     memset(&iop_stat.cdvd, 0, sizeof(iop_stat.cdvd));
     memset(cdvd_trans, 0, sizeof(cdvd_trans));
-    //load_buf_table[0] = malloc(0x64000);
+    load_buf_table[0] = malloc(0x64000);
 
-    /*if (load_buf_table[0])
+    if (load_buf_table[0])
     {
         load_buf_table[1] = load_buf_table[0] + 0x32000;
         iop_stat.cdvd.ld_addr = load_buf_table[0];
-    }*/
+    }
 
     cdvd_stat.fp = fopen("\\IMG.BD.BIN", "r");
     cdvd_stat.lock = SDL_CreateMutex();
@@ -104,12 +107,15 @@ void ICdvdDoTransfer(CDVD_REQ_BUF *rq)
     switch (rq->tmem)
     {
         case TRANS_MEM_EE:// EE
-            MikuPan_ReadFileInArchive(rq->start_sector, rq->size_sector, rq->taddr);
+            MikuPan_ReadFileInArchive(rq->start_sector, rq->size_sector,
+                                      rq->taddr);
             break;
         case TRANS_MEM_IOP:// IOP
             info_log("CDVD transfer to IOP unimplemented");
             break;
         case TRANS_MEM_SPU:// SPU
+            MikuPan_ReadFileInArchive64(rq->start_sector, rq->size_sector,
+                                        &seBuff);
             break;
     }
 
@@ -130,7 +136,9 @@ static void ICdvdAdpcmLoad()
         pos = 1;
     }
 
-    MikuPan_ReadFileInArchive64(cdvd_stat.adpcm[pos].start, cdvd_stat.adpcm[pos].size_now, &AdpcmIopBuf[pos]);
+    MikuPan_ReadFileInArchive64(cdvd_stat.adpcm[pos].start,
+                                cdvd_stat.adpcm[pos].size_now,
+                                &AdpcmIopBuf[pos]);
 
     cdvd_stat.adpcm[0].now_load = 1;
     cdvd_stat.adpcm_req = 1;
@@ -301,7 +309,8 @@ void ICdvdMain()
 
         else
         {
-            SetLoopFlgSize(cdvd_stat.adpcm[pos].size_now, (u_int *) cdvd_stat.adpcm[pos].taddr, 0);
+            SetLoopFlgSize(cdvd_stat.adpcm[pos].size_now,
+                           (u_int *) cdvd_stat.adpcm[pos].taddr, 0);
             IAdpcmLoadEndStream(0);
         }
         cdvd_stat.adpcm[pos].now_load = 0;
@@ -384,8 +393,10 @@ static void ICdvdTransFinishedData()
     {
         case TRANS_MEM_EE:
             cdvd_trans[cdvd_stat.now_lbuf].stat = 2;
-            cdvd_trans[cdvd_stat.now_lbuf].id = cdvd_req[cdvd_stat.start_pos].id;
-            cdvd_trans[cdvd_stat.now_lbuf].tmem = cdvd_req[cdvd_stat.start_pos].tmem;
+            cdvd_trans[cdvd_stat.now_lbuf].id =
+                cdvd_req[cdvd_stat.start_pos].id;
+            cdvd_trans[cdvd_stat.now_lbuf].tmem =
+                cdvd_req[cdvd_stat.start_pos].tmem;
             break;
 
         case TRANS_MEM_IOP:
@@ -401,15 +412,11 @@ static void ICdvdTransFinishedData()
                 trans_size = cdvd_stat.now_size;
 
             /*if (!sceSdVoiceTransStatus(cdvd_trans[cdvd_stat.now_lbuf].tid, 0))
-            sceSdVoiceTransStatus(cdvd_trans[cdvd_stat.now_lbuf].tid, 1);
+            sceSdVoiceTransStatus(cdvd_trans[cdvd_stat.now_lbuf].tid, 1);*/
 
-        while (sceSdVoiceTrans(
-                   cdvd_trans[cdvd_stat.now_lbuf].tid,
-                   0,
-                   load_buf_table[cdvd_stat.now_lbuf],
-                   ((u_int)cdvd_req[cdvd_stat.start_pos].taddr + cdvd_stat.end_size),
-                   trans_size)
-            < 0);*/
+            sceSdVoiceTrans(cdvd_trans[cdvd_stat.now_lbuf].tid, 0,
+                            (s16 *) seBuff, (u_int) se_buff_addr,
+                            cdvd_req[cdvd_stat.start_pos].size_sector);
             //sceSdSetTransIntrHandler(cdvd_trans[cdvd_stat.now_lbuf].tid, ICdvdSeTransCB, 0);
             cdvd_trans[cdvd_stat.now_lbuf].stat = 2;
             cdvd_trans[cdvd_stat.now_lbuf].id =
@@ -421,16 +428,15 @@ static void ICdvdTransFinishedData()
     }
 }
 
-static int ICdvdSeTransCB(int channel, void* data)
+static int ICdvdSeTransCB(int channel, void *data)
 {
     cdvd_stat.vtrans_flg = 0;
     //sceSdSetTransIntrHandler(1, 0, 0);
     return 1;
 }
 
-
 void ICdvdBreak()
-{    
+{
     cdvd_stat.stat = 0;
     cdvd_stat.adpcm_req = 0;
 }
@@ -493,7 +499,7 @@ static void ICdvdAddCmd(IOP_COMMAND *icp)
 
     if (req_buf.tmem == TRANS_MEM_SPU)
     {
-        req_buf.taddr = (u_int*)SeGetSndBufTop(icp->data4);
+        se_buff_addr = (u_int *) SeGetSndBufTop(icp->data4);
         req_buf.se_buf_no = icp->data4;
     }
     else
@@ -520,14 +526,14 @@ static void ICdvdTransSe(IOP_COMMAND *icp)
 
     size = icp->data1;
     addr = snd_buf_top[icp->data2];
-    //while (sceSdVoiceTrans(1, 0, (u_char*)load_buf_table[0], (u_int*)addr, size) < 0)
-    //  ;
+    sceSdVoiceTrans(1, 0, (u_char *) (seBuff), (u_int *) addr, size);
     iop_stat.cdvd.se_trans = 1;
     SeSetStartPoint(icp->data2, icp->data3);
 }
 
 int ICdvdTransSeEnd()
 {
+
     /*if (iop_stat.cdvd.se_trans == 1) {
     if (sceSdVoiceTransStatus(1, 0) == 1) {
             iop_stat.cdvd.se_trans = 2;
@@ -634,7 +640,8 @@ void ICdvdLoadReqPcm(u_int lsn, u_int size_sec, void *buf, u_char pre)
     cdvd_stat.pcm_req = 1;
 }
 
-void ICdvdLoadReqAdpcm(int lsn, u_int size_now, void *buf, u_char channel, int req_type, int endld_flg)
+void ICdvdLoadReqAdpcm(int lsn, u_int size_now, void *buf, u_char channel,
+                       int req_type, int endld_flg)
 {
     cdvd_stat.adpcm[channel].start = lsn;
     cdvd_stat.adpcm[channel].size_now = size_now;
