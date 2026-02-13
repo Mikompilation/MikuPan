@@ -729,7 +729,8 @@ void SetLWS(SgCOORDUNIT *cp, SgCAMERA *camera)
     if (cp->parent == 0)
     {
         sceVu0CopyMatrix(cp->lwmtx, cp->matrix);
-        sceVu0MulMatrix(cp->workm, camera->ws, cp->lwmtx);
+        //sceVu0MulMatrix(cp->workm, camera->ws, cp->lwmtx);
+        sceVu0CopyMatrix(cp->workm, cp->lwmtx);
 
         cp->flg = 1;
     }
@@ -737,7 +738,8 @@ void SetLWS(SgCOORDUNIT *cp, SgCAMERA *camera)
     {
         SetLWS(GetCoordPParent(cp), camera);
         sceVu0MulMatrix(cp->lwmtx, GetCoordPParent(cp)->lwmtx, cp->matrix);
-        sceVu0MulMatrix(cp->workm, camera->ws, cp->lwmtx);
+        //sceVu0MulMatrix(cp->workm, camera->ws, cp->lwmtx);
+        sceVu0CopyMatrix(cp->workm, cp->lwmtx);
 
         cp->flg = 1;
     }
