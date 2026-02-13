@@ -57,6 +57,9 @@ enum MikuPan_PipelineType
     /// SIMPLE TEXTURED SHADER
     POSITION3_UV,
 
+    /// SPRITE 3D
+    POSITION3_UV_3D,
+
     /// UI SPRITE
     POSITION2_UV,
 

@@ -1570,9 +1570,9 @@ u_long VramItem2D(u_char mode, u_char type)
         }
     }
 
-    MakeTim2SendPacket(VRAM_ITEM_2D_ADDRESS, offset);
+    MakeTim2SendPacket(MikuPan_GetHostAddress(VRAM_ITEM_2D_ADDRESS), offset);
 
-    return GetTex0RegTM(VRAM_ITEM_2D_ADDRESS, offset);
+    return GetTex0RegTM(MikuPan_GetHostAddress(VRAM_ITEM_2D_ADDRESS), offset);
 }
 
 char DspItem2D(u_long tex_addr, float pos_x, float pos_y, int rgb, float alp, float scl_x, float scl_y, char pri)

@@ -956,7 +956,8 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
 	u_int clpz2 = 0xffffff;
 	u_long tx0;
 	sceVu0FMATRIX slm;
-	sceVu0IVECTOR ivec[4];
+	//sceVu0IVECTOR ivec[4] = {0};
+	sceVu0FVECTOR ivec[4] = {0};
 	sceVu0FVECTOR ppos[4] = {
         { -1.0f, 1.0f, 0.0f, 1.0f },
         { 1.0f, 1.0f, 0.0f, 1.0f },
@@ -971,7 +972,7 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
 	U32DATA ts[4];
 	U32DATA tt[4];
 	U32DATA tq[4];
-    
+
 
     for (i = 0; i < 4; i++)
     {
@@ -980,10 +981,12 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
         ppos[i][2] = 0.0f;
         ppos[i][3] = 1.0f;
     }
-    
-    sceVu0MulMatrix(slm, SgWSMtx, wlm);
-    sceVu0RotTransPersN(ivec , slm, ppos, 4, 1);
-    
+
+    //sceVu0MulMatrix(slm, SgWSMtx, wlm);
+    sceVu0MulMatrix(slm, *(sceVu0FMATRIX*)MikuPan_GetWorldScreenMatrix(), wlm);
+    //sceVu0RotTransPersN(ivec, slm, ppos, 4, 1);
+    sceVu0RotTransPersNF(ivec, slm, ppos, 4, 1);
+
     tx0 = effdat[texno + monochrome_mode].tex0;
     tw = effdat[texno + monochrome_mode].w;
     th = effdat[texno + monochrome_mode].h;
@@ -1018,13 +1021,21 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
         {
             w = 1.0f;
         }
-        
+
+        if (ivec[i][3] == 0)
+        {
+            ivec[i][3] = 1.0f;
+        }
+
         tq[i].fl32 = 1.0f / ivec[i][3];
-        ts[i].fl32 = (tw * stq[i % 2] * tq[i].fl32) / twoby[log_2(tw)];
-        tt[i].fl32 = (th * stq[i / 2] * tq[i].fl32) / twoby[log_2(th)];
+        //ts[i].fl32 = (tw * stq[i % 2] * tq[i].fl32) / twoby[log_2(tw)];
+        //tt[i].fl32 = (th * stq[i / 2] * tq[i].fl32) / twoby[log_2(th)];
+
+        ts[i].fl32 = stq[i % 2];
+        tt[i].fl32 = stq[i % 2];
     }
     
-    if (w == 0.0f)
+    //if (w == 0.0f)
     {
         Reserve2DPacket(0x1000);
 
@@ -1059,24 +1070,31 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
             | SCE_GS_ST    << (4 * 0) 
             | SCE_GS_RGBAQ << (4 * 1) 
             | SCE_GS_XYZF2 << (4 * 2);
-        
+
+        float* render_buffer = (float*)&pbuf[ndpkt];
+
         for (i = 0; i < 4; i++)
         {            
-            pbuf[ndpkt].ui32[0] = ts[i].ui32;
-            pbuf[ndpkt].ui32[1] = tt[i].ui32;
-            pbuf[ndpkt].ui32[2] = tq[i].ui32;
-            pbuf[ndpkt++].ui32[3] = 0.0f;
+            pbuf[ndpkt].fl32[0] = ts[i].fl32;
+            pbuf[ndpkt].fl32[1] = tt[i].fl32;
+            pbuf[ndpkt].fl32[2] = tq[i].fl32;
+            pbuf[ndpkt++].fl32[3] = 0.0f;
             
-            pbuf[ndpkt].ui32[0] = r;
-            pbuf[ndpkt].ui32[1] = g;
-            pbuf[ndpkt].ui32[2] = b;
-            pbuf[ndpkt++].ui32[3] = a;
-            
-            pbuf[ndpkt].ui32[0] = ivec[i][0];
-            pbuf[ndpkt].ui32[1] = ivec[i][1];
-            pbuf[ndpkt].ui32[2] = ivec[i][2] * 16;
-            pbuf[ndpkt++].ui32[3] = (i <= 1) ? 0x8000 : 0;
+            pbuf[ndpkt].fl32[0] = (float)r/255.0f;
+            pbuf[ndpkt].fl32[1] = (float)g/255.0f;
+            pbuf[ndpkt].fl32[2] = (float)b/255.0f;
+            pbuf[ndpkt++].fl32[3] = (float)a/128.0f;
+
+            pbuf[ndpkt].fl32[0] = (float)ivec[i][0] ;
+            pbuf[ndpkt].fl32[1] = (float)ivec[i][1];
+            pbuf[ndpkt].fl32[2] = (float)ivec[i][2];
+            pbuf[ndpkt++].fl32[3] = 1.0f;
+            //pbuf[ndpkt].ui32[2] = ppos[i][2] * 16;
+            //pbuf[ndpkt++].ui32[3] = (i <= 1) ? 0x8000 : 0;
+            //pbuf[ndpkt++].ui32[3] = 1.0f;
         }
+
+        MikuPan_RenderSprite3D((sceGsTex0*)&tx0, render_buffer);
         
         pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
     }

@@ -11,7 +11,14 @@ unsigned char ps2_virtual_scratchpad[1024*16];
 int64_t MikuPan_GetHostAddress(int offset)
 {
     offset = MikuPan_SanitizePs2Address(offset);
-    return (int64_t) (ps2_virtual_ram + offset);
+    int64_t ptr = (int64_t) (ps2_virtual_ram + offset);
+
+    if (!MikuPan_IsPs2MemoryPointer((int64_t) ptr))
+    {
+        return -1;
+    }
+
+    return ptr;
 }
 
 void *MikuPan_GetHostPointer(int offset)

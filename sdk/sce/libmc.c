@@ -9,7 +9,12 @@ int sceMcInit()
 
 int sceMcSync(int mode, int *cmd, int *result)
 {
-    return 0;
+    if (cmd != NULL)
+    {
+        *cmd = 1;
+    }
+
+    return 1;
 }
 
 int sceMcDelete(int port, int slot, const char *name)
@@ -49,15 +54,13 @@ int sceMcClose(int fd)
 
 int sceMcOpen(int port, int slot, const char *name, int mode)
 {
-
     info_log("CARD NAME: %s\n", name);
-
     return 1;
 }
 
 int sceMcGetDir(int port, int slot, const char *name, unsigned mode, int maxent,
                 sceMcTblGetDir *table)
 {
-    // Checks if files exist
+    info_log("Memory Card requested directory %s", name);
     return 0;
 }

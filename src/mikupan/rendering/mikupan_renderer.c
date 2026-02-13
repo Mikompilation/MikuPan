@@ -41,10 +41,12 @@ SDL_Window *window = NULL;
 MikuPan_TextureInfo *fnt_texture[6] = {0};
 MikuPan_TextureInfo *curr_fnt_texture = NULL;
 
+mat4 WorldScreen = {0};
+
 SDL_AppResult MikuPan_Init()
 {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                         SDL_GL_CONTEXT_PROFILE_CORE);
@@ -59,6 +61,9 @@ SDL_AppResult MikuPan_Init()
 
     SDL_SetAppMetadata("MikuPan", "1.0", "mikupan");
     SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     window = SDL_CreateWindow("MikuPan", window_width, window_height,
                               SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
@@ -78,7 +83,8 @@ SDL_AppResult MikuPan_Init()
     }
 
     SDL_GL_MakeCurrent(window, gl_context);
-    info_log("GLad version loaded %d", gladLoadGL(SDL_GL_GetProcAddress));
+
+    info_log("GLad version loaded %d", gladLoadGLLoader((void*)SDL_GL_GetProcAddress));
 
     MikuPan_InitUi(window, gl_context);
     MikuPan_InitShaders();
@@ -544,6 +550,7 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
     glad_glBindTexture(GL_TEXTURE_2D, texture_info->id);
     glad_glEnable(GL_BLEND);
     glad_glBlendFunc(alpha_fac, alpha_calc);
+    glad_glDisable(GL_DEPTH_TEST);
     //glad_glDepthMask(GL_FALSE);
     //glad_glDisable(GL_DEPTH_TEST);
 
@@ -561,6 +568,38 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
     //glad_glEnable(GL_DEPTH_TEST);
 }
 
+void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
+{
+    MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(tex);
+
+    if (texture_info == NULL)
+    {
+        texture_info = MikuPan_CreateGLTexture(tex);
+    }
+
+    MikuPan_SetCurrentShaderProgram(SPRITE_3D_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_UV_3D);
+    glad_glBindVertexArray(pipeline->vao);
+    //glad_glEnable(GL_DEPTH_TEST);
+    //glad_glDepthMask(GL_TRUE);
+    //glad_glDepthFunc(GL_LEQUAL);
+    glad_glDepthRange(0.1f, 1.0f);
+
+    glad_glActiveTexture(GL_TEXTURE0);
+
+    if (texture_info != NULL)
+    {
+        glad_glBindTexture(GL_TEXTURE_2D, texture_info->id);
+    }
+
+    glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
+    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline->buffers[0].buffer_length, buffer);
+
+    int render_type =
+            MikuPan_IsWireframeRendering() ? GL_LINE_STRIP : GL_TRIANGLE_STRIP;
+    glad_glDrawArrays(render_type, 0, 4);
+}
+
 void MikuPan_SetupFntTexture()
 {
     for (int i = 0; i < 6; i++)
@@ -573,6 +612,16 @@ void MikuPan_SetupFntTexture()
     }
 
     curr_fnt_texture = fnt_texture[0];
+}
+
+float* MikuPan_GetWorldScreenMatrix()
+{
+    return (float*)&WorldScreen;
+}
+
+void MikuPan_SetWorldScreen()
+{
+    MikuPan_SetModelTransformMatrix(WorldScreen);
 }
 
 void MikuPan_SetFontTexture(int fnt)
@@ -623,11 +672,16 @@ void MikuPan_SetModelTransformMatrix(sceVu0FVECTOR *m)
 void MikuPan_SetModelTransform(unsigned int *prim)
 {
     mat4 m = {0};
+    mat4 rot = {0};
+    glm_mat4_identity(rot);
     glm_mat4_copy(lcp[prim[1]].workm, m);
 
-    //sceVu0RotMatrixX(m, lcp[prim[1]].workm, lcp[prim[1]].rot[0]);
-    //sceVu0RotMatrixY(m, lcp[prim[1]].workm, lcp[prim[1]].rot[1]);
-    //sceVu0RotMatrixZ(m, lcp[prim[1]].workm, lcp[prim[1]].rot[2]);
+    //sceVu0RotMatrix(rot, rot, lcp[prim[1]].rot);
+    sceVu0RotMatrixZ(rot, rot, lcp[prim[1]].rot[2]);
+    sceVu0RotMatrixX(rot, rot, lcp[prim[1]].rot[0]);
+    sceVu0RotMatrixY(rot, rot, lcp[prim[1]].rot[1]);
+
+    glm_mul(m, rot, m);
 
     for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
     {
@@ -681,8 +735,29 @@ void MikuPan_Camera(SgCAMERA *camera)
     // Projection -> camera->vcv
     mat4 projection = {0};
     float aspect = (float) window_width / (float) window_height;
-    glm_perspective(camera->fov, aspect, 5.0f, 32000.0f,
+    glm_perspective(camera->fov, aspect, 150.0f, 32000.0f,
                     projection);
+
+    mat4 mm = {0};
+    glm_mat4_mul(projection, mtx, WorldScreen);
+
+
+    mat4 viewport;
+    glm_mat4_identity(viewport);
+
+    // Scale: [-1,1] to [0, screen_size]
+    viewport[0][0] = window_width / 2.0f;
+    viewport[1][1] = window_height / 2.0f;  // Flip Y (OpenGL convention)
+    viewport[2][2] = 0.5f;           // Z: [-1,1] to [0,1]
+
+    // Translate to screen center
+    viewport[3][0] = window_width / 2.0f;
+    viewport[3][1] = window_height / 2.0f;
+    viewport[3][2] = 0.5f;
+
+    // Step 3: Combine MVP with viewport
+    // World -> Screen
+    //glm_mat4_mul(viewport, mm, WorldScreen);
 
     for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
     {
@@ -858,7 +933,7 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
     if (pProcData->VUMeshData.GifTag.NREG != 6)
     {
         //return;
-        mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x28);
+        //mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x28);
     }
 
     MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(mesh_tex_reg);
@@ -880,6 +955,11 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
     MikuPan_SetShaderProgramWithBackup(MESH_0x12_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV);
     glad_glBindVertexArray(pipeline->vao);
+
+    glad_glEnable(GL_DEPTH_TEST);
+    //glad_glDepthMask(GL_TRUE);
+    glad_glDepthFunc(GL_LEQUAL);
+    glad_glDepthRange(0.1f, 1.0f);
 
     for (int i = 0; i < GET_NUM_MESH(pPUHead); i++)
     {

@@ -21,8 +21,6 @@ char mcStartCheckMain()
 {
     static char err_flg = 0;
 
-    return 1;
-
     AnaPonChk();
 
     mc_ctrl.stepbak = mc_ctrl.step;
@@ -202,7 +200,6 @@ char mcStartCheckYesno(int def_pos)
     }
     else if (mcAcsMain() != 0)
     {
-        return 2;
         if (backup[mc_ctrl.port] != 0xff)
         {
             if (mc_ctrl.acs.card_sta < -10 && backup[mc_ctrl.port ^ 1] < -10)

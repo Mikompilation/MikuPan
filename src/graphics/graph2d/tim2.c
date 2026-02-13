@@ -2281,8 +2281,8 @@ void DispSqrD(DISP_SQAR *s)
     float y2[4];
     u_int xx[4];
     u_int yy[4];
-    sceVu0FVECTOR ftmp;
-    sceVu0IVECTOR itmp;
+    sceVu0FVECTOR ftmp = {0};
+    sceVu0IVECTOR itmp = {0};
 
     mcrx = s->crx - 320.0f;
     mcry = s->cry - 224.0f;

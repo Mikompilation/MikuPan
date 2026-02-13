@@ -291,6 +291,31 @@ void sceVu0RotTransPersN(sceVu0IVECTOR *v0, sceVu0FMATRIX m0, sceVu0FVECTOR *v1,
     }
 }
 
+void sceVu0RotTransPersNF(sceVu0FVECTOR *v0, sceVu0FMATRIX m0, sceVu0FVECTOR *v1, int n, int mode)
+{
+    int i;
+
+    vec4 tmp = {0};
+    // Always runs at least once, but code assumes n is non-zero so a for it is
+    // Also technically clobbers vf4:vf7, but I don't think the game relies on that behavior
+    for (i = 0; i < n; i++)
+    {
+        tmp[0] = m0[0][0] * v1[i][0] + m0[1][0] * v1[i][1] + m0[2][0] * v1[i][2] + m0[3][0] * v1[i][3];
+        tmp[1] = m0[0][1] * v1[i][0] + m0[1][1] * v1[i][1] + m0[2][1] * v1[i][2] + m0[3][1] * v1[i][3];
+        tmp[2] = m0[0][2] * v1[i][0] + m0[1][2] * v1[i][1] + m0[2][2] * v1[i][2] + m0[3][2] * v1[i][3];
+        tmp[3] = m0[0][3] * v1[i][0] + m0[1][3] * v1[i][1] + m0[2][3] * v1[i][2] + m0[3][3] * v1[i][3];
+
+        tmp[0] *= 1.0f / tmp[3];
+        tmp[1] *= 1.0f / tmp[3];
+        tmp[2] *= 1.0f / tmp[3];
+
+        v0[i][0] = (tmp[0]);
+        v0[i][1] = (tmp[1]);
+        v0[i][2] = (tmp[2]);
+        v0[i][3] = (tmp[3]);
+    }
+}
+
 void sceVu0RotTransPers(sceVu0IVECTOR v0, sceVu0FMATRIX m0, sceVu0FVECTOR v1, int mode)
 {
     vec4 tmp = {0};

@@ -984,6 +984,11 @@ static void FileName(u_char model_type, u_char model_no, u_char fade, u_char tim
     char book_adj;
     u_char val;
 
+    if (time == 0)
+    {
+        time = 1;
+    }
+
     if (fade == 0)
     {
 

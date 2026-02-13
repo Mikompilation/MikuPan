@@ -9,6 +9,8 @@
 #include "mc/mc_icon.h"
 #include "mc/mc_main.h"
 
+#include <stdio.h>
+
 #define FRAMES_PER_SECOND  (60)
 #define SECONDS_PER_MINUTE (60)
 #define SECONDS_PER_HOUR   (60 * SECONDS_PER_MINUTE)
