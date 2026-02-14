@@ -61,4 +61,5 @@ char AlbumModeInGameOver()
 
 int SavePointLightJudge()
 {
+    return 1;
 }

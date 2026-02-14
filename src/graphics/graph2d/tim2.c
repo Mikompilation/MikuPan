@@ -1363,8 +1363,7 @@ void InitTIM2Files()
 
     InitTIM2Addr();
 
-    /// TODO : CHECK THE ACTUAL PACKET BUFFER SIZE, ALLOCATING 1MB FOR NOW
-    pbuf = malloc(sizeof(Q_WORDDATA)* 24576*2);
+    pbuf = MikuPan_GetHostPointer(PBUF_ADDRESS);
     mpbuf = mpbufw[0];
 
     mes_swap = 0;
@@ -1373,7 +1372,7 @@ void InitTIM2Files()
     nmdpkt = 0;
     nmdpri = 0;
 
-    SetG2DTopPkt(pbuf);
+    SetG2DTopPkt(MikuPan_GetHostAddress(PBUF_ADDRESS));
     LoadTIM2File();
 }
 

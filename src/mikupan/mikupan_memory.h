@@ -76,6 +76,7 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define FLY_MDL_ADDRESS                 0xd8000000
 #define MSN00TTL_PK2_ADDRESS            0x1e900000
 #define STORY_WORK_SAVE_ADDRESS         0x10900000
+#define PBUF_ADDRESS                    0x00720000
 
 /* DEVKIT EXTANDED RAM */
 #define TEST2D_PK2_ADDRESS              0x007F0000 /* 0x04300000 */

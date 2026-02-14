@@ -1085,13 +1085,12 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
             pbuf[ndpkt].fl32[2] = (float)b/255.0f;
             pbuf[ndpkt++].fl32[3] = (float)a/128.0f;
 
-            pbuf[ndpkt].fl32[0] = (float)ivec[i][0] ;
+            pbuf[ndpkt].fl32[0] = (float)ivec[i][0];
             pbuf[ndpkt].fl32[1] = (float)ivec[i][1];
             pbuf[ndpkt].fl32[2] = (float)ivec[i][2];
             pbuf[ndpkt++].fl32[3] = 1.0f;
             //pbuf[ndpkt].ui32[2] = ppos[i][2] * 16;
             //pbuf[ndpkt++].ui32[3] = (i <= 1) ? 0x8000 : 0;
-            //pbuf[ndpkt++].ui32[3] = 1.0f;
         }
 
         MikuPan_RenderSprite3D((sceGsTex0*)&tx0, render_buffer);

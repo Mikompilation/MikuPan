@@ -3285,7 +3285,7 @@ void SetSunshine(EFFECT_CONT *ec)
         {
             sceVu0RotTransPers(eff_ray[i].ipos[j], slm, eff_ray[i].fpos[j], 1);
 
-            eff_ray[i].tq[j].fl32 = 1.0f / eff_ray[i].ipos[j][3];
+            eff_ray[i].tq[j].fl32 = 1.0f / (eff_ray[i].ipos[j][3] == 0 ? 1.0f : (float)eff_ray[i].ipos[j][3]);
             eff_ray[i].ts[j].fl32 = eff_ray[i].ts[j].fl32 * eff_ray[i].tq[j].fl32;
             eff_ray[i].tt[j].fl32 = eff_ray[i].tt[j].fl32 * eff_ray[i].tq[j].fl32;
 
