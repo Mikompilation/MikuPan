@@ -840,7 +840,7 @@ void MovieTest(int scene_no)
     AdpcmReturnFromMovie();
     EiMain();
 
-    *(int *)REG_DMAC_CTRL &= ~D_CTRL_RELE_M;
+    //*(int *)REG_DMAC_CTRL &= ~D_CTRL_RELE_M;
 
     MovieInitWrk();
 }

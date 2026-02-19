@@ -322,10 +322,10 @@ void LoadTRI2Files(u_int *prim)
         //          (int) tri2->gsli.trxreg.RRH);
         GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
 
-        //uint8_t* img = (uint8_t*)&tri2[1];
-        //sceGsLoadImage* image_load = (sceGsLoadImage*)&img[tri2->gsli.giftag1.NLOOP * 0x10];
-        //uint8_t* image_color_data = (uint8_t*)(&image_load[1]);
-        //GsUpload(image_load, image_color_data);
+        uint8_t* img = (uint8_t*)&tri2[1];
+        sceGsLoadImage* image_load = (sceGsLoadImage*)&img[tri2->gsli.giftag1.NLOOP * 0x10];
+        uint8_t* image_color_data = (uint8_t*)(&image_load[1]);
+        GsUpload(image_load, image_color_data);
 
         AppendDmaTag((int64_t)prim, tri2size + 1);
 
@@ -368,7 +368,7 @@ void RebuildTRI2Files(u_int *prim)
     u_int tsize;
     u_int vtsize;
     qword *base;
-    sceGsStoreImage spi;
+    sceGsStoreImage spi = {0};
 
     fprim = prim;
     next_pointer = (int64_t)GetNextProcUnitHeaderPtr(prim);
@@ -382,6 +382,8 @@ void RebuildTRI2Files(u_int *prim)
     {
         return;
     }
+
+    return;
 
     InitialDmaBuffer();
 
@@ -400,7 +402,7 @@ void RebuildTRI2Files(u_int *prim)
 
         SGDTRI2FILEHEADER * tri2 = (SGDTRI2FILEHEADER *) prim;
 
-        info_log("Packet TRi2 archive request buffer %x", (int)tri2->gsli.bitbltbuf.DBP);
+        info_log("Packet TRi2 archive request buffer %x %d", (int)tri2->gsli.bitbltbuf.DBP, (int) tri2->gsli.bitbltbuf.DPSM);
         GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
 
         while (((uint64_t)search_addr - (uint64_t)(prim)) / 16 < tri2size - 8)
@@ -471,7 +473,7 @@ void RebuildTRI2Files(u_int *prim)
 
     if (next_pointer - (int64_t)start_vif_code < tsize * 0x2000 + 0x180)
     {
-        info_log("Not Enough Memory %lld %d\n", next_pointer - (int64_t)start_vif_code, tsize * 0x2000 + 0x180);
+        info_log("Not Enough Memory %lld %d", next_pointer - (int64_t)start_vif_code, tsize * 0x2000 + 0x180);
         return;
     }
 
@@ -481,7 +483,7 @@ void RebuildTRI2Files(u_int *prim)
     {
         vtsize = tsize < 0x40 ? tsize : 0x3f;
 
-        sceGsSetDefStoreImage(&spi, minaddr, 1, 0, 0, 0, 0x40, vtsize * 32);
+        sceGsSetDefStoreImage(&spi, minaddr, 1, 0, 0, 0, 0x40, vtsize * 0x20);
         FlushCache(0);
         sceGsExecStoreImage(&spi, (u_long128 *)&start_vif_code[28]);
         sceGsSyncPath(0, 0);

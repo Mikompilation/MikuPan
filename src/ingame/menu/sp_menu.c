@@ -1,6 +1,9 @@
 #include "common.h"
 #include "sp_menu.h"
 
+#include "ingame/enemy/ene_ctl.h"
+#include "ingame/event/ev_main.h"
+
 void SavePointMenuInit()
 {
 }
@@ -61,5 +64,10 @@ char AlbumModeInGameOver()
 
 int SavePointLightJudge()
 {
-    return 1;
+    if (EnemyUseJudge(0) != 0)
+    {
+        return 0;
+    }
+
+    return ev_wrk.btl_lock < 1;
 }

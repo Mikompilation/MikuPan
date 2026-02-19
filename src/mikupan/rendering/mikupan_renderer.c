@@ -186,8 +186,23 @@ void MikuPan_Render2DTexture(DISP_SPRT *sprite)
     src_rect.x = (float) sprite->u;
     src_rect.y = (float) sprite->v;
 
-    src_rect.w = (float) sprite->w * sprite->scw;
-    src_rect.h = (float) sprite->h * sprite->sch;
+    if (sprite->scw != 1.0f)
+    {
+        src_rect.w = (float) sprite->w * sprite->scw;
+    }
+    else
+    {
+        src_rect.w = (float) sprite->w;
+    }
+
+    if (sprite->sch != 1.0f)
+    {
+        src_rect.h = (float) sprite->h * sprite->sch;
+    }
+    else
+    {
+        src_rect.h = (float) sprite->h;
+    }
 
     dst_rect.x = (float) sprite->x;
     dst_rect.y = (float) sprite->y;
@@ -499,14 +514,14 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
     float u1 = ((src.x + dst.w) / texW) - halfU;
     float v1 = ((src.y + dst.h) / texH) - halfV;
 
-    if (flipX)
+    if (flipX == 1)
     {
         float tmp = u0;
         u0 = u1;
         u1 = tmp;
     }
 
-    if (flipY)
+    if (flipY == 1)
     {
         float tmp = v0;
         v0 = v1;
@@ -523,17 +538,22 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
         {ndc_x0, ndc_y0, u0, v0}  // top-left
     };
 
-    float cosr = SgCosf((rotation * 3.1415927f) / 180.0f);
-    float sinr = SgSinf((rotation * 3.1415927f) / 180.0f);
 
-    // Rotate only POSITION (x,y), not UVs
-    for (int i = 0; i < 6; i++)
+    if (rotation != 0)
     {
-        Rotate2D(&vertices[i][0],
-                 &vertices[i][1],
-                 cx, cy,
-                 cosr, sinr);
+        float cosr = SgCosf((rotation * 3.1415927f) / 180.0f);
+        float sinr = SgSinf((rotation * 3.1415927f) / 180.0f);
+
+        // Rotate only POSITION (x,y), not UVs
+        for (int i = 0; i < 6; i++)
+        {
+            Rotate2D(&vertices[i][0],
+                     &vertices[i][1],
+                     cx, cy,
+                     cosr, sinr);
+        }
     }
+
 
     MikuPan_SetCurrentShaderProgram(UI_SPRITE_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION2_UV);
@@ -551,8 +571,6 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
     glad_glEnable(GL_BLEND);
     glad_glBlendFunc(alpha_fac, alpha_calc);
     glad_glDisable(GL_DEPTH_TEST);
-    //glad_glDepthMask(GL_FALSE);
-    //glad_glDisable(GL_DEPTH_TEST);
 
     float color[4] = {AdjustAlpha(r) / 255.0f, AdjustAlpha(g) / 255.0f,
                       AdjustAlpha(b) / 255.0f, AdjustAlpha(a) / 255.0f};
@@ -563,9 +581,6 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
         color);
 
     glad_glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    //glad_glDepthMask(GL_TRUE);
-    //glad_glEnable(GL_DEPTH_TEST);
 }
 
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
@@ -579,12 +594,11 @@ void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
 
     MikuPan_SetCurrentShaderProgram(SPRITE_3D_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_UV_3D);
+
     glad_glBindVertexArray(pipeline->vao);
     //glad_glEnable(GL_DEPTH_TEST);
     //glad_glDepthMask(GL_TRUE);
     //glad_glDepthFunc(GL_LEQUAL);
-    glad_glDepthRange(0.1f, 1.0f);
-
     glad_glActiveTexture(GL_TEXTURE0);
 
     if (texture_info != NULL)
@@ -735,28 +749,23 @@ void MikuPan_Camera(SgCAMERA *camera)
     // Projection -> camera->vcv
     mat4 projection = {0};
     float aspect = (float) window_width / (float) window_height;
-    glm_perspective(camera->fov, aspect, 150.0f, 32000.0f,
+    glm_perspective(camera->fov, aspect, 150.0f, camera->farz,
                     projection);
 
-    mat4 mm = {0};
     glm_mat4_mul(projection, mtx, WorldScreen);
 
-
-    mat4 viewport;
-    glm_mat4_identity(viewport);
-
-    // Scale: [-1,1] to [0, screen_size]
-    viewport[0][0] = window_width / 2.0f;
-    viewport[1][1] = window_height / 2.0f;  // Flip Y (OpenGL convention)
-    viewport[2][2] = 0.5f;           // Z: [-1,1] to [0,1]
-
-    // Translate to screen center
-    viewport[3][0] = window_width / 2.0f;
-    viewport[3][1] = window_height / 2.0f;
-    viewport[3][2] = 0.5f;
-
-    // Step 3: Combine MVP with viewport
-    // World -> Screen
+    //mat4 viewport;
+    //glm_mat4_identity(viewport);
+    //// Scale: [-1,1] to [0, screen_size]
+    //viewport[0][0] = window_width / 2.0f;
+    //viewport[1][1] = window_height / 2.0f;  // Flip Y (OpenGL convention)
+    //viewport[2][2] = 0.5f;           // Z: [-1,1] to [0,1]
+    //// Translate to screen center
+    //viewport[3][0] = window_width / 2.0f;
+    //viewport[3][1] = window_height / 2.0f;
+    //viewport[3][2] = 0.5f;
+    //// Step 3: Combine MVP with viewport
+    //// World -> Screen
     //glm_mat4_mul(viewport, mm, WorldScreen);
 
     for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
@@ -841,9 +850,10 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
     }
 
     glad_glEnable(GL_DEPTH_TEST);
-    //glad_glDepthMask(GL_TRUE);
     glad_glDepthFunc(GL_LEQUAL);
     glad_glDepthRange(0.1f, 1.0f);
+
+    glad_glBindVertexArray(pipeline->vao);
 
     for (int i = 0; i < GET_NUM_MESH(pPUHead); i++)
     {
@@ -873,8 +883,6 @@ void MikuPan_RenderMeshType0x32(struct SGDPROCUNITHEADER *pVUVN,
             /// This one has the vertex and normal buffer together: v,n
             vertices = &((float *) &(((int *) pVUVN)[14]))[vertexOffset * 6];
         }
-
-        glad_glBindVertexArray(pipeline->vao);
 
         /// POSITION
         glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
@@ -992,7 +1000,8 @@ void MikuPan_RenderMeshType0x2(struct SGDPROCUNITHEADER *pVUVN,
                                struct SGDPROCUNITHEADER *pPUHead)
 {
     return;
-    MikuPan_SetShaderProgramWithBackup(DEFAULT_SHADER);
+    MikuPan_SetShaderProgramWithBackup(MESH_0x12_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4_NORMAL4_UV);
 
     VUVN_PRIM *v = ((VUVN_PRIM *) &pVUVN[2]);
 
@@ -1004,32 +1013,62 @@ void MikuPan_RenderMeshType0x2(struct SGDPROCUNITHEADER *pVUVN,
         (struct SGDVUMESHSTREGSET *) &pMeshInfo[GET_NUM_MESH(pPUHead)];
     struct SGDVUMESHSTDATA *sgdMeshData =
         (struct SGDVUMESHSTDATA *) &sgdVuMeshStRegSet->auiVifCode[3];
+    union SGDPROCUNITDATA *pProcData = (union SGDPROCUNITDATA *) &pPUHead[1];
+
+    sceGsTex0 *mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x28);
+
+    if (pProcData->VUMeshData.GifTag.NREG != 6)
+    {
+        //return;
+        //mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x18);
+    }
+
+    if (mesh_tex_reg->PSM == 48 /* PSMZ32 */)
+    {
+        return;
+    }
+
+    MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(mesh_tex_reg);
+
+    if (texture_info == NULL)
+    {
+        texture_info = MikuPan_CreateGLTexture(mesh_tex_reg);
+    }
+
+    glad_glActiveTexture(GL_TEXTURE0);
+
+    if (texture_info != NULL)
+    {
+        glad_glBindTexture(GL_TEXTURE_2D, texture_info->id);
+    }
+
+    glad_glEnable(GL_DEPTH_TEST);
+    glad_glDepthFunc(GL_LEQUAL);
+    glad_glDepthRange(0.1f, 1.0f);
+
+    glad_glBindVertexArray(pipeline->vao);
 
     int vertex_offset = 0;
-
-    //glad_glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     for (int i = 0; i < GET_NUM_MESH(pPUHead); i++)
     {
         size_t vertexCount = pMeshInfo[i].uiPointNum;
         size_t byteSize = vertexCount * sizeof(float[4]);
 
-        //for (int j = 0; j < vertexCount; j++)
+        glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
+
+        for (int j = 0; j < vertexCount; j++)
         {
             GLfloat *vertices =
                 (GLfloat *) MikuPan_GetHostPointer(vector_data[i]);
 
-            // Optional but recommended: orphan buffer to avoid stalls
-            glad_glBufferData(GL_ARRAY_BUFFER, byteSize, NULL, GL_DYNAMIC_DRAW);
-
             // Upload new data
-            glad_glBufferSubData(GL_ARRAY_BUFFER, 0, byteSize, vertices);
+            glad_glBufferSubData(GL_ARRAY_BUFFER, vertex_offset, byteSize, vertices);
         }
 
         vertex_offset += vertexCount;
 
         // Draw
-        //glad_glBindVertexArray(VAO);
         glad_glDrawArrays(MikuPan_IsWireframeRendering() ? GL_LINE_STRIP
                                                          : GL_TRIANGLE_STRIP,
                           0, vertexCount);

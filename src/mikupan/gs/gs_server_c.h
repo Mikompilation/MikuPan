@@ -6,5 +6,6 @@
 
 void GsUpload(sceGsLoadImage* image_load, unsigned char* image);
 unsigned char* DownloadGsTexture(sceGsTex0* tex0);
+void GsStore(sceGsStoreImage* image_store, unsigned char* outbuf);
 
 #endif //MIKUPAN_GS_SERVER_C_H

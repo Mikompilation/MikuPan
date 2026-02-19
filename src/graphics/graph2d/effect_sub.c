@@ -973,7 +973,6 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
 	U32DATA tt[4];
 	U32DATA tq[4];
 
-
     for (i = 0; i < 4; i++)
     {
         ppos[i][0] = i & 1 ? w * 0.5f : -w * 0.5f;
@@ -983,8 +982,9 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
     }
 
     //sceVu0MulMatrix(slm, SgWSMtx, wlm);
-    sceVu0MulMatrix(slm, *(sceVu0FMATRIX*)MikuPan_GetWorldScreenMatrix(), wlm);
     //sceVu0RotTransPersN(ivec, slm, ppos, 4, 1);
+
+    sceVu0MulMatrix(slm, *(sceVu0FMATRIX*)MikuPan_GetWorldScreenMatrix(), wlm);
     sceVu0RotTransPersNF(ivec, slm, ppos, 4, 1);
 
     tx0 = effdat[texno + monochrome_mode].tex0;
@@ -1089,6 +1089,7 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
             pbuf[ndpkt].fl32[1] = (float)ivec[i][1];
             pbuf[ndpkt].fl32[2] = (float)ivec[i][2];
             pbuf[ndpkt++].fl32[3] = 1.0f;
+
             //pbuf[ndpkt].ui32[2] = ppos[i][2] * 16;
             //pbuf[ndpkt++].ui32[3] = (i <= 1) ? 0x8000 : 0;
         }
@@ -1764,6 +1765,31 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
         Change.CLD = 0;
     }
 
+    DISP_SPRT s = {0};
+    s.tex0 = *(u_long*)&sd->g_GsTex0;
+    s.r = sd->r;
+    s.g = sd->g;
+    s.b = sd->b;
+    s.alpha = sd->alpha;
+    s.x = mx + 320;
+    s.y = my + 224;
+
+    int min_u_clamp = (mclu>>4) & 0xffff;
+    int max_u_clamp = (mclu>>24) & 0xffff;
+
+    int min_v_clamp = (mclv>>4) & 0xffff;
+    int max_v_clamp = (mclv>>24) & 0xffff;
+
+    s.u = min_u_clamp; //min_u_clamp + ((rand() / RAND_MAX) * max_u_clamp);
+    s.v = min_v_clamp; //min_v_clamp + ((rand() / RAND_MAX) * max_v_clamp);
+    s.w = sd->size_w;
+    s.h = sd->size_h;
+    s.rot = sd->angle;
+    s.scw = sd->scale_w;
+    s.sch = sd->scale_h;
+
+    MikuPan_Render2DTexture(&s);
+
     Reserve2DPacket(pri);
     
     pbuf[ndpkt].ul128 = (u_long128)0;
@@ -2020,7 +2046,7 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
         Change.CLD = 0;
     }
 
-    DISP_SPRT s;
+    DISP_SPRT s = {0};
     s.tex0 = *(u_long*)&sd->g_GsTex0;
     s.r = sd->r;
     s.g = sd->g;
@@ -2028,6 +2054,8 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
     s.alpha = sd->alpha;
     s.x = mx + 320;
     s.y = my + 224;
+    s.scw = sd->scale_w;
+    s.sch = sd->scale_h;
 
     s.u = 8;
     s.v = 8;

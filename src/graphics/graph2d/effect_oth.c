@@ -9,19 +9,20 @@
 #include "ee/eestruct.h"
 #include "sce/libvu0.h"
 
-#include "os/eeiop/eese.h"
-#include "os/eeiop/cdvd/eecdvd.h"
-#include "main/glob.h"
-#include "ingame/ig_glob.h"
-#include "ingame/menu/sp_menu.h"
-#include "ingame/plyr/unit_ctl.h"
-#include "ingame/enemy/ene_ctl.h"
+#include "graphics/graph2d/effect.h"
+#include "graphics/graph2d/effect_obj.h"
+#include "graphics/graph2d/effect_sub.h"
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sglib.h"
-#include "graphics/graph2d/effect.h"
-#include "graphics/graph2d/effect_sub.h"
-#include "graphics/graph2d/effect_obj.h"
+#include "ingame/enemy/ene_ctl.h"
+#include "ingame/ig_glob.h"
+#include "ingame/menu/sp_menu.h"
+#include "ingame/plyr/unit_ctl.h"
+#include "main/glob.h"
+#include "mikupan/rendering/mikupan_renderer.h"
+#include "os/eeiop/cdvd/eecdvd.h"
+#include "os/eeiop/eese.h"
 
 int stop_lf = 0;
 
@@ -474,28 +475,54 @@ void SetEffSQTex(int n, float *v, int tp, float w, float h, u_char r, u_char g, 
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEST_1;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_TRUE, 340, SCE_GIF_PACKED, 3);
+
     pbuf[ndpkt++].ul64[1] = 0 \
-        | SCE_GS_RGBAQ << (4 * 0)
-        | SCE_GS_UV    << (4 * 1)
+        | SCE_GS_UV << (4 * 0)
+        | SCE_GS_RGBAQ    << (4 * 1)
         | SCE_GS_XYZF2 << (4 * 2);
+
+    float* buf = (float*)&pbuf[ndpkt];
 
     for (i = 0; i < 4; i++)
     {
-        pbuf[ndpkt].ui32[0] = rr;
-        pbuf[ndpkt].ui32[1] = gg;
-        pbuf[ndpkt].ui32[2] = bb;
-        pbuf[ndpkt++].ui32[3] = a;
+        pbuf[ndpkt].fl32[0] = (float)(i % 2 ? tw - 8 : 8) / tw;
+        pbuf[ndpkt].fl32[1] = (float)(i / 2 ? th - 8 : 8) / th;
+        pbuf[ndpkt].fl32[2] = 0;
+        pbuf[ndpkt++].fl32[3] = 0;
 
-        pbuf[ndpkt].ui32[0] = i % 2 ? tw - 8 : 8;
-        pbuf[ndpkt].ui32[1] = i / 2 ? th - 8 : 8;
-        pbuf[ndpkt].ui32[2] = 0;
-        pbuf[ndpkt++].ui32[3] = 0;
+        pbuf[ndpkt].fl32[0] = (float)rr/255.0f;
+        pbuf[ndpkt].fl32[1] = (float)gg/255.0f;
+        pbuf[ndpkt].fl32[2] = (float)bb/255.0f;
+        pbuf[ndpkt++].fl32[3] = (float)a/128.0f;
 
-        //pbuf[ndpkt].ui32[0] = (int)(xx[i % 2] * 16.0f);
-        //pbuf[ndpkt].ui32[1] = (int)(yy[i / 2] * 16.0f);
-        //pbuf[ndpkt].ui32[2] = (int)(v[2] * 16.0f);
-        pbuf[ndpkt++].ui32[3] = i > 1 ? 0 : 0x8000;
+        pbuf[ndpkt].fl32[0] = ((float)(xx[i % 2] - 2048.0f) / 2048.0f) * 2.0f - 1.0f;
+        pbuf[ndpkt].fl32[1] = 1.0f - ((float)(yy[i / 2] - 2048.0f) / 2048.0f) * 2.0f;
+        pbuf[ndpkt].fl32[2] = 0.0f;
+        //pbuf[ndpkt].fl32[2] = (float)(v[2] - 2048.0f) / 2048.0f;
+        pbuf[ndpkt++].fl32[3] = 1.0f;
     }
+
+    MikuPan_RenderSprite3D((sceGsTex0*)&tx0, buf);
+
+    //pbuf[ndpkt++].ul64[1] = 0 \
+    //    | SCE_GS_RGBAQ << (4 * 0)
+    //    | SCE_GS_UV    << (4 * 1)
+    //    | SCE_GS_XYZF2 << (4 * 2);
+    //for (i = 0; i < 4; i++)
+    //{
+    //    pbuf[ndpkt].ui32[0] = rr;
+    //    pbuf[ndpkt].ui32[1] = gg;
+    //    pbuf[ndpkt].ui32[2] = bb;
+    //    pbuf[ndpkt++].ui32[3] = a;
+    //    pbuf[ndpkt].ui32[0] = i % 2 ? tw - 8 : 8;
+    //    pbuf[ndpkt].ui32[1] = i / 2 ? th - 8 : 8;
+    //    pbuf[ndpkt].ui32[2] = 0;
+    //    pbuf[ndpkt++].ui32[3] = 0;
+    //    pbuf[ndpkt].ui32[0] = (int)(xx[i % 2] * 16.0f);
+    //    pbuf[ndpkt].ui32[1] = (int)(yy[i / 2] * 16.0f);
+    //    pbuf[ndpkt].ui32[2] = (int)(v[2] * 16.0f);
+    //    pbuf[ndpkt++].ui32[3] = i > 1 ? 0 : 0x8000;
+    //}
 }
 
 void SetEffSQITex(int n, int *v, int tp, float w, float h, u_char r, u_char g, u_char b, u_char a)
@@ -1911,7 +1938,7 @@ void* GetTorchPartAddr(void *addr, int type, int lifetime)
         {
             if (torch_particle[i].flag == 0)
             {
-                printf("Set Torch work no = [%d]\n", i);
+                info_log("Set Torch work no = [%d]", i);
                 SetPartInit(&torch_particle[i], type, lifetime);
                 ret = &torch_particle[i];
                 n = 1;
@@ -3142,9 +3169,9 @@ void SetSunshine(EFFECT_CONT *ec)
     float fx; float fy; float fz;
     float l;
     float add;
-    sceVu0FMATRIX wlm;
-    sceVu0FMATRIX slm;
-    sceVu0FVECTOR wpos;
+    sceVu0FMATRIX wlm = {0};
+    sceVu0FMATRIX slm = {0};
+    sceVu0FVECTOR wpos = {0};
     sceVu0FVECTOR base_pos = {22875.0f, -457.0f, 8676.0f, 1.0f};
     sceVu0FVECTOR mpos[6] = {
         {0.0f, -120.0f, -92.0f, 1.0f},
@@ -3154,6 +3181,7 @@ void SetSunshine(EFFECT_CONT *ec)
         {-5.0f, -5.0f, 0.0f, 1.0f},
         {-5.0f, +5.0f, 0.0f, 1.0f}
     };
+
     EFF_SUNSHINE eff_ray[6];
     Q_WORDDATA pbh[1024];
 #ifdef MATCHING_DECOMP
@@ -5444,7 +5472,7 @@ void SetSky()
             clip = 1;
         }
 
-        if (!clip)
+        //if (!clip)
         {
             GetTrgtRot(camera.p, camera.i, rot, 2);
 
@@ -5510,26 +5538,31 @@ void SetSky()
                 | SCE_GS_UV    << (4 * 3)
                 | SCE_GS_XYZF2 << (4 * 4);
 
+            /// RGBA
             pbuf[ndpkt].ui32[0] = 0x40;
             pbuf[ndpkt].ui32[1] = 0x40;
             pbuf[ndpkt].ui32[2] = 0x40;
             pbuf[ndpkt++].ui32[3] = 0x80;
 
+            /// UV
             pbuf[ndpkt].ui32[0] = u1;
             pbuf[ndpkt].ui32[1] = 0;
             pbuf[ndpkt].ui32[2] = 0;
             pbuf[ndpkt++].ui32[3] = 0;
 
+            /// XYZ
             pbuf[ndpkt].ui32[0] = x1;
             pbuf[ndpkt].ui32[1] = y1;
             pbuf[ndpkt].ui32[2] = 0;
             pbuf[ndpkt++].ui32[3] = 0x8000;
 
+            /// UV
             pbuf[ndpkt].ui32[0] = u2;
             pbuf[ndpkt].ui32[1] = hline * 16;
             pbuf[ndpkt].ui32[2] = 0;
             pbuf[ndpkt++].ui32[3] = 0;
 
+            /// XYZ
             pbuf[ndpkt].ui32[0] = x2;
             pbuf[ndpkt].ui32[1] = y2;
             pbuf[ndpkt].ui32[2] = 0;

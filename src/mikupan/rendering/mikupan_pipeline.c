@@ -49,7 +49,39 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1],
         3, 1,
-        sizeof(float[3]), sizeof(float[3]));
+        sizeof(float[6]), sizeof(float[3]));
+
+    /// BUFFER 2: UVs
+    /// TEXCOORD ATTRIBUTE
+    MikuPan_SetBufferObjectInfo(
+        &curr_pipeline->buffers[1],
+        1024 * 32, 1);
+    MikuPan_SetBufferAttributeInfo(
+        &curr_pipeline->buffers[1].attributes[0],
+        2, 2,
+        sizeof(float[2]), 0);
+
+    glad_glBindVertexArray(0);
+
+    ///////// MESH_0x2_SHADER /////////
+    curr_pipeline = &pipelines[POSITION4_NORMAL4_UV];
+    MikuPan_CreateBufferObjectsInfo(curr_pipeline, 2);
+    glad_glGenVertexArrays(1, &curr_pipeline->vao);
+    glad_glBindVertexArray(curr_pipeline->vao);
+
+    /// BUFFER 1: VERTEX + NORMALS
+    /// POSITION ATTRIBUTE
+    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 1024 * 32, 2);
+    MikuPan_SetBufferAttributeInfo(
+        &curr_pipeline->buffers[0].attributes[0],
+        4, 0,
+        sizeof(float[8]), 0);
+
+    /// NORMALS ATTRIBUTE
+    MikuPan_SetBufferAttributeInfo(
+        &curr_pipeline->buffers[0].attributes[1],
+        4, 1,
+        sizeof(float[8]), sizeof(float[4]));
 
     /// BUFFER 2: UVs
     /// TEXCOORD ATTRIBUTE

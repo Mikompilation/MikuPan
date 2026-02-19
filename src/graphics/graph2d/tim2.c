@@ -1821,11 +1821,10 @@ void _ftoi4(int *out, float *in)
     //    sqc2    $vf12,0(%1) \n\
     //": :"r"(in),"r"(out));
 
-    // Convert 4 floats to integers with 4-bit fixed point (multiply by 16, then truncate)
-    out[0] = (int)(in[0] * 16.0f);
-    out[1] = (int)(in[1] * 16.0f);
-    out[2] = (int)(in[2] * 16.0f);
-    out[3] = (int)(in[3] * 16.0f);
+    out[0] = (int)(in[0]);
+    out[1] = (int)(in[1]);
+    out[2] = (int)(in[2]);
+    out[3] = (int)(in[3]);
 }
 
 /**
@@ -1834,14 +1833,18 @@ void _ftoi4(int *out, float *in)
  */
 void DispSprD(DISP_SPRT *s)
 {
-    u_int ui;
+    //u_int ui;
+    float ui;
     int i;
     int psm;
     float ss;
     float cc;
     u_int matt;
-    u_int mu;
-    u_int mv;
+    //u_int mu;
+    //u_int mv;
+
+    float mu;
+    float mv;
     float mw;
     float mh;
     float mx;
@@ -1873,8 +1876,10 @@ void DispSprD(DISP_SPRT *s)
     float y2[4];
     u_int xx[4];
     u_int yy[4];
-    u_int uu[4];
-    u_int vv[4];
+    //u_int uu[4];
+    //u_int vv[4];
+    float uu[4];
+    float vv[4];
     sceVu0IVECTOR itmp = {0};
     sceVu0FVECTOR ftmp = {0};
 
@@ -1990,11 +1995,21 @@ void DispSprD(DISP_SPRT *s)
 
     _ftoi0(itmp, ftmp);
 
-    uu[0] = uu[2] = mu * 16;
-    uu[1] = uu[3] = (itmp[0] + mu) * 16;
+    int width = 1 << ((sceGsTex0*)(&mtex0))->TW;
+    int height = 1 << ((sceGsTex0*)(&mtex0))->TH;
 
-    vv[0] = vv[1] = mv * 16;
-    vv[2] = vv[3] = (itmp[1] + mv) * 16;
+    float halfU = 0.5f / width;
+    float halfV = 0.5f / height;
+
+    uu[0] = uu[2] = mu / (float)width + halfU;
+    uu[1] = uu[3] = (mw + mu) / (float)width - halfU;
+    vv[0] = vv[1] = mv /(float)height + halfV;
+    vv[2] = vv[3] = (mh + mv) / (float)height - halfV;
+
+    //uu[0] = uu[2] = mu * 16;
+    //uu[1] = uu[3] = (itmp[0] + mu) * 16;
+    //vv[0] = vv[1] = mv * 16;
+    //vv[2] = vv[3] = (itmp[1] + mv) * 16;
 
     if (matt & 0x2)
     {
@@ -2032,7 +2047,7 @@ void DispSprD(DISP_SPRT *s)
     sceGsTex0 tex0;
     tex0 = *(sceGsTex0 *)&mtex0;
 
-    if (psm == 20)
+    if (psm == SCE_GS_PSMT4)
     {
         tex0.PSM = SCE_GS_PSMT8;
         tex0.CSA = 0;
@@ -2055,7 +2070,7 @@ void DispSprD(DISP_SPRT *s)
         pbuf[ndpkt++].ul64[1] = SCE_GS_NOP;
     }
 
-    MikuPan_Render2DTexture(s);
+    //MikuPan_Render2DTexture(s);
 
     pbuf[ndpkt].ul64[0] = mtex1;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEX1_1;
@@ -2093,23 +2108,62 @@ void DispSprD(DISP_SPRT *s)
         | (long long)SCE_GS_RGBAQ << (4 * 10)
         | (long long)SCE_GS_XYZF2 << (4 * 11);
 
+    float* render_buffer = (float*)&pbuf[ndpkt];
+
+    float scale_x = (float)MikuPan_GetWindowWidth()  / 640.0f;
+    float scale_y = (float)MikuPan_GetWindowHeight() / 448.0f;
+    float scale   = (scale_x < scale_y) ? scale_x : scale_y;
+
+    float viewport_w =  640.0f * scale;
+    float viewport_h = 448.0f * scale;
+
+    float viewport_x = ((float)MikuPan_GetWindowWidth()  - viewport_w) * 0.5f;
+    float viewport_y = ((float)MikuPan_GetWindowHeight() - viewport_h) * 0.5f;
+
+
     for (i = 0; i < 4; i++)
     {
-        pbuf[ndpkt].ui32[0] = uu[i];
-        pbuf[ndpkt].ui32[1] = vv[i];
-        pbuf[ndpkt].ui32[2] = 0;
-        pbuf[ndpkt++].ui32[3] = 0;
+        pbuf[ndpkt].fl32[0] = uu[i];
+        pbuf[ndpkt].fl32[1] = vv[i];
+        pbuf[ndpkt].fl32[2] = 0;
+        pbuf[ndpkt++].fl32[3] = 0;
 
-        pbuf[ndpkt].ui32[0] = mr;
-        pbuf[ndpkt].ui32[1] = mg;
-        pbuf[ndpkt].ui32[2] = mb;
-        pbuf[ndpkt++].ui32[3] = ma;
+        pbuf[ndpkt].fl32[0] = (float) mr / 128.0f;
+        pbuf[ndpkt].fl32[1] = (float) mg / 128.0f;
+        pbuf[ndpkt].fl32[2] = (float) mb / 128.0f;
+        pbuf[ndpkt++].fl32[3] = (float) ma / 128.0f;
 
-        pbuf[ndpkt].ui32[0] = xx[i];
-        pbuf[ndpkt].ui32[1] = yy[i];
-        pbuf[ndpkt].ui32[2] = mz;
-        pbuf[ndpkt++].ui32[3] = 0;
+        // Compute destination rectangle in screen space
+        float x1 = viewport_x + (x2[i] + 320.0f) * scale;
+        float y1 = viewport_y + (y2[i] + 224.0f) * scale;
+
+        // Convert screen space to OpenGL NDC (-1 to 1)
+        float ndc_x1 = (x1 / (float)MikuPan_GetWindowWidth()) * 2.0f - 1.0f;
+        float ndc_y1 = 1.0f - (y1 / (float)MikuPan_GetWindowHeight()) * 2.0f;
+
+        pbuf[ndpkt].fl32[0] = ndc_x1;
+        pbuf[ndpkt].fl32[1] = ndc_y1;
+        pbuf[ndpkt].fl32[2] = 0.0f;
+        pbuf[ndpkt++].fl32[3] = 1.0f;
+
+        //pbuf[ndpkt].ui32[0] = uu[i];
+        //pbuf[ndpkt].ui32[1] = vv[i];
+        //pbuf[ndpkt].ui32[2] = 0;
+        //pbuf[ndpkt++].ui32[3] = 0;
+        //
+        //pbuf[ndpkt].ui32[0] = mr;
+        //pbuf[ndpkt].ui32[1] = mg;
+        //pbuf[ndpkt].ui32[2] = mb;
+        //pbuf[ndpkt++].ui32[3] = ma;
+        //
+        //pbuf[ndpkt].ui32[0] = xx[i];
+        //pbuf[ndpkt].ui32[1] = yy[i];
+        //pbuf[ndpkt].ui32[2] = mz;
+        //pbuf[ndpkt++].ui32[3] = 1;
+        //pbuf[ndpkt++].ui32[3] = 0;
     }
+
+    MikuPan_RenderSprite3D((sceGsTex0*)&tex0, render_buffer);
 }
 
 void CopySqrDToSqr(DISP_SQAR *s, SQAR_DAT *d)

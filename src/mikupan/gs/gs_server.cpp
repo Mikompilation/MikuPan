@@ -252,6 +252,23 @@ void GS::GSHelper::Clear()
     memset(mem_.data(), 0, mem_.size() * sizeof(char));
 }
 
+void GsStore(sceGsStoreImage* image_store, unsigned char* outbuf)
+{
+    spdlog::debug("GS store request for SBP {:#x} SPSM {} X: {} Y: {}",
+                  (int)image_store->bitbltbuf.SBP,
+                  (int)image_store->bitbltbuf.SPSM,
+                  (int)image_store->trxreg.RRW,
+                  (int)image_store->trxreg.RRH);
+
+    const int sbp  = image_store->bitbltbuf.SBP;
+    const int sbw  = image_store->bitbltbuf.SBW;
+    const int ssax = image_store->trxpos.SSAX;
+    const int ssay = image_store->trxpos.SSAY;
+    const int rrw  = image_store->trxreg.RRW;
+    const int rrh  = image_store->trxreg.RRH;
+    memcpy(outbuf, &gsHelper.mem_.data()[GetPixelAddressPSMCT32(sbp, sbw, 0, 0)], rrh * rrw * 4);
+}
+
 void GsUpload(sceGsLoadImage *image_load, unsigned char *image)
 {
     spdlog::debug("GS upload request for DBP {:#x} DPSM {} X: {} Y: {}",

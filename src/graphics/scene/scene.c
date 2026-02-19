@@ -970,7 +970,7 @@ void SceneSetEneEffect(SCN_ANM_MDL *sam)
     if (sam->efct_addr[0] == NULL)
     {
         sam->efct_addr[0] = SetEffects(
-            EF_ENEFIRE, 2, 1, &pos, 0, &sam->ene_efct->aura_rgba,
+            EF_ENEFIRE, 2, 1, &pos, (void*)0, &sam->ene_efct->aura_rgba,
             &sam->ene_efct->aura_size, 0xa0, &sam->ene_efct->aura_rate);
     }
 

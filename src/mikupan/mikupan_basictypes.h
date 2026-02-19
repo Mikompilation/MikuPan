@@ -54,6 +54,9 @@ enum MikuPan_PipelineType
     /// MESH 0x12 SHADER
     POSITION3_NORMAL3_UV,
 
+    /// MESH 0x2 SHADER
+    POSITION4_NORMAL4_UV,
+
     /// SIMPLE TEXTURED SHADER
     POSITION3_UV,
 

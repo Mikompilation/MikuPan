@@ -64,6 +64,8 @@ void SetViewScreenClipMatrix(SgCAMERA *camera, float scrz)
 
     sceVu0UnitMatrix(camera->vs);
 
+    /// camera->vs, camera->wv
+
     camera->vs[0][0] = scrz;
     camera->vs[1][1] = scrz;
     camera->vs[2][2] = 0.0f;
@@ -113,12 +115,6 @@ void SgSetRefCamera(SgCAMERA *camera)
     {
         camera->fov = 90.0f;
     }
-
-    //sceVu0FVECTOR clip_volume = {1920.0f, 896.0f, 256.0f, 16777000.0f};
-    //static sceVu0FVECTOR clip_volumev = {320.0f, 112.0f, 0.1f, 16777000.0f};
-
-    clip_volume[0] = MikuPan_GetWindowWidth() / 2;
-    clip_volume[1] = MikuPan_GetWindowHeight() / 2;
 
     scrz = clip_volumev[1] / tanf(camera->fov * 0.5f) * 2;
 

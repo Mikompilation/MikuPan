@@ -18,7 +18,7 @@
 #include "ingame/photo/photo.h"
 #include "ingame/photo/pht_main.h"
 #include "ingame/photo/pht_make.h"
-// #include "ingame/plyr/plyr_ctl.h" // FModeScreenEffect
+#include "ingame/plyr/plyr_ctl.h" // FModeScreenEffect
 #include "main/glob.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"

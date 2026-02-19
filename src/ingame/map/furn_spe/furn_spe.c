@@ -234,7 +234,6 @@ int SearchFActWrkIDFromFurnID(u_short furn_id)
     {
         if (f_act_wrk[i].state != ST_FACT_VACANT && f_act_wrk[i].furn_id == furn_id)
         {
-
             return i;
         }
     }

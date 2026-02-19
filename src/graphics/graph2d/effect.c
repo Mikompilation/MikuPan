@@ -1069,10 +1069,10 @@ void EffectZSort2()
 
         switch (ec->dat.uc8[0])
         {
-        case 40:
+        case EF_ENEOUT:
             SetEneSeal(ec);
         break;
-        case 28:
+        case EF_ENEFIRE:
             SetEneFire(ec);
         break;
         }
@@ -1401,8 +1401,6 @@ void EffectControl(int no)
     }
     return;
 }
-
-
 
 void SetBlurOff()
 {

@@ -2831,7 +2831,7 @@ void SubDither3(/* s0 16 */ int type, /* f27 65 */ float alp, /* f28 66 */ float
     sceVu0CopyVector(old_cam_i, camera.i);
     
     
-    if (isnan(tx) || isnan(ty) || isnan(otx) || isnan(oty))
+    if (isnan(tx) || isnan(ty) || isnan(otx) || isnan(oty) || isinf(tx) || isinf(ty) || isinf(otx) || isinf(oty))
     {
         mvx = 0.0f;
         mvy = 0.0f;

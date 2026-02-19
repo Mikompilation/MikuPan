@@ -44,24 +44,17 @@ int sceGsSwapDBuff(sceGsDBuff* db, int id)
 
 int sceGsSetDefStoreImage(sceGsStoreImage* sp, short sbp, short sbw, short spsm, short x, short y, short w, short h)
 {
+    memset(sp, 0, sizeof(sceGsStoreImage));
+
     /// Setting up the BITBLTBUF tag
-    sp->bitbltbuf.SBP = 0;
-    sp->bitbltbuf.SBW = 0;
-    sp->bitbltbuf.SPSM = 0;
     sp->bitbltbuf.SBP = sbp;
-    sp->bitbltbuf.DBP = sbp;
     sp->bitbltbuf.SBW = sbw;
-    sp->bitbltbuf.DBW = sbw;
     sp->bitbltbuf.SPSM = spsm;
-    sp->bitbltbuf.DPSM = spsm;
     sp->bitbltbufaddr = SCE_GS_BITBLTBUF;
 
     /// Setting up the TRXPOS tag
-    sp->trxpos.DIR = 0;
     sp->trxpos.DSAX = x;
     sp->trxpos.DSAY = y;
-    sp->trxpos.SSAX = 0;
-    sp->trxpos.SSAY = 0;
     sp->trxdiraddr = SCE_GS_TRXPOS;
 
     /// Setting up the TRXREG tag
@@ -73,6 +66,8 @@ int sceGsSetDefStoreImage(sceGsStoreImage* sp, short sbp, short sbw, short spsm,
     sp->trxdir.XDR = 0;
     sp->trxdiraddr = SCE_GS_TRXDIR;
 
+    sp->finishaddr = SCE_GS_FINISH;
+
     return 1;
 }
 
@@ -80,6 +75,7 @@ int sceGsExecStoreImage(sceGsStoreImage* sp, u_long128* dstaddr)
 {
     //GsUpload((sceGsLoadImage*)&sp->giftag, (unsigned char *)dstaddr);
     //memcpy(dstaddr, sp, sizeof(sceGsStoreImage));
+    //GsStore(sp, (unsigned char*)dstaddr);
     return 1;
 }
 
