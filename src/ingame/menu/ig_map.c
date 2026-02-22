@@ -3,14 +3,26 @@
 
 MAP_SVP_POS map_svp_pos[];
 
-void NewgameMenuMapInit(void)
+void NewgameMenuMapInit()
 {
 }
 
-void LoadgameMenuMapInit(void)
+void LoadgameMenuMapInit()
 {
 }
 
-void MapCntInit(void)
+void StartMapModeInit()
+{
+}
+
+void IngameMenuMap()
+{
+}
+
+void IngameMenuMapDisp(u_char mod)
+{
+}
+
+void AngleForWin(int pri, short int xo, short int yo, short int r, u_char ptn)
 {
 }
