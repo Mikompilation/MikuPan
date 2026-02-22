@@ -56,6 +56,14 @@ SDL_AppResult MikuPan_Init()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
+    info_log("Loading SDL_GameControllerDB");
+
+    if (!SDL_AddGamepadMappingsFromFile("shaders/gamecontrollerdb.txt"))
+    {
+        info_log(SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
     window = SDL_CreateWindow("MikuPan", window_width, window_height,
                               SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 

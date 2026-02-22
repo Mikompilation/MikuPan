@@ -49,6 +49,7 @@ void FGTransInit()
 
 u_char IsEndFgTrans()
 {
+    return 1;
     return st_ctrl.mode == STMODE_USEOK;
 }
 
