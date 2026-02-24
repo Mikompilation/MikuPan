@@ -66,7 +66,7 @@ int ZeroHourAppearMain()
             LoadReq(M040_MAGATOKI_MDL, ANIM_MODEL_TYPE_8_ADDRESS_0);
             LoadReq(M040_MAGATOKI_ANM, ANIM_MODEL_TYPE_9_ADDRESS_0);
 
-            LoadEneDmgTex(40, (u_int *)ENE_DMG_TEX_TYPE_9_ADDRESS_0);
+            LoadEneDmgTex(40, (u_int *)MikuPan_GetHostPointer(ENE_DMG_TEX_TYPE_9_ADDRESS_0));
 
             if (plyr_wrk.mode == 1)
             {
@@ -277,13 +277,13 @@ void ZeroHourEnemyReLoad()
     if (zh_wrk.zh_mot_bak[0] != 0xff)
     {
         LoadReq(zh_wrk.zh_mot_bak[0] + M000_MIKU_ANM, ANIM_MODEL_TYPE_9_ADDRESS_0);
-        LoadEneDmgTex((u_int)zh_wrk.zh_mdl_bak[0], (u_int *)ENE_DMG_TEX_TYPE_9_ADDRESS_0);
+        LoadEneDmgTex((u_int)zh_wrk.zh_mdl_bak[0], (u_int *)MikuPan_GetHostPointer(ENE_DMG_TEX_TYPE_9_ADDRESS_0));
     }
 
     if (zh_wrk.zh_mot_bak[1] != 0xff)
     {
         LoadReq(zh_wrk.zh_mot_bak[1] + M000_MIKU_ANM, ANIM_MODEL_TYPE_9_ADDRESS_1);
-        LoadEneDmgTex((u_int)zh_wrk.zh_mdl_bak[1], (u_int *)ENE_DMG_TEX_TYPE_9_ADDRESS_1);
+        LoadEneDmgTex((u_int)zh_wrk.zh_mdl_bak[1], (u_int *)MikuPan_GetHostPointer(ENE_DMG_TEX_TYPE_9_ADDRESS_1));
     }
 }
 

@@ -259,7 +259,7 @@ int SettleGhostLoadOneSize()
         if (IsLoadEndAll() != 0)
         {
             motInitEnemyMdl((u_int *)MikuPan_GetHostPointer(ENEMY_MODEL_ADDRESS), jene_dat[ingame_wrk.msn_no][sgst_wrk.sg_no].mdl_no);
-            LoadEneDmgTex(jene_dat[ingame_wrk.msn_no][sgst_wrk.sg_no].mdl_no, (u_int *)ENEMY_DAMAGE_TEXTURE_ADDRESS);
+            LoadEneDmgTex(jene_dat[ingame_wrk.msn_no][sgst_wrk.sg_no].mdl_no, (u_int *)MikuPan_GetHostPointer(ENEMY_DAMAGE_TEXTURE_ADDRESS));
             LoadReq(jene_dat[ingame_wrk.msn_no][sgst_wrk.sg_no].anm_no + M000_MIKU_ANM, ANIM_MODEL_ADDRESS);
 
             sgst_wrk.load_mode = 3;
@@ -310,7 +310,7 @@ int SettleGhostLoadTwoSize()
         {
             motInitEnemyMdl((u_int *)MikuPan_GetHostPointer(TOUSHU_MODEL_ADDRESS_1), 37);
             motInitEnemyMdl((u_int *)MikuPan_GetHostPointer(ONNRYOU_MPK_ADDRESS_1), 67);
-            LoadEneDmgTex(37, (u_int *)ENEMY_DAMAGE_ADDRESS_2);
+            LoadEneDmgTex(37, (u_int *)MikuPan_GetHostPointer(ENEMY_DAMAGE_ADDRESS_2));
             LoadReq(M037_TOUSHU_ANM, TOUSHU_ANIM_MODEL_ADDRESS_1);
 
             sgst_wrk.load_mode = 3;

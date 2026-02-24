@@ -80,8 +80,8 @@ SDL_AppResult MikuPan_Init()
         info_log(SDL_GetError());
         return SDL_APP_FAILURE;
     }
-
-    SDL_Surface* iconSurface = SDL_LoadBMP("resources/angry_noise_sae.bmp");
+//
+    SDL_Surface* iconSurface = SDL_LoadPNG("resources/mikupan.png");
     if (!SDL_SetWindowIcon(window, iconSurface))
     {
         info_log(SDL_GetError());
@@ -657,7 +657,7 @@ void MikuPan_Camera(SgCAMERA *camera)
     // Projection -> camera->vcv
     mat4 projection = {0};
     float aspect = (float) window_width / (float) window_height;
-    glm_perspective(camera->fov, aspect, 150.0f, camera->farz,
+    glm_perspective(camera->fov, aspect, 200.0f, camera->farz,
                     projection);
 
     glm_mat4_mul(projection, WorldView, WorldScreen);

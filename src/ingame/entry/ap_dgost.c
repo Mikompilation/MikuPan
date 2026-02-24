@@ -168,7 +168,7 @@ int DeadGhostLoad()
         if (IsLoadEndAll() != 0)
         {
             motInitEnemyMdl((u_int *)MikuPan_GetHostPointer(M_SLCT_CMN_PK2_ADDRESS), M055_SYOUALL);
-            LoadEneDmgTex(42, (u_int *)ENE_DMG_TEX_ADDRESS);
+            LoadEneDmgTex(42, (u_int *)MikuPan_GetHostPointer(ENE_DMG_TEX_ADDRESS));
             LoadReq(M042_SYOUKI2_ANM, SPRITE_ADDRESS);
 
             dgst_wrk.load_mode = DGLOAD_MODE_MOT;
