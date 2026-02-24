@@ -4,14 +4,15 @@
 
 #include "sce/libvu0.h"
 
-#include "main/glob.h"
-#include "ingame/map/map_area.h"
-#include "ingame/entry/ap_rgost.h"
+#include "graphics/graph2d/effect.h"
+#include "graphics/graph2d/effect_sub.h"
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
-#include "graphics/graph2d/effect_sub.h"
-#include "graphics/graph2d/effect.h"
+#include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sglib.h"
+#include "ingame/entry/ap_rgost.h"
+#include "ingame/map/map_area.h"
+#include "main/glob.h"
 
 typedef struct {
     SPRT_DAT *spr;

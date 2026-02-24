@@ -2777,7 +2777,7 @@ u_int FromPKZ(u_int pkz_addr, u_char pk2_no)
     break;
     }
 
-    // missing return
+    return 1;
 }
 
 void DcdCMP2PK2(u_int cmp_addr, u_int tmp_addr)

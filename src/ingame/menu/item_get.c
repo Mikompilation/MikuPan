@@ -16,6 +16,8 @@
 #include "ingame/menu/ig_menu.h"
 #include "ingame/menu/item.h"
 #include "ingame/menu/item_get.h"
+
+#include "graphics/motion/mdlwork.h"
 #include "main/glob.h"
 #include "os/eeiop/adpcm/ea_tape.h"
 #include "os/eeiop/cdvd/eecdvd.h"

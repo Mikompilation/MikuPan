@@ -131,7 +131,7 @@ int SettleGhostAppearReq(int sg_no)
 
     ReqPlayerStop(1);
 
-    // missing return ...
+    return 1;
 }
 
 void SettleGhostMain()

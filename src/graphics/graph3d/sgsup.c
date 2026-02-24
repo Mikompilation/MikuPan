@@ -56,7 +56,7 @@ void DispMicroMemory()
 
     while ((u_int) read_p <= (u_int) (VU1_MICRO_ADDR + 1968 * 4 * 4))
     {
-        printf("%x:%x %x %x %x\n", (u_int) read_p, read_p[0], read_p[1],
+        info_log("%x:%x %x %x %x", (u_int) read_p, read_p[0], read_p[1],
                read_p[2], read_p[3]);
 
         read_p += 4;
@@ -86,22 +86,20 @@ void DispVUMemory()
             || ((u_int) read_p >= (VU1_MEM_ADDR + 8 * 4 * 4)
                 && (u_int) read_p <= (VU1_MEM_ADDR + 960 + 8 * 4 * 4)))
         {
-            printf("%x(%3d):%f %f %f %f\n", (u_int) read_p,
+            info_log("%x(%3d):%f %f %f %f", (u_int) read_p,
                    (u_int) ((u_int) read_p - VU1_MEM_ADDR) / (4 * 4),
                    ((float *) read_p)[0], ((float *) read_p)[1],
                    ((float *) read_p)[2], ((float *) read_p)[3]);
         }
         else
         {
-            printf("%x(%3d):%8x %8x %8x %8x\n", (u_int) read_p,
+            info_log("%x(%3d):%8x %8x %8x %8x", (u_int) read_p,
                    (u_int) ((u_int) read_p - VU1_MEM_ADDR) / (4 * 4), read_p[0],
                    read_p[1], read_p[2], read_p[3]);
         }
 
         read_p += 4;
     }
-
-    printf("\n");
 
     exit(0);
 }

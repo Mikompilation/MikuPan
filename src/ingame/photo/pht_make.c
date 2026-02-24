@@ -121,6 +121,7 @@ void DispPhotoFrame00(int flag)
 
 int DispPhotoFrame1(int fl)
 {
+    return 0;
 }
 
 void DispPhotoFrame2()

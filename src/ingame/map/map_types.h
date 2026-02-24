@@ -3,8 +3,10 @@
 
 #include "typedefs.h"
 
+#include <stdint.h>
+
 typedef struct {
-	int dat_adr;
+	int64_t dat_adr;
 	u_char floor;
 	u_char load_area;
 	u_char now_room;

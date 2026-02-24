@@ -19,7 +19,7 @@ typedef struct {
 	sceVu0FVECTOR trot;
 	sceVu0FVECTOR pos_mid;
 	P_INT comm_add;
-	long int comm_add_top;
+	int64_t comm_add_top;
 } MOVE_BOX;
 
 #endif // INGAME_ENEMY_MOVE_TYPES_H

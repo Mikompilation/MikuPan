@@ -28,7 +28,8 @@ bool controller_rumble_test = false;
 bool camera_debug = false;
 int render_wireframe = 0;
 int render_normals = 0;
-bool show_texture_list = 0;
+bool show_texture_list = false;
+bool show_bounding_boxes = false;
 
 FrameTimeGraph::FrameTimeGraph(int max_samples, float ms_scale) : max_samples_(std::max(8, max_samples)), ms_scale_(ms_scale)
 {
@@ -278,6 +279,7 @@ void MikuPan_UiMenuBar()
                 ImGui::Toggle("Wireframe", (bool*)&render_wireframe, ImGuiToggleFlags_Animated);
                 ImGui::Toggle("Normals", (bool*)&render_normals, ImGuiToggleFlags_Animated);
                 ImGui::Toggle("Textures", (bool*)&show_texture_list, ImGuiToggleFlags_Animated);
+                ImGui::Toggle("BoundingBox", (bool*)&show_bounding_boxes, ImGuiToggleFlags_Animated);
 
                 if (ImGui::Button("Clear Texture Cache"))
                 {
@@ -303,4 +305,9 @@ void MikuPan_UiMenuBar()
 
         ImGui::EndMainMenuBar();
     }
+}
+
+int MikuPan_IsBoundingBoxRendering()
+{
+    return show_bounding_boxes;
 }

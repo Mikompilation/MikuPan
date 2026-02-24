@@ -1,5 +1,7 @@
 #include "mikupan_utils.h"
 
+#include "rendering/mikupan_renderer.h"
+
 #include <stdlib.h>
 
 void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float* out, float screen_width, float screen_height, float x, float y)
@@ -47,4 +49,19 @@ unsigned char MikuPan_GamePadAxisToPS2(int sdl_axis, int deadzone)
 
     int ps2 = (sdl_axis + 32768) * 255 / 65535;
     return (unsigned char)ps2;
+}
+
+void MikuPan_GetPS2Viewport(int width, int height,
+    float *vx, float *vy, float *vw, float *vh, float *scale)
+{
+    float sx = (float)width  / PS2_RESOLUTION_X_FLOAT;
+    float sy = (float)height / PS2_RESOLUTION_Y_FLOAT;
+
+    *scale = (sx < sy) ? sx : sy;
+
+    *vw = PS2_RESOLUTION_X_FLOAT * (*scale);
+    *vh = PS2_RESOLUTION_Y_FLOAT * (*scale);
+
+    *vx = ((float)width  - *vw) * 0.5f;
+    *vy = ((float)height - *vh) * 0.5f;
 }

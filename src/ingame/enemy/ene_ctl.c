@@ -3,6 +3,8 @@
 #include "enums.h"
 #include "ene_ctl.h"
 
+#include "move_ctl.h"
+
 #include <string.h>
 
 #include "sce/libvu0.h"
@@ -31,25 +33,26 @@
 #include "ingame/map/map_htck.h"
 #include "ingame/map/map_ctrl.h"
 
-#include "data/jene_dat0.h"      // ENE_DAT jene_dat0[];
-#include "data/aene_info_dat0.h" // AENE_INFO_DAT aene_info_dat0[];
-#include "data/fly_dat.h"        // FLY_DATA fly_dat[];
-#include "data/jene_dat1.h"      // ENE_DAT jene_dat1[];
-#include "data/fene_dat1.h"      // ENE_DAT fene_dat1[];
-#include "data/aene_info_dat1.h" // AENE_INFO_DAT aene_info_dat1[];
-#include "data/jene_dat2.h"      // ENE_DAT jene_dat2[];
-#include "data/fene_dat2.h"      // ENE_DAT fene_dat2[];
-#include "data/aene_info_dat2.h" // AENE_INFO_DAT aene_info_dat2[];
-#include "data/jene_dat3.h"      // ENE_DAT jene_dat3[];
-#include "data/fene_dat3.h"      // ENE_DAT fene_dat3[];
-#include "data/aene_info_dat3.h" // AENE_INFO_DAT aene_info_dat3[];
-#include "data/jene_dat4.h"      // ENE_DAT jene_dat4[];
-#include "data/fene_dat4.h"      // ENE_DAT fene_dat4[];
-#include "data/aene_info_dat4.h" // AENE_INFO_DAT aene_info_dat4[];
-#include "data/jene_dat.h"       // ENE_DAT *jene_dat[];
-#include "data/fene_dat.h"       // ENE_DAT *fene_dat[];
-#include "data/aene_info_dat.h"  // AENE_INFO_DAT *aene_info_dat[];
+#include "data/aene_info_dat.h" // AENE_INFO_DAT *aene_info_dat[];
+#include "data/aene_info_dat0.h"// AENE_INFO_DAT aene_info_dat0[];
+#include "data/aene_info_dat1.h"// AENE_INFO_DAT aene_info_dat1[];
+#include "data/aene_info_dat2.h"// AENE_INFO_DAT aene_info_dat2[];
+#include "data/aene_info_dat3.h"// AENE_INFO_DAT aene_info_dat3[];
+#include "data/aene_info_dat4.h"// AENE_INFO_DAT aene_info_dat4[];
+#include "data/fene_dat.h"      // ENE_DAT *fene_dat[];
+#include "data/fene_dat1.h"     // ENE_DAT fene_dat1[];
+#include "data/fene_dat2.h"     // ENE_DAT fene_dat2[];
+#include "data/fene_dat3.h"     // ENE_DAT fene_dat3[];
+#include "data/fene_dat4.h"     // ENE_DAT fene_dat4[];
+#include "data/fly_dat.h"       // FLY_DATA fly_dat[];
+#include "data/jene_dat.h"      // ENE_DAT *jene_dat[];
+#include "data/jene_dat0.h"     // ENE_DAT jene_dat0[];
+#include "data/jene_dat1.h"     // ENE_DAT jene_dat1[];
+#include "data/jene_dat2.h"     // ENE_DAT jene_dat2[];
+#include "data/jene_dat3.h"     // ENE_DAT jene_dat3[];
+#include "data/jene_dat4.h"     // ENE_DAT jene_dat4[];
 #include "graphics/graph2d/effect_ene.h"
+#include "graphics/graph3d/gra3d.h"
 #include "graphics/motion/mdlwork.h"
 #include "ingame/entry/ap_zgost.h"
 #include "ingame/event/ev_main.h"

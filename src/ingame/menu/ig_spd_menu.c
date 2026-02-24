@@ -10,6 +10,8 @@
 #include "ingame/menu/ig_menu.h"
 #include "ingame/menu/ig_option.h"
 #include "ingame/menu/ig_spd_menu.h"
+
+#include "graphics/motion/mdlwork.h"
 #include "ingame/menu/item.h"
 #include "ingame/menu/pause.h"
 #include "main/glob.h"

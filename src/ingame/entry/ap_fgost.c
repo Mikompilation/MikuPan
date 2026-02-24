@@ -276,7 +276,7 @@ int FloatGhostBattleEnd()
     ap_wrk.fg_mode = 1;
     ap_wrk.fg_ap = 0;
 
-    // missing return!!
+    return 1;
 }
 
 int FloatGhostEscapeEnd()
@@ -284,7 +284,7 @@ int FloatGhostEscapeEnd()
     ap_wrk.fg_mode = 1;
     ap_wrk.fg_ap = 700;
 
-    // missing return!!
+    return 1;
 }
 
 void FloatGhostLoadReq()

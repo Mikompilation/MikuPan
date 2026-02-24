@@ -404,9 +404,6 @@ int CheckBoundingBox(u_int *prim)
     int xmin_flg;
     int ymin_flg;
     int ymax_flg;
-    // float *lw[4];
-    // float *m0[4];
-    // float *v1;
     sceVu0FVECTOR *ed;
     sceVu0FVECTOR *vec_690;
     sceVu0FVECTOR *vec_6e0;
@@ -421,7 +418,7 @@ int CheckBoundingBox(u_int *prim)
     asm_1__CheckBoundingBox(SgCMVtx, SgCMtx, lcp[prim[2]].lwmtx);
 
     MikuPan_SetModelTransform(&prim[1]);
-    //DrawBoundingBox((sceVu0FVECTOR*)&prim[4]);
+    DrawBoundingBox((sceVu0FVECTOR*)&prim[4]);
 
     // Re-enable this line to have stuff render, right now, nothing is within BoundingBox
     return 1;

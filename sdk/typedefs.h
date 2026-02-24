@@ -1,5 +1,6 @@
 #ifndef TYPEDEFS_H 
 #define TYPEDEFS_H
+#include <stdint.h>
 
 #ifdef _MSC_VER
 #define ATTRIBUTE_ALIGNED(x, decl) __declspec(align(x)) decl
@@ -62,7 +63,7 @@ typedef union
     s_short *ps16;
     int *ps32;
     s_long *ps64;
-    long int wrk;
+    int64_t wrk;
 } P_INT;
 
 #endif /* TYPEDEFS_H */

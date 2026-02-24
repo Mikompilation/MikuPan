@@ -5,7 +5,7 @@
 
 #include "graphics/graph2d/effect_sub.h"
 #include "graphics/graph2d/message.h"
-// #include "graphics/graph2d/tim2.h" // CopySprDToSpr
+#include "graphics/graph2d/tim2.h" // CopySprDToSpr
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/motion/mdlwork.h"

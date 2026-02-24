@@ -103,6 +103,8 @@ SDL_AppResult MikuPan_Init()
 
     info_log("GLad version loaded %d", gladLoadGLLoader((void*)SDL_GL_GetProcAddress));
 
+    glad_glDepthMask(GL_TRUE);
+
     MikuPan_InitUi(window, gl_context);
     MikuPan_InitShaders();
     MikuPan_InitPipeline();
@@ -300,54 +302,26 @@ void MikuPan_Render2DMessage(DISP_SPRT *sprite)
                          sprite->alpha, sprite->rot, sprite->att & 0x2, sprite->att & 0x1, curr_fnt_texture);
 }
 
-static inline void PS2_GetViewport(
-    float *vx, float *vy, float *vw, float *vh, float *scale)
-{
-    float sx = window_width  / PS2_RESOLUTION_X_FLOAT;
-    float sy = window_height / PS2_RESOLUTION_Y_FLOAT;
 
-    *scale = (sx < sy) ? sx : sy;
-
-    *vw = PS2_RESOLUTION_X_FLOAT * (*scale);
-    *vh = PS2_RESOLUTION_Y_FLOAT * (*scale);
-
-    *vx = (window_width  - *vw) * 0.5f;
-    *vy = (window_height - *vh) * 0.5f;
-}
 
 void MikuPan_RenderSquare(float x1, float y1, float x2, float y2,
                           float x3, float y3, float x4, float y4,
                           u_char r, u_char g, u_char b, u_char a)
 {
-    /* -------------------------------------------------- */
-    /* 1. Get PS2 virtual viewport                        */
-    /* -------------------------------------------------- */
-    float vx, vy, vw, vh, scale;
-    PS2_GetViewport(&vx, &vy, &vw, &vh, &scale);
+    float vx, vy, vw, vh, scale = 0.0f;
+    MikuPan_GetPS2Viewport(window_width, window_height, &vx, &vy, &vw, &vh, &scale);
 
-    /* -------------------------------------------------- */
-    /* 2. Apply PS2 screen center offset (GS-style)       */
-    /* -------------------------------------------------- */
     x1 += PS2_CENTER_X; y1 += PS2_CENTER_Y;
     x2 += PS2_CENTER_X; y2 += PS2_CENTER_Y;
     x3 += PS2_CENTER_X; y3 += PS2_CENTER_Y;
     x4 += PS2_CENTER_X; y4 += PS2_CENTER_Y;
 
-    /* -------------------------------------------------- */
-    /* 3. Collect vertices (still PS2 pixel space)        */
-    /* -------------------------------------------------- */
     float px[4] = { x1, x2, x3, x4 };
     float py[4] = { y1, y2, y3, y4 };
 
-    /* -------------------------------------------------- */
-    /* 4. Find quad center                                */
-    /* -------------------------------------------------- */
     float cx = (px[0] + px[1] + px[2] + px[3]) * 0.25f;
     float cy = (py[0] + py[1] + py[2] + py[3]) * 0.25f;
 
-    /* -------------------------------------------------- */
-    /* 5. Classify TL / TR / BR / BL                      */
-    /* -------------------------------------------------- */
     float tlx, tly, trx, try_, brx, bry, blx, bly;
 
     for (int i = 0; i < 4; i++)
@@ -358,9 +332,6 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2,
         else                                { blx = px[i]; bly = py[i]; }
     }
 
-    /* -------------------------------------------------- */
-    /* 6. PS2 → window pixels (uniform scale + center)   */
-    /* -------------------------------------------------- */
     float wx_tl = vx + tlx * scale;
     float wy_tl = vy + tly * scale;
 
@@ -373,9 +344,6 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2,
     float wx_bl = vx + blx * scale;
     float wy_bl = vy + bly * scale;
 
-    /* -------------------------------------------------- */
-    /* 7. Window → NDC                                    */
-    /* -------------------------------------------------- */
     float ndc_tl_x = (wx_tl / window_width) * 2.0f - 1.0f;
     float ndc_tl_y = 1.0f - (wy_tl / window_height) * 2.0f;
 
@@ -388,9 +356,6 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2,
     float ndc_bl_x = (wx_bl / window_width) * 2.0f - 1.0f;
     float ndc_bl_y = 1.0f - (wy_bl / window_height) * 2.0f;
 
-    /* -------------------------------------------------- */
-    /* 8. Build triangles                                 */
-    /* -------------------------------------------------- */
     float vtx[12] = {
         /* Triangle 1 */
         ndc_tl_x, ndc_tl_y,
@@ -403,9 +368,6 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2,
         ndc_bl_x, ndc_bl_y
     };
 
-    /* -------------------------------------------------- */
-    /* 9. Draw                                           */
-    /* -------------------------------------------------- */
     MikuPan_SetCurrentShaderProgram(UNTEXTURED_SPRITE_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION2);
 
@@ -478,6 +440,11 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
 
 void MikuPan_RenderBoundingBox(sceVu0FVECTOR *vertices)
 {
+    if (!MikuPan_IsBoundingBoxRendering())
+    {
+        return;
+    }
+
     MikuPan_SetShaderProgramWithBackup(BOUNDING_BOX_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4);
 

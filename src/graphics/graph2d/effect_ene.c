@@ -29,10 +29,11 @@
 #include "data/eto_rgb.h"          // static u_char eto_rgb[5][3];
 #include "effect_oth.h"
 #include "enums.h"
+#include "graphics/graph3d/gra3d.h"
 
 static sceVu0FVECTOR reserve_lig;
 static sceVu0FVECTOR spos[96];
-static u_int enedmg_tex_addr[4];
+static int64_t enedmg_tex_addr[4];
 static NEW_PERTICLE new_perticle[44];
 
 #define PI 3.1415927f

@@ -1,4 +1,4 @@
-#include "common.h"#include "common.h"
+#include "common.h"
 #include "typedefs.h"
 #include "door_conte.h"
 
@@ -7,8 +7,8 @@
 #include "ingame/map/door_conte.h"
 #include "ingame/map/door_ctl.h"
 #include "ingame/map/doortype.h"
-// #include "ingame/map/map_ctrl.h" // GetPointHeight
-// #include "ingame/plyr/plyr_ctl.h" // SetPlyrAnime
+#include "ingame/map/map_ctrl.h" // GetPointHeight
+#include "ingame/plyr/plyr_ctl.h" // SetPlyrAnime
 #include "main/glob.h"
 
 static void DoorConteInit();

@@ -83,4 +83,5 @@ char CheckGlistComplete(u_int list)
 
 char CheckGlistRareGhost(u_int kind, u_int no)
 {
+    return 1;
 }

@@ -80,6 +80,7 @@ void CameraCntRenew()
 
 int isCameraTopMenu()
 {
+    return 0;
 }
 
 void OutGameInitCamera()
@@ -88,10 +89,12 @@ void OutGameInitCamera()
 
 int isCameraEnd()
 {
+    return 1;
 }
 
 float GetCamDispAlpha()
 {
+    return 0.5f;
 }
 
 void OpenCameraMenu()

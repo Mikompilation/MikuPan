@@ -450,6 +450,9 @@ void SetRareGhostDispAlpha(int wrk_no, int rg_no)
         alp_no = rg_end_dat[rg_dat[rg_no].end].alp_no;
         rg_alp = rg_alp_end[alp_no];
     break;
+    default:
+            alp_no = rg_end_dat[rg_dat[rg_no].end].alp_no;
+            rg_alp = rg_alp_end[alp_no];
     }
 
     if (count == 0)

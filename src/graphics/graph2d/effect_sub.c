@@ -9,20 +9,21 @@
 #include "sce/libvu0.h"
 
 // #include "os/pad.h"
-#include "mikupan/mikupan_memory.h"
-#include "os/system.h"
-#include "main/glob.h"
-#include "ingame/ig_init.h"
 #include "common/ul_math.h"
+#include "graphics/graph2d/effect_oth.h"
 #include "graphics/graph2d/sprt.h"
 #include "graphics/graph2d/tim2.h"
-#include "graphics/graph2d/effect_oth.h"
 #include "graphics/graph2d/tim2_new.h"
+#include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
-#include "graphics/graph3d/libsg.h"
+#include "ingame/ig_init.h"
+#include "main/glob.h"
 #include "mikupan/gs/gs_server_c.h"
+#include "mikupan/mikupan_memory.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "os/pad.h"
+#include "os/system.h"
 
 typedef struct {
 	int screen_flag;
@@ -2524,7 +2525,7 @@ void CheckPointDepth(PP_JUDGE *ppj)
     };
 	float fr_f;
 	static sceGsStoreImage gs_simage1;
-	Q_WORDDATA q;
+	Q_WORDDATA q = {0};
 	int n1;
 	int n2;
 	u_int ui;

@@ -292,6 +292,7 @@ void SeCmdGetRotRatio()
 int SeCmdSetPitch(int sw_no, u_short pitch)
 {  
     SetIopCmdSm(IC_SE_PITCH, sw_no, pitch, 0);
+    return 1;
 }
 
 void SeCmdGetDataPitch(int se_req_no)

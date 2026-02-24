@@ -796,7 +796,7 @@ u_int Tim2LoadPicture2(TIM2_PICTUREHEADER *ph, u_int tbp, u_int cbp, u_int offse
 
 u_int Tim2LoadPicture(TIM2_PICTUREHEADER *ph, u_int tbp, u_int cbp)
 {
-    Tim2LoadPicture2(ph, tbp, cbp, 0);
+    return Tim2LoadPicture2(ph, tbp, cbp, 0);
 }
 
 u_int Tim2LoadImage2(TIM2_PICTUREHEADER *ph, u_int tbp, u_int offset)
@@ -915,7 +915,7 @@ u_int Tim2LoadImage2(TIM2_PICTUREHEADER *ph, u_int tbp, u_int offset)
 
 u_int Tim2LoadImage(TIM2_PICTUREHEADER *ph, u_int tbp)
 {
-    Tim2LoadImage2(ph, tbp, 0);
+    return Tim2LoadImage2(ph, tbp, 0);
 }
 
 u_int Tim2LoadClut2(TIM2_PICTUREHEADER *ph, u_int cbp, u_int offset)
@@ -1011,7 +1011,7 @@ u_int Tim2LoadClut2(TIM2_PICTUREHEADER *ph, u_int cbp, u_int offset)
 
 u_int Tim2LoadClut(TIM2_PICTUREHEADER *ph, u_int cbp)
 {
-    Tim2LoadClut2(ph, cbp, 0);
+    return Tim2LoadClut2(ph, cbp, 0);
 }
 
 int Tim2TakeSnapshot(sceGsDispEnv *d0, sceGsDispEnv *d1, char *pszFname)
@@ -1678,7 +1678,11 @@ void SetSprFile(int64_t addr)
 
 void SetSprFile2(int64_t addr, u_int offset)
 {
-    addr = MikuPan_GetHostAddress(addr);
+    if (MikuPan_GetHostAddress(addr) != -1)
+    {
+        addr = MikuPan_GetHostAddress(addr);
+    }
+
     MakeTim2ClutDirect3(addr, -1, -1, offset);
 }
 

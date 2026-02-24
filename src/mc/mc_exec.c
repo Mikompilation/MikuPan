@@ -10,6 +10,7 @@
 #include "mc/mc_main.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #define FRAMES_PER_SECOND  (60)
 #define SECONDS_PER_MINUTE (60)

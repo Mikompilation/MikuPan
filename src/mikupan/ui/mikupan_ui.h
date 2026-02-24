@@ -41,5 +41,6 @@ extern "C"
     void MikuPan_ShowTextureList();
     void MikuPan_UiHandleShortcuts();
     void MikuPan_UiMenuBar();
+    int MikuPan_IsBoundingBoxRendering();
 }
 #endif //MIKUPAN_IMGUI_WINDOW_H

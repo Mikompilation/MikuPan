@@ -1553,6 +1553,7 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
             break;
             }
         break;
+        default: return;
         }
 
         for (i = 0; tbl[i] != 0xffffffff; i++)
