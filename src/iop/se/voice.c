@@ -135,10 +135,7 @@ void FillAdpcmHeader(int vNo)
     if (LOOPSTART(v->header))
     {
         v->lsa = v->ssa & ~0x7;
-        printf("LoopStart\n");
     }
-
-    printf("HEADER \n");
 }
 
 void SetPitch(int vNo, u_short val)

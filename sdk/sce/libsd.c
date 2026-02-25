@@ -11,9 +11,9 @@ static int totalAmt;
 int sceSdVoiceTrans(short channel, u_short mode, void *m_addr, u_int s_addr,
                     u_int size)
 {
-    info_log("VOICE TRANS \n");
+    //info_log("VOICE TRANS");
     memcpy(&audioBuffer[s_addr], m_addr, size);
-    totalAmt += size;
+    //totalAmt += size;
     return size;
 }
 
