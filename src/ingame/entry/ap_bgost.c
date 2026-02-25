@@ -80,7 +80,7 @@ int BindGhostLoad(void)
         if (IsLoadEndAll() != 0)
         {
             motInitEnemyMdl((u_int *)bgst_wrk.mdl_adr, jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].mdl_no);
-            LoadEneDmgTex(jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].mdl_no, (u_int *)(bgst_wrk.mot_adr + 0x98000));
+            LoadEneDmgTex(jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].mdl_no, (u_int *)(bgst_wrk.mot_adr + ENE_DMG_TEX_BASE_ADDRESS));
 
             LoadReq((jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].anm_no + M000_MIKU_ANM), bgst_wrk.mot_adr);
 

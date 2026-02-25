@@ -5,7 +5,7 @@
 #include "typedefs.h"
 
 extern SPRT_DAT hintdat[];
-// extern SPRT_DAT hintreadat[];
+extern SPRT_DAT hintreadat[];
 extern int pazene_load_tbl[];
 // extern int frm_type;
 // extern int ers_type;

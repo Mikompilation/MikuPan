@@ -1,18 +1,20 @@
 #include "common.h"
 #include "pht_make.h"
 
-/* data 33fbd8 */ SPRT_DAT hintdat[0];
-/* data 3407f8 */ SPRT_DAT hintreadat[0];
-/* data 340e58 */ int pazene_load_tbl[0];
-/* sdata 357220 */ int frm_type;
-/* sdata 357224 */ int ers_type;
-/* sdata 357244 */ int hint_2d;
-/* sdata 357248 */ int hint_rea;
-/* sdata 35724c */ int hint_3d;
-/* sdata 357250 */ int hint_2d_num;
-/* sdata 357254 */ int hint_3d_num;
-/* sdata 357258 */ int pic_save_flag;
-/* sdata 35725c */ int pht_finder_off;
+
+#include "data/hintdat.h"
+#include "data/hintreadat.h"
+#include "data/pazene_load_tbl.h"
+
+/* sdata 357220 */ int frm_type = 2;
+/* sdata 357224 */ int ers_type = 1;
+/* sdata 357244 */ int hint_2d = 0;
+/* sdata 357248 */ int hint_rea = 0;
+/* sdata 35724c */ int hint_3d = 0;
+/* sdata 357250 */ int hint_2d_num = 0;
+/* sdata 357254 */ int hint_3d_num = 0;
+/* sdata 357258 */ int pic_save_flag = 0;
+/* sdata 35725c */ int pht_finder_off = 0;
 
 void InitPhotoMake()
 {

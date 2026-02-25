@@ -11,5 +11,9 @@ float MikuPan_GetFrameRate();
 int MikuPan_IsWireframeRendering();
 int MikuPan_IsNormalsRendering();
 int MikuPan_IsBoundingBoxRendering();
+int MikuPan_IsMesh0x82Rendering();
+int MikuPan_IsMesh0x32Rendering();
+int MikuPan_IsMesh0x12Rendering();
+int MikuPan_IsMesh0x2Rendering();
 
 #endif //MIKUPAN_IMGUI_WINDOW_C_H

@@ -13,4 +13,5 @@ float MikuPan_ConvertScaleColor(unsigned char color_fragment);
 unsigned char MikuPan_GamePadAxisToPS2(int sdl_axis, int deadzone);
 void MikuPan_GetPS2Viewport(int width, int height,
     float *vx, float *vy, float *vw, float *vh, float *scale);
+void MikuPan_FixUV(float* uv, int num);
 #endif//MIKUPAN_MIKUPAN_UTILS_H

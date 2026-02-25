@@ -21,8 +21,10 @@ extern u_int shader_list[MAX_SHADER_PROGRAMS];
 int MikuPan_InitShaders();
 void MikuPan_BackUpCurrentShaderProgram();
 void MikuPan_RestoreCurrentShaderProgram();
-void MikuPan_SetCurrentShaderProgram(int shader_program);
+u_int MikuPan_SetCurrentShaderProgram(int shader_program);
 void MikuPan_SetShaderProgramWithBackup(int shader_program);
 u_int MikuPan_GetCurrentShaderProgram();
+void MikuPan_SetUniformMatrix4fvToAllShaders(float* mat, char* name);
+void MikuPan_SetUniform1iToAllShaders(int value, char* name);
 
 #endif//MIKUPAN_MIKUPAN_SHADER_H

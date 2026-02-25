@@ -1,7 +1,4 @@
 #include "mikupan_utils.h"
-
-#include "rendering/mikupan_renderer.h"
-
 #include <stdlib.h>
 
 void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float* out, float screen_width, float screen_height, float x, float y)
@@ -42,10 +39,19 @@ float MikuPan_ConvertScaleColor(unsigned char color_fragment)
 unsigned char MikuPan_GamePadAxisToPS2(int sdl_axis, int deadzone)
 {
     if (abs(sdl_axis) < deadzone)
+    {
         sdl_axis = 0;
+    }
 
-    if (sdl_axis < -32768) sdl_axis = -32768;
-    if (sdl_axis >  32767) sdl_axis =  32767;
+    if (sdl_axis < -32768)
+    {
+        sdl_axis = -32768;
+    }
+
+    if (sdl_axis >  32767)
+    {
+        sdl_axis =  32767;
+    }
 
     int ps2 = (sdl_axis + 32768) * 255 / 65535;
     return (unsigned char)ps2;
@@ -64,4 +70,23 @@ void MikuPan_GetPS2Viewport(int width, int height,
 
     *vx = ((float)width  - *vw) * 0.5f;
     *vy = ((float)height - *vh) * 0.5f;
+}
+
+void MikuPan_FixUV(float* uv, int num)
+{
+    typedef struct
+    {
+        float u;
+        float v;
+    } v2;
+
+    v2* uvf = (v2*)uv;
+
+    for (int i = 0; i < num; i++)
+    {
+        if (*((int*)&uvf[i].v) == 1)
+        {
+            uvf[i].v = uvf[i - 2].v;
+        }
+    }
 }

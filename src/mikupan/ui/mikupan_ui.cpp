@@ -30,6 +30,10 @@ int render_wireframe = 0;
 int render_normals = 0;
 bool show_texture_list = false;
 bool show_bounding_boxes = false;
+bool show_mesh_0x82 = true;
+bool show_mesh_0x32 = true;
+bool show_mesh_0x12 = true;
+bool show_mesh_0x2 = true;
 
 FrameTimeGraph::FrameTimeGraph(int max_samples, float ms_scale) : max_samples_(std::max(8, max_samples)), ms_scale_(ms_scale)
 {
@@ -281,6 +285,15 @@ void MikuPan_UiMenuBar()
                 ImGui::Toggle("Textures", (bool*)&show_texture_list, ImGuiToggleFlags_Animated);
                 ImGui::Toggle("BoundingBox", (bool*)&show_bounding_boxes, ImGuiToggleFlags_Animated);
 
+                if (ImGui::BeginMenu("Meshes"))
+                {
+                    ImGui::Toggle("Mesh 0x82", (bool*)&show_mesh_0x82, ImGuiToggleFlags_Animated);
+                    ImGui::Toggle("Mesh 0x32", (bool*)&show_mesh_0x32, ImGuiToggleFlags_Animated);
+                    ImGui::Toggle("Mesh 0x12", (bool*)&show_mesh_0x12, ImGuiToggleFlags_Animated);
+                    ImGui::Toggle("Mesh 0x2", (bool*)&show_mesh_0x2, ImGuiToggleFlags_Animated);
+                    ImGui::EndMenu();
+                }
+
                 if (ImGui::Button("Clear Texture Cache"))
                 {
                     MikuPan_RequestFlushTextureCache();
@@ -310,4 +323,23 @@ void MikuPan_UiMenuBar()
 int MikuPan_IsBoundingBoxRendering()
 {
     return show_bounding_boxes;
+}
+
+int MikuPan_IsMesh0x82Rendering()
+{
+    return show_mesh_0x82;
+}
+
+int MikuPan_IsMesh0x32Rendering()
+{
+    return show_mesh_0x32;
+}
+
+int MikuPan_IsMesh0x12Rendering()
+{
+    return show_mesh_0x12;
+}
+int MikuPan_IsMesh0x2Rendering()
+{
+    return show_mesh_0x2;
 }

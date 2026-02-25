@@ -42,5 +42,9 @@ extern "C"
     void MikuPan_UiHandleShortcuts();
     void MikuPan_UiMenuBar();
     int MikuPan_IsBoundingBoxRendering();
+    int MikuPan_IsMesh0x82Rendering();
+    int MikuPan_IsMesh0x32Rendering();
+    int MikuPan_IsMesh0x12Rendering();
+    int MikuPan_IsMesh0x2Rendering();
 }
 #endif //MIKUPAN_IMGUI_WINDOW_H

@@ -89,16 +89,16 @@ void MikuPan_RestoreCurrentShaderProgram()
     glad_glUseProgram(backup_current_program);
 }
 
-void MikuPan_SetCurrentShaderProgram(int shader_program)
+u_int MikuPan_SetCurrentShaderProgram(int shader_program)
 {
     if (shader_program >= MAX_SHADER_PROGRAMS)
     {
-        return;
+        return -1;
     }
 
     current_program = shader_list[shader_program];
-
     glad_glUseProgram(current_program);
+    return current_program;
 }
 
 void MikuPan_SetShaderProgramWithBackup(int shader_program)
@@ -110,4 +110,25 @@ void MikuPan_SetShaderProgramWithBackup(int shader_program)
 u_int MikuPan_GetCurrentShaderProgram()
 {
     return current_program;
+}
+
+void MikuPan_SetUniformMatrix4fvToAllShaders(float *mat, char *name)
+{
+    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
+    {
+        glad_glUniformMatrix4fv(
+            glad_glGetUniformLocation(MikuPan_SetCurrentShaderProgram(i), name),
+            1, GL_FALSE,
+            (float *) mat);
+    }
+}
+
+void MikuPan_SetUniform1iToAllShaders(int value, char *name)
+{
+    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
+    {
+        glad_glUniform1i(
+            glad_glGetUniformLocation(MikuPan_SetCurrentShaderProgram(i), name),
+            value);
+    }
 }

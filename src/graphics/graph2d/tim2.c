@@ -2159,7 +2159,7 @@ void DispSprD(DISP_SPRT *s)
         //pbuf[ndpkt++].ui32[3] = 0;
     }
 
-    MikuPan_RenderSprite3D((sceGsTex0*)&tex0, render_buffer);
+    MikuPan_RenderSprite2D((sceGsTex0*)&tex0, render_buffer);
 }
 
 void CopySqrDToSqr(DISP_SQAR *s, SQAR_DAT *d)

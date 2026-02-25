@@ -3088,7 +3088,7 @@ int MissionDataLoadReq(MSN_LOAD_DAT* dat)
     {
         if (dat->file_type == 9)
         {
-            LoadEneDmgTex(dat->tmp_no, (u_int *)(dat->addr + 0x98000));
+            LoadEneDmgTex(dat->tmp_no, (u_int *)(dat->addr + ENE_DMG_TEX_BASE_ADDRESS));
             ret = LoadReq(dat->file_no, (int64_t)dat->addr);
         }
         else

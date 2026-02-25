@@ -44,6 +44,7 @@ int sceGsSwapDBuff(sceGsDBuff* db, int id)
 
 int sceGsSetDefStoreImage(sceGsStoreImage* sp, short sbp, short sbw, short spsm, short x, short y, short w, short h)
 {
+    return 1;
     memset(sp, 0, sizeof(sceGsStoreImage));
 
     /// Setting up the BITBLTBUF tag

@@ -2160,6 +2160,9 @@ int CheckModelBoundingBox(sceVu0FMATRIX lwmtx, sceVu0FVECTOR *bbox)
     MikuPan_SetModelTransformMatrix(lwmtx);
     DrawBoundingBox(bbox);
 
+    /// Enabling makes it so the model is always drawn
+    return 1;
+
     if (clip_value_check != 0)
     {
         clip1 = 0x3f;

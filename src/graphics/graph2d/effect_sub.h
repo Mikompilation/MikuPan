@@ -50,8 +50,6 @@ extern int vib2_time;
 extern int vib2_pow;
 extern int tecmo_logo_flow;
 
-#include "graphics/graph2d/effect_sub.h"
-
 void InitEffectSub();
 void SetParam(int alp, int time, u_char r, u_char g, u_char b, int flag);
 int ScreenCtrl();

@@ -6,17 +6,18 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "main/glob.h"
-#include "ingame/ig_glob.h"
+#include "graphics/graph2d/effect_scr.h"
+#include "graphics/graph3d/load3d.h"
+#include "graphics/motion/mdlwork.h"
 #include "ingame/camera/camera.h"
-#include "ingame/event/ev_load.h"
-#include "ingame/map/map_area.h"
-#include "ingame/entry/entry.h"
-#include "ingame/entry/ap_rgost.h"
 #include "ingame/entry/ap_fgost.h"
 #include "ingame/entry/ap_ggost.h"
-#include "graphics/graph2d/effect_scr.h"
-#include "graphics/motion/mdlwork.h"
+#include "ingame/entry/ap_rgost.h"
+#include "ingame/entry/entry.h"
+#include "ingame/event/ev_load.h"
+#include "ingame/ig_glob.h"
+#include "ingame/map/map_area.h"
+#include "main/glob.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/fileload.h"
 

@@ -329,6 +329,7 @@ u_int* motInitAniCtrl(ANI_CTRL *ani_ctrl, u_int *anm_p, u_int *mdl_p, u_int *pkt
 
     motSetHierarchy(GetCoordP(hs), ani_ctrl->mot.dat);
 
+
     return pkt_p;
 }
 

@@ -1,6 +1,6 @@
 #version 330 core
 
-layout(location = 0) in vec2 aUV;
+layout(location = 0) in vec4 aUV;
 layout(location = 1) in vec4 inColor;
 layout(location = 2) in vec4 aPos;
 
@@ -14,6 +14,6 @@ out vec4 uColor;
 void main()
 {
     gl_Position = aPos;
-    vUV = aUV;
+    vUV = vec2(aUV);
     uColor = inColor;
 }

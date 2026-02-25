@@ -9,20 +9,19 @@ uniform int renderNormals;
 
 void main()
 {
+    vec4 tex = texture(uTexture, vUV);
+
+    if (tex.a == 0.0f)
+    {
+        discard;
+    }
+
     if (renderNormals == 1)
     {
         FragColor = vec4(normalize(vNormal), 1.0f);
     }
     else
     {
-        vec3 lightDir = normalize(vec3(0.3, 0.7, 0.6));
-        float ndl = max(dot(normalize(vNormal), -lightDir), 0.0);
-        vec4 tex = texture(uTexture, vUV);
         FragColor = vec4(tex.rgb, tex.a);
-
-        //if (tex.a == 0.0f)
-        //{
-        //    discard;
-        //}
     }
 }

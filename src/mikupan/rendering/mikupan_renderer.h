@@ -26,10 +26,12 @@ void MikuPan_RenderSquare(float x1, float y1, float x2, float y2, float x3, floa
 void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r, u_char g, u_char b, u_char a);
 void MikuPan_RenderBoundingBox(sceVu0FVECTOR* vertices);
 void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r, u_char g, u_char b, u_char a, float rotation, bool flipX, bool flipY, MikuPan_TextureInfo* texture_info);
+void MikuPan_RenderSprite2D(sceGsTex0 *tex, float* buffer);
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer);
 void MikuPan_SetupFntTexture();
 void MikuPan_SetWorldScreen();
 float* MikuPan_GetWorldScreenMatrix();
+void MikuPan_SetWeightedMesh(int value);
 int MikuPan_GetTextureIndex(int fnt);
 void MikuPan_SetFontTexture(int fnt);
 void MikuPan_DeleteTexture(MikuPan_TextureInfo* texture_info);

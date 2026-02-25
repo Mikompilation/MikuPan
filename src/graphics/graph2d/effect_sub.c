@@ -968,10 +968,11 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
         1.0f, 2.0f, 4.0f, 8.0f, 16.0f,
         32.0f, 64.0f, 128.0f, 256.0f, 512.0f, 1024.f,
     };
-	float stq[2] = { 0.01f, 0.99f };
+	float stq[2] = { 0.0f, 1.0f };
 	U32DATA ts[4];
 	U32DATA tt[4];
 	U32DATA tq[4];
+
 
     for (i = 0; i < 4; i++)
     {
@@ -1028,11 +1029,8 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
         }
 
         tq[i].fl32 = 1.0f / ivec[i][3];
-        //ts[i].fl32 = (tw * stq[i % 2] * tq[i].fl32) / twoby[log_2(tw)];
-        //tt[i].fl32 = (th * stq[i / 2] * tq[i].fl32) / twoby[log_2(th)];
-
-        ts[i].fl32 = stq[i % 2];
-        tt[i].fl32 = stq[i % 2];
+        ts[i].fl32 = (tw * stq[i % 2] * tq[i].fl32) / twoby[log_2(tw)];
+        tt[i].fl32 = (th * stq[i / 2] * tq[i].fl32) / twoby[log_2(th)];
     }
     
     //if (w == 0.0f)
@@ -1075,15 +1073,15 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
 
         for (i = 0; i < 4; i++)
         {            
-            pbuf[ndpkt].fl32[0] = ts[i].fl32;
-            pbuf[ndpkt].fl32[1] = tt[i].fl32;
-            pbuf[ndpkt].fl32[2] = tq[i].fl32;
+            pbuf[ndpkt].fl32[0] = stq[i % 2];
+            pbuf[ndpkt].fl32[1] = stq[i % 2];
+            pbuf[ndpkt].fl32[2] = 0.0f;
             pbuf[ndpkt++].fl32[3] = 0.0f;
             
             pbuf[ndpkt].fl32[0] = (float)r/255.0f;
             pbuf[ndpkt].fl32[1] = (float)g/255.0f;
             pbuf[ndpkt].fl32[2] = (float)b/255.0f;
-            pbuf[ndpkt++].fl32[3] = (float)a/128.0f;
+            pbuf[ndpkt++].fl32[3] = (float)a/255.0f;
 
             pbuf[ndpkt].fl32[0] = (float)ivec[i][0];
             pbuf[ndpkt].fl32[1] = (float)ivec[i][1];
