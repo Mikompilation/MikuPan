@@ -421,7 +421,7 @@ int CheckBoundingBox(u_int *prim)
     DrawBoundingBox((sceVu0FVECTOR*)&prim[4]);
 
     // Re-enable this line to have stuff render, right now, nothing is within BoundingBox
-    return 1;
+    //return 1;
 
     pvec = (sceVu0FVECTOR *) &prim[4];
 

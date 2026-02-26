@@ -562,7 +562,10 @@ void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
     glad_glBindVertexArray(pipeline->vao);
     MikuPan_SetTexture(tex);
 
-    MikuPan_SetRenderState3D();
+    MikuPan_SetRenderState2D();
+
+    glad_glEnable(GL_DEPTH_TEST);
+    glad_glDepthFunc(GL_LEQUAL);
 
     glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
     glad_glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline->buffers[0].buffer_length, buffer);
@@ -658,7 +661,7 @@ void MikuPan_Camera(SgCAMERA *camera)
     // Projection -> camera->vcv
     mat4 projection = {0};
     float aspect = (float) window_width / (float) window_height;
-    glm_perspective(camera->fov, aspect, 125.0f, camera->farz,
+    glm_perspective(camera->fov, aspect, 10.0f, camera->farz,
                     projection);
 
     glm_mat4_mul(projection, WorldView, WorldScreen);
