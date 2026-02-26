@@ -39,6 +39,7 @@ MikuPan_TextureInfo* MikuPan_CreateGLTexture(sceGsTex0 *tex0);
 void MikuPan_SetTexture(sceGsTex0 *tex0);
 void MikuPan_Camera(SgCAMERA *camera);
 void MikuPan_SetupMirrorMtx(float* wv);
+void MikuPan_Setup3D();
 void MikuPan_Shutdown();
 void MikuPan_EndFrame();
 void MikuPan_SetModelTransformMatrix(sceVu0FVECTOR* m);

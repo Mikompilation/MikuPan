@@ -670,8 +670,16 @@ void MikuPan_Camera(SgCAMERA *camera)
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)projection, "projection");
 }
 
+void MikuPan_Setup3D()
+{
+    MikuPan_SetRenderState3D();
+    glad_glCullFace(GL_BACK);
+}
+
 void MikuPan_SetupMirrorMtx(float* mtx)
 {
+    MikuPan_SetRenderState3DMirror();
+
     mat4 out = {0};
     mat4 m = {0};
 

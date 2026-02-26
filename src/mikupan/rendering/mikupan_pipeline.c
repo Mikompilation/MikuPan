@@ -251,11 +251,15 @@ MikuPan_PipelineInfo* MikuPan_GetPipelineInfo(enum MikuPan_PipelineType pipeline
 
 void MikuPan_SetRenderState3D()
 {
-    //glad_glDepthMask(GL_TRUE);
     glad_glEnable(GL_CULL_FACE);
     glad_glEnable(GL_DEPTH_TEST);
     glad_glDepthFunc(GL_LEQUAL);
-    //glad_glDepthRange(0.1f, 1.0f);
+}
+
+void MikuPan_SetRenderState3DMirror()
+{
+    MikuPan_SetRenderState3D();
+    glad_glCullFace(GL_FRONT);
 }
 
 void MikuPan_SetRenderState2D()

@@ -1053,4 +1053,6 @@ void MirrorRender(SgCAMERA *camera,
 
     SetVF2Register(rreg);
     SgSetRefCamera(camera);
+
+    MikuPan_Setup3D();
 }
