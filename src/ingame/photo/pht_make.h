@@ -7,20 +7,20 @@
 extern SPRT_DAT hintdat[];
 extern SPRT_DAT hintreadat[];
 extern int pazene_load_tbl[];
-// extern int frm_type;
-// extern int ers_type;
+extern int frm_type;
+extern int ers_type;
 extern int hint_2d;
 extern int hint_rea;
 extern int hint_3d;
 extern int hint_2d_num;
 extern int hint_3d_num;
-// extern int pic_save_flag;
+extern int pic_save_flag;
 extern int pht_finder_off;
 
 void InitPhotoMake();
 void CopyScreenToBuffer(int addr, int szfl, int mx, int my, int mw, int mh);
 void DrawPhotoBuffer(u_int pri, int addr, int szfl, int x, int y, int szw,
-                     int szh, int mszw, int mszh, int ftype, int alp,
+                     int szh, int mszw, int mszh, int ftype, u_char alp,
                      int ztype);
 void CompressData(int addri, int addro, int n);
 void UncompressData(int addri, int n, int addro);
@@ -34,7 +34,7 @@ void DrawSPhotoFromSmallPhotoAreaAD(int addr, int n, int pri, int ftype, int x,
 void DrawSPhotoFromSmallPhotoArea2(int n, int pri, int ftype, int x, int y,
                                    int szw, int szh, u_char alp);
 void DrawSPhotoFromSmallPhotoArea2AD(int addr, int n, int pri, int ftype, int x,
-                                     int y, int szw, int szh, int alp);
+                                     int y, int szw, int szh, u_char alp);
 void CompPhotoFromWorkArea(int n);
 void DrawPhotoFromWorkArea(int pri, int ftype, int x, int y, int szw, int szh,
                            u_char alp);
