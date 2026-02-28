@@ -108,7 +108,7 @@ void MikuPan_ReadFileInArchive64(int sector, int size, int64_t address)
 u_char MikuPan_OpenFile(const char *filename, void *buffer, int size)
 {
     std::filesystem::path filePath(filename);
-    filePath = filePath.relative_path();
+    filePath = std::filesystem::absolute(filePath);
     std::ifstream inFile;
 
     if (!std::filesystem::exists(filePath))
@@ -116,7 +116,7 @@ u_char MikuPan_OpenFile(const char *filename, void *buffer, int size)
         MikuPan_SaveFile(filename, buffer, 0);
     }
     inFile.open(filePath);
-    inFile.read((char *)buffer, size);
+    inFile.read((char *) buffer, size);
     inFile.close();
     return inFile.bad() == 0;
 }
@@ -124,13 +124,15 @@ u_char MikuPan_OpenFile(const char *filename, void *buffer, int size)
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size)
 {
     std::filesystem::path filePath(filename);
-    filePath = filePath.relative_path();
+    filePath = std::filesystem::absolute(filePath);
     std::ofstream outFile;
 
-    if (!std::filesystem::exists(filePath))
+    if (!std::filesystem::exists(filePath.remove_filename()))
     {
         std::filesystem::create_directories(filePath);
     }
+
+    filePath.replace_filename(filename);
 
     outFile.open(filePath, std::ios::binary);
     outFile.write((char *) buffer, size);
