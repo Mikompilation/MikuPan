@@ -6,44 +6,46 @@ typedef float _iconVu0FVECTOR[4];
 
 typedef struct
 {
-	unsigned char Head[4];
-	unsigned short Reserv1;
-	unsigned short OffsLF;
-	unsigned int Reserv2;
-	unsigned int TransRate;
-	_iconVu0IVECTOR BgColor[4];
-	_iconVu0FVECTOR LightDir[3];
-	_iconVu0FVECTOR LightColor[3];
-	_iconVu0FVECTOR Ambient;
-	unsigned char TitleName[68];
-	unsigned char FnameView[64];
-	unsigned char FnameCopy[64];
-	unsigned char FnameDel[64];
-	unsigned char Reserve3[512];
+    unsigned char Head[4];
+    unsigned short Reserv1;
+    unsigned short OffsLF;
+    unsigned int Reserv2;
+    unsigned int TransRate;
+    _iconVu0IVECTOR BgColor[4];
+    _iconVu0FVECTOR LightDir[3];
+    _iconVu0FVECTOR LightColor[3];
+    _iconVu0FVECTOR Ambient;
+    unsigned char TitleName[68];
+    unsigned char FnameView[64];
+    unsigned char FnameCopy[64];
+    unsigned char FnameDel[64];
+    unsigned char Reserve3[512];
 } sceMcIconSys;
 
 typedef struct
 {
-	unsigned char Resv2,Sec,Min,Hour;
-	unsigned char Day,Month;
-	unsigned short Year;
+    unsigned char Resv2, Sec, Min, Hour;
+    unsigned char Day, Month;
+    unsigned short Year;
 } sceMcStDateTime;
 
 typedef struct
 {
-	sceMcStDateTime _Create;
-	sceMcStDateTime _Modify;
-	unsigned int FileSizeByte;
-	unsigned short AttrFile;
-	unsigned short Reserve1;
-	unsigned int Reserve2;
-	unsigned int PdaAplNo;
-	unsigned char EntryName[32];
-} sceMcTblGetDir __attribute__((aligned (64)));
+    sceMcStDateTime _Create;
+    sceMcStDateTime _Modify;
+    unsigned int FileSizeByte;
+    unsigned short AttrFile;
+    unsigned short Reserve1;
+    unsigned int Reserve2;
+    unsigned int PdaAplNo;
+    unsigned char EntryName[32];
+} sceMcTblGetDir __attribute__((aligned(64)));
+
+extern int fd;
 
 int sceMcInit();
 int sceMcSync(int mode, int *cmd, int *result);
-int sceMcDelete(int	port, int slot, const char *name);
+int sceMcDelete(int port, int slot, const char *name);
 int sceMcFormat(int port, int slot);
 int sceMcMkdir(int port, int slot, const char *name);
 int sceMcGetInfo(int port, int slot, int *type, int *free, int *format);
@@ -51,7 +53,8 @@ int sceMcWrite(int fd, const void *buffer, int size);
 int sceMcRead(int fd, void *buffer, int size);
 int sceMcClose(int fd);
 int sceMcOpen(int port, int slot, const char *name, int mode);
-int sceMcGetDir(int port, int slot, const char *name, unsigned mode, int maxent, sceMcTblGetDir *table);
+int sceMcGetDir(int port, int slot, const char *name, unsigned mode, int maxent,
+                sceMcTblGetDir *table);
 int sceMcGetInfo(int port, int slot, int *type, int *free, int *format);
 
-#endif // SCE_LIBMC_H
+#endif// SCE_LIBMC_H
