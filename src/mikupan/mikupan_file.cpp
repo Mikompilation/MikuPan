@@ -6,11 +6,24 @@
 #include <filesystem>
 #include <fstream>
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
+#include <errno.h>
+
 extern "C" {
 #include "mikupan_memory.h"
 }
 
 static inline std::vector<int> file_loaded_address;
+static inline int fd;
 
 void MikuPan_LoadImgHdFile()
 {
@@ -105,40 +118,150 @@ void MikuPan_ReadFileInArchive64(int sector, int size, int64_t address)
     infile.close();
 }
 
-u_char MikuPan_OpenFile(const char *filename, void *buffer, int size)
+u_char MikuPan_OpenFile(const char *filename)
 {
     std::filesystem::path filePath(filename);
     filePath = std::filesystem::absolute(filePath);
-    std::ifstream inFile;
 
     if (!std::filesystem::exists(filePath))
     {
-        MikuPan_SaveFile(filename, buffer, 0);
+        MikuPan_WriteFile(filename, fd, 0x0, 0);
     }
-    inFile.open(filePath);
-    inFile.read((char *) buffer, size);
-    inFile.close();
-    return inFile.bad() == 0;
+
+#ifdef _WIN32
+    fd = _open(filePath, _O_CREAT | _O_BINARY);
+
+    if (fd < 0)
+    {
+        printf("File Open Error: \n", errno);
+        return -1
+    }
+#else
+    fd = open(filePath.c_str(), O_CREAT | O_RDWR, S_IRWXU);
+
+    if (fd < 0)
+    {
+        printf("File Open Error: %s\n", strerror(errno));
+        return -1;
+    }
+#endif
+
+    return 1;
 }
 
-u_char MikuPan_SaveFile(const char *filename, void *buffer, int size)
+int MikuPan_WriteFile(const char *filename, int fd, void *buffer, int size)
 {
+    int amtWritten;
     std::filesystem::path filePath(filename);
-    filePath = std::filesystem::absolute(filePath);
-    std::ofstream outFile;
-
-    if (!std::filesystem::exists(filePath.remove_filename()))
+    if (!std::filesystem::is_empty(filePath))
     {
-        std::filesystem::create_directories(filePath);
+        std::filesystem::path fileName(filename);
+        filePath = std::filesystem::absolute(filePath);
+        fileName = fileName.filename();
+
+        if (!std::filesystem::exists(filePath.remove_filename()))
+        {
+            std::filesystem::create_directories(filePath);
+        }
+
+        filePath.replace_filename(fileName);
+    }
+#ifdef _WIN32
+    if (fd == 0 && !std::filesystem::is_empty(filePath))
+    {
+        fd = _open(filePath, _O_CREAT | _O_BINARY);
+        if (fd < 0)
+        {
+            printf("File Open Error: \n", errno);
+            return -1;
+        }
+    }
+    amtWritten = _write(fd, buffer, size);
+    if (amtWritten < 0)
+    {
+        printf("File Write Error: \n", errno);
+        return -1;
     }
 
-    filePath.replace_filename(filename);
+    else
+    {
+        printf("No File Provided! \n");
+        return 0;
+    }
+#else
 
-    outFile.open(filePath, std::ios::binary);
-    outFile.write((char *) buffer, size);
-    outFile.close();
+    if (fd == 0 && !std::filesystem::is_empty(filePath))
+    {
+        fd = open(filePath.c_str(), O_CREAT | O_RDWR, S_IRWXU);
 
-    return outFile.bad() == 0;
+        if (fd < 0)
+        {
+            printf("File Open Error: %s\n", strerror(errno));
+            return -1;
+        }
+    }
+    amtWritten = write(fd, buffer, size);
+    if (amtWritten < 0)
+    {
+        printf("File Write Error: %s\n", strerror(errno));
+        return -1;
+    }
+    else
+    {
+        printf("No File Provided! \n");
+        return 0;
+    }
+
+    return amtWritten;
+#endif
+}
+
+int MikuPan_CreateDirectory(const char *path)
+{
+    std::filesystem::path folderPath(path);
+    folderPath = std::filesystem::absolute(folderPath);
+    if (std::filesystem::exists(folderPath))
+    {
+        return 0;
+    }
+    return std::filesystem::create_directories(folderPath);
+}
+
+int MikuPan_ReadFile(int fd, void *buffer, int size)
+{
+    int amtRead;
+#ifdef _WIN32
+    amtRead = _read(fd, buffer, size);
+    if (amtRead < 0)
+    {
+        printf("File Read Error\n");
+        return -1;
+    }
+
+#else
+    amtRead = read(fd, buffer, size);
+    if (amtRead < 0)
+    {
+        printf("File Read Error: %s\n", strerror(errno));
+        return -1;
+    }
+#endif
+
+    return amtRead;
+}
+
+void MikuPan_CloseFD()
+{
+#ifdef _WIN32
+    _close(fd);
+#else
+    close(fd);
+#endif
+}
+
+int GetFD()
+{
+    return fd;
 }
 
 u_int MikuPan_GetFileSize(const char *filename)

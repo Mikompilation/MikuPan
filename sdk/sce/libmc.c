@@ -6,6 +6,7 @@
 
 int sceMcInit()
 {
+    MikuPan_CreateDirectory("saves");
     return 1;
 }
 
@@ -32,7 +33,8 @@ int sceMcFormat(int port, int slot)
 
 int sceMcMkdir(int port, int slot, const char *name)
 {
-    return 0;
+    // Likely needs a constructed path based on port or slot + name
+    return MikuPan_CreateDirectory(name);
 }
 
 int sceMcGetInfo(int port, int slot, int *type, int *free, int *format)
@@ -45,22 +47,24 @@ int sceMcGetInfo(int port, int slot, int *type, int *free, int *format)
 
 int sceMcWrite(int fd, const void *buffer, int size)
 {
-    return 0;
+    return MikuPan_WriteFile("", fd, buffer, size);
 }
 
 int sceMcRead(int fd, void *buffer, int size)
 {
-    return MikuPan_OpenFile("", buffer, size);
+    return MikuPan_ReadFile(fd, buffer, size);
 }
 
 int sceMcClose(int fd)
 {
+    MikuPan_CloseFD();
     return 0;
 }
 
 int sceMcOpen(int port, int slot, const char *name, int mode)
 {
     info_log("CARD NAME: %s", name);
+    MikuPan_OpenFile(name);
     return 0;
 }
 
