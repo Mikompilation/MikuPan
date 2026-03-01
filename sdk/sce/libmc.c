@@ -6,8 +6,7 @@
 
 int sceMcInit()
 {
-    MikuPan_CreateDirectory("saves");
-    return 1;
+    return MikuPan_CreateDirectory("saves");
 }
 
 int sceMcSync(int mode, int *cmd, int *result)
@@ -57,15 +56,13 @@ int sceMcRead(int fd, void *buffer, int size)
 
 int sceMcClose(int fd)
 {
-    MikuPan_CloseFD();
-    return 0;
+    return MikuPan_CloseFD(fd);
 }
 
 int sceMcOpen(int port, int slot, const char *name, int mode)
 {
     info_log("CARD NAME: %s", name);
-    MikuPan_OpenFile(name);
-    return 0;
+    return MikuPan_OpenFile(name);
 }
 
 int sceMcGetDir(int port, int slot, const char *name, unsigned mode, int maxent,

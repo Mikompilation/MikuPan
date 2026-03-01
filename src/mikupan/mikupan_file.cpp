@@ -23,7 +23,6 @@ extern "C" {
 }
 
 static inline std::vector<int> file_loaded_address;
-static inline int fd;
 
 void MikuPan_LoadImgHdFile()
 {
@@ -118,8 +117,9 @@ void MikuPan_ReadFileInArchive64(int sector, int size, int64_t address)
     infile.close();
 }
 
-u_char MikuPan_OpenFile(const char *filename)
+int MikuPan_OpenFile(const char *filename)
 {
+    int fd;
     std::filesystem::path filePath(filename);
     filePath = std::filesystem::absolute(filePath);
 
@@ -146,7 +146,7 @@ u_char MikuPan_OpenFile(const char *filename)
     }
 #endif
 
-    return 1;
+    return fd;
 }
 
 int MikuPan_WriteFile(const char *filename, int fd, void *buffer, int size)
@@ -250,18 +250,13 @@ int MikuPan_ReadFile(int fd, void *buffer, int size)
     return amtRead;
 }
 
-void MikuPan_CloseFD()
+int MikuPan_CloseFD(int fd)
 {
 #ifdef _WIN32
-    _close(fd);
+    return _close(fd);
 #else
-    close(fd);
+    return close(fd);
 #endif
-}
-
-int GetFD()
-{
-    return fd;
 }
 
 u_int MikuPan_GetFileSize(const char *filename)

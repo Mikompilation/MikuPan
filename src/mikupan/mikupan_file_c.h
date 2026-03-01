@@ -12,7 +12,6 @@ u_char MikuPan_OpenFile(const char *filename);
 int MikuPan_ReadFile(int fd, void *buffer, int size);
 int MikuPan_WriteFile(const char *filename, int fd, void *buffer, int size);
 int MikuPan_CreateDirectory(const char *path);
-void MikuPan_CloseFD();
-int GetFD();
+int MikuPan_CloseFD(int fd);
 
 #endif//MIKUPAN_MIKUPAN_FILE_C_H
