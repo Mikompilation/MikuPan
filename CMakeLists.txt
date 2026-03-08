@@ -21,8 +21,13 @@ include(imgui)
 include(spdlog)
 include(cglm)
 
-set(MIKUPAN_SOURCES
-        "src/mikupan/mikupan_file.cpp"
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(AVFORMAT REQUIRED libavformat)
+pkg_check_modules(AVCODEC REQUIRED libavcodec)
+pkg_check_modules(SWSCALE REQUIRED libswscale)
+pkg_check_modules(AVUTIL REQUIRED libavutil)
+
+set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         "src/common/ul_math.c"
         "src/common/utility.c"
         "src/edit/test_2d.c"
@@ -217,6 +222,8 @@ set(MIKUPAN_SOURCES
         "src/mc/mc_at.c"
         "src/graphics/graph3d/vu_program.c"
         "src/mikupan/mikupan_memory.c"
+        "src/mikupan/av/mikupan_video_decoder.cpp"
+        "src/mikupan/av/mikupan_video_decoder_c.cpp"
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/rendering/mikupan_renderer.c
         src/mikupan/rendering/mikupan_shader.c
@@ -240,7 +247,31 @@ add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
 
 target_include_directories(MikuPan PRIVATE "sdk/" "src" "extern/" "extern/glad/include/" ${SDL3_INCLUDE_DIR})
 
-target_link_libraries(MikuPan PRIVATE m imgui SDL3::SDL3 spdlog::spdlog cglm)
+target_include_directories(MikuPan PRIVATE
+    ${AVFORMAT_INCLUDE_DIRS}
+    ${AVCODEC_INCLUDE_DIRS}
+    ${SWSCALE_INCLUDE_DIRS}
+    ${AVUTIL_INCLUDE_DIRS}
+)
+
+link_directories(
+    ${AVFORMAT_LIBRARY_DIRS}
+    ${AVCODEC_LIBRARY_DIRS}
+    ${SWSCALE_LIBRARY_DIRS}
+    ${AVUTIL_LIBRARY_DIRS}
+)
+
+target_link_libraries(MikuPan PRIVATE
+    m
+    imgui
+    SDL3::SDL3
+    spdlog::spdlog
+    cglm
+    ${AVFORMAT_LIBRARIES}
+    ${AVCODEC_LIBRARIES}
+    ${SWSCALE_LIBRARIES}
+    ${AVUTIL_LIBRARIES}
+)
 
 add_custom_command(TARGET MikuPan POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:MikuPan>/resources
