@@ -224,6 +224,10 @@ set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         "src/mikupan/mikupan_memory.c"
         "src/mikupan/av/mikupan_video_decoder.cpp"
         "src/mikupan/av/mikupan_video_decoder_c.cpp"
+        "src/mikupan/av/mikupan_audio_decoder.h"
+        "src/mikupan/av/mikupan_audio_decoder.cpp"
+        "src/mikupan/av/mikupan_audio_decoder_c.h"
+        src/mikupan/av/mikupan_audio_decoder_c.cpp
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/rendering/mikupan_renderer.c
         src/mikupan/rendering/mikupan_shader.c

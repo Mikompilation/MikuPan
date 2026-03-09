@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <mikupan/rendering/mikupan_renderer.h>
 #include <mikupan/av/mikupan_video_decoder_c.h>
+#include <mikupan/av/mikupan_audio_decoder_c.h>
 #include <glad/gl.h>
 
 #define MOVIE_DEBUG 1
@@ -269,6 +270,17 @@ typedef struct ReadBuffer {
     double ptsSec;
 } ReadBuffer;
 
+typedef struct AudioState {
+    AudioDecoder *decoder;
+    SDL_AudioDeviceID device;
+    SDL_AudioStream *stream;
+    int rate;
+    int channels;
+    uint8_t audio_buffer[16384];
+    size_t audio_queued;
+    int eof;
+} AudioState;
+
 //static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file);
 static int readMpeg(VideoDecoder *vd, ReadBuffer *rb);
 static int isAudioOK();
@@ -284,6 +296,7 @@ static int cpy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0, int s
 
 static VideoDecoder g_vd = {0};
 static ReadBuffer  g_rb = {0};
+static AudioState g_audio_state = {0};
 
 #define IOP_BUFF_SIZE (12288*2)
 #define STACK_SIZE (16*1024)
@@ -466,6 +479,52 @@ static double now_sec()
     return (double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency();
 }
 
+static size_t audioQueuedBytes()
+{
+    if (!g_audio_state.stream) return 0;
+    return SDL_GetAudioStreamQueued(g_audio_state.stream);
+}
+
+static size_t audioLowWater()
+{
+    if (g_audio_state.rate <= 0) return 0;
+    return (g_audio_state.rate * 250) / 1000;
+}
+
+static size_t audioHighWater()
+{
+    if (g_audio_state.rate <= 0) return 0;
+    return (g_audio_state.rate * 750) / 1000;
+}
+
+static void feedAudio()
+{
+    if (!g_audio_state.decoder || !g_audio_state.stream) return;
+
+    size_t queued = audioQueuedBytes();
+    size_t high_water = audioHighWater();
+
+    if (queued >= high_water) return;
+
+    size_t to_feed = high_water - queued;
+    if (to_feed < 4096) to_feed = 4096;
+
+    if (to_feed > sizeof(g_audio_state.audio_buffer)) {
+        to_feed = sizeof(g_audio_state.audio_buffer);
+    }
+
+    if (g_audio_state.eof) return;
+
+    if (!mikupan_decoder_pump(g_audio_state.decoder, to_feed)) {
+        return;
+    }
+
+    size_t n = mikupan_decoder_pop(g_audio_state.decoder, g_audio_state.audio_buffer, sizeof(g_audio_state.audio_buffer));
+    if (n > 0) {
+        SDL_PutAudioStreamData(g_audio_state.stream, g_audio_state.audio_buffer, (int)n);
+    }
+}
+
 void playMovLoop()
 {
     double fps = g_vd.fps;
@@ -490,6 +549,17 @@ void playMovLoop()
             continue;
         }
 
+        feedAudio();
+
+        size_t queued = audioQueuedBytes();
+        size_t low_water = audioLowWater();
+
+        if (queued < low_water && !g_audio_state.eof) {
+            if (wait > 0.010) SDL_Delay(1);
+            SDL_PumpEvents();
+            continue;
+        }
+
         if (wait > 0.0) {
             SDL_PumpEvents();
             if (wait > 0.010) SDL_Delay(1);
@@ -497,9 +567,14 @@ void playMovLoop()
         }
 
         int r = readMpeg(&g_vd, &g_rb);
-        if (r < 0) break;     // fatal
-        if (r == 2) break;    // EOF
+        if (r < 0) break;
+        if (r == 2) {
+            g_audio_state.eof = 1;
+            break;
+        }
         if (r == 1) haveAnyFrame = 1;
+
+        feedAudio();
 
         if (haveAnyFrame) renderMovFrame(g_vd.ti);
         else MikuPan_Clear();
@@ -508,8 +583,13 @@ void playMovLoop()
         SDL_PumpEvents();
 
         tick++;
+    }
 
-        SDL_PumpEvents();
+    if (g_audio_state.stream) {
+        int drain_safety = 100;
+        while (SDL_GetAudioStreamQueued(g_audio_state.stream) > 0 && drain_safety-- > 0) {
+            SDL_Delay(10);
+        }
     }
 }
 
@@ -690,7 +770,61 @@ void initMov(char *bsfilename)
     }
 
     g_vd.fps = movvid_fps(g_vd.mov);
-        if (g_vd.fps <= 0.0) g_vd.fps = 25.0;
+    if (g_vd.fps <= 0.0) g_vd.fps = 25.0;
+
+    memset(&g_audio_state, 0, sizeof(g_audio_state));
+
+    g_audio_state.decoder = mikupan_decoder_open(resolvedPath);
+    if (!g_audio_state.decoder) {
+        info_log("audio decoder open failed");
+    } else {
+        if (!mikupan_decoder_pump(g_audio_state.decoder, 4096)) {
+            info_log("initial audio pump failed");
+        }
+
+        g_audio_state.rate = mikupan_decoder_get_rate(g_audio_state.decoder);
+        g_audio_state.channels = mikupan_decoder_get_channels(g_audio_state.decoder);
+
+        if (g_audio_state.rate <= 0 || g_audio_state.channels <= 0) {
+            info_log("Invalid audio format: rate=%d channels=%d", 
+                     g_audio_state.rate, g_audio_state.channels);
+            mikupan_decoder_close(g_audio_state.decoder);
+            g_audio_state.decoder = NULL;
+        } else {
+            info_log("Audio: %d Hz %d ch", g_audio_state.rate, g_audio_state.channels);
+
+            SDL_AudioSpec spec = {0};
+            spec.freq = g_audio_state.rate;
+            spec.format = SDL_AUDIO_S16;
+            spec.channels = g_audio_state.channels;
+
+            g_audio_state.device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+
+            if (!g_audio_state.device) {
+                info_log("SDL_OpenAudioDevice failed: %s", SDL_GetError());
+                mikupan_decoder_close(g_audio_state.decoder);
+                g_audio_state.decoder = NULL;
+            } else {
+                g_audio_state.stream = SDL_CreateAudioStream(&spec, &spec);
+
+                if (!g_audio_state.stream) {
+                    info_log("SDL_CreateAudioStream failed: %s", SDL_GetError());
+                    SDL_CloseAudioDevice(g_audio_state.device);
+                    g_audio_state.device = 0;
+                    mikupan_decoder_close(g_audio_state.decoder);
+                    g_audio_state.decoder = NULL;
+                } else {
+                    SDL_BindAudioStream(g_audio_state.device, g_audio_state.stream);
+                    SDL_ResumeAudioDevice(g_audio_state.device);
+
+                    for (int i = 0; i < 8; i++) {
+                        feedAudio();
+                        if (audioQueuedBytes() >= audioLowWater()) break;
+                    }
+                }
+            }
+        }
+    }
 
     glad_glGenTextures(1, &g_vd.tex);
     glad_glBindTexture(GL_TEXTURE_2D, g_vd.tex);
@@ -732,7 +866,23 @@ static void termMov()
     }
     g_vd.w = g_vd.h = 0;
 
-    // Restaurar el contexto OpenGL original
+    if (g_audio_state.stream) {
+        SDL_DestroyAudioStream(g_audio_state.stream);
+        g_audio_state.stream = NULL;
+    }
+
+    if (g_audio_state.device) {
+        SDL_CloseAudioDevice(g_audio_state.device);
+        g_audio_state.device = 0;
+    }
+
+    if (g_audio_state.decoder) {
+        mikupan_decoder_close(g_audio_state.decoder);
+        g_audio_state.decoder = NULL;
+    }
+
+    memset(&g_audio_state, 0, sizeof(g_audio_state));
+
     SDL_GL_MakeCurrent(window, gl_context);
 }
 
