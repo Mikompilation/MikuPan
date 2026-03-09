@@ -791,7 +791,7 @@ void initMov(char *bsfilename)
             mikupan_decoder_close(g_audio_state.decoder);
             g_audio_state.decoder = NULL;
         } else {
-            info_log("Audio: %d Hz %d ch", g_audio_state.rate, g_audio_state.channels);
+            info_log("[AUDIO] %d Hz %d ch", g_audio_state.rate, g_audio_state.channels);
 
             SDL_AudioSpec spec = {0};
             spec.freq = g_audio_state.rate;

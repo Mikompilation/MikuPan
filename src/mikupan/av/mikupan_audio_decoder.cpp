@@ -2,6 +2,9 @@
 #include <cstring>
 #include <algorithm>
 
+// Extern declaration for info_log
+extern "C" void info_log(const char *fmt, ...);
+
 static constexpr uint8_t START_CODE[3] = {0x00,0x00,0x01};
 static constexpr uint8_t PRIVATE_STREAM1 = 0xBD;
 
@@ -129,8 +132,8 @@ void MikupanAudioDecoder::parseAccumulatedPayload()
 
             payloadAcc_.erase(payloadAcc_.begin(),payloadAcc_.begin()+o+12);
 
-            std::printf(
-                "[MIKUPAN] type=%u rate=%u ch=%u interleave=%u\n",
+            info_log(
+                "[AUDIO] type=%u rate=%u ch=%u interleave=%u",
                 header_.type,
                 header_.rate,
                 header_.channels,
@@ -151,7 +154,7 @@ void MikupanAudioDecoder::parseAccumulatedPayload()
 
             payloadAcc_.erase(payloadAcc_.begin(),payloadAcc_.begin()+p+8);
 
-            std::printf("[MIKUPAN] audio bytes: %u\n",bodyRemaining_);
+            info_log("[AUDIO] audio bytes: %u",bodyRemaining_);
 
             continue;
         }

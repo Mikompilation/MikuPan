@@ -3,7 +3,10 @@
 #include <cstdio>
 #include <string>
 
-#define VDBG(fmt, ...) fprintf(stderr,"[VIDEO] " fmt "\n", ##__VA_ARGS__)
+// Extern declaration for info_log
+extern "C" void info_log(const char *fmt, ...);
+
+#define VDBG(fmt, ...) info_log("[VIDEO] " fmt, ##__VA_ARGS__)
 
 static std::string ff_err2str(int err)
 {
