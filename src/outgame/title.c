@@ -642,7 +642,7 @@ SPRT_DAT title_sprt[11] = {
             mc_slot2 = mc_slot1 = 0xff;
             mc_file2 = mc_file1 = 0xff;
 
-            mcInit(5, (u_int *)MC_WORK_ADDRESS, 0);
+            mcInit(5, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
 
             title_wrk.mode = TITLE_ALBM_LOAD0;
         }
@@ -672,7 +672,7 @@ SPRT_DAT title_sprt[11] = {
 
             memcpy((void *)0xE80000, (void *)0x5a0000, 0x180000);
 
-            mcInit(6, (u_int *)MC_WORK_ADDRESS, 0);
+            mcInit(6, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
 
             title_wrk.mode = TITLE_ALBM_LOAD2;
             break;
