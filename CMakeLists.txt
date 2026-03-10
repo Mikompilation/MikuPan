@@ -21,12 +21,6 @@ include(imgui)
 include(spdlog)
 include(cglm)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(AVFORMAT REQUIRED libavformat)
-pkg_check_modules(AVCODEC REQUIRED libavcodec)
-pkg_check_modules(SWSCALE REQUIRED libswscale)
-pkg_check_modules(AVUTIL REQUIRED libavutil)
-
 set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         "src/common/ul_math.c"
         "src/common/utility.c"
@@ -251,14 +245,16 @@ set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
 
 add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
 
-target_include_directories(MikuPan PRIVATE "sdk/" "src" "extern/" "extern/glad/include/" ${SDL3_INCLUDE_DIR})
-
 target_include_directories(MikuPan PRIVATE
-    ${AVFORMAT_INCLUDE_DIRS}
-    ${AVCODEC_INCLUDE_DIRS}
-    ${SWSCALE_INCLUDE_DIRS}
-    ${AVUTIL_INCLUDE_DIRS}
-)
+        "sdk/"
+        "src"
+        "extern/"
+        "extern/glad/include/"
+        ${SDL3_INCLUDE_DIR}
+        ${AVFORMAT_INCLUDE_DIRS}
+        ${AVCODEC_INCLUDE_DIRS}
+        ${SWSCALE_INCLUDE_DIRS}
+        ${AVUTIL_INCLUDE_DIRS})
 
 link_directories(
     ${AVFORMAT_LIBRARY_DIRS}
