@@ -5,6 +5,10 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <string>
+#include <cctype>
+#include <limits>
+#include <cstring>
 
 extern "C" {
 #include "mikupan_memory.h"
@@ -151,4 +155,67 @@ u_int MikuPan_GetFileSize(const char *filename)
     }
 
     return std::filesystem::file_size(filename);
+}
+
+bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size)
+{
+    if (!path) {
+        spdlog::error("MikuPan_ResolveCdPath: path is null");
+        return false;
+    }
+    
+    if (!buffer) {
+        spdlog::error("MikuPan_ResolveCdPath: buffer is null");
+        return false;
+    }
+    
+    if (buffer_size == 0) {
+        spdlog::error("MikuPan_ResolveCdPath: buffer_size is 0");
+        return false;
+    }
+    
+    std::string s(path);
+    
+    auto ltrim = [](std::string& x) {
+        x.erase(x.begin(), std::find_if(x.begin(), x.end(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }));
+    };
+    
+    auto rtrim = [](std::string& x) {
+        x.erase(std::find_if(x.rbegin(), x.rend(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }).base(), x.end());
+    };
+    
+    ltrim(s);
+    rtrim(s);
+    
+    if (auto semi = s.find(';'); semi != std::string::npos) {
+        s.erase(semi);
+    }
+    
+    std::replace(s.begin(), s.end(), '\\', '/');
+    
+    if (s.rfind("./", 0) != 0) {
+        if (auto colon = s.find(':'); colon != std::string::npos) {
+            s.erase(0, colon + 1);
+            if (!s.empty() && s.front() == '/') {
+                s.erase(0, 1);
+            }
+        }
+        if (!s.empty()) {
+            s.insert(0, "./");
+        }
+    }
+    
+    if (s.length() + 1 > buffer_size) {
+        spdlog::error("MikuPan_ResolveCdPath: Buffer too small. Need {} bytes, got {}", 
+                      s.length() + 1, buffer_size);
+        return false;
+    }
+    
+    std::strcpy(buffer, s.c_str());
+    
+    return true;
 }

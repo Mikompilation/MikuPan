@@ -40,13 +40,30 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <stdlib.h>
+#include <mikupan/rendering/mikupan_renderer.h>
+#include <mikupan/av/mikupan_video_decoder_c.h>
+#include <mikupan/av/mikupan_audio_decoder_c.h>
+#include <glad/gl.h>
+
+#define MOVIE_DEBUG 1
+#define MOVIE_EARLY_RETURN_MOVIE 0
+#define MOVIE_EARLY_RETURN_INITMOV 0
+
+#if MOVIE_DEBUG
+#define MDBG(fmt, ...) printf("[MOV] " fmt "\n", ##__VA_ARGS__)
+#else
+#define MDBG(fmt, ...) do {} while(0)
+#endif
+
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/scene/scene_dat.h"
 #include "ingame/map/map_area.h"
 #include "graphics/scene/scene.h"
 
-#include <stdlib.h>
+extern SDL_Window *window;
+extern SDL_GLContext gl_context;
 
 #ifdef BUILD_EU_VERSION
 char *mpegName[][40] = {
@@ -237,9 +254,35 @@ typedef struct {
     int h;
 } Rect;
 
-static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file);
-static int isAudioOK();
-static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file) ;
+typedef struct VideoDecoder {
+    MovVidHandle mov;
+    int w, h;
+    GLuint tex;
+    MikuPan_TextureInfo *ti;
+    int started;
+    double wallBase;
+    double fps;
+} VideoDecoder;
+
+typedef struct ReadBuffer {
+    const unsigned char *rgba;
+    int strideBytes;
+    double ptsSec;
+} ReadBuffer;
+
+typedef struct AudioState {
+    AudioDecoder *decoder;
+    SDL_AudioDeviceID device;
+    SDL_AudioStream *stream;
+    int rate;
+    int channels;
+    uint8_t audio_buffer[16384];
+    size_t audio_queued;
+    int eof;
+} AudioState;
+
+//static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file);
+static int readMpeg(VideoDecoder *vd, ReadBuffer *rb);
 static int isAudioOK();
 static void termMov();
 static void usage();
@@ -250,6 +293,10 @@ static void changeMasterVolume(u_int val);
 static void changeInputVolume(u_int val);
 static int copy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1);
 static int cpy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1);
+
+static VideoDecoder g_vd = {0};
+static ReadBuffer  g_rb = {0};
+static AudioState g_audio_state = {0};
 
 #define IOP_BUFF_SIZE (12288*2)
 #define STACK_SIZE (16*1024)
@@ -380,25 +427,23 @@ int PlayMpegEvent()
 
 u_int movie(char *name)
 {
-    return controller_val;
-    static int count = 0;
+    if (MOVIE_EARLY_RETURN_MOVIE) {
+        return controller_val;
+    }
 
     sceGsSyncPath(0, 0);
     sceGsResetPath();
     sceDmaReset(1);
 #ifdef BUILD_EU_VERSION
-            sceGsResetGraph(1, SCE_GS_INTERLACE, sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL: SCE_GS_NTSC, SCE_GS_FRAME);
+    sceGsResetGraph(1, SCE_GS_INTERLACE,
+                    sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL : SCE_GS_NTSC,
+                    SCE_GS_FRAME);
 #else
-            sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
+    sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
 #endif
-    if (scene_bg_color == 0)
-    {
-        clearGsMem(0, 0, 0, 0x280, 0x1c0);
-    }
-    else
-    {
-        clearGsMem(0xff, 0xff, 0xff, 0x280, 0x1c0);
-    }
+
+    if (scene_bg_color == 0) clearGsMem(0, 0, 0, 0x280, 0x1c0);
+    else                     clearGsMem(0xff, 0xff, 0xff, 0x280, 0x1c0);
 
 #ifdef BUILD_EU_VERSION
     SendFontTex();
@@ -407,36 +452,148 @@ u_int movie(char *name)
     sceGsSetDefDBuff(&db, 0, 0x280, 0xe0, 0, 0, 1);
 
 #ifdef BUILD_EU_VERSION
-    if (sys_wrk.pal_disp_mode == 0)
-    {
-        db.disp[1].display.DX = 656;
-        db.disp[0].display.DX = 656;
-        db.disp[1].display.DY = 104;
-        db.disp[0].display.DY = 104;
-    }
-    else
-    {
-        db.disp[1].display.DX = 636;
-        db.disp[0].display.DX = 636;
-        db.disp[1].display.DY = 50;
-        db.disp[0].display.DY = 50;
+    if (sys_wrk.pal_disp_mode == 0) {
+        db.disp[1].display.DX = 656; db.disp[0].display.DX = 656;
+        db.disp[1].display.DY = 104; db.disp[0].display.DY = 104;
+    } else {
+        db.disp[1].display.DX = 636; db.disp[0].display.DX = 636;
+        db.disp[1].display.DY = 50;  db.disp[0].display.DY = 50;
     }
 #endif
 
     FlushCache(0);
 
     thread_id = GetThreadId();
-
     ChangeThreadPriority(thread_id, 1);
 
     initMov(name);
-    readMpeg(&videoDec,readBuf,(StrFile *)&infile);
+    playMovLoop();
     termMov();
 
     ChangeThreadPriority(GetThreadId(), thread_id);
-
     return controller_val;
 }
+
+static double now_sec()
+{
+    return (double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency();
+}
+
+static size_t audioQueuedBytes()
+{
+    if (!g_audio_state.stream) return 0;
+    return SDL_GetAudioStreamQueued(g_audio_state.stream);
+}
+
+static size_t audioLowWater()
+{
+    if (g_audio_state.rate <= 0) return 0;
+    return (g_audio_state.rate * 250) / 1000;
+}
+
+static size_t audioHighWater()
+{
+    if (g_audio_state.rate <= 0) return 0;
+    return (g_audio_state.rate * 750) / 1000;
+}
+
+static void feedAudio()
+{
+    if (!g_audio_state.decoder || !g_audio_state.stream) return;
+
+    size_t queued = audioQueuedBytes();
+    size_t high_water = audioHighWater();
+
+    if (queued >= high_water) return;
+
+    size_t to_feed = high_water - queued;
+    if (to_feed < 4096) to_feed = 4096;
+
+    if (to_feed > sizeof(g_audio_state.audio_buffer)) {
+        to_feed = sizeof(g_audio_state.audio_buffer);
+    }
+
+    if (g_audio_state.eof) return;
+
+    if (!mikupan_decoder_pump(g_audio_state.decoder, to_feed)) {
+        return;
+    }
+
+    size_t n = mikupan_decoder_pop(g_audio_state.decoder, g_audio_state.audio_buffer, sizeof(g_audio_state.audio_buffer));
+    if (n > 0) {
+        SDL_PutAudioStreamData(g_audio_state.stream, g_audio_state.audio_buffer, (int)n);
+    }
+}
+
+void playMovLoop()
+{
+    double fps = g_vd.fps;
+    if (fps < 1.0 || fps > 120.0) fps = 30.0;
+
+    const double frameDur = 1.0 / fps;
+
+    double startT = now_sec();
+    unsigned long long tick = 0;
+
+    int haveAnyFrame = 0;
+
+    for (;;)
+    {
+        double t = now_sec();
+        double targetT = startT + (double)tick * frameDur;
+        double wait = targetT - t;
+
+        if (wait > 0.5) {
+            startT = t;
+            tick = 0;
+            continue;
+        }
+
+        feedAudio();
+
+        size_t queued = audioQueuedBytes();
+        size_t low_water = audioLowWater();
+
+        if (queued < low_water && !g_audio_state.eof) {
+            if (wait > 0.010) SDL_Delay(1);
+            SDL_PumpEvents();
+            continue;
+        }
+
+        if (wait > 0.0) {
+            SDL_PumpEvents();
+            if (wait > 0.010) SDL_Delay(1);
+            continue;
+        }
+
+        int r = readMpeg(&g_vd, &g_rb);
+        if (r < 0) break;
+        if (r == 2) {
+            g_audio_state.eof = 1;
+            break;
+        }
+        if (r == 1) haveAnyFrame = 1;
+
+        feedAudio();
+
+        if (haveAnyFrame) renderMovFrame(g_vd.ti);
+        else MikuPan_Clear();
+
+        SDL_GL_SwapWindow(window);
+        SDL_PumpEvents();
+
+        tick++;
+    }
+
+    if (g_audio_state.stream) {
+        int drain_safety = 100;
+        while (SDL_GetAudioStreamQueued(g_audio_state.stream) > 0 && drain_safety-- > 0) {
+            SDL_Delay(10);
+        }
+    }
+}
+
+
 
 volatile int isCountVblank = 0;
 volatile int vblankCount = 0;
@@ -450,7 +607,46 @@ void switchThread()
     RotateThreadReadyQueue(1);
 }
 
-static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file)
+static int readMpeg(VideoDecoder *vd, ReadBuffer *rb)
+{
+    if (!vd || !vd->mov || !vd->tex || !rb) return -1;
+
+    const char *err = NULL;
+    double pts = 0.0;
+
+    int r = movvid_decode_frame(vd->mov, NULL, 0, &pts, &err);
+    if (r < 0) {
+        info_log("movvid_decode_frame error: %s", err ? err : "(no detail)");
+        return -1;
+    }
+    if (r == 0) return 0; // EAGAIN
+    if (r == 2) return 2; // EOF
+
+    int strideBytes = 0;
+    const unsigned char *rgba = movvid_rgba_ptr(vd->mov, &strideBytes);
+    if (!rgba || strideBytes <= 0) {
+        info_log("movvid_rgba_ptr failed");
+        return -1;
+    }
+
+    rb->rgba = rgba;
+    rb->strideBytes = strideBytes;
+    rb->ptsSec = pts;
+
+    glad_glBindTexture(GL_TEXTURE_2D, vd->tex);
+    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glad_glPixelStorei(GL_UNPACK_ROW_LENGTH, strideBytes / 4);
+
+    glad_glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, vd->w, vd->h,
+                         GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+
+    glad_glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glad_glBindTexture(GL_TEXTURE_2D, 0);
+
+    return 1;
+}
+
+/*static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file)
 {
     u_char cdata[32];
     int isStarted;
@@ -541,7 +737,7 @@ static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file)
     }
 
     return 1;
-}
+}*/
 
 static int isAudioOK()
 {
@@ -550,98 +746,146 @@ static int isAudioOK()
 
 void initMov(char *bsfilename)
 {
-    return;
-    ThreadParam th_param;
-    void *val;
+    termMov();
 
-    //*REG_DMAC_CTRL |= 3;
-    //*REG_DMAC_STAT = 4;
-
-    scePcStop();
-
-    if (movie_wrk.play_event_sta == 6 || movie_wrk.play_event_sta == 7)
-    {
-        mpegWork = (u_char *)MikuPan_GetHostAddress(MPEG_WORK_ADDRESS);
-    }
-    else
-    {
-        mpegWork = (u_char *)GetEmptyRoomAddr();
+    char resolvedPath[256];
+    if (!MikuPan_ResolveCdPath(bsfilename, resolvedPath, sizeof(resolvedPath))) {
+        info_log("Failed to resolve path for file.bin");
+        return;
     }
 
-    val = mpegWork;
-    viBufData = (val + (SCE_MPEG_BUFFER_SIZE(MPEG_DISP_WIDTH, MPEG_DISP_HEIGHT) - 8192));
-
-    readBufCreate(readBuf);
-    //sceMpegInit();
-
-    videoDecCreate(&videoDec, mpegWork, (SCE_MPEG_BUFFER_SIZE(MAX_WIDTH, MAX_HEIGHT) - 8192), viBufData, viBufTag, VIBUF_SIZE, timeStamp, VIBUF_TS_SIZE);
-
-    sceSdRemoteInit();
-    sceSdRemote(1, rSdInit, SD_INIT_COLD);
-
-    audioDecCreate(&audioDec, audioBuff, 0xc000, IOP_BUFF_SIZE);
-    videoDecSetStream(&videoDec, sceMpegStrM2V, 0, (sceMpegCallback)videoCallback, readBuf);
-
-    if (isWithAudio != 0)
-    {
-        videoDecSetStream(&videoDec, sceMpegStrPCM, 0, (sceMpegCallback)pcmCallback, readBuf);
+    const char *err = NULL;
+    g_vd.mov = movvid_open(resolvedPath, &err);
+    if (!g_vd.mov) {
+        info_log("movvid_open failed: %s", err ? err : "(no detail)");
+        return;
     }
 
-    voBufCreate(&voBuf, UncAddr(voBufData), voBufTag, N_GSBUF);
+    g_vd.w = movvid_w(g_vd.mov);
+    g_vd.h = movvid_h(g_vd.mov);
+    if (g_vd.w <= 0 || g_vd.h <= 0) {
+        info_log("Invalid video size: %dx%d", g_vd.w, g_vd.h);
+        termMov();
+        return;
+    }
 
-    th_param.entry = videoDecMain;
-    th_param.stack = videoDecStack;
-    th_param.stackSize = STACK_SIZE;
-    th_param.initPriority = 1;
-    th_param.gpReg = &_gp;
-    th_param.option = 0;
+    g_vd.fps = movvid_fps(g_vd.mov);
+    if (g_vd.fps <= 0.0) g_vd.fps = 25.0;
 
-    videoDecTh = CreateThread(&th_param);
-    StartThread(videoDecTh, &videoDec);
+    memset(&g_audio_state, 0, sizeof(g_audio_state));
 
-    while (!strFileOpen(&infile, bsfilename)) {}
+    g_audio_state.decoder = mikupan_decoder_open(resolvedPath);
+    if (!g_audio_state.decoder) {
+        info_log("audio decoder open failed");
+    } else {
+        if (!mikupan_decoder_pump(g_audio_state.decoder, 4096)) {
+            info_log("initial audio pump failed");
+        }
 
-    //sceGsSyncVCallback(vblankHandlerM);
+        g_audio_state.rate = mikupan_decoder_get_rate(g_audio_state.decoder);
+        g_audio_state.channels = mikupan_decoder_get_channels(g_audio_state.decoder);
 
-    //videoDec.hid_endimage = AddDmacHandler(DMAC_GIF, handler_endimage, 0);
+        if (g_audio_state.rate <= 0 || g_audio_state.channels <= 0) {
+            info_log("Invalid audio format: rate=%d channels=%d", 
+                     g_audio_state.rate, g_audio_state.channels);
+            mikupan_decoder_close(g_audio_state.decoder);
+            g_audio_state.decoder = NULL;
+        } else {
+            info_log("[AUDIO] %d Hz %d ch", g_audio_state.rate, g_audio_state.channels);
 
-    //EnableDmac(2);
+            SDL_AudioSpec spec = {0};
+            spec.freq = g_audio_state.rate;
+            spec.format = SDL_AUDIO_S16;
+            spec.channels = g_audio_state.channels;
 
-    vblankCount = 0;
-    scn_vib_time1 = 0;
-    scn_vib_time0 = 0;
+            g_audio_state.device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+
+            if (!g_audio_state.device) {
+                info_log("SDL_OpenAudioDevice failed: %s", SDL_GetError());
+                mikupan_decoder_close(g_audio_state.decoder);
+                g_audio_state.decoder = NULL;
+            } else {
+                g_audio_state.stream = SDL_CreateAudioStream(&spec, &spec);
+
+                if (!g_audio_state.stream) {
+                    info_log("SDL_CreateAudioStream failed: %s", SDL_GetError());
+                    SDL_CloseAudioDevice(g_audio_state.device);
+                    g_audio_state.device = 0;
+                    mikupan_decoder_close(g_audio_state.decoder);
+                    g_audio_state.decoder = NULL;
+                } else {
+                    SDL_BindAudioStream(g_audio_state.device, g_audio_state.stream);
+                    SDL_ResumeAudioDevice(g_audio_state.device);
+
+                    for (int i = 0; i < 8; i++) {
+                        feedAudio();
+                        if (audioQueuedBytes() >= audioLowWater()) break;
+                    }
+                }
+            }
+        }
+    }
+
+    glad_glGenTextures(1, &g_vd.tex);
+    glad_glBindTexture(GL_TEXTURE_2D, g_vd.tex);
+
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, g_vd.w, g_vd.h, 0,
+                      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glad_glBindTexture(GL_TEXTURE_2D, 0);
+
+    g_vd.ti = (MikuPan_TextureInfo*)malloc(sizeof(MikuPan_TextureInfo));
+    g_vd.ti->id = g_vd.tex;
+    g_vd.ti->width = g_vd.w;
+    g_vd.ti->height = g_vd.h;
+
+    g_vd.started = 0;
+    g_vd.wallBase = 0.0;
 }
+
 
 static void termMov()
 {
-    sceGsGParam *gparam;
-    u_long UserIMR;
+    if (g_vd.tex) {
+        glad_glDeleteTextures(1, &g_vd.tex);
+        g_vd.tex = 0;
+    }
+    if (g_vd.ti) {
+        free(g_vd.ti);
+        g_vd.ti = NULL;
+    }
+    if (g_vd.mov) {
+        movvid_close(g_vd.mov);
+        g_vd.mov = NULL;
+    }
+    g_vd.w = g_vd.h = 0;
 
-    readBufDelete(readBuf);
-    voBufDelete(&voBuf);
+    if (g_audio_state.stream) {
+        SDL_DestroyAudioStream(g_audio_state.stream);
+        g_audio_state.stream = NULL;
+    }
 
-    //TerminateThread(videoDecTh);
-    //DeleteThread(videoDecTh);
+    if (g_audio_state.device) {
+        SDL_CloseAudioDevice(g_audio_state.device);
+        g_audio_state.device = 0;
+    }
 
-    //DisableDmac(2);
-    //RemoveDmacHandler(2,videoDec.hid_endimage);
+    if (g_audio_state.decoder) {
+        mikupan_decoder_close(g_audio_state.decoder);
+        g_audio_state.decoder = NULL;
+    }
 
-    videoDecDelete(&videoDec);
-    audioDecDelete(&audioDec);
+    memset(&g_audio_state, 0, sizeof(g_audio_state));
 
-    strFileClose(&infile);
-
-    //UserIMR = sceGsPutIMR(0xff00);
-    gparam = sceGsGetGParam();
-
-    //DisableIntc(2);
-    //RemoveIntcHandler(2, gparam->sceGsVSCid);
-
-    gparam->sceGsVSCfunc = NULL;
-    gparam->sceGsVSCid = 0;
-
-    //sceGsPutIMR(UserIMR);
+    SDL_GL_MakeCurrent(window, gl_context);
 }
+
 
 void defMain(void)
 {
@@ -2901,3 +3145,22 @@ void voBufDecCount(VoBuf *f)
         f->count--;
     }
 }
+
+void renderMovFrame(const MikuPan_TextureInfo *ti)
+{
+    if (!ti || !ti->id) return;
+
+    MikuPan_Clear();
+
+    MikuPan_Rect src = {0};
+    src.x = 0.0f; src.y = 0.0f;
+    src.w = (float)ti->width;
+    src.h = (float)ti->height;
+
+    MikuPan_Rect dst = {0};
+    dst.x = 0.0f; dst.y = 0.0f;
+    dst.w = 640.0f; dst.h = 448.0f;
+
+    MikuPan_RenderSprite(src, dst, 255, 255, 255, 255, (MikuPan_TextureInfo*)ti);
+}
+

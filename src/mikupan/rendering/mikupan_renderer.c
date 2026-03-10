@@ -27,6 +27,7 @@ int state_changes = 0;
 int draw_calls = 0;
 
 SDL_Window *window = NULL;
+SDL_GLContext gl_context = NULL;
 MikuPan_TextureInfo *fnt_texture[6] = {0};
 MikuPan_TextureInfo *curr_fnt_texture = NULL;
 
@@ -90,7 +91,7 @@ SDL_AppResult MikuPan_Init()
 
     info_log("Creating OpenGL Context");
 
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    gl_context = SDL_GL_CreateContext(window);
 
     if (gl_context == NULL)
     {
