@@ -4834,10 +4834,10 @@ void RelationShip()
     case 0:
 #ifdef BUILD_EU_VERSION
         file_rel.load_id = LoadReqLanguage(PL_FILE_REL_E_PK2, SPRT_ADDRESS);
-        file_rel.load_id = LoadReqLanguage(PL_GLST_E_PK2, 0x1e90000);
+        file_rel.load_id = LoadReqLanguage(PL_GLST_E_PK2, EVENT_ADDRESS);
 #else
         file_rel.load_id = LoadReq(PL_FILE_REL_PK2, SPRT_ADDRESS);
-        file_rel.load_id = LoadReq(PL_GLST_PK2, 0x1e90000);
+        file_rel.load_id = LoadReq(PL_GLST_PK2, EVENT_ADDRESS);
 #endif
         file_rel.step = 1;
     break;
@@ -4853,10 +4853,10 @@ void RelationShip()
         {
             file_rel.step = 3;
 #ifdef BUILD_EU_VERSION
-            file_rel.load_id = LoadReqLanguage(PL_FILE_E_PK2, 0x1e90000);
+            file_rel.load_id = LoadReqLanguage(PL_FILE_E_PK2, EVENT_ADDRESS);
             file_rel.load_id = LoadReqLanguage(PL_FNDR_E_PK2, SPRT_ADDRESS);
 #else
-            file_rel.load_id = LoadReq(PL_FILE_PK2, 0x1e90000);
+            file_rel.load_id = LoadReq(PL_FILE_PK2, EVENT_ADDRESS);
             file_rel.load_id = LoadReq(PL_FNDR_PK2, SPRT_ADDRESS);
 #endif
         }
@@ -5877,7 +5877,7 @@ void RelDspBackGrd()
 
     DispSprD(&ds);
 
-    SetSprFile(0x1e90000);
+    SetSprFile(EVENT_ADDRESS);
 
     SetSprFile(SPRT_ADDRESS_2);
 
@@ -6076,7 +6076,7 @@ void RelationDispMsg(RELATION_DAT *r_dat)
     break;
     }
 
-    SetSprFile(0x1e90000);
+    SetSprFile(EVENT_ADDRESS);
 
 #ifdef BUILD_EU_VERSION
     Sheet(814, 20, dsp_offy + 20, 600, 180, 0xf, 0x80);

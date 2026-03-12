@@ -128,7 +128,7 @@ char mcFileCheck()
 
 char mcOpen()
 {
-    if (sceMcOpen(mc_ctrl.port,mc_ctrl.slot,mc_ctrl.rw.name,mc_ctrl.rw.mode) == 0)
+    if (sceMcOpen(mc_ctrl.port, mc_ctrl.slot, mc_ctrl.rw.name, mc_ctrl.rw.mode) == 0)
     {
         return 1;
     }

@@ -259,9 +259,9 @@ void SpdOptStart()
     SpdOptInit();
 
 #ifdef BUILD_EU_VERSION
-    sopt_load_id = LoadReqLanguage(PL_OPTI_E_PK2, 0x1e90000);
+    sopt_load_id = LoadReqLanguage(PL_OPTI_E_PK2, EVENT_ADDRESS);
 #else
-    sopt_load_id = LoadReq(PL_OPTI_PK2, 0x1e90000);
+    sopt_load_id = LoadReq(PL_OPTI_PK2, EVENT_ADDRESS);
 #endif
 
     ingame_wrk.mode = INGAME_MODE_SPD_OPT;
@@ -298,8 +298,8 @@ void SpdOptMain()
 
     if (yw2d.io_a[4] != 0.0f)
     {
-        SetSprFile(0x1ce0000);
-        SetSprFile(0x1e90000);
+        SetSprFile(SP_SPRITES_ADDRESS);
+        SetSprFile(EVENT_ADDRESS);
     }
 
     if (spd_mnu.sopt != 0x0)

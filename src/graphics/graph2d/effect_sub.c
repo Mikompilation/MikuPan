@@ -1074,14 +1074,14 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
         for (i = 0; i < 4; i++)
         {            
             pbuf[ndpkt].fl32[0] = stq[i % 2];
-            pbuf[ndpkt].fl32[1] = stq[i % 2];
+            pbuf[ndpkt].fl32[1] = stq[i / 2];
             pbuf[ndpkt].fl32[2] = 0.0f;
             pbuf[ndpkt++].fl32[3] = 0.0f;
             
             pbuf[ndpkt].fl32[0] = (float)r/255.0f;
             pbuf[ndpkt].fl32[1] = (float)g/255.0f;
             pbuf[ndpkt].fl32[2] = (float)b/255.0f;
-            pbuf[ndpkt++].fl32[3] = (float)a/255.0f;
+            pbuf[ndpkt++].fl32[3] = (float)a/128.0f;
 
             pbuf[ndpkt].fl32[0] = (float)ivec[i][0];
             pbuf[ndpkt].fl32[1] = (float)ivec[i][1];

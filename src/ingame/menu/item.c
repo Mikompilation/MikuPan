@@ -434,20 +434,14 @@ static ITM_EFF_WRK iew;
 
 #ifdef BUILD_EU_VERSION
 #define PL_BGBG_PK2_ADDRESS 0x1cfefc0
-#else
-#define PL_BGBG_PK2_ADDRESS 0x1d05140
 #endif
 
 #ifdef BUILD_EU_VERSION
 #define LOAD_ITEM_2D_ADDR 0x1d51db0
-#else
-#define LOAD_ITEM_2D_ADDR 0x01d573b0
 #endif
 
 #ifdef BUILD_EU_VERSION
 #define VRAM_ITEM_2D_ADDRESS 0x1d51db0
-#else
-#define VRAM_ITEM_2D_ADDRESS 0x1d573b0
 #endif
 
 void NewgameItemInit()
@@ -1504,19 +1498,19 @@ int LoadItem2D(u_char get_type, u_char get_no)
         switch(get_type)
         {
         case 0:
-            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         case 1:
-            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         case 2:
-            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         case 3:
-            load_id = LoadReq(get_no + HINT_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + HINT_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         case 4:
-            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         }
     }
@@ -2733,33 +2727,33 @@ u_int FromPKZ(u_int pkz_addr, u_char pk2_no)
 #endif
     break;
     case 10:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 11:
 #ifdef BUILD_EU_VERSION
-        SetSprFile(0x1d51db0);
+        SetSprFile(MODE_SELECT2_ADDRESS);
 #else
-        SetSprFile(0x1d573b0);
+        SetSprFile(PL_PHOT_PK2_ADDRESS);
 #endif
     break;
     case 12:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 13:
 #ifdef BUILD_EU_VERSION
-        SetSprFile(0x1d51db0);
+        SetSprFile(MODE_SELECT2_ADDRESS);
 #else
-        SetSprFile(0x1d573b0);
+        SetSprFile(PL_PHOT_PK2_ADDRESS);
 #endif
     break;
     case 14:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 15:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 16:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 18:
 #ifdef BUILD_EU_VERSION

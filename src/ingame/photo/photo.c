@@ -9,6 +9,7 @@
 #include "ingame/photo/photo_types.h"
 #include "ingame/plyr/time_ctl.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_memory.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
 
@@ -177,11 +178,11 @@ int SpecialPhotoMakeJudge()
 
         if (no >= 150 && no < 200)
         {
-            ret = LoadReq(hint_rea_tbl[no - 150], 0x1e90000);
+            ret = LoadReq(hint_rea_tbl[no - 150], EVENT_ADDRESS);
         }
         else
         {
-            ret = LoadReq(hint_tbl[no], 0x1e90000);
+            ret = LoadReq(hint_tbl[no], EVENT_ADDRESS);
         }
 
         photo_wrk.spcl_pht_no[count][0] = 6;
@@ -200,11 +201,11 @@ int SpecialPhotoMakeJudge()
 
                 if (no >= 150 && no < 200)
                 {
-                    ret = LoadReq(hint_rea_tbl[no - 150], 0x1e90000);
+                    ret = LoadReq(hint_rea_tbl[no - 150], EVENT_ADDRESS);
                 }
                 else
                 {
-                    ret = LoadReq(hint_tbl[no], 0x1e90000);
+                    ret = LoadReq(hint_tbl[no], EVENT_ADDRESS);
                 }
 
                 photo_wrk.spcl_pht_no[count][0] = 6;

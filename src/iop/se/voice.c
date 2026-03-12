@@ -113,7 +113,7 @@ static void FillVoiceBuffer(int vNo)
 static void SaveDebugBuffer()
 {
     int size = sizeof(spuRam) / sizeof(spuRam[0]);
-    MikuPan_SaveFile("AudioBuffer.bin", spuRam, size);
+    MikuPan_WriteFile("AudioBuffer.bin", spuRam, size);
 }
 
 void Key_On(int vNo)

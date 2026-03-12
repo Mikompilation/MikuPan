@@ -1,6 +1,7 @@
 #include "scn_test.h"
 #include "common.h"
 #include "enums.h"
+#include "os/pad.h"
 #include "typedefs.h"
 
 #include <stdio.h>
@@ -87,12 +88,6 @@ static void (*SceneTestDBMenu[])() = {
 
 #define PI 3.1415927f
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
-
-#define EFFECT_ADDRESS 0x1e90000
-#define SCENE_LOAD_ADDRESS 0x1090000
-#define MSN_MAP_OBG_ADDRESS 0x7f8000
-#define MODEL_DATA_ADDRESS 0x14b0000
-#define SCENE_TEST_MD_LOAD_ADDRESS 0xe00000
 
 void SceneTestCtrl()
 {

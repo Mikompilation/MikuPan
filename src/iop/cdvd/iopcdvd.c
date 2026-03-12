@@ -55,7 +55,7 @@ void ICdvdCmd(IOP_COMMAND *icp)
             ICdvdAddCmd(icp);
             break;
         case IC_CDVD_SE_TRANS:
-            ICdvdTransSe(icp);
+            //ICdvdTransSe(icp);
             break;
         case IC_CDVD_SE_TRANS_RESET:
             ICdvdTransSeInit();

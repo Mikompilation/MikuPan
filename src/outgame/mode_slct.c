@@ -858,9 +858,9 @@ char ModeSlctPad(u_char mode)
         {
             BgFusumaYW(0x606060, 0.0f, GetCamDispAlpha(), 0x7d000);
 #ifdef BUILD_EU_VERSION
-            SetSprFile(0x1e90000);
-            SetSprFile(0x1ce0000);
-            SetSprFile(0x1d10000);
+            SetSprFile(EVENT_ADDRESS);
+            SetSprFile(PL_STTS_PK2_ADDRESS);
+            SetSprFile(MODE_SELECT_ADDRESS);
 #else
             SetSprFile(MISSION_TITLE_CARD_ADDRESS);
             SetSprFile(PL_STTS_PK2_ADDRESS);
@@ -880,9 +880,9 @@ char ModeSlctPad(u_char mode)
         {
             BgFusumaYW(0x606060, 0.0f, GetPhtDispAlpha(), 0x7d000);
 #ifdef BUILD_EU_VERSION
-            SetSprFile(0x1d51db0);
-            SetSprFile(0x1ce0000);
-            SetSprFile(0x1d10000);
+            SetSprFile(MODE_SELECT2_ADDRESS);
+            SetSprFile(PL_STTS_PK2_ADDRESS);
+            SetSprFile(MODE_SELECT_ADDRESS);
 #else
             SetSprFile(PL_PHOT_PK2_ADDRESS);
             SetSprFile(PL_STTS_PK2_ADDRESS);

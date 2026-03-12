@@ -23,12 +23,13 @@
 #include "graphics/graph2d/sprt.h"
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
+#include "graphics/graph3d/gra3d.h"
 #include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
-#include "mikupan/rendering/mikupan_renderer.h"
 #include <mikupan/mikupan_memory.h>
 
 typedef struct { // 0x28
@@ -4304,7 +4305,7 @@ int SetGameOver()
     
     if (gameover_flow > 2)
     {
-        SetSprFile3(0x1e90000, 0);
+        SetSprFile3(EVENT_ADDRESS, 0);
         
         if (gameover_flow > 2)
         {            
