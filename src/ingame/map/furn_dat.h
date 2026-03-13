@@ -6,7 +6,7 @@
 #include "typedefs.h"
 
 extern FURN_DAT furn_dat[];
-extern u_int furn_attr_dat[0][5];
+extern u_int furn_attr_dat[34][5];
 extern sceVu0FVECTOR furn_photo_center00;
 extern sceVu0FVECTOR furn_photo_center01;
 extern sceVu0FVECTOR furn_photo_center02;
