@@ -96,5 +96,5 @@ u_short sceSdGetParam(u_short entry)
 
 void ClearAudioBuffer()
 {
-    memset(spuRam, 0, 0x15160 * 10);
+    memset(spuRam, 0, sizeof(spuRam));
 }
