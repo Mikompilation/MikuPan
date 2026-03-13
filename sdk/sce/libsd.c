@@ -4,16 +4,14 @@
 #include "typedefs.h"
 #include <stdlib.h>
 
-s16 spuRam[0x15160 * 10];
-
-static int totalRead;
+// 2mb
+s16 spuRam[(1024*1024*2) >> 1];
 
 int sceSdVoiceTrans(short channel, u_short mode, void *m_addr, u_int s_addr,
                     u_int size)
 {
     //info_log("VOICE TRANS");
-    memcpy(&spuRam[s_addr] + totalRead, m_addr, size);
-    totalRead += size;
+    memcpy(&spuRam[s_addr >> 1], m_addr, size);
     return size;
 }
 

@@ -49,7 +49,7 @@ static void DebugFill(int vNo)
 {
     s32 histL[2] = {0}, histR[2] = {0};
 
-    s16 *src;
+    s16 *src = &spuRam[voices[vNo].ssa];
 
     int sampleCount = 0;
 
@@ -57,7 +57,6 @@ static void DebugFill(int vNo)
     s16 *out = voices[vNo].buffer;
     int size = sizeof(spuRam) / sizeof(spuRam[0]);
     int chunks = size / 0x800;
-    src = (s16 *) seBuff;
     for (int i = 0; i < chunks; i++)
     {
         MikuPan_DecodeAdpcmBlock(out, src, histL, histR);
