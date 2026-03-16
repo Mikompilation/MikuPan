@@ -110,7 +110,7 @@ void* SetEffectsWithScale(sceVu0FVECTOR pos, SOUL_EFF_PARAM *param, float scale,
 
     temp.scale2 = param->scale2 * scale;
 
-    return SetEffects(0x17, 1, 3, pos, temp.r1, temp.g1, temp.b1, temp.scale1, temp.r2, temp.g2, temp.b2, temp.scale2);
+    return SetEffects(EF_FIRE, 1, 3, pos, temp.r1, temp.g1, temp.b1, temp.scale1, temp.r2, temp.g2, temp.b2, temp.scale2);
 }
 
 int GetUsableWanSoWrkID()
@@ -204,7 +204,7 @@ void RegisterWansoEffect(WANDER_SOUL_WRK *wswrk)
 {
     if (wswrk->disp_flg == 0 && change_efbank != 0)
     {
-        wswrk->eff_buff = SetEffects(25, 2, 2, wswrk->disp_pos, &wswrk->srate, &wswrk->arate);
+        wswrk->eff_buff = SetEffects(EF_TORCH, 2, 2, wswrk->disp_pos, &wswrk->srate, &wswrk->arate);
 
         if (wswrk->eff_buff != NULL)
         {
@@ -760,7 +760,7 @@ void OneSoulCtrl(WANDER_SOUL_WRK *wswrk, float *srate, float *arate)
         {
             if (wswrk->count == 3)
             {
-                overlap_buf = SetEffects(8, 2, 0x28);
+                overlap_buf = SetEffects(EF_OVERLAP, 2, 0x28);
             }
         }
         else
@@ -802,7 +802,7 @@ void OneSoulCtrl(WANDER_SOUL_WRK *wswrk, float *srate, float *arate)
         {
             se_no = SeStartPos(8, wswrk->ori_pos, 0, 0x1000, 0x1000, 0xff);
 
-            ws_noise_buf = SetEffects(2, 4, 7, 32.0f, 9.0f, 0x46, 0x78, 0x78, 0, 0x78);
+            ws_noise_buf = SetEffects(EF_DITHER, 4, 7, 32.0f, 9.0f, 0x46, 0x78, 0x78, 0, 0x78);
 
             noise_in_time = 40;
 
@@ -830,7 +830,7 @@ void OneSoulCtrl(WANDER_SOUL_WRK *wswrk, float *srate, float *arate)
 
             if (telling_count < -60 && face_load_end != 0)
             {
-                face_buff = SetEffects(33, 8, 0, wswrk->turn, wswrk->ori_pos[0] + 0.0f, wswrk->ori_pos[1] + -80.0f, wswrk->ori_pos[2] + 0.0f);
+                face_buff = SetEffects(EF_ENEFACE, 8, 0, wswrk->turn, wswrk->ori_pos[0] + 0.0f, wswrk->ori_pos[1] + -80.0f, wswrk->ori_pos[2] + 0.0f);
 
                 if (face_buff != NULL)
                 {
@@ -838,7 +838,7 @@ void OneSoulCtrl(WANDER_SOUL_WRK *wswrk, float *srate, float *arate)
                     static float rate = 1.0f;
                     static float trate = 1.0f;
 
-                    p_deform_buf = SetEffects(27, 2, 0x17, 0x50, 0.7f, 0.7f, wswrk->ori_pos, 0, 0, 0, 0, &spd, &rate, &trate);
+                    p_deform_buf = SetEffects(EF_PDEFORM, 2, 0x17, 0x50, 0.7f, 0.7f, wswrk->ori_pos, 0, 0, 0, (void*)0, &spd, &rate, &trate);
 
                     telling_count = 50;
                 }
@@ -865,7 +865,7 @@ void OneSoulCtrl(WANDER_SOUL_WRK *wswrk, float *srate, float *arate)
                 ResetEffects(ws_noise_buf);
             }
 
-            ws_noise_buf = SetEffects(2, 2, 7, 32.0f, 9.0f, 0x46, 0x78, 0, 0, 0);
+            ws_noise_buf = SetEffects(EF_DITHER, 2, 7, 32.0f, 9.0f, 0x46, 0x78, 0, 0, 0);
         }
 
         if (telling_count == 1 || --telling_count == 1)
