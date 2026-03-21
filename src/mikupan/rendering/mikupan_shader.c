@@ -11,12 +11,9 @@ u_int shader_list[MAX_SHADER_PROGRAMS] = {0};
 const char* shader_file_name[MAX_SHADER_PROGRAMS][2] = {
     {"./resources/shaders/mesh_0x12.vert",          "./resources/shaders/textured_mesh_lighted.frag"},
     {"./resources/shaders/mesh_0x2.vert",           "./resources/shaders/textured_mesh_lighted.frag"},
-    {"./resources/shaders/ui_sprite.vert",          "./resources/shaders/ui_sprite.frag"},
-    {"./resources/shaders/untextured_sprite.vert",  "./resources/shaders/untextured_sprite.frag"},
     {"./resources/shaders/untextured_coloured_sprite.vert",  "./resources/shaders/untextured_coloured_sprite.frag"},
     {"./resources/shaders/bounding_box.vert",       "./resources/shaders/untextured_sprite.frag"},
-    {"./resources/shaders/sprite_3D.vert",          "./resources/shaders/sprite_3D.frag"},
-    {"./resources/shaders/skybox.vert",             "./resources/shaders/skybox.frag"}
+    {"./resources/shaders/sprite.vert",          "./resources/shaders/sprite.frag"}
 };
 
 int MikuPan_InitShaders()
@@ -26,6 +23,8 @@ int MikuPan_InitShaders()
         const char* vertex_shader_filename = shader_file_name[i][0];
         u_int shader_file_size = MikuPan_GetFileSize(vertex_shader_filename) + 1;
 
+        /// Need to append a \0 at the end of the string or it won't compile
+        /// the shader
         char* vertex_shader_buffer = malloc(shader_file_size);
         vertex_shader_buffer[shader_file_size - 1] = 0;
 
@@ -78,16 +77,6 @@ int MikuPan_InitShaders()
     return 0;
 }
 
-void MikuPan_BackUpCurrentShaderProgram()
-{
-    glad_glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&backup_current_program);
-}
-
-void MikuPan_RestoreCurrentShaderProgram()
-{
-    glad_glUseProgram(backup_current_program);
-}
-
 u_int MikuPan_SetCurrentShaderProgram(int shader_program)
 {
     if (shader_program >= MAX_SHADER_PROGRAMS)
@@ -98,12 +87,6 @@ u_int MikuPan_SetCurrentShaderProgram(int shader_program)
     current_program = shader_list[shader_program];
     glad_glUseProgram(current_program);
     return current_program;
-}
-
-void MikuPan_SetShaderProgramWithBackup(int shader_program)
-{
-    MikuPan_BackUpCurrentShaderProgram();
-    MikuPan_SetCurrentShaderProgram(shader_program);
 }
 
 u_int MikuPan_GetCurrentShaderProgram()

@@ -2108,7 +2108,6 @@ void DispSprD(DISP_SPRT *s)
     float* render_buffer = (float*)&pbuf[ndpkt];
     float ndc[2] = { 0.0f, 0.0f };
 
-
     for (i = 0; i < 4; i++)
     {
         pbuf[ndpkt].fl32[0] = uu[i];

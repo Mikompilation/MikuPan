@@ -49,6 +49,7 @@ void FrameTimeGraph::update(float dt_sec)
     {
         times_.erase(times_.begin());
     }
+
     times_.push_back(ms);
 
     sum_ms_ += ms;
