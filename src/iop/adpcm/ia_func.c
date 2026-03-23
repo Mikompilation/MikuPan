@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "memory.h"
+#include "mikupan/mikupan_audio.h"
 #include "os/system.h"
 #include "ee/eekernel.h"
 #include "iop/iopmain.h"
@@ -60,22 +61,17 @@ void IaInitEffect()
 
 void IaInitVolume()
 {
-    float ll = iop_adpcm[0].vol_ll / 16383.0f;
-    float lr = iop_adpcm[0].vol_lr / 16383.0f;
-    float rl = iop_adpcm[0].vol_rl / 16383.0f;
-    float rr = iop_adpcm[0].vol_rr / 16383.0f;
+    /*sceSdSetParam(SD_P_MVOLL | 0, iop_mv.vol);
+    sceSdSetParam(SD_P_MVOLR | 0, iop_mv.vol);
+    sceSdSetSwitch(SD_S_VMIXL | 0, 0xFFFFFFu);
+    sceSdSetSwitch(SD_S_VMIXR | 0, 0xFFFFFFu);
+    sceSdSetSwitch(SD_S_VMIXEL | 0, 0);
+    sceSdSetSwitch(SD_S_VMIXER | 0, 0);
+    sceSdSetParam(SD_VP_VOLL | SD_VOICE(0) | 0, 0);
+    sceSdSetParam(SD_VP_VOLR | SD_VOICE(0) | 0, 0);
+    sceSdSetParam(SD_VP_VOLL | SD_VOICE(1) | 0, 0);
+    sceSdSetParam(SD_VP_VOLR | SD_VOICE(1) | 0, 0);*/
 
-    float left  = ll + rl;
-    float right = lr + rr;
-
-    float gain = (left + right) * 0.5f;
-
-    float pan = 0.0f;
-    if (left + right > 0.0001f)
-        pan = (right - left) / (left + right);
-
-    SDL_SetAudioStreamGain(iop_adpcm[0].stream, gain);
-    //SDL_SetAudioStreamPan(iop_adpcm[0].stream, pan);
 }
 
 void IaDbgMemoryCheck()
@@ -216,6 +212,8 @@ static void IaSetStopBlock(u_char channel)
 
 void IaSetMasterVol(u_short mvol)
 {
-    float gain = ((float)(mvol & 0x3FFF) / 0x3FFF) * 0.5f;
-    SDL_SetAudioStreamGain(iop_adpcm[0].stream, gain);
+    mVolL = mvol & 0x3FFF;
+    mVolR = mvol & 0x3FFF;
+    sceSdSetParam(SD_P_MVOLL, mvol & 0x3FFF);
+    sceSdSetParam(SD_P_MVOLR, mvol & 0x3FFF);
 }

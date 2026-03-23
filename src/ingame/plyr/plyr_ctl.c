@@ -1116,7 +1116,7 @@ void PlyrTrembleChk()
         {
             if (mvib_time1 == 18)
             {
-                SeStartFix(15, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_TERROR, 0, 0x1000, 0x1000, 0);
             }
 
             mvib_time1--;
@@ -1260,7 +1260,7 @@ void PlyrHPdwonCtrl()
                 plyr_wrk.sta &= ~0x800;
                 plyr_wrk.sta |= 0x4000;
 
-                SeStartFix(6, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_USEITEM, 0, 0x1000, 0x1000, 0);
 
                 hp_down_deg = 0;
             }
@@ -1523,7 +1523,7 @@ void PlyrSubAtkChk()
                 }
                 else
                 {
-                    SeStartFix(12, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CAMSUB_01, 0, 0x1000, 0x1000, 0);
                 }
             }
         }
@@ -1920,20 +1920,20 @@ void PlyrPhotoChk()
         case 4:
         case 5:
         case 6:
-            SeStartFix(0x15, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_SPOUT_LOW, 0, 0x1000, 0x1000, 0);
         break;
         case 7:
         case 8:
         case 9:
-            SeStartFix(0x16, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_SPOUT_MDL, 0, 0x1000, 0x1000, 0);
         break;
         case 10:
         case 11:
         case 12:
-            SeStartFix(0x17, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_SPOUT_HI, 0, 0x1000, 0x1000, 0);
         break;
         default:
-            SeStartFix(0x14, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_SHUTTER, 0, 0x1000, 0x1000, 0);
         break;
         }
 
@@ -1949,7 +1949,7 @@ void PlyrPhotoChk()
     }
     else if (poss_item[plyr_wrk.film_no] == 0)
     {
-        SeStartFix(5, 0, 0x1000, 0xa00, 0);
+        SeStartFix(SE_SEALING, 0, 0x1000, 0xa00, 0);
     }
 }
 
@@ -2149,11 +2149,11 @@ void PlyrChargeCtrl(u_char req, ENE_WRK *ew)
                 {
                     plyr_wrk.charge_rate = 4.5f;
 
-                    SeStartFix(19, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_PUNT, 0, 0x1000, 0x1000, 0);
                 }
                 else
                 {
-                    SeStartFix(18, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CHARGE, 0, 0x1000, 0x1000, 0);
                 }
             }
             else

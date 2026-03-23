@@ -78,11 +78,6 @@ static inline void SetAdsr2(int vNo, u_short val)
     voices[vNo].adsr2 = val;
 }
 
-static inline s16 ApplyVolume(s16 sample, s16 vol)
-{
-    return (vol * sample) >> 15;
-}
-
 void CloseVoice(int vNo);
 void CloseVoices();
 
