@@ -126,7 +126,7 @@ static int GetClipValue()
 }
 
 #define FLT_TO_FIX4(_val) ((int)((_val) * 16.0f))
-static inline void inline_asm__mirror_c_line_120(Q_WORDDATA base, sceVu0FVECTOR vp)
+static inline void inline_asm__mirror_c_line_120(Q_WORDDATA *base, sceVu0FVECTOR vp)
 {
     sceVu0FVECTOR *wk0 = work_matrix_0; // in [vf4:vf7]
     sceVu0FVECTOR *wk1 = work_matrix_1; // in [vf8:vf11]
@@ -144,27 +144,22 @@ static inline void inline_asm__mirror_c_line_120(Q_WORDDATA base, sceVu0FVECTOR 
     tmp0[1] *= r;
     tmp0[2] *= r;
 
-    /// TODO : CHECK MORE INDEPTH THIS HERE, CAUSES CRASHES
-    base.iv[0] = FLT_TO_FIX4(tmp0[0]);
-    base.iv[1] = FLT_TO_FIX4(tmp0[1]);
-    base.iv[2] = FLT_TO_FIX4(tmp0[2]);
-
-    //base.fv[0] = tmp0[0] * 16.0f;
-    //base.fv[1] = tmp0[1] * 16.0f;
-    //base.fv[2] = tmp0[2] * 16.0f;
+    base[0].ui32[0] = FLT_TO_FIX4(tmp0[0]);
+    base[0].ui32[1] = FLT_TO_FIX4(tmp0[1]);
+    base[0].ui32[2] = FLT_TO_FIX4(tmp0[2]);
 
     // Gets skipped, actually so the value should be unused as it's undefined
     // base.i[3] = FLT_TO_FIX4(tmp0[3] * r);
 
-    base.fv[4] = (wk0[0][0] * vp[0]) + (wk0[1][0] * vp[1]) + (wk0[2][0] * vp[2]) + (wk0[3][0] * vp[3]);
-    base.fv[5] = (wk0[0][1] * vp[0]) + (wk0[1][1] * vp[1]) + (wk0[2][1] * vp[2]) + (wk0[3][1] * vp[3]);
-    base.fv[6] = (wk0[0][2] * vp[0]) + (wk0[1][2] * vp[1]) + (wk0[2][2] * vp[2]) + (wk0[3][2] * vp[3]);
-    base.fv[7] = (wk0[0][3] * vp[0]) + (wk0[1][3] * vp[1]) + (wk0[2][3] * vp[2]) + (wk0[3][3] * vp[3]);
+    base[1].fl32[0] = (wk0[0][0] * vp[0]) + (wk0[1][0] * vp[1]) + (wk0[2][0] * vp[2]) + (wk0[3][0] * vp[3]);
+    base[1].fl32[1] = (wk0[0][1] * vp[0]) + (wk0[1][1] * vp[1]) + (wk0[2][1] * vp[2]) + (wk0[3][1] * vp[3]);
+    base[1].fl32[2] = (wk0[0][2] * vp[0]) + (wk0[1][2] * vp[1]) + (wk0[2][2] * vp[2]) + (wk0[3][2] * vp[3]);
+    base[1].fl32[3] = (wk0[0][3] * vp[0]) + (wk0[1][3] * vp[1]) + (wk0[2][3] * vp[2]) + (wk0[3][3] * vp[3]);
 
-    base.fv[8]  = tmp0[0];
-    base.fv[9]  = tmp0[1];
-    base.fv[10] = tmp0[2];
-    base.fv[11] = tmp0[3];
+    base[2].fl32[0] = tmp0[0];
+    base[2].fl32[1] = tmp0[1];
+    base[2].fl32[2] = tmp0[2];
+    base[2].fl32[3] = tmp0[3];
 }
 
 int CheckMirrorModel(void *sgd_top)
@@ -397,7 +392,7 @@ void CalcScreenMirror(sceVu0FVECTOR vp0, sceVu0FVECTOR vp1, sceVu0FVECTOR vp2,
 
         for (i = 0; i < 3; i++)
         {
-            inline_asm__mirror_c_line_120(*(Q_WORDDATA*)pbase, fn->in[i].vp);
+            inline_asm__mirror_c_line_120((Q_WORDDATA*)pbase, fn->in[i].vp);
             pbase += 3;
         }
 
@@ -415,7 +410,7 @@ void CalcScreenMirror(sceVu0FVECTOR vp0, sceVu0FVECTOR vp1, sceVu0FVECTOR vp2,
 
             for (i = 0; i < fn->nodes; i++)
             {
-                inline_asm__mirror_c_line_120(*(Q_WORDDATA*)pbase, fn->in[i].vp);
+                inline_asm__mirror_c_line_120((Q_WORDDATA*)pbase, fn->in[i].vp);
 
                 if (mxmax < pbase[0][0])
                 {
