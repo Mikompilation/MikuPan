@@ -8,7 +8,7 @@ MikuPan_PipelineInfo pipelines[MAX_NUMBER_OF_PIPELINES] = {0};
 void MikuPan_InitPipeline()
 {
     ///////// MESH_0x12_SHADER /////////
-    MikuPan_PipelineInfo* curr_pipeline = &pipelines[POSITION3_NORMAL3_UV];
+    MikuPan_PipelineInfo* curr_pipeline = &pipelines[POSITION3_NORMAL3_UV2];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 2);
     glad_glGenVertexArrays(1, &curr_pipeline->vao);
     glad_glBindVertexArray(curr_pipeline->vao);
@@ -40,7 +40,7 @@ void MikuPan_InitPipeline()
     glad_glBindVertexArray(0);
 
     ///////// MESH_0x2_SHADER /////////
-    curr_pipeline = &pipelines[POSITION4_NORMAL4_UV];
+    curr_pipeline = &pipelines[POSITION4_NORMAL4_UV2];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 2);
     glad_glGenVertexArrays(1, &curr_pipeline->vao);
     glad_glBindVertexArray(curr_pipeline->vao);
@@ -112,8 +112,8 @@ void MikuPan_InitPipeline()
 
     glad_glEnableVertexAttribArray(0);
 
-    ///////// SPRITE 3D SHADER /////////
-    curr_pipeline = &pipelines[UV4_COLOR4_POSITION4];
+    ///////// SPRITE SHADER /////////
+    curr_pipeline = &pipelines[UV4_COLOUR4_POSITION4];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 1);
     glad_glGenVertexArrays(1, &curr_pipeline->vao);
     glad_glBindVertexArray(curr_pipeline->vao);

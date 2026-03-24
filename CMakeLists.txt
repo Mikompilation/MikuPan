@@ -235,7 +235,7 @@ set(MIKUPAN_SOURCES
         extern/glad/src/gl.c
         src/ingame/map/find_dat.c
         src/mikupan/rendering/mikupan_pipeline.c
-        src/mikupan/mikupan_utils.c
+        "src/mikupan/mikupan_utils.c"
         src/ingame/map/furn_spe/fsla_dat.c
 )
 

@@ -12,7 +12,7 @@ const char* shader_file_name[MAX_SHADER_PROGRAMS][2] = {
     {"./resources/shaders/mesh_0x12.vert",          "./resources/shaders/textured_mesh_lighted.frag"},
     {"./resources/shaders/mesh_0x2.vert",           "./resources/shaders/textured_mesh_lighted.frag"},
     {"./resources/shaders/untextured_coloured_sprite.vert",  "./resources/shaders/untextured_coloured_sprite.frag"},
-    {"./resources/shaders/bounding_box.vert",       "./resources/shaders/untextured_sprite.frag"},
+    {"./resources/shaders/bounding_box.vert",       "./resources/shaders/untextured_coloured_sprite.frag"},
     {"./resources/shaders/sprite.vert",          "./resources/shaders/sprite.frag"}
 };
 

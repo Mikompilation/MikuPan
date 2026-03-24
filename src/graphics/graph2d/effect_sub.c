@@ -8,7 +8,6 @@
 #include "sce/libgraph.h"
 #include "sce/libvu0.h"
 
-// #include "os/pad.h"
 #include "common/ul_math.h"
 #include "graphics/graph2d/effect_oth.h"
 #include "graphics/graph2d/sprt.h"
@@ -52,8 +51,8 @@ static u_long128 *bufz;
 void InitEffectSub()
 {
     buf = (u_long128 *)MikuPan_GetHostPointer(EFFECT_ADDRESS);
-    buf2 = (u_long128 *)MikuPan_GetHostPointer(0x01F1C000);
-    bufz = (u_long128 *)MikuPan_GetHostPointer(0x05000000);
+    buf2 = (u_long128 *)MikuPan_GetHostPointer(EFFECT_BUFFER_ADDRESS);
+    bufz = (u_long128 *)MikuPan_GetHostPointer(EFFECT_Z_BUFFER_ADDRESS);
     vib1_time = 0;
     vib2_time = 0;
     vib2_pow = 0;

@@ -16,9 +16,11 @@
 #include "ingame/plyr/unit_ctl.h"
 #include "graphics/graph3d/sglib.h"
 
+#include <stdlib.h>
+
 #define PI 3.1415927f
 
-void RotLimitChk(sceVu0FVECTOR rot)
+void RotLimitChk(float* rot)
 {
     if (PI < rot[0])
     {

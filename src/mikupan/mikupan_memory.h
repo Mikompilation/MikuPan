@@ -23,6 +23,8 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define ImgHdAddress                    0x012f0000
 #define IG_MSG_OBJ_ADDRESS              0x0084a000
 #define EFFECT_ADDRESS                  0x01e90000
+#define EFFECT_BUFFER_ADDRESS           0x01F1C000
+#define EFFECT_Z_BUFFER_ADDRESS         0x05000000
 #define PBUF_ADDRESS                    0x00720000
 #define SPRITE_ADDRESS                  0x00a30000
 #define PL_BGBG_PK2_ADDRESS             0x01d05140

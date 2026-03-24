@@ -16,4 +16,6 @@ void MikuPan_GetPS2Viewport(int width, int height, float *vx, float *vy, float *
 void MikuPan_FixUV(float* uv, int num);
 void MikuPan_SetTriangleIndex(int* triangle_index, int vertex_count, int vertex_offset, int mesh_offset);
 unsigned int *MikuPan_GetNextUnpackAddr(unsigned int *prim);
+unsigned char* MikuPan_ConvertImageAlpha(unsigned char* img, int width, int height);
+unsigned char MikuPan_AdjustPS2Alpha(unsigned char alpha);
 #endif//MIKUPAN_MIKUPAN_UTILS_H

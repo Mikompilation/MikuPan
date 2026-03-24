@@ -253,7 +253,7 @@ void MikuPan_ShowTextureList()
         if (ImGui::CollapsingHeader(label.c_str()))
         {
             ImGui::Text("%d: %d x %d", texture->id, texture->width, texture->height);
-            ImGui::Image((ImTextureID)(intptr_t)texture->id, ImVec2(texture->width, texture->height));
+            ImGui::Image(static_cast<ImTextureID>(static_cast<intptr_t>(texture->id)), ImVec2(texture->width, texture->height));
         }
     }
 

@@ -493,6 +493,7 @@ void SetVUMeshDataPost(u_int *prim)
             read_p = SetVUVNDataPost(vuvnprim);
 
             MikuPan_SetWeightedMesh(1);
+            /// Needs to be its own function since the actual type is 0x10
             MikuPan_RenderMeshType0x2((void*)vuvnprim, (void*)prim, (float*)read_p);
             MikuPan_SetWeightedMesh(0);
 

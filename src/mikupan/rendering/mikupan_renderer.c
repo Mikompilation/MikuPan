@@ -427,7 +427,7 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
     };
 
     u_int current_program = MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOR4_POSITION4);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     glad_glBindVertexArray(pipeline->vao);
     glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
@@ -447,7 +447,7 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
 void MikuPan_RenderSprite2D(sceGsTex0 *tex, float *buffer)
 {
     MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOR4_POSITION4);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     glad_glBindVertexArray(pipeline->vao);
     MikuPan_SetTexture(tex);
@@ -478,7 +478,7 @@ void MikuPan_RenderUntexturedSprite(float *buffer)
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
 {
     MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOR4_POSITION4);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     glad_glBindVertexArray(pipeline->vao);
     MikuPan_SetTexture(tex);
@@ -643,7 +643,7 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
     }
 
     MikuPan_SetCurrentShaderProgram(MESH_0x12_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV2);
 
     SGDPROCUNITDATA *pVUVNData = (SGDPROCUNITDATA *) &pVUVN[1];
     SGDPROCUNITDATA *pProcData = (SGDPROCUNITDATA *) &pPUHead[1];
@@ -753,7 +753,7 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
     VUVN_PRIM *v = ((VUVN_PRIM *) &((int*)pVUVN)[2]);
 
     MikuPan_SetCurrentShaderProgram(MESH_0x12_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV2);
     glad_glBindVertexArray(pipeline->vao);
 
     sceGsTex0 *mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x18);
@@ -805,7 +805,7 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
     }
 
     MikuPan_SetCurrentShaderProgram(MESH_0x2_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4_NORMAL4_UV);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4_NORMAL4_UV2);
     VUVN_PRIM *v = ((VUVN_PRIM *) &((int*)pVUVN)[2]);
 
     SGDVUMESHPOINTNUM *pMeshInfo = (SGDVUMESHPOINTNUM *) &pPUHead[4];
