@@ -162,6 +162,7 @@ int CheckCoordCache(int cn)
             return 1;
         }
     }
+
 label:
     ccahe.cache_on = 1;
     ccahe.edge_check = edge_check;
@@ -232,7 +233,8 @@ void CalcVertexBuffer(u_int *prim)
     //vli = (VERTEXLIST *)lphead->pWeightedList;
     vli = (VERTEXLIST *) MikuPan_GetHostPointer(lphead->pWeightedList);
 
-    if (vli == NULL)
+    //if (vli == NULL)
+    if (lphead->pWeightedList == 0)
     {
         return;
     }
@@ -317,12 +319,6 @@ u_int *SetVUVNDataPost(u_int *prim)
 
     void* bak = vp;
 
-    cn = (char *) MikuPan_GetHostPointer(prim[0]);
-    load_matrix_0(lcp[cn[0x1c]].lwmtx);
-    load_matrix_1(lcp[cn[0x1d]].lwmtx);
-    //load_matrix_0(lcp[cn[0x1c]].workm);
-    //load_matrix_1(lcp[cn[0x1d]].workm);
-
     switch (vh->vtype)
     {
         case 2:
@@ -335,6 +331,13 @@ u_int *SetVUVNDataPost(u_int *prim)
             }
             else
             {
+                cn = (char *) MikuPan_GetHostPointer(prim[0]);
+
+                load_matrix_0(lcp[cn[0x1c]].lwmtx);
+                load_matrix_1(lcp[cn[0x1d]].lwmtx);
+                //load_matrix_0(lcp[cn[0x1c]].workm);
+                //load_matrix_1(lcp[cn[0x1d]].workm);
+
                 for (i = 0; i < vh->vnum; vp += 2, prim += 2, i++)
                 {
                     calc_skinned_data(vp, (float *) MikuPan_GetHostPointer(prim[0]), (float *) MikuPan_GetHostPointer(prim[1]));
@@ -353,6 +356,13 @@ u_int *SetVUVNDataPost(u_int *prim)
             {
                 for (i = 0; i < vh->vnum; i++, vp += 2, prim += 2)
                 {
+                    cn = (char *) MikuPan_GetHostPointer(prim[0]);
+
+                    load_matrix_0(lcp[cn[0x1c]].lwmtx);
+                    load_matrix_1(lcp[cn[0x1d]].lwmtx);
+                    //load_matrix_0(lcp[cn[0x1c]].workm);
+                    //load_matrix_1(lcp[cn[0x1d]].workm);
+
                     calc_skinned_data(vp, (float *) MikuPan_GetHostPointer(prim[0]), (float *) MikuPan_GetHostPointer(prim[1]));
                 }
             }
@@ -476,9 +486,7 @@ void SetVUMeshDataPost(u_int *prim)
         case 0:
             read_p = SetVUVNDataPost(vuvnprim);
 
-            //MikuPan_SetWeightedMesh(1);
             //MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER*)vuvnprim, (SGDPROCUNITHEADER*)prim, (float*)read_p);
-            //MikuPan_SetWeightedMesh(0);
 
             read_p[0] = 0x14000000 | ((u_int) DRAWTYPE0 >> 3);
             read_p[1] = 0x17000000;
@@ -492,10 +500,8 @@ void SetVUMeshDataPost(u_int *prim)
         case 2:
             read_p = SetVUVNDataPost(vuvnprim);
 
-            MikuPan_SetWeightedMesh(1);
             /// Needs to be its own function since the actual type is 0x10
             MikuPan_RenderMeshType0x2((void*)vuvnprim, (void*)prim, (float*)read_p);
-            MikuPan_SetWeightedMesh(0);
 
             read_p[0] = 0x14000000 | ((u_int) DRAWTYPE2W >> 3);
             read_p[1] = 0x17000000;

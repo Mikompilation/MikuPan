@@ -20,8 +20,8 @@
 #define PI 3.1415925f
 #define POW2(x) ((x) * (x))
 
-sceVu0FVECTOR work_vf01;
-sceVu0FVECTOR work_vf02;
+sceVu0FVECTOR work_vf01 = {0.0f, 0.0f, 0.0f, 0.0f};
+sceVu0FVECTOR work_vf02 = {0.0f, 0.0f, 0.0f, 0.0f};
 
 sceVu0FVECTOR vf12reg[2] = {
     {1.0f, 1.0f, 1.0f, -1.0f},

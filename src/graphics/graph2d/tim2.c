@@ -2067,8 +2067,6 @@ void DispSprD(DISP_SPRT *s)
         pbuf[ndpkt++].ul64[1] = SCE_GS_NOP;
     }
 
-    //MikuPan_Render2DTexture(s);
-
     pbuf[ndpkt].ul64[0] = mtex1;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEX1_1;
 

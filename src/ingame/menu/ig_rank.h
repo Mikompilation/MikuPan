@@ -2,17 +2,21 @@
 #define INGAME_MENU_IG_RANK_H
 
 #include "typedefs.h"
-#include "ig_types.h"
+#include "ingame/menu/ig_types.h"
 #include "os/system.h"
 
-
-typedef struct { // 0x5
-    /* 0x0 */ u_char mode;
-    /* 0x1 */ u_char csr_bak;
-    /* 0x2 */ u_char star;
-    /* 0x3 */ u_char cnt;
-    /* 0x4 */ char exist_s_rank;
+typedef struct {
+    u_char mode;
+    u_char csr_bak;
+    u_char star;
+    u_char cnt;
+    char exist_s_rank;
 } MENU_RANK;
+
+typedef struct {
+    u_short type;
+    u_short id;
+} SUBJECT_CHK;
 
 extern SAVE_RANK save_rank;
 

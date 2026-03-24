@@ -14,7 +14,7 @@ void main()
 {
     vUV = aUV;
 
-    gl_Position = projection * view * model * aPos;
-    //vNormal = transpose(inverse(model)) * aNormal;
+    /// Weighted mesh get converted to world space on the CPU
+    gl_Position = projection * view * aPos;
     vNormal = aNormal;
 }

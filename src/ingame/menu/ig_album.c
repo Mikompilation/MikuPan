@@ -1,10 +1,5 @@
 #include "common.h"
 
-#ifdef MATCHING_DECOMP
-#define INCLUDING_FROM_IG_ALBUM_C
-#include "ig_album.h"
-#undef INCLUDING_FROM_IG_ALBUM_C
-#else
 #include "ig_album.h"
 
 void NewgameMenuAlbumInit()
@@ -59,6 +54,11 @@ u_char MoneyIsTime(u_char time)
     return 0;
 }
 
+void PutDate(PICTURE_WRK *pic_inf, short int pos_x, short int pos_y,
+             short int alpha, int pri)
+{
+}
+
 void OutGameInitPhoto()
 {
 }
@@ -72,4 +72,3 @@ float GetPhtDispAlpha()
 {
     return 0.5f;
 }
-#endif

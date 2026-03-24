@@ -4,8 +4,9 @@
 
 enum ShaderPrograms
 {
-    MESH_0x12_SHADER,
     MESH_0x2_SHADER,
+    MESH_0xA_SHADER,
+    MESH_0x12_SHADER,
     UNTEXTURED_COLOURED_SPRITE_SHADER,
     BOUNDING_BOX_SHADER,
     SPRITE_SHADER,
@@ -18,6 +19,8 @@ int MikuPan_InitShaders();
 u_int MikuPan_SetCurrentShaderProgram(int shader_program);
 u_int MikuPan_GetCurrentShaderProgram();
 void MikuPan_SetUniformMatrix4fvToAllShaders(float* mat, char* name);
+void MikuPan_SetUniform4fvToAllShaders(float* vector, char* name);
+void MikuPan_SetUniform4fvToCurrentShader(float* vector, char* name);
 void MikuPan_SetUniform1iToAllShaders(int value, char* name);
 
 #endif//MIKUPAN_MIKUPAN_SHADER_H

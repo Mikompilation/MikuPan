@@ -155,17 +155,18 @@ void MikuPan_SetupAmbientLighting()
     for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
     {
         u_int curr = MikuPan_SetCurrentShaderProgram(i);
+        float* f_light = MikuPan_GetLightColor();
 
         glad_glUniform3fv(
             glad_glGetUniformLocation(curr, "lightColor"),
             1,
-            MikuPan_GetLightColor()
+            f_light
             /* MikuPan_GetLightColor() */
             /* TAmbient */);
 
         glad_glUniform1f(
             glad_glGetUniformLocation(curr, "ambientStrength"),
-            1.0f);
+            f_light[3]);
     }
 }
 
@@ -238,40 +239,6 @@ void MikuPan_SetTexture(sceGsTex0 *tex0)
     }
 }
 
-void MikuPan_Render2DTexture(DISP_SPRT *sprite)
-{
-    if (!MikuPan_IsFirstUploadDone())
-    {
-        return;
-    }
-
-    sceGsTex0 *tex0 = (sceGsTex0 *) &sprite->tex0;
-
-    MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(tex0);
-
-    if (texture_info == NULL)
-    {
-        texture_info = MikuPan_CreateGLTexture(tex0);
-    }
-
-    MikuPan_Rect dst_rect = {0};
-    MikuPan_Rect src_rect = {0};
-
-    src_rect.x = (float) sprite->u;
-    src_rect.y = (float) sprite->v;
-
-    src_rect.w = (float) sprite->w;
-    src_rect.h = (float) sprite->h;
-
-    dst_rect.x = (float) sprite->x;
-    dst_rect.y = (float) sprite->y;
-
-    dst_rect.w = (float) sprite->w;
-    dst_rect.h = (float) sprite->h;
-
-    MikuPan_RenderSprite(src_rect, dst_rect, sprite->r, sprite->g, sprite->b, sprite->alpha, texture_info);
-}
-
 void MikuPan_Render2DMessage(DISP_SPRT *sprite)
 {
     MikuPan_Rect dst_rect = {0};
@@ -342,13 +309,11 @@ void MikuPan_RenderBoundingBox(sceVu0FVECTOR *vertices)
 
     float bb_color[4] = {0.0f, 1.0f, 0.0f, 1.0f};
 
-    u_int curr = MikuPan_SetCurrentShaderProgram(BOUNDING_BOX_SHADER);
+    MikuPan_SetCurrentShaderProgram(BOUNDING_BOX_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4);
+    MikuPan_SetRenderState3D();
 
-    glad_glUniform4fv(
-        glad_glGetUniformLocation(curr, "uColor"),
-        1,
-        bb_color);
+    MikuPan_SetUniform4fvToCurrentShader(bb_color, "uColor");
 
     glad_glBindVertexArray(pipeline->vao);
     glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
@@ -357,8 +322,6 @@ void MikuPan_RenderBoundingBox(sceVu0FVECTOR *vertices)
         pipeline->buffers[0].attributes[0].offset,
         pipeline->buffers[0].buffer_length,
         vertices);
-
-    MikuPan_SetRenderState3D();
 
     for (int i = 0; i < 6; i++)
     {
@@ -507,11 +470,6 @@ void MikuPan_SetupFntTexture()
 float* MikuPan_GetWorldClipView()
 {
     return (float*)&WorldClipView;
-}
-
-void MikuPan_SetWeightedMesh(int value)
-{
-    MikuPan_SetUniform1iToAllShaders(value, "isWeighted");
 }
 
 void MikuPan_SetWorldClipView()
@@ -727,11 +685,11 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
 
     if (mesh_type == 0x32)
     {
-        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, byte_size, buf);
+        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)byte_size, buf);
     }
     else
     {
-        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, byte_size, vertices);
+        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)byte_size, vertices);
     }
 
     draw_calls++;
@@ -804,7 +762,19 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
         return;
     }
 
-    MikuPan_SetCurrentShaderProgram(MESH_0x2_SHADER);
+    if (GET_MESH_TYPE(pPUHead) == 0x2)
+    {
+        MikuPan_SetCurrentShaderProgram(MESH_0x2_SHADER);
+    }
+    else if (GET_MESH_TYPE(pPUHead) == 0xA)
+    {
+        MikuPan_SetCurrentShaderProgram(MESH_0xA_SHADER);
+    }
+    else
+    {
+        return;
+    }
+
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4_NORMAL4_UV2);
     VUVN_PRIM *v = ((VUVN_PRIM *) &((int*)pVUVN)[2]);
 

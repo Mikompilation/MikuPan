@@ -2125,23 +2125,6 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
         Change.CSA = 0;
         Change.CLD = 0;
     }
-
-    //DISP_SPRT s = {0};
-    //s.tex0 = *(u_long*)&sd->g_GsTex0;
-    //s.r = sd->r;
-    //s.g = sd->g;
-    //s.b = sd->b;
-    //s.alpha = sd->alpha;
-    //s.x = mx + 320;
-    //s.y = my + 224;
-    //s.scw = sd->scale_w;
-    //s.sch = sd->scale_h;
-    //s.u = 8;
-    //s.v = 8;
-    //s.w = sd->size_w;
-    //s.h = sd->size_h;
-    //s.rot = sd->angle;
-    //MikuPan_Render2DTexture(&s);
     
     Reserve2DPacket(0xffffffff);
 
@@ -2155,8 +2138,7 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
     pbuf[ndpkt].ul64[0] = 0;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEXFLUSH;
 
-    sceGsTex0* mikupan_texture_load;
-    mikupan_texture_load = (sceGsTex0*)&pbuf[ndpkt];
+    sceGsTex0* mikupan_texture_load = (sceGsTex0*)&pbuf[ndpkt];
     
     if (sd->g_GsTex0.PSM == SCE_GS_PSMT4)
     {
@@ -2208,62 +2190,28 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
         | SCE_GS_UV    << (4 * 7) 
         | (u_long)SCE_GS_XYZF2 << (4 * 8);
 
-    /*
-    float buffer[4][12];
-
     float x0 = mx;
     float x1 = x0 + mszw;
 
     float y0 = my;
     float y1 = y0 + mszh;
 
-    float textureWidth = (float) (1 << mikupan_texture_load->TW);
-    float textureHeight = (float) (1 << mikupan_texture_load->TH);
-
-    float u0 = tw[0] / (textureWidth * 16.0f);
-    float u1 = tw[1] / (textureWidth * 16.0f);
-
-    float v0 = th[0] / (textureHeight * 16.0f);
-    float v1 = th[1] / (textureHeight * 16.0f);
-
-    float vertices[4][4] = {
-        /// POS,    UV
-        {x0, y0, u0, v0}, // top-left
-        {x1, y0, u1, v0}, // top-right
-
-        {x0, y1, u0, v1}, // bottom-left
-        {x1, y1, u1, v1}, // bottom-right
+    float vertices[4][12] = {
+        /// UV,               COLOUR,                                                                                  POS
+        {0.0f, 0.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y0, 0.0f, 1.0f, }, // top-left
+        {1.0f, 0.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y0, 0.0f, 1.0f, }, // top-right
+        {0.0f, 1.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y1, 0.0f, 1.0f, }, // bottom-left
+        {1.0f, 1.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y1, 0.0f, 1.0f, }, // bottom-right
     };
-
-    float ndc[2] = {0.0f, 0.0f};
 
     for (int i = 0; i < 4; i++)
     {
-        /// UV
-        buffer[i][0] = vertices[i][2];
-        buffer[i][1] = vertices[i][3];
-        buffer[i][2] = 0.0f;
-        buffer[i][3] = 0.0f;
-
-        /// Color
-        buffer[i][4] = (float)r/128.0f;
-        buffer[i][5] = (float)g/128.0f;
-        buffer[i][6] = (float)b/128.0f;
-        buffer[i][7] = MikuPan_ConvertScaleColor(128);
-
-        MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(ndc,
+        MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(&vertices[i][8],
             (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(),
-            vertices[i][0], vertices[i][1]);
-
-        /// Position
-        buffer[i][8] = ndc[0];
-        buffer[i][9] = ndc[1];
-        buffer[i][10] = 0.0f;
-        buffer[i][11] = 1.0f;
+            vertices[i][8], vertices[i][9]);
     }
 
-    MikuPan_RenderSprite2D(mikupan_texture_load, &buffer[0][0]);
-    */
+    MikuPan_RenderSprite2D(mikupan_texture_load, &vertices[0][0]);
     
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
