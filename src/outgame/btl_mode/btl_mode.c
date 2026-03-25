@@ -212,7 +212,7 @@ void BattleModeStageMain()
     case BTL_MODE_SAVE2:
         if (IsEndAdpcmFadeOut() != 0)
         {
-            mcInit(0, (u_int *)MC_WORK_ADDRESS, mc_msn_flg);
+            mcInit(0, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), mc_msn_flg);
 
 #ifdef BUILD_EU_VERSION
             sp_load_id = LoadReqLanguage(PL_PSVP_E_PK2, PL_PSVP_PK2_ADDRESS);

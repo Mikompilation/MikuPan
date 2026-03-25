@@ -10,7 +10,7 @@ typedef struct {
 	u_short file_no;
 	u_char file_type;
 	u_char tmp_no;
-	int64_t addr;
+	int addr;
 } MSN_LOAD_DAT;
 
 typedef struct { // 0x8

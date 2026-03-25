@@ -187,11 +187,6 @@ static u_char zushi_alpha[3];
 #define PI 3.1415927f
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
 
-#define BASE_ADDRESS 0x7f0000
-
-#define EVENT_ADDRESS 0x1e90000
-#define EVENT_ADDRESS_2 0x1ed8f10
-
 void SpecialEventInit(u_char spev_no)
 {
     spev_wrk = (SPECIAL_EVENT_WRK){0};

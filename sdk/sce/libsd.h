@@ -4,7 +4,7 @@
 #include "mikupan/mikupan_audio.h"
 #include "typedefs.h"
 
-extern s16 spuRam[0x15160 * 10];
+extern s16 spuRam[(1024*1024*2) >> 1];
 
 extern void sceSdSetParam(u_short entry, u_short value);
 extern u_short sceSdGetParam(u_short entry);

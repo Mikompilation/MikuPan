@@ -3,7 +3,9 @@
 
 #include "typedefs.h"
 
-void RotLimitChk(sceVu0FVECTOR rot);
+/// Changed from void RotLimitChk(sceVu0FVECTOR rot); because the compiler
+/// did not like how it was being passed
+void RotLimitChk(float* rot);
 float GetTrgtRotY(sceVu0FVECTOR p0, sceVu0FVECTOR p1);
 void GetTrgtRotFromPlyr(sceVu0FVECTOR p, sceVu0FVECTOR rot, int id);
 void GetTrgtRot(sceVu0FVECTOR p0, sceVu0FVECTOR p1, sceVu0FVECTOR rot, int id);

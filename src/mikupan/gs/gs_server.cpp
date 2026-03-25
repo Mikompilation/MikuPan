@@ -3,7 +3,7 @@
 #include "mikupan_texture_manager.h"
 
 extern "C" {
-#include "common/utility.h"
+#include "mikupan/mikupan_utils.h"
 }
 
 #include "spdlog/spdlog.h"
@@ -257,23 +257,6 @@ void GS::GSHelper::Clear()
     memset(mem_.data(), 0, mem_.size() * sizeof(char));
 }
 
-void GsStore(sceGsStoreImage* image_store, unsigned char* outbuf)
-{
-    spdlog::debug("GS store request for SBP {:#x} SPSM {} X: {} Y: {}",
-                  (int)image_store->bitbltbuf.SBP,
-                  (int)image_store->bitbltbuf.SPSM,
-                  (int)image_store->trxreg.RRW,
-                  (int)image_store->trxreg.RRH);
-
-    const int sbp  = image_store->bitbltbuf.SBP;
-    const int sbw  = image_store->bitbltbuf.SBW;
-    const int ssax = image_store->trxpos.SSAX;
-    const int ssay = image_store->trxpos.SSAY;
-    const int rrw  = image_store->trxreg.RRW;
-    const int rrh  = image_store->trxreg.RRH;
-    //memcpy(outbuf, &gsHelper.mem_.data()[GetPixelAddressPSMCT32(sbp, sbw, 0, 0)], rrh * rrw * 4);
-}
-
 void GsUpload(sceGsLoadImage *image_load, unsigned char *image)
 {
     spdlog::debug("GS upload request for DBP {:#x} DPSM {} X: {} Y: {}",
@@ -327,9 +310,9 @@ unsigned char *DownloadGsTexture(sceGsTex0 *tex0)
     int height = (1 << tex0->TH);
 
     spdlog::debug("GS download request for DBP {:#x} CBP {:#x} DPSM {} ",
-                  (unsigned long long) tex0->TBP0,
-                  (unsigned long long) tex0->CBP,
-                  (unsigned long long) tex0->PSM);
+                  static_cast<unsigned long long>(tex0->TBP0),
+                  static_cast<unsigned long long>(tex0->CBP),
+                  static_cast<unsigned long long>(tex0->PSM));
 
     auto texture = MikuPan_GetTexturePixelBuffer(tex0);
 
@@ -367,31 +350,9 @@ unsigned char *DownloadGsTexture(sceGsTex0 *tex0)
             break;
     }
 
-    /// TODO: Move code somewhere prettier
-    /// TODO: Add TextureManager code here once implemented or else...
-    auto image_data = (unsigned int *) malloc(width * height * 4);
-    auto rawPixel = (unsigned int *) img.data();
+    unsigned char* image_data = MikuPan_ConvertImageAlpha(img.data(), width, height);
 
-    struct RGBA
-    {
-        unsigned char r;
-        unsigned char g;
-        unsigned char b;
-        unsigned char a;
-    };
+    MikuPan_AddTexturePixelBuffer(tex0, image_data);
 
-    for (auto i = 0; i < height; i++)
-    {
-        for (auto k = 0; k < width; k++)
-        {
-            auto pixel = (RGBA *) &rawPixel[(i * width + k)];
-            pixel->a = AdjustAlpha(pixel->a);
-
-            image_data[(i * width + k)] = *(unsigned int *) pixel;
-        }
-    }
-
-    MikuPan_AddTexturePixelBuffer(tex0, (unsigned char *) image_data);
-
-    return (unsigned char *) image_data;
+    return image_data;
 }

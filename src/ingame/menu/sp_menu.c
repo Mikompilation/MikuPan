@@ -319,15 +319,15 @@ char SavePointMenuMain(u_char msn)
 
                     if (is_btlmode)
                     {
-                        mcInit(0, (u_int *) 0x420000, mc_header.game.msn_flg);
+                        mcInit(0, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), mc_header.game.msn_flg);
                     }
                     else if (msn == 0)
                     {
-                        mcInit(0, (u_int *) 0x420000, 0);
+                        mcInit(0, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
                     }
                     else
                     {
-                        mcInit(0, (u_int *) 0x420000, 1);
+                        mcInit(0, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 1);
                     }
 
                     spmenu_wrk.mode = 7;
@@ -393,11 +393,11 @@ char SavePointMenuMain(u_char msn)
 
                 if (dsp_svp.in_album != 0)
                 {
-                    mcInit(4, (u_int *) 0x420000, 0);
+                    mcInit(4, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
                 }
                 else
                 {
-                    mcInit(3, (u_int *) 0x420000, 0);
+                    mcInit(3, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
                 }
 
                 spmenu_wrk.mode = 11;
@@ -554,15 +554,15 @@ char SavePointMenuMain(u_char msn)
                 case 1:
                     if (is_btlmode)
                     {
-                        mcInit(2, (u_int *) 0x420000, mc_header.game.msn_flg);
+                        mcInit(2, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), mc_header.game.msn_flg);
                     }
                     else if (msn == 0)
                     {
-                        mcInit(2, (u_int *) 0x420000, 0);
+                        mcInit(2, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
                     }
                     else
                     {
-                        mcInit(2, (u_int *) 0x420000, 1);
+                        mcInit(2, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 1);
                     }
 
                     dsp_svp.load_side = 0;
@@ -583,15 +583,15 @@ char SavePointMenuMain(u_char msn)
                 case 2:
                     if (is_btlmode)
                     {
-                        mcInit(2, (u_int *) 0x420000, mc_header.game.msn_flg);
+                        mcInit(2, (u_int *) MikuPan_GetHostPointer(MC_WORK_ADDRESS), mc_header.game.msn_flg);
                     }
                     else if (msn == 0)
                     {
-                        mcInit(2, (u_int *) 0x420000, 0);
+                        mcInit(2, (u_int *) MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
                     }
                     else
                     {
-                        mcInit(2, (u_int *) 0x420000, 1);
+                        mcInit(2, (u_int *) MikuPan_GetHostPointer(MC_WORK_ADDRESS), 1);
                     }
 
                     dsp_svp.load_side = 1;
@@ -738,7 +738,7 @@ char SavePointMenuMain(u_char msn)
                     }
                     else
                     {
-                        mcInit(3, (u_int *) 0x420000, 0);
+                        mcInit(3, (u_int *) MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
 
                         spmenu_wrk.mode = 11;
                     }
@@ -3223,11 +3223,11 @@ char AlbumModeInGameOver()
 
                 if (albm_mode.in_album != 0)
                 {
-                    mcInit(MC_MODE_ALBUMLOAD_GAME2, (u_int *) 0x420000, 0);
+                    mcInit(MC_MODE_ALBUMLOAD_GAME2, (u_int *) MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
                 }
                 else
                 {
-                    mcInit(MC_MODE_ALBUMLOAD_GAME1, (u_int *) 0x420000, 0);
+                    mcInit(MC_MODE_ALBUMLOAD_GAME1, (u_int *) MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
                 }
 
                 albm_mode.step = ALBM_MODE_DATA_LOAD;
@@ -3369,7 +3369,7 @@ char AlbumModeInGameOver()
                     // do nothing ...
                     break;
                 case 1:
-                    mcInit(MC_MODE_ALBUMSAVE, (u_int *) 0x420000, 1);
+                    mcInit(MC_MODE_ALBUMSAVE, (u_int *) MikuPan_GetHostPointer(MC_WORK_ADDRESS), 1);
 
                     albm_mode.load_side = 0;
 #ifdef BUILD_EU_VERSION
@@ -3386,7 +3386,7 @@ char AlbumModeInGameOver()
                     albm_mode.step = ALBM_MODE_AFT;
                     break;
                 case 2:
-                    mcInit(MC_MODE_ALBUMSAVE, (u_int *) 0x420000, 1);
+                    mcInit(MC_MODE_ALBUMSAVE, (u_int *) MikuPan_GetHostPointer(MC_WORK_ADDRESS), 1);
 
                     albm_mode.load_side = 1;
 #ifdef BUILD_EU_VERSION
@@ -3509,7 +3509,7 @@ char AlbumModeInGameOver()
                     }
                     else
                     {
-                        mcInit(MC_MODE_ALBUMLOAD_GAME1, (u_int *) 0x420000, 0);
+                        mcInit(MC_MODE_ALBUMLOAD_GAME1, (u_int *) MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
 
                         albm_mode.step = ALBM_MODE_DATA_LOAD;
                     }

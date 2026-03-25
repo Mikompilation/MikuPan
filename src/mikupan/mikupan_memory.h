@@ -14,14 +14,24 @@ int MikuPan_SanitizePs2Address(int address);
 int MikuPan_IsPs2AddressMainMemoryRange(int address);
 int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 
+#define BASE_ADDRESS                    0x007f0000
+#define EVENT_ADDRESS                   0x01e90000
+#define EVENT_ADDRESS_2                 0x01ed8f10
+#define TX_BTL_RES_PK2_ADDRESS          0x01f108b0
+#define EFFECT_ANIMATION_ADDRESS        0x01f108b0
 #define FontTextAddress                 0x01e30000
 #define ImgHdAddress                    0x012f0000
 #define IG_MSG_OBJ_ADDRESS              0x0084a000
 #define EFFECT_ADDRESS                  0x01e90000
+#define EFFECT_BUFFER_ADDRESS           0x01F1C000
+#define EFFECT_Z_BUFFER_ADDRESS         0x05000000
 #define PBUF_ADDRESS                    0x00720000
 #define SPRITE_ADDRESS                  0x00a30000
 #define PL_BGBG_PK2_ADDRESS             0x01d05140
 #define PL_STTS_PK2_ADDRESS             0x01ce0000
+#define MODE_SELECT_ADDRESS             0x01d10000
+#define MODE_SELECT2_ADDRESS            0x01d51db0
+#define SP_SPRITES_ADDRESS              0x01ce0000
 #define PL_PSVP_PK2_ADDRESS             0x01d59630
 #define PL_SAVE_PK2_ADDRESS             0x01d15600
 #define SV_PHT_PK2_ADDRESS              0x01d28c80
@@ -83,6 +93,13 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define ENE_DMG_TEX_TYPE_9_ADDRESS_0    0x00ac8000
 #define ANIM_MODEL_TYPE_9_ADDRESS_1     0x00ae0000
 #define ENE_DMG_TEX_TYPE_9_ADDRESS_1    0x00b78000
+#define BUFFER_PIC_DST_ADDRESS          0x01AA5400
+#define MSN_MAP_OBG_ADDRESS             0x007f8000
+#define MODEL_DATA_ADDRESS              0x014b0000
+#define SCENE_TEST_MD_LOAD_ADDRESS      0x00e00000
+#define LOAD_ITEM_2D_ADDRESS            0x01d573b0
+#define VRAM_ITEM_2D_ADDRESS            0x01d573b0
+#define VRAM_ITEM_2D_EU_ADDRESS         0x01d51db0
 
 /* DEVKIT EXTANDED RAM */
 #define TEST2D_PK2_ADDRESS              0x007F0000 /* 0x04300000 */

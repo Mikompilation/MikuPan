@@ -12085,8 +12085,8 @@ static void DspBigCircle(u_short lu_chr, short int pos_x, short int pos_y, u_cha
 
         ds.scw = size_r / 110.0f;
         ds.sch = ds.scw;
-        ds.csx = spr_dat[lu_chr + 3].x;
-        ds.csy = spr_dat[lu_chr + 3].y;
+        ds.csx = spr_dat[lu_chr + FND_CONT_NUM00].x;
+        ds.csy = spr_dat[lu_chr + FND_CONT_NUM00].y;
 
         if (flip_table[i] == 1)
         {
@@ -12127,7 +12127,7 @@ static void PointerEN(short int pos_x, short int pos_y, u_char red, u_char alp, 
 
     scl = size / 64.0f;
 
-    CopySprDToSpr(&ds, &spr_dat[96]);
+    CopySprDToSpr(&ds, &spr_dat[FND_CNT_CIR]);
 
     ds.x += pos_x;
     ds.y += pos_y;
@@ -12237,14 +12237,14 @@ static void NumDisp(u_char number, u_char no, short int pos_x, short int pos_y, 
     }
     else
     {
-        slot_mov = spr_dat[3].h * inf_dsp.flm_cng_tmr / 20.0f;
+        slot_mov = spr_dat[FND_CONT_NUM00].h * inf_dsp.flm_cng_tmr / 20.0f;
     }
 
     for (i = 0; i < 4; i++)
     {
         spr_no = (number + 9 + i) % 10;
 
-        CopySprDToSpr(&ds, &spr_dat[spr_no + 3]);
+        CopySprDToSpr(&ds, &spr_dat[spr_no + FND_CONT_NUM00]);
 
         tmp_y = pos_y + num_y + slot_mov + ds.h - ds.h * i;
 

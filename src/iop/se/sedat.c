@@ -559,6 +559,12 @@ SE_PARAM* SeGetSeParamTbl(int num)
 
 int GetSeAdrs(int se_no)
 {
+    // This function is called with -1 unconditionlly when initing...
+    if (se_no < 0)
+    {
+        return 0;
+    }
+
     return se_param_tbl[se_no].adrs;
 }
 

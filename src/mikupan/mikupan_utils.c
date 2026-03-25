@@ -22,6 +22,27 @@ void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float* out, float scr
     out[1] = 1.0f - (y0 / screen_height) * 2.0f;
 }
 
+void MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(float* out, float screen_width, float screen_height, float x, float y)
+{
+    float scale_x = screen_width  / PS2_RESOLUTION_X_FLOAT;
+    float scale_y = screen_height / PS2_RESOLUTION_Y_FLOAT;
+    float scale   = (scale_x < scale_y) ? scale_x : scale_y;
+
+    float viewport_w = PS2_RESOLUTION_X_FLOAT * scale;
+    float viewport_h = PS2_RESOLUTION_Y_FLOAT * scale;
+
+    float viewport_x = (screen_width  - viewport_w) * 0.5f;
+    float viewport_y = (screen_height - viewport_h) * 0.5f;
+
+    // Compute destination rectangle in screen space
+    float x0 = viewport_x + (x + (PS2_RESOLUTION_X_FLOAT / 2)) * scale;
+    float y0 = viewport_y + (y + (PS2_RESOLUTION_Y_FLOAT / 2)) * scale;
+
+    // Convert screen space to OpenGL NDC (-1 to 1)
+    out[0] = (x0 / screen_width) * 2.0f - 1.0f;
+    out[1] = 1.0f - (y0 / screen_height) * 2.0f;
+}
+
 float MikuPan_ConvertScaleColor(unsigned char color_fragment)
 {
     if (color_fragment <= 127)
@@ -112,4 +133,42 @@ unsigned int *MikuPan_GetNextUnpackAddr(unsigned int *prim)
 
         prim++;
     }
+}
+
+unsigned char *MikuPan_ConvertImageAlpha(unsigned char *img, int width,
+                                         int height)
+{
+    unsigned int* image_data = (unsigned int *) malloc(width * height * 4);
+    unsigned int* raw_pixel = (unsigned int *) img;
+
+    typedef struct
+    {
+        unsigned char r;
+        unsigned char g;
+        unsigned char b;
+        unsigned char a;
+    } RGBA;
+
+    for (int i = 0; i < height; i++)
+    {
+        for (int k = 0; k < width; k++)
+        {
+            RGBA* pixel = (RGBA *) &raw_pixel[(i * width) + k];
+            pixel->a = MikuPan_AdjustPS2Alpha(pixel->a);
+
+            image_data[(i * width) + k] = *(unsigned int *) pixel;
+        }
+    }
+
+    return (unsigned char *)image_data;
+}
+
+unsigned char MikuPan_AdjustPS2Alpha(unsigned char alpha)
+{
+    if (alpha <= 127)
+    {
+        return alpha << 1;
+    }
+
+    return 0xFF;
 }

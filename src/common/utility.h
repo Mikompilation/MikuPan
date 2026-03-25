@@ -5,6 +5,4 @@
 
 char* StrToLower(char *str);
 
-u_char AdjustAlpha(u_char alpha);
-
 #endif // COMMON_UTILITY_H

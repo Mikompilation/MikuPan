@@ -7,23 +7,8 @@ MikuPan_PipelineInfo pipelines[MAX_NUMBER_OF_PIPELINES] = {0};
 
 void MikuPan_InitPipeline()
 {
-    ///////// DEFAULT_SHADER /////////
-    MikuPan_PipelineInfo* curr_pipeline = &pipelines[POSITION3];
-    MikuPan_CreateBufferObjectsInfo(curr_pipeline, 1);
-    glad_glGenVertexArrays(1, &curr_pipeline->vao);
-    glad_glBindVertexArray(curr_pipeline->vao);
-
-    /// POSITION ATTRIBUTE
-    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 1024 * 32, 1);
-    MikuPan_SetBufferAttributeInfo(
-        &curr_pipeline->buffers[0].attributes[0],
-        3, 0,
-        sizeof(float[3]), 0);
-
-    glad_glBindVertexArray(0);
-
     ///////// MESH_0x12_SHADER /////////
-    curr_pipeline = &pipelines[POSITION3_NORMAL3_UV];
+    MikuPan_PipelineInfo* curr_pipeline = &pipelines[POSITION3_NORMAL3_UV2];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 2);
     glad_glGenVertexArrays(1, &curr_pipeline->vao);
     glad_glBindVertexArray(curr_pipeline->vao);
@@ -55,7 +40,7 @@ void MikuPan_InitPipeline()
     glad_glBindVertexArray(0);
 
     ///////// MESH_0x2_SHADER /////////
-    curr_pipeline = &pipelines[POSITION4_NORMAL4_UV];
+    curr_pipeline = &pipelines[POSITION4_NORMAL4_UV2];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 2);
     glad_glGenVertexArrays(1, &curr_pipeline->vao);
     glad_glBindVertexArray(curr_pipeline->vao);
@@ -86,44 +71,27 @@ void MikuPan_InitPipeline()
 
     glad_glBindVertexArray(0);
 
-    ///////// UI_SPRITE_SHADER /////////
-    curr_pipeline = &pipelines[POSITION2_UV];
+    ///////// UNTEXTURED_COLOURED_SPRITE_SHADER /////////
+    /// Buffers for line and square
+    curr_pipeline = &pipelines[COLOUR4_POSITION4];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 1);
     glad_glGenVertexArrays(1, &curr_pipeline->vao);
     glad_glBindVertexArray(curr_pipeline->vao);
 
-    /// BUFFER 1: VERTICES + UVs
-    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], sizeof(float[6][4]), 2);
+    /// BUFFER 1: COLOURS + SPRITE POSITION
+    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], sizeof(float[8]) * 4, 2);
 
-    /// SPRITE POSITION
+    /// COLOUR
     MikuPan_SetBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0],
-        2, 0,
-        sizeof(float[4]), 0);
+        4, 0,
+        sizeof(float[8]), 0);
 
-    /// SPRITE UV
+    /// SPRITE POSITION
     MikuPan_SetBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1],
-        2, 1,
-        sizeof(float[4]), sizeof(float[2]));
-
-    glad_glBindVertexArray(0);
-
-    ///////// UNTEXTURED_SPRITE_SHADER /////////
-    /// Buffers for line and square
-    curr_pipeline = &pipelines[POSITION2];
-    MikuPan_CreateBufferObjectsInfo(curr_pipeline, 1);
-    glad_glGenVertexArrays(1, &curr_pipeline->vao);
-    glad_glBindVertexArray(curr_pipeline->vao);
-
-    /// BUFFER 1: VERTICES
-    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], sizeof(float[2]) * 6, 1);
-
-    /// SPRITE POSITION
-    MikuPan_SetBufferAttributeInfo(
-        &curr_pipeline->buffers[0].attributes[0],
-        2, 0,
-        sizeof(float[2]), 0);
+        4, 1,
+        sizeof(float[8]), sizeof(float[4]));
 
     glad_glEnableVertexAttribArray(0);
 
@@ -144,34 +112,8 @@ void MikuPan_InitPipeline()
 
     glad_glEnableVertexAttribArray(0);
 
-    ///////// SIMPLE TEXTURED SHADER /////////
-    curr_pipeline = &pipelines[POSITION3_UV];
-    MikuPan_CreateBufferObjectsInfo(curr_pipeline, 2);
-    glad_glGenVertexArrays(1, &curr_pipeline->vao);
-    glad_glBindVertexArray(curr_pipeline->vao);
-
-    /// BUFFER 1: VERTICES -> POSITION
-    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 1024 * 32, 1);
-
-    /// POSITION ATTRIBUTE
-    MikuPan_SetBufferAttributeInfo(
-        &curr_pipeline->buffers[0].attributes[0],
-        3, 0,
-        sizeof(float[3]), 0);
-
-    /// BUFFER 2: UVs
-    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[1], 1024 * 32, 1);
-
-    /// UVs ATTRIBUTE
-    MikuPan_SetBufferAttributeInfo(
-        &curr_pipeline->buffers[1].attributes[0],
-        2, 1,
-        sizeof(float[2]), 0);
-
-    glad_glEnableVertexAttribArray(0);
-
-    ///////// SPRITE 3D SHADER /////////
-    curr_pipeline = &pipelines[POSITION3_UV_3D];
+    ///////// SPRITE SHADER /////////
+    curr_pipeline = &pipelines[UV4_COLOUR4_POSITION4];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 1);
     glad_glGenVertexArrays(1, &curr_pipeline->vao);
     glad_glBindVertexArray(curr_pipeline->vao);

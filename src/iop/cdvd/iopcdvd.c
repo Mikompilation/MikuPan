@@ -19,10 +19,7 @@ CDVD_REQ_BUF cdvd_req[32];
 CDVD_LOAD_STAT load_stat[32];
 CDVD_TRANS_STAT cdvd_trans[2];
 
-// UNUSED: ToDo Refractor and ... cast pointer in here?
-u_int *load_buf_table[2];
-
-static u_int *se_buff_addr;
+u8 *load_buf_table[2];
 
 static void ICdvdInitOnce();
 static void ICdvdInitSoftReset();
@@ -55,7 +52,7 @@ void ICdvdCmd(IOP_COMMAND *icp)
             ICdvdAddCmd(icp);
             break;
         case IC_CDVD_SE_TRANS:
-            ICdvdTransSe(icp);
+            //ICdvdTransSe(icp);
             break;
         case IC_CDVD_SE_TRANS_RESET:
             ICdvdTransSeInit();
@@ -80,13 +77,6 @@ void ICdvdInitOnce()
     memset(cdvd_req, 0, sizeof(cdvd_req));
     memset(&iop_stat.cdvd, 0, sizeof(iop_stat.cdvd));
     memset(cdvd_trans, 0, sizeof(cdvd_trans));
-    load_buf_table[0] = malloc(0x64000);
-
-    if (load_buf_table[0])
-    {
-        load_buf_table[1] = load_buf_table[0] + 0x32000;
-        iop_stat.cdvd.ld_addr = load_buf_table[0];
-    }
 
     cdvd_stat.fp = fopen("\\IMG.BD.BIN", "r");
     cdvd_stat.lock = SDL_CreateMutex();
@@ -115,7 +105,7 @@ void ICdvdDoTransfer(CDVD_REQ_BUF *rq)
             break;
         case TRANS_MEM_SPU:// SPU
             MikuPan_ReadFileInArchive64(rq->start_sector, rq->size_sector,
-                                        &seBuff);
+                                        &load_buf_table[cdvd_stat.now_lbuf]);
             break;
     }
 
@@ -415,7 +405,8 @@ static void ICdvdTransFinishedData()
             sceSdVoiceTransStatus(cdvd_trans[cdvd_stat.now_lbuf].tid, 1);*/
 
             sceSdVoiceTrans(cdvd_trans[cdvd_stat.now_lbuf].tid, 0,
-                            (s16 *) seBuff, (u_int) se_buff_addr,
+                            load_buf_table[cdvd_stat.now_lbuf],
+                            (u_int) cdvd_req[cdvd_stat.start_pos].se_taddr,
                             cdvd_req[cdvd_stat.start_pos].size_sector);
             //sceSdSetTransIntrHandler(cdvd_trans[cdvd_stat.now_lbuf].tid, ICdvdSeTransCB, 0);
             cdvd_trans[cdvd_stat.now_lbuf].stat = 2;
@@ -451,6 +442,11 @@ static int ICdvdSectorLoad(CDVD_REQ_BUF *req_bufp)
     cdvd_stat.file_no = req_bufp->file_no;
     cdvd_stat.end_size = 0;
     cdvd_stat.id = req_bufp->id;
+
+    if (req_bufp->tmem == TRANS_MEM_SPU)
+    {
+        SeSetStartPoint(req_bufp->se_buf_no, req_bufp->file_no);
+    }
 
     ICdvdDataReadOnceSector(req_bufp);
     cdvd_stat.cmd_on = 1;
@@ -499,7 +495,7 @@ static void ICdvdAddCmd(IOP_COMMAND *icp)
 
     if (req_buf.tmem == TRANS_MEM_SPU)
     {
-        se_buff_addr = (u_int *) SeGetSndBufTop(icp->data4);
+        req_buf.se_taddr = SeGetSndBufTop(icp->data4);
         req_buf.se_buf_no = icp->data4;
     }
     else

@@ -826,10 +826,6 @@ static void SetFont(int pri, int type, int no, int x, int y, u_char r, u_char g,
     s.g = g;
     s.b = b;
     s.alpha = a;
-
-    sceGsTex0 Load = *(sceGsTex0*)&fntdat[ft].tex0;
-
-    s.tex0 = *(u_long*)&Load;
     s.x = x;
     s.y = y;
     s.u = tw1;
@@ -1052,7 +1048,6 @@ static void SetFontPat(int pri, int fn, int x, int y, int fw, u_char r, u_char g
     dq.g = g;
     dq.b = b;
     dq.alpha = a;
-
     dq.x = x;
     dq.y = y;
     dq.w = Font_W;

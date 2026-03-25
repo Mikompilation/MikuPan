@@ -12,6 +12,8 @@
 #include "mc/mc_exec.h"
 #include "mc/mc_main.h"
 
+#include <stdio.h>
+
 #define KEYCODE "BA"
 #define PRODUCT_CODE "SLUS-20388"
 
@@ -377,7 +379,7 @@ char mcCtrlCheckAlbum(void)
     case 0:
         mc_ctrl.sub_step = 1;
 
-        mcAcsReq(0);
+        mcAcsReq(MC_FUNC_SLOT_CHECK);
     break;
     case 1:
         if (mcAcsMain() != 0)
@@ -398,7 +400,7 @@ char mcCtrlCheckAlbum(void)
         sprintf(mc_ctrl.rw.path, "%s%s", "/", KEYCODE PRODUCT_CODE "albm");
         sprintf(mc_ctrl.rw.name, "%s*", mc_ctrl.rw.path);
 
-        mcAcsReq(1);
+        mcAcsReq(MC_FUNC_FILE_CHECK);
     break;
     case 3:
         if (mcAcsMain() != 0)
@@ -450,7 +452,7 @@ char mcCtrlCheckAlbum(void)
         mcSetPathDir(mc_ctrl.sel_file);
         sprintf(mc_ctrl.rw.name, "%s*", mc_ctrl.rw.path);
 
-        mcAcsReq(1);
+        mcAcsReq(MC_FUNC_FILE_CHECK);
     break;
     case 5:
         if (mcAcsMain() != 0)
@@ -531,7 +533,7 @@ char mcCtrlAlbumSel()
 
     if (mc_ctrl.sub_step == 1)
     {
-        mcAcsReq(7);
+        mcAcsReq(MC_FUNC_EXIST_CHECK);
 
         mc_ctrl.sub_step = 2;
     }

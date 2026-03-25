@@ -538,7 +538,8 @@ TextureAnimation* GetTextureAnimation(void *sgd_top)
 
     hs = (HeaderSection *)sgd_top;
 
-    prim = (u_int *)hs->primitives;
+    //prim = (u_int *)hs->primitives;
+    prim = GetTopProcUnitHeaderPtr(hs, 0);
 
     if (prim == NULL)
     {
@@ -604,6 +605,18 @@ void LoadTextureAnimation(u_int *prim)
     {
         tri2size = *(u_short *)&prim[3];
         prim = (u_int *)((int64_t)&prim[4] + tri2size * 16);
+
+        SGDTRI2FILEHEADER * tri2 = (SGDTRI2FILEHEADER *) prim;
+        GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
+
+        /// Need to upload the clut data too, only if it is not PSMCT32
+        if (tri2->gsli.bitbltbuf.DPSM != 0 /* PSMCT32 */)
+        {
+            uint8_t* img = (uint8_t*)&tri2[1];
+            sceGsLoadImage* image_load = (sceGsLoadImage*)&img[tri2->gsli.giftag1.NLOOP * 0x10];
+            uint8_t* image_color_data = (uint8_t*)(&image_load[1]);
+            GsUpload(image_load, image_color_data);
+        }
     }
 
     tri2size = *(u_short *)&prim[3];

@@ -16,6 +16,7 @@ typedef struct { // 0x20
     /* 0x10 */ int size_byte;
     /* 0x10:32 */ u_int id : 32;
     /* 0x18 */ u_int* taddr;
+    /* 0x18 */ u_int se_taddr;
     /* 0x1c */ u_char se_buf_no;
     /* 0x1d */ u_char tmem;
 } CDVD_REQ_BUF;

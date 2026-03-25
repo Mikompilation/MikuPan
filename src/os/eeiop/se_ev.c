@@ -3,6 +3,7 @@
 #include "enums.h"
 #include "se_ev.h"
 
+#include "mikupan/mikupan_logging_c.h"
 #include "os/eeiop/eese.h"
 #include "os/eeiop/se_data.h"
 
@@ -120,7 +121,7 @@ void SeEvReq(int se_req_no, int se_ev_pos, int count, char mode)
         
         if (free_sw == 0xff)
         {
-            printf("SeEvReq free_se = 0xFF\n");
+            info_log("SeEvReq free_se = 0xFF");
         }
         else
         {
@@ -137,7 +138,7 @@ void SeEvReq(int se_req_no, int se_ev_pos, int count, char mode)
                 seewp->count = 0;
             }
             
-            printf("SeEvReq se_no = %d, v_no = %d\n", ssp->se_no0, seewp->sew_no0);
+            info_log("SeEvReq se_no = %d, v_no = %d", ssp->se_no0, seewp->sew_no0);
         }
     }
 }

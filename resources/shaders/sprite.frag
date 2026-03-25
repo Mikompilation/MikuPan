@@ -12,10 +12,10 @@ void main()
     vec4 tex = texture(uTexture, vUV);
     vec4 col = tex * uColor;
 
-    if (col.a == 0.0f)
-    {
-        discard;
-    }
+    //if (col.a == 0.0f)
+    //{
+    //    discard;
+    //}
 
     FragColor = col;
 }

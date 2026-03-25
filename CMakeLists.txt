@@ -148,6 +148,7 @@ set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         "src/mc/mc_exec.c"
         "src/mc/mc_main.c"
         "src/mc/mc_start.c"
+        "src/mc/mc_icon.c"
         "src/os/eeiop/adpcm/ea_autog.c"
         "src/os/eeiop/adpcm/ea_btlmode.c"
         "src/os/eeiop/adpcm/ea_cmd.c"
@@ -239,7 +240,7 @@ set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         extern/glad/src/gl.c
         src/ingame/map/find_dat.c
         src/mikupan/rendering/mikupan_pipeline.c
-        src/mikupan/mikupan_utils.c
+        "src/mikupan/mikupan_utils.c"
         src/ingame/map/furn_spe/fsla_dat.c
 )
 

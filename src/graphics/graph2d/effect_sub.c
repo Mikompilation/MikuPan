@@ -8,7 +8,6 @@
 #include "sce/libgraph.h"
 #include "sce/libvu0.h"
 
-// #include "os/pad.h"
 #include "common/ul_math.h"
 #include "graphics/graph2d/effect_oth.h"
 #include "graphics/graph2d/sprt.h"
@@ -21,6 +20,7 @@
 #include "main/glob.h"
 #include "mikupan/gs/gs_server_c.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "os/pad.h"
 #include "os/system.h"
@@ -51,8 +51,8 @@ static u_long128 *bufz;
 void InitEffectSub()
 {
     buf = (u_long128 *)MikuPan_GetHostPointer(EFFECT_ADDRESS);
-    buf2 = (u_long128 *)MikuPan_GetHostPointer(0x01F1C000);
-    bufz = (u_long128 *)MikuPan_GetHostPointer(0x05000000);
+    buf2 = (u_long128 *)MikuPan_GetHostPointer(EFFECT_BUFFER_ADDRESS);
+    bufz = (u_long128 *)MikuPan_GetHostPointer(EFFECT_Z_BUFFER_ADDRESS);
     vib1_time = 0;
     vib2_time = 0;
     vib2_pow = 0;
@@ -132,8 +132,6 @@ void SetSquare(int pri, float x1, float y1, float x2, float y2, float x3, float 
     y[2] = (y3 / div + 2048.0f) * 16.0f;
     y[3] = (y4 / div + 2048.0f) * 16.0f;
 
-    MikuPan_RenderSquare(x1, y1, x2, y2, x3, y3, x4, y4, r, g, b, a);
-
     z = 0x0fffffff - mpri;
 
     pbuf[ndpkt].ul128 = (u_long128)0; // clear tag
@@ -168,6 +166,30 @@ void SetSquare(int pri, float x1, float y1, float x2, float y2, float x3, float 
         | SCE_GS_XYZF2 << (4 * 3) 
         | SCE_GS_XYZF2 << (4 * 4);
     ndpkt++;
+
+    float colours[4] = {
+        (float)r/128.0f,
+        (float)g/128.0f,
+        (float)b/128.0f,
+        MikuPan_ConvertScaleColor(a)
+    };
+
+    float vertices[4][8] = {
+        /// COLOUR,                                         POSITION
+        {colours[0], colours[1], colours[2], colours[3], x1, y1, 0.0f, 1.0f }, // top-left
+        {colours[0], colours[1], colours[2], colours[3], x2, y2, 0.0f, 1.0f }, // top-right
+        {colours[0], colours[1], colours[2], colours[3], x3, y3, 0.0f, 1.0f }, // bottom-left
+        {colours[0], colours[1], colours[2], colours[3], x4, y4, 0.0f, 1.0f }, // bottom-right
+    };
+
+    for (int i = 0; i < 4; i++)
+    {
+        MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(&vertices[i][4],
+            (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(),
+            vertices[i][4], vertices[i][5]);
+    }
+
+    MikuPan_RenderUntexturedSprite(&vertices[0][0]);
 
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
@@ -224,10 +246,6 @@ void SetSquare2s(int pri, float x1, float y1, float x4, float y4, u_char r1, u_c
     y[3] = (y4 / div + 2048.0f) * 16.0f;
     
     z = 0x0fffffff - mpri;
-
-    float w = x4 - x1;
-    float h = y4 - y1;
-    //MikuPan_RenderSquare(x1, y1, 0, 0, 0, 0, x4, y4, r1, g1, b1, a);
     
     pbuf[ndpkt].ul128 = (u_long128)0;
 
@@ -637,7 +655,7 @@ void SetLine(int pri, float x1, float y1, float x2, float y2, u_char r, u_char g
 }
 
 void SetLine2(int pri, float x1, float y1, float x2, float y2, u_char r, u_char g, u_char b, u_char a)
-    {
+{
 	u_char rr;
 	u_char gg;
 	u_char bb;
@@ -1074,14 +1092,14 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
         for (i = 0; i < 4; i++)
         {            
             pbuf[ndpkt].fl32[0] = stq[i % 2];
-            pbuf[ndpkt].fl32[1] = stq[i % 2];
+            pbuf[ndpkt].fl32[1] = stq[i / 2];
             pbuf[ndpkt].fl32[2] = 0.0f;
             pbuf[ndpkt++].fl32[3] = 0.0f;
             
             pbuf[ndpkt].fl32[0] = (float)r/255.0f;
             pbuf[ndpkt].fl32[1] = (float)g/255.0f;
             pbuf[ndpkt].fl32[2] = (float)b/255.0f;
-            pbuf[ndpkt++].fl32[3] = (float)a/255.0f;
+            pbuf[ndpkt++].fl32[3] = (float)a/128.0f;
 
             pbuf[ndpkt].fl32[0] = (float)ivec[i][0];
             pbuf[ndpkt].fl32[1] = (float)ivec[i][1];
@@ -1445,37 +1463,38 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
 
 void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
 {
-	int n;
-	int tw[2];
-	int th[2];
-	float mx;
-	float my;
-	u_int mz;
-	float mscw;
-	float msch;
-	float mszw;
-	float mszh;
-	int mclu;
-	int mclv;
-	u_int r;
-	u_int g;
-	u_int b;
-	u_int a;
-	u_long tex1;
-	u_long alpha;
-	u_long zbuf;
-	u_long test;
-	u_long clmp;
-	u_long prim;
-	sceGsTex0 Load;
-	sceGsTex0 Change;
-	float div;
-	float px;
-	float py;
-	float pw;
-	float ph;
-	float xx[2];
-	float yy[2];
+    int n;
+    int tw[2];
+    int th[2];
+    float mx;
+    float my;
+    u_int mz;
+    float mscw;
+    float msch;
+    float mszw;
+    float mszh;
+    int mclu;
+    int mclv;
+    u_int r;
+    u_int g;
+    u_int b;
+    u_int a;
+    u_long tex1;
+    u_long alpha;
+    u_long zbuf;
+    u_long test;
+    u_long clmp;
+    u_long prim;
+    sceGsTex0 Load = {0};
+    sceGsTex0 Change = {0};
+    sceGsTex0* mikupan_texture_load;
+    float div;
+    float px;
+    float py;
+    float pw;
+    float ph;
+    float xx[2];
+    float yy[2];
     
     div = g_bInterlace ? 2.0f : 1.0f;
 
@@ -1552,33 +1571,6 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
         Change.CLD = 0;
     }
 
-    DISP_SPRT s = {0};
-    s.tex0 = *(u_long*)&sd->g_GsTex0;
-    s.r = sd->r;
-    s.g = sd->g;
-    s.b = sd->b;
-    s.alpha = sd->alpha;
-    s.x = mx + 320;
-    s.y = my + 224;
-
-    int min_u_clamp = (mclu>>4) & 0xffff;
-    int max_u_clamp = (mclu>>24) & 0xffff;
-
-    int min_v_clamp = (mclv>>4) & 0xffff;
-    int max_v_clamp = (mclv>>24) & 0xffff;
-
-    s.u = min_u_clamp; //min_u_clamp + ((rand() / RAND_MAX) * max_u_clamp);
-    s.v = min_v_clamp; //min_v_clamp + ((rand() / RAND_MAX) * max_v_clamp);
-    s.w = sd->size_w;
-    s.h = sd->size_h;
-    s.rot = sd->angle;
-    s.scw = sd->scale_w;
-    s.sch = sd->scale_h;
-
-    MikuPan_Render2DTexture(&s);
-    //s.alpha = de->alpha;
-    //MikuPan_Render2DTexture(&s);
-
     Reserve2DPacket(pri);
     
     pbuf[ndpkt].ul128 = (u_long128)0;
@@ -1590,6 +1582,8 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
     
     pbuf[ndpkt].ul64[0] = 0;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEXFLUSH;
+
+    mikupan_texture_load = (sceGsTex0*)&pbuf[ndpkt];
     
     if (sd->g_GsTex0.PSM == SCE_GS_PSMT4)
     {
@@ -1630,27 +1624,81 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
         | SCE_GS_XYZF2 << (4 * 2) 
         | SCE_GS_UV    << (4 * 3) 
         | SCE_GS_XYZF2 << (4 * 4);
-    
+
+    float buffer[4][12];
+
+    float x0 = mx;
+    float x1 = x0 + mszw;
+
+    float y0 = my;
+    float y1 = y0 + mszh;
+
+    float textureWidth = (float) (1 << mikupan_texture_load->TW);
+    float textureHeight = (float) (1 << mikupan_texture_load->TH);
+
+    float u0 = tw[0] / (textureWidth * 16.0f);
+    float u1 = tw[1] / (textureWidth * 16.0f);
+
+    float v0 = th[0]/ (textureHeight * 16.0f);
+    float v1 = th[1]/ (textureHeight * 16.0f);
+
+    float vertices[4][4] = {
+        /// POS,    UV
+        {x0, y0, (float)u0, (float)v0}, // top-left
+        {x1, y0, (float)u1, (float)v0}, // top-right
+        {x0, y1, (float)u0, (float)v1}, // bottom-left
+        {x1, y1, (float)u1, (float)v1}, // bottom-right
+    };
+
+    float ndc[2] = {0.0f, 0.0f};
+
+    for (int i = 0; i < 4; i++)
+    {
+        /// UV
+        buffer[i][0] = vertices[i][2];
+        buffer[i][1] = vertices[i][3];
+        buffer[i][2] = 0.0f;
+        buffer[i][3] = 0.0f;
+
+        /// Color
+        buffer[i][4] = (float)r/128.0f;
+        buffer[i][5] = (float)g/128.0f;
+        buffer[i][6] = (float)b/128.0f;
+        buffer[i][7] = MikuPan_ConvertScaleColor(a);
+
+        MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(ndc,
+            (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(),
+            vertices[i][0], vertices[i][1]);
+
+        /// Position
+        buffer[i][8] = ndc[0];
+        buffer[i][9] = ndc[1];
+        buffer[i][10] = 0.0f;
+        buffer[i][11] = 1.0f;
+    }
+
+    MikuPan_RenderSprite2D(mikupan_texture_load, &buffer[0][0]);
+
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
     pbuf[ndpkt].ui32[2] = b;
     pbuf[ndpkt++].ui32[3] = a;
-    
+
     pbuf[ndpkt].iv[0] = tw[0];
     pbuf[ndpkt].iv[1] = th[0];
     pbuf[ndpkt].iv[2] = 0;
     pbuf[ndpkt++].iv[3] = 0;
-    
+
     pbuf[ndpkt].ui32[0] = (int)xx[0];
     pbuf[ndpkt].ui32[1] = (int)yy[0];
     pbuf[ndpkt].ui32[2] = mz;
     pbuf[ndpkt++].ui32[3] = 0;
-    
+
     pbuf[ndpkt].iv[0] = tw[1];
     pbuf[ndpkt].iv[1] = th[1];
     pbuf[ndpkt].iv[2] = 0;
     pbuf[ndpkt++].iv[3] = 0;
-    
+
     pbuf[ndpkt].ui32[0] = (int)xx[1];
     pbuf[ndpkt].ui32[1] = (int)yy[1];
     pbuf[ndpkt].ui32[2] = mz;
@@ -1689,6 +1737,8 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
 	float ph;
 	float xx[2];
 	float yy[2];
+
+    sceGsTex0* mikupan_texture_load;
     
     div = g_bInterlace ? 2.0f : 1.0f;
 
@@ -1763,31 +1813,6 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
         Change.CLD = 0;
     }
 
-    DISP_SPRT s = {0};
-    s.tex0 = *(u_long*)&sd->g_GsTex0;
-    s.r = sd->r;
-    s.g = sd->g;
-    s.b = sd->b;
-    s.alpha = sd->alpha;
-    s.x = mx + 320;
-    s.y = my + 224;
-
-    int min_u_clamp = (mclu>>4) & 0xffff;
-    int max_u_clamp = (mclu>>24) & 0xffff;
-
-    int min_v_clamp = (mclv>>4) & 0xffff;
-    int max_v_clamp = (mclv>>24) & 0xffff;
-
-    s.u = min_u_clamp; //min_u_clamp + ((rand() / RAND_MAX) * max_u_clamp);
-    s.v = min_v_clamp; //min_v_clamp + ((rand() / RAND_MAX) * max_v_clamp);
-    s.w = sd->size_w;
-    s.h = sd->size_h;
-    s.rot = sd->angle;
-    s.scw = sd->scale_w;
-    s.sch = sd->scale_h;
-
-    MikuPan_Render2DTexture(&s);
-
     Reserve2DPacket(pri);
     
     pbuf[ndpkt].ul128 = (u_long128)0;
@@ -1799,6 +1824,8 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
     
     pbuf[ndpkt].ul64[0] = 0;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEXFLUSH;
+
+    mikupan_texture_load = (sceGsTex0*)&pbuf[ndpkt];
     
     if (sd->g_GsTex0.PSM == SCE_GS_PSMT4)
     {
@@ -1839,6 +1866,61 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
         | SCE_GS_XYZF2 << (4 * 2) 
         | SCE_GS_UV    << (4 * 3) 
         | SCE_GS_XYZF2 << (4 * 4);
+
+    float buffer[4][12];
+
+    float x0 = mx;
+    float x1 = x0 + mszw;
+
+    float y0 = my;
+    float y1 = y0 + mszh;
+
+    float textureWidth = (float) (1 << mikupan_texture_load->TW);
+    float textureHeight = (float) (1 << mikupan_texture_load->TH);
+
+    float u0 = tw[0] / (textureWidth * 16.0f);
+    float u1 = tw[1] / (textureWidth * 16.0f);
+
+    float v0 = th[0] / (textureHeight * 16.0f);
+    float v1 = th[1] / (textureHeight * 16.0f);
+
+    float vertices[4][4] = {
+        /// POS,    UV
+        {x0, y0, u0, v0}, // top-left
+        {x1, y0, u1, v0}, // top-right
+
+        {x0, y1, u0, v1}, // bottom-left
+        {x1, y1, u1, v1}, // bottom-right
+    };
+
+    float ndc[2] = {0.0f, 0.0f};
+
+    for (int i = 0; i < 4; i++)
+    {
+        /// UV
+        buffer[i][0] = vertices[i][2];
+        buffer[i][1] = vertices[i][3];
+        buffer[i][2] = 0.0f;
+        buffer[i][3] = 0.0f;
+
+        /// Color
+        buffer[i][4] = (float)r/128.0f;
+        buffer[i][5] = (float)g/128.0f;
+        buffer[i][6] = (float)b/128.0f;
+        buffer[i][7] = MikuPan_ConvertScaleColor(a);
+
+        MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(ndc,
+            (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(),
+            vertices[i][0], vertices[i][1]);
+
+        /// Position
+        buffer[i][8] = ndc[0];
+        buffer[i][9] = ndc[1];
+        buffer[i][10] = 0.0f;
+        buffer[i][11] = 1.0f;
+    }
+
+    MikuPan_RenderSprite2D(mikupan_texture_load, &buffer[0][0]);
     
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
@@ -2043,25 +2125,6 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
         Change.CSA = 0;
         Change.CLD = 0;
     }
-
-    DISP_SPRT s = {0};
-    s.tex0 = *(u_long*)&sd->g_GsTex0;
-    s.r = sd->r;
-    s.g = sd->g;
-    s.b = sd->b;
-    s.alpha = sd->alpha;
-    s.x = mx + 320;
-    s.y = my + 224;
-    s.scw = sd->scale_w;
-    s.sch = sd->scale_h;
-
-    s.u = 8;
-    s.v = 8;
-    s.w = sd->size_w;
-    s.h = sd->size_h;
-    s.rot = sd->angle;
-
-    MikuPan_Render2DTexture(&s);
     
     Reserve2DPacket(0xffffffff);
 
@@ -2074,6 +2137,8 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
     
     pbuf[ndpkt].ul64[0] = 0;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEXFLUSH;
+
+    sceGsTex0* mikupan_texture_load = (sceGsTex0*)&pbuf[ndpkt];
     
     if (sd->g_GsTex0.PSM == SCE_GS_PSMT4)
     {
@@ -2124,6 +2189,29 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
         | SCE_GS_XYZF2 << (4 * 6) 
         | SCE_GS_UV    << (4 * 7) 
         | (u_long)SCE_GS_XYZF2 << (4 * 8);
+
+    float x0 = mx;
+    float x1 = x0 + mszw;
+
+    float y0 = my;
+    float y1 = y0 + mszh;
+
+    float vertices[4][12] = {
+        /// UV,               COLOUR,                                                                                  POS
+        {0.0f, 0.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y0, 0.0f, 1.0f, }, // top-left
+        {1.0f, 0.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y0, 0.0f, 1.0f, }, // top-right
+        {0.0f, 1.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y1, 0.0f, 1.0f, }, // bottom-left
+        {1.0f, 1.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y1, 0.0f, 1.0f, }, // bottom-right
+    };
+
+    for (int i = 0; i < 4; i++)
+    {
+        MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(&vertices[i][8],
+            (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(),
+            vertices[i][8], vertices[i][9]);
+    }
+
+    MikuPan_RenderSprite2D(mikupan_texture_load, &vertices[0][0]);
     
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
@@ -2311,6 +2399,13 @@ void CaptureScreen(u_int addr)
     LocalCopyLtoB2(1, (sys_wrk.count & 1) * 224 * 10);
 }
 
+/// Draws the last 3D space as a texture on the screen
+/// @param pri
+/// @param addr PS2 ram address to which the TM2 texture should be copied to
+/// @param r red factor
+/// @param g green factor
+/// @param b blue factor
+/// @param a alpha factor
 void DrawScreen(u_int pri, u_int addr, u_char r, u_char g, u_char b, u_char a)
 {
     DISP_SPRT ds = {0};

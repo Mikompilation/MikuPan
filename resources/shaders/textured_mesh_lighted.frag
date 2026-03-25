@@ -22,6 +22,7 @@ void main()
 
     if (renderNormals == 1)
     {
+        //FragColor = transpose(inverse(model)) * aNormal;
         FragColor = vNormal;
     }
     else

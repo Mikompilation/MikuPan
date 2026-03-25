@@ -13,9 +13,12 @@
 #include "ingame/menu/ig_menu.h"
 #include "ingame/menu/item.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_memory.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 #include "os/pad.h"
+
+#include <string.h>
 
 static void FileCntInit();
 static void FileCntRenew();
@@ -4184,11 +4187,11 @@ static void PutBarScale(short int pos_x, short int pos_y, u_short now_lng, u_cha
     float mdl_scl;
     DISP_SPRT ds;
 
-    scl_px = spr_dat[chr_top + 2].x;
-    scl_py = spr_dat[chr_top + 2].y;
+    scl_px = spr_dat[chr_top + FND_CONT_BASE].x;
+    scl_py = spr_dat[chr_top + FND_CONT_BASE].y;
 
-    mdl_scl = (now_lng - (spr_dat[chr_top].h + spr_dat[chr_top + 1].h)) / (float)spr_dat[chr_top + 2].h;
-    mdl_lng = mdl_scl * spr_dat[chr_top + 2].h;
+    mdl_scl = (now_lng - (spr_dat[chr_top].h + spr_dat[chr_top + FND_FRAME_R].h)) / (float)spr_dat[chr_top + FND_CONT_BASE].h;
+    mdl_lng = mdl_scl * spr_dat[chr_top + FND_CONT_BASE].h;
 
     for (i = 0; i < 3; i++)
     {
@@ -4510,7 +4513,7 @@ static void PhotDispCtrl(u_char alp)
         mem_ofs = dsp_box[i].mem_no * 0x10440;
         tim_offset = dsp_box[i].mem_no * 0x204 + 0x3080;
 
-        mem_box[dsp_box[i].mem_no].tx = LoadTIM2Sub(&dmy, (char *)(LOAD_ADDRESS + mem_ofs), 0, tim_offset);
+        mem_box[dsp_box[i].mem_no].tx = LoadTIM2Sub(&dmy, (char *)MikuPan_GetHostPointer(LOAD_ADDRESS + mem_ofs), 0, tim_offset);
     }
 
     if (AllVramTensoOK(3, dsp_box) != 0)
@@ -4717,7 +4720,7 @@ static u_char DspPhot2D(u_long tex, u_char rt, short int px, short int py, short
         return 2;
     }
 
-    CopySprDToSpr(&ds, &spr_dat[287]);
+    CopySprDToSpr(&ds, &spr_dat[ITM_CAM_FLR]);
 
     ds.tex0 = tex;
 
@@ -4831,10 +4834,10 @@ void RelationShip()
     case 0:
 #ifdef BUILD_EU_VERSION
         file_rel.load_id = LoadReqLanguage(PL_FILE_REL_E_PK2, SPRT_ADDRESS);
-        file_rel.load_id = LoadReqLanguage(PL_GLST_E_PK2, 0x1e90000);
+        file_rel.load_id = LoadReqLanguage(PL_GLST_E_PK2, EVENT_ADDRESS);
 #else
         file_rel.load_id = LoadReq(PL_FILE_REL_PK2, SPRT_ADDRESS);
-        file_rel.load_id = LoadReq(PL_GLST_PK2, 0x1e90000);
+        file_rel.load_id = LoadReq(PL_GLST_PK2, EVENT_ADDRESS);
 #endif
         file_rel.step = 1;
     break;
@@ -4850,10 +4853,10 @@ void RelationShip()
         {
             file_rel.step = 3;
 #ifdef BUILD_EU_VERSION
-            file_rel.load_id = LoadReqLanguage(PL_FILE_E_PK2, 0x1e90000);
+            file_rel.load_id = LoadReqLanguage(PL_FILE_E_PK2, EVENT_ADDRESS);
             file_rel.load_id = LoadReqLanguage(PL_FNDR_E_PK2, SPRT_ADDRESS);
 #else
-            file_rel.load_id = LoadReq(PL_FILE_PK2, 0x1e90000);
+            file_rel.load_id = LoadReq(PL_FILE_PK2, EVENT_ADDRESS);
             file_rel.load_id = LoadReq(PL_FNDR_PK2, SPRT_ADDRESS);
 #endif
         }
@@ -5850,11 +5853,7 @@ void RelDspBackGrd()
 
     alpha = 0x64;
 
-#ifdef BUILD_EU_VERSION
-    ssd = spr_dat[1020];
-#else
-    ssd = spr_dat[1019];
-#endif
+    ssd = spr_dat[REL_TITLE_00];
 
     ssd.y += rel_csr.offy;
 
@@ -5862,11 +5861,7 @@ void RelDspBackGrd()
 
     DispSprD(&ds);
 
-#ifdef BUILD_EU_VERSION
-    ssd = spr_dat[1021];
-#else
-    ssd = spr_dat[1020];
-#endif
+    ssd = spr_dat[REL_TITLE_01];
 
     ssd.y += rel_csr.offy;
 
@@ -5874,7 +5869,7 @@ void RelDspBackGrd()
 
     DispSprD(&ds);
 
-    SetSprFile(0x1e90000);
+    SetSprFile(EVENT_ADDRESS);
 
     SetSprFile(SPRT_ADDRESS_2);
 
@@ -5882,7 +5877,7 @@ void RelDspBackGrd()
     {
         for (j = 0; j < 6; j++)
         {
-            ssd = spr_dat[463];
+            ssd = spr_dat[MAP_SEAT_PAPER];
 
             ssd.x = ssd.w * j;
             ssd.y = ssd.h * i;
@@ -5956,9 +5951,9 @@ void RelDspBackGrd()
 
     SetSprFile(SPRT_ADDRESS_2);
 
-    DrawButtonTex(0x14000, 3, spr_dat[476].x - 45, spr_dat[476].y + rel_csr.offy + 69, 0x64);
+    DrawButtonTex(0x14000, 3, spr_dat[MAP_DIRECTION].x - 45, spr_dat[MAP_DIRECTION].y + rel_csr.offy + 69, 0x64);
 
-    ssd = spr_dat[476];
+    ssd = spr_dat[MAP_DIRECTION];
 
     ssd.x += -45;
     ssd.y += rel_csr.offy + 97;
@@ -5980,9 +5975,9 @@ void RelDspBackGrd()
 
     DispSprD(&ds);
 
-    DrawButtonTex(0x14000, 1, spr_dat[476].x - 45, spr_dat[476].y + rel_csr.offy + 43, 0x64);
+    DrawButtonTex(0x14000, 1, spr_dat[MAP_DIRECTION].x - 45, spr_dat[MAP_DIRECTION].y + rel_csr.offy + 43, 0x64);
 
-    ssd = spr_dat[203];
+    ssd = spr_dat[MNU_GRB_CAP_EXIT];
 
     CopySprDToSpr(&ds, &ssd);
 
@@ -6073,7 +6068,7 @@ void RelationDispMsg(RELATION_DAT *r_dat)
     break;
     }
 
-    SetSprFile(0x1e90000);
+    SetSprFile(EVENT_ADDRESS);
 
 #ifdef BUILD_EU_VERSION
     Sheet(814, 20, dsp_offy + 20, 600, 180, 0xf, 0x80);
@@ -6151,11 +6146,7 @@ void TestPk2DataSou(long int sendtexaddr)
         ttest_count--;
     }
 
-#ifdef BUILD_EU_VERSION
-    ssd.tex0 = spr_dat[929].tex0;
-#else
-    ssd.tex0 = spr_dat[928].tex0;
-#endif
+    ssd.tex0 = spr_dat[REL_NAME_WAKU].tex0;
 
     ssd.u = 1;
     ssd.v = 1;

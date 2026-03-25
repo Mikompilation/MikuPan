@@ -189,27 +189,27 @@ void ResetPartsBlur()
 
 void* CallPartsDeform2(int type, float scale, void *pos, u_int in, u_int keep, u_int out)
 {
-    return SetEffects(EF_PDEFORM, 4, type, 100, scale, scale, pos, in, keep, out, NULL, NULL, NULL, NULL);
+    return SetEffects(EF_PDEFORM, 4, type, 100, scale, scale, pos, in, keep, out, (void*)0, (void*)0, (void*)0, (void*)0);
 }
 
 void* CallPartsDeform3(int type, float scale, void *pos, u_int in, u_int keep, u_int out, int alp)
 {
-    return SetEffects(EF_PDEFORM, 4, type, alp, scale, scale, pos, in, keep, out, NULL, NULL, NULL, NULL);
+    return SetEffects(EF_PDEFORM, 4, type, alp, scale, scale, pos, in, keep, out, (void*)0, (void*)0, (void*)0, (void*)0);
 }
 
 void* CallPartsDeform3_2(int type, float sclx, float scly, void *pos, u_int in, u_int keep, u_int out, int alp)
 {
-    return SetEffects(EF_PDEFORM, 4, type, alp, sclx, scly, pos, in, keep, out, NULL, NULL, NULL, NULL);
+    return SetEffects(EF_PDEFORM, 4, type, alp, sclx, scly, pos, in, keep, out, (void*)0, (void*)0, (void*)0, (void*)0);
 }
 
 void* CallPartsDeform4(int type, float scale, void *pos, float *vol)
 {
-    return SetEffects(EF_PDEFORM, 2, type, 0x80, scale, scale, pos, 0, 0, 0, vol, NULL, NULL, NULL);
+    return SetEffects(EF_PDEFORM, 2, type, 0x80, scale, scale, pos, 0, 0, 0, vol, (void*)0, (void*)0, (void*)0);
 }
 
 void* CallPartsDeform5(int type, float sclx, float scly, void *pos, float *vol)
 {
-    return SetEffects(EF_PDEFORM, 2, type, 0x80, sclx, scly, pos, 0, 0, 0, vol, NULL, NULL, NULL);
+    return SetEffects(EF_PDEFORM, 2, type, 0x80, sclx, scly, pos, 0, 0, 0, vol, (void*)0, (void*)0, (void*)0);
 }
 
 void SetPartsDeform(EFFECT_CONT *ec)

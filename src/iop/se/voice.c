@@ -45,31 +45,6 @@ static void MixSamples(int sampleCount, s16 *samples, VOICE v)
     }
 }
 
-static void DebugFill(int vNo)
-{
-    s32 histL[2] = {0}, histR[2] = {0};
-
-    s16 *src;
-
-    int sampleCount = 0;
-
-    voices[vNo].buffer = malloc(0x15160 * 10);
-    s16 *out = voices[vNo].buffer;
-    int size = sizeof(spuRam) / sizeof(spuRam[0]);
-    int chunks = size / 0x800;
-    src = (s16 *) seBuff;
-    for (int i = 0; i < chunks; i++)
-    {
-        MikuPan_DecodeAdpcmBlock(out, src, histL, histR);
-        out += 28;
-        sampleCount += 28;
-        src += 8;
-    }
-    int byteCount = (out - voices[vNo].buffer) * sizeof(s16);
-    MixSamples(sampleCount, voices[vNo].buffer, voices[vNo]);
-    SDL_PutAudioStreamData(voices[vNo].stream, voices[vNo].buffer, byteCount);
-}
-
 static void FillVoiceBuffer(int vNo)
 {
     s32 histL[2] = {0}, histR[2] = {0};
@@ -102,6 +77,9 @@ static void FillVoiceBuffer(int vNo)
                 int byteCount = (out - voices[vNo].buffer) * sizeof(s16);
                 voices[vNo].nax = voices[vNo].lsa;
                 MixSamples(sampleCount, voices[vNo].buffer, voices[vNo]);
+
+                SDL_SetAudioStreamFrequencyRatio(
+                    voices[vNo].stream, voices[vNo].pitch / (float) 0x1000);
                 SDL_PutAudioStreamData(voices[vNo].stream, voices[vNo].buffer,
                                        byteCount);
                 break;
@@ -113,7 +91,7 @@ static void FillVoiceBuffer(int vNo)
 static void SaveDebugBuffer()
 {
     int size = sizeof(spuRam) / sizeof(spuRam[0]);
-    MikuPan_SaveFile("AudioBuffer.bin", spuRam, size);
+    MikuPan_WriteFile("AudioBuffer.bin", spuRam, size);
 }
 
 void Key_On(int vNo)
@@ -130,8 +108,7 @@ void Key_On(int vNo)
     voices[vNo].nax = voices[vNo].ssa;
     //SaveDebugBuffer();
     FillAdpcmHeader(vNo);
-    //FillVoiceBuffer(vNo);
-    DebugFill(vNo);
+    FillVoiceBuffer(vNo);
     SDL_ResumeAudioStreamDevice(voices[vNo].stream);
 }
 

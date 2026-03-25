@@ -434,20 +434,14 @@ static ITM_EFF_WRK iew;
 
 #ifdef BUILD_EU_VERSION
 #define PL_BGBG_PK2_ADDRESS 0x1cfefc0
-#else
-#define PL_BGBG_PK2_ADDRESS 0x1d05140
 #endif
 
 #ifdef BUILD_EU_VERSION
 #define LOAD_ITEM_2D_ADDR 0x1d51db0
-#else
-#define LOAD_ITEM_2D_ADDR 0x01d573b0
 #endif
 
 #ifdef BUILD_EU_VERSION
 #define VRAM_ITEM_2D_ADDRESS 0x1d51db0
-#else
-#define VRAM_ITEM_2D_ADDRESS 0x1d573b0
 #endif
 
 void NewgameItemInit()
@@ -1504,19 +1498,19 @@ int LoadItem2D(u_char get_type, u_char get_no)
         switch(get_type)
         {
         case 0:
-            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         case 1:
-            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         case 2:
-            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         case 3:
-            load_id = LoadReq(get_no + HINT_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + HINT_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         case 4:
-            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDR);
+            load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         }
     }
@@ -1586,7 +1580,7 @@ char DspItem2D(u_long tex_addr, float pos_x, float pos_y, int rgb, float alp, fl
         return 1;
     }
 
-    CopySprDToSpr(&ds, &spr_dat[287]);
+    CopySprDToSpr(&ds, &spr_dat[ITM_CAM_FLR]);
 
     ds.tex0 = tex_addr;
 
@@ -1627,7 +1621,7 @@ void PkTm2(u_long tex_addr, short int pos_x, short int pos_y, short int w, short
         return;
     }
 
-    CopySprDToSpr(&ds, &spr_dat[287]);
+    CopySprDToSpr(&ds, &spr_dat[ITM_CAM_FLR]);
 
     ds.tex0 = tex_addr;
 
@@ -2343,23 +2337,19 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
         ds.y = pos_y;
     break;
     case 4:
-        CopySprDToSpr(&ds, &spr_dat[309 + num]);
+        CopySprDToSpr(&ds, &spr_dat[PHT_LAG_DIGIT0 + num]);
 
         ds.x = (no - 1) * fw[font] + pos_x;
         ds.y = pos_y - fh[font];
     break;
     case 5:
-        CopySprDToSpr(&ds, &spr_dat[347 + num]);
+        CopySprDToSpr(&ds, &spr_dat[PHT_SCRT_NUM0 + num]);
 
         ds.x = (no - 1) * fw[font] + pos_x;
         ds.y = pos_y - fh[font];
     break;
     case 6:
-#ifdef BUILD_EU_VERSION
-        CopySprDToSpr(&ds, &spr_dat[647 + num]);
-#else
-        CopySprDToSpr(&ds, &spr_dat[646 + num]);
-#endif
+        CopySprDToSpr(&ds, &spr_dat[SV_LNZ_NUM00 + num]);
 
         ds.x = pos_x;
         ds.y = pos_y - no * fw[font];
@@ -2373,7 +2363,7 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
         ds.rot = -90.0f;
     break;
     case 7:
-        CopySprDToSpr(&ds, &spr_dat[14 + num]);
+        CopySprDToSpr(&ds, &spr_dat[FND_DM_NUM_00 + num]);
 
         ds.x = pos_x + no * fw[font] * sx;
         ds.y = pos_y;
@@ -2385,11 +2375,7 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
         ds.csy = ds.y + ds.h * sy * 0.5f;
     break;
     case 8:
-#ifdef BUILD_EU_VERSION
-        CopySprDToSpr(&ds, &spr_dat[820 + num]);
-#else
-        CopySprDToSpr(&ds, &spr_dat[819 + num]);
-#endif
+        CopySprDToSpr(&ds, &spr_dat[GLST_NUM1_0 + num]);
 
         ds.x = pos_x + no * fw[font] * sx;
         ds.y = pos_y;
@@ -2401,11 +2387,7 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
         ds.csy = ds.y + ds.h * sy * 0.5f;
     break;
     case 9:
-#ifdef BUILD_EU_VERSION
-        CopySprDToSpr(&ds, &spr_dat[722 + num]);
-#else
-        CopySprDToSpr(&ds, &spr_dat[721 + num]);
-#endif
+        CopySprDToSpr(&ds, &spr_dat[OA_LD_FNT1_0 + num]);
 
         ds.x = pos_x + no * fw[font] * sx;
         ds.y = pos_y;
@@ -2417,11 +2399,7 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
         ds.csy = ds.y + ds.h * sy * 0.5f;
     break;
     case 10:
-#ifdef BUILD_EU_VERSION
-        CopySprDToSpr(&ds, &spr_dat[732 + num]);
-#else
-        CopySprDToSpr(&ds, &spr_dat[731 + num]);
-#endif
+        CopySprDToSpr(&ds, &spr_dat[OA_LD_FNT2_0 + num]);
 
         ds.x = pos_x + no * fw[font] * sx;
         ds.y = pos_y;
@@ -2433,11 +2411,7 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
         ds.csy = ds.y + ds.h * sy * 0.5f;
     break;
     case 11:
-#ifdef BUILD_EU_VERSION
-        CopySprDToSpr(&ds, &spr_dat[752 + num]);
-#else
-        CopySprDToSpr(&ds, &spr_dat[751 + num]);
-#endif
+        CopySprDToSpr(&ds, &spr_dat[OA_TP_FNT_0 + num]);
 
         ds.x = pos_x + no * fw[font] * sx;
         ds.y = pos_y;
@@ -2449,7 +2423,7 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
         ds.csy = ds.y + ds.h * sy * 0.5f;
     break;
     case 12:
-        CopySprDToSpr(&ds, &spr_dat[114 + num]);
+        CopySprDToSpr(&ds, &spr_dat[FND_WP_NUM00 + num]);
 
         ds.x = pos_x + no * fw[font] * sx;
         ds.y = pos_y;
@@ -2461,7 +2435,7 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
         ds.csy = ds.y + ds.h * sy * 0.5f;
     break;
     case 13:
-        CopySprDToSpr(&ds, &spr_dat[124 + num]);
+        CopySprDToSpr(&ds, &spr_dat[FND_DM_NUM00 + num]);
 
         ds.x = pos_x + no * fw[font] * sx;
         ds.y = pos_y;
@@ -2733,33 +2707,33 @@ u_int FromPKZ(u_int pkz_addr, u_char pk2_no)
 #endif
     break;
     case 10:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 11:
 #ifdef BUILD_EU_VERSION
-        SetSprFile(0x1d51db0);
+        SetSprFile(MODE_SELECT2_ADDRESS);
 #else
-        SetSprFile(0x1d573b0);
+        SetSprFile(PL_PHOT_PK2_ADDRESS);
 #endif
     break;
     case 12:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 13:
 #ifdef BUILD_EU_VERSION
-        SetSprFile(0x1d51db0);
+        SetSprFile(MODE_SELECT2_ADDRESS);
 #else
-        SetSprFile(0x1d573b0);
+        SetSprFile(PL_PHOT_PK2_ADDRESS);
 #endif
     break;
     case 14:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 15:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 16:
-        SetSprFile(0x1e90000);
+        SetSprFile(EVENT_ADDRESS);
     break;
     case 18:
 #ifdef BUILD_EU_VERSION

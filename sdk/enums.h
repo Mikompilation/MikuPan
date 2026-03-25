@@ -1,7 +1,8 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
-enum SPRT_DAT {
+typedef enum
+{
     FND_FRAME_L = 0,
     FND_FRAME_R,
     FND_CONT_BASE,
@@ -1094,7 +1095,7 @@ enum SPRT_DAT {
     REL_FAM_NAME03 = 1025,
     REL_END = 1025,
 #endif
-};
+} SPR_DAT_IDX;
 
 enum CD_FILE_DAT {
     DUMMYDUMMY00_OBJ = 0,
@@ -5220,6 +5221,36 @@ typedef enum {
 	MC_MODE_STARTCHECK = 7,
 	MC_MODE_NUM = 8
 } MC_MODE;
+
+enum {
+    MC_FUNC_SLOT_CHECK = 0,
+    MC_FUNC_FILE_CHECK = 1,
+    MC_FUNC_OPEN = 2,
+    MC_FUNC_LOAD = 3,
+    MC_FUNC_SAVE = 4,
+    MC_FUNC_MAKE_DIR = 5,
+    MC_FUNC_FORMAT = 6,
+    MC_FUNC_EXIST_CHECK = 7,
+    MC_FUNC_CLOSE = 8,
+    MC_FUNC_DELETE = 9,
+    MC_FUNC_NUM = 10
+};
+
+enum {
+    MC_FILE_ICONSYS = 0,
+    MC_FILE_ICONDATA1 = 1,
+    MC_FILE_ICONDATA2 = 2,
+    MC_FILE_ICONDATA3 = 3,
+    MC_FILE_HEADER = 4,
+    MC_FILE_GAMEDATA1 = 5,
+    MC_FILE_GAMEDATA2 = 6,
+    MC_FILE_GAMEDATA3 = 7,
+    MC_FILE_ALBUMDATA1 = 8,
+    MC_FILE_ALBUMDATA2 = 9,
+    MC_FILE_ALBUMDATA3 = 10,
+    MC_FILE_ALBUMDATA4 = 11,
+    MC_FILE_ALBUMDATA5 = 12
+};
 
 typedef enum {
 	DOCM_FREE = 0,

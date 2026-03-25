@@ -11,6 +11,7 @@
 
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sglib.h"
+#include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #include <stdlib.h>
@@ -2066,8 +2067,6 @@ void DispSprD(DISP_SPRT *s)
         pbuf[ndpkt++].ul64[1] = SCE_GS_NOP;
     }
 
-    //MikuPan_Render2DTexture(s);
-
     pbuf[ndpkt].ul64[0] = mtex1;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEX1_1;
 
@@ -2105,17 +2104,7 @@ void DispSprD(DISP_SPRT *s)
         | (long long)SCE_GS_XYZF2 << (4 * 11);
 
     float* render_buffer = (float*)&pbuf[ndpkt];
-
-    float scale_x = (float)MikuPan_GetWindowWidth()  / 640.0f;
-    float scale_y = (float)MikuPan_GetWindowHeight() / 448.0f;
-    float scale   = (scale_x < scale_y) ? scale_x : scale_y;
-
-    float viewport_w =  640.0f * scale;
-    float viewport_h = 448.0f * scale;
-
-    float viewport_x = ((float)MikuPan_GetWindowWidth()  - viewport_w) * 0.5f;
-    float viewport_y = ((float)MikuPan_GetWindowHeight() - viewport_h) * 0.5f;
-
+    float ndc[2] = { 0.0f, 0.0f };
 
     for (i = 0; i < 4; i++)
     {
@@ -2129,16 +2118,12 @@ void DispSprD(DISP_SPRT *s)
         pbuf[ndpkt].fl32[2] = (float) mb / 128.0f;
         pbuf[ndpkt++].fl32[3] = (float) ma / 128.0f;
 
-        // Compute destination rectangle in screen space
-        float x1 = viewport_x + (x2[i] + 320.0f) * scale;
-        float y1 = viewport_y + (y2[i] + 224.0f) * scale;
+        MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(ndc,
+            (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(),
+            x2[i], y2[i]);
 
-        // Convert screen space to OpenGL NDC (-1 to 1)
-        float ndc_x1 = (x1 / (float)MikuPan_GetWindowWidth()) * 2.0f - 1.0f;
-        float ndc_y1 = 1.0f - (y1 / (float)MikuPan_GetWindowHeight()) * 2.0f;
-
-        pbuf[ndpkt].fl32[0] = ndc_x1;
-        pbuf[ndpkt].fl32[1] = ndc_y1;
+        pbuf[ndpkt].fl32[0] = ndc[0];
+        pbuf[ndpkt].fl32[1] = ndc[1];
         pbuf[ndpkt].fl32[2] = 0.0f;
         pbuf[ndpkt++].fl32[3] = 1.0f;
 
@@ -2441,19 +2426,6 @@ void DispSqrD(DISP_SQAR *s)
 
     Reserve2DPacket(mpri);
 
-    DISP_SPRT sprite;
-    sprite.r = mr[i];
-    sprite.g = mg[i];
-    sprite.b = mb[i];
-    sprite.alpha = ma;
-    sprite.rot = mrot;
-    sprite.tex0 = mtexa;
-    sprite.u = s->crx;
-    sprite.v = s->cry;
-    sprite.w = s->csx;
-    sprite.h = s->csy;
-    MikuPan_Render2DTexture(&sprite);
-
     pbuf[ndpkt].ul128 = (u_long128)0;
 
     pbuf[ndpkt++].ui32[0] = DMAend | 14;
@@ -2482,18 +2454,40 @@ void DispSqrD(DISP_SQAR *s)
         | SCE_GS_RGBAQ << (4 * 4)
         | SCE_GS_XYZF2 << (4 * 5)
         | SCE_GS_RGBAQ << (4 * 6)
-        | SCE_GS_XYZF2 << (4 * 7) ;
+        | SCE_GS_XYZF2 << (4 * 7);
+
+    float ndc[2] = { 0.0f, 0.0f };
+
+    float* render_buffer = (float*)&pbuf[ndpkt];
 
     for (i = 0; i < 4; i++)
     {
-        pbuf[ndpkt].ui32[0] = mr[i];
-        pbuf[ndpkt].ui32[1] = mg[i];
-        pbuf[ndpkt].ui32[2] = mb[i];
-        pbuf[ndpkt++].ui32[3] = ma;
+        pbuf[ndpkt].fl32[0] = (float)(mr[i]) / 255.0f;
+        pbuf[ndpkt].fl32[1] = (float)(mg[i]) / 255.0f;
+        pbuf[ndpkt].fl32[2] = (float)(mb[i]) / 255.0f;
+        pbuf[ndpkt++].fl32[3] = MikuPan_ConvertScaleColor(ma);
 
-        pbuf[ndpkt].ui32[0] = xx[i];
-        pbuf[ndpkt].ui32[1] = yy[i];
-        pbuf[ndpkt].ui32[2] = mz;
-        pbuf[ndpkt++].ui32[3] = 0;
+        MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(ndc,
+            (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(),
+            x2[i], y2[i]);
+
+        pbuf[ndpkt].fl32[0] = ndc[0];
+        pbuf[ndpkt].fl32[1] = ndc[1];
+        pbuf[ndpkt].fl32[2] = 0.0f;
+        pbuf[ndpkt++].fl32[3] = 1.0f;
     }
+
+    //for (i = 0; i < 4; i++)
+    //{
+    //    pbuf[ndpkt].ui32[0] = mr[i];
+    //    pbuf[ndpkt].ui32[1] = mg[i];
+    //    pbuf[ndpkt].ui32[2] = mb[i];
+    //    pbuf[ndpkt++].ui32[3] = ma;
+    //    pbuf[ndpkt].ui32[0] = xx[i];
+    //    pbuf[ndpkt].ui32[1] = yy[i];
+    //    pbuf[ndpkt].ui32[2] = mz;
+    //    pbuf[ndpkt++].ui32[3] = 0;
+    //}
+
+    MikuPan_RenderUntexturedSprite(render_buffer);
 }

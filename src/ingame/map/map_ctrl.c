@@ -22,6 +22,7 @@
 #include "ingame/map/map_ctrl.h"
 #include "ingame/map/map_htck.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_logging_c.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 #include "os/eeiop/sd_room.h"
@@ -1557,7 +1558,7 @@ int PlyrMapHitMoveOfs(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char room, u_char 
     dst[0] = x_ofs;
     dst[2] = z_ofs;
 
-    info_log("x_ofs = %d   z_ofs = %d \n", x_ofs, z_ofs);
+    info_log("x_ofs = %d   z_ofs = %d ", x_ofs, z_ofs);
 
     return 0;
 }

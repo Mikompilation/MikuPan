@@ -28,16 +28,16 @@ char mcStartCheckMain()
     switch (mc_ctrl.step)
     {
     case 0:
-        mcSetStep(4, MC_MSG_NONE);
+        mcSetStep(MC_SEL_SLOT, MC_MSG_NONE);
     break;
     case 4:
         if (err_flg == 1)
         {
-            mcSetStep(1, MC_MSG_NONE);
+            mcSetStep(MC_CHECK, MC_MSG_NONE);
         }
         else
         {
-            mcSetStep(1, MC_MSG_NONE);
+            mcSetStep(MC_CHECK, MC_MSG_NONE);
         }
     case 1:
         if (mcCtrlCheck() != 0)
@@ -48,11 +48,11 @@ char mcStartCheckMain()
             {
                 if (err_flg == 1)
                 {
-                    mcSetStep(4, MC_MSG_NONE);
+                    mcSetStep(MC_SEL_SLOT, MC_MSG_NONE);
                 }
                 else
                 {
-                    mcSetStep(4, MC_MSG_NONE);
+                    mcSetStep(MC_SEL_SLOT, MC_MSG_NONE);
                 }
 
                 mc_ctrl.port = 1;
@@ -63,13 +63,13 @@ char mcStartCheckMain()
                 switch(mcStartCheckResult())
                 {
                     case 0:
-                        mcSetStep(5, MC_MSG_SEL_START);
+                        mcSetStep(MC_SEL_START, MC_MSG_SEL_START);
                     break;
                     case 1:
-                        mcSetStep(5, MC_MSG_SEL_START2);
+                        mcSetStep(MC_SEL_START, MC_MSG_SEL_START2);
                     break;
                     case 3:
-                        mcSetStep(5, MC_MSG_SEL_START3);
+                        mcSetStep(MC_SEL_START, MC_MSG_SEL_START3);
                     break;
                     default:
                         return 1;
@@ -90,7 +90,7 @@ char mcStartCheckMain()
         break;
         case 2:
             mcInit(MC_MODE_STARTCHECK, NULL, 0);
-            mcSetStep(1, MC_MSG_NONE);
+            mcSetStep(MC_CHECK, MC_MSG_NONE);
         break;
         }
     break;
@@ -194,7 +194,7 @@ char mcStartCheckYesno(int def_pos)
 
     if (mc_ctrl.sub_step == 1)
     {
-        mcAcsReq(7);
+        mcAcsReq(MC_FUNC_EXIST_CHECK);
 
         mc_ctrl.sub_step = 2;
     }
@@ -298,7 +298,7 @@ char mcCtrlCheckLanguage()
     case 0:
         mc_ctrl.sub_step = 1;
 
-        mcAcsReq(0);
+        mcAcsReq(MC_FUNC_SLOT_CHECK);
     break;
     case 1:
         if (mcAcsMain() != 0)
@@ -314,11 +314,11 @@ char mcCtrlCheckLanguage()
     case 4:
         mc_ctrl.sub_step = 5;
 
-        mcSetPathDir(0);
+        mcSetPathDir(MC_FILE_ICONSYS);
 
         sprintf(mc_ctrl.rw.name, "%s*", mc_ctrl.rw.path);
 
-        mcAcsReq(1);
+        mcAcsReq(MC_FUNC_FILE_CHECK);
     break;
     case 5:
         if (mcAcsMain() != 0)

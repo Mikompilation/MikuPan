@@ -9,10 +9,13 @@
 #define PS2_CENTER_Y 224.0f
 
 void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float* out, float screen_width, float screen_height, float x, float y);
+void MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(float* out, float screen_width, float screen_height, float x, float y);
 float MikuPan_ConvertScaleColor(unsigned char color_fragment);
 unsigned char MikuPan_GamePadAxisToPS2(int sdl_axis, int deadzone);
 void MikuPan_GetPS2Viewport(int width, int height, float *vx, float *vy, float *vw, float *vh, float *scale);
 void MikuPan_FixUV(float* uv, int num);
 void MikuPan_SetTriangleIndex(int* triangle_index, int vertex_count, int vertex_offset, int mesh_offset);
 unsigned int *MikuPan_GetNextUnpackAddr(unsigned int *prim);
+unsigned char* MikuPan_ConvertImageAlpha(unsigned char* img, int width, int height);
+unsigned char MikuPan_AdjustPS2Alpha(unsigned char alpha);
 #endif//MIKUPAN_MIKUPAN_UTILS_H

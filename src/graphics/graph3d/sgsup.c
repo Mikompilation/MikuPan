@@ -115,7 +115,7 @@ void DrawBoundingBox(sceVu0FVECTOR *box)
         1, 0, 3, 2, 7, 5, 3, 1, 6, 7, 2, 3, 4, 6, 0, 2, 5, 4, 1, 0, 4, 5, 6, 7,
     };
 
-    LoadSgProg(1);
+    LoadSgProg(VUPROG_SG_PRESET0);
 
     datap = (u_int *) getObjWrk();
 

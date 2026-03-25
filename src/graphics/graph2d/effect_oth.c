@@ -5613,6 +5613,39 @@ void SetSky()
                 | SCE_GS_UV    << (4 * 3)
                 | SCE_GS_XYZF2 << (4 * 4);
 
+            float buffer[4][12];
+
+            float vertices[4][4] = {
+                /// POS,          UV
+                {-1.0f,  1.0f, (float)u1, 0.0f}, // top-left
+                {1.0f,   1.0f, (float)u2, 0.0f}, // top-right
+                {-1.0f, -1.0f, (float)u1, hline * 16}, // bottom-left
+                {1.0f,  -1.0f, (float)u2, hline * 16}, // bottom-right
+            };
+
+            for (int i = 0; i < 4; i++)
+            {
+                /// UV
+                buffer[i][0] = vertices[i][2];
+                buffer[i][1] = vertices[i][3];
+                buffer[i][2] = 0.0f;
+                buffer[i][3] = 0.0f;
+
+                /// Color
+                buffer[i][4] = (float)0x40/128.0f;
+                buffer[i][5] = (float)0x40/128.0f;
+                buffer[i][6] = (float)0x40/128.0f;
+                buffer[i][7] = MikuPan_ConvertScaleColor(0x80);
+
+                /// Position
+                buffer[i][8] = vertices[i][0];
+                buffer[i][9] = vertices[i][1];
+                buffer[i][10] = 1.0f;
+                buffer[i][11] = 1.0f;
+            }
+
+            MikuPan_RenderSprite3D((sceGsTex0 *)&effdat[monochrome_mode + 50].tex0, &buffer[0][0]);
+
             /// RGBA
             pbuf[ndpkt].ui32[0] = 0x40;
             pbuf[ndpkt].ui32[1] = 0x40;

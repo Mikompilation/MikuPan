@@ -23,12 +23,13 @@
 #include "graphics/graph2d/sprt.h"
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
+#include "graphics/graph3d/gra3d.h"
 #include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
-#include "mikupan/rendering/mikupan_renderer.h"
 #include <mikupan/mikupan_memory.h>
 
 typedef struct { // 0x28
@@ -791,7 +792,7 @@ void RunDeform(/* s0 16 */ EFFECT_CONT *ec)
 
 void CallDeform2(/* a0 4 */ int in, /* a1 5 */ int keep, /* t2 10 */ int out, /* a3 7 */ int type, /* t0 8 */ int max)
 {
-    SetEffects(6, 4, type, max, in, keep, out);
+    SetEffects(EF_DEFORM, 4, type, max, in, keep, out);
 }
 
 static void _SetScrData(/* a0 4 */ Q_WORDDATA *dst, /* a1 5 */ SCRDEF *src)
@@ -2378,7 +2379,7 @@ void* CallNega2(/* a0 4 */ int in, /* a1 5 */ int keep, /* a2 6 */ int out)
 {
 	/* sdata 356498 */ static u_char alp = 0x80;
 
-    return SetEffects(0xc, 4, 64, 196, in, keep, out);
+    return SetEffects(EF_NEGA, 4, 64, 196, in, keep, out);
 }
 
 void* CallNega(/* a0 4 */ int time)
@@ -3189,18 +3190,18 @@ void SetMAGATOKI2()
         // floats are promoted do doubles due to SetEffects being a vararg function
         if (plyr_wrk.mode != 0x1)
         {
-            SetEffects(3, 1, &alpr, 1015, 1800, 320.0f, 112.0f);
-            SetEffects(6, 1, 2, 12);
-            SetEffects(13, 1, 70, 70);
-            SetEffects(2, 1, 2, 24.0f, 8.0f, 106 ,101);
-            SetEffects(9, 1, 30, 0x80000);
+            SetEffects(EF_BLUR_N, 1, &alpr, 1015, 1800, 320.0f, 112.0f);
+            SetEffects(EF_DEFORM, 1, 2, 12);
+            SetEffects(EF_NCONTRAST, 1, 70, 70);
+            SetEffects(EF_DITHER, 1, 2, 24.0f, 8.0f, 106 ,101);
+            SetEffects(EF_FADEFRAME, 1, 30, 0x80000);
         }
         else
         {
-            SetEffects(6, 1, 2, 12);
-            SetEffects(13, 1, 70, 70);
-            SetEffects(2, 1, 2, 24.0f, 8.0f, 106, 101);
-            SetEffects(9, 1, 30, 0x80000);
+            SetEffects(EF_DEFORM, 1, 2, 12);
+            SetEffects(EF_NCONTRAST, 1, 70, 70);
+            SetEffects(EF_DITHER, 1, 2, 24.0f, 8.0f, 106, 101);
+            SetEffects(EF_FADEFRAME, 1, 30, 0x80000);
         }
     }
 }
@@ -4304,7 +4305,7 @@ int SetGameOver()
     
     if (gameover_flow > 2)
     {
-        SetSprFile3(0x1e90000, 0);
+        SetSprFile3(EVENT_ADDRESS, 0);
         
         if (gameover_flow > 2)
         {            
@@ -4460,12 +4461,12 @@ int SetExFade1()
     break;
     }
     
-    SetEffects(2, 1, 3, (float)dalp, (float)dspd, 0x80, 0x40);
-    SetEffects(0xc, 1, 0x21, 0xff, &nalp);
-    SetEffects(9, 1, msbtset.ff.alp, 0x80000);
+    SetEffects(EF_DITHER, 1, 3, (float)dalp, (float)dspd, 0x80, 0x40);
+    SetEffects(EF_NEGA, 1, 0x21, 0xff, &nalp);
+    SetEffects(EF_FADEFRAME, 1, msbtset.ff.alp, 0x80000);
 
 #ifdef BUILD_EU_VERSION
-    SetEffects(0xb, 1, 0x24);
+    SetEffects(EF_BLACKFILTER, 1, 0x24);
 #else
 #endif
     
@@ -4574,12 +4575,12 @@ int SetExFade2()
     
     if (ef_exfade2_flow1 < 6)
     {
-        SetEffects(9, 1, 0x1e, 0x80000);
-        SetEffects(3, 1, &balp, 1000, 1800, 320.0f, 112.0f);
-        SetEffects(6, 1, 2, dfrt);
-        SetEffects(2, 1, 2, (float)dalp, 8.0f, 0x40, 0x80);
+        SetEffects(EF_FADEFRAME, 1, 0x1e, 0x80000);
+        SetEffects(EF_BLUR_N, 1, &balp, 1000, 1800, 320.0f, 112.0f);
+        SetEffects(EF_DEFORM, 1, 2, dfrt);
+        SetEffects(EF_DITHER, 1, 2, (float)dalp, 8.0f, 0x40, 0x80);
         
-        SetEffects(0xd, 1, ccol, calp);
+        SetEffects(EF_NCONTRAST, 1, ccol, calp);
     }
     
     return ef_exfade2_flow1 == 6;
@@ -4617,12 +4618,6 @@ void SetScreenSaver()
         .pri = 0,
         .alpha = 0x80,
     };
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
 
     if (ingame_wrk.stts & 0x20)
     {

@@ -9,6 +9,7 @@
 #include "SDL3/SDL_audio.h"
 #include "enums.h"
 #include "mikupan/mikupan_audio.h"
+#include "mikupan/mikupan_logging_c.h"
 #include "os/eeiop/eeiop.h"
 #include "stdio.h"
 
@@ -373,7 +374,7 @@ static void ISeAllStop(IOP_COMMAND *icp)
             swsp->prm_no = -1;
             swsp->param = 0;
             GetSeVstat(swsp->v_no)->status = 0;
-            printf("(SE)Key-Off num = %d\n", vn);
+            info_log("(SE)Key-Off num = %d", vn);
         }
         i++;
         swsp++;

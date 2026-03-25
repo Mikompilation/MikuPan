@@ -156,17 +156,18 @@ void MikuPan_SetupAmbientLighting()
     for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
     {
         u_int curr = MikuPan_SetCurrentShaderProgram(i);
+        float* f_light = MikuPan_GetLightColor();
 
         glad_glUniform3fv(
             glad_glGetUniformLocation(curr, "lightColor"),
             1,
-            MikuPan_GetLightColor()
+            f_light
             /* MikuPan_GetLightColor() */
             /* TAmbient */);
 
         glad_glUniform1f(
             glad_glGetUniformLocation(curr, "ambientStrength"),
-            1.0f);
+            f_light[3]);
     }
 }
 
@@ -198,11 +199,11 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
                       width, height, 0, GL_RGBA,
                       GL_UNSIGNED_BYTE, pixels);
 
-    GLfloat maxAniso = 0.0f;
-    glad_glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
-    glad_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
+    //GLfloat maxAniso = 0.0f;
+    //glad_glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
+    //glad_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
 
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -239,59 +240,10 @@ void MikuPan_SetTexture(sceGsTex0 *tex0)
     }
 }
 
-void MikuPan_Render2DTexture(DISP_SPRT *sprite)
-{
-    if (!MikuPan_IsFirstUploadDone())
-    {
-        return;
-    }
-
-    sceGsTex0 *tex0 = (sceGsTex0 *) &sprite->tex0;
-
-    MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(tex0);
-
-    if (texture_info == NULL)
-    {
-        texture_info = MikuPan_CreateGLTexture(tex0);
-    }
-
-    MikuPan_Rect dst_rect = {0};
-    MikuPan_Rect src_rect = {0};
-
-    src_rect.x = (float) sprite->u;
-    src_rect.y = (float) sprite->v;
-
-    src_rect.w = (float) sprite->w;
-    src_rect.h = (float) sprite->h;
-
-    dst_rect.x = (float) sprite->x;
-    dst_rect.y = (float) sprite->y;
-
-    dst_rect.w = (float) sprite->w;
-    dst_rect.h = (float) sprite->h;
-
-    MikuPan_RenderSprite(src_rect, dst_rect, sprite->r, sprite->g, sprite->b, sprite->alpha, texture_info);
-}
-
-int MikuPan_GetTextureIndex(int fnt)
-{
-    if (fnt == 1)
-    {
-        return 0;
-    }
-
-    if (fnt == 0)
-    {
-        return 1;
-    }
-
-    return fnt;
-}
-
 void MikuPan_Render2DMessage(DISP_SPRT *sprite)
 {
-    MikuPan_Rect dst_rect;
-    MikuPan_Rect src_rect;
+    MikuPan_Rect dst_rect = {0};
+    MikuPan_Rect src_rect = {0};
 
     src_rect.x = (float) sprite->u;
     src_rect.y = (float) sprite->v;
@@ -308,92 +260,6 @@ void MikuPan_Render2DMessage(DISP_SPRT *sprite)
     MikuPan_RenderSprite(src_rect, dst_rect, sprite->r, sprite->g, sprite->b, sprite->alpha, curr_fnt_texture);
 }
 
-void MikuPan_RenderSquare(float x1, float y1, float x2, float y2,
-                          float x3, float y3, float x4, float y4,
-                          u_char r, u_char g, u_char b, u_char a)
-{
-    float vx, vy, vw, vh, scale = 0.0f;
-    MikuPan_GetPS2Viewport(window_width, window_height, &vx, &vy, &vw, &vh, &scale);
-
-    x1 += PS2_CENTER_X; y1 += PS2_CENTER_Y;
-    x2 += PS2_CENTER_X; y2 += PS2_CENTER_Y;
-    x3 += PS2_CENTER_X; y3 += PS2_CENTER_Y;
-    x4 += PS2_CENTER_X; y4 += PS2_CENTER_Y;
-
-    float px[4] = { x1, x2, x3, x4 };
-    float py[4] = { y1, y2, y3, y4 };
-
-    float cx = (px[0] + px[1] + px[2] + px[3]) * 0.25f;
-    float cy = (py[0] + py[1] + py[2] + py[3]) * 0.25f;
-
-    float tlx, tly, trx, try_, brx, bry, blx, bly;
-
-    for (int i = 0; i < 4; i++)
-    {
-        if (px[i] <= cx && py[i] <= cy)      { tlx = px[i]; tly = py[i]; }
-        else if (px[i] > cx && py[i] <= cy) { trx = px[i]; try_ = py[i]; }
-        else if (px[i] > cx && py[i] > cy)  { brx = px[i]; bry = py[i]; }
-        else                                { blx = px[i]; bly = py[i]; }
-    }
-
-    float wx_tl = vx + tlx * scale;
-    float wy_tl = vy + tly * scale;
-
-    float wx_tr = vx + trx * scale;
-    float wy_tr = vy + try_ * scale;
-
-    float wx_br = vx + brx * scale;
-    float wy_br = vy + bry * scale;
-
-    float wx_bl = vx + blx * scale;
-    float wy_bl = vy + bly * scale;
-
-    float ndc_tl_x = (wx_tl / window_width) * 2.0f - 1.0f;
-    float ndc_tl_y = 1.0f - (wy_tl / window_height) * 2.0f;
-
-    float ndc_tr_x = (wx_tr / window_width) * 2.0f - 1.0f;
-    float ndc_tr_y = 1.0f - (wy_tr / window_height) * 2.0f;
-
-    float ndc_br_x = (wx_br / window_width) * 2.0f - 1.0f;
-    float ndc_br_y = 1.0f - (wy_br / window_height) * 2.0f;
-
-    float ndc_bl_x = (wx_bl / window_width) * 2.0f - 1.0f;
-    float ndc_bl_y = 1.0f - (wy_bl / window_height) * 2.0f;
-
-    float vtx[12] = {
-        /* Triangle 1 */
-        ndc_tl_x, ndc_tl_y,
-        ndc_tr_x, ndc_tr_y,
-        ndc_br_x, ndc_br_y,
-
-        /* Triangle 2 */
-        ndc_tl_x, ndc_tl_y,
-        ndc_br_x, ndc_br_y,
-        ndc_bl_x, ndc_bl_y
-    };
-
-    u_int current_program = MikuPan_SetCurrentShaderProgram(UNTEXTURED_SPRITE_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION2);
-
-    glad_glBindVertexArray(pipeline->vao);
-    glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
-
-    glad_glBufferSubData(
-        GL_ARRAY_BUFFER, 0,
-        sizeof(vtx), vtx);
-
-    glad_glUniform4f(
-        glad_glGetUniformLocation(current_program, "uColor"),
-        MikuPan_ConvertScaleColor(r),
-        MikuPan_ConvertScaleColor(g),
-        MikuPan_ConvertScaleColor(b),
-        MikuPan_ConvertScaleColor(a));
-
-    MikuPan_SetRenderState2D();
-
-    glad_glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
 void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
                         u_char g, u_char b, u_char a)
 {
@@ -407,16 +273,21 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
     float ndc_x2 = sx2 * 2.0f - 1.0f;
     float ndc_y2 = 1.0f - sy2 * 2.0f;
 
-    float vertices[4] =
-    {
-        ndc_x1,
-        ndc_y1,
-        ndc_x2,
-        ndc_y2
+    float colours[4] = {
+        MikuPan_ConvertScaleColor(r),
+        MikuPan_ConvertScaleColor(g),
+        MikuPan_ConvertScaleColor(b),
+        MikuPan_ConvertScaleColor(a)
     };
 
-    u_int current_program = MikuPan_SetCurrentShaderProgram(UNTEXTURED_SPRITE_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION2);
+    float vertices[2][8] =
+    {
+        { colours[0], colours[1], colours[2], colours[3], ndc_x1, ndc_y1, 0.0f, 1.0f},
+        { colours[0], colours[1], colours[2], colours[3], ndc_x2, ndc_y2, 0.0f, 1.0f},
+    };
+
+    MikuPan_SetCurrentShaderProgram(UNTEXTURED_COLOURED_SPRITE_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(COLOUR4_POSITION4);
 
     glad_glBindVertexArray(pipeline->vao);
     glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
@@ -424,14 +295,6 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
     glad_glBufferSubData(
         GL_ARRAY_BUFFER, pipeline->buffers[0].attributes[0].offset,
         sizeof(vertices), vertices);
-
-    glad_glUniform4f(
-        glad_glGetUniformLocation(current_program, "uColor"),
-        MikuPan_ConvertScaleColor(r),
-        MikuPan_ConvertScaleColor(g),
-        MikuPan_ConvertScaleColor(b),
-        MikuPan_ConvertScaleColor(a)
-        );
 
     MikuPan_SetRenderState2D();
 
@@ -447,13 +310,11 @@ void MikuPan_RenderBoundingBox(sceVu0FVECTOR *vertices)
 
     float bb_color[4] = {0.0f, 1.0f, 0.0f, 1.0f};
 
-    u_int curr = MikuPan_SetCurrentShaderProgram(BOUNDING_BOX_SHADER);
+    MikuPan_SetCurrentShaderProgram(BOUNDING_BOX_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4);
+    MikuPan_SetRenderState3D();
 
-    glad_glUniform4fv(
-        glad_glGetUniformLocation(curr, "uColor"),
-        1,
-        bb_color);
+    MikuPan_SetUniform4fvToCurrentShader(bb_color, "uColor");
 
     glad_glBindVertexArray(pipeline->vao);
     glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
@@ -462,8 +323,6 @@ void MikuPan_RenderBoundingBox(sceVu0FVECTOR *vertices)
         pipeline->buffers[0].attributes[0].offset,
         pipeline->buffers[0].buffer_length,
         vertices);
-
-    MikuPan_SetRenderState3D();
 
     for (int i = 0; i < 6; i++)
     {
@@ -481,7 +340,7 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
         return;
     }
 
-    float ndc[4];
+    float ndc[4] = {0};
 
     MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(ndc, (float)window_width, (float)window_height, dst.x, dst.y);
     MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(&ndc[2], (float)window_width, (float)window_height, dst.x + src.w, dst.y + src.h);
@@ -500,18 +359,39 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
     float u1 = ((src.x + dst.w) / texW) - halfU;
     float v1 = ((src.y + dst.h) / texH) - halfV;
 
-    float vertices[6][4] =
-    {
-        {ndc[0], ndc[3], u0, v1}, /// bottom-left
-        {ndc[2], ndc[3], u1, v1}, /// bottom-right
-        {ndc[2], ndc[1], u1, v0}, /// top-right
-        {ndc[0], ndc[3], u0, v1}, /// bottom-left
-        {ndc[2], ndc[1], u1, v0}, /// top-right
-        {ndc[0], ndc[1], u0, v0}  /// top-left
+    float color[4] = {
+        MikuPan_ConvertScaleColor(r),
+        MikuPan_ConvertScaleColor(g),
+        MikuPan_ConvertScaleColor(b),
+        MikuPan_ConvertScaleColor(a)
     };
 
-    u_int current_program = MikuPan_SetCurrentShaderProgram(UI_SPRITE_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION2_UV);
+    float vertices[4][12] =
+    {
+        {
+            u0, v0, 0.0f, 0.0f,
+            color[0], color[1], color[2], color[3],
+            ndc[0], ndc[1], 0.0f, 1.0f
+        },
+        {
+            u1, v0, 0.0f, 0.0f,
+            color[0], color[1], color[2], color[3],
+            ndc[2], ndc[1], 0.0f, 1.0f
+        },
+        {
+            u0, v1, 0.0f, 0.0f,
+            color[0], color[1], color[2], color[3],
+            ndc[0], ndc[3], 0.0f, 1.0f
+        },
+        {
+            u1, v1, 0.0f, 0.0f,
+            color[0], color[1], color[2], color[3],
+            ndc[2], ndc[3], 0.0f, 1.0f
+        }
+    };
+
+    u_int current_program = MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     glad_glBindVertexArray(pipeline->vao);
     glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
@@ -525,26 +405,13 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
     glad_glBindTexture(GL_TEXTURE_2D, texture_info->id);
     MikuPan_SetRenderState2D();
 
-    float color[4] =
-    {
-        MikuPan_ConvertScaleColor(r),
-        MikuPan_ConvertScaleColor(g),
-        MikuPan_ConvertScaleColor(b),
-        MikuPan_ConvertScaleColor(a)
-    };
-
-    glad_glUniform4fv(
-        glad_glGetUniformLocation(current_program, "uColor"),
-        1,
-        color);
-
-    glad_glDrawArrays(GL_TRIANGLES, 0, 6);
+    glad_glDrawArrays(MikuPan_GetRenderMode(), 0, 4);
 }
 
 void MikuPan_RenderSprite2D(sceGsTex0 *tex, float *buffer)
 {
-    MikuPan_SetCurrentShaderProgram(SPRITE_3D_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_UV_3D);
+    MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     glad_glBindVertexArray(pipeline->vao);
     MikuPan_SetTexture(tex);
@@ -557,10 +424,25 @@ void MikuPan_RenderSprite2D(sceGsTex0 *tex, float *buffer)
     glad_glDrawArrays(MikuPan_GetRenderMode(), 0, 4);
 }
 
+void MikuPan_RenderUntexturedSprite(float *buffer)
+{
+    MikuPan_SetCurrentShaderProgram(UNTEXTURED_COLOURED_SPRITE_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(COLOUR4_POSITION4);
+
+    glad_glBindVertexArray(pipeline->vao);
+
+    MikuPan_SetRenderState2D();
+
+    glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
+    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline->buffers[0].buffer_length, buffer);
+
+    glad_glDrawArrays(MikuPan_GetRenderMode(), 0, 4);
+}
+
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
 {
-    MikuPan_SetCurrentShaderProgram(SPRITE_3D_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_UV_3D);
+    MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     glad_glBindVertexArray(pipeline->vao);
     MikuPan_SetTexture(tex);
@@ -589,11 +471,6 @@ void MikuPan_SetupFntTexture()
 float* MikuPan_GetWorldClipView()
 {
     return (float*)&WorldClipView;
-}
-
-void MikuPan_SetWeightedMesh(int value)
-{
-    MikuPan_SetUniform1iToAllShaders(value, "isWeighted");
 }
 
 void MikuPan_SetWorldClipView()
@@ -724,8 +601,8 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
         return;
     }
 
-    MikuPan_SetShaderProgramWithBackup(MESH_0x12_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV);
+    MikuPan_SetCurrentShaderProgram(MESH_0x12_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV2);
 
     SGDPROCUNITDATA *pVUVNData = (SGDPROCUNITDATA *) &pVUVN[1];
     SGDPROCUNITDATA *pProcData = (SGDPROCUNITDATA *) &pPUHead[1];
@@ -809,11 +686,11 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
 
     if (mesh_type == 0x32)
     {
-        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, byte_size, buf);
+        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)byte_size, buf);
     }
     else
     {
-        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, byte_size, vertices);
+        glad_glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)byte_size, vertices);
     }
 
     draw_calls++;
@@ -834,8 +711,8 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
     SGDVUMESHSTDATA* sgdMeshData = (SGDVUMESHSTDATA *) &sgdVuMeshStRegSet->auiVifCode[3];
     VUVN_PRIM *v = ((VUVN_PRIM *) &((int*)pVUVN)[2]);
 
-    MikuPan_SetShaderProgramWithBackup(MESH_0x12_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV);
+    MikuPan_SetCurrentShaderProgram(MESH_0x12_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV2);
     glad_glBindVertexArray(pipeline->vao);
 
     sceGsTex0 *mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x18);
@@ -886,8 +763,20 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
         return;
     }
 
-    MikuPan_SetShaderProgramWithBackup(MESH_0x2_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4_NORMAL4_UV);
+    if (GET_MESH_TYPE(pPUHead) == 0x2)
+    {
+        MikuPan_SetCurrentShaderProgram(MESH_0x2_SHADER);
+    }
+    else if (GET_MESH_TYPE(pPUHead) == 0xA)
+    {
+        MikuPan_SetCurrentShaderProgram(MESH_0xA_SHADER);
+    }
+    else
+    {
+        return;
+    }
+
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4_NORMAL4_UV2);
     VUVN_PRIM *v = ((VUVN_PRIM *) &((int*)pVUVN)[2]);
 
     SGDVUMESHPOINTNUM *pMeshInfo = (SGDVUMESHPOINTNUM *) &pPUHead[4];

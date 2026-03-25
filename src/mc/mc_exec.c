@@ -8,6 +8,7 @@
 #include "mc/mc_acs.h"
 #include "mc/mc_icon.h"
 #include "mc/mc_main.h"
+#include "mikupan/mikupan_memory.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -18,16 +19,6 @@
 
 #define KEYCODE "BA"
 #define PRODUCT_CODE "SLUS-20388"
-
-const char mc_icon_title[];
-const char mc_icon_album[];
-const int mc_bgcolor[4][4];
-const float mc_lightdir[3][4];
-const float mc_lightcol[3][4];
-const float mc_ambient[4];
-const u_char *mc_iconName[];
-const int mc_iconFile[];
-const int mc_iconFileAlbum[];
 
 void mcSetPathDir(char file_no)
 {
@@ -108,7 +99,7 @@ void mcAcsFileReq(char type, int mode, int header)
 {
 
     switch(type) {
-    case 0:
+    case MC_FILE_ICONSYS:
         mcMakeIconsysFileName(mc_ctrl.rw.name);
 
         mc_ctrl.rw.step = 0;
@@ -116,9 +107,9 @@ void mcAcsFileReq(char type, int mode, int header)
         mc_ctrl.rw.buf = (char *)&mc_ctrl;
         mc_ctrl.rw.size = 0x3c4; // sizeof ??
     break;
-    case 1:
-    case 2:
-    case 3:
+    case MC_FILE_ICONDATA1:
+    case MC_FILE_ICONDATA2:
+    case MC_FILE_ICONDATA3:
         mcMakeIconDataFileName(mc_ctrl.rw.name, type - 1);
 
         mc_ctrl.rw.mode = mode;
@@ -134,10 +125,10 @@ void mcAcsFileReq(char type, int mode, int header)
             mc_ctrl.rw.size = 0x104b0; // sizeof ??
         }
     break;
-    case 5:
-    case 6:
-    case 7:
-        mcMakeGameFileName(mc_ctrl.rw.name, type - 5);
+    case MC_FILE_GAMEDATA1:
+    case MC_FILE_GAMEDATA2:
+    case MC_FILE_GAMEDATA3:
+        mcMakeGameFileName(mc_ctrl.rw.name, type - MC_FILE_GAMEDATA1);
 
         mc_ctrl.rw.step = 0;
         mc_ctrl.rw.mode = mode;
@@ -153,12 +144,12 @@ void mcAcsFileReq(char type, int mode, int header)
             mc_ctrl.rw.size = mc_game_size;
         }
     break;
-    case 8:
-    case 9:
-    case 10:
-    case 11:
-    case 12:
-        mcMakeAlbumFileName(mc_ctrl.rw.name, type - 8);
+    case MC_FILE_ALBUMDATA1:
+    case MC_FILE_ALBUMDATA2:
+    case MC_FILE_ALBUMDATA3:
+    case MC_FILE_ALBUMDATA4:
+    case MC_FILE_ALBUMDATA5:
+        mcMakeAlbumFileName(mc_ctrl.rw.name, type - MC_FILE_ALBUMDATA1);
 
         mc_ctrl.rw.step = 0;
         mc_ctrl.rw.mode = mode;
@@ -182,7 +173,7 @@ char mcWriteFile()
     switch(mc_ctrl.rw.step)
     {
     case 0:
-        mcAcsReq(2);
+        mcAcsReq(MC_FUNC_OPEN);
 
         mc_ctrl.rw.step = 1;
     break;
@@ -198,7 +189,7 @@ char mcWriteFile()
         }
     break;
     case 2:
-        mcAcsReq(4);
+        mcAcsReq(MC_FUNC_SAVE);
         mc_ctrl.rw.step = 3;
     break;
     case 3:
@@ -213,7 +204,7 @@ char mcWriteFile()
         }
     break;
     case 4:
-        mcAcsReq(8);
+        mcAcsReq(MC_FUNC_CLOSE);
 
         mc_ctrl.rw.step = 5;
     break;
@@ -233,7 +224,7 @@ char mcReadFile()
     switch(mc_ctrl.rw.step)
     {
     case 0:
-        mcAcsReq(2);
+        mcAcsReq(MC_FUNC_OPEN);
 
         mc_ctrl.rw.step = 1;
     break;
@@ -249,7 +240,7 @@ char mcReadFile()
         }
         break;
     case 2:
-        mcAcsReq(3);
+        mcAcsReq(MC_FUNC_LOAD);
 
         mc_ctrl.rw.step = 3;
     break;
@@ -265,7 +256,7 @@ char mcReadFile()
         }
         break;
     case 4:
-        mcAcsReq(8);
+        mcAcsReq(MC_FUNC_CLOSE);
 
         mc_ctrl.rw.step = 5;
     break;
@@ -606,6 +597,11 @@ void mcMakeSaveFile(u_int *work_addr, u_char file_id)
     {
         addr1 = data_str[i].addr;
 
+        if (MikuPan_IsPs2MemoryPointer((int64_t)data_str[i].addr) || (0 == (0xFFFFFFFF00000000 & (int64_t)data_str[i].addr) && MikuPan_IsPs2AddressMainMemoryRange((int)data_str[i].addr)))
+        {
+            addr1 = MikuPan_GetHostPointer((int)data_str[i].addr);
+        }
+
         for (j = 0; j < data_str[i].size; j++)
         {
             sum += *addr1;
@@ -671,6 +667,11 @@ char mcSetLoadFile(u_int *work_addr, u_char file_id)
     for (i = 0; i < str_num; i++)
     {
         addr1 = data_str[i].addr;
+
+        if (MikuPan_IsPs2MemoryPointer((int64_t)data_str[i].addr) || (0 == (0xFFFFFFFF00000000 & (int64_t)data_str[i].addr) && MikuPan_IsPs2AddressMainMemoryRange((int)data_str[i].addr)))
+        {
+            addr1 = MikuPan_GetHostPointer((int)data_str[i].addr);
+        }
 
         for (j = 0; j < data_str[i].size; j++)
         {

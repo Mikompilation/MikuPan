@@ -541,7 +541,7 @@ char mcCtrlCheck()
     case 0:
         mc_ctrl.sub_step = 1;
 
-        mcAcsReq(0);
+        mcAcsReq(MC_FUNC_SLOT_CHECK);
     break;
     case 1:
         if (mcAcsMain() != 0)
@@ -559,11 +559,11 @@ char mcCtrlCheck()
     case 4:
         mc_ctrl.sub_step = 5;
 
-        mcSetPathDir(0);
+        mcSetPathDir(MC_FILE_ICONSYS);
 
         sprintf(mc_ctrl.rw.name, "%s*", mc_ctrl.rw.path);
 
-        mcAcsReq(1);
+        mcAcsReq(MC_FUNC_FILE_CHECK);
     break;
     case 5:
         if (mcAcsMain() == 0)
@@ -619,7 +619,7 @@ char mcCtrlCheck()
         {
             if (mc_ctrl.acs.sta == 0x0)
             {
-                mcSetLoadFile(mc_ctrl.work_addr, 5);
+                mcSetLoadFile(mc_ctrl.work_addr, MC_MODE_ALBUMLOAD_TITLE1);
 
                 mc_header_buf[loop] = mc_header;
 
@@ -747,7 +747,7 @@ char mcCtrlFileSel()
 
     if (mc_ctrl.sub_step == 1)
     {
-        mcAcsReq(7);
+        mcAcsReq(MC_FUNC_EXIST_CHECK);
         mc_ctrl.sub_step = 2;
     }
     else
@@ -886,11 +886,11 @@ char mcCtrlLoad()
 
     if (mc_ctrl.mode == MC_MODE_GAMESAVE || mc_ctrl.mode == MC_MODE_GAMELOAD || mc_ctrl.mode == MC_MODE_STARTCHECK)
     {
-        file_id = 5;
+        file_id = MC_FILE_GAMEDATA1;
     }
     else
     {
-        file_id = 8;
+        file_id = MC_FILE_ALBUMDATA1;
     }
 
     file_id += mc_ctrl.sel_file;
@@ -974,8 +974,7 @@ char mcCtrlMakeDir()
     {
     case 0:
         mcSetPathDir(mc_ctrl.sel_file);
-        mcAcsReq(5);
-
+        mcAcsReq(MC_FUNC_MAKE_DIR);
         mc_ctrl.sub_step = 1;
     break;
     case 1:
@@ -1121,7 +1120,7 @@ char mcCtrlFormat()
     switch (mc_ctrl.sub_step)
     {
     case 0:
-        mcAcsReq(6);
+        mcAcsReq(MC_FUNC_FORMAT);
 
         mc_ctrl.sub_step = 1;
     break;
@@ -1166,7 +1165,7 @@ char mcCtrlDelete()
 
         sprintf(mc_ctrl.rw.name, "%s*", mc_ctrl.rw.path);
 
-        mcAcsReq(1);
+        mcAcsReq(MC_FUNC_FILE_CHECK);
     break;
     case 2:
         if (mcAcsMain() != 0)
@@ -1189,7 +1188,7 @@ char mcCtrlDelete()
 
         if (mc_ctrl.dir.table[cnt].EntryName[0] != '.')
         {
-            mcAcsReq(9);
+            mcAcsReq(MC_FUNC_DELETE);
 
             mc_ctrl.sub_step = 4;
         }
@@ -1254,7 +1253,7 @@ char mcCtrlDispErr()
     switch (mc_ctrl.sub_step)
     {
     case 0:
-        mcAcsReq(7);
+        mcAcsReq(MC_FUNC_EXIST_CHECK);
 
         mc_ctrl.sub_step = 1;
     break;
@@ -1299,7 +1298,7 @@ char mcCtrlYesno(int def_pos)
     {
         if (mc_ctrl.sub_step == MC_CHECK)
         {
-            mcAcsReq(7);
+            mcAcsReq(MC_FUNC_EXIST_CHECK);
 
             mc_ctrl.sub_step = 2;
         }

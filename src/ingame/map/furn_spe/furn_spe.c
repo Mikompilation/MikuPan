@@ -2106,10 +2106,10 @@ void FSpeTexAnmExe(u_char modelnum, FURN_ACT_WRK *fawp, u_char regmode, u_char l
 
     hs = (HeaderSection *)tmpModelp;
 
-    matp = hs->matp;
-    phead = hs->phead;
+    matp = MikuPan_GetHostPointer(hs->matp);
+    phead = MikuPan_GetHostPointer(hs->phead);
 
-    while ((u_int)matp < (u_int)phead)
+    while ((int64_t)matp < (int64_t)phead)
     {
         if (strncmp("sha_", matp->name, 4) == 0)
         {
