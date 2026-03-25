@@ -20,6 +20,7 @@ include(sdl3)
 include(imgui)
 include(spdlog)
 include(cglm)
+include(ffmpeg)
 
 set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         "src/common/ul_math.c"
@@ -252,28 +253,20 @@ target_include_directories(MikuPan PRIVATE
         "extern/"
         "extern/glad/include/"
         ${SDL3_INCLUDE_DIR}
-        ${AVFORMAT_INCLUDE_DIRS}
-        ${AVCODEC_INCLUDE_DIRS}
-        ${SWSCALE_INCLUDE_DIRS}
-        ${AVUTIL_INCLUDE_DIRS})
-
-link_directories(
-    ${AVFORMAT_LIBRARY_DIRS}
-    ${AVCODEC_LIBRARY_DIRS}
-    ${SWSCALE_LIBRARY_DIRS}
-    ${AVUTIL_LIBRARY_DIRS}
+        ${ffmpeg_SOURCE_DIR}
 )
 
+
 target_link_libraries(MikuPan PRIVATE
-    m
-    imgui
-    SDL3::SDL3
-    spdlog::spdlog
-    cglm
-    ${AVFORMAT_LIBRARIES}
-    ${AVCODEC_LIBRARIES}
-    ${SWSCALE_LIBRARIES}
-    ${AVUTIL_LIBRARIES}
+        m
+        imgui
+        SDL3::SDL3
+        spdlog::spdlog
+        cglm
+        avcodec
+        swscale
+        avutil
+        avformat
 )
 
 add_custom_command(TARGET MikuPan POST_BUILD
