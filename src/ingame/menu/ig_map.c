@@ -58,7 +58,7 @@ u_char rm_in_flr3[2] = { 20, 0xff };
 
 static FLSH_CORE flsh[3];
 
-static MAP_CTRL map;
+static MAP_CTRL map = {0};
 
 #define PI 3.1415927f
 
@@ -1186,7 +1186,7 @@ static void MapExistCHK()
     map.movable = 0;
     map.visit_flr = 0;
 
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < 4; i++)
     {
         if (floor_exist[ingame_wrk.msn_no][i] == 0)
         {
