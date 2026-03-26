@@ -551,7 +551,6 @@ void playMovLoop()
         fps = 30.0;
     }
 
-
     const double frameDur = 1.0 / fps;
 
     double startT = now_sec();
