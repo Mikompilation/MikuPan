@@ -18,6 +18,7 @@
 #include "mikupan_pipeline.h"
 
 #include <glad/gl.h>
+#include <xxhash.h>
 
 int window_width = 640;
 int window_height = 448;
@@ -182,7 +183,9 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
     int width = 1 << tex0->TW;
     int height = 1 << tex0->TH;
 
+    /// TODO: IMPROVE THIS PERFORMANCE WISE
     void *pixels = DownloadGsTexture(tex0);
+    uint64_t hash = GetTextureHash(tex0);
 
     if (!pixels)
     {
@@ -216,16 +219,19 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
     texture_info->height = height;
     texture_info->width = width;
     texture_info->id = tex;
+    texture_info->hash = hash;
     texture_info->data = pixels;
 
-    MikuPan_AddTexture(tex0, texture_info);
+    MikuPan_AddTexture(hash, texture_info);
 
     return texture_info;
 }
 
 void MikuPan_SetTexture(sceGsTex0 *tex0)
 {
-    MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(tex0);
+    uint64_t hash = GetTextureHash(tex0);
+
+    MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(hash);
 
     if (texture_info == NULL)
     {
@@ -500,6 +506,7 @@ void MikuPan_DeleteTexture(MikuPan_TextureInfo *texture_info)
     }
 
     glad_glDeleteTextures(1, (const GLuint *) &texture_info->id);
+    free(texture_info->data);
     free(texture_info);
 }
 

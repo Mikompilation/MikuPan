@@ -489,10 +489,7 @@ void MakeTim2Direct3(u_int *tim2_addr, int tbp, int offset)
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
     *(u_long*)&load_image.giftag1 = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
 
-    if (MikuPan_GetTexturePixelBuffer(&sgtx0) == NULL)
-    {
-        GsUpload(&load_image, (unsigned char*)img_addr);
-    }
+    GsUpload(&load_image, (unsigned char*)img_addr);
 
     qwc = (ndpkt - qwtop) - 1;
 
@@ -604,10 +601,7 @@ void MakeClutDirect3(u_int *tim2_addr, int cbp, int offset)
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
     *(u_long*)&load_image.giftag1 = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
 
-    if (MikuPan_GetTexturePixelBuffer(&sgtx0) == NULL)
-    {
-        GsUpload(&load_image, (unsigned char*)img_addr);
-    }
+    GsUpload(&load_image, (unsigned char*)img_addr);
 
     qwc = (ndpkt - qwtop) - 1;
 

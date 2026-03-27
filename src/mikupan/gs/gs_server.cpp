@@ -1,14 +1,12 @@
 #include "gs_server.h"
-
 #include "mikupan_texture_manager.h"
+#include "spdlog/spdlog.h"
+#include <cstring>
+#include "xxhash.h"
 
 extern "C" {
 #include "mikupan/mikupan_utils.h"
 }
-
-#include "spdlog/spdlog.h"
-
-#include <cstring>
 
 GS::GSHelper gsHelper;
 
@@ -314,11 +312,11 @@ unsigned char *DownloadGsTexture(sceGsTex0 *tex0)
                   static_cast<unsigned long long>(tex0->CBP),
                   static_cast<unsigned long long>(tex0->PSM));
 
-    auto texture = MikuPan_GetTexturePixelBuffer(tex0);
-
+    uint64_t hash = GetTextureHash(tex0);
+    auto texture = MikuPan_GetTextureInfo(hash);
     if (texture != nullptr)
     {
-        return texture;
+        return texture->data;
     }
 
     std::vector<uint8_t> img;
@@ -352,7 +350,44 @@ unsigned char *DownloadGsTexture(sceGsTex0 *tex0)
 
     unsigned char* image_data = MikuPan_ConvertImageAlpha(img.data(), width, height);
 
-    MikuPan_AddTexturePixelBuffer(tex0, image_data);
-
     return image_data;
+}
+
+uint64_t GetTextureHash(sceGsTex0 *tex0)
+{
+    if (!MikuPan_IsFirstUploadDone())
+    {
+        return 0;
+    }
+
+    int width = (1 << tex0->TW);
+    int height = (1 << tex0->TH);
+    int addr = 0;
+
+    switch (tex0->PSM)
+    {
+        case PSMCT32:
+            addr = GetPixelAddressPSMCT32(tex0->TBP0, tex0->TBW, 0, 0);
+            break;
+
+        case PSMT4:
+            addr = GetPixelAddressPSMCT32(tex0->CBP, tex0->TBW, 0, 0);
+            //addr = GetPixelAddressPSMT4(tex0->TBP0, tex0->TBW, 0, 0) >> 1;
+            break;
+        case PSMT8:
+            addr = GetPixelAddressPSMCT32(tex0->CBP, tex0->TBW, 0, 0);
+            //addr = GetPixelAddressPSMT8(tex0->TBP0, tex0->TBW, 0, 0);
+            break;
+        default:
+            spdlog::debug(
+                "Texture Transfer Upload Failed, Unsupported Format: DPSM "
+                "{:#x}",
+                (int) tex0->PSM);
+            return 0;
+            break;
+    }
+
+    XXH64_hash_t hash = XXH64(&gsHelper.mem_[addr], width*height, 0);
+
+    return hash;
 }

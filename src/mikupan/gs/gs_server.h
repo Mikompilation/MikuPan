@@ -130,10 +130,8 @@ class GSHelper
     std::vector<uint8_t> DownloadImagePSMT4(int dbp, int dbw, int dsax,
                                             int dsay, int rrw, int rrh, int cbp,
                                             int cbw, int csa, char alpha_reg);
-    void Clear();
-
-   private:
     std::vector<char> mem_ = std::vector<char> (4 * 1024 * 1024);
+    void Clear();
 };
 }// namespace GS
 
@@ -142,6 +140,7 @@ extern GS::GSHelper gsHelper;
 extern "C" {
 void GsUpload(sceGsLoadImage *image_load, unsigned char *image);
 unsigned char *DownloadGsTexture(sceGsTex0 *tex0);
+uint64_t GetTextureHash(sceGsTex0 *tex0);
 }
 
 // Texture *DownloadGsTexture(sceGsTex0* pMeshTexReg);

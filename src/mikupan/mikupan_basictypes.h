@@ -15,6 +15,7 @@ typedef struct
     int width;
     int height;
     u_int id;
+    uint64_t hash;
     unsigned char* data;
 } MikuPan_TextureInfo;
 
