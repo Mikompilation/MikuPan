@@ -404,6 +404,9 @@ char GetSeUseTbl(u_char type, u_char tbl_no, u_char se_no)
                     return 0;
                 }
                 return se_use_jidou_tbl[tbl_no][0];
+
+            default:
+            return 1;
         }
     }
     else

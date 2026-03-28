@@ -95,11 +95,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
             {
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
 
                 return 1;
@@ -110,11 +110,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 {
                     if (ingame_wrk.stts & 0x80)
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                     }
                     else
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                     }
 
                     return 1;
@@ -122,11 +122,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 }
 
                 *mode = *csr;
@@ -149,11 +149,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (
@@ -174,11 +174,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
             }
         }
@@ -194,11 +194,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if ((*key_now[6] == 1) || (*key_now[5] == 1))
@@ -209,11 +209,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (
@@ -234,11 +234,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (
@@ -259,11 +259,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
             }
         }
@@ -277,11 +277,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
@@ -290,11 +290,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (
@@ -324,11 +324,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (
@@ -358,11 +358,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
             }
         }
@@ -376,11 +376,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
@@ -389,11 +389,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (
@@ -407,11 +407,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (
@@ -425,11 +425,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
             }
         }
@@ -445,11 +445,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
@@ -458,11 +458,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (*key_now[2] != 0 || Ana2PadDirCnt(3) != 0)
@@ -506,11 +506,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
@@ -519,11 +519,11 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 if (ingame_wrk.stts & 0x80)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 }
             }
         }

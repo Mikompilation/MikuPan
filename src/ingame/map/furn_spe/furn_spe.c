@@ -10,6 +10,7 @@
 #define RAND_MAX 2147483647
 
 #include "sce/libvu0.h"
+#include "mikupan/mikupan_logging_c.h"
 
 #include "common/ul_math.h"
 #include "graphics/graph2d/effect.h"
@@ -671,6 +672,11 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
     fawp->flg &= ~0x2;
 
     pointer = (u_char *)point;
+
+    if (printer == NULL)
+    {
+        return;
+    }
 
     while (*printer)
     {

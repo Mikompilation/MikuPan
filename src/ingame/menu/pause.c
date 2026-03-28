@@ -48,7 +48,7 @@ int PauseMain()
         {
             if (CanPauseCHK() != 0)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 CaptureScreen(0x1a40);
                 DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
 
@@ -70,7 +70,7 @@ int PauseMain()
         else if (pause_wrk.mode == PAUSE_MODE_MENU)
         {
             pause_wrk.mode = PAUSE_MODE_MENU_OUT;
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
         }
     }
     else if (pause_wrk.mode == PAUSE_MODE_MENU_OUT)
@@ -102,13 +102,13 @@ int PauseMain()
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 pause_wrk.mode = PAUSE_MODE_MENU_OUT;
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 *key_now[4] = 2;
 
@@ -136,7 +136,7 @@ int PauseMain()
                      || Ana2PadDirCnt(0) == 1
                      || (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1))
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                 if (pause_wrk.csr[0] != 0)
                 {
@@ -152,7 +152,7 @@ int PauseMain()
                      || Ana2PadDirCnt(2) == 1
                      || (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1))
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                 if (pause_wrk.csr[0] < 2)
                 {
@@ -166,7 +166,7 @@ int PauseMain()
         }
         else if (*key_now[4] != 0)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
             *key_now[4] = 2;
 
@@ -193,17 +193,17 @@ int PauseMain()
                 ps_dsp.yn_mode = 0;
             }
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
         }
         else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
             pause_wrk.csr[1] = 1 - pause_wrk.csr[1];
         }
         else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
             pause_wrk.csr[1] = 1 - pause_wrk.csr[1];
         }

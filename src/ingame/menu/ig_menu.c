@@ -101,7 +101,7 @@ void IngameMenuOpenStart()
     if (CanYouOpenMyMind(0) != 0)
     {
         IngameMenuOpenInit();
-        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
         CaptureScreen(0x1a40);
         DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
 
@@ -261,7 +261,7 @@ void IngameMenuModeSlct()
             yw2d.menu_io_flg = 2;
             yw2d.menu_io_cnt = 45;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
             SetTargetVolSeMenuFade(0xfff);
             SetTargetVolAdpcmMenuFade(0xfff);
@@ -271,7 +271,7 @@ void IngameMenuModeSlct()
             switch(ig_menu_wrk.csr[0])
             {
             case 0:
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_MAP;
 
@@ -280,7 +280,7 @@ void IngameMenuModeSlct()
                 StartMapModeInit();
             break;
             case 1:
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_ITEM;
 
@@ -289,7 +289,7 @@ void IngameMenuModeSlct()
                 StartItemModeInit();
             break;
             case 2:
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_ALBM;
 
@@ -302,7 +302,7 @@ void IngameMenuModeSlct()
                 StartAlbumModeInit();
             break;
             case 3:
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_FILE;
 
@@ -317,7 +317,7 @@ void IngameMenuModeSlct()
             case 4:
                 if (ingame_wrk.clear_count != 0)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                     ig_menu_wrk.mode = IGMENU_MODE_GHOST;
 
@@ -331,7 +331,7 @@ void IngameMenuModeSlct()
                 }
                 else
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                     ig_menu_wrk.mode = IGMENU_MODE_CAMERA;
 
@@ -345,7 +345,7 @@ void IngameMenuModeSlct()
                 }
             break;
             case 5:
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_RANKING;
 
@@ -358,7 +358,7 @@ void IngameMenuModeSlct()
                 StartRankModeInit();
             break;
             case 6:
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_CAMERA;
 
@@ -371,7 +371,7 @@ void IngameMenuModeSlct()
                 CameraCustomInit();
             break;
             case 12:
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_OPTN;
 
@@ -401,7 +401,7 @@ void IngameMenuModeSlct()
                 ig_menu_wrk.csr[0] = mode_limit;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
         else if (
             *key_now[1] == 1 ||
@@ -419,7 +419,7 @@ void IngameMenuModeSlct()
                 ig_menu_wrk.csr[0] = 0;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
     }
 }

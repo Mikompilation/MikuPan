@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 VOICE voices[24];
+SDL_Mutex *voice_lock;
 
 void VoicesInit()
 {
@@ -36,12 +37,14 @@ VOICE *GetFreeVoice()
 
 static void MixSamples(int sampleCount, s16 *samples, VOICE v)
 {
+
+    s16 volume = (s32) v.volL * v.mVolL / 100;
+
     for (int i = 0; i < sampleCount; i++)
     {
         s16 sample = samples[i];
-        sample = ApplyVolume(sample, v.adsr1);
-        s16 left = ApplyVolume(sample, v.volL);
-        samples[i] = left;
+        //sample = ApplyVolume(sample, v.adsr1);
+        samples[i] = ApplyVolume(sample, volume);
     }
 }
 
@@ -76,7 +79,7 @@ static void FillMono(int vNo)
             {
                 int byteCount = (out - voices[vNo].buffer) * sizeof(s16);
                 voices[vNo].nax = voices[vNo].lsa;
-                MixSamples(sampleCount, voices[vNo].buffer, voices[vNo]);
+                //MixSamples(sampleCount, voices[vNo].buffer, voices[vNo]);
 
                 SDL_SetAudioStreamFrequencyRatio(
                     voices[vNo].stream, voices[vNo].pitch / (float) 0x1000);
@@ -97,6 +100,7 @@ static void SaveDebugBuffer()
 void Key_On(int vNo)
 {
     iop_stat.sev_stat[vNo].status = VOICE_USE;
+    VOICE v = voices[vNo];
 
     SDL_AudioSpec spec;
     spec.channels = 1;
@@ -107,9 +111,14 @@ void Key_On(int vNo)
     SDL_BindAudioStream(audio_dev, voices[vNo].stream);
     voices[vNo].nax = voices[vNo].ssa;
     //SaveDebugBuffer();
-    FillAdpcmHeader(vNo);
-    FillMono(vNo);
-    SDL_ResumeAudioStreamDevice(voices[vNo].stream);
+    SDL_LockMutex(voice_lock);
+
+    if (iop_stat.sev_stat[vNo].status == VOICE_USE)
+    {
+        FillAdpcmHeader(vNo);
+        FillMono(vNo);
+        SDL_ResumeAudioStreamDevice(voices[vNo].stream);
+    }
 }
 
 void Key_Off(int vNo)
@@ -118,6 +127,7 @@ void Key_Off(int vNo)
     iop_stat.sev_stat[vNo].status = VOICE_FREE;
     SDL_PauseAudioStreamDevice(v.stream);
     SDL_ClearAudioStream(v.stream);
+    SDL_UnlockMutex(voice_lock);
 }
 
 void CloseVoice(int vNo)

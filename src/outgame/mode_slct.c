@@ -320,13 +320,13 @@ char ModeSlctPad(u_char mode)
     case 0:
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dsp_ms.next_mode = 5;
             rtrn = 1;
         }
         else if (*key_now[5] == 1)
         { 
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dsp_ms.next_mode = dsp_ms.csr[0] + 1;
             if (dsp_ms.next_mode == 3 || dsp_ms.next_mode == 4)
             {
@@ -343,7 +343,7 @@ char ModeSlctPad(u_char mode)
                 (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
             )
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 if (dsp_ms.csr[0])
                 {
                     dsp_ms.csr[0]--;
@@ -360,7 +360,7 @@ char ModeSlctPad(u_char mode)
                 (Ana2PadDirCnt(2) > 0x19 && Ana2PadDirCnt(2) % 5 == 1)
             )
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 if (dsp_ms.csr[0] <= 3)
                 {
                     dsp_ms.csr[0]++;
@@ -375,7 +375,7 @@ char ModeSlctPad(u_char mode)
     case 1:
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             if (dsp_ms.side == 0)
             {
                 dsp_ms.next_mode = dsp_ms.end_mode;
@@ -399,7 +399,7 @@ char ModeSlctPad(u_char mode)
         }
         else if (*key_now[5] == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             switch (dsp_ms.csr[1])
             {
             case 0:
@@ -472,7 +472,7 @@ char ModeSlctPad(u_char mode)
                     (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     if (dsp_ms.csr[1] > sm_csr_info[0])
                     {
                         dsp_ms.csr[1]--;
@@ -489,7 +489,7 @@ char ModeSlctPad(u_char mode)
                     (Ana2PadDirCnt(2) > 0x19 && (Ana2PadDirCnt(2) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     if (dsp_ms.csr[1] <= 3)
                     {
                         dsp_ms.csr[1]++;
@@ -508,7 +508,7 @@ char ModeSlctPad(u_char mode)
                     (Ana2PadDirCnt(3) > 0x19 && (Ana2PadDirCnt(3) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     if (dsp_ms.csr[1] == 2)
                     {
                         if (dsp_ms.sm_slct[2] != 0)
@@ -539,7 +539,7 @@ char ModeSlctPad(u_char mode)
                     (Ana2PadDirCnt(1) > 0x19 && (Ana2PadDirCnt(1) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     if (dsp_ms.csr[1] == 2)
                     {
                         if (sm_csr_info[1] > dsp_ms.sm_slct[2])
@@ -570,7 +570,7 @@ char ModeSlctPad(u_char mode)
     case 2:
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             if (dsp_ms.side == 0)
             {
                 dsp_ms.next_mode = dsp_ms.end_mode;
@@ -583,7 +583,7 @@ char ModeSlctPad(u_char mode)
         }
         else if (*key_now[5] == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             switch (dsp_ms.csr[1])
             {
             case 0:
@@ -625,7 +625,7 @@ char ModeSlctPad(u_char mode)
                     (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     if (dsp_ms.csr[1] != 0)
                     {
                         dsp_ms.csr[1]--;
@@ -642,7 +642,7 @@ char ModeSlctPad(u_char mode)
                     (Ana2PadDirCnt(2) > 0x19 && (Ana2PadDirCnt(2) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     if (dsp_ms.csr[1] < 5)
                     {
                         dsp_ms.csr[1]++;
@@ -661,7 +661,7 @@ char ModeSlctPad(u_char mode)
                     (Ana2PadDirCnt(3) > 0x19 && (Ana2PadDirCnt(3) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     if (dsp_ms.csr[1] == 0)
                     {
                         if (dsp_ms.bm_slct[0] != 0)
@@ -693,7 +693,7 @@ char ModeSlctPad(u_char mode)
                     (Ana2PadDirCnt(1) > 0x19 && Ana2PadDirCnt(1) % 5 == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     if (dsp_ms.csr[1] == 0)
                     {
                         if (dsp_ms.bm_slct[0] < sm_csr_info[1])
@@ -724,7 +724,7 @@ char ModeSlctPad(u_char mode)
     case 3:
         if (MenuOptionPad(&dsp_ms.csr[2], &dsp_ms.opt_mode))
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             EAdpcmFadeOut(0x3c);
             dsp_ms.next_mode = dsp_ms.end_mode;
             rtrn = 1;
@@ -733,7 +733,7 @@ char ModeSlctPad(u_char mode)
     case 4:
         if (SoundTestForModeSlect())
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dsp_ms.next_mode = dsp_ms.end_mode;
             rtrn = 1;
         }
@@ -742,14 +742,14 @@ char ModeSlctPad(u_char mode)
         level = CheckClearStage();
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dsp_ms.next_mode = 0x2;
             OutGameModeChange(OUTGAME_MODE_MODESEL);
             rtrn = 1;
         }
         else if (*key_now[5] == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             ingame_wrk.game = 1;
             TitleModeEnd();
             sys_wrk.load = 0;
@@ -792,13 +792,13 @@ char ModeSlctPad(u_char mode)
             {
                 if (btl_wrk.stage_no % 5 != 0)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     btl_wrk.stage_no--;
                 }
                 else
                 {
                     btl_wrk.stage_no += 4;
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
             }
             else
@@ -812,13 +812,13 @@ char ModeSlctPad(u_char mode)
                 {
                     if ((btl_wrk.stage_no + 1) % 5 != 0)
                     {
-                        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                         btl_wrk.stage_no++;
                     }
                     else
                     {
                         btl_wrk.stage_no -= 4;
-                        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     }
                 }
                 else
@@ -832,7 +832,7 @@ char ModeSlctPad(u_char mode)
                     {
                         if (btl_wrk.stage_no >= 5)
                         {
-                            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                             btl_wrk.stage_no -= 5;
                         }
                     }
@@ -845,7 +845,7 @@ char ModeSlctPad(u_char mode)
                     {
                         if (btl_wrk.stage_no <= 0xe && btl_wrk.stage_no / 5 < level)
                         {
-                            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                             btl_wrk.stage_no += 5;
                         }
                     }

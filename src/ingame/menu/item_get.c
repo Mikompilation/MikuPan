@@ -180,7 +180,7 @@ static void BookGetPad(u_char model_type, u_char model_no)
             {
                 file_dsp.stp = 5;
 
-                SeStartFix(0xb, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_GETITEM, 0, 0x1000, 0x1000, 0);
             }
         }
     break;
@@ -203,7 +203,7 @@ static void BookGetPad(u_char model_type, u_char model_no)
         {
             file_dsp.stp = 9;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[6] == 1 || *key_now[5] == 1)
         {
@@ -213,20 +213,20 @@ static void BookGetPad(u_char model_type, u_char model_no)
                 {
                     file_dsp.open_page++;
 
-                    SeStartFix(4, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR1, 0, 0x1000, 0x1000, 0);
                 }
                 else
                 {
                     file_dsp.stp = 9;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 }
             }
             else
             {
                 file_dsp.stp = 9;
 
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             }
         }
     break;
@@ -449,7 +449,7 @@ static void PhotGetPad(u_char model_type, u_char model_no)
 
         file_dsp.stp = 13;
 
-        SeStartFix(11, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_GETITEM, 0, 0x1000, 0x1000, 0);
     break;
     case 14:
         if (*key_now[6] != 1 && *key_now[5] != 1)
@@ -691,7 +691,7 @@ static void ItemGetPad(u_char model_type, u_char model_no)
             if (get_ctrl.itm_num == 0)
             {
                 file_dsp.stp = 22;
-                SeStartFix(11, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_GETITEM, 0, 0x1000, 0x1000, 0);
             }
             else
             {
@@ -703,7 +703,7 @@ static void ItemGetPad(u_char model_type, u_char model_no)
             if (get_ctrl.itm_num < 99)
             {
                 file_dsp.stp = 22;
-                SeStartFix(11, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_GETITEM, 0, 0x1000, 0x1000, 0);
             }
             else
             {

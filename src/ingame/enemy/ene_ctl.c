@@ -1774,7 +1774,7 @@ void FlyAtkHit(FLY_WRK *fw)
 
     plyr_wrk.dmg += fw->dat->dmg;
 
-    SeStartFix(0x21, 0, 0x1000, 0x1000, 0x0);
+    SeStartFix(SE_PLYR_DMG0, 0, 0x1000, 0x1000, 0x0);
 
     fw->sta |= 0x2;
 

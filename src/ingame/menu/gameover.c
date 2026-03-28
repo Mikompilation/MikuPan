@@ -115,7 +115,7 @@ void GameOverMenuMain()
     {
         if (*key_now[6] == 1 || *key_now[5] == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
             go_wrk.fade = 3;
         }
@@ -126,7 +126,7 @@ void GameOverMenuMain()
             (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
         )
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
             go_wrk.csr = 1 - go_wrk.csr;
         }
@@ -137,7 +137,7 @@ void GameOverMenuMain()
             (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
         )
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
             go_wrk.csr = 1 - go_wrk.csr;
         }

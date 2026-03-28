@@ -227,21 +227,21 @@ char mcStartCheckYesno(int def_pos)
 
     if (pad[0].one & 0x40)
     {
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
         return mc_ctrl.now_cur != 0 ? 2 : 1;
     }
 
     if (pad[0].one & 0x10)
     {
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
         return 2;
     }
 
     if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1 || DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         mc_ctrl.now_cur ^= 1;
     }

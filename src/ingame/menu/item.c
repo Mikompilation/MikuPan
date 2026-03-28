@@ -573,7 +573,7 @@ void IngameMenuItem()
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 yw2d.out_mode_cnt = 11;
             }
@@ -587,7 +587,7 @@ void IngameMenuItem()
             {
                 yw2d.out_mode_cnt = 0xb;
 
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
             }
         }
         else if (*key_now[6] == 1 || *key_now[5] == 1)
@@ -604,11 +604,11 @@ void IngameMenuItem()
                 iew.hp_max_chk != 0 || iew.flm_dff_chk != 0
             )
             {
-                SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
             }
             else
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
             }
 
         }
@@ -642,7 +642,7 @@ void IngameMenuItem()
                 }
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
         else if (
             *key_now[1] == 1 ||
@@ -667,7 +667,7 @@ void IngameMenuItem()
                 iew.itm_lst_strt = 0;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
     }
 }
@@ -721,7 +721,7 @@ void IngameMenuItemUseSlct()
 
             ig_menu_wrk.mode = IGMENU_MODE_ITEM;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
         }
 
         return;
@@ -764,7 +764,7 @@ void IngameMenuItemUseSlct()
 
                     ig_menu_wrk.mode = IGMENU_MODE_ITEM;
 
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else if (*key_now[1] == 1 || Ana2PadDirCnt(2) == 1)
                 {
@@ -786,7 +786,7 @@ void IngameMenuItemUseSlct()
 
                     ig_menu_wrk.mode = IGMENU_MODE_ITEM;
 
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
             }
         }
@@ -796,13 +796,13 @@ void IngameMenuItemUseSlct()
             {
                 ig_menu_wrk.mode = IGMENU_MODE_ITEM;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
                 ig_menu_wrk.mode = IGMENU_MODE_ITEM;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
                 *key_now[0] == 1 ||
@@ -836,7 +836,7 @@ void IngameMenuItemUseSlct()
 
                 ig_menu_wrk.mode = IGMENU_MODE_ITEM;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
                 *key_now[1] == 1 ||
@@ -863,7 +863,7 @@ void IngameMenuItemUseSlct()
 
                 ig_menu_wrk.mode = IGMENU_MODE_ITEM;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
 
@@ -884,7 +884,7 @@ void IngameMenuItemUseSlct()
     {
         ig_menu_wrk.mode = IGMENU_MODE_ITEM;
 
-        SeStartFix(3, 0, 0x1000, 0x1000, 1);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
     }
     else if (*key_now[6] == 1 || *key_now[5] == 1)
     {
@@ -918,25 +918,25 @@ void IngameMenuItemUseSlct()
 
         if (ig_menu_wrk.csr[2] != 0)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
         }
         else if (iew.itm_eve_chk != 0)
         {
-            SeStartFix(2, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
         }
     }
     else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
     {
         ig_menu_wrk.csr[2] = 1 - ig_menu_wrk.csr[2];
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 1);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
     }
     else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
     {
         ig_menu_wrk.csr[2] = 1 - ig_menu_wrk.csr[2];
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 1);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
     }
 
     return;
@@ -983,7 +983,7 @@ static void ItemUse(u_char item_no)
     case 2:
         plyr_wrk.film_no = item_use_dat[item_no].value0;
 
-        SeStartFix(5, 0, 0x1000, 0x1000, 1);
+        SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
     break;
     case 3:
         plyr_wrk.hp += item_use_dat[item_no].value1;
@@ -1001,7 +1001,7 @@ static void ItemUse(u_char item_no)
 
         poss_item[item_no]--;
 
-        SeStartFix(6, 0, 0x1000, 0x1000, 1);
+        SeStartFix(SE_USEITEM, 0, 0x1000, 0x1000, 1);
     break;
     case 4:
         // do nothing ...

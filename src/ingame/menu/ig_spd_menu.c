@@ -50,7 +50,7 @@ char SpdMenuCtrl()
     {
         if (CanYouOpenMyMind(1) != 0 && spd_mnu.smap == 0)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             SpdMapStart();
 
             rtrn = 1;

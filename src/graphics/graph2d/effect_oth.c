@@ -2671,7 +2671,7 @@ int SetAmuletFire()
     case 1:
         if (IsLoadEnd(load_id) != 0)
         {
-            SeStartFix(0x5d, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             amulet_fire_ret = NULL;
             amulet_fire_flow++;
         }
