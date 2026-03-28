@@ -19,7 +19,7 @@ void VoicesInit()
         memset(&voices[i].header, 0, sizeof(AudioHeader));
     }
 
-    memset (iop_stat.sev_stat, 0, 24);
+    memset(iop_stat.sev_stat, 0, 24);
 }
 
 VOICE *GetFreeVoice()
@@ -40,12 +40,12 @@ static void MixSamples(int sampleCount, s16 *samples, VOICE v)
     {
         s16 sample = samples[i];
         sample = ApplyVolume(sample, v.adsr1);
-        sample = ApplyVolume(sample, v.volL);
-        samples[i] = sample;
+        s16 left = ApplyVolume(sample, v.volL);
+        samples[i] = left;
     }
 }
 
-static void FillVoiceBuffer(int vNo)
+static void FillMono(int vNo)
 {
     s32 histL[2] = {0}, histR[2] = {0};
 
@@ -108,7 +108,7 @@ void Key_On(int vNo)
     voices[vNo].nax = voices[vNo].ssa;
     //SaveDebugBuffer();
     FillAdpcmHeader(vNo);
-    FillVoiceBuffer(vNo);
+    FillMono(vNo);
     SDL_ResumeAudioStreamDevice(voices[vNo].stream);
 }
 
