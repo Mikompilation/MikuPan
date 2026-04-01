@@ -224,8 +224,7 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/rendering/mikupan_renderer.c
         src/mikupan/rendering/mikupan_shader.c
-        src/mikupan/gs/gs_server.cpp
-        src/mikupan/gs/gs_server.h
+        src/mikupan/gs/mikupan_gs.cpp
         src/mikupan/gs/mikupan_texture_manager.cpp
         src/mikupan/mikupan_logging.cpp
         extern/imgui_toggle/imgui_toggle.cpp

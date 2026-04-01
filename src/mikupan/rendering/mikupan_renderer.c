@@ -5,7 +5,7 @@
 #include "cglm/cglm.h"
 #include "graphics/graph2d/message.h"
 #include "graphics/graph3d/sgsu.h"
-#include "mikupan/gs/gs_server_c.h"
+#include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/ui/mikupan_ui_c.h"
@@ -16,9 +16,7 @@
 #include "graphics/graph3d/sglib.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan_pipeline.h"
-
 #include <glad/gl.h>
-#include <xxhash.h>
 
 int window_width = 640;
 int window_height = 448;
@@ -58,7 +56,7 @@ SDL_AppResult MikuPan_Init()
         return SDL_APP_FAILURE;
     }
 
-    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
+    //SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
 
     MikuPan_SetupOpenGLContext();
 
@@ -179,57 +177,51 @@ void MikuPan_RenderSetDebugValues()
 MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
 {
     GLuint tex = 0;
+    GLfloat maxAniso = 0.0f;
 
     int width = 1 << tex0->TW;
     int height = 1 << tex0->TH;
 
-    /// TODO: IMPROVE THIS PERFORMANCE WISE
-    void *pixels = DownloadGsTexture(tex0);
-    uint64_t hash = GetTextureHash(tex0);
+    uint64_t hash = 0;
+    void *pixels = MikuPan_GsDownloadTexture(tex0, &hash);
 
-    if (!pixels)
+    if (hash == 0)
     {
         return NULL;
     }
 
     glad_glGenTextures(1, &tex);
     glad_glBindTexture(GL_TEXTURE_2D, tex);
-
     glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
     glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
                       width, height, 0, GL_RGBA,
                       GL_UNSIGNED_BYTE, pixels);
-
-    //GLfloat maxAniso = 0.0f;
-    //glad_glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
-    //glad_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
-
+    glad_glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
+    glad_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
     glad_glGenerateMipmap(GL_TEXTURE_2D);
-
     glad_glBindTexture(GL_TEXTURE_2D, 0);
 
     MikuPan_TextureInfo *texture_info = malloc(sizeof(MikuPan_TextureInfo));
     texture_info->height = height;
     texture_info->width = width;
     texture_info->id = tex;
+    texture_info->tex0 = *(uint64_t*)tex0;
     texture_info->hash = hash;
-    texture_info->data = pixels;
 
     MikuPan_AddTexture(hash, texture_info);
+
+    free(pixels);
 
     return texture_info;
 }
 
 void MikuPan_SetTexture(sceGsTex0 *tex0)
 {
-    uint64_t hash = GetTextureHash(tex0);
+    uint64_t hash = MikuPan_GetTextureHash(tex0);
 
     MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(hash);
 
@@ -395,8 +387,10 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
         }
     };
 
-    u_int current_program = MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+
+    MikuPan_SetRenderState2D();
 
     glad_glBindVertexArray(pipeline->vao);
     glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
@@ -497,6 +491,11 @@ void MikuPan_SetFontTexture(int fnt)
 
 void MikuPan_DeleteTexture(MikuPan_TextureInfo *texture_info)
 {
+    if (texture_info == NULL)
+    {
+        return;
+    }
+
     for (int i = 0; i < 6; i++)
     {
         if (fnt_texture[i]->id == texture_info->id)
@@ -506,7 +505,6 @@ void MikuPan_DeleteTexture(MikuPan_TextureInfo *texture_info)
     }
 
     glad_glDeleteTextures(1, (const GLuint *) &texture_info->id);
-    free(texture_info->data);
     free(texture_info);
 }
 

@@ -45,7 +45,8 @@ int sceSifCheckStatRpc(sceSifRpcData* cd)
 int sceSifCallRpc(sceSifClientData* client, unsigned int rpc_number, unsigned int mode, void* send, int ssize,
                   void* receive, int rsize, sceSifEndFunc end_function, void* end_param)
 {
-    if (client == &ei_sys.gcd) {
+    if (client == &ei_sys.gcd)
+    {
         void *ret = IopDrvFunc(rpc_number, send, ssize);
         memcpy(receive, ret, rsize);
     }

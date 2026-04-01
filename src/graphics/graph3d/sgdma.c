@@ -13,7 +13,7 @@
 #include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sgsu.h"
-#include "mikupan/gs/gs_server_c.h"
+#include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_types.h"
@@ -331,7 +331,7 @@ void LoadTRI2Files(u_int *prim)
         SGDTRI2FILEHEADER * tri2 = (SGDTRI2FILEHEADER *) prim;
         tri2size = *(u_short *)(prim + 3);
 
-        GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
+        MikuPan_GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
 
         /// Need to upload the clut data too, only if it is not PSMCT32
         if (tri2->gsli.bitbltbuf.DPSM != 0 /* PSMCT32 */)
@@ -339,7 +339,7 @@ void LoadTRI2Files(u_int *prim)
             uint8_t* img = (uint8_t*)&tri2[1];
             sceGsLoadImage* image_load = (sceGsLoadImage*)&img[tri2->gsli.giftag1.NLOOP * 0x10];
             uint8_t* image_color_data = (uint8_t*)(&image_load[1]);
-            GsUpload(image_load, image_color_data);
+            MikuPan_GsUpload(image_load, image_color_data);
         }
 
         AppendDmaTag((int64_t)prim, tri2size + 1);
@@ -420,7 +420,7 @@ void RebuildTRI2Files(u_int *prim)
         SGDTRI2FILEHEADER * tri2 = (SGDTRI2FILEHEADER *) prim;
 
         info_log("Packet TRi2 archive request buffer %x %d", (int)tri2->gsli.bitbltbuf.DBP, (int) tri2->gsli.bitbltbuf.DPSM);
-        GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
+        MikuPan_GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
 
         while (((uint64_t)search_addr - (uint64_t)(prim)) / 16 < tri2size - 8)
         {
@@ -607,7 +607,7 @@ void LoadTextureAnimation(u_int *prim)
         prim = (u_int *)((int64_t)&prim[4] + tri2size * 16);
 
         SGDTRI2FILEHEADER * tri2 = (SGDTRI2FILEHEADER *) prim;
-        GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
+        MikuPan_GsUpload(&tri2->gsli, (u_char*)&tri2[1]);
 
         /// Need to upload the clut data too, only if it is not PSMCT32
         if (tri2->gsli.bitbltbuf.DPSM != 0 /* PSMCT32 */)
@@ -615,7 +615,7 @@ void LoadTextureAnimation(u_int *prim)
             uint8_t* img = (uint8_t*)&tri2[1];
             sceGsLoadImage* image_load = (sceGsLoadImage*)&img[tri2->gsli.giftag1.NLOOP * 0x10];
             uint8_t* image_color_data = (uint8_t*)(&image_load[1]);
-            GsUpload(image_load, image_color_data);
+            MikuPan_GsUpload(image_load, image_color_data);
         }
     }
 

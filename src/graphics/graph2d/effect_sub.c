@@ -18,7 +18,7 @@
 #include "graphics/graph3d/sglib.h"
 #include "ingame/ig_init.h"
 #include "main/glob.h"
-#include "mikupan/gs/gs_server_c.h"
+#include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"

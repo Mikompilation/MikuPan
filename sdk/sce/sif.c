@@ -7,4 +7,5 @@ int sceSifDmaStat(unsigned int id)
 
 unsigned int sceSifSetDma(sceSifDmaData* sdd, int len)
 {
+    return 0;
 }

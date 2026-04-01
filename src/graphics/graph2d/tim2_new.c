@@ -12,7 +12,7 @@
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph3d/sgdma.h"
 #include "main/glob.h"
-#include "mikupan/gs/gs_server_c.h"
+#include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/rendering/mikupan_renderer.h"
@@ -103,7 +103,7 @@ u_int* MakeTim2Direct2(u_int *pkt_addr, u_int *tim2_addr, int tbp)
 
     qw = SetImageTransParam2(qw, tbp, tbw, psm, tph->ImageWidth, tph->ImageHeight);
 
-    GsUpload(&load_image, (unsigned char*)img_addr);
+    MikuPan_GsUpload(&load_image, (unsigned char*)img_addr);
 
 #ifdef BUILD_EU_VERSION
     qw->ul64[0] = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 0);
@@ -219,7 +219,7 @@ u_int* MakeClutDirect2(u_int *pkt_addr, u_int *tim2_addr, int cbp)
         load_image.trxregaddr = SCE_GS_TRXREG;
     }
 
-    GsUpload(&load_image, (unsigned char*)img_addr);
+    MikuPan_GsUpload(&load_image, (unsigned char*)img_addr);
 
 #ifdef BUILD_EU_VERSION
     qw->ul64[0] = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 0);
@@ -489,7 +489,7 @@ void MakeTim2Direct3(u_int *tim2_addr, int tbp, int offset)
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
     *(u_long*)&load_image.giftag1 = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
 
-    GsUpload(&load_image, (unsigned char*)img_addr);
+    MikuPan_GsUpload(&load_image, (unsigned char*)img_addr);
 
     qwc = (ndpkt - qwtop) - 1;
 
@@ -601,7 +601,7 @@ void MakeClutDirect3(u_int *tim2_addr, int cbp, int offset)
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
     *(u_long*)&load_image.giftag1 = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
 
-    GsUpload(&load_image, (unsigned char*)img_addr);
+    MikuPan_GsUpload(&load_image, (unsigned char*)img_addr);
 
     qwc = (ndpkt - qwtop) - 1;
 

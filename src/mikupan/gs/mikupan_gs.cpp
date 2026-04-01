@@ -1,14 +1,15 @@
-#include "gs_server.h"
+#include "mikupan_gs.h"
 #include "mikupan_texture_manager.h"
 #include "spdlog/spdlog.h"
-#include <cstring>
 #include "xxhash.h"
+#include <cstring>
 
 extern "C" {
 #include "mikupan/mikupan_utils.h"
 }
 
 GS::GSHelper gsHelper;
+std::vector<uint8_t> texture_buffer = std::vector<uint8_t>(4096 * 4096 * 4);
 
 int __attribute__((optimize("O3"))) GetBlockIdPSMCT32(int block, int x, int y)
 {
@@ -129,10 +130,9 @@ void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMT4(int dbp, int dbw,
     }
 }
 
-std::vector<uint8_t> __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMCT32(int dbp, int dbw, int dsax,
+void __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMCT32(unsigned char* outbuf, int dbp, int dbw, int dsax,
                                                    int dsay, int rrw, int rrh)
 {
-    std::vector<uint8_t> outbuf(rrw * rrh * 4);
     int dst_addr = 0;
 
     for (int y = dsay; y < dsay + rrh; ++y)
@@ -147,30 +147,13 @@ std::vector<uint8_t> __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMCT
             dst_addr += 0x04;
         }
     }
-
-    return outbuf;
 }
 
-std::vector<uint8_t> __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMT8(int dbp, int dbw, int dsax,
-                                                 int dsay, int rrw, int rrh)
-{
-    // Not implemented
-    return std::vector<uint8_t>();
-}
-
-std::vector<uint8_t> __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMT4(int dbp, int dbw, int dsax,
-                                                 int dsay, int rrw, int rrh)
-{
-    // Not implemented
-    return std::vector<uint8_t>();
-}
-
-std::vector<uint8_t> __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT8(int dbp, int dbw,
+void __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT8(unsigned char* outbuf, int dbp, int dbw,
                                                       int dsax, int dsay,
                                                       int rrw, int rrh, int cbp,
                                                       int cbw, char alpha_reg)
 {
-    std::vector<uint8_t> outbuf(rrw * rrh * 4);
     int dst_addr = 0;
 
     for (int y = dsay; y < dsay + rrh; ++y)
@@ -205,17 +188,14 @@ std::vector<uint8_t> __attribute__((optimize("O3"))) GS::GSHelper::DownloadImage
             dst_addr += 4;
         }
     }
-
-    return outbuf;
 }
 
-std::vector<uint8_t> __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT4(int dbp, int dbw,
+void __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT4(unsigned char* outbuf, int dbp, int dbw,
                                                       int dsax, int dsay,
                                                       int rrw, int rrh, int cbp,
                                                       int cbw, int csa,
                                                       char alpha_reg)
 {
-    std::vector<uint8_t> outbuf(rrw * rrh * 4);
     int dst_addr = 0;
 
     for (int y = dsay; y < dsay + rrh; ++y)
@@ -246,8 +226,6 @@ std::vector<uint8_t> __attribute__((optimize("O3"))) GS::GSHelper::DownloadImage
             dst_addr += 4;
         }
     }
-    
-    return outbuf;
 }
 
 void GS::GSHelper::Clear()
@@ -255,17 +233,17 @@ void GS::GSHelper::Clear()
     memset(mem_.data(), 0, mem_.size() * sizeof(char));
 }
 
-void GsUpload(sceGsLoadImage *image_load, unsigned char *image)
+void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image)
 {
     spdlog::debug("GS upload request for DBP {:#x} DPSM {} X: {} Y: {}",
-                  (int) image_load->bitbltbuf.DBP,
-                  (int) image_load->bitbltbuf.DPSM,
-                  (int) image_load->trxreg.RRW,
-                  (int) image_load->trxreg.RRH);
+                  static_cast<int>(image_load->bitbltbuf.DBP),
+                  static_cast<int>(image_load->bitbltbuf.DPSM),
+                  static_cast<int>(image_load->trxreg.RRW),
+                  static_cast<int>(image_load->trxreg.RRH));
 
     MikuPan_FirstUploadDone();
 
-    switch ((PixelStorageFormat) image_load->bitbltbuf.DPSM)
+    switch (static_cast<PixelStorageFormat>(image_load->bitbltbuf.DPSM))
     {
         case PSMZ32:
         case PSMCT32:
@@ -291,13 +269,12 @@ void GsUpload(sceGsLoadImage *image_load, unsigned char *image)
             break;
         }
         default:
-            spdlog::info("Texture Transfer Upload Info FAILED: DPSM {:#x}",
-                          (int) image_load->bitbltbuf.DPSM);
+            spdlog::info("Texture Transfer Upload Info FAILED: DPSM {:#x}", static_cast<int>(image_load->bitbltbuf.DPSM));
             break;
     }
 }
 
-unsigned char *DownloadGsTexture(sceGsTex0 *tex0)
+unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash)
 {
     if (!MikuPan_IsFirstUploadDone())
     {
@@ -308,52 +285,51 @@ unsigned char *DownloadGsTexture(sceGsTex0 *tex0)
     int height = (1 << tex0->TH);
 
     spdlog::debug("GS download request for DBP {:#x} CBP {:#x} DPSM {} ",
-                  static_cast<unsigned long long>(tex0->TBP0),
-                  static_cast<unsigned long long>(tex0->CBP),
-                  static_cast<unsigned long long>(tex0->PSM));
+                  static_cast<int>(tex0->TBP0),
+                  static_cast<int>(tex0->CBP),
+                  static_cast<int>(tex0->PSM));
 
-    uint64_t hash = GetTextureHash(tex0);
-    auto texture = MikuPan_GetTextureInfo(hash);
+    *hash = MikuPan_GetTextureHash(tex0);
+    auto texture = MikuPan_GetTextureInfo(*hash);
     if (texture != nullptr)
     {
-        return texture->data;
+        return nullptr;
     }
-
-    std::vector<uint8_t> img;
 
     switch (tex0->PSM)
     {
-        case PSMZ32:
         case PSMCT32:
-            img = gsHelper.DownloadPSMCT32(tex0->TBP0, tex0->TBW, 0, 0, width,
-                                           height);
+            gsHelper.DownloadPSMCT32(
+                texture_buffer.data(),
+                tex0->TBP0, tex0->TBW,
+                0, 0, width, height);
             break;
 
         case PSMT4:
-            img = gsHelper.DownloadImagePSMT4(tex0->TBP0, tex0->TBW, 0, 0,
-                                              width, height, tex0->CBP,
-                                              tex0->TBW, tex0->CSA, -1);
+            gsHelper.DownloadImagePSMT4(
+                texture_buffer.data(),
+                tex0->TBP0, tex0->TBW, 0, 0,
+                width, height, tex0->CBP, tex0->TBW, tex0->CSA, -1);
             break;
         case PSMT8:
-            img =
-                gsHelper.DownloadImagePSMT8(tex0->TBP0, tex0->TBW, 0, 0, width,
-                                            height, tex0->CBP, tex0->TBW, -1);
+            gsHelper.DownloadImagePSMT8(
+                texture_buffer.data(),
+                tex0->TBP0, tex0->TBW, 0, 0,
+                width, height, tex0->CBP, tex0->TBW, -1);
             break;
         default:
             spdlog::debug(
-                "Texture Transfer Upload Failed, Unsupported Format: DPSM "
-                "{:#x}",
-                (int) tex0->PSM);
+                "Texture Transfer Upload Failed, Unsupported Format: DPSM {:#x}", static_cast<int>(tex0->PSM));
+            *hash = 0;
             return nullptr;
-            break;
     }
 
-    unsigned char* image_data = MikuPan_ConvertImageAlpha(img.data(), width, height);
+    unsigned char* image_data = MikuPan_ConvertImageAlpha(texture_buffer.data(), width, height);
 
     return image_data;
 }
 
-uint64_t GetTextureHash(sceGsTex0 *tex0)
+uint64_t MikuPan_GetTextureHash(sceGsTex0 *tex0)
 {
     if (!MikuPan_IsFirstUploadDone())
     {
@@ -362,32 +338,9 @@ uint64_t GetTextureHash(sceGsTex0 *tex0)
 
     int width = (1 << tex0->TW);
     int height = (1 << tex0->TH);
-    int addr = 0;
+    int addr = GetPixelAddressPSMCT32(tex0->CBP, tex0->TBW, 0, 0);
 
-    switch (tex0->PSM)
-    {
-        case PSMCT32:
-            addr = GetPixelAddressPSMCT32(tex0->TBP0, tex0->TBW, 0, 0);
-            break;
-
-        case PSMT4:
-            addr = GetPixelAddressPSMCT32(tex0->CBP, tex0->TBW, 0, 0);
-            //addr = GetPixelAddressPSMT4(tex0->TBP0, tex0->TBW, 0, 0) >> 1;
-            break;
-        case PSMT8:
-            addr = GetPixelAddressPSMCT32(tex0->CBP, tex0->TBW, 0, 0);
-            //addr = GetPixelAddressPSMT8(tex0->TBP0, tex0->TBW, 0, 0);
-            break;
-        default:
-            spdlog::debug(
-                "Texture Transfer Upload Failed, Unsupported Format: DPSM "
-                "{:#x}",
-                (int) tex0->PSM);
-            return 0;
-            break;
-    }
-
-    XXH64_hash_t hash = XXH64(&gsHelper.mem_[addr], width*height, 0);
+    XXH64_hash_t hash = XXH3_64bits(&gsHelper.mem_[addr], width*height);
 
     return hash;
 }

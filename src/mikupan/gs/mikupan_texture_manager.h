@@ -10,6 +10,7 @@ extern bool first_upload_done;
 extern "C"
 {
     void MikuPan_AddTexture(uint64_t hash, MikuPan_TextureInfo* texture_info);
+    MikuPan_TextureInfo* MikuPan_GetTex0TextureInfoAndCount(uint64_t tex0, int* count);
     MikuPan_TextureInfo* MikuPan_GetTextureInfo(uint64_t hash);
     int MikuPan_IsTextureCacheFlushRequested();
     void MikuPan_FirstUploadDone();

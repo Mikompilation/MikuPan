@@ -51,6 +51,23 @@ void MikuPan_RequestFlushTextureCache()
     request_texture_cache_flush = true;
 }
 
+MikuPan_TextureInfo* MikuPan_GetTex0TextureInfoAndCount(uint64_t tex0, int* count)
+{
+    MikuPan_TextureInfo* texture = nullptr;
+    *count = 0;
+
+    for (const auto& [key, info] : mikupan_render_texture_atlas)
+    {
+        if (info->tex0 == tex0)
+        {
+            texture = info;
+            (*count)++;
+        }
+    }
+
+    return texture;
+}
+
 MikuPan_TextureInfo* MikuPan_GetTextureInfo(uint64_t hash)
 {
     if (!first_upload_done)

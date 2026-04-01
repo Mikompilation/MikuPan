@@ -17,7 +17,7 @@
 #include "ingame/plyr/plyr_ctl.h"
 #include "main/glob.h"
 #include "mc/mc_main.h"
-#include "mikupan/gs/gs_server_c.h"
+#include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #ifdef BUILD_EU_VERSION
