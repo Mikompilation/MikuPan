@@ -32,6 +32,13 @@ typedef struct {
     sceVu0FVECTOR yd;
 } MikuPan_Camera;
 
+typedef struct
+{
+    SDL_Window *window;
+    int width;
+    int height;
+} MikuPan_RenderWindow;
+
 SDL_AppResult MikuPan_Init();
 void MikuPan_SetupOpenGLContext();
 void MikuPan_Clear();

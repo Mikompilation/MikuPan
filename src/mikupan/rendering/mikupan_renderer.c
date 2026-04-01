@@ -18,14 +18,13 @@
 #include "mikupan_pipeline.h"
 #include <glad/gl.h>
 
-int window_width = 640;
-int window_height = 448;
 int vertex_index[1024 * 1024] = {0};
 float temp_render_buffer[1024 * 1024] = {0};
 int state_changes = 0;
 int draw_calls = 0;
 
-SDL_Window *window = NULL;
+MikuPan_RenderWindow mikupan_render = {0};
+
 MikuPan_TextureInfo *fnt_texture[6] = {0};
 MikuPan_TextureInfo *curr_fnt_texture = NULL;
 
@@ -70,17 +69,17 @@ SDL_AppResult MikuPan_Init()
 
     info_log("Creating SDL Window");
 
-    window = SDL_CreateWindow("MikuPan", window_width, window_height,
+    mikupan_render.window = SDL_CreateWindow("MikuPan", 640, 448,
                               SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
-    if (window == NULL)
+    if (mikupan_render.window == NULL)
     {
         info_log(SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
     SDL_Surface* iconSurface = SDL_LoadPNG("resources/mikupan.png");
-    if (!SDL_SetWindowIcon(window, iconSurface))
+    if (!SDL_SetWindowIcon(mikupan_render.window, iconSurface))
     {
         info_log(SDL_GetError());
     }
@@ -89,7 +88,7 @@ SDL_AppResult MikuPan_Init()
 
     info_log("Creating OpenGL Context");
 
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    SDL_GLContext gl_context = SDL_GL_CreateContext(mikupan_render.window);
 
     if (gl_context == NULL)
     {
@@ -97,11 +96,11 @@ SDL_AppResult MikuPan_Init()
         return SDL_APP_FAILURE;
     }
 
-    SDL_GL_MakeCurrent(window, gl_context);
+    SDL_GL_MakeCurrent(mikupan_render.window, gl_context);
 
     info_log("GLad version loaded %d", gladLoadGLLoader((void*)SDL_GL_GetProcAddress));
 
-    MikuPan_InitUi(window, gl_context);
+    MikuPan_InitUi(mikupan_render.window, gl_context);
     MikuPan_InitShaders();
     MikuPan_InitPipeline();
     MikuPan_Setup3D();
@@ -130,18 +129,18 @@ void MikuPan_Clear()
 
 void MikuPan_UpdateWindowSize(int width, int height)
 {
-    window_width = width;
-    window_height = height;
+    mikupan_render.width = width;
+    mikupan_render.height = height;
 }
 
 int MikuPan_GetWindowWidth()
 {
-    return window_width;
+    return mikupan_render.width;
 }
 
 int MikuPan_GetWindowHeight()
 {
-    return window_height;
+    return mikupan_render.height;
 }
 
 int MikuPan_GetRenderMode()
@@ -339,8 +338,8 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
 
     float ndc[4] = {0};
 
-    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(ndc, (float)window_width, (float)window_height, dst.x, dst.y);
-    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(&ndc[2], (float)window_width, (float)window_height, dst.x + src.w, dst.y + src.h);
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(ndc, (float)mikupan_render.width, (float)mikupan_render.height, dst.x, dst.y);
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(&ndc[2], (float)mikupan_render.width, (float)mikupan_render.height, dst.x + src.w, dst.y + src.h);
 
     // Container size (PS2 texture memory size)
     float texW = (float) (texture_info->width);
@@ -510,7 +509,18 @@ void MikuPan_DeleteTexture(MikuPan_TextureInfo *texture_info)
 
 void MikuPan_Shutdown()
 {
-    SDL_DestroyWindow(window);
+    for (int i = 0; i < 6; i++)
+    {
+        if (fnt_texture[i] != NULL)
+        {
+            glad_glDeleteTextures(1, (const GLuint *) &fnt_texture[i]->id);
+            free(fnt_texture[i]);
+
+            fnt_texture[i] = NULL;
+        }
+    }
+
+    SDL_DestroyWindow(mikupan_render.window);
 }
 
 void MikuPan_EndFrame()
@@ -521,7 +531,7 @@ void MikuPan_EndFrame()
 
     MikuPan_DrawUi();
     MikuPan_RenderUi();
-    SDL_GL_SwapWindow(window);
+    SDL_GL_SwapWindow(mikupan_render.window);
 }
 
 void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
@@ -538,7 +548,7 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     glm_lookat(mikupan_camera->p, center, up, WorldView);
 
     // Projection -> camera->vcv
-    float aspect = (float) window_width / (float) window_height;
+    float aspect = (float) mikupan_render.width / (float) mikupan_render.height;
     glm_perspective(mikupan_camera->fov, aspect, 10.0f, mikupan_camera->farz, projection);
 
 
@@ -552,8 +562,8 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     float gs_width  = 4096.0f;
     float gs_height = 4096.0f;
 
-    float scaleX = window_width  / gs_width;
-    float scaleY = window_height / gs_height;
+    float scaleX = mikupan_render.width  / gs_width;
+    float scaleY = mikupan_render.height / gs_height;
 
     mat4 vc;
     glm_mat4_identity(vc);
