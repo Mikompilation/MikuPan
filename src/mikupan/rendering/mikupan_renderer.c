@@ -55,7 +55,7 @@ SDL_AppResult MikuPan_Init()
         return SDL_APP_FAILURE;
     }
 
-    //SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
+    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
 
     MikuPan_SetupOpenGLContext();
 
@@ -615,6 +615,11 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
         return;
     }
 
+    if (pPUHead->VUMeshDesc.MeshType.TEX == 0)
+    {
+        return;
+    }
+
     MikuPan_SetCurrentShaderProgram(MESH_0x12_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION3_NORMAL3_UV2);
 
@@ -786,6 +791,11 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
         MikuPan_SetCurrentShaderProgram(MESH_0xA_SHADER);
     }
     else
+    {
+        return;
+    }
+
+    if (pPUHead->VUMeshDesc.MeshType.TEX == 0)
     {
         return;
     }
