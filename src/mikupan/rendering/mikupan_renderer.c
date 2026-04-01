@@ -155,11 +155,14 @@ void MikuPan_SetupAmbientLighting()
         u_int curr = MikuPan_SetCurrentShaderProgram(i);
         float* f_light = MikuPan_GetLightColor();
 
+        //f_light[0] = TAmbient[0] / 255.0f;
+        //f_light[1] = TAmbient[1] / 255.0f;
+        //f_light[2] = TAmbient[2] / 255.0f;
+
         glad_glUniform3fv(
             glad_glGetUniformLocation(curr, "lightColor"),
             1,
             f_light
-            /* MikuPan_GetLightColor() */
             /* TAmbient */);
 
         glad_glUniform1f(
@@ -551,7 +554,6 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     float aspect = (float) mikupan_render.width / (float) mikupan_render.height;
     glm_perspective(mikupan_camera->fov, aspect, 10.0f, mikupan_camera->farz, projection);
 
-
     glm_mat4_mul(projection, WorldView, WorldClipView);
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)WorldView, "view");
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)projection, "projection");
@@ -611,11 +613,6 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
     if ((mesh_type != 0x12 && mesh_type != 0x10 && mesh_type != 0x32) ||
         ((mesh_type == 0x12 || mesh_type == 0x10) && !MikuPan_IsMesh0x12Rendering()) ||
         (mesh_type == 0x32 && !MikuPan_IsMesh0x32Rendering()))
-    {
-        return;
-    }
-
-    if (pPUHead->VUMeshDesc.MeshType.TEX == 0)
     {
         return;
     }
@@ -791,11 +788,6 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
         MikuPan_SetCurrentShaderProgram(MESH_0xA_SHADER);
     }
     else
-    {
-        return;
-    }
-
-    if (pPUHead->VUMeshDesc.MeshType.TEX == 0)
     {
         return;
     }

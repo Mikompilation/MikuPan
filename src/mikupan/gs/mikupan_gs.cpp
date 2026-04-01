@@ -340,6 +340,11 @@ uint64_t MikuPan_GetTextureHash(sceGsTex0 *tex0)
     int height = (1 << tex0->TH);
     int addr = GetPixelAddressPSMCT32(tex0->CBP, tex0->TBW, 0, 0);
 
+    if ((addr + width * height) > 4 * 1024 * 1024)
+    {
+        return 0;
+    }
+
     XXH64_hash_t hash = XXH3_64bits(&gsHelper.mem_[addr], width*height);
 
     return hash;
