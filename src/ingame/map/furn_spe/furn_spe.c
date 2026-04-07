@@ -351,7 +351,7 @@ u_char* ForwardActionPointer(u_char *pointer)
         case 2:
             pointer += 8;
         break;
-        case '\x1e':
+        case 30:
             pointer += 6;
         break;
         case 3:
