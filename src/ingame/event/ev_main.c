@@ -736,7 +736,7 @@ void EventMain()
         case HANYO_SE_REQ:
             if (dat_adr[1] == 0)
             {
-               SeStartFix(0x5d,0,0x1000,0x1000,0);
+               SeStartFix(SE_HANYOU,0,0x1000,0x1000,0);
                 dat_adr[1] = 1U;
             }
             dat_adr += 2;

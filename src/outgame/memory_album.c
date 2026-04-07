@@ -551,12 +551,12 @@ char NmlPadInTopPage()
     {
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dm_albm.exit_realy = 0;
         }
         else if ((*key_now[6] == 1) || (*key_now[5] == 1))
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             switch(dm_albm.csr[4])
             {
             case 0:
@@ -594,7 +594,7 @@ char NmlPadInTopPage()
         }
         else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             if (dm_albm.side == 0 && dm_albm.is_title == 0)
             {
                 if (dm_albm.csr[4] == 0)
@@ -625,7 +625,7 @@ char NmlPadInTopPage()
         }
         else if ((DPAD_LEFT_PRESSED() == 1) || (Ana2PadDirCnt(3) == 1))
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             if (dm_albm.side == 0 && dm_albm.is_title == 0)
             {
                 if (dm_albm.csr[4] == 0)
@@ -688,13 +688,13 @@ char NmlPadInTopPage()
                 {
                     if (dm_albm.buf_set != 0)
                     {
-                        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                         dm_albm.buf_set = 0;
                         dm_albm.csr_mode = 0;
                     }
                     else
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                         dm_albm.exit_realy = 1;
                         dm_albm.csr[4] = 2;
                     }
@@ -709,28 +709,28 @@ char NmlPadInTopPage()
                             if (dm_albm.csr[0] < dm_albm.pht_max[0])
                             {
                             LAB_0010515c:
-                                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                                 ReqPhotoExpand();
                                 dm_albm.mode = 1;
                                 dm_albm.mode_chng = 20;
                             }
                             else
                             {
-                                SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                                SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
                             }
                         break;
                             case 1:
                         
                             if (dm_albm.csr[1] < dm_albm.pht_max[1])
                             {
-                                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                                 ReqPhotoExpand();
                                 dm_albm.mode = 1;
                                 dm_albm.mode_chng = 20;
                             }
                             else
                             {
-                                SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                                SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
                             }
                             break;
                         }
@@ -744,11 +744,11 @@ char NmlPadInTopPage()
                 {
                     if (dm_albm.buf_set != 0)
                     {
-                        SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
                     }
                     else
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                         dm_albm.csr_mode = 1;
                         dm_albm.csr[3] = 0;
                     }
@@ -764,7 +764,7 @@ char NmlPadInTopPage()
                         }
                         else
                         {
-                            SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                            SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
                         }
                     }
                     else
@@ -781,7 +781,7 @@ char NmlPadInTopPage()
                 {
                     if ((dm_albm.csr[dm_albm.side] + csr_ax[dm_albm.csr[dm_albm.side] % 8].n) < (int)csr_movable)
                     {
-                        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                         dm_albm.csr[dm_albm.side] += csr_ax[dm_albm.csr[dm_albm.side] % 8].n;
                     }
                     else 
@@ -792,13 +792,13 @@ char NmlPadInTopPage()
                             {
                                 if (dm_albm.csr[dm_albm.side] != csr_movable)
                                 {
-                                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                                     dm_albm.csr[dm_albm.side] = csr_movable;
                                 }
                             }
                             else if (dm_albm.csr[dm_albm.side] != 0x17)
                             {
-                                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                                 dm_albm.csr[dm_albm.side] = 23;
                             }
                         }
@@ -806,7 +806,7 @@ char NmlPadInTopPage()
                         {
                             if (dm_albm.csr[dm_albm.side] != csr_movable)
                             {
-                                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                                 dm_albm.csr[dm_albm.side] = csr_movable;
                             }
                         }
@@ -821,7 +821,7 @@ char NmlPadInTopPage()
                 {
                     if ((dm_albm.csr[dm_albm.side] + csr_ax[dm_albm.csr[dm_albm.side] % 8].p) >= 0)
                     {
-                        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                         dm_albm.csr[dm_albm.side] += csr_ax[dm_albm.csr[dm_albm.side] % 8].p;
                     }
                 }
@@ -839,14 +839,14 @@ char NmlPadInTopPage()
                     {
                         if ((dm_albm.buf_set == 0) && (dm_albm.mem != 0))
                         {
-                            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                             dm_albm.csr_mode = 2;
                             dm_albm.csr[2] = dm_albm.mem - 1;
                         }
                     }
                     else
                     {
-                        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                         dm_albm.csr[dm_albm.side] += csr_ay[dm_albm.csr[dm_albm.side] % 8].n;
                     }
                 }
@@ -860,7 +860,7 @@ char NmlPadInTopPage()
                     if ((csr_ay[dm_albm.csr[dm_albm.side] % 8].p != 99) &&
                         (dm_albm.csr[dm_albm.side] + csr_ay[dm_albm.csr[dm_albm.side] % 8].p >= 0))
                         {
-                            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                             dm_albm.csr[dm_albm.side] += csr_ay[dm_albm.csr[dm_albm.side] % 8].p;
                         }
                 }
@@ -887,7 +887,7 @@ char NmlPadInTopPage()
         
         if (dm_albm.side_chng_wait == 0)
         {
-            SeStartFix(4, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR1, 0, 0x1000, 0x1000, 0);
             dm_albm.side_chng = 20;
             dm_albm.side = dm_albm.side_chng_mode;
             dm_albm.inf_alp = 0;
@@ -899,7 +899,7 @@ char NmlPadInTopPage()
         dm_albm.copy_wait = dm_albm.copy_wait - 1;
         if (dm_albm.copy_wait == 0)
         {
-            SeStartFix(11, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_GETITEM, 0, 0x1000, 0x1000, 0);
         }
     }
 
@@ -993,7 +993,7 @@ char AbnPadInBigPage(u_char alp)
 
     if (*key_now[5] == 1)
     {
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         dm_albm.mode_chng = 20;
         dm_albm.mode = 0;
     }
@@ -1001,7 +1001,7 @@ char AbnPadInBigPage(u_char alp)
     {
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dm_albm.mode_chng = 20;
             dm_albm.mode = 0;
         }
@@ -1017,7 +1017,7 @@ char AbnPadInBigPage(u_char alp)
             {
                 if (dm_albm.mem > 1)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
                 
                 if (dm_albm.mem - 1 > dm_albm.csr[2])
@@ -1031,7 +1031,7 @@ char AbnPadInBigPage(u_char alp)
             {                
                 if (dm_albm.pht_max[dm_albm.side] > 1)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
                 
                 if (dm_albm.csr[dm_albm.side] == 0)
@@ -1056,7 +1056,7 @@ char AbnPadInBigPage(u_char alp)
             {
                 if (dm_albm.mem > 1)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
 
                 if (dm_albm.csr[2] == 0)
@@ -1072,7 +1072,7 @@ char AbnPadInBigPage(u_char alp)
             {
                 if (1 < dm_albm.pht_max[dm_albm.side])
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
                 
                 if (dm_albm.csr[dm_albm.side] < dm_albm.pht_max[dm_albm.side] - 1)
@@ -1242,7 +1242,7 @@ char MenuPadCmn()
     {
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dm_albm.csr_mode = 0;
         }
         else if ((*key_now[5]) == 1)
@@ -1252,7 +1252,7 @@ char MenuPadCmn()
             case 0:
                 if (dm_albm.csr[dm_albm.side] < dm_albm.pht_max[dm_albm.side])
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                     ReqPhotoExpand();
                     dm_albm.mode = 1;
                     dm_albm.mode_chng = 20;
@@ -1260,7 +1260,7 @@ char MenuPadCmn()
                 }
                 else
                 {
-                    SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
                 }
                 break;
 
@@ -1277,7 +1277,7 @@ char MenuPadCmn()
                     }
                     else
                     {
-                        SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
                     }
                 }
                 else
@@ -1292,11 +1292,11 @@ char MenuPadCmn()
                     dm_albm.csr[dm_albm.side] == dm_albm.pht_max[dm_albm.side]
                 )
                 {
-                    SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
                 }
                 else
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                     dm_albm.yes_no = 2;
                     dm_albm.csr[4] = 1;
                 }
@@ -1308,7 +1308,7 @@ char MenuPadCmn()
                 case 0:
                     if (dm_albm.is_title != 0)
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                         save_pht_in_game = 0;
                         mc_album_save = album_save_dat[0];
                         mc_photo_num = dm_albm.pht_max[0];
@@ -1316,11 +1316,11 @@ char MenuPadCmn()
                     }
                     else
                     {
-                        SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
                     }
                 break;
                 case 1: {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                     save_pht_in_game = 0;
                     mc_album_save = album_save_dat[1];
                     mc_photo_num = dm_albm.pht_max[1];
@@ -1339,18 +1339,18 @@ char MenuPadCmn()
                 case 0:
                     if (dm_albm.is_title != 0)
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                         dm_albm.yes_no = 3;
                         dm_albm.csr[4] = 1;
                     }
                     else
                     {
-                        SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
                     }
                     break;
 
                 case 1: {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                     dm_albm.yes_no = 3;
                     dm_albm.csr[4] = side;
                 }
@@ -1360,7 +1360,7 @@ char MenuPadCmn()
             break;
 
             case 5:
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 dm_albm.yes_no = 1;
                 dm_albm.csr[4] = 2;
                 break;
@@ -1373,7 +1373,7 @@ char MenuPadCmn()
             (Ana2PadDirCnt(2) >= 0x1a && (Ana2PadDirCnt(2) % 5) == 1)
         )
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             if ((dm_albm.side == 0) && (dm_albm.is_title == 0))
             {
                 if (dm_albm.csr[3] == 0)
@@ -1405,7 +1405,7 @@ char MenuPadCmn()
             (Ana2PadDirCnt(0) >= 0x1a && (Ana2PadDirCnt(0) % 5) == 1)
         )
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             if ((dm_albm.side == 0) && (dm_albm.is_title == 0))
             {
                 if (dm_albm.csr[3] == 5)
@@ -1438,12 +1438,12 @@ char MenuPadCmn()
         case 1: {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 dm_albm.yes_no = 0;
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 switch (dm_albm.csr[4])
                 {
                 case 0:
@@ -1487,7 +1487,7 @@ char MenuPadCmn()
             }
             else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 if (dm_albm.side == 0 && dm_albm.is_title == 0)
                 {
                     if (dm_albm.csr[4] == 0)
@@ -1514,7 +1514,7 @@ char MenuPadCmn()
             }
             else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 if (dm_albm.side == 0 && dm_albm.is_title == 0)
                 {
                     if (dm_albm.csr[4] == 0)
@@ -1552,7 +1552,7 @@ char MenuPadCmn()
             
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 dm_albm.yes_no = 0;
             }
             else
@@ -1561,7 +1561,7 @@ char MenuPadCmn()
                 {
                     if (dm_albm.csr[4] != 0)
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                         dm_albm.yes_no = 0;
                     }
                     else
@@ -1576,7 +1576,7 @@ char MenuPadCmn()
                     DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     dm_albm_p->csr[4] = one - dm_albm_p->csr[4];
                 }
             }
@@ -1597,14 +1597,14 @@ char MenuPadCmn()
             
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 dm_albm.yes_no = 0;
             }
             else
             {
                 if (*key_now[6] == 1 || *key_now[5] == 1)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                     if (dm_albm.csr[4] == 0)
                     {
                         switch (dm_albm.side)
@@ -1630,7 +1630,7 @@ char MenuPadCmn()
                     DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                     // needs the two local vars, 'one' and 'dm_albm_p', to match ... why??
                     // also, what's the meaning of this? csr is a u_char so doing a subtraction
                     // does not make any sense! is it a compiler thing to leverage
@@ -1661,7 +1661,7 @@ char PasteCtrl()
         PutStringYW(6, 0x26, 0x3c, 0x186, 0x808080, 0x80, 0x1000, 0); // Line 1447
         if (*key_now[4] == 1) // Line 1450
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0); // Line 1455
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0); // Line 1455
             dm_albm.pst_yes_no = 0;
             rtrn = 1;
         }
@@ -1675,7 +1675,7 @@ char PasteCtrl()
             }
             else
             {            
-                SeStartFix(1, 0, 0x1000, 0x1000, 0); // Line 1462
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0); // Line 1462
                 dm_albm.pst_yes_no = 0;
                 rtrn = 1; // Line 1467
             }
@@ -1685,7 +1685,7 @@ char PasteCtrl()
             DPAD_LEFT_PRESSED() == one || Ana2PadDirCnt(3) == one
         ))
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 0); // Line 1471
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0); // Line 1471
             // dm_albm.csr[4] = one - dm_albm.csr[4];
             dm_albm_p->csr[4] = one - dm_albm_p->csr[4]; // Line 1472 - 1477
         }
@@ -1694,20 +1694,20 @@ char PasteCtrl()
     {
         if (--dm_albm.paste_wait == 0) // Line 1478 - 1479
         {
-            SeStartFix(0xb, 0, 0x1000, 0x1000, 0); // Line 1485
+            SeStartFix(SE_GETITEM, 0, 0x1000, 0x1000, 0); // Line 1485
             rtrn = 1;
         }
     }
     else  if (dm_albm.side == 0 && dm_albm.is_title == 0) // Line 1487
     {
-        SeStartFix(2, 0, 0x1000, 0x1000, 0); // Line 1488
+        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0); // Line 1488
         rtrn = 1; // Line 1490
     }
     else if (dm_albm.mem != 0) // Line 1491
     {
         if (dm_albm.csr[dm_albm.side] < dm_albm.pht_max[dm_albm.side]) // Line 1493
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0); // Line 1494
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0); // Line 1494
             dm_albm.csr[4] = 1; // Line 1495 -
             dm_albm.pst_yes_no = 1; // - 1499
         }
@@ -1719,7 +1719,7 @@ char PasteCtrl()
     }
     else
     {
-        SeStartFix(2, 0, 0x1000, 0x1000, 0); // Line 1505
+        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0); // Line 1505
         rtrn = 1;
     }
 
@@ -1781,20 +1781,20 @@ void BuffPadCmn()
     {
         if (*key_now[6] == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dm_albm.csr[3] = 0;
             dm_albm.csr_mode = 3;
         }
         else if (*key_now[5] == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dm_albm.buf_exp_flg = 1;
             dm_albm.mode_chng = 20;
             dm_albm.mode = 1;
         }
         else if (*key_now[7] == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dm_albm.buf_set = 1;
             dm_albm.csr_mode = 0;
             dm_albm.csr[dm_albm.side] = GetAlbumCurPos(dm_albm.side);
@@ -1806,7 +1806,7 @@ void BuffPadCmn()
             (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
         )
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             dm_albm.csr_mode = 0;
         }
         else if (
@@ -1818,12 +1818,12 @@ void BuffPadCmn()
         {
             if (dm_albm.csr[2] < (dm_albm.mem - 1))
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 dm_albm.csr[2] = dm_albm.csr[2] + 1;
             }
             else if (dm_albm.mem >= 2)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 dm_albm.csr[2] = 0;
             }
             else
@@ -1840,14 +1840,14 @@ void BuffPadCmn()
         {
             if (dm_albm.csr[2] != 0)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 dm_albm.csr[2]--;
             }
             else
             {
                 if (dm_albm.mem > 1)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 }
                 dm_albm.csr[2] = dm_albm.mem - 1;
             }
@@ -1880,7 +1880,7 @@ void BuffPadMnu()
 
     if (*key_now[4] == 1)
     {
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         dm_albm.csr_mode = 2;
     }
     else if (*key_now[5] == 1)
@@ -1888,20 +1888,20 @@ void BuffPadMnu()
         switch(dm_albm.csr[3])
         {
             case 0:
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 dm_albm.buf_exp_flg = 1;
                 dm_albm.mode = 1;
                 dm_albm.csr_mode = 2;
                 dm_albm.mode_chng = 20;
             break;
             case 1:
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 dm_albm.buf_set = 1;
                 dm_albm.csr_mode = 0;
                 dm_albm.csr[dm_albm.side] = GetAlbumCurPos(dm_albm.side);
             break;
             case 2:
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 dm_albm.buf[8] = 0xff;
                 dm_albm.buf_sid[8] = 0xff;
                 
@@ -1939,7 +1939,7 @@ void BuffPadMnu()
             (Ana2PadDirCnt(2) > 0x19 && (Ana2PadDirCnt(2) % 5) == 1)
         )
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         if (dm_albm.csr[3] > 1)
         {
             dm_albm.csr[3] = 0;
@@ -1956,7 +1956,7 @@ void BuffPadMnu()
             (Ana2PadDirCnt(0) > 0x19 && (Ana2PadDirCnt(0) % 5) == 1)
         )
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         if (dm_albm.csr[3] != 0)
         {
             dm_albm.csr[3]--;
@@ -2052,7 +2052,7 @@ void DelPyon(u_char file, u_char csr)
     
     if (dm_albm.pht_max[file] > csr)
     {
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
         dust = album_save_dat[file].pic[csr].adr_no;
         
@@ -2067,7 +2067,7 @@ void DelPyon(u_char file, u_char csr)
     }
     else
     {
-        SeStartFix(2, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
         return;
     }
 }

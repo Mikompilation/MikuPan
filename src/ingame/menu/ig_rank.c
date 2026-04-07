@@ -78,7 +78,7 @@ void IngameMenuRank()
             {
                 yw2d.out_mode_cnt = 11;
 
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
             }
         }
     }
@@ -93,13 +93,13 @@ void IngameMenuRank()
                 {
                     yw2d.out_mode_cnt = 11;
 
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else if ((*key_now[6] == 1) || (*key_now[5] == 1))
                 {
                     menu_rank.mode = 1;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else if (
                     *key_now[1] == 1 ||
@@ -108,7 +108,7 @@ void IngameMenuRank()
                     (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                     if (ig_menu_wrk.csr[1] < save_rank.pic_num - 1)
                     {
@@ -126,7 +126,7 @@ void IngameMenuRank()
                     (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                     if (ig_menu_wrk.csr[1] != 0)
                     {
@@ -146,7 +146,7 @@ void IngameMenuRank()
                 {
                     menu_rank.mode = 0;
 
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else if (
                     *key_now[3] == 1 ||
@@ -155,7 +155,7 @@ void IngameMenuRank()
                     (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                     if (ig_menu_wrk.csr[1] < save_rank.pic_num - 1)
                     {
@@ -173,7 +173,7 @@ void IngameMenuRank()
                     (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
                 )
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                     if (ig_menu_wrk.csr[1] != 0)
                     {

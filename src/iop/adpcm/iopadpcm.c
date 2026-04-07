@@ -18,8 +18,8 @@ s16 *AdpcmSpuBuf[2];
 s16 *AdpcmIopBuf[2];
 
 u_short mVolL, mVolR;
-
-static int lCount, rCount;
+u_short adsr1L, adsr2L;
+u_short adsr1R, adsr2R;
 
 SDL_Mutex *cmd_lock;
 
@@ -182,7 +182,10 @@ void IAdpcmPlay(ADPCM_CMD *acp)
 
     if (iop_adpcm[channel].stat == ADPCM_STAT_PRELOAD_END)
     {
-        iop_adpcm[channel].loop_end = 0;
+        IaSetWrkVolPanPitch(channel, acp->pan, acp->vol, acp->pitch);
+        IaSetRegVol(channel);
+        IaSetRegPitch(channel);
+        IaSetRegAdsr(channel);
         iop_adpcm[channel].stat = ADPCM_STAT_PLAY;
         SDL_SetAudioStreamFrequencyRatio(iop_adpcm[channel].stream,
                                          (float) acp->pitch / (float) 0x1000);
@@ -402,7 +405,6 @@ void IAdpcmInit(int dev_init)
     spec.freq = SAMPLE_RATE;
     iop_adpcm[0].stream =
         SDL_OpenAudioDeviceStream(audio_dev, &spec, IAdpcmReadCh0, NULL);
-    //SDL_BindAudioStream(audio_dev, iop_adpcm[0].stream);
 
     InitAdpcmCmdBuf();
     IaInitVolume();

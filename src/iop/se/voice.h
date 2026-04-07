@@ -3,11 +3,7 @@
 #include "common.h"
 #include "typedefs.h"
 #include <SDL3/SDL_audio.h>
-
-#define SD_VOICE(no) ((no) << 1)
-#define LOOPEND(flags) (flags & 1 << 8)
-#define LOOP(flags) (flags & 1 << 9)
-#define LOOPSTART(flags) (flags & 1 << 10)
+#include <SDL3/SDL_thread.h>
 
 enum SE_VOICE_STAT
 {
@@ -39,6 +35,9 @@ typedef struct
 
     u_short volL;
     u_short volR;
+    u_short mVolL;
+    u_short mVolR;
+
     u_short pitch;
     u_short adsr1;
     u_short adsr2;
@@ -46,6 +45,9 @@ typedef struct
 } VOICE;
 
 extern VOICE voices[24];
+
+extern SDL_Mutex *voice_lock;
+
 
 void VoicesInit();
 VOICE *GetFreeVoice();
@@ -66,6 +68,16 @@ static inline void SetVolLeft(int vNo, u_short val)
 static inline void SetVolRight(int vNo, u_short val)
 {
     voices[vNo].volR = val;
+}
+
+static inline void SetMasterVolLeft(int vNo, u_short val)
+{
+    voices[vNo].mVolL = val;
+}
+
+static inline void SetMasterVolRight(int vNo, u_short val)
+{
+    voices[vNo].mVolR = val;
 }
 
 static inline void SetAdsr1(int vNo, u_short val)

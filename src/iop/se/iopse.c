@@ -151,7 +151,7 @@ static void ISeEndCheck()
             }
         }
 
-        //sceSdSetSwitch(i | SD_S_ENDX, 0);
+        sceSdSetSwitch(i | SD_S_ENDX, 0);
     }
 }
 
@@ -276,7 +276,7 @@ static void ISeStop(IOP_COMMAND *icp)
     int candv;
 
     swsp = GetSeWrkSetP(icp->data1);
-    //svp = GetSeVstat(swsp->v_no);
+    svp = GetSeVstat(swsp->v_no);
     if (!swsp)
     {
         return;
@@ -286,7 +286,7 @@ static void ISeStop(IOP_COMMAND *icp)
     candv = CidAndVnum(vn, 1);
     if (vn >= 0 && vn < 24)
     {
-        //svp->status = 0;
+        svp->status = 0;
         swsp->prm_no = -1;
         swsp->param = 0;
         sceSdSetSwitch(SD_S_KOFF | 0, 1 << vn);
@@ -296,7 +296,7 @@ static void ISeStop(IOP_COMMAND *icp)
     }
     else if (vn >= 24 && vn < 48)
     {
-        //svp->status = 0;
+        svp->status = 0;
         swsp->prm_no = -1;
         swsp->param = 0;
         se_stop_flg |= 1 << (vn - 24);
@@ -360,17 +360,17 @@ static void ISeAllStop(IOP_COMMAND *icp)
     SE_VSTAT *svp;
 
     swsp = GetSeWrkSetP(icp->data1);
-    //svp = GetSeVstat(swsp->v_no);
+    svp = GetSeVstat(swsp->v_no);
     i = 0;
     swsp = GetSeWrkSetP(0);
     while (i < 24)
     {
         vn = i + 24;
-        //svp = GetSeVstat(swsp->v_no);
+        svp = GetSeVstat(swsp->v_no);
         candv = CidAndVnum(vn, 1);
         if (vn >= 24 && vn < 48)
         {
-            //svp->status = 0;
+            svp->status = 0;
             swsp->prm_no = -1;
             swsp->param = 0;
             GetSeVstat(swsp->v_no)->status = 0;
@@ -733,8 +733,7 @@ static void SeSetSeWrk(SE_WRK_SET *swsp)
 
     num = swsp->v_no;
     candv = CidAndVnum(num + 24, 1);
-    sceSdSetAddr(candv | SD_VA_SSA,
-                 GetSeAdrs(swsp->prm_no) + snd_buf_top[swsp->buf_no]);
+    sceSdSetAddr(candv | SD_VA_SSA, GetSeAdrs(swsp->prm_no) + snd_buf_top[swsp->buf_no]);
     sceSdSetParam(candv | SD_VP_ADSR1, swsp->adsr1);
     sceSdSetParam(candv | SD_VP_ADSR2, swsp->adsr2);
     sceSdSetParam(candv | SD_VP_VOLL, swsp->vol_l);
@@ -811,9 +810,6 @@ u_int SeGetSndBufTop(int pos)
 
 void SeSetMasterVol(u_short mvol)
 {
-    SE_WRK_SET *swsp;
-    swsp = GetSeWrkSetP(0);
-
-    float gain = ((float) (mvol & 0x3FFF) / 0x3FFF) * 0.5f;
-    //SDL_SetAudioStreamGain(swsp->stream, gain);
+    sceSdSetParam(SD_P_MVOLL | 1, mvol & 0x3FFF);
+    sceSdSetParam(SD_P_MVOLR | 1, mvol & 0x3FFF);
 }

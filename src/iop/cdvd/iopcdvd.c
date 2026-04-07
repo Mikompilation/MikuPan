@@ -104,6 +104,7 @@ void ICdvdDoTransfer(CDVD_REQ_BUF *rq)
             info_log("CDVD transfer to IOP unimplemented");
             break;
         case TRANS_MEM_SPU:// SPU
+            SeSetStartPoint(rq->se_buf_no, rq->file_no);
             MikuPan_ReadFileInArchive64(rq->start_sector, rq->size_sector,
                                         &load_buf_table[cdvd_stat.now_lbuf]);
             break;
@@ -522,7 +523,7 @@ static void ICdvdTransSe(IOP_COMMAND *icp)
 
     size = icp->data1;
     addr = snd_buf_top[icp->data2];
-    sceSdVoiceTrans(1, 0, (u_char *) (seBuff), (u_int *) addr, size);
+    sceSdVoiceTrans(1, 0, (u_char *) load_buf_table[0], (u_int *) addr, size);
     iop_stat.cdvd.se_trans = 1;
     SeSetStartPoint(icp->data2, icp->data3);
 }

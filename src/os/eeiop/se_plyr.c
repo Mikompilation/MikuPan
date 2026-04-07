@@ -9,10 +9,56 @@
 #include "os/eeiop/sd_room.h"
 #include "ingame/map/map_ctrl.h"
 
-#include "data/rand_ita_tbl.h" // SE_FOOT_RAND_ITA rand_ita_tbl[] = { ... };
 #include "mikupan/mikupan_memory.h"
 
 #include <stdlib.h>
+
+SE_FOOT_RAND_ITA rand_ita_tbl[] = {
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 2,
+        .rate = {90, 10, 0, 0},
+    },
+    {
+        .num = 0,
+        .rate = {0, 0, 0, 0},
+    },
+};
 
 #define DVD_DATA_ADDR (0x7f8000)
 

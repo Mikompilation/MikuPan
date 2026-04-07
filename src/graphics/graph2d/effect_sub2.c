@@ -2289,7 +2289,7 @@ int CallMissionClear()
         )
         {
             now_pos = now_pos != 2 ? now_pos + 1 : 0;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         if (
@@ -2300,7 +2300,7 @@ int CallMissionClear()
         )
         {
             now_pos = now_pos != 0 ? now_pos - 1 : 2;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         alpha_res[now_pos] = 80;
@@ -2416,7 +2416,7 @@ uint64_t CallMissionFailed()
         )
         {
             now_pos = now_pos != 2 ? now_pos + 1 : 0;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         if (
@@ -2427,7 +2427,7 @@ uint64_t CallMissionFailed()
         )
         {
             now_pos = now_pos != 0 ? now_pos - 1 : 2;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         alpha_res[now_pos] = 100;
@@ -2551,7 +2551,7 @@ int CallMissionAllClear()
         )
         {
             now_pos = now_pos == 0;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         if (
@@ -2562,7 +2562,7 @@ int CallMissionAllClear()
         )
         {
             now_pos = now_pos == 0;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         alpha_res[now_pos] = 100;
@@ -2965,7 +2965,7 @@ int BtlAnmMain()
             *key_now[5] == 1
         )
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             return 1;
         }
         

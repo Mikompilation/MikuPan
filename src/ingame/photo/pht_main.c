@@ -174,11 +174,11 @@ void PhotoCtrl()
                 {
                     if (hint_rea != 0)
                     {
-                        SeStartFix(7, 0, 0x1000, 0x7a0, 0);
+                        SeStartFix(SE_SOUL_APR, 0, 0x1000, 0x7a0, 0);
                     }
                     else
                     {
-                        SeStartFix(10, 0, 0x1000, 0x1000, 0);
+                        SeStartFix(SE_COME_OUT, 0, 0x1000, 0x1000, 0);
                     }
 
                     photo_wrk.mode = PHOTO_MODE_DISP_WAIT1;

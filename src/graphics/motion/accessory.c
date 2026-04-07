@@ -1,6 +1,7 @@
 #include "common.h"
 #include "typedefs.h"
 #include "accessory.h"
+#include "enums.h"
 
 #include "sce/libvu0.h"
 
@@ -1879,7 +1880,7 @@ char acsChodoMoveKaidan(SgCOORDUNIT *cp, float *p1, CMOVE_CTRL *mv)
     {
         if ((!(ingame_wrk.stts & 0x10)) && (!(ingame_wrk.stts & 0x80)))
         {
-            SeStartFix(45, 0, 4096, 4096, 0);
+            SeStartFix(SE_FOOT1, 0, 4096, 4096, 0);
         }
     }
 

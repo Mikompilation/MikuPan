@@ -12970,7 +12970,7 @@ static void SndEffLoop()
     {
         if (new_inf.se_num < 5)
         {
-            SeStartFix(17, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_DRAIN, 0, 0x1000, 0x1000, 0);
         }
 
         new_inf.se_wait = 5;

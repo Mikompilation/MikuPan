@@ -3741,7 +3741,7 @@ void SetEneSeal(EFFECT_CONT *ec)
                 {
                     if (ec->fw[1] >= 1.0f)
                     {
-                        SeStartFix(7, 0, 0x1000, 0x1280, 0);
+                        SeStartFix(SE_SOUL_APR, 0, 0x1000, 0x1280, 0);
                         eneseal_status = 1;
                     }
                     else
@@ -3824,7 +3824,7 @@ void SetEneSeal(EFFECT_CONT *ec)
                 flag1 = 0;
                 flag3 = 1;
 
-                SeStartFix(0x1d, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_ENE_PURIFY, 0, 0x1000, 0x1000, 0);
                 SetSpiritAway(1, bpos[eneno]);
                 ResetEffects(spr_fire);
 
