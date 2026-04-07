@@ -68,7 +68,7 @@ void SeEvMain()
             {
                 seewp->sew_no0 = 0xff;
             }
-            else if (swp->status == 0)
+            else if (swp->status == SEW_STAT_FREE)
             {
                 seewp->sew_no0 = 0xff;
             }

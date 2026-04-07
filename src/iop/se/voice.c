@@ -118,6 +118,7 @@ void Key_On(int vNo)
         FillAdpcmHeader(vNo);
         FillMono(vNo);
         SDL_ResumeAudioStreamDevice(voices[vNo].stream);
+        iop_stat.sev_stat[vNo].status = VOICE_FREE;
     }
 }
 

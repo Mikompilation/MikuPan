@@ -2,6 +2,7 @@
 #include "common.h"
 #include "enums.h"
 #include "typedefs.h"
+#include "mikupan/mikupan_logging_c.h"
 
 #include "common/ul_math.h"
 #include "graphics/graph3d/sglib.h"
@@ -154,7 +155,7 @@ static void SeInitSeWrkP(SE_WRK *swp)
         swp->mpos = 0x0;
         swp->spos[0] = swp->spos[1] = swp->spos[2] = 0.0f;
 
-        swp->status = 0;
+        swp->status = SEW_STAT_FREE;
         swp->atr = 0;
         swp->se_p = 0;
         swp->v_p = 0;
@@ -376,11 +377,13 @@ int SeStartPos(int se_no, float *pos, u_short fin_spd, u_short vol_max,
 
     if (se_no == 0xff)
     {
+        info_log("se_no -1");
         return -1;
     }
 
     if (CheckSeUse(se_no) == 0)
     {
+        info_log("Check -1");
         return -1;
     }
 
@@ -388,6 +391,7 @@ int SeStartPos(int se_no, float *pos, u_short fin_spd, u_short vol_max,
 
     if (vpos == -1)
     {
+        info_log("vpos -1");
         return -1;
     }
 
@@ -634,10 +638,10 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
             // ...
             break;
         case 1:
-            swp->status = 4;
+            swp->status = SEW_STAT_RESERVED;
             break;
         case 4:
-            swp->status = 4;
+            swp->status = SEW_STAT_RESERVED;
             swp->atr = 3;
             swp->spos[0] = tmp_str->pos[0];
             swp->spos[1] = tmp_str->pos[1];
@@ -658,7 +662,7 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
             break;
         case 2:
             swp->atr = 1;
-            swp->status = 4;
+            swp->status = SEW_STAT_RESERVED;
             swp->spos[0] = tmp_str->pos[0];
             swp->spos[1] = tmp_str->pos[1];
             swp->spos[2] = tmp_str->pos[2];
@@ -680,7 +684,7 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
             swp->ene_wrk_no = tmp_str->ewrk_no;
             swp->mpos = &ene_wrk[swp->ene_wrk_no].move_box;
             swp->atr = 2;
-            swp->status = 4;
+            swp->status = SEW_STAT_RESERVED;
             swp->spos[0] = ((MOVE_BOX *) swp->mpos)->pos[0];
             swp->spos[1] = ((MOVE_BOX *) swp->mpos)->pos[1];
             swp->spos[2] = ((MOVE_BOX *) swp->mpos)->pos[2];
@@ -701,7 +705,7 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
         case 5:
             swp->mpos = &plyr_wrk.move_box;
             swp->atr = 4;
-            swp->status = 4;
+            swp->status = SEW_STAT_RESERVED;
             swp->spos[0] = ((MOVE_BOX *) swp->mpos)->pos[0];
             swp->spos[1] = ((MOVE_BOX *) swp->mpos)->pos[1];
             swp->spos[2] = ((MOVE_BOX *) swp->mpos)->pos[2];
@@ -942,7 +946,7 @@ static int SeGetFreeVoice(int start_no, int get)
 
     for (i = start_no; i < SE_WRK_SIZE; i++, svp++)
     {
-        if (svp->status == 0 && SeGetSeWrk(i)->status != 4)
+        if (svp->status == 0 && SeGetSeWrk(i)->status != SEW_STAT_RESERVED)
         {
             if (get != 0)
             {
@@ -1041,7 +1045,7 @@ void SeFadeFlameAll(u_short flame, u_short tgt_vol)
 
     for (i = 0; i < SE_WRK_SIZE; i++, swp++)
     {
-        if (swp->status != 0)
+        if (swp->status != SEW_STAT_FREE)
         {
             SeFadeFlame(swp->v_p, flame, tgt_vol);
         }
@@ -1061,16 +1065,16 @@ void SeWrkUpdate()
     {
         if (isp->sev_stat[i].status == 0)
         {
-            if (swp->status != 4)
+            if (swp->status != SEW_STAT_RESERVED)
             {
-                swp->status = 0;
+                swp->status = SEW_STAT_FREE;
             }
         }
         else
         {
-            if (swp->status == 4)
+            if (swp->status == SEW_STAT_RESERVED)
             {
-                swp->status = 1;
+                swp->status = SEW_STAT_RING;
             }
         }
     }
@@ -1390,7 +1394,7 @@ void SeStartVpCmn(int se_no, int vpos, float *pos, float *mb, int fin_spd,
             break;
         case 2:
             swp->atr = 1;
-            swp->status = 1;
+            swp->status = SEW_STAT_RING;
             swp->spos[0] = pos[0];
             swp->spos[1] = pos[1];
             swp->spos[2] = pos[2];

@@ -254,7 +254,7 @@ int SeCmdFdOut(int sw_no, short int vol_inc)
     {
         swp = SeGetSeWrk(sw_no);
         
-        if (swp->status != 0)
+        if (swp->status != SEW_STAT_FREE)
         {
             if (vol_inc >= 0) 
             {
