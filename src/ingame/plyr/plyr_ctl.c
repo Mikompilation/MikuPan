@@ -5,10 +5,15 @@
 
 #include "sce/libvu0.h"
 
-#include "os/eeiop/eese.h"
-#include "os/pad.h"
 #include "common/ul_math.h"
-#include "main/glob.h"
+#include "graphics/graph2d/effect.h"
+#include "graphics/graph2d/effect_ene.h"
+#include "graphics/graph2d/effect_scr.h"
+#include "graphics/graph2d/effect_sub.h"
+#include "graphics/graph2d/effect_sub2.h"
+#include "graphics/graph3d/load3d.h"
+#include "graphics/graph3d/sglib.h"
+#include "graphics/motion/motion.h"
 #include "ingame/camera/camera.h"
 #include "ingame/enemy/ene_ctl.h"
 #include "ingame/entry/ap_pgost.h"
@@ -26,16 +31,15 @@
 #include "ingame/menu/gameover.h"
 #include "ingame/menu/item_get.h"
 #include "ingame/plyr/plyr_ctl.h"
+
+#include "cglm/mat4.h"
 #include "ingame/plyr/time_ctl.h"
 #include "ingame/plyr/unit_ctl.h"
-#include "graphics/motion/motion.h"
-#include "graphics/graph2d/effect.h"
-#include "graphics/graph2d/effect_ene.h"
-#include "graphics/graph2d/effect_scr.h"
-#include "graphics/graph2d/effect_sub.h"
-#include "graphics/graph2d/effect_sub2.h"
-#include "graphics/graph3d/load3d.h"
-#include "graphics/graph3d/sglib.h"
+#include "main/glob.h"
+#include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/rendering/mikupan_shader.h"
+#include "os/eeiop/eese.h"
+#include "os/pad.h"
 
 #include <common/ul_math.h>
 #include <math.h>
@@ -217,7 +221,7 @@ void PlyrCondChk()
     switch (plyr_wrk.cond)
     {
     case 2:
-        SetEffects(6, 1, 7, 0x14);
+        SetEffects(EF_DEFORM, 1, 7, 0x14);
 
         if (LeverGachaChk() != 0)
         {
@@ -225,7 +229,7 @@ void PlyrCondChk()
         }
         break;
     case 3:
-        SetEffects(6, 1, 4, 0x32);
+        SetEffects(EF_DEFORM, 1, 4, 0x32);
     break;
     }
 }
@@ -798,7 +802,7 @@ void FModeScreenEffect()
     {
         if (req_dmg_ef[i])
         {
-            SetEffects(9, 1, 0, 0x80000);
+            SetEffects(EF_FADEFRAME, 1, 0, 0x80000);
 
             return;
         }
@@ -840,8 +844,8 @@ void FModeScreenEffect()
         }
     }
 
-    SetEffects(2, 1, 3, alpha, 8.0f, 101, 64);
-    SetEffects(14, 1, crate, crate);
+    SetEffects(EF_DITHER, 1, 3, alpha, 8.0f, 101, 64);
+    SetEffects(EF_NCONTRAST2, 1, crate, crate);
 }
 
 void PlyrDmgCtrl()
@@ -1301,7 +1305,7 @@ void PlyrSpotLightOnChk()
 
     if (plyr_wrk.mode == PMODE_NORMAL && plyr_wrk.anime_no != PANI_CAM_SET_OUT)
     {
-        SetEffects(10, 1, 4, plyr_wrk.spot_pos, plyr_wrk.move_box.rot);
+        SetEffects(EF_RENZFLARE, 1, 4, plyr_wrk.spot_pos, plyr_wrk.move_box.rot);
     }
 }
 

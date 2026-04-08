@@ -9,7 +9,7 @@ uniform mat4 projection;
 
 out vec2 vUV;
 out vec4 vNormal;
-out float outViewZCoord;
+out vec4 oViewPosition;
 
 void main()
 {
@@ -17,7 +17,12 @@ void main()
 
     /// Weighted mesh get converted to world space on the CPU
     gl_Position = projection * view * aPos;
-    vNormal = aNormal;
-    vec4 view4 = view * aPos;
-    outViewZCoord = view4.z;
+
+    mat3 normalMat = mat3(transpose(inverse(view)));
+    vec3 normalVS = normalize(normalMat * vec3(aNormal));
+    vNormal = vec4(normalVS, 1.0f);
+
+    vec4 a = view * aPos;
+    oViewPosition = a;
+
 }

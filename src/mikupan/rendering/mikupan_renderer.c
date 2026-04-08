@@ -14,8 +14,10 @@
 
 #define GLAD_GL_IMPLEMENTATION
 #include "graphics/graph3d/sglib.h"
+#include "main/glob.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan_pipeline.h"
+
 #include <glad/gl.h>
 
 int vertex_index[1024 * 1024] = {0};
@@ -148,26 +150,177 @@ int MikuPan_GetRenderMode()
     return MikuPan_IsWireframeRendering() ? GL_LINE_STRIP : GL_TRIANGLE_STRIP;
 }
 
-void MikuPan_SetupAmbientLighting()
+void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
 {
-    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
+#define MAXL 16
+
+    for (int k = 0; k < MAX_SHADER_PROGRAMS; k++)
     {
-        u_int curr = MikuPan_SetCurrentShaderProgram(i);
-        float* f_light = MikuPan_GetLightColor();
+        u_int prog = MikuPan_SetCurrentShaderProgram(k);
 
-        //f_light[0] = TAmbient[0] / 255.0f;
-        //f_light[1] = TAmbient[1] / 255.0f;
-        //f_light[2] = TAmbient[2] / 255.0f;
+        //info_log("Ambient Light %.3f %.3f %.3f %.3f", TAmbient[0], TAmbient[1], TAmbient[2], TAmbient[3]);
 
-        glad_glUniform3fv(
-            glad_glGetUniformLocation(curr, "lightColor"),
-            1,
-            f_light
-            /* TAmbient */);
+        GLint uAmbientLoc      = glad_glGetUniformLocation(prog, "uAmbient");
+        GLint uParCountLoc    = glad_glGetUniformLocation(prog, "uParCount");
+        GLint uParDirLoc      = glad_glGetUniformLocation(prog, "uParDir");
+        GLint uParDiffuseLoc  = glad_glGetUniformLocation(prog, "uParDiffuse");
+        GLint uPointCountLoc  = glad_glGetUniformLocation(prog, "uPointCount");
+        GLint uPointPosLoc    = glad_glGetUniformLocation(prog, "uPointPos");
+        GLint uPointDiffuseLoc= glad_glGetUniformLocation(prog, "uPointDiffuse");
+        GLint uPointPowerLoc  = glad_glGetUniformLocation(prog, "uPointPower");
+        GLint uSpotCountLoc   = glad_glGetUniformLocation(prog, "uSpotCount");
+        GLint uSpotPosLoc     = glad_glGetUniformLocation(prog, "uSpotPos");
+        GLint uSpotDirLoc     = glad_glGetUniformLocation(prog, "uSpotDir");
+        GLint uSpotDiffuseLoc = glad_glGetUniformLocation(prog, "uSpotDiffuse");
+        GLint uSpotPowerLoc   = glad_glGetUniformLocation(prog, "uSpotPower");
+        GLint uSpotIntensLoc  = glad_glGetUniformLocation(prog, "uSpotIntens");
 
-        glad_glUniform1f(
-            glad_glGetUniformLocation(curr, "ambientStrength"),
-            f_light[3]);
+        // =========================
+        // Ambient
+        // =========================
+        vec4 ambient = {
+            lp->ambient[0],
+            lp->ambient[1],
+            lp->ambient[2],
+            lp->ambient[3] / 128.0f
+        };
+
+        glad_glUniform4fv(uAmbientLoc, 1, ambient);
+
+        // =========================
+        // Parallel (Directional)
+        // =========================
+        vec4 parDir[MAXL];
+        vec4 parDif[MAXL];
+
+        int parCount = lp->parallel_num > MAXL ? MAXL : lp->parallel_num;
+
+        for (int i = 0; i < parCount; i++)
+        {
+            vec4 dirWS = {
+                lp->parallel[i].direction[0],
+                lp->parallel[i].direction[1],
+                lp->parallel[i].direction[2],
+                lp->parallel[i].direction[3]
+            };
+
+            vec4 dif = {
+                lp->parallel[i].diffuse[0],
+                lp->parallel[i].diffuse[1],
+                lp->parallel[i].diffuse[2],
+                lp->parallel[i].diffuse[3] / 128.0f
+            };
+
+            // view-space direction (no translation)
+            mat3 view3;
+            glm_mat4_pick3(WorldView, view3);
+            glm_mat3_mulv(view3, dirWS, parDir[i]);
+            glm_vec4_copy(dif, parDif[i]);
+        }
+
+        glad_glUniform1i(uParCountLoc, parCount);
+        glad_glUniform4fv(uParDirLoc, parCount, (float*)parDir);
+        glad_glUniform4fv(uParDiffuseLoc, parCount, (float*)parDif);
+
+        // =========================
+        // Point
+        // =========================
+        vec4 pointPos[MAXL];
+        vec4 pointDif[MAXL];
+        float pointPow[MAXL];
+
+        int pointCount = lp->point_num > MAXL ? MAXL : lp->point_num;
+
+        for (int i = 0; i < pointCount; i++)
+        {
+            vec4 posWS = {
+                lp->point[i].pos[0],
+                lp->point[i].pos[1],
+                lp->point[i].pos[2],
+                lp->point[i].pos[3]
+            };
+
+            vec4 posVS;
+            glm_mat4_mulv(WorldView, posWS, posVS);
+            glm_vec3_copy(posVS, pointPos[i]);
+            pointPos[i][3] = 1.0f;
+
+            vec4 dif = {
+                lp->point[i].diffuse[0],
+                lp->point[i].diffuse[1],
+                lp->point[i].diffuse[2],
+                lp->point[i].diffuse[3] / 128.0f
+            };
+
+            glm_vec4_copy(dif, pointDif[i]);
+            pointPow[i] = lp->point[i].power;
+        }
+
+        glad_glUniform1i(uPointCountLoc, pointCount);
+        glad_glUniform4fv(uPointPosLoc, pointCount, (float*)pointPos);
+        glad_glUniform4fv(uPointDiffuseLoc, pointCount, (float*)pointDif);
+        glad_glUniform1fv(uPointPowerLoc, pointCount, pointPow);
+
+        // =========================
+        // Spot
+        // =========================
+        vec4 spotPos[MAXL];
+        vec4 spotDir[MAXL];
+        vec4 spotDif[MAXL];
+        float spotPow[MAXL];
+        float spotInt[MAXL];
+
+        int spotCount = lp->spot_num > MAXL ? MAXL : lp->spot_num;
+
+        for (int i = 0; i < spotCount; i++)
+        {
+            // position → view space
+            vec4 posWS = {
+                lp->spot[i].pos[0],
+                lp->spot[i].pos[1],
+                lp->spot[i].pos[2],
+                lp->spot[i].pos[3]
+            };
+
+            vec4 posVS;
+            glm_mat4_mulv(WorldView, posWS, posVS);
+            glm_vec3_copy(posVS, spotPos[i]);
+            spotPos[i][3] = 1.0f;
+
+            // direction → view space (no translation)
+            vec4 dirWS = {
+                lp->spot[i].direction[0],
+                lp->spot[i].direction[1],
+                lp->spot[i].direction[2],
+                lp->spot[i].direction[3]
+            };
+
+            mat3 view3;
+            glm_mat4_pick3(WorldView, view3);
+            glm_mat3_mulv(view3, dirWS, spotDir[i]);
+            glm_vec3_normalize(spotDir[i]);
+            spotDir[i][3] = 1.0f;
+
+            // diffuse
+            vec4 dif = {
+                lp->spot[i].diffuse[0],
+                lp->spot[i].diffuse[1],
+                lp->spot[i].diffuse[2],
+                lp->spot[i].diffuse[3] / 128.0f
+            };
+
+            glm_vec4_copy(dif, spotDif[i]);
+
+            spotPow[i] = lp->spot[i].power;
+            spotInt[i] = lp->spot[i].intens;
+        }
+
+        glad_glUniform1i(uSpotCountLoc, spotCount);
+        glad_glUniform4fv(uSpotPosLoc, spotCount, (float*)spotPos);
+        glad_glUniform4fv(uSpotDirLoc, spotCount, (float*)spotDir);
+        glad_glUniform4fv(uSpotDiffuseLoc, spotCount, (float*)spotDif);
+        glad_glUniform1fv(uSpotPowerLoc, spotCount, spotPow);
+        glad_glUniform1fv(uSpotIntensLoc, spotCount, spotInt);
     }
 }
 
@@ -474,6 +627,11 @@ float* MikuPan_GetWorldClipView()
     return (float*)&WorldClipView;
 }
 
+float* MikuPan_GetWorldClip()
+{
+    return (float*)&WorldView;
+}
+
 void MikuPan_SetWorldClipView()
 {
     MikuPan_SetModelTransformMatrix(WorldClipView);
@@ -482,7 +640,7 @@ void MikuPan_SetWorldClipView()
 void MikuPan_SetModelTransformMatrix(sceVu0FVECTOR *m)
 {
     state_changes++;
-    MikuPan_SetupAmbientLighting();
+    //MikuPan_SetupAmbientLighting();
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)m, "model");
 }
 
@@ -848,4 +1006,84 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
 
     draw_calls++;
     glad_glDrawElements(MikuPan_GetRenderMode(), v->nnum + GET_NUM_MESH(pPUHead), GL_UNSIGNED_INT, vertex_index);
+}
+
+static GLenum gsABDtoGL(int v)
+{
+    switch (v)
+    {
+        case SCE_GS_ALPHA_CS:   return GL_SRC_COLOR;
+        case SCE_GS_ALPHA_CD:   return GL_DST_COLOR;
+        case SCE_GS_ALPHA_ZERO: return GL_ZERO;
+    }
+    return GL_ZERO;
+}
+
+static GLenum gsCtoGL(int v)
+{
+    switch (v)
+    {
+        case SCE_GS_ALPHA_AS:  return GL_SRC_ALPHA;
+        case SCE_GS_ALPHA_AD:  return GL_DST_ALPHA;
+        case SCE_GS_ALPHA_FIX: return GL_CONSTANT_COLOR;
+    }
+    return GL_ZERO;
+}
+
+u_long GSAlphaToOpenGL(int A, int B, int C, int D, int fix)
+{
+    glad_glEnable(GL_BLEND);
+
+    // FIX handling (0..128 on GS)
+    //float f = (float)fix / 128.0f;
+    //glad_glBlendColor(f, f, f, f);
+
+    GLenum glA = gsABDtoGL(A);
+    GLenum glB = gsABDtoGL(B);
+    GLenum glC = gsCtoGL(C);
+    GLenum glD = gsABDtoGL(D);
+
+#define SCE_GS_SET_ALPHA22(a, b, c, d, fix) \
+((u_long)(a)       | ((u_long)(b) << 2)     | ((u_long)(c) << 4) | \
+((u_long)(d) << 6) | ((u_long)(fix) << 32))
+
+    u_long out = SCE_GS_SET_ALPHA22(A, B, C, D, fix);
+
+    /*
+        GS: (A - B) * C + D
+
+        We implement this using:
+        glBlendFuncSeparate + glBlendEquation
+    */
+
+    // (CS - CD) * AS + CD  -> standard alpha blend
+    if (A == SCE_GS_ALPHA_CS &&
+        B == SCE_GS_ALPHA_CD &&
+        C == SCE_GS_ALPHA_AS &&
+        D == SCE_GS_ALPHA_CD)
+    {
+        glad_glBlendEquation(GL_FUNC_ADD);
+        glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        return out;
+    }
+
+    // (CS - 0) * AS + 0  -> pure modulate
+    if (B == SCE_GS_ALPHA_ZERO && D == SCE_GS_ALPHA_ZERO)
+    {
+        glad_glBlendEquation(GL_FUNC_ADD);
+        glad_glBlendFunc(glC, GL_ZERO);
+        return out;
+    }
+
+    // (CS - CD) * FIX + CD  -> fog / fades / particles
+    if (C == SCE_GS_ALPHA_FIX)
+    {
+        glad_glBlendEquation(GL_FUNC_ADD);
+        glad_glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_CONSTANT_COLOR);
+        return out;
+    }
+
+    // General case (rare but needed)
+    glad_glBlendEquation(GL_FUNC_ADD);
+    glad_glBlendFuncSeparate(glC, glD, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }

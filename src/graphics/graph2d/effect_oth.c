@@ -122,7 +122,7 @@ int SearchEmptyRippleBuf()
 
 void* CallRipple(void *pos, void *rot, float scale, int num, int time)
 {
-    return SetEffects(0x16, 8, 1, time, 0x80, 0x80, 0x80, 1.0f, scale, pos, rot, num);
+    return SetEffects(EF_RIPPLE2, 8, 1, time, 0x80, 0x80, 0x80, 1.0f, scale, pos, rot, num);
 }
 
 void SetRipple(EFFECT_CONT *ec)
@@ -604,39 +604,63 @@ void SetEffSQITex(int n, int *v, int tp, float w, float h, u_char r, u_char g, u
         | SCE_GS_UV    << (4 * 1)
         | SCE_GS_XYZF2 << (4 * 2);
 
+    float* buffer = (float*)&pbuf[ndpkt];
+
     for (i = 0; i < 4; i++)
     {
-        pbuf[ndpkt].ui32[0] = rr;
-        pbuf[ndpkt].ui32[1] = gg;
-        pbuf[ndpkt].ui32[2] = bb;
-        pbuf[ndpkt++].ui32[3] = a;
+        pbuf[ndpkt].fl32[0] = i % 2 ? 1.0f : 0.0f;
+        pbuf[ndpkt].fl32[1] = i / 2 ? 1.0f : 0.0f;
+        pbuf[ndpkt].fl32[2] = 0.0f;
+        pbuf[ndpkt++].fl32[3] = 0.0f;
 
-        pbuf[ndpkt].ui32[0] = i % 2 ? tw - 8 : 8;
-        pbuf[ndpkt].ui32[1] = i / 2 ? th - 8 : 8;
-        pbuf[ndpkt].ui32[2] = 0;
-        pbuf[ndpkt++].ui32[3] = 0;
+        pbuf[ndpkt].fl32[0] = MikuPan_ConvertScaleColor(rr);
+        pbuf[ndpkt].fl32[1] = MikuPan_ConvertScaleColor(gg);
+        pbuf[ndpkt].fl32[2] = MikuPan_ConvertScaleColor(bb);
+        pbuf[ndpkt++].fl32[3] = MikuPan_ConvertScaleColor(a);
 
-        pbuf[ndpkt].ui32[0] = xx[i % 2];
-        pbuf[ndpkt].ui32[1] = yy[i / 2];
-        pbuf[ndpkt].ui32[2] = v[2];
-        pbuf[ndpkt++].ui32[3] = i > 1 ? 0 : 0x8000;
+        float o_x, o_y, o_z = 0.0f;
+
+        MikuPan_GSToNDC(xx[i % 2], yy[i / 2], v[2], &o_x, &o_y, &o_z, (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight());
+
+        pbuf[ndpkt].fl32[0] = o_x;
+        pbuf[ndpkt].fl32[1] = o_y;
+        pbuf[ndpkt].fl32[2] = 0.0f;
+        pbuf[ndpkt++].fl32[3] = 1.0f;
     }
+
+    MikuPan_RenderSprite3D((sceGsTex0*)&tx0, buffer);
+
+    //for (i = 0; i < 4; i++)
+    //{
+    //    pbuf[ndpkt].ui32[0] = rr;
+    //    pbuf[ndpkt].ui32[1] = gg;
+    //    pbuf[ndpkt].ui32[2] = bb;
+    //    pbuf[ndpkt++].ui32[3] = a;
+    //    pbuf[ndpkt].ui32[0] = i % 2 ? tw - 8 : 8;
+    //    pbuf[ndpkt].ui32[1] = i / 2 ? th - 8 : 8;
+    //    pbuf[ndpkt].ui32[2] = 0;
+    //    pbuf[ndpkt++].ui32[3] = 0;
+    //    pbuf[ndpkt].ui32[0] = xx[i % 2];
+    //    pbuf[ndpkt].ui32[1] = yy[i / 2];
+    //    pbuf[ndpkt].ui32[2] = v[2];
+    //    pbuf[ndpkt++].ui32[3] = i > 1 ? 0 : 0x8000;
+    //}
 }
 
 void* CallFire(void *pos, u_char r, u_char g, u_char b, float scale)
 {
     static float rate = 1.0f;
-    return SetEffects(0x19 , 2, 1, pos, &rate, &rate);
+    return SetEffects(EF_TORCH , 2, 1, pos, &rate, &rate);
 }
 
 void* CallFire2(void *pos, u_char r, u_char g, u_char b, float scl, u_char r2, u_char g2, u_char b2, float scl2)
 {
-    return SetEffects(0x17, 2, 3, pos, r, g, b, scl, r2, g2, b2, scl2);
+    return SetEffects(EF_FIRE, 2, 3, pos, r, g, b, scl, r2, g2, b2, scl2);
 }
 
 void* CallFire3(void *pos, int type, u_char r, u_char g, u_char b, float scl, u_char r2, u_char g2, u_char b2, float scl2)
 {
-    return SetEffects(0x17, 2, type ? 0 : 3,pos, r, g, b, scl, r2, g2, b2, scl2);
+    return SetEffects(EF_FIRE, 2, type ? 0 : 3,pos, r, g, b, scl, r2, g2, b2, scl2);
 }
 
 void SubFire1(EFFECT_CONT *ec)
@@ -3886,7 +3910,7 @@ void SetWaterdrop(EFFECT_CONT *ec)
                 Vu0CopyVector(wwpos[wwcnt], wpos);
                 wwpos[wwcnt][1] = wddely;
 
-                SetEffects(0x16, 8, 1, (u_int)(vu0Rand() * 16.0f) + 8, 0x20, 0x20, 0x30, 0.3f, 4.5f, wwpos[wwcnt], dummy_rot, 2);
+                SetEffects(EF_RIPPLE2, 8, 1, (u_int)(vu0Rand() * 16.0f) + 8, 0x20, 0x20, 0x30, 0.3f, 4.5f, wwpos[wwcnt], dummy_rot, 2);
 
                 if (plyr_wrk.pr_info.room_no == R023_IKESU)
                 {
@@ -3909,7 +3933,7 @@ void SetWaterdrop(EFFECT_CONT *ec)
                 wwpos[wwcnt][1] = wddely;
                 wwpos[wwcnt][2] += (vu0Rand() * 128.0f - 64.0f);
 
-                SetEffects(0x16, 8, 0x81, 0x10, 0x40, 0, 0, 0.002f, 0.3f, wwpos[wwcnt], dummy_rot, 1);
+                SetEffects(EF_RIPPLE2, 8, 0x81, 0x10, 0x40, 0, 0, 0.002f, 0.3f, wwpos[wwcnt], dummy_rot, 1);
 
                 if (plyr_wrk.pr_info.room_no == R001_FUSUMA || plyr_wrk.pr_info.room_no == RO26_OYASHIRO)
                 {
@@ -3935,11 +3959,11 @@ void SetWaterdrop(EFFECT_CONT *ec)
 
             if (ec->dat.uc8[7] != 0)
             {
-                SetEffects(0x16, 8, 0x41, 0x20, 0x40, 0, 0, 0.05f, 4.0f, wwpos[wwcnt], dummy_rot, 2);
+                SetEffects(EF_RIPPLE2, 8, 0x41, 0x20, 0x40, 0, 0, 0.05f, 4.0f, wwpos[wwcnt], dummy_rot, 2);
             }
             else
             {
-                SetEffects(0x16, 8, 1, (u_int)(vu0Rand() * 16.0f) + 8, 0x20, 0x20, 0x30, 0.3f, 4.5f, wwpos[wwcnt], dummy_rot, 2);
+                SetEffects(EF_RIPPLE2, 8, 1, (u_int)(vu0Rand() * 16.0f) + 8, 0x20, 0x20, 0x30, 0.3f, 4.5f, wwpos[wwcnt], dummy_rot, 2);
             }
             if (plyr_wrk.pr_info.room_no == R023_IKESU)
             {
@@ -5250,7 +5274,10 @@ void SetGlowOfAFirefly(float *p, float sc, u_char r1, u_char g1, u_char b1, u_ch
     sceVu0FMATRIX wlm;
     sceVu0FMATRIX slm;
     sceVu0IVECTOR ipos;
+
     sceVu0IVECTOR ivec[4];
+    //sceVu0FVECTOR ivec[4];
+
     sceVu0FVECTOR vpos;
     sceVu0FVECTOR vtw[4];
     sceVu0FVECTOR wpos[4] = {
@@ -5276,12 +5303,14 @@ void SetGlowOfAFirefly(float *p, float sc, u_char r1, u_char g1, u_char b1, u_ch
     sceVu0RotMatrixY(wlm, wlm, rot_y);
     sceVu0TransMatrix(wlm, wlm, vpos);
     sceVu0MulMatrix(slm, SgWSMtx, wlm);
+    //sceVu0MulMatrix(slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
 
     w = 0;
 
     for (i = 0; i < 4; i++)
     {
         sceVu0RotTransPers(ivec[i], slm, wpos[i], 0);
+        //sceVu0RotTransPersF(ivec[i], slm, wpos[i], 0);
 
         if (0x5000 < ivec[i][0] - 0x5800U)
         {
@@ -6711,10 +6740,10 @@ void SetSpirit(EFFECT_CONT *ec)
     {
         sc = (float)(num - i) / (num + 1);
 
-        SetEffects(24, 1, mf, &opos[tbl[i]], mr, mg, mb, msc * sc, mrh, mgh, mbh, msch * sc, sc * arate);
+        SetEffects(EF_FIRE2, 1, mf, &opos[tbl[i]], mr, mg, mb, msc * sc, mrh, mgh, mbh, msch * sc, sc * arate);
     }
 
-    SetEffects(23, 1, mf,bpos, mr, mg, mb, msc, mrh, mgh, mbh, msch * arate);
+    SetEffects(EF_FIRE, 1, mf,bpos, mr, mg, mb, msc, mrh, mgh, mbh, msch * arate);
 
     ec->cnt = num;
     ec->max = top;

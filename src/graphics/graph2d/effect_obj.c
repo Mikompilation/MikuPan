@@ -18,6 +18,7 @@
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
+#include "mikupan/rendering/mikupan_shader.h"
 
 #include <math.h>
 

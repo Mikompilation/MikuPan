@@ -22,5 +22,6 @@ void MikuPan_SetUniformMatrix4fvToAllShaders(float* mat, char* name);
 void MikuPan_SetUniform4fvToAllShaders(float* vector, char* name);
 void MikuPan_SetUniform4fvToCurrentShader(float* vector, char* name);
 void MikuPan_SetUniform1iToAllShaders(int value, char* name);
+void MikuPan_SetUniform1fToAllShaders(float value, char *name);
 
 #endif//MIKUPAN_MIKUPAN_SHADER_H

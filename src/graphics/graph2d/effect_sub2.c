@@ -32,6 +32,7 @@
 #include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sglib.h"
 #include "ingame/event/ev_spcl.h"
+#include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "outgame/btl_mode/btl_dat.h"
 #include "outgame/btl_mode/btl_mode.h"
@@ -627,28 +628,29 @@ void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotati
     sceVu0RotTransPersNF(ivec, slm, ppos, 4, 0);
     
     w = 0;
-    
-    for (i = 0; i < 4; i++)
-    {
-        if (ivec[i][0] < 0x4000 || ivec[i][0] > 0xc000)
-        {
-            w = 1;
-        }
 
-        if (ivec[i][1] < 0x4000 || ivec[i][1] > 0xc000)
-        {
-            w = 1;
-        }
-        
-        if (ivec[i][2] < 0xff || ivec[i][2] > 0xffffff)
-        {
-            w = 1;
-        }
-    }
+    w = MikuPan_IsVisibleOnScreen(ivec);
+
+    //for (i = 0; i < 4; i++)
+    //{
+    //    if (ivec[i][0] < 0x4000 || ivec[i][0] > 0xc000)
+    //    {
+    //        w = 1;
+    //    }
+    //    if (ivec[i][1] < 0x4000 || ivec[i][1] > 0xc000)
+    //    {
+    //        w = 1;
+    //    }
+    //
+    //    if (ivec[i][2] < 0xff || ivec[i][2] > 0xffffff)
+    //    {
+    //        w = 1;
+    //    }
+    //}
     
     i = 4;
     
-    //if (!w)
+    if (!w)
     {
         if (fall_mode == 0)
         {

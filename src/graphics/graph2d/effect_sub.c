@@ -969,9 +969,6 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
 	int bak;
 	float th;
 	float tw;
-    u_int clpx2 = 0xc000;
-	u_int clpy2 = 0xc000;
-	u_int clpz2 = 0xffffff;
 	u_long tx0;
 	sceVu0FMATRIX slm;
 	//sceVu0IVECTOR ivec[4] = {0};
@@ -1014,44 +1011,61 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
     
     for (i = 0; i < 4; i++)
     {
-        if (ivec[i][0] >= 0 && ivec[i][0] < 0x4000)
-        {
-            w = 1.0f;
-        }
-        else if (ivec[i][0] > clpx2)
+        if (ivec[i][3] == 0.0f)
         {
             w = 1.0f;
         }
 
-        if (ivec[i][1] >= 0 && ivec[i][1] < 0x4000)
-        {
-            w = 1.0f;
-        }
-        else if (ivec[i][1] > clpy2)
-        {
-            w = 1.0f;
-        }
-        
-        if (ivec[i][2] == 0)
-        {
-            w = 1.0f;
-        }
-        else if (ivec[i][2] > clpz2)
+        if (ivec[i][0] < -ivec[i][3] || ivec[i][0] > ivec[i][3])
         {
             w = 1.0f;
         }
 
-        if (ivec[i][3] == 0)
+        if (ivec[i][1] < -ivec[i][3] || ivec[i][1] > ivec[i][3])
         {
-            ivec[i][3] = 1.0f;
+            w = 1.0f;
         }
+
+        if (ivec[i][2] <= 0.0f || ivec[i][2] > ivec[i][3])
+        {
+            w = 1.0f;
+        }
+
+        //if (ivec[i][0] >= 0 && ivec[i][0] < 0x4000)
+        //{
+        //    w = 1.0f;
+        //}
+        //else if (ivec[i][0] > 0xc000)
+        //{
+        //    w = 1.0f;
+        //}
+        //if (ivec[i][1] >= 0 && ivec[i][1] < 0x4000)
+        //{
+        //    w = 1.0f;
+        //}
+        //else if (ivec[i][1] > 0xc000)
+        //{
+        //    w = 1.0f;
+        //}
+        //if (ivec[i][2] == 0)
+        //{
+        //    w = 1.0f;
+        //}
+        //else if (ivec[i][2] > 0xffffff)
+        //{
+        //    w = 1.0f;
+        //}
+        //if (ivec[i][3] == 0)
+        //{
+        //    ivec[i][3] = 1.0f;
+        //}
 
         tq[i].fl32 = 1.0f / ivec[i][3];
         ts[i].fl32 = (tw * stq[i % 2] * tq[i].fl32) / twoby[log_2(tw)];
         tt[i].fl32 = (th * stq[i / 2] * tq[i].fl32) / twoby[log_2(th)];
     }
     
-    //if (w == 0.0f)
+    if (w == 0.0f)
     {
         Reserve2DPacket(0x1000);
 
