@@ -69,7 +69,7 @@
 #include "graphics/scene/scene_dat.h"
 #include "ingame/map/map_area.h"
 
-extern SDL_Window *window;
+extern MikuPan_RenderWindow mikupan_render;
 extern SDL_GLContext gl_context;
 
 #ifdef BUILD_EU_VERSION
@@ -629,7 +629,7 @@ void playMovLoop()
             MikuPan_Clear();
         }
 
-        SDL_GL_SwapWindow(window);
+        SDL_GL_SwapWindow(mikupan_render.window);
         SDL_PumpEvents();
 
         tick++;
@@ -985,7 +985,7 @@ static void termMov()
 
     memset(&g_audio_state, 0, sizeof(g_audio_state));
 
-    SDL_GL_MakeCurrent(window, gl_context);
+    SDL_GL_MakeCurrent(mikupan_render.window, gl_context);
 }
 
 void defMain(void)
