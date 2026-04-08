@@ -1,6 +1,9 @@
 #ifndef MIKUPAN_IMGUI_WINDOW_C_H
 #define MIKUPAN_IMGUI_WINDOW_C_H
 
+#include "SDL3/SDL_video.h"
+#include "SDL3/SDL_events.h"
+
 void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer);
 void MikuPan_RenderUi();
 void MikuPan_StartFrameUi();

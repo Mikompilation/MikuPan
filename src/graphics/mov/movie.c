@@ -37,6 +37,7 @@
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/ui/mikupan_ui_c.h"
 
 #include <ctype.h>
 #include <stdbool.h>
@@ -629,6 +630,7 @@ void playMovLoop()
             MikuPan_Clear();
         }
 
+        MikuPan_RenderUi();
         SDL_GL_SwapWindow(mikupan_render.window);
         SDL_PumpEvents();
 
