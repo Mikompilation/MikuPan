@@ -42,6 +42,11 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
     vec4 N = normalize(normal);
     vec3 result = uAmbient.rgb * baseColor;
 
+    if (result == 0.0f)
+    {
+        result = baseColor;
+    }
+
     // Directional (parallel)
     for (int i = 0; i < uParCount; i++)
     {
@@ -58,10 +63,10 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
 
         float NdotL = max(dot(N.xyz, Ldir), 0.0);
 
-        float colscale = (uSpotDiffuse[i].r + uSpotDiffuse[i].g + uSpotDiffuse[i].b) * uSpotPower[i];
-        float att = colscale / dist; // distance attenuation
+        float colscale = (uPointDiffuse[i].r + uPointDiffuse[i].g + uPointDiffuse[i].b) * uPointPower[i];
+        float att = colscale / (dist + 1.0f); // distance attenuation
 
-        result += baseColor * uPointDiffuse[i].rgb * NdotL * att;
+        result += baseColor * NdotL * att;
     }
 
     // Spot
@@ -75,19 +80,11 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
         if (plane <= 0.0) continue;
 
         float NdotL = max(dot(N.xyz, Ldir), 0.0);
-
-        float cosAngle = max(dot(Ldir, normalize(uSpotDir[i].xyz)), 0.0);
-        float cone = (cosAngle) * uSpotIntens[i]; // intensity exponent controls cone sharpness
-
         float cd = dot(normalize(L), normalize(uSpotDir[i].xyz));
-        if (cd * cd < uSpotIntens[i])
-        {
-            continue;
-        }
+        if (cd * cd < uSpotIntens[i]) continue;
 
         float colscale = (uSpotDiffuse[i].r + uSpotDiffuse[i].g + uSpotDiffuse[i].b) * uSpotPower[i];
-
-        float att = colscale / (dist); // distance attenuation
+        float att = colscale / (dist + 1.0f); // distance attenuation
 
         result += baseColor * NdotL * att;
     }

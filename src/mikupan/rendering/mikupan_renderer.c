@@ -306,7 +306,7 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
                 lp->spot[i].diffuse[0],
                 lp->spot[i].diffuse[1],
                 lp->spot[i].diffuse[2],
-                lp->spot[i].diffuse[3] / 128.0f
+                lp->spot[i].diffuse[3]
             };
 
             glm_vec4_copy(dif, spotDif[i]);
