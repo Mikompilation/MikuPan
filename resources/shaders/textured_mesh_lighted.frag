@@ -87,7 +87,7 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
 
         float colscale = (uSpotDiffuse[i].r + uSpotDiffuse[i].g + uSpotDiffuse[i].b) * uSpotPower[i];
 
-        float att = colscale / (dist + 1.0f); // distance attenuation
+        float att = colscale / (dist); // distance attenuation
 
         result += baseColor * NdotL * att;
     }
