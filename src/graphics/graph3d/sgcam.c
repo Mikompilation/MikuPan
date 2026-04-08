@@ -16,6 +16,7 @@
 #include "graphics/graph3d/sgsu.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/rendering/mikupan_shader.h"
 
 #include <math.h>
 
@@ -564,11 +565,20 @@ void SgSetFog(float min, float max, float near, float far, int r, int g, int b)
 {
     u_int *datap;
 
+    min /= 255.0f;
+    max /= 255.0f;
+
     fog_value[0] = min;
     fog_value[1] = max;
-    fog_value[2] =
-        (((min - max) * (far + near)) / (far - near) + (min + max)) / 2;
+    fog_value[2] = (((min - max) * (far + near)) / (far - near) + (min + max)) / 2;
     fog_value[3] = (far * near * (max - min)) / (far - near);
+
+    float fog_colour[4];
+
+    fog_colour[0] = (float)r / 255.0f;
+    fog_colour[1] = (float)g / 255.0f;
+    fog_colour[2] = (float)b / 255.0f;
+    fog_colour[3] = 1.0f;
 
     datap = (u_int *) getObjWrk();
 
@@ -583,6 +593,17 @@ void SgSetFog(float min, float max, float near, float far, int r, int g, int b)
 
     *(u_long *) &datap[8] = SCE_GS_SET_FOGCOL(r, g, b);
     *(u_long *) &datap[10] = SCE_GS_FOGCOL;
+
+    MikuPan_SetUniform4fvToAllShaders(fog_value, "uFog");
+    MikuPan_SetUniform4fvToAllShaders(fog_colour, "uFogColor");
+
+    min *= 255.0f;
+    max *= 255.0f;
+
+    fog_value[0] = min;
+    fog_value[1] = max;
+    fog_value[2] = (((min - max) * (far + near)) / (far - near) + (min + max)) / 2;
+    fog_value[3] = (far * near * (max - min)) / (far - near);
 
     AppendDmaBuffer(3);
     FlushModel(0);

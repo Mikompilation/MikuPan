@@ -1,11 +1,12 @@
 #ifndef MIKUPAN_SDL_RENDERER_H
 #define MIKUPAN_SDL_RENDERER_H
-#include "mikupan/mikupan_basictypes.h"
-#include "mikupan/mikupan_types.h"
 #include "SDL3/SDL_init.h"
 #include "SDL3/SDL_video.h"
 #include "ee/eestruct.h"
 #include "graphics/graph2d/sprt.h"
+#include "graphics/graph3d/light_types.h"
+#include "mikupan/mikupan_basictypes.h"
+#include "mikupan/mikupan_types.h"
 
 typedef struct {
     sceVu0FVECTOR p;
@@ -32,6 +33,13 @@ typedef struct {
     sceVu0FVECTOR yd;
 } MikuPan_Camera;
 
+typedef struct
+{
+    SDL_Window *window;
+    int width;
+    int height;
+} MikuPan_RenderWindow;
+
 SDL_AppResult MikuPan_Init();
 void MikuPan_SetupOpenGLContext();
 void MikuPan_Clear();
@@ -50,7 +58,8 @@ void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer);
 void MikuPan_SetupFntTexture();
 void MikuPan_SetWorldClipView();
 float* MikuPan_GetWorldClipView();
-void MikuPan_SetupAmbientLighting();
+float* MikuPan_GetWorldClip();
+void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp);
 void MikuPan_SetFontTexture(int fnt);
 void MikuPan_DeleteTexture(MikuPan_TextureInfo* texture_info);
 MikuPan_TextureInfo* MikuPan_CreateGLTexture(sceGsTex0 *tex0);
@@ -64,6 +73,6 @@ void MikuPan_SetModelTransformMatrix(sceVu0FVECTOR* m);
 void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUHead);
 void MikuPan_RenderMeshType0x82(unsigned int* pVUVN, unsigned int *pPUHead);
 void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER* pVUVN, SGDPROCUNITHEADER *pPUHead, float* vertices);
-
+u_long GSAlphaToOpenGL(int A, int B, int C, int D, int fix);
 
 #endif //MIKUPAN_SDL_RENDERER_H

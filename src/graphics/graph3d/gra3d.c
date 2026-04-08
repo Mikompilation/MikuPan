@@ -1058,6 +1058,8 @@ void SetMyLight(LIGHT_PACK *light_pack, float *eyevec)
     static SgLIGHT point[6];
     static SgLIGHT spot[6];
 
+    MikuPan_SetupAmbientLighting(light_pack);
+
     SgSetAmbient(light_pack->ambient);
 
     num = light_pack->parallel_num;
@@ -1225,7 +1227,7 @@ void TransMyLight(LIGHT_PACK *dest_pack, LIGHT_PACK *light_pack, sceVu0FVECTOR p
 
     if (stocks > 3)
     {
-           int dest_num;
+        int dest_num;
         int source_num;
         float ad;
         float as;
@@ -1338,13 +1340,9 @@ void DeleteReflectLight(LIGHT_PACK *light_pack)
 }
 void SetMyLightObj(LIGHT_PACK *trans_pack, LIGHT_PACK *light_pack, float *cam_zd, float *pos)
 {
-    int old_parallel_num;
-    int old_spot_num;
-    int old_point_num;
-
-    old_parallel_num = light_pack->parallel_num;
-    old_spot_num = light_pack->spot_num;
-    old_point_num = light_pack->point_num;
+    int old_parallel_num = light_pack->parallel_num;
+    int old_spot_num = light_pack->spot_num;
+    int old_point_num = light_pack->point_num;
 
     if (old_spot_num < 3)
     {

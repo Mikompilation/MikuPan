@@ -30,6 +30,7 @@
 #include "effect_oth.h"
 #include "enums.h"
 #include "graphics/graph3d/gra3d.h"
+#include "mikupan/mikupan_utils.h"
 
 static sceVu0FVECTOR reserve_lig;
 static sceVu0FVECTOR spos[96];
@@ -132,6 +133,8 @@ void SetETOCircleTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, float w, float h, u_cha
         ts[i].fl32 = stq[i % 2] * 192.0f * tq[i].fl32 / 256.0f;
         tt[i].fl32 = stq[i / 2] * 192.0f * tq[i].fl32 / 256.0f;
     }
+
+    //w = (float) MikuPan_IsVisibleOnScreen(ivec);
 
     if (w == 0.0f)
     {
@@ -3741,7 +3744,7 @@ void SetEneSeal(EFFECT_CONT *ec)
                 {
                     if (ec->fw[1] >= 1.0f)
                     {
-                        SeStartFix(7, 0, 0x1000, 0x1280, 0);
+                        SeStartFix(SE_SOUL_APR, 0, 0x1000, 0x1280, 0);
                         eneseal_status = 1;
                     }
                     else
@@ -3824,7 +3827,7 @@ void SetEneSeal(EFFECT_CONT *ec)
                 flag1 = 0;
                 flag3 = 1;
 
-                SeStartFix(0x1d, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_ENE_PURIFY, 0, 0x1000, 0x1000, 0);
                 SetSpiritAway(1, bpos[eneno]);
                 ResetEffects(spr_fire);
 

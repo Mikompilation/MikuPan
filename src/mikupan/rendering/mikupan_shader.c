@@ -132,3 +132,13 @@ void MikuPan_SetUniform1iToAllShaders(int value, char *name)
             value);
     }
 }
+
+void MikuPan_SetUniform1fToAllShaders(float value, char *name)
+{
+    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
+    {
+        glad_glUniform1f(
+            glad_glGetUniformLocation(MikuPan_SetCurrentShaderProgram(i), name),
+            value);
+    }
+}

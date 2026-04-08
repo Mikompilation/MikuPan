@@ -120,7 +120,7 @@ void CameraCustomMenuSlct(char *err)
     {
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
             yw2d.out_mode_cnt = 11;
         }
@@ -140,7 +140,7 @@ void CameraCustomMenuSlct(char *err)
                 cmr_menu_wrk.csr[0] = 0;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
         else if (
             *key_now[0] == 1 ||
@@ -158,14 +158,14 @@ void CameraCustomMenuSlct(char *err)
                 cmr_menu_wrk.csr[0] = 3;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
         else if (*key_now[6] == 1 || *key_now[5] == 1)
         {
             cmr_menu_wrk.yn_mode = 0;
             cmr_menu_wrk.mode = cmr_menu_wrk.csr[0];
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
         }
     }
 }
@@ -176,7 +176,7 @@ void CameraCustomFilm(char *err)
     {
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
             if (*err != 0)
             {
@@ -194,7 +194,7 @@ void CameraCustomFilm(char *err)
         {
             if (*err != 0)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 *err = 0;
             }
@@ -206,24 +206,24 @@ void CameraCustomFilm(char *err)
                     {
                         plyr_wrk.film_no = cmr_menu_wrk.csr[1] + 1;
 
-                        SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
                     }
                     else
                     {
                         *err = 2;
 
-                        SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                     }
                 }
                 else if (flm_exp_flg[cmr_menu_wrk.csr[1] + 1] == 0)
                 {
-                    SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
                     *err = 4;
 
-                    SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                 }
             }
         }
@@ -259,7 +259,7 @@ void CameraCustomFilm(char *err)
             break;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
         else if (
             (
@@ -293,7 +293,7 @@ void CameraCustomFilm(char *err)
             break;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
     }
 }
@@ -318,7 +318,7 @@ void CameraCustomPowerUp(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 if (*err == 0)
                 {
                     cmr_menu_wrk.mode = 4;
@@ -344,7 +344,7 @@ void CameraCustomPowerUp(char *err)
                 {
                     cmr_menu_wrk.csr[2] = 0;
                 }
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if  (
                 *key_now[0] == 1 ||
@@ -362,13 +362,13 @@ void CameraCustomPowerUp(char *err)
                 {
                     cmr_menu_wrk.csr[2] = 2;
                 }
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
                 if (*err != 0)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                     *err = 0;
                 }
                 else if (*pow[cmr_menu_wrk.csr[2]] != 3)
@@ -379,13 +379,13 @@ void CameraCustomPowerUp(char *err)
 
                         cmr_menu_wrk.csr[5] = 0;
 
-                        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                     }
                     else
                     {
                         *err = 1;
 
-                        SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                     }
                 }
             }
@@ -397,7 +397,7 @@ void CameraCustomPowerUp(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -421,11 +421,11 @@ void CameraCustomPowerUp(char *err)
                     cmr_menu_wrk.csr[5] = 1;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -463,7 +463,7 @@ void CameraCustomSubAbility(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -492,7 +492,7 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.csr[3] = 0;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
                 *key_now[2] == 1 ||
@@ -512,7 +512,7 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.csr[3] = 4;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
@@ -520,14 +520,14 @@ void CameraCustomSubAbility(char *err)
                 {
                     *err = 0;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                     return;
                 }
 
                 if (cam_custom_wrk.func_sub[cmr_menu_wrk.csr[3]] == 0)
                 {
-                    SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                 }
                 else if (cam_custom_wrk.func_sub[cmr_menu_wrk.csr[3]] == 1)
                 {
@@ -536,13 +536,13 @@ void CameraCustomSubAbility(char *err)
                         cmr_menu_wrk.yn_mode = 1;
                         cmr_menu_wrk.csr[5] = 0;
 
-                        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                     }
                     else
                     {
                         *err = 1;
 
-                        SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                     }
                 }
                 else if (cam_custom_wrk.func_sub[cmr_menu_wrk.csr[3]] == 2)
@@ -550,7 +550,7 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.yn_mode = 2;
                     cmr_menu_wrk.csr[5] = 0;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 }
                 else if (cam_custom_wrk.func_sub[cmr_menu_wrk.csr[3]] == 3)
@@ -558,7 +558,7 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.yn_mode = 3;
                     cmr_menu_wrk.csr[5] = 0;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
             }
         }
@@ -569,7 +569,7 @@ void CameraCustomSubAbility(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -597,11 +597,11 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.csr[5] = 1;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -627,7 +627,7 @@ void CameraCustomSubAbility(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -651,11 +651,11 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.csr[5] = 1;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -689,7 +689,7 @@ void CameraCustomSubAbility(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -713,11 +713,11 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.csr[5] = 1;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -749,7 +749,7 @@ void CameraCustomSpecialAbility(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -781,7 +781,7 @@ void CameraCustomSpecialAbility(char *err)
                     cmr_menu_wrk.csr[4] = 0;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
                 *key_now[2] == 1 ||
@@ -801,7 +801,7 @@ void CameraCustomSpecialAbility(char *err)
                     cmr_menu_wrk.csr[4] = 4;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
@@ -809,20 +809,20 @@ void CameraCustomSpecialAbility(char *err)
                 {
                     *err = 0;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                     return;
                 }
 
                 if (cam_custom_wrk.func_spe[cmr_menu_wrk.csr[4]] == 0)
                 {
-                    SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                 }
                 else if (cam_custom_wrk.func_spe[cmr_menu_wrk.csr[4]] == 1)
                 {
                     if (camera_spe_abi_point[cmr_menu_wrk.csr[4]] <= cam_custom_wrk.point)
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                         cmr_menu_wrk.csr[5] = 0;
                         cmr_menu_wrk.yn_mode = 1;
@@ -831,7 +831,7 @@ void CameraCustomSpecialAbility(char *err)
                     {
                         *err = 1;
 
-                        SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                     }
                 }
                 else if (cam_custom_wrk.func_spe[cmr_menu_wrk.csr[4]] == 2)
@@ -839,14 +839,14 @@ void CameraCustomSpecialAbility(char *err)
                     cmr_menu_wrk.csr[5] = 0;
                     cmr_menu_wrk.yn_mode = 2;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else if (cam_custom_wrk.func_spe[cmr_menu_wrk.csr[4]] == 3)
                 {
                     cmr_menu_wrk.csr[5] = 0;
                     cmr_menu_wrk.yn_mode = 3;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
 
             }
@@ -858,7 +858,7 @@ void CameraCustomSpecialAbility(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -889,11 +889,11 @@ void CameraCustomSpecialAbility(char *err)
                     cmr_menu_wrk.csr[5] = 1;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -919,7 +919,7 @@ void CameraCustomSpecialAbility(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -946,11 +946,11 @@ void CameraCustomSpecialAbility(char *err)
                     cmr_menu_wrk.csr[5] = 1;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -984,7 +984,7 @@ void CameraCustomSpecialAbility(char *err)
         {
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {
@@ -1011,11 +1011,11 @@ void CameraCustomSpecialAbility(char *err)
                     cmr_menu_wrk.csr[5] = 1;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 if (*err != 0)
                 {

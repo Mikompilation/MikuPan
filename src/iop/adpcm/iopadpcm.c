@@ -17,6 +17,10 @@ ADPCM_CMD cmd_buf[8];
 s16 *AdpcmSpuBuf[2];
 s16 *AdpcmIopBuf[2];
 
+u_short mVolL, mVolR;
+u_short adsr1L, adsr2L;
+u_short adsr1R, adsr2R;
+
 SDL_Mutex *cmd_lock;
 
 /* ADPCM Notes
@@ -88,6 +92,62 @@ void IAdpcmPreLoad(ADPCM_CMD *acp)
                       channel, 1u, endld_flg);
 }
 
+static void MixSamples(int sampleCount, s16 *samples, u_short vol)
+{
+    for (int i = 0; i < sampleCount; i++)
+    {
+        s16 sample = samples[i];
+        sample = ApplyVolume(sample, vol);
+        samples[i] = sample;
+    }
+}
+
+static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
+                       SDL_AudioStream *stream)
+{
+    void *dec[2] = {dec_buf[0], dec_buf[1]};
+
+    s32 histL[2] = {}, histR[2] = {};
+
+    s16 *src = src_buf[channel];
+    s16 *dst;
+
+    int chunks = size / 0x800 / 2;
+
+    // Prevent memleaks by not reading too much into the audio stream.
+    if (SDL_GetAudioStreamQueued(stream) >= size)
+    {
+        return;
+    }
+
+    for (int i = 0; i < chunks; i++)
+    {
+        dst = dec_buf[0];
+        for (int j = 0; j < 128; j++)
+        {
+
+            MikuPan_DecodeAdpcmBlock(dst, src, &histL[0], &histL[1]);
+            dst += 28;
+            src += 8;
+        }
+
+        MixSamples(3584, dst, mVolL);
+
+        dst = dec_buf[1];
+        for (int j = 0; j < 128; j++)
+        {
+
+            MikuPan_DecodeAdpcmBlock(dst, src, &histR[0], &histR[1]);
+            dst += 28;
+            src += 8;
+        }
+
+        MixSamples(3584, dst, mVolR);
+
+        SDL_PutAudioStreamPlanarData(stream, (void *) dec, CHANNELS, 3584);
+    }
+}
+
 void IAdpcmPreLoadEnd(int channel)
 {
     int i;
@@ -99,8 +159,8 @@ void IAdpcmPreLoadEnd(int channel)
         iop_adpcm[channel].start +=
             (iop_adpcm[channel].lreq_size + 2047) / 2048;
         iop_adpcm[channel].str_lpos = iop_adpcm[channel].lreq_size;
-        MikuPan_FillBuffer(now_cmd.size, channel, AdpcmIopBuf, AdpcmSpuBuf,
-                           iop_adpcm[channel].stream);
+        FillStereo(now_cmd.size, channel, AdpcmIopBuf, AdpcmSpuBuf,
+                   iop_adpcm[channel].stream);
         iop_adpcm[channel].str_tpos = 0x2000;
         iop_adpcm[channel].pos = 0x2000;
     }
@@ -122,10 +182,11 @@ void IAdpcmPlay(ADPCM_CMD *acp)
 
     if (iop_adpcm[channel].stat == ADPCM_STAT_PRELOAD_END)
     {
-        iop_adpcm[channel].loop_end = 0;
+        IaSetWrkVolPanPitch(channel, acp->pan, acp->vol, acp->pitch);
+        IaSetRegVol(channel);
+        IaSetRegPitch(channel);
+        IaSetRegAdsr(channel);
         iop_adpcm[channel].stat = ADPCM_STAT_PLAY;
-        SDL_SetAudioStreamGetCallback(iop_adpcm[channel].stream, IAdpcmReadCh0,
-                                      NULL);
         SDL_SetAudioStreamFrequencyRatio(iop_adpcm[channel].stream,
                                          (float) acp->pitch / (float) 0x1000);
         SDL_ResumeAudioStreamDevice(iop_adpcm[channel].stream);
@@ -139,6 +200,7 @@ void IAdpcmStop(ADPCM_CMD *acp)
     u_char channel;
 
     SDL_PauseAudioDevice(audio_dev);
+    SDL_ClearAudioStream(iop_adpcm[0].stream);
 
     channel = acp->channel;
     IaSetWrkFadeInit(channel);
@@ -303,6 +365,7 @@ void IAdpcmMain2()
     if (iap->stat == ADPCM_STAT_NOPLAY)
     {
         iap->stop_cnt++;
+        //info_log("STOP COUNT: %d", iap->stop_cnt);
         if (iap->stop_cnt >= 41)
         {
             iap->stop_cnt = 16;
@@ -340,8 +403,8 @@ void IAdpcmInit(int dev_init)
     spec.channels = CHANNELS;
     spec.format = SDL_AUDIO_S16;
     spec.freq = SAMPLE_RATE;
-    iop_adpcm[0].stream = SDL_CreateAudioStream(&spec, NULL);
-    SDL_BindAudioStream(audio_dev, iop_adpcm[0].stream);
+    iop_adpcm[0].stream =
+        SDL_OpenAudioDeviceStream(audio_dev, &spec, IAdpcmReadCh0, NULL);
 
     InitAdpcmCmdBuf();
     IaInitVolume();
@@ -505,22 +568,13 @@ SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream,
     ADPCM_CMD cmd;
     u_char loop_ok;
 
-    //SDL_Delay(2);
     if (iop_adpcm[0].stat >= ADPCM_STAT_PRELOAD_TRANS)
     {
         iop_adpcm[0].count++;
 
-        //AdpcmTransCB();
+        int chunks = now_cmd.size / 0x800 / 2;
 
-        int amountOffset = total_amount / sizeof(s16) / 2;
-
-        //info_log("AmtOffset: %d", amountOffset);
-
-        iop_adpcm[0].pos += amountOffset;
-        iop_adpcm[0].str_tpos += amountOffset;
-
-        remain_t = iop_adpcm[0].szFile - iop_adpcm[0].str_tpos;
-        if (remain_t > 0x1000)
+        if (additional_amount < 0x1000)
         {
             if (iop_adpcm[0].pos == (iop_adpcm[0].dbidi + 1) * 0x20000)
             {
@@ -618,6 +672,9 @@ SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream,
                 iop_adpcm[0].loop_end = 1;
             }
         }
+
+        iop_adpcm[0].pos += chunks;
+        iop_adpcm[0].str_tpos += chunks;
     }
     else
     {
@@ -717,7 +774,7 @@ SDLCALL int IAdpcmReadCh1(void *data)
                     iop_adpcm[1].dbidi ^= 1;
                 }
 
-                //MikuPan_FillBuffer(iop_adpcm[1].lreq_size, 1, AdpcmSpuBuf);
+                //FillStereo(iop_adpcm[1].lreq_size, 1, AdpcmSpuBuf);
 
                 // ????
                 if (iop_adpcm[1].stat != ADPCM_STAT_PLAY)

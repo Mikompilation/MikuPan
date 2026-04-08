@@ -21,20 +21,22 @@
 
 #include <string.h>
 
-#include "outgame/mode_slct.h"
-#include "outgame/btl_mode/btl_dat.h"
-#include "outgame/btl_mode/btl_mode.h"
+#include "graphics/graph2d/effect.h"
+#include "graphics/graph2d/effect_obj.h"
+#include "graphics/graph2d/effect_scr.h"
+#include "graphics/graph2d/effect_sub.h"
+#include "graphics/graph2d/message.h"
 #include "graphics/graph2d/sprt.h"
 #include "graphics/graph2d/tim2.h"
-#include "graphics/graph2d/effect.h"
-#include "graphics/graph2d/message.h"
 #include "graphics/graph2d/tim2_new.h"
-#include "graphics/graph2d/effect_sub.h"
-#include "graphics/graph2d/effect_scr.h"
-#include "graphics/graph2d/effect_obj.h"
-#include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/libsg.h"
+#include "graphics/graph3d/sglib.h"
 #include "ingame/event/ev_spcl.h"
+#include "mikupan/mikupan_utils.h"
+#include "mikupan/rendering/mikupan_renderer.h"
+#include "outgame/btl_mode/btl_dat.h"
+#include "outgame/btl_mode/btl_mode.h"
+#include "outgame/mode_slct.h"
 
 typedef struct { // 0x8
 	/* 0x0 */ void *start_point;
@@ -152,20 +154,7 @@ void StopFallenEffect()
 
 void FallObjInit(/* a0 4 */ sceVu0FVECTOR mpos, /* t5 13 */ int leaf_no, /* a2 6 */ int area, /* a3 7 */ int fall_num, /* t0 8 */ int fall_mode)
 {
-	/* t1 9 */ int tmp;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
+	int tmp;
 
     tmp = (int)(vu0Rand() * 10.0f) + 1;
     
@@ -252,8 +241,7 @@ void FallObjInitAll(/* a0 4 */ sceVu0FVECTOR mpos, /* s2 18 */ int area, /* s1 1
 
 void FallObjDropSet()
 {
-	/* t0 8 */ int i;
-	// /* f1 39 */ float r;
+	int i;
 
     for (i = 0; i < fall_wrk.fnum_keep; i++)
     {
@@ -589,25 +577,26 @@ void FallObjLight(/* a0 4 */ sceVu0FVECTOR leaf, /* s0 16 */ short int *rgba, /*
 
 void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotation, /* s1 17 */ short int *rgba, /* s2 18 */ int fall_mode)
 {
-	/* t3 11 */ int i;
-	/* a1 5 */ int w;
-	/* fp 30 */ int th;
-	/* s7 23 */ int tw;
-	/* t5 13 */ int bak;
-	/* 0x0(sp) */ sceVu0FMATRIX wlm;
-	/* 0x40(sp) */ sceVu0FMATRIX slm;
-	/* 0x80(sp) */ sceVu0IVECTOR ivec[4];
-	/* 0xc0(sp) */ sceVu0FVECTOR wpos;
-	/* 0xd0(sp) */ sceVu0FVECTOR ppos[4] = {
+	int i;
+	int w;
+	int th;
+	int tw;
+	int bak;
+	sceVu0FMATRIX wlm;
+	sceVu0FMATRIX slm;
+	//sceVu0IVECTOR ivec[4];
+	sceVu0FVECTOR ivec[4];
+	sceVu0FVECTOR wpos;
+	sceVu0FVECTOR ppos[4] = {
         { -12.0f, +12.0f, 0.0f, 1.0f },
         { +12.0f, +12.0f, 0.0f, 1.0f },
         { -12.0f, -12.0f, 0.0f, 1.0f },
         { +12.0f, -12.0f, 0.0f, 1.0f },
     };
-	/* s5 21 */ u_char mr;
-	/* s6 22 */ u_char mg;
-	/* s4 20 */ u_char mb;
-	/* s0 16 */ u_long tex0;
+	u_char mr;
+	u_char mg;
+	u_char mb;
+	u_long tex0;
     
     wpos[0] = mpos[0];
     wpos[1] = mpos[1];
@@ -631,29 +620,33 @@ void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotati
     sceVu0RotMatrixY(wlm, wlm, rotation[1]);
     sceVu0RotMatrixZ(wlm, wlm, rotation[2]);
     sceVu0TransMatrix(wlm, wlm, wpos);
-    sceVu0MulMatrix(slm, SgWSMtx, wlm);
-    
-    sceVu0RotTransPersN(ivec, slm, ppos, 4, 0);
+
+    //sceVu0MulMatrix(slm, SgWSMtx, wlm);
+    //sceVu0RotTransPersN(ivec, slm, ppos, 4, 0);
+
+    sceVu0MulMatrix(slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
+    sceVu0RotTransPersNF(ivec, slm, ppos, 4, 0);
     
     w = 0;
-    
-    for (i = 0; i < 4; i++)
-    {
-        if (ivec[i][0] < 0x4000 || ivec[i][0] > 0xc000)
-        {
-            w = 1;
-        }
 
-        if (ivec[i][1] < 0x4000 || ivec[i][1] > 0xc000)
-        {
-            w = 1;
-        }
-        
-        if (ivec[i][2] < 0xff || ivec[i][2] > 0xffffff)
-        {
-            w = 1;
-        }
-    }
+    w = MikuPan_IsVisibleOnScreen(ivec);
+
+    //for (i = 0; i < 4; i++)
+    //{
+    //    if (ivec[i][0] < 0x4000 || ivec[i][0] > 0xc000)
+    //    {
+    //        w = 1;
+    //    }
+    //    if (ivec[i][1] < 0x4000 || ivec[i][1] > 0xc000)
+    //    {
+    //        w = 1;
+    //    }
+    //
+    //    if (ivec[i][2] < 0xff || ivec[i][2] > 0xffffff)
+    //    {
+    //        w = 1;
+    //    }
+    //}
     
     i = 4;
     
@@ -709,23 +702,43 @@ void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotati
             | SCE_GS_UV    << (4 * 1) 
             | SCE_GS_XYZF2 << (4 * 2);
 
+        float* buffer = (float*)&pbuf[ndpkt];
+
         for (i = 0; i < 4; i++)
         {
-            pbuf[ndpkt].ui32[0] = mr;
-            pbuf[ndpkt].ui32[1] = mg;
-            pbuf[ndpkt].ui32[2] = mb;
-            pbuf[ndpkt++].ui32[3] = rgba[3];
+            pbuf[ndpkt].fl32[0] = (i % 2) ? 1.0f : 0;
+            pbuf[ndpkt].fl32[1] = (i / 2) ? 1.0f : 0;
+            pbuf[ndpkt].fl32[2] = 0.0f;
+            pbuf[ndpkt++].fl32[3] = 0.0f;
 
-            pbuf[ndpkt].ui32[0] = (i % 2) ? tw : 0;
-            pbuf[ndpkt].ui32[1] = (i / 2) ? th : 0;
-            pbuf[ndpkt].ui32[2] = 0;
-            pbuf[ndpkt++].ui32[3] = 0;
+            pbuf[ndpkt].fl32[0] = (float)mr/255.0f;
+            pbuf[ndpkt].fl32[1] = (float)mg/255.0f;
+            pbuf[ndpkt].fl32[2] = (float)mb/255.0f;
+            pbuf[ndpkt++].fl32[3] = (float)rgba[3]/128.0f;
 
-            pbuf[ndpkt].ui32[0] = ivec[i][0];
-            pbuf[ndpkt].ui32[1] = ivec[i][1];
-            pbuf[ndpkt].ui32[2] = ivec[i][2];
-            pbuf[ndpkt++].ui32[3] = (i <= 1) ? 0x8000 : 0;
+            pbuf[ndpkt].fl32[0] = ivec[i][0];
+            pbuf[ndpkt].fl32[1] = ivec[i][1];
+            pbuf[ndpkt].fl32[2] = ivec[i][2];
+            pbuf[ndpkt++].fl32[3] = 1.0f;
         }
+
+        MikuPan_RenderSprite3D((sceGsTex0*)&tex0, buffer);
+
+        //for (i = 0; i < 4; i++)
+        //{
+        //    pbuf[ndpkt].ui32[0] = mr;
+        //    pbuf[ndpkt].ui32[1] = mg;
+        //    pbuf[ndpkt].ui32[2] = mb;
+        //    pbuf[ndpkt++].ui32[3] = rgba[3];
+        //    pbuf[ndpkt].ui32[0] = (i % 2) ? tw : 0;
+        //    pbuf[ndpkt].ui32[1] = (i / 2) ? th : 0;
+        //    pbuf[ndpkt].ui32[2] = 0;
+        //    pbuf[ndpkt++].ui32[3] = 0;
+        //    pbuf[ndpkt].ui32[0] = ivec[i][0];
+        //    pbuf[ndpkt].ui32[1] = ivec[i][1];
+        //    pbuf[ndpkt].ui32[2] = ivec[i][2];
+        //    pbuf[ndpkt++].ui32[3] = (i <= 1) ? 0x8000 : 0;
+        //}
 
         pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
     }
@@ -1585,52 +1598,7 @@ void LineGusInitAll(/* s3 19 */ sceVu0FVECTOR mpos1, /* a1 5 */ sceVu0FVECTOR mp
 
 void LineGusSetPos(/* t4 12 */ int leaf_no, /* a1 5 */ int dir, /* a2 6 */ int line_num)
 {
-	/* f4 42 */ float tmp;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
-	// /* f0 38 */ float r;
+	float tmp;
     
     line_gus[line_num][leaf_no][0] = line_wrk[line_num].mpos_keep[0];
     line_gus[line_num][leaf_no][1] = line_wrk[line_num].mpos_keep[1];
@@ -2323,7 +2291,7 @@ int CallMissionClear()
         )
         {
             now_pos = now_pos != 2 ? now_pos + 1 : 0;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         if (
@@ -2334,7 +2302,7 @@ int CallMissionClear()
         )
         {
             now_pos = now_pos != 0 ? now_pos - 1 : 2;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         alpha_res[now_pos] = 80;
@@ -2450,7 +2418,7 @@ uint64_t CallMissionFailed()
         )
         {
             now_pos = now_pos != 2 ? now_pos + 1 : 0;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         if (
@@ -2461,7 +2429,7 @@ uint64_t CallMissionFailed()
         )
         {
             now_pos = now_pos != 0 ? now_pos - 1 : 2;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         alpha_res[now_pos] = 100;
@@ -2585,7 +2553,7 @@ int CallMissionAllClear()
         )
         {
             now_pos = now_pos == 0;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         if (
@@ -2596,7 +2564,7 @@ int CallMissionAllClear()
         )
         {
             now_pos = now_pos == 0;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         
         alpha_res[now_pos] = 100;
@@ -2999,7 +2967,7 @@ int BtlAnmMain()
             *key_now[5] == 1
         )
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             return 1;
         }
         

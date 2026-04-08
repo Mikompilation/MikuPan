@@ -493,7 +493,7 @@ int ButtonMarkNext(int x_off, int y_off, int se_flg)
 
         if (se_flg == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         }
     }
 
@@ -980,7 +980,7 @@ int StarPuzzleMain(int pzl_no)
         {
             if (star_pzl_wrk.count < star_pzl_dat[star_pzl_wrk.pzl_no].move_num)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
                 tmp0 = star_pzl_wrk.stone[star_pzl_wrk.bak_no[star_pzl_wrk.count]];
 
@@ -1001,7 +1001,7 @@ int StarPuzzleMain(int pzl_no)
         }
         else if (*key_now[7] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
             if (star_pzl_wrk.count != star_pzl_dat[star_pzl_wrk.pzl_no].move_num)
             {
@@ -1027,11 +1027,11 @@ int StarPuzzleMain(int pzl_no)
                 star_pzl_wrk.mode = STAR_PZL_MODE_MOVE;
                 star_pzl_wrk.time = 30;
 
-                SeStartFix(33, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
             }
             else
             {
-                SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
             }
         }
         else if (
@@ -1060,7 +1060,7 @@ int StarPuzzleMain(int pzl_no)
 
             star_pzl_wrk.time = 30;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (
             *key_now[2] == 1 ||
@@ -1088,7 +1088,7 @@ int StarPuzzleMain(int pzl_no)
 
             star_pzl_wrk.time = 30;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case STAR_PZL_MODE_MOVE:
@@ -1182,7 +1182,7 @@ int StarPuzzleMain(int pzl_no)
             {
                 star_pzl_wrk.menu_mode = STAR_PZL_MENU_SLCT;
 
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             }
             else if (*key_now[5] == 1)
             {
@@ -1198,7 +1198,7 @@ int StarPuzzleMain(int pzl_no)
                     star_pzl_wrk.mode = STAR_PZL_MODE_RESL;
                 }
 
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             }
             else if (*key_now[3] == 1 || *key_now[2] == 1)
             {
@@ -1211,7 +1211,7 @@ int StarPuzzleMain(int pzl_no)
                     star_pzl_wrk.menu_csr[1] = 1;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             }
         }
         else if (star_pzl_wrk.menu_mode == STAR_PZL_MENU_EXIT)
@@ -1263,7 +1263,7 @@ int StarPuzzleMain(int pzl_no)
         }
         else
         {
-            SeStartFix(34, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_MN1, 0, 0x1000, 0x1000, 0);
 
             star_pzl_wrk.mode = STAR_PZL_MODE_READYGOOD2;
             star_pzl_wrk.time = 50;
@@ -1293,7 +1293,7 @@ int StarPuzzleMain(int pzl_no)
         if (star_pzl_wrk.time == 0)
         {
             ButtonMarkTimeClear();
-            SeStartFix(35, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_PUZZLE2, 0, 0x1000, 0x1000, 0);
 
             star_pzl_wrk.mode = STAR_PZL_MODE_GOUT;
             star_pzl_wrk.time = 60;
@@ -1315,7 +1315,7 @@ int StarPuzzleMain(int pzl_no)
         if (ButtonMarkNext(0, 0, 0) != 0)
         {
             ButtonMarkTimeClear();
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             StarPuzzleDataSet(star_pzl_wrk.pzl_no);
 
             star_pzl_wrk.time = 15;
@@ -2420,7 +2420,7 @@ int DialKeyDoorMain()
 
                 dkey_wrk.push_no[dkey_wrk.count] = 0xff;
 
-                SeStartFix(34, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_MN1, 0, 0x1000, 0x1000, 0);
             }
             else
             {
@@ -2438,7 +2438,7 @@ int DialKeyDoorMain()
                 dkey_wrk.mode = DIAL_KEY_MODE_PUSH;
                 dkey_wrk.time = 40;
 
-                SeStartFix(33, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
             }
         }
         else if (
@@ -2457,7 +2457,7 @@ int DialKeyDoorMain()
                 dkey_wrk.slct_no = 9;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (
             *key_now[2] == 1 ||
@@ -2475,7 +2475,7 @@ int DialKeyDoorMain()
                 dkey_wrk.slct_no = 0;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case DIAL_KEY_MODE_PUSH:
@@ -2500,7 +2500,7 @@ int DialKeyDoorMain()
                     dkey_wrk.mode = DIAL_KEY_MODE_GOOD;
                     dkey_wrk.time = 180;
 
-                    SeStartFix(35, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_PUZZLE2, 0, 0x1000, 0x1000, 0);
                 }
                 else
                 {
@@ -3448,13 +3448,13 @@ void DollPzlMain()
             spev_wrk.time = 40;
 
             SetBlackOut();
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[5] == 1)
         {
             spev_wrk.mode = 11;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         }
         else if (
             *key_now[0] == 1 ||
@@ -3472,7 +3472,7 @@ void DollPzlMain()
                     spev_wrk.time = 20;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             }
         }
         else if (
@@ -3491,7 +3491,7 @@ void DollPzlMain()
                     spev_wrk.time = 20;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             }
         }
         else if (
@@ -3510,7 +3510,7 @@ void DollPzlMain()
                     spev_wrk.time = 20;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             }
         }
         else if (
@@ -3529,7 +3529,7 @@ void DollPzlMain()
                     spev_wrk.time = 20;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             }
         }
     break;
@@ -3538,11 +3538,11 @@ void DollPzlMain()
         {
             spev_wrk.mode = 10;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[5] == 1)
         {
-            SeStartFix(35, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_PUZZLE2, 0, 0x1000, 0x1000, 0);
             if (spev_wrk.csr[0] == evdl_dat[no].answer)
             {
                 spev_wrk.mode = 21;
@@ -3574,7 +3574,7 @@ void DollPzlMain()
         {
             spev_wrk.mode = 12;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 12:
@@ -3582,13 +3582,13 @@ void DollPzlMain()
         {
             spev_wrk.mode = 10;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[5] == 1)
             {
                 spev_wrk.mode = 10;
 
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             }
         else if (
             (
@@ -3606,7 +3606,7 @@ void DollPzlMain()
         {
             spev_wrk.mode = 11;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 13:
@@ -3743,7 +3743,7 @@ void DollPzlMain()
             {
                 spev_wrk.time = 0;
 
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             }
 
             if (spev_wrk.time == 0)
@@ -3807,13 +3807,13 @@ void DollPzlMain()
         {
             spev_wrk.time = 0;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[4] == 1)
         {
             spev_wrk.time = 0;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         }
 
         if (spev_wrk.time == 0)
@@ -4423,7 +4423,7 @@ void ButsuzoPzlMain()
 
                 SetBlackOut();
             }
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[5] == 1)
         {
@@ -4439,7 +4439,7 @@ void ButsuzoPzlMain()
             spev_wrk.mode = 5;
             spev_wrk.time = 20;
 
-            SeStartFix(33, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
         }
         else if (
             *key_now[3] == 1 ||
@@ -4463,7 +4463,7 @@ void ButsuzoPzlMain()
                     spev_wrk.mode = 5;
                 }
             }
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (
             *key_now[2] == 1 ||
@@ -4501,7 +4501,7 @@ void ButsuzoPzlMain()
                 spev_wrk.mode = 5;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 5:
@@ -4560,7 +4560,7 @@ void ButsuzoPzlMain()
                 spev_wrk.mode = 10;
             }
 
-            SeStartFix(34, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_MN1, 0, 0x1000, 0x1000, 0);
         }
         else if (
             *key_now[0] == 1 ||
@@ -4760,7 +4760,7 @@ void ButsuzoPzlMain()
             {
                 spev_wrk.mode = 13;
                 spev_wrk.time = 80;
-                SeStartFix(35, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_PUZZLE2, 0, 0x1000, 0x1000, 0);
             }
             else
             {
@@ -5329,7 +5329,7 @@ void ButsuzoMSGMain()
                 spev_wrk.mode = 3;
                 spev_wrk.time = 40;
 
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             }
         }
     break;
@@ -5627,7 +5627,7 @@ void LightsOutMain()
             spev_wrk.mode = 7;
             spev_wrk.time = 20;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[5] == 1)
         {
@@ -5638,7 +5638,7 @@ void LightsOutMain()
                 spev_wrk.mode = 5;
                 spev_wrk.time = 30;
 
-                SeStartFix(33, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
             }
         }
         else if (
@@ -5656,7 +5656,7 @@ void LightsOutMain()
             }
 
             CsrClear(&spev_wrk.csr[1]);
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (
             *key_now[2] == 1 ||
@@ -5675,7 +5675,7 @@ void LightsOutMain()
             }
 
             CsrClear(&spev_wrk.csr[1]);
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 5:
@@ -5697,7 +5697,7 @@ void LightsOutMain()
                 {
                     evcdl_dat.cdl_flg[0][spev_wrk.csr[0]+1] = 1;
 
-                    SeStartFix(33, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
                 }
             }
             else if (spev_wrk.csr[0] == 5)
@@ -5710,7 +5710,7 @@ void LightsOutMain()
                 {
                     evcdl_dat.cdl_flg[0][spev_wrk.csr[0]-1] = 1;
 
-                    SeStartFix(33, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
                 }
             }
             else
@@ -5723,7 +5723,7 @@ void LightsOutMain()
                 {
                     evcdl_dat.cdl_flg[0][spev_wrk.csr[0]+1] = 1;
 
-                    SeStartFix(33, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
                 }
 
                 if (evcdl_dat.cdl_flg[0][spev_wrk.csr[0]-1] != 0)
@@ -5734,7 +5734,7 @@ void LightsOutMain()
                 {
                     evcdl_dat.cdl_flg[0][spev_wrk.csr[0]-1] = 1;
 
-                    SeStartFix(33, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
                 }
             }
 
@@ -5788,7 +5788,7 @@ void LightsOutMain()
             spev_wrk.mode = 9;
             spev_wrk.time = 60;
 
-            SeStartFix(34, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_MN1, 0, 0x1000, 0x1000, 0);
         }
         else
         {
@@ -5801,7 +5801,7 @@ void LightsOutMain()
             spev_wrk.mode = 10;
             spev_wrk.time = 0xff;
 
-            pzl_load_id = SeStartFix(35, 0, 0x1000, 0x1000, 0);
+            pzl_load_id = SeStartFix(SE_PUZZLE2, 0, 0x1000, 0x1000, 0);
         }
         else
         {
@@ -6318,7 +6318,7 @@ void FaceDoorMain(int face_no)
             spev_wrk.mode = 26;
             spev_wrk.time = 40;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             SetBlackOut();
         }
         else if (
@@ -6348,7 +6348,7 @@ void FaceDoorMain(int face_no)
                 spev_wrk.mode = 7;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -6377,7 +6377,7 @@ void FaceDoorMain(int face_no)
                 spev_wrk.mode = 8;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
 
         if (spev_wrk.time == 0)
@@ -6389,7 +6389,7 @@ void FaceDoorMain(int face_no)
 
                 go_flg = 1;
 
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 SetBlackOut();
             }
             else if (spev_wrk.mode == 8)
@@ -6408,7 +6408,7 @@ void FaceDoorMain(int face_no)
                 }
 
                 FaceDoorOkSet(face_no);
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                 spev_wrk.mode = 27;
                 spev_wrk.time = 40;
@@ -6420,7 +6420,7 @@ void FaceDoorMain(int face_no)
                 spev_wrk.mode = 26;
                 spev_wrk.time = 40;
 
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 SetBlackOut();
             }
         }
@@ -6446,7 +6446,7 @@ void FaceDoorMain(int face_no)
         }
         else if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
             if (have_omen == 1)
             {
@@ -6476,7 +6476,7 @@ void FaceDoorMain(int face_no)
         )
         {
             spev_wrk.mode = spev_wrk.mode == 11 ? 12 : 11;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
 
         if (spev_wrk.time == 0)
@@ -6491,21 +6491,21 @@ void FaceDoorMain(int face_no)
                 poss_item[46] = 0;
 
                 NisUseSet(face_no);
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             }
             else if (have_omen == 1)
             {
                 spev_wrk.mode = 19;
                 spev_wrk.time = 1;
 
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             }
             else
             {
                 spev_wrk.mode = 17;
                 spev_wrk.time = 1;
 
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             }
         }
     break;
@@ -6575,7 +6575,7 @@ void FaceDoorMain(int face_no)
         {
             spev_wrk.time = 0;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         }
 
         if (spev_wrk.time == 0)
@@ -6646,7 +6646,7 @@ void FaceDoorMain(int face_no)
         {
             spev_wrk.mode = spev_wrk.mode == 19 ? 20 : 19;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[4] == 1)
         {
@@ -6683,7 +6683,7 @@ void FaceDoorMain(int face_no)
             spev_wrk.mode = 22;
             spev_wrk.time = 40;
 
-            SeStartFix(93, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             SetBlackIn();
         }
     break;
@@ -6756,7 +6756,7 @@ void FaceDoorMain(int face_no)
             spev_wrk.csr[1] = 0;
 
             SetBlackIn();
-            SeStartFix(93, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 30:
@@ -7953,7 +7953,7 @@ void SurpriseDoorMain()
                 spev_wrk.csr[1] = 0x80;
                 spev_wrk.time = 1;
 
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             }
         }
     break;
@@ -8160,7 +8160,7 @@ void SimenPillarMain(int event_no)
             spev_wrk.time = 30;
 
             SetBlackIn();
-            SeStartFix(93, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 3:
@@ -8277,7 +8277,7 @@ void SimenPillarMain(int event_no)
             spev_wrk.mode = 32;
             spev_wrk.time = 10;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -8295,7 +8295,7 @@ void SimenPillarMain(int event_no)
         {
             spev_wrk.mode = spev_wrk.mode == 6 ? 8 : 6;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
 
         if (spev_wrk.time != 0)
@@ -8331,7 +8331,7 @@ void SimenPillarMain(int event_no)
             spev_wrk.mode = 32;
             spev_wrk.time = 10;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 17:
@@ -8357,7 +8357,7 @@ void SimenPillarMain(int event_no)
             spev_wrk.mode = 32;
             spev_wrk.time = 10;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -8374,7 +8374,7 @@ void SimenPillarMain(int event_no)
         )
         {
             spev_wrk.mode = spev_wrk.mode == 19 ? 20 : 19;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
 
         if (spev_wrk.time != 0)
@@ -8408,7 +8408,7 @@ void SimenPillarMain(int event_no)
             spev_wrk.mode = 32;
             spev_wrk.time = 10;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 23:
@@ -8465,7 +8465,7 @@ void SimenPillarMain(int event_no)
         else
         {
             SetFurnAttrEve(choudo_no, 0x4000, 1);
-            SeStartFix(93, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
 
             spev_wrk.mode = 30;
 
@@ -8480,7 +8480,7 @@ void SimenPillarMain(int event_no)
         else
         {
             SetFurnAttrEve(choudo_no, 0x4000, 0);
-            SeStartFix(93, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
 
             spev_wrk.mode = 32;
 
@@ -9677,7 +9677,7 @@ void ZushiBonjiMain(int bonji_no)
             spev_wrk.mode = 7;
             spev_wrk.time = 40;
 
-            SeStartFix(33, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
         }
         else if (
             *key_now[3] == 1 ||
@@ -9743,7 +9743,7 @@ void ZushiBonjiMain(int bonji_no)
             spev_wrk.mode = 8;
             spev_wrk.time = 20;
 
-            SeStartFix(34, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_MN1, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 8:
@@ -10498,7 +10498,7 @@ void IdoIntoMain()
     case 0:
         if (*key_now[5] == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
             spev_wrk.mode = 2;
             spev_wrk.time = 60;
@@ -10513,7 +10513,7 @@ void IdoIntoMain()
             spev_wrk.mode = 4;
             spev_wrk.time = 20;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -10530,7 +10530,7 @@ void IdoIntoMain()
         )
         {
             spev_wrk.mode = 1;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 1:
@@ -10539,7 +10539,7 @@ void IdoIntoMain()
             spev_wrk.mode = 4;
             spev_wrk.time = 20;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -10556,7 +10556,7 @@ void IdoIntoMain()
         )
         {
             spev_wrk.mode = 0;
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 2:
@@ -10699,7 +10699,7 @@ void IdoOutMain()
     case 0:
         if (*key_now[5] == 1)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
             spev_wrk.mode = 2;
             spev_wrk.time = 60;
@@ -10714,7 +10714,7 @@ void IdoOutMain()
             spev_wrk.mode = 4;
             spev_wrk.time = 20;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -10732,7 +10732,7 @@ void IdoOutMain()
         {
             spev_wrk.mode = 1;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 1:
@@ -10741,7 +10741,7 @@ void IdoOutMain()
             spev_wrk.mode = 4;
             spev_wrk.time = 20;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -10759,7 +10759,7 @@ void IdoOutMain()
         {
             spev_wrk.mode = 0;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 2:
@@ -11132,16 +11132,16 @@ void ItemEventMain(int event_no)
             switch(event_no)
             {
             case 73:
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
             case 74:
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
             case 75:
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
             case 76:
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
             case 78:
                 spev_wrk.mode = 7;
@@ -11150,7 +11150,7 @@ void ItemEventMain(int event_no)
                 SetBlackOut();
             break;
             default:
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             break;
             }
         }
@@ -11158,7 +11158,7 @@ void ItemEventMain(int event_no)
         {
             spev_wrk.mode = 9;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -11176,7 +11176,7 @@ void ItemEventMain(int event_no)
         {
             spev_wrk.mode = 6;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 6:
@@ -11184,13 +11184,13 @@ void ItemEventMain(int event_no)
         {
             spev_wrk.mode = 9;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[4] == 1)
         {
             spev_wrk.mode = 9;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -11208,7 +11208,7 @@ void ItemEventMain(int event_no)
         {
             spev_wrk.mode = 5;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 7:
@@ -11251,7 +11251,7 @@ void ItemEventMain(int event_no)
             }
 
             SetBlackIn();
-            SeStartFix(93, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
 
             spev_wrk.mode = 8;
         }
@@ -11469,16 +11469,16 @@ void NawakakeFalseMain(int event_no)
             switch (event_no)
             {
             case 82:
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
             case 83:
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
             case 84:
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
             case 85:
-                SeStartFix(93, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
             }
         }
@@ -11486,7 +11486,7 @@ void NawakakeFalseMain(int event_no)
         {
             spev_wrk.mode = 9;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -11504,7 +11504,7 @@ void NawakakeFalseMain(int event_no)
         {
             spev_wrk.mode = 6;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 6:
@@ -11512,13 +11512,13 @@ void NawakakeFalseMain(int event_no)
         {
             spev_wrk.mode = 9;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[4] == 1)
         {
             spev_wrk.mode = 9;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (
             (
@@ -11536,7 +11536,7 @@ void NawakakeFalseMain(int event_no)
         {
             spev_wrk.mode = 5;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
     case 3:

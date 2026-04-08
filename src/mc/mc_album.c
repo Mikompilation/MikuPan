@@ -338,7 +338,7 @@ char mcAlbumSaveMain()
 
         if (pad[0].one & 0x50)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
             mcSetStep(MC_END, MC_MSG_NONE);
         }
@@ -551,19 +551,19 @@ char mcCtrlAlbumSel()
 
     if (pad[0].one & 0x40)
     {
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
         return 1;
     }
     else if (pad[0].one & 0x10)
     {
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
         return 2;
     }
     else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         if (mc_ctrl.now_cur < 3)
         {
@@ -579,7 +579,7 @@ char mcCtrlAlbumSel()
     }
     else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         if (mc_ctrl.now_cur < 3)
         {
@@ -594,7 +594,7 @@ char mcCtrlAlbumSel()
         }
     } else if (*key_now[0] == 1 || Ana2PadDirCnt(0) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         mc_ctrl.now_cur -= 3;
 
@@ -604,7 +604,7 @@ char mcCtrlAlbumSel()
         }
     } else if (*key_now[1] == 1 || Ana2PadDirCnt(2) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         mc_ctrl.now_cur += 3;
 

@@ -239,13 +239,13 @@ char SavePointMenuMain(u_char msn)
         case 1:
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
                 spmenu_wrk.mode = 2;
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
 #ifdef BUILD_EU_VERSION
                 sp_load_id = LoadReqLanguage(PL_PSVP_E_PK2, LOAD_ADDRESS_1);
@@ -867,7 +867,7 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
         {
             if (spmenu_wrk.csr[3] != 3)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                 spmenu_wrk.csr[3] = 3;
                 spmenu_wrk.csr[4] = 1;
@@ -880,11 +880,11 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
         {
             if (mode < 2 && spmenu_wrk.csr[3] == 2)
             {
-                SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
             }
             else
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                 spmenu_wrk.csr[4] = 1;
 
@@ -911,7 +911,7 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
                 spmenu_wrk.csr[3] = 3;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (*key_now[2] == 1
                  || (*key_now[2] > 25 && (*key_now[2] % 5) == 1)
@@ -932,12 +932,12 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
                 spmenu_wrk.csr[3] = 1;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     }
     else if (*key_now[4] == 1)
     {
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
         dsp_svp.slct_mode = -1;
     }
@@ -948,7 +948,7 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
             switch (dsp_svp.slct_mode)
             {
                 case 0:
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
 #ifdef BUILD_EU_VERSION
                     sp_load_id = LoadReqLanguage(PL_SAVE_E_PK2, LOAD_ADDRESS_2);
@@ -960,7 +960,7 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
                     spmenu_wrk.mode = SPMODE_SAVE_INN;
                     break;
                 case 1:
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
 #ifdef BUILD_EU_VERSION
                     sp_load_id = LoadReqLanguage(PL_SAVE_E_PK2, LOAD_ADDRESS_2);
@@ -978,14 +978,14 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
                     spmenu_wrk.mode = SPMODE_ALBM_PSVP_WAIT;
                     break;
                 case 2:
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                     poss_item[1] = 30;
 
                     dsp_svp.slct_mode = -1;
                     break;
                 case 3:
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
 #ifdef BUILD_EU_VERSION
                     sp_load_id = LoadReqLanguage(PL_PLDT_E_PK2, LOAD_ADDRESS_4);
@@ -1001,20 +1001,20 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
         }
         else
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
             dsp_svp.slct_mode = -1;
         }
     }
     else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         spmenu_wrk.csr[4] = 1 - spmenu_wrk.csr[4];
     }
     else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         spmenu_wrk.csr[4] = 1 - spmenu_wrk.csr[4];
     }
@@ -1316,7 +1316,7 @@ static u_char SaveConte()
 
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
                 sv_dsp_sw.msk = 0xff;
                 sv_dsp_sw.svp = 0xff;
@@ -1326,7 +1326,7 @@ static u_char SaveConte()
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                 sav_con.slot = spmenu_wrk.csr[1];
                 spmenu_wrk.csr[2] = sav_con.file;
@@ -1338,7 +1338,7 @@ static u_char SaveConte()
                      || Ana2PadDirCnt(2) == 1
                      || (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1))
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
                 if (spmenu_wrk.csr[1] < 2)
                 {
@@ -1354,7 +1354,7 @@ static u_char SaveConte()
                      || Ana2PadDirCnt(0) == 1
                      || (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1))
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
                 if (spmenu_wrk.csr[1] > 0)
                 {
@@ -1371,7 +1371,7 @@ static u_char SaveConte()
 
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
                 spmenu_wrk.csr[1] = sav_con.slot;
                 spmenu_wrk.csr[2] = 0xff;
@@ -1388,14 +1388,14 @@ static u_char SaveConte()
 
                 sav_con.step = CNT_FINAL_ANSWER;
 
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             }
             else if (*key_now[1] == 1
                      || (*key_now[1] > 25 && (*key_now[1] % 5) == 1)
                      || Ana2PadDirCnt(2) == 1
                      || (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1))
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
                 if (spmenu_wrk.csr[2] < 2)
                 {
@@ -1411,7 +1411,7 @@ static u_char SaveConte()
                      || Ana2PadDirCnt(0) == 1
                      || (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1))
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
                 if (spmenu_wrk.csr[2] > 0)
                 {
@@ -1428,7 +1428,7 @@ static u_char SaveConte()
 
             if (*key_now[4] == 1)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
                 spmenu_wrk.csr[0] = 0xff;
                 spmenu_wrk.csr[2] = sav_con.file;
@@ -1439,7 +1439,7 @@ static u_char SaveConte()
             {
                 if (spmenu_wrk.csr[0] == 0)
                 {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                     sav_con.sv_ctrl = 1;
 
@@ -1449,7 +1449,7 @@ static u_char SaveConte()
                 }
                 else
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
                     sv_dsp_sw.msk = 0xff;
                     sv_dsp_sw.msg = 0xff;
@@ -1460,13 +1460,13 @@ static u_char SaveConte()
             }
             else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
                 spmenu_wrk.csr[0] = 1;
             }
             else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
                 spmenu_wrk.csr[0] = 0;
             }

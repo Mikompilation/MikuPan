@@ -86,46 +86,9 @@ static void MikuPan_DecodeAdpcmBlock(s16 *buffer, s16 *block, s32 *prev1,
     }
 }
 
-static void MikuPan_FillBuffer(int size, u_char channel, s16 **src_buf,
-                               s16 **dec_buf, SDL_AudioStream *stream)
+static inline s16 ApplyVolume(s16 sample, s32 vol)
 {
-    void *dec[2] = {dec_buf[0], dec_buf[1]};
-
-    s32 histL[2] = {}, histR[2] = {};
-
-    s16 *src = src_buf[channel];
-    s16 *dst;
-
-    int chunks = size / 0x800 / 2;
-
-    // Prevent memleaks by not reading too much into the audio stream.
-    if (SDL_GetAudioStreamQueued(stream) >= size)
-    {
-        return;
-    }
-
-    for (int i = 0; i < chunks; i++)
-    {
-        dst = dec_buf[0];
-        for (int j = 0; j < 128; j++)
-        {
-
-            MikuPan_DecodeAdpcmBlock(dst, src, &histL[0], &histL[1]);
-            dst += 28;
-            src += 8;
-        }
-
-        dst = dec_buf[1];
-        for (int j = 0; j < 128; j++)
-        {
-
-            MikuPan_DecodeAdpcmBlock(dst, src, &histR[0], &histR[1]);
-            dst += 28;
-            src += 8;
-        }
-
-        SDL_PutAudioStreamPlanarData(stream, (void *) dec, CHANNELS, 3584);
-    }
+    return (sample * vol) >> 15;
 }
 
 #endif// AUDIO_COMMON_H

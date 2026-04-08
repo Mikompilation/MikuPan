@@ -1,16 +1,21 @@
 #include "mikupan_utils.h"
+
+#include <math.h>
 #include <stdlib.h>
 
-void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float* out, float screen_width, float screen_height, float x, float y)
+void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float *out,
+                                                           float screen_width,
+                                                           float screen_height,
+                                                           float x, float y)
 {
-    float scale_x = screen_width  / PS2_RESOLUTION_X_FLOAT;
+    float scale_x = screen_width / PS2_RESOLUTION_X_FLOAT;
     float scale_y = screen_height / PS2_RESOLUTION_Y_FLOAT;
-    float scale   = (scale_x < scale_y) ? scale_x : scale_y;
+    float scale = (scale_x < scale_y) ? scale_x : scale_y;
 
     float viewport_w = PS2_RESOLUTION_X_FLOAT * scale;
     float viewport_h = PS2_RESOLUTION_Y_FLOAT * scale;
 
-    float viewport_x = (screen_width  - viewport_w) * 0.5f;
+    float viewport_x = (screen_width - viewport_w) * 0.5f;
     float viewport_y = (screen_height - viewport_h) * 0.5f;
 
     // Compute destination rectangle in screen space
@@ -22,16 +27,17 @@ void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float* out, float scr
     out[1] = 1.0f - (y0 / screen_height) * 2.0f;
 }
 
-void MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(float* out, float screen_width, float screen_height, float x, float y)
+void MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(
+    float *out, float screen_width, float screen_height, float x, float y)
 {
-    float scale_x = screen_width  / PS2_RESOLUTION_X_FLOAT;
+    float scale_x = screen_width / PS2_RESOLUTION_X_FLOAT;
     float scale_y = screen_height / PS2_RESOLUTION_Y_FLOAT;
-    float scale   = (scale_x < scale_y) ? scale_x : scale_y;
+    float scale = (scale_x < scale_y) ? scale_x : scale_y;
 
     float viewport_w = PS2_RESOLUTION_X_FLOAT * scale;
     float viewport_h = PS2_RESOLUTION_Y_FLOAT * scale;
 
-    float viewport_x = (screen_width  - viewport_w) * 0.5f;
+    float viewport_x = (screen_width - viewport_w) * 0.5f;
     float viewport_y = (screen_height - viewport_h) * 0.5f;
 
     // Compute destination rectangle in screen space
@@ -54,7 +60,12 @@ float MikuPan_ConvertScaleColor(unsigned char color_fragment)
         color_fragment = 0xFF;
     }
 
-    return (float)color_fragment / 255.0f;
+    return (float) color_fragment / 255.0f;
+}
+
+float MikuPan_ConvertColorFloat(unsigned char color_fragment)
+{
+    return (float) color_fragment / 255.0f;
 }
 
 unsigned char MikuPan_GamePadAxisToPS2(int sdl_axis, int deadzone)
@@ -69,31 +80,31 @@ unsigned char MikuPan_GamePadAxisToPS2(int sdl_axis, int deadzone)
         sdl_axis = -32768;
     }
 
-    if (sdl_axis >  32767)
+    if (sdl_axis > 32767)
     {
-        sdl_axis =  32767;
+        sdl_axis = 32767;
     }
 
     int ps2 = (sdl_axis + 32768) * 255 / 65535;
-    return (unsigned char)ps2;
+    return (unsigned char) ps2;
 }
 
-void MikuPan_GetPS2Viewport(int width, int height,
-    float *vx, float *vy, float *vw, float *vh, float *scale)
+void MikuPan_GetPS2Viewport(int width, int height, float *vx, float *vy,
+                            float *vw, float *vh, float *scale)
 {
-    float sx = (float)width  / PS2_RESOLUTION_X_FLOAT;
-    float sy = (float)height / PS2_RESOLUTION_Y_FLOAT;
+    float sx = (float) width / PS2_RESOLUTION_X_FLOAT;
+    float sy = (float) height / PS2_RESOLUTION_Y_FLOAT;
 
     *scale = (sx < sy) ? sx : sy;
 
     *vw = PS2_RESOLUTION_X_FLOAT * (*scale);
     *vh = PS2_RESOLUTION_Y_FLOAT * (*scale);
 
-    *vx = ((float)width  - *vw) * 0.5f;
-    *vy = ((float)height - *vh) * 0.5f;
+    *vx = ((float) width - *vw) * 0.5f;
+    *vy = ((float) height - *vh) * 0.5f;
 }
 
-void MikuPan_FixUV(float* uv, int num)
+void MikuPan_FixUV(float *uv, int num)
 {
     typedef struct
     {
@@ -101,18 +112,19 @@ void MikuPan_FixUV(float* uv, int num)
         float v;
     } v2;
 
-    v2* uvf = (v2*)uv;
+    v2 *uvf = (v2 *) uv;
 
     for (int i = 0; i < num; i++)
     {
-        if (*((int*)&uvf[i].v) == 1)
+        if (*((int *) &uvf[i].v) == 1)
         {
             uvf[i].v = uvf[i - 2].v;
         }
     }
 }
 
-void MikuPan_SetTriangleIndex(int *triangle_index, int vertex_count, int vertex_offset, int mesh_offset)
+void MikuPan_SetTriangleIndex(int *triangle_index, int vertex_count,
+                              int vertex_offset, int mesh_offset)
 {
     for (int j = 0; j < vertex_count; j++)
     {
@@ -138,8 +150,8 @@ unsigned int *MikuPan_GetNextUnpackAddr(unsigned int *prim)
 unsigned char *MikuPan_ConvertImageAlpha(unsigned char *img, int width,
                                          int height)
 {
-    unsigned int* image_data = (unsigned int *) malloc(width * height * 4);
-    unsigned int* raw_pixel = (unsigned int *) img;
+    unsigned int *image_data = (unsigned int *) malloc(width * height * 4);
+    unsigned int *raw_pixel = (unsigned int *) img;
 
     typedef struct
     {
@@ -153,14 +165,14 @@ unsigned char *MikuPan_ConvertImageAlpha(unsigned char *img, int width,
     {
         for (int k = 0; k < width; k++)
         {
-            RGBA* pixel = (RGBA *) &raw_pixel[(i * width) + k];
+            RGBA *pixel = (RGBA *) &raw_pixel[(i * width) + k];
             pixel->a = MikuPan_AdjustPS2Alpha(pixel->a);
 
             image_data[(i * width) + k] = *(unsigned int *) pixel;
         }
     }
 
-    return (unsigned char *)image_data;
+    return (unsigned char *) image_data;
 }
 
 unsigned char MikuPan_AdjustPS2Alpha(unsigned char alpha)
@@ -171,4 +183,72 @@ unsigned char MikuPan_AdjustPS2Alpha(unsigned char alpha)
     }
 
     return 0xFF;
+}
+
+int MikuPan_IsVisibleOnScreen(const sceVu0FVECTOR *vector)
+{
+    int w = 0;
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (vector[i][0] < -vector[i][3] || vector[i][0] > vector[i][3])
+        {
+            w = 1;
+        }
+
+        if (vector[i][1] < -vector[i][3] || vector[i][1] > vector[i][3])
+        {
+            w = 1;
+        }
+
+        if (vector[i][2] < 0.0 || vector[i][2] > vector[i][3])
+        {
+            w = 1;
+        }
+    }
+
+
+    return w;
+}
+
+void MikuPan_GSToNDC(int Xgs, int Ygs, int Zgs, float* x, float* y, float* z, float window_width, float window_height)
+{
+    /*
+    float px = ((float)Xgs / 16.0f) - 1728.0f;
+    float py = ((float)Ygs / 16.0f) - 1936.0f;
+
+    float scale_x = window_width / PS2_RESOLUTION_X_FLOAT;
+    float scale_y = window_height / PS2_RESOLUTION_Y_FLOAT;
+    float scale = (scale_x < scale_y) ? scale_x : scale_y;
+
+    float viewport_w = PS2_RESOLUTION_X_FLOAT * scale;
+    float viewport_h = PS2_RESOLUTION_Y_FLOAT * scale;
+
+    float viewport_x = (window_width - viewport_w) * 0.5f;
+    float viewport_y = (window_height - viewport_h) * 0.5f;
+
+    float x0 = viewport_x + px * scale;
+    float y0 = viewport_y + py * scale;
+
+    *x = (x0 / window_width) * 2.0f - 1.0f;
+    *y = 1.0f - (y0 / window_height) * 2.0f;
+    **/
+
+    float screenX = ((float)Xgs / 16.0f) - 1728.0f;
+    float screenY = ((float)Ygs / 16.0f) - 1936.0f;
+
+    /*
+    float out[2];
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(out, window_width, window_height, screenX, screenY);
+    *x = out[0];
+
+    MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(out, window_width, window_height, screenX, screenY);
+    *y = out[1];
+    **/
+
+    *x = (screenX / PS2_RESOLUTION_X_FLOAT) * 2.0f - 1.0f;
+    *y = -(screenY / PS2_CENTER_Y) * 2.0f + 1.0f;
+
+    float z01 = (float)((float)Zgs - 255.0f) / (32768.0f - 255.0f);
+    *z = z01 * 2.0f - 1.0f;
 }

@@ -22,7 +22,7 @@
 #include "mc/mc_at.h"
 #include "mc/mc_main.h"
 #include "memory_album.h"
-#include "mikupan/gs/gs_server_c.h"
+#include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/rendering/mikupan_renderer.h"

@@ -21,6 +21,7 @@ include(imgui)
 include(spdlog)
 include(cglm)
 include(ffmpeg)
+include(xxhash)
 
 set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         "src/common/ul_math.c"
@@ -229,8 +230,7 @@ set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/rendering/mikupan_renderer.c
         src/mikupan/rendering/mikupan_shader.c
-        src/mikupan/gs/gs_server.cpp
-        src/mikupan/gs/gs_server.h
+        src/mikupan/gs/mikupan_gs.cpp
         src/mikupan/gs/mikupan_texture_manager.cpp
         src/mikupan/mikupan_logging.cpp
         extern/imgui_toggle/imgui_toggle.cpp
@@ -267,6 +267,7 @@ target_link_libraries(MikuPan PRIVATE
         swscale
         avutil
         avformat
+        xxHash::xxhash
 )
 
 add_custom_command(TARGET MikuPan POST_BUILD

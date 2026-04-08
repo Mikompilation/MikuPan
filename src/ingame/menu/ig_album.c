@@ -99,7 +99,7 @@ void IngameMenuAlbum(char is_outgame)
                 return;
             }
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
             yw2d.out_mode_cnt = 11;
         }
@@ -110,7 +110,7 @@ void IngameMenuAlbum(char is_outgame)
         {
             ig_menu_wrk.csr[5] = ig_menu_wrk.csr_bak[0];
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
         }
 
         if (ig_menu_wrk.csr[5] != 0xff)
@@ -129,19 +129,19 @@ void IngameMenuAlbum(char is_outgame)
                     ig_menu_wrk.csr_bak[0] = ig_menu_wrk.csr[5];
                     ig_menu_wrk.csr[5] = 0;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
                     if (*key_now[4] == 1)
                     {
-                        SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                         yw2d.out_mode_cnt = 21;
                     }
                     else if (*key_now[5] == 1)
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                         ig_menu_wrk.csr_bak[2] = ig_menu_wrk.csr[2];
                         ig_menu_wrk.csr[2] = 2;
@@ -158,13 +158,13 @@ void IngameMenuAlbum(char is_outgame)
                     ig_menu_wrk.csr_bak[0] = ig_menu_wrk.csr[5];
                     ig_menu_wrk.csr[5] = 0;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
                     if (*key_now[4] == 1)
                     {
-                        SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                         ig_menu_wrk.csr[2] = ig_menu_wrk.csr_bak[2];
 
@@ -253,7 +253,7 @@ void IngameAlbumAllPad(u_char *csr, u_char *csr_top, u_char *mode)
 
             if (max_x != 0 || csr_y != max_y)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
         else if (
@@ -290,7 +290,7 @@ void IngameAlbumAllPad(u_char *csr, u_char *csr_top, u_char *mode)
 
             if (max_x != 0 || csr_y != max_y)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
         else if (
@@ -319,7 +319,7 @@ void IngameAlbumAllPad(u_char *csr, u_char *csr_top, u_char *mode)
             {
                 if (csr_x <= max_x || max_y != 1)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
             }
         }
@@ -359,7 +359,7 @@ void IngameAlbumAllPad(u_char *csr, u_char *csr_top, u_char *mode)
             {
                 if (csr_x <= max_x || max_y != 1)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
             }
         }
@@ -375,22 +375,22 @@ void IngameAlbumAllPad(u_char *csr, u_char *csr_top, u_char *mode)
             {
                 pfile_wrk.pic[*csr].status &= ~0x2;
 
-                SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
             }
             else if (SealChk() < 23)
             {
                 pfile_wrk.pic[*csr].status |= 2;
 
-                SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
             }
             else
             {
-                SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
             }
         }
         else
         {
-            SeStartFix(2, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
         }
     }
 
@@ -400,7 +400,7 @@ void IngameAlbumAllPad(u_char *csr, u_char *csr_top, u_char *mode)
         {
             if (*key_now[10] == 1 || *key_now[8] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 *mode = 1;
 
@@ -467,7 +467,7 @@ void IngameAlbumLstPad(u_char *csr, u_char *csr_top, u_char *mode)
 
             if (pfile_wrk.pic_num > 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
         else if (
@@ -496,7 +496,7 @@ void IngameAlbumLstPad(u_char *csr, u_char *csr_top, u_char *mode)
 
             if (pfile_wrk.pic_num > 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
 
@@ -508,22 +508,22 @@ void IngameAlbumLstPad(u_char *csr, u_char *csr_top, u_char *mode)
                 {
                     pfile_wrk.pic[*csr].status &= ~0x2;
 
-                    SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
                 }
                 else if (SealChk() < 23)
                 {
                     pfile_wrk.pic[*csr].status |= 0x2;
 
-                    SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
-                    SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                 }
             }
             else
             {
-                SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
             }
         }
     }
@@ -534,7 +534,7 @@ void IngameAlbumLstPad(u_char *csr, u_char *csr_top, u_char *mode)
         {
             if (*key_now[10] == 1 || *key_now[8] == 1)
             {
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 *mode = 0;
             }
@@ -562,7 +562,7 @@ void IngameAlbumBigPad(u_char *csr, u_char *csr_top, u_char *mode)
 
         if (pfile_wrk.pic_num > 1)
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
 
     }
@@ -584,7 +584,7 @@ void IngameAlbumBigPad(u_char *csr, u_char *csr_top, u_char *mode)
 
         if (pfile_wrk.pic_num > 1)
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
     }
 
@@ -596,22 +596,22 @@ void IngameAlbumBigPad(u_char *csr, u_char *csr_top, u_char *mode)
             {
                 pfile_wrk.pic[*csr].status &= ~0x2;
 
-                SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
             }
             else if (SealChk() < 23)
             {
                 pfile_wrk.pic[*csr].status |= 0x2;
 
-                SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
             }
             else
             {
-                SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
             }
         }
         else
         {
-            SeStartFix(2, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
         }
     }
 }
@@ -645,23 +645,23 @@ static void CmndMenuVrgn(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                         {
                             pfile_wrk.pic[*pic].status &= ~0x2;
 
-                            SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                            SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
                         }
                         else if (SealChk() < 23)
                         {
                             pfile_wrk.pic[*pic].status |= 0x2;
 
-                            SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                            SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
                         }
                         else
                         {
-                            SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                            SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                         }
 
                     }
                     else
                     {
-                        SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                     }
 
                     *csr0 = 0xff;
@@ -669,13 +669,13 @@ static void CmndMenuVrgn(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                 case 1:
                     if (*pic < pfile_wrk.pic_num)
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                         *csr1 = 1;
                     }
                     else
                     {
-                        SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                     }
                 break;
                 }
@@ -696,7 +696,7 @@ static void CmndMenuVrgn(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                     *csr0 = 1;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
                 *key_now[1] == 1 ||
@@ -714,7 +714,7 @@ static void CmndMenuVrgn(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                     *csr0 = 0;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
     }
@@ -729,7 +729,7 @@ static void CmndMenuVrgn(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
             {
                 *csr1 = 0xff;
 
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
@@ -737,7 +737,7 @@ static void CmndMenuVrgn(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                 {
                     DeletePhotoData(*pic);
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                     if (pfile_wrk.pic_num - 1 < *pic)
                     {
@@ -758,7 +758,7 @@ static void CmndMenuVrgn(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                 }
                 else
                 {
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
 
                 *csr0 = 0xff;
@@ -768,13 +768,13 @@ static void CmndMenuVrgn(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
             {
                 *csr1 = 1 - *csr1;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
             {
                 *csr1 = 1 - *csr1;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
     }
@@ -797,23 +797,23 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                         {
                             pfile_wrk.pic[*pic].status &= ~0x2;
 
-                            SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                            SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
                         }
                         else if (SealChk() < 23)
                         {
                             pfile_wrk.pic[*pic].status |= 0x2;
 
-                            SeStartFix(5, 0, 0x1000, 0x1000, 1);
+                            SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
                         }
                         else
                         {
-                            SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                            SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                         }
 
                     }
                     else
                     {
-                        SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                     }
 
                     *csr0 = 0xff;
@@ -821,17 +821,17 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                 case 1:
                     if (*pic < pfile_wrk.pic_num)
                     {
-                        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                         *csr1 = 1;
                     }
                     else
                     {
-                        SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                     }
                 break;
                 case 2:
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                     albm_wrk.mmenu_tmr = 0;
 
@@ -865,7 +865,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                     }
                 break;
                 case 3:
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                     *csr1 = 0;
                 break;
@@ -901,7 +901,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                     }
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
                 *key_now[1] == 1 ||
@@ -933,7 +933,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                     }
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
     }
@@ -947,7 +947,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                 {
                     *csr1 = 0xff;
 
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else if ((*key_now[6] == 1) || (*key_now[5] == 1))
                 {
@@ -971,7 +971,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                     *csr0 = 0xff;
                     *csr1 = 0xff;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                     IngameAlbumSort();
                 }
@@ -991,7 +991,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                         *csr1 = 2;
                     }
 
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else if (
                     *key_now[1] == 1 ||
@@ -1009,7 +1009,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                         *csr1 = 0;
                     }
 
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
             }
         }
@@ -1024,14 +1024,14 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                 {
                     *csr1 = 0xff;
 
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
                 else if (*key_now[6] == 1 || *key_now[5] == 1)
                 {
                     if (*csr1 == 0)
                     {
                         DeletePhotoData(*pic);
-                        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                         if (*pic > pfile_wrk.pic_num - 1)
                         {
                             *pic = pfile_wrk.pic_num - 1;
@@ -1048,7 +1048,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                     }
                     else
                     {
-                        SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                     }
 
                     *csr0 = 0xff;
@@ -1058,13 +1058,13 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                 {
                     *csr1 = 1 - *csr1;
 
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
                 else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
                 {
                     *csr1 = 1 - *csr1;
 
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
             }
         }

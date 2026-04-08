@@ -87,7 +87,7 @@ void IngameMenuGlst()
                 {
                     yw2d.out_mode_cnt = 11;
 
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
@@ -113,7 +113,7 @@ void IngameMenuGlst()
 
                     glist_index[ig_menu_wrk.csr[1]].new_flg = 0;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
             }
             else if (
@@ -148,7 +148,7 @@ void IngameMenuGlst()
                     }
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
                 *key_now[1] == 1 ||
@@ -175,13 +175,13 @@ void IngameMenuGlst()
                     menu_glist.lst_top = 0;
                 }
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (pad[0].one & 0x8)
             {
                 if (ig_menu_wrk.csr[1] != 107)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                     glist_photo.mode = 0;
                 }
@@ -204,7 +204,7 @@ void IngameMenuGlst()
             {
                 if (ig_menu_wrk.csr[1] != 0)
                 {
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                     glist_photo.mode = 0;
                 }

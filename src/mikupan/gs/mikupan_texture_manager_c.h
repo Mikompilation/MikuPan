@@ -1,14 +1,12 @@
 #ifndef MIKUPAN_TEXTURE_MANAGER_C_H
 #define MIKUPAN_TEXTURE_MANAGER_C_H
 
-#include "ee/eestruct.h"
 #include "mikupan/mikupan_basictypes.h"
 
-void MikuPan_AddTexture(sceGsTex0 *tex0, MikuPan_TextureInfo* texture_info);
-MikuPan_TextureInfo* MikuPan_GetTextureInfo(sceGsTex0* tex0);
-u_char* MikuPan_GetTexturePixelBuffer(sceGsTex0* tex0);
+void MikuPan_AddTexture(uint64_t hash, MikuPan_TextureInfo* texture_info);
+MikuPan_TextureInfo* MikuPan_GetTex0TextureInfoAndCount(uint64_t tex0, int* count);
+MikuPan_TextureInfo* MikuPan_GetTextureInfo(uint64_t hash);
 int MikuPan_IsTextureCacheFlushRequested();
-void MikuPan_AddTexturePixelBuffer(sceGsTex0* tex0, unsigned char *img);
 void MikuPan_FirstUploadDone();
 int MikuPan_IsFirstUploadDone();
 void MikuPan_FlushTextureCache();

@@ -274,7 +274,7 @@ char mcSaveMain()
 
         if (pad[0].one & 0x50)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
 
             mcSetStep(MC_END, MC_MSG_NONE);
         }
@@ -498,7 +498,7 @@ char mcLoadMain()
     case MC_LOAD_END:
         if (pad[0].one & 0x50)
         {
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             mcSetStep(MC_END, MC_MSG_NONE);
         }
     break;
@@ -650,7 +650,7 @@ char mcCtrlSelSlot()
 {
     if (pad[0].one & 0x40)
     {
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
         if (mc_ctrl.port != 2)
         {
@@ -667,14 +667,14 @@ char mcCtrlSelSlot()
 
     if (pad[0].one & 0x10)
     {
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
         return 2;
     }
 
     if (*key_now[1] == 1 || Ana2PadDirCnt(2) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         mc_ctrl.port++;
 
@@ -685,7 +685,7 @@ char mcCtrlSelSlot()
     }
     else if (*key_now[0] == 1 || Ana2PadDirCnt(0) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         mc_ctrl.port--;
 
@@ -772,12 +772,12 @@ char mcCtrlFileSel()
             {
                 if (mc_ctrl.album.sta[mc_ctrl.sel_cur] != 0)
                 {
-                    SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
 
                     return 0;
                 }
 
-                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                 mc_ctrl.sel_file = mc_ctrl.album.file_no[mc_ctrl.sel_cur];
             }
@@ -787,12 +787,12 @@ char mcCtrlFileSel()
 
                 if (mc_ctrl.sel_file == 0xff)
                 {
-                    SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
 
                     return 0;
                 }
                 else {
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                     return 4;
                 }
@@ -802,19 +802,19 @@ char mcCtrlFileSel()
                 switch (mc_ctrl.album.sta[mc_ctrl.now_cur])
                 {
                 case 3:
-                    SeStartFix(2, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
 
                     return 0;
                 break;
                 case 9:
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                     mc_ctrl.sel_file = mc_ctrl.album.file_no[mc_ctrl.sel_cur];
 
                     return 5;
                 break;
                 default:
-                    SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
                     mc_ctrl.sel_file = mc_ctrl.album.file_no[mc_ctrl.sel_cur];
                     mc_ctrl.album.type = mc_header_buf[mc_ctrl.sel_file].album.type;
@@ -833,7 +833,7 @@ char mcCtrlFileSel()
                 mc_ctrl.sel_file = mc_ctrl.sel_cur;
             }
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         }
 
         return 1;
@@ -842,7 +842,7 @@ char mcCtrlFileSel()
     {
         if (pad[0].one & 0x10)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
             return 2;
         }
@@ -851,7 +851,7 @@ char mcCtrlFileSel()
         {
             if (num > 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             }
 
             mc_ctrl.now_cur++;
@@ -865,7 +865,7 @@ char mcCtrlFileSel()
         {
             if (num > 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             }
 
             mc_ctrl.now_cur--;
@@ -1232,7 +1232,7 @@ char mcCtrlDispErr()
 {
     if (pad[0].one & 0x50)
     {
-        SeStartFix(1, 0, 0x1000, 0x1000, 0x0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0x0);
 
 #ifdef BUILD_EU_VERSION
         mc_check_timer = 0;
@@ -1317,7 +1317,7 @@ char mcCtrlYesno(int def_pos)
 
     if (pad[0].one & 0x40)
     {
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
         if (mc_ctrl.now_cur == 0)
         {
@@ -1328,7 +1328,7 @@ char mcCtrlYesno(int def_pos)
     }
     else if (pad[0].one & 0x10)
     {
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
         return 3;
     }
@@ -1336,7 +1336,7 @@ char mcCtrlYesno(int def_pos)
     {
         if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1 || *key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
         {
-            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
             mc_ctrl.now_cur ^= 1;
         }
@@ -1355,21 +1355,21 @@ char mcCtrl3taku(int def_pos)
 
     if (pad[0].one & 0x40)
     {
-        SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
         return mc_ctrl.now_cur + 1;
     }
 
     if (pad[0].one & 0x10)
     {
-        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
         return 3;
     }
 
     if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         if (--mc_ctrl.now_cur < 0)
         {
@@ -1378,7 +1378,7 @@ char mcCtrl3taku(int def_pos)
     }
     else if (*key_now[3] == 1 || Ana2PadDirCnt(1)== 1)
     {
-        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         if (++mc_ctrl.now_cur > 2)
         {

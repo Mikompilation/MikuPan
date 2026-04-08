@@ -118,21 +118,16 @@ class GSHelper
                      const uint8_t *inbuf);
     void UploadPSMT4(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh,
                      const uint8_t *inbuf);
-    std::vector<uint8_t> DownloadPSMCT32(int dbp, int dbw, int dsax, int dsay,
+    void DownloadPSMCT32(unsigned char* outbuf, int dbp, int dbw, int dsax, int dsay,
                                          int rrw, int rrh);
-    std::vector<uint8_t> DownloadPSMT8(int dbp, int dbw, int dsax, int dsay,
-                                       int rrw, int rrh);
-    std::vector<uint8_t> DownloadPSMT4(int dbp, int dbw, int dsax, int dsay,
-                                       int rrw, int rrh);
-    std::vector<uint8_t> DownloadImagePSMT8(int dbp, int dbw, int dsax,
+    void DownloadImagePSMT8(unsigned char* outbuf, int dbp, int dbw, int dsax,
                                             int dsay, int rrw, int rrh, int cbp,
                                             int cbw, char alpha_reg);
-    std::vector<uint8_t> DownloadImagePSMT4(int dbp, int dbw, int dsax,
+    void DownloadImagePSMT4(unsigned char* outbuf, int dbp, int dbw, int dsax,
                                             int dsay, int rrw, int rrh, int cbp,
                                             int cbw, int csa, char alpha_reg);
     void Clear();
 
-   private:
     std::vector<char> mem_ = std::vector<char> (4 * 1024 * 1024);
 };
 }// namespace GS
@@ -140,8 +135,9 @@ class GSHelper
 extern GS::GSHelper gsHelper;
 
 extern "C" {
-void GsUpload(sceGsLoadImage *image_load, unsigned char *image);
-unsigned char *DownloadGsTexture(sceGsTex0 *tex0);
+void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image);
+unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash);
+uint64_t MikuPan_GetTextureHash(sceGsTex0 *tex0);
 }
 
 // Texture *DownloadGsTexture(sceGsTex0* pMeshTexReg);

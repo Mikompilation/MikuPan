@@ -98,7 +98,7 @@ void IngameMenuMap()
     {
         if (*key_now[4] == 1)
         {
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
             if (spd_mnu.smap == 0)
             {
@@ -114,7 +114,7 @@ void IngameMenuMap()
         {
             if (spd_mnu.smap != 0)
             {
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 yw2d.menu_io_flg = 2;
                 yw2d.menu_io_cnt = 20;
@@ -124,13 +124,13 @@ void IngameMenuMap()
         {
             map.scl_mod = 1 - map.scl_mod;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
         }
         else if (*key_now[10] == 1)
         {
             if (map.visit_flr > 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                 if (map.flr < 3)
                 {
@@ -158,7 +158,7 @@ void IngameMenuMap()
         {
             if (map.visit_flr > 1)
             {
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                 if (map.flr != 0)
                 {

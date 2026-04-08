@@ -63,6 +63,35 @@ int loadtri2_flg = 1;
 int loadbw_flg = 0;
 int set_bw_color = 0;
 
+sceVu0FVECTOR *objwork = NULL;
+SgSourceChainTag *cachetag = NULL;
+int vu1tag_num = 0;
+int sbuffer_p = 0;
+int edge_check = 0;
+int ptag = 0;
+qword *SgWorkBase = NULL;
+SgVULightCoord *SgLightCoordp = NULL;
+SgVULightParallel *SgLightParallelp = NULL;
+SgVULightSpot *SgLightSpotp = NULL;
+SgVULightPoint *SgLightPointp = NULL;
+int SgInfiniteNum = 0;
+int SgPointNum = 0;
+int SgPointGroupNum = 0;
+int SgSpotNum = 0;
+int SgSpotGroupNum = 0;
+void *sgd_top_addr = NULL;
+sceDmaChan *dvif0 = NULL;
+sceDmaChan *dvif1 = NULL;
+sceDmaChan *dgif = NULL;
+sceDmaChan *dfspr = NULL;
+SgSourceChainTag *cachetagdbuf[2] = {0};
+sceVu0FVECTOR *objworkdbuf[2] = {0};
+int tagswap = 0;
+int vu_prog_num = 0;
+int clip_value_check = 0;
+int wscissor_flg = 0;
+u_int *pGroupPacket = NULL;
+
 static inline float asm_1(float rad)
 {
     return rad + (truncf(trad[1] * rad)) * trad[2];
@@ -193,35 +222,6 @@ void printLMatC(sceVu0FMATRIX m0, char *str)
         info_log("%f %f %f", m0[0][i], m0[1][i], m0[2][i]);
     }
 }
-
-sceVu0FVECTOR *objwork = NULL;
-SgSourceChainTag *cachetag = NULL;
-int vu1tag_num = 0;
-int sbuffer_p = 0;
-int edge_check = 0;
-int ptag = 0;
-qword *SgWorkBase = NULL;
-SgVULightCoord *SgLightCoordp = NULL;
-SgVULightParallel *SgLightParallelp = NULL;
-SgVULightSpot *SgLightSpotp = NULL;
-SgVULightPoint *SgLightPointp = NULL;
-int SgInfiniteNum = 0;
-int SgPointNum = 0;
-int SgPointGroupNum = 0;
-int SgSpotNum = 0;
-int SgSpotGroupNum = 0;
-void *sgd_top_addr = NULL;
-sceDmaChan *dvif0 = NULL;
-sceDmaChan *dvif1 = NULL;
-sceDmaChan *dgif = NULL;
-sceDmaChan *dfspr = NULL;
-SgSourceChainTag *cachetagdbuf[2] = {0};
-sceVu0FVECTOR *objworkdbuf[2] = {0};
-int tagswap = 0;
-int vu_prog_num = 0;
-int clip_value_check = 0;
-int wscissor_flg = 0;
-u_int *pGroupPacket = NULL;
 
 void SgSetWsMtx(sceVu0FMATRIX m0)
 {

@@ -3276,7 +3276,7 @@ void IngameMenuFile()
         {
             yw2d.out_mode_cnt = 11;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
         }
 
         return;
@@ -3294,7 +3294,7 @@ void IngameMenuFile()
         {
             yw2d.out_mode_cnt = 11;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
         }
         else if (*key_now[6] == 1 || *key_now[5] == 1)
         {
@@ -3304,13 +3304,13 @@ void IngameMenuFile()
                 {
                     menu_file.mod = 1;
 
-                    SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                 }
                 else
                 {
                     menu_file.mod = 2;
 
-                    SeStartFix(2, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                 }
             }
             else
@@ -3320,7 +3320,7 @@ void IngameMenuFile()
                 file_rel.load_id = -1;
                 file_rel.step = 0;
 
-                SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
             }
         }
         else if (
@@ -3345,7 +3345,7 @@ void IngameMenuFile()
 
                 menu_file.lst_top = 0;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
         else if (
@@ -3370,7 +3370,7 @@ void IngameMenuFile()
 
                 menu_file.lst_top = 0;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
     break;
@@ -3384,7 +3384,7 @@ void IngameMenuFile()
         {
             menu_file.mod = 0;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
         }
         else if (*key_now[6] == 1 || *key_now[5] == 1)
         {
@@ -3412,7 +3412,7 @@ void IngameMenuFile()
             menu_file.open_page = 1;
             menu_file.csr_bak = 0xff;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
         }
         else if (
             *key_now[0] == 1 ||
@@ -3444,7 +3444,7 @@ void IngameMenuFile()
                 }
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
         else if (
             *key_now[1] == 1 ||
@@ -3469,7 +3469,7 @@ void IngameMenuFile()
                 menu_file.lst_top = 0;
             }
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
     break;
     case 2:
@@ -3482,13 +3482,13 @@ void IngameMenuFile()
         {
             menu_file.mod = 0;
 
-            SeStartFix(3, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
         }
         else if (*key_now[6] == 1 || *key_now[5] == 1)
         {
             menu_file.mod = 0;
 
-            SeStartFix(1, 0, 0x1000, 0x1000, 1);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
         }
         else if (
             *key_now[0] == 1 ||
@@ -3513,7 +3513,7 @@ void IngameMenuFile()
                 menu_file.lst_top = 0;
                 menu_file.mod = 0;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
         else if (
@@ -3539,7 +3539,7 @@ void IngameMenuFile()
                 menu_file.lst_top = 0;
                 menu_file.mod = 0;
 
-                SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
         }
     break;
@@ -3583,7 +3583,7 @@ void IngameMenuFileData()
 
                 ig_menu_wrk.mode = IGMENU_MODE_FILE;
 
-                SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
             }
             else if (*key_now[6] == 1 || *key_now[5] == 1)
             {
@@ -3593,7 +3593,7 @@ void IngameMenuFileData()
                     {
                         menu_file.open_page++;
 
-                        SeStartFix(4, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CSR1, 0, 0x1000, 0x1000, 1);
                     }
                     else
                     {
@@ -3601,7 +3601,7 @@ void IngameMenuFileData()
 
                         ig_menu_wrk.mode = IGMENU_MODE_FILE;
 
-                        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+                        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
                     }
                 }
                 else
@@ -3610,7 +3610,7 @@ void IngameMenuFileData()
 
                     ig_menu_wrk.mode = IGMENU_MODE_FILE;
 
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
             }
             else if (
@@ -3624,7 +3624,7 @@ void IngameMenuFileData()
                 {
                     menu_file.open_page++;
 
-                    SeStartFix(4, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR1, 0, 0x1000, 0x1000, 1);
                 }
             }
             else if (
@@ -3638,7 +3638,7 @@ void IngameMenuFileData()
                 {
                     menu_file.open_page--;
 
-                    SeStartFix(4, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR1, 0, 0x1000, 0x1000, 1);
                 }
             }
         }
@@ -3663,7 +3663,7 @@ void IngameMenuFileData()
 
                     ig_menu_wrk.mode = IGMENU_MODE_FILE;
 
-                    SeStartFix(3, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
             }
             else if (
@@ -3700,7 +3700,7 @@ void IngameMenuFileData()
 
                     menu_file.pht_alp = 0;
 
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
                 }
             }
             else if (
@@ -3728,7 +3728,7 @@ void IngameMenuFileData()
                         menu_file.lst_top++;
                     }
 
-                    SeStartFix(0, 0, 0x1000, 0x1000, 1);
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
                     menu_file.pht_alp = 0;
                 }
@@ -4808,7 +4808,7 @@ void DokiDokiLetter(u_char level)
     {
         if (sinpaku == 18)
         {
-            SeStartFix(0xf, 0, 0x1000, 0x1000, 0x1);
+            SeStartFix(SE_TERROR, 0, 0x1000, 0x1000, 0x1);
         }
 
         sinpaku--;
@@ -5130,7 +5130,7 @@ void MoveBeyondData()
         {
             rel_csr.now_dat = rel_csr.now_dat->left_p;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0x1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0x1);
         }
     }
     else if (
@@ -5144,7 +5144,7 @@ void MoveBeyondData()
         {
             rel_csr.now_dat = rel_csr.now_dat->right_p;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0x1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0x1);
         }
     }
     else if (
@@ -5158,7 +5158,7 @@ void MoveBeyondData()
         {
             rel_csr.now_dat = rel_csr.now_dat->up_p;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0x1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0x1);
         }
     }
     else if (
@@ -5172,7 +5172,7 @@ void MoveBeyondData()
         {
             rel_csr.now_dat = rel_csr.now_dat->down_p;
 
-            SeStartFix(0, 0, 0x1000, 0x1000, 0x1);
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0x1);
         }
     }
 }
@@ -5217,7 +5217,7 @@ void MoveBeyondGroup()
 
         rel_csr.attribute |= 2;
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0x1);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0x1);
     }
     else if (*key_now[10] == 1)
     {
@@ -5252,7 +5252,7 @@ void MoveBeyondGroup()
 
         rel_csr.attribute |= 2;
 
-        SeStartFix(0, 0, 0x1000, 0x1000, 0x1);
+        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0x1);
     }
 }
 
@@ -5320,7 +5320,7 @@ int ButtonManager()
         rel_csr.mode = 0;
         rel_csr.attribute ^= 0x1;
 
-        SeStartFix(1, 0, 0x1000, 0x1000, 1);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
     }
 
     if (*key_now[4] == 1)
@@ -5337,7 +5337,7 @@ int ButtonManager()
             ret_num = 1;
         }
 
-        SeStartFix(3, 0, 0x1000, 0x1000, 1);
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
     }
 
     return ret_num;

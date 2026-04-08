@@ -8,14 +8,16 @@
 #include "sce/libvu0.h"
 
 #include "common/utility.h"
-#include "ingame/camera/camera.h"
-#include "ingame/plyr/unit_ctl.h"
-#include "graphics/scene/scene.h"
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_scr.h"
 #include "graphics/graph3d/libsg.h"
+#include "graphics/graph3d/light_types.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sglight.h"
+#include "graphics/scene/scene.h"
+#include "ingame/camera/camera.h"
+#include "ingame/plyr/unit_ctl.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 
 sceVu0FMATRIX fod_cmn_mtx = {0};
 FOD_EFF_PARAM eff_param = {0};
@@ -319,6 +321,7 @@ void FodSetMyLight(FOD_LIGHT *fl, char *pfx, float *eye)
     int sl_num;
     int pl_num;
     int get_light_flg;
+    LIGHT_PACK lp = {0};
 
     fls = fl->lit_serial;
     org = fl->all_lit;
@@ -403,7 +406,16 @@ void FodSetMyLight(FOD_LIGHT *fl, char *pfx, float *eye)
         sceVu0AddVector(ambient, ambient, fl->amb[5]);
     }
 
+
     SgSetAmbient(ambient);
+    memcpy(&lp.ambient, ambient, sizeof(sceVu0FVECTOR));
+
+    for (i = 0; i < il_num; i++)
+    {
+        lp.parallel_num = il_num;
+        memcpy(&lp.parallel[i].direction, ilight[i].direction, sizeof(sceVu0FVECTOR));
+        memcpy(&lp.parallel[i].diffuse, ilight[i].diffuse, sizeof(sceVu0FVECTOR));
+    }
 
     if (il_num >= 1)
     {
@@ -412,6 +424,15 @@ void FodSetMyLight(FOD_LIGHT *fl, char *pfx, float *eye)
     else
     {
         SgSetInfiniteLights(eye, NULL, 0);
+    }
+
+
+    for (i = 0; i < pl_num; i++)
+    {
+        lp.point_num = pl_num;
+        lp.point[i].power = plight[i].power;
+        memcpy(&lp.point[i].diffuse, plight[i].diffuse, sizeof(sceVu0FVECTOR));
+        memcpy(&lp.point[i].pos, plight[i].pos, sizeof(sceVu0FVECTOR));
     }
 
     if (pl_num >= 1)
@@ -431,6 +452,18 @@ void FodSetMyLight(FOD_LIGHT *fl, char *pfx, float *eye)
     {
         FodSetSpotLights(slight, sl_num);
     }
+
+    for (i = 0; i < sl_num; i++)
+    {
+        lp.spot_num = sl_num;
+        lp.spot[i].intens = slight[i].intens;
+        lp.spot[i].power = slight[i].power;
+        memcpy(&lp.spot[i].direction, slight[i].direction, sizeof(sceVu0FVECTOR));
+        memcpy(&lp.spot[i].diffuse, slight[i].diffuse, sizeof(sceVu0FVECTOR));
+        memcpy(&lp.spot[i].pos, slight[i].pos, sizeof(sceVu0FVECTOR));
+    }
+
+    MikuPan_SetupAmbientLighting(&lp);
 }
 
 void FodSetSpotLights(SgLIGHT *sl, u_int num)

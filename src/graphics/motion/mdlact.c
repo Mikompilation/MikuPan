@@ -1,6 +1,7 @@
 #include "common.h"
 #include "typedefs.h"
 #include "mdlact.h"
+#include "enums.h"
 
 #include "sce/libvu0.h"
 
@@ -232,7 +233,7 @@ char motPlyrActSurprise(SgCOORDUNIT *cp)
 
     if (plyr_act_wrk.timer == 15)
     {
-        se_handle = SeStartFix(34, 0, 4096, 4096, 0);
+        se_handle = SeStartFix(SE_MN1, 0, 4096, 4096, 0);
     }
 
     if (plyr_act_wrk.timer == 20)

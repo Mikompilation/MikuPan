@@ -22,6 +22,7 @@
 #include "main/glob.h"
 #include "os/eeiop/adpcm/ea_scene.h"
 #include "os/eeiop/cdvd/eecdvd.h"
+#include "os/pad.h"
 #ifdef BUILD_EU_VERSION
 #include "graphics/graph2d/subtitles.h"
 #include "graphics/graph2d/tim2_new.h"

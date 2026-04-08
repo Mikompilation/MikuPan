@@ -38,10 +38,10 @@ static sceVu0FMATRIX IPMatrix;
 static sceVu0FMATRIX CullingMatrix;
 static sceVu0FVECTOR wbbox[8];
 
-extern void SHADOWDRAWTYPE0() __attribute__((section(".vutext")));
-extern void SHADOWDRAWTYPE2() __attribute__((section(".vutext")));
-extern void DIVPS_PROLOGUE() __attribute__((section(".vutext")));
-extern void DPS_PROLOGUE() __attribute__((section(".vutext")));
+extern void SHADOWDRAWTYPE0()   __attribute__((section(".vutext")));
+extern void SHADOWDRAWTYPE2()   __attribute__((section(".vutext")));
+extern void DIVPS_PROLOGUE()    __attribute__((section(".vutext")));
+extern void DPS_PROLOGUE()      __attribute__((section(".vutext")));
 
 #define SCREENX_TO_GSX_UL(x, swidth) (((2048 - (swidth >> 1)) + (x)) << 4)
 #define SCREENY_TO_GSY_UL(y, sheight) (((2048 - (sheight >> 1)) + (y)) << 4)
@@ -388,6 +388,8 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
     prim = &prim[12];
     vp = vp + 2;
 
+    void* vp_bak = vp;
+
     switch (((char *) vh)[5])
     {
         case 0:
@@ -482,6 +484,8 @@ void ShadowModelMesh(u_int *prim)
         case 2:
             read_p = SetVUVNDataShadowModel(vuvnprim);
 
+            //MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER*)vuvnprim, (SGDPROCUNITHEADER*)prim, (float*)read_p);
+
             read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE2 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
@@ -496,6 +500,8 @@ void ShadowModelMesh(u_int *prim)
             AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
 
+            //MikuPan_RenderMeshType0x82(vuvnprim, prim);
+
             read_p = (u_int *) getObjWrk();
             read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE0 >> 3);
             read_p[1] = 0x17000000;
@@ -506,7 +512,7 @@ void ShadowModelMesh(u_int *prim)
             FlushModel(0);
             break;
         case 0x82:
-            MikuPan_RenderMeshType0x82(vuvnprim, prim);
+            //MikuPan_RenderMeshType0x82(vuvnprim, prim);
             AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
             AppendDmaTag((u_int) &prim[4], prim[2]);
@@ -686,10 +692,7 @@ void ShadowMeshDataVU(u_int *prim)
             break;
         case 18:
         case 0x32:
-            if (mtype == 0x32)
-            {
-                //MikuPan_RenderMeshType0x32((struct SGDPROCUNITHEADER *)vuvnprim, (struct SGDPROCUNITHEADER *)prim);
-            }
+            //MikuPan_RenderMeshType0x32((SGDPROCUNITHEADER *)vuvnprim, (SGDPROCUNITHEADER *)prim);
 
             AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);

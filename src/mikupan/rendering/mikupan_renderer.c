@@ -5,7 +5,7 @@
 #include "cglm/cglm.h"
 #include "graphics/graph2d/message.h"
 #include "graphics/graph3d/sgsu.h"
-#include "mikupan/gs/gs_server_c.h"
+#include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/ui/mikupan_ui_c.h"
@@ -14,20 +14,19 @@
 
 #define GLAD_GL_IMPLEMENTATION
 #include "graphics/graph3d/sglib.h"
+#include "main/glob.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan_pipeline.h"
 
 #include <glad/gl.h>
 
-int window_width = 640;
-int window_height = 448;
 int vertex_index[1024 * 1024] = {0};
 float temp_render_buffer[1024 * 1024] = {0};
 int state_changes = 0;
 int draw_calls = 0;
 
-SDL_Window *window = NULL;
 SDL_GLContext gl_context = NULL;
+MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_TextureInfo *fnt_texture[6] = {0};
 MikuPan_TextureInfo *curr_fnt_texture = NULL;
 
@@ -72,17 +71,17 @@ SDL_AppResult MikuPan_Init()
 
     info_log("Creating SDL Window");
 
-    window = SDL_CreateWindow("MikuPan", window_width, window_height,
+    mikupan_render.window = SDL_CreateWindow("MikuPan", 640, 448,
                               SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
-    if (window == NULL)
+    if (mikupan_render.window == NULL)
     {
         info_log(SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
     SDL_Surface* iconSurface = SDL_LoadPNG("resources/mikupan.png");
-    if (!SDL_SetWindowIcon(window, iconSurface))
+    if (!SDL_SetWindowIcon(mikupan_render.window, iconSurface))
     {
         info_log(SDL_GetError());
     }
@@ -91,7 +90,7 @@ SDL_AppResult MikuPan_Init()
 
     info_log("Creating OpenGL Context");
 
-    gl_context = SDL_GL_CreateContext(window);
+    gl_context = SDL_GL_CreateContext(mikupan_render.window);
 
     if (gl_context == NULL)
     {
@@ -99,11 +98,11 @@ SDL_AppResult MikuPan_Init()
         return SDL_APP_FAILURE;
     }
 
-    SDL_GL_MakeCurrent(window, gl_context);
+    SDL_GL_MakeCurrent(mikupan_render.window, gl_context);
 
     info_log("GLad version loaded %d", gladLoadGLLoader((void*)SDL_GL_GetProcAddress));
 
-    MikuPan_InitUi(window, gl_context);
+    MikuPan_InitUi(mikupan_render.window, gl_context);
     MikuPan_InitShaders();
     MikuPan_InitPipeline();
     MikuPan_Setup3D();
@@ -132,18 +131,18 @@ void MikuPan_Clear()
 
 void MikuPan_UpdateWindowSize(int width, int height)
 {
-    window_width = width;
-    window_height = height;
+    mikupan_render.width = width;
+    mikupan_render.height = height;
 }
 
 int MikuPan_GetWindowWidth()
 {
-    return window_width;
+    return mikupan_render.width;
 }
 
 int MikuPan_GetWindowHeight()
 {
-    return window_height;
+    return mikupan_render.height;
 }
 
 int MikuPan_GetRenderMode()
@@ -151,23 +150,177 @@ int MikuPan_GetRenderMode()
     return MikuPan_IsWireframeRendering() ? GL_LINE_STRIP : GL_TRIANGLE_STRIP;
 }
 
-void MikuPan_SetupAmbientLighting()
+void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
 {
-    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
+#define MAXL 16
+
+    for (int k = 0; k < MAX_SHADER_PROGRAMS; k++)
     {
-        u_int curr = MikuPan_SetCurrentShaderProgram(i);
-        float* f_light = MikuPan_GetLightColor();
+        u_int prog = MikuPan_SetCurrentShaderProgram(k);
 
-        glad_glUniform3fv(
-            glad_glGetUniformLocation(curr, "lightColor"),
-            1,
-            f_light
-            /* MikuPan_GetLightColor() */
-            /* TAmbient */);
+        //info_log("Ambient Light %.3f %.3f %.3f %.3f", TAmbient[0], TAmbient[1], TAmbient[2], TAmbient[3]);
 
-        glad_glUniform1f(
-            glad_glGetUniformLocation(curr, "ambientStrength"),
-            f_light[3]);
+        GLint uAmbientLoc      = glad_glGetUniformLocation(prog, "uAmbient");
+        GLint uParCountLoc    = glad_glGetUniformLocation(prog, "uParCount");
+        GLint uParDirLoc      = glad_glGetUniformLocation(prog, "uParDir");
+        GLint uParDiffuseLoc  = glad_glGetUniformLocation(prog, "uParDiffuse");
+        GLint uPointCountLoc  = glad_glGetUniformLocation(prog, "uPointCount");
+        GLint uPointPosLoc    = glad_glGetUniformLocation(prog, "uPointPos");
+        GLint uPointDiffuseLoc= glad_glGetUniformLocation(prog, "uPointDiffuse");
+        GLint uPointPowerLoc  = glad_glGetUniformLocation(prog, "uPointPower");
+        GLint uSpotCountLoc   = glad_glGetUniformLocation(prog, "uSpotCount");
+        GLint uSpotPosLoc     = glad_glGetUniformLocation(prog, "uSpotPos");
+        GLint uSpotDirLoc     = glad_glGetUniformLocation(prog, "uSpotDir");
+        GLint uSpotDiffuseLoc = glad_glGetUniformLocation(prog, "uSpotDiffuse");
+        GLint uSpotPowerLoc   = glad_glGetUniformLocation(prog, "uSpotPower");
+        GLint uSpotIntensLoc  = glad_glGetUniformLocation(prog, "uSpotIntens");
+
+        // =========================
+        // Ambient
+        // =========================
+        vec4 ambient = {
+            lp->ambient[0],
+            lp->ambient[1],
+            lp->ambient[2],
+            lp->ambient[3] / 128.0f
+        };
+
+        glad_glUniform4fv(uAmbientLoc, 1, ambient);
+
+        // =========================
+        // Parallel (Directional)
+        // =========================
+        vec4 parDir[MAXL];
+        vec4 parDif[MAXL];
+
+        int parCount = lp->parallel_num > MAXL ? MAXL : lp->parallel_num;
+
+        for (int i = 0; i < parCount; i++)
+        {
+            vec4 dirWS = {
+                lp->parallel[i].direction[0],
+                lp->parallel[i].direction[1],
+                lp->parallel[i].direction[2],
+                lp->parallel[i].direction[3]
+            };
+
+            vec4 dif = {
+                lp->parallel[i].diffuse[0],
+                lp->parallel[i].diffuse[1],
+                lp->parallel[i].diffuse[2],
+                lp->parallel[i].diffuse[3] / 128.0f
+            };
+
+            // view-space direction (no translation)
+            mat3 view3;
+            glm_mat4_pick3(WorldView, view3);
+            glm_mat3_mulv(view3, dirWS, parDir[i]);
+            glm_vec4_copy(dif, parDif[i]);
+        }
+
+        glad_glUniform1i(uParCountLoc, parCount);
+        glad_glUniform4fv(uParDirLoc, parCount, (float*)parDir);
+        glad_glUniform4fv(uParDiffuseLoc, parCount, (float*)parDif);
+
+        // =========================
+        // Point
+        // =========================
+        vec4 pointPos[MAXL];
+        vec4 pointDif[MAXL];
+        float pointPow[MAXL];
+
+        int pointCount = lp->point_num > MAXL ? MAXL : lp->point_num;
+
+        for (int i = 0; i < pointCount; i++)
+        {
+            vec4 posWS = {
+                lp->point[i].pos[0],
+                lp->point[i].pos[1],
+                lp->point[i].pos[2],
+                lp->point[i].pos[3]
+            };
+
+            vec4 posVS;
+            glm_mat4_mulv(WorldView, posWS, posVS);
+            glm_vec3_copy(posVS, pointPos[i]);
+            pointPos[i][3] = 1.0f;
+
+            vec4 dif = {
+                lp->point[i].diffuse[0],
+                lp->point[i].diffuse[1],
+                lp->point[i].diffuse[2],
+                lp->point[i].diffuse[3] / 128.0f
+            };
+
+            glm_vec4_copy(dif, pointDif[i]);
+            pointPow[i] = lp->point[i].power;
+        }
+
+        glad_glUniform1i(uPointCountLoc, pointCount);
+        glad_glUniform4fv(uPointPosLoc, pointCount, (float*)pointPos);
+        glad_glUniform4fv(uPointDiffuseLoc, pointCount, (float*)pointDif);
+        glad_glUniform1fv(uPointPowerLoc, pointCount, pointPow);
+
+        // =========================
+        // Spot
+        // =========================
+        vec4 spotPos[MAXL];
+        vec4 spotDir[MAXL];
+        vec4 spotDif[MAXL];
+        float spotPow[MAXL];
+        float spotInt[MAXL];
+
+        int spotCount = lp->spot_num > MAXL ? MAXL : lp->spot_num;
+
+        for (int i = 0; i < spotCount; i++)
+        {
+            // position → view space
+            vec4 posWS = {
+                lp->spot[i].pos[0],
+                lp->spot[i].pos[1],
+                lp->spot[i].pos[2],
+                lp->spot[i].pos[3]
+            };
+
+            vec4 posVS;
+            glm_mat4_mulv(WorldView, posWS, posVS);
+            glm_vec3_copy(posVS, spotPos[i]);
+            spotPos[i][3] = 1.0f;
+
+            // direction → view space (no translation)
+            vec4 dirWS = {
+                lp->spot[i].direction[0],
+                lp->spot[i].direction[1],
+                lp->spot[i].direction[2],
+                lp->spot[i].direction[3]
+            };
+
+            mat3 view3;
+            glm_mat4_pick3(WorldView, view3);
+            glm_mat3_mulv(view3, dirWS, spotDir[i]);
+            glm_vec3_normalize(spotDir[i]);
+            spotDir[i][3] = 1.0f;
+
+            // diffuse
+            vec4 dif = {
+                lp->spot[i].diffuse[0],
+                lp->spot[i].diffuse[1],
+                lp->spot[i].diffuse[2],
+                lp->spot[i].diffuse[3] / 128.0f
+            };
+
+            glm_vec4_copy(dif, spotDif[i]);
+
+            spotPow[i] = lp->spot[i].power;
+            spotInt[i] = lp->spot[i].intens;
+        }
+
+        glad_glUniform1i(uSpotCountLoc, spotCount);
+        glad_glUniform4fv(uSpotPosLoc, spotCount, (float*)spotPos);
+        glad_glUniform4fv(uSpotDirLoc, spotCount, (float*)spotDir);
+        glad_glUniform4fv(uSpotDiffuseLoc, spotCount, (float*)spotDif);
+        glad_glUniform1fv(uSpotPowerLoc, spotCount, spotPow);
+        glad_glUniform1fv(uSpotIntensLoc, spotCount, spotInt);
     }
 }
 
@@ -179,54 +332,53 @@ void MikuPan_RenderSetDebugValues()
 MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
 {
     GLuint tex = 0;
+    GLfloat maxAniso = 0.0f;
 
     int width = 1 << tex0->TW;
     int height = 1 << tex0->TH;
 
-    void *pixels = DownloadGsTexture(tex0);
+    uint64_t hash = 0;
+    void *pixels = MikuPan_GsDownloadTexture(tex0, &hash);
 
-    if (!pixels)
+    if (hash == 0)
     {
         return NULL;
     }
 
     glad_glGenTextures(1, &tex);
     glad_glBindTexture(GL_TEXTURE_2D, tex);
-
     glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
     glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
                       width, height, 0, GL_RGBA,
                       GL_UNSIGNED_BYTE, pixels);
-
-    //GLfloat maxAniso = 0.0f;
-    //glad_glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
-    //glad_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
-
+    glad_glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
+    glad_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
     glad_glGenerateMipmap(GL_TEXTURE_2D);
-
     glad_glBindTexture(GL_TEXTURE_2D, 0);
 
     MikuPan_TextureInfo *texture_info = malloc(sizeof(MikuPan_TextureInfo));
     texture_info->height = height;
     texture_info->width = width;
     texture_info->id = tex;
-    texture_info->data = pixels;
+    texture_info->tex0 = *(uint64_t*)tex0;
+    texture_info->hash = hash;
 
-    MikuPan_AddTexture(tex0, texture_info);
+    MikuPan_AddTexture(hash, texture_info);
+
+    free(pixels);
 
     return texture_info;
 }
 
 void MikuPan_SetTexture(sceGsTex0 *tex0)
 {
-    MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(tex0);
+    uint64_t hash = MikuPan_GetTextureHash(tex0);
+
+    MikuPan_TextureInfo *texture_info = MikuPan_GetTextureInfo(hash);
 
     if (texture_info == NULL)
     {
@@ -342,8 +494,8 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
 
     float ndc[4] = {0};
 
-    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(ndc, (float)window_width, (float)window_height, dst.x, dst.y);
-    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(&ndc[2], (float)window_width, (float)window_height, dst.x + src.w, dst.y + src.h);
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(ndc, (float)mikupan_render.width, (float)mikupan_render.height, dst.x, dst.y);
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(&ndc[2], (float)mikupan_render.width, (float)mikupan_render.height, dst.x + src.w, dst.y + src.h);
 
     // Container size (PS2 texture memory size)
     float texW = (float) (texture_info->width);
@@ -390,8 +542,10 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
         }
     };
 
-    u_int current_program = MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+
+    MikuPan_SetRenderState2D();
 
     glad_glBindVertexArray(pipeline->vao);
     glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
@@ -473,6 +627,11 @@ float* MikuPan_GetWorldClipView()
     return (float*)&WorldClipView;
 }
 
+float* MikuPan_GetWorldClip()
+{
+    return (float*)&WorldView;
+}
+
 void MikuPan_SetWorldClipView()
 {
     MikuPan_SetModelTransformMatrix(WorldClipView);
@@ -481,7 +640,7 @@ void MikuPan_SetWorldClipView()
 void MikuPan_SetModelTransformMatrix(sceVu0FVECTOR *m)
 {
     state_changes++;
-    MikuPan_SetupAmbientLighting();
+    //MikuPan_SetupAmbientLighting();
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)m, "model");
 }
 
@@ -492,6 +651,11 @@ void MikuPan_SetFontTexture(int fnt)
 
 void MikuPan_DeleteTexture(MikuPan_TextureInfo *texture_info)
 {
+    if (texture_info == NULL)
+    {
+        return;
+    }
+
     for (int i = 0; i < 6; i++)
     {
         if (fnt_texture[i]->id == texture_info->id)
@@ -506,7 +670,18 @@ void MikuPan_DeleteTexture(MikuPan_TextureInfo *texture_info)
 
 void MikuPan_Shutdown()
 {
-    SDL_DestroyWindow(window);
+    for (int i = 0; i < 6; i++)
+    {
+        if (fnt_texture[i] != NULL)
+        {
+            glad_glDeleteTextures(1, (const GLuint *) &fnt_texture[i]->id);
+            free(fnt_texture[i]);
+
+            fnt_texture[i] = NULL;
+        }
+    }
+
+    SDL_DestroyWindow(mikupan_render.window);
 }
 
 void MikuPan_EndFrame()
@@ -517,7 +692,7 @@ void MikuPan_EndFrame()
 
     MikuPan_DrawUi();
     MikuPan_RenderUi();
-    SDL_GL_SwapWindow(window);
+    SDL_GL_SwapWindow(mikupan_render.window);
 }
 
 void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
@@ -534,9 +709,8 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     glm_lookat(mikupan_camera->p, center, up, WorldView);
 
     // Projection -> camera->vcv
-    float aspect = (float) window_width / (float) window_height;
+    float aspect = (float) mikupan_render.width / (float) mikupan_render.height;
     glm_perspective(mikupan_camera->fov, aspect, 10.0f, mikupan_camera->farz, projection);
-
 
     glm_mat4_mul(projection, WorldView, WorldClipView);
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)WorldView, "view");
@@ -548,8 +722,8 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     float gs_width  = 4096.0f;
     float gs_height = 4096.0f;
 
-    float scaleX = window_width  / gs_width;
-    float scaleY = window_height / gs_height;
+    float scaleX = mikupan_render.width  / gs_width;
+    float scaleY = mikupan_render.height / gs_height;
 
     mat4 vc;
     glm_mat4_identity(vc);
@@ -832,4 +1006,84 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
 
     draw_calls++;
     glad_glDrawElements(MikuPan_GetRenderMode(), v->nnum + GET_NUM_MESH(pPUHead), GL_UNSIGNED_INT, vertex_index);
+}
+
+static GLenum gsABDtoGL(int v)
+{
+    switch (v)
+    {
+        case SCE_GS_ALPHA_CS:   return GL_SRC_COLOR;
+        case SCE_GS_ALPHA_CD:   return GL_DST_COLOR;
+        case SCE_GS_ALPHA_ZERO: return GL_ZERO;
+    }
+    return GL_ZERO;
+}
+
+static GLenum gsCtoGL(int v)
+{
+    switch (v)
+    {
+        case SCE_GS_ALPHA_AS:  return GL_SRC_ALPHA;
+        case SCE_GS_ALPHA_AD:  return GL_DST_ALPHA;
+        case SCE_GS_ALPHA_FIX: return GL_CONSTANT_COLOR;
+    }
+    return GL_ZERO;
+}
+
+u_long GSAlphaToOpenGL(int A, int B, int C, int D, int fix)
+{
+    glad_glEnable(GL_BLEND);
+
+    // FIX handling (0..128 on GS)
+    //float f = (float)fix / 128.0f;
+    //glad_glBlendColor(f, f, f, f);
+
+    GLenum glA = gsABDtoGL(A);
+    GLenum glB = gsABDtoGL(B);
+    GLenum glC = gsCtoGL(C);
+    GLenum glD = gsABDtoGL(D);
+
+#define SCE_GS_SET_ALPHA22(a, b, c, d, fix) \
+((u_long)(a)       | ((u_long)(b) << 2)     | ((u_long)(c) << 4) | \
+((u_long)(d) << 6) | ((u_long)(fix) << 32))
+
+    u_long out = SCE_GS_SET_ALPHA22(A, B, C, D, fix);
+
+    /*
+        GS: (A - B) * C + D
+
+        We implement this using:
+        glBlendFuncSeparate + glBlendEquation
+    */
+
+    // (CS - CD) * AS + CD  -> standard alpha blend
+    if (A == SCE_GS_ALPHA_CS &&
+        B == SCE_GS_ALPHA_CD &&
+        C == SCE_GS_ALPHA_AS &&
+        D == SCE_GS_ALPHA_CD)
+    {
+        glad_glBlendEquation(GL_FUNC_ADD);
+        glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        return out;
+    }
+
+    // (CS - 0) * AS + 0  -> pure modulate
+    if (B == SCE_GS_ALPHA_ZERO && D == SCE_GS_ALPHA_ZERO)
+    {
+        glad_glBlendEquation(GL_FUNC_ADD);
+        glad_glBlendFunc(glC, GL_ZERO);
+        return out;
+    }
+
+    // (CS - CD) * FIX + CD  -> fog / fades / particles
+    if (C == SCE_GS_ALPHA_FIX)
+    {
+        glad_glBlendEquation(GL_FUNC_ADD);
+        glad_glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_CONSTANT_COLOR);
+        return out;
+    }
+
+    // General case (rare but needed)
+    glad_glBlendEquation(GL_FUNC_ADD);
+    glad_glBlendFuncSeparate(glC, glD, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
