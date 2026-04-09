@@ -5,6 +5,8 @@
 #include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_thread.h>
 
+#define VOICE_NUM 24
+
 enum SE_VOICE_STAT
 {
     VOICE_FREE = 0,
@@ -27,11 +29,17 @@ typedef struct
 {
     int vNo;
     int size;
+
+    bool isPlaying;
+
     s16 *buffer;
     u16 header;
     u_int ssa;// Single Playback Address
     u_int lsa;// Looped Playback Address
     u_int nax;
+
+    s32 histL[2], histR[2];
+
 
     u_short volL;
     u_short volR;
@@ -46,14 +54,16 @@ typedef struct
 
 extern VOICE voices[24];
 
-extern SDL_Mutex *voice_lock;
-
+extern bool loopEnd;
+extern bool loopRepeat;
 
 void VoicesInit();
 VOICE *GetFreeVoice();
 void FillAdpcmHeader(int vNo);
 void Key_On(int vNo);
 void Key_Off(int vNo);
+void VoiceRun();
+
 
 static inline void SetPitch(int vNo, u_short val)
 {

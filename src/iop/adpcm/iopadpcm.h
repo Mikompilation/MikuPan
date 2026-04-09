@@ -145,6 +145,7 @@ enum ADPCM_PLAY_STAT
 };
 
 extern u_short mVolL, mVolR;
+extern u_short volL, volR;
 extern u_short adsr1L, adsr2L;
 extern u_short adsr1R, adsr2R;
 

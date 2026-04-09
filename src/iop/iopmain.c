@@ -21,6 +21,7 @@ IOP_MASTER_VOL iop_mv;
 IOP_SYS_CTRL iop_sys_ctrl;
 
 static int request_shutdown = 0;
+static s32 mTick;
 
 SDL_AudioDeviceID audio_dev;
 
@@ -206,15 +207,25 @@ static int IopInitMain()
 }
 
 static SDLCALL int IopMain(void *data)
-{
+{    
+    Uint64 nextTick = SDL_GetTicksNS();
+    const Uint64 interval = 4167000;
+
     while (!request_shutdown)
     {
-        // The thread was originally woken up by an IOP timer handler
-        SDL_DelayNS(4167000);
+        Uint64 now = SDL_GetTicksNS();
+        if (now < nextTick)
+        {
+            SDL_DelayNS(nextTick - now);
+        }
+
+        nextTick += interval;
+        mTick++;
 
         ISeMain();
         ICdvdMain();
         IAdpcmMain2();
+        VoiceRun();
     }
 
     return 0;
