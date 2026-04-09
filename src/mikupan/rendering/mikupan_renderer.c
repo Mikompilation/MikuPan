@@ -158,7 +158,7 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
     {
         u_int prog = MikuPan_SetCurrentShaderProgram(k);
 
-        //info_log("Ambient Light %.3f %.3f %.3f %.3f", TAmbient[0], TAmbient[1], TAmbient[2], TAmbient[3]);
+        info_log("Ambient Light %.3f %.3f %.3f %.3f", TAmbient[0], TAmbient[1], TAmbient[2], TAmbient[3]);
 
         GLint uAmbientLoc      = glad_glGetUniformLocation(prog, "uAmbient");
         GLint uParCountLoc    = glad_glGetUniformLocation(prog, "uParCount");

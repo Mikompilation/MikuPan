@@ -42,11 +42,6 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
     vec4 N = normalize(normal);
     vec3 result = uAmbient.rgb * baseColor;
 
-    if (result == 0.0f)
-    {
-        result = baseColor;
-    }
-
     // Directional (parallel)
     for (int i = 0; i < uParCount; i++)
     {
@@ -58,13 +53,20 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
     for (int i = 0; i < uPointCount; i++)
     {
         vec3 L = uPointPos[i].xyz - viewPos.xyz;
-        float dist = length(L.xyz);
-        vec3 Ldir = L.xyz / (dist);
+        float dist = length(L);
+        vec3 Ldir = L / dist;
 
         float NdotL = max(dot(N.xyz, Ldir), 0.0);
 
-        float colscale = (uPointDiffuse[i].r + uPointDiffuse[i].g + uPointDiffuse[i].b) * uPointPower[i];
-        float att = colscale / (dist + 1.0f); // distance attenuation
+        float colscale =
+        (uPointDiffuse[i].r +
+        uPointDiffuse[i].g +
+        uPointDiffuse[i].b) * uPointPower[i];
+
+        // ---- proper quadratic distance falloff ----
+        float distAtt = 1.0 / (1.0 + 0.01f * dist * dist);
+
+        float att = colscale * distAtt;
 
         result += baseColor * NdotL * att;
     }
@@ -72,19 +74,33 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
     // Spot
     for (int i = 0; i < uSpotCount; i++)
     {
-        vec3 L = uSpotPos[i].xyz - viewPos.xyz; // from light to fragment
+        vec3 L = uSpotPos[i].xyz - viewPos.xyz;
         float dist = length(L);
-        vec3 Ldir = L / (dist);
+        vec3 Ldir = L / dist;
 
-        float plane = dot(normalize(uSpotDir[i].xyz), L);
-        if (plane <= 0.0) continue;
+        vec3 Sdir = normalize(uSpotDir[i].xyz);
 
-        float NdotL = max(dot(N.xyz, Ldir), 0.0);
-        float cd = dot(normalize(L), normalize(uSpotDir[i].xyz));
+        float cd = dot(Ldir, Sdir);
         if (cd * cd < uSpotIntens[i]) continue;
 
-        float colscale = (uSpotDiffuse[i].r + uSpotDiffuse[i].g + uSpotDiffuse[i].b) * uSpotPower[i];
-        float att = colscale / (dist + 1.0f); // distance attenuation
+        // ---- derive cone from your existing value ----
+        float outerCos = sqrt(uSpotIntens[i]);
+        float innerCos = min(outerCos + 0.15f, 0.999);
+
+        float spot = clamp((cd - outerCos) / (innerCos - outerCos), 0.0, 1.0);
+        if (spot <= 0.0) continue;
+
+        // ---- proper quadratic distance falloff ----
+        float distAtt = 1.0 / (1.0 + 0.01f * dist * dist);
+
+        float NdotL = max(dot(N.xyz, Ldir), 0.0);
+
+        float colscale =
+        (uSpotDiffuse[i].r +
+        uSpotDiffuse[i].g +
+        uSpotDiffuse[i].b) * uSpotPower[i];
+
+        float att = colscale * distAtt * spot;
 
         result += baseColor * NdotL * att;
     }
