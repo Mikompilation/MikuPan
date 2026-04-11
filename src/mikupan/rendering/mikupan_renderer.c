@@ -43,6 +43,8 @@ mat4 ViewClip = {0};
 /// SgCMtx or camera->wc
 mat4 WorldClip = {0};
 
+MikuPan_LightData mikupan_light_data = {0};
+
 SDL_AppResult MikuPan_Init()
 {
     MikuPan_SetupOpenGLContext();
@@ -105,6 +107,17 @@ SDL_AppResult MikuPan_Init()
     MikuPan_InitUi(mikupan_render.window, gl_context);
     MikuPan_InitShaders();
     MikuPan_InitPipeline();
+
+    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
+    {
+        u_int program = MikuPan_SetCurrentShaderProgram(i);
+        u_int blockIndex = glad_glGetUniformBlockIndex(program, "LightBlock");
+        if (blockIndex != GL_INVALID_INDEX)
+        {
+            glad_glUniformBlockBinding(program, blockIndex, 0);
+        }
+    }
+
     MikuPan_Setup3D();
 
     return SDL_APP_CONTINUE;
@@ -152,176 +165,120 @@ int MikuPan_GetRenderMode()
 
 void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
 {
-#define MAXL 16
+#define MAX_LIGHTS 3
+    mikupan_light_data.uAmbient[0] = lp->ambient[0];
+    mikupan_light_data.uAmbient[1] = lp->ambient[1];
+    mikupan_light_data.uAmbient[2] = lp->ambient[2];
+    mikupan_light_data.uAmbient[3] = lp->ambient[3] / 128.0f;
 
-    for (int k = 0; k < MAX_SHADER_PROGRAMS; k++)
+    int parCount = lp->parallel_num > MAX_LIGHTS ? MAX_LIGHTS : lp->parallel_num;
+    mikupan_light_data.uParCount[0] = parCount;
+
+    mat3 view3;
+    glm_mat4_pick3(WorldView, view3);
+
+    for (int i = 0; i < parCount; i++)
     {
-        u_int prog = MikuPan_SetCurrentShaderProgram(k);
-
-        info_log("Ambient Light %.3f %.3f %.3f %.3f", TAmbient[0], TAmbient[1], TAmbient[2], TAmbient[3]);
-
-        GLint uAmbientLoc      = glad_glGetUniformLocation(prog, "uAmbient");
-        GLint uParCountLoc    = glad_glGetUniformLocation(prog, "uParCount");
-        GLint uParDirLoc      = glad_glGetUniformLocation(prog, "uParDir");
-        GLint uParDiffuseLoc  = glad_glGetUniformLocation(prog, "uParDiffuse");
-        GLint uPointCountLoc  = glad_glGetUniformLocation(prog, "uPointCount");
-        GLint uPointPosLoc    = glad_glGetUniformLocation(prog, "uPointPos");
-        GLint uPointDiffuseLoc= glad_glGetUniformLocation(prog, "uPointDiffuse");
-        GLint uPointPowerLoc  = glad_glGetUniformLocation(prog, "uPointPower");
-        GLint uSpotCountLoc   = glad_glGetUniformLocation(prog, "uSpotCount");
-        GLint uSpotPosLoc     = glad_glGetUniformLocation(prog, "uSpotPos");
-        GLint uSpotDirLoc     = glad_glGetUniformLocation(prog, "uSpotDir");
-        GLint uSpotDiffuseLoc = glad_glGetUniformLocation(prog, "uSpotDiffuse");
-        GLint uSpotPowerLoc   = glad_glGetUniformLocation(prog, "uSpotPower");
-        GLint uSpotIntensLoc  = glad_glGetUniformLocation(prog, "uSpotIntens");
-
-        // =========================
-        // Ambient
-        // =========================
-        vec4 ambient = {
-            lp->ambient[0],
-            lp->ambient[1],
-            lp->ambient[2],
-            lp->ambient[3] / 128.0f
+        vec4 dirWS = {
+            lp->parallel[i].direction[0],
+            lp->parallel[i].direction[1],
+            lp->parallel[i].direction[2],
+            lp->parallel[i].direction[3]
         };
 
-        glad_glUniform4fv(uAmbientLoc, 1, ambient);
+        vec4 dirVS;
+        glm_mat3_mulv(view3, dirWS, dirVS);
 
-        // =========================
-        // Parallel (Directional)
-        // =========================
-        vec4 parDir[MAXL];
-        vec4 parDif[MAXL];
+        mikupan_light_data.uParDir[i][0] = dirVS[0];
+        mikupan_light_data.uParDir[i][1] = dirVS[1];
+        mikupan_light_data.uParDir[i][2] = dirVS[2];
+        mikupan_light_data.uParDir[i][3] = 1.0f;
 
-        int parCount = lp->parallel_num > MAXL ? MAXL : lp->parallel_num;
-
-        for (int i = 0; i < parCount; i++)
-        {
-            vec4 dirWS = {
-                lp->parallel[i].direction[0],
-                lp->parallel[i].direction[1],
-                lp->parallel[i].direction[2],
-                lp->parallel[i].direction[3]
-            };
-
-            vec4 dif = {
-                lp->parallel[i].diffuse[0],
-                lp->parallel[i].diffuse[1],
-                lp->parallel[i].diffuse[2],
-                lp->parallel[i].diffuse[3] / 128.0f
-            };
-
-            // view-space direction (no translation)
-            mat3 view3;
-            glm_mat4_pick3(WorldView, view3);
-            glm_mat3_mulv(view3, dirWS, parDir[i]);
-            glm_vec4_copy(dif, parDif[i]);
-        }
-
-        glad_glUniform1i(uParCountLoc, parCount);
-        glad_glUniform4fv(uParDirLoc, parCount, (float*)parDir);
-        glad_glUniform4fv(uParDiffuseLoc, parCount, (float*)parDif);
-
-        // =========================
-        // Point
-        // =========================
-        vec4 pointPos[MAXL];
-        vec4 pointDif[MAXL];
-        float pointPow[MAXL];
-
-        int pointCount = lp->point_num > MAXL ? MAXL : lp->point_num;
-
-        for (int i = 0; i < pointCount; i++)
-        {
-            vec4 posWS = {
-                lp->point[i].pos[0],
-                lp->point[i].pos[1],
-                lp->point[i].pos[2],
-                lp->point[i].pos[3]
-            };
-
-            vec4 posVS;
-            glm_mat4_mulv(WorldView, posWS, posVS);
-            glm_vec3_copy(posVS, pointPos[i]);
-            pointPos[i][3] = 1.0f;
-
-            vec4 dif = {
-                lp->point[i].diffuse[0],
-                lp->point[i].diffuse[1],
-                lp->point[i].diffuse[2],
-                lp->point[i].diffuse[3] / 128.0f
-            };
-
-            glm_vec4_copy(dif, pointDif[i]);
-            pointPow[i] = lp->point[i].power;
-        }
-
-        glad_glUniform1i(uPointCountLoc, pointCount);
-        glad_glUniform4fv(uPointPosLoc, pointCount, (float*)pointPos);
-        glad_glUniform4fv(uPointDiffuseLoc, pointCount, (float*)pointDif);
-        glad_glUniform1fv(uPointPowerLoc, pointCount, pointPow);
-
-        // =========================
-        // Spot
-        // =========================
-        vec4 spotPos[MAXL];
-        vec4 spotDir[MAXL];
-        vec4 spotDif[MAXL];
-        float spotPow[MAXL];
-        float spotInt[MAXL];
-
-        int spotCount = lp->spot_num > MAXL ? MAXL : lp->spot_num;
-
-        for (int i = 0; i < spotCount; i++)
-        {
-            // position → view space
-            vec4 posWS = {
-                lp->spot[i].pos[0],
-                lp->spot[i].pos[1],
-                lp->spot[i].pos[2],
-                lp->spot[i].pos[3]
-            };
-
-            vec4 posVS;
-            glm_mat4_mulv(WorldView, posWS, posVS);
-            glm_vec3_copy(posVS, spotPos[i]);
-            spotPos[i][3] = 1.0f;
-
-            // direction → view space (no translation)
-            vec4 dirWS = {
-                lp->spot[i].direction[0],
-                lp->spot[i].direction[1],
-                lp->spot[i].direction[2],
-                lp->spot[i].direction[3]
-            };
-
-            mat3 view3;
-            glm_mat4_pick3(WorldView, view3);
-            glm_mat3_mulv(view3, dirWS, spotDir[i]);
-            glm_vec3_normalize(spotDir[i]);
-            spotDir[i][3] = 1.0f;
-
-            // diffuse
-            vec4 dif = {
-                lp->spot[i].diffuse[0],
-                lp->spot[i].diffuse[1],
-                lp->spot[i].diffuse[2],
-                lp->spot[i].diffuse[3]
-            };
-
-            glm_vec4_copy(dif, spotDif[i]);
-
-            spotPow[i] = lp->spot[i].power;
-            spotInt[i] = lp->spot[i].intens;
-        }
-
-        glad_glUniform1i(uSpotCountLoc, spotCount);
-        glad_glUniform4fv(uSpotPosLoc, spotCount, (float*)spotPos);
-        glad_glUniform4fv(uSpotDirLoc, spotCount, (float*)spotDir);
-        glad_glUniform4fv(uSpotDiffuseLoc, spotCount, (float*)spotDif);
-        glad_glUniform1fv(uSpotPowerLoc, spotCount, spotPow);
-        glad_glUniform1fv(uSpotIntensLoc, spotCount, spotInt);
+        mikupan_light_data.uParDiffuse[i][0] = lp->parallel[i].diffuse[0];
+        mikupan_light_data.uParDiffuse[i][1] = lp->parallel[i].diffuse[1];
+        mikupan_light_data.uParDiffuse[i][2] = lp->parallel[i].diffuse[2];
+        mikupan_light_data.uParDiffuse[i][3] = lp->parallel[i].diffuse[3] / 128.0f;
     }
+
+    int pointCount = lp->point_num > MAX_LIGHTS ? MAX_LIGHTS : lp->point_num;
+    mikupan_light_data.uPointCount[0] = pointCount;
+
+    for (int i = 0; i < pointCount; i++)
+    {
+        vec4 posWS = {
+            lp->point[i].pos[0],
+            lp->point[i].pos[1],
+            lp->point[i].pos[2],
+            lp->point[i].pos[3]
+        };
+
+        vec4 posVS;
+        glm_mat4_mulv(WorldView, posWS, posVS);
+
+        mikupan_light_data.uPointPos[i][0] = posVS[0];
+        mikupan_light_data.uPointPos[i][1] = posVS[1];
+        mikupan_light_data.uPointPos[i][2] = posVS[2];
+        mikupan_light_data.uPointPos[i][3] = 1.0f;
+
+        mikupan_light_data.uPointDiffuse[i][0] = lp->point[i].diffuse[0];
+        mikupan_light_data.uPointDiffuse[i][1] = lp->point[i].diffuse[1];
+        mikupan_light_data.uPointDiffuse[i][2] = lp->point[i].diffuse[2];
+        mikupan_light_data.uPointDiffuse[i][3] = lp->point[i].diffuse[3] / 128.0f;
+
+        mikupan_light_data.uPointPower[i][0] = lp->point[i].power;  // .x used in shader
+    }
+
+    int spotCount = lp->spot_num > MAX_LIGHTS ? MAX_LIGHTS : lp->spot_num;
+    mikupan_light_data.uSpotCount[0] = spotCount;
+
+    for (int i = 0; i < spotCount; i++)
+    {
+        vec4 posWS = {
+            lp->spot[i].pos[0],
+            lp->spot[i].pos[1],
+            lp->spot[i].pos[2],
+            lp->spot[i].pos[3]
+        };
+
+        vec4 posVS;
+        glm_mat4_mulv(WorldView, posWS, posVS);
+
+        mikupan_light_data.uSpotPos[i][0] = posVS[0];
+        mikupan_light_data.uSpotPos[i][1] = posVS[1];
+        mikupan_light_data.uSpotPos[i][2] = posVS[2];
+        mikupan_light_data.uSpotPos[i][3] = 1.0f;
+
+        vec4 dirWS = {
+            lp->spot[i].direction[0],
+            lp->spot[i].direction[1],
+            lp->spot[i].direction[2],
+            lp->spot[i].direction[3]
+        };
+
+        vec4 dirVS;
+        glm_mat3_mulv(view3, dirWS, dirVS);
+        glm_vec3_normalize(dirVS);
+
+        mikupan_light_data.uSpotDir[i][0] = dirVS[0];
+        mikupan_light_data.uSpotDir[i][1] = dirVS[1];
+        mikupan_light_data.uSpotDir[i][2] = dirVS[2];
+        mikupan_light_data.uSpotDir[i][3] = 1.0f;
+
+        mikupan_light_data.uSpotDiffuse[i][0] = lp->spot[i].diffuse[0];
+        mikupan_light_data.uSpotDiffuse[i][1] = lp->spot[i].diffuse[1];
+        mikupan_light_data.uSpotDiffuse[i][2] = lp->spot[i].diffuse[2];
+        mikupan_light_data.uSpotDiffuse[i][3] = lp->spot[i].diffuse[3];
+
+        mikupan_light_data.uSpotPower[i][0]  = lp->spot[i].power;   // .x in shader
+        mikupan_light_data.uSpotIntens[i][0] = lp->spot[i].intens;  // .x in shader
+    }
+
+
+    glad_glBufferSubData(
+        GL_UNIFORM_BUFFER,
+        0,
+        sizeof(MikuPan_LightData),
+        &mikupan_light_data);
 }
 
 void MikuPan_RenderSetDebugValues()

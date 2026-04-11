@@ -1,5 +1,7 @@
 #include "mikupan_pipeline.h"
 
+#include "mikupan/mikupan_types.h"
+
 #include <glad/gl.h>
 #include <stdlib.h>
 
@@ -16,13 +18,13 @@ void MikuPan_InitPipeline()
     /// BUFFER 1: VERTEX + NORMALS
     /// POSITION ATTRIBUTE
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 1024 * 32, 2);
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0],
         3, 0,
         sizeof(float[6]), 0);
 
     /// NORMALS ATTRIBUTE
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1],
         3, 1,
         sizeof(float[6]), sizeof(float[3]));
@@ -32,7 +34,7 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferObjectInfo(
         &curr_pipeline->buffers[1],
         1024 * 32, 1);
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[1].attributes[0],
         2, 2,
         sizeof(float[2]), 0);
@@ -48,13 +50,13 @@ void MikuPan_InitPipeline()
     /// BUFFER 1: VERTEX + NORMALS
     /// POSITION ATTRIBUTE
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 1024 * 32, 2);
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0],
         4, 0,
         sizeof(float[2][4]), 0);
 
     /// NORMALS ATTRIBUTE
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1],
         4, 1,
         sizeof(float[2][4]), sizeof(float[4]));
@@ -64,7 +66,7 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferObjectInfo(
         &curr_pipeline->buffers[1],
         1024 * 32, 1);
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[1].attributes[0],
         2, 2,
         sizeof(float[2]), 0);
@@ -82,13 +84,13 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], sizeof(float[8]) * 4, 2);
 
     /// COLOUR
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0],
         4, 0,
         sizeof(float[8]), 0);
 
     /// SPRITE POSITION
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1],
         4, 1,
         sizeof(float[8]), sizeof(float[4]));
@@ -105,7 +107,7 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], sizeof(float[4]) * 24, 1);
 
     /// BB POSITION
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0],
         4, 0,
         sizeof(float[4]), 0);
@@ -122,24 +124,33 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], sizeof(float[4][3][4]), 3);
 
     /// UV ATTRIBUTE
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0],
         4, 0,
         sizeof(float[3][4]), 0);
 
     /// COLOR ATTRIBUTE
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1],
         4, 1,
         sizeof(float[3][4]), sizeof(float[4]));
 
     /// POSITION ATTRIBUTE
-    MikuPan_SetBufferAttributeInfo(
+    MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[2],
         4, 2,
         sizeof(float[3][4]), sizeof(float[2][4]));
 
     glad_glEnableVertexAttribArray(0);
+
+    ///////// LIGHT DATA BUFFER /////////
+    curr_pipeline = &pipelines[LIGHTING_DATA];
+    MikuPan_CreateBufferObjectsInfo(curr_pipeline, 1);
+
+    /// BUFFER 1
+    MikuPan_SetUniformBufferObjectInfo(&curr_pipeline->buffers[0], sizeof(MikuPan_LightData), 0);
+    glad_glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glad_glBindBufferBase(GL_UNIFORM_BUFFER, 0, curr_pipeline->buffers[0].id);
 }
 
 void MikuPan_CreateBufferObjectsInfo(MikuPan_PipelineInfo* pipeline_info, u_int num_buffers)
@@ -148,7 +159,7 @@ void MikuPan_CreateBufferObjectsInfo(MikuPan_PipelineInfo* pipeline_info, u_int 
     pipeline_info->buffers = malloc(sizeof(MikuPan_BufferObjectInfo) * num_buffers);
 }
 
-void MikuPan_SetBufferAttributeInfo(MikuPan_AttributeInfo *attribute_info,
+void MikuPan_SetVertexBufferAttributeInfo(MikuPan_AttributeInfo *attribute_info,
                                     int size, u_int index, int stride,
                                     u_int offset)
 {
@@ -166,13 +177,44 @@ void MikuPan_SetBufferAttributeInfo(MikuPan_AttributeInfo *attribute_info,
         (void *) attribute_info->offset);
 }
 
+void MikuPan_SetUniformBufferObjectInfo(MikuPan_BufferObjectInfo *object_info,
+                                int buffer_length, u_int num_attributes)
+{
+    glad_glGenBuffers(1, &object_info->id);
+
+    object_info->buffer_length = buffer_length;
+    object_info->num_attributes = num_attributes;
+
+    if (num_attributes > 0)
+    {
+        object_info->attributes = malloc(sizeof(MikuPan_AttributeInfo) * object_info->num_attributes);
+    }
+    else
+    {
+        object_info->attributes = NULL;
+    }
+
+    glad_glBindBuffer(GL_UNIFORM_BUFFER, object_info->id);
+    glad_glBufferData(
+        GL_UNIFORM_BUFFER,
+        object_info->buffer_length,
+        NULL,
+        GL_DYNAMIC_DRAW);
+}
+
 void MikuPan_SetBufferObjectInfo(MikuPan_BufferObjectInfo *object_info,
                                 int buffer_length, u_int num_attributes)
 {
     glad_glGenBuffers(1, &object_info->id);
+
     object_info->buffer_length = buffer_length;
     object_info->num_attributes = num_attributes;
-    object_info->attributes = malloc(sizeof(MikuPan_AttributeInfo) * object_info->num_attributes);
+
+    if (num_attributes > 0)
+    {
+        object_info->attributes = malloc(sizeof(MikuPan_AttributeInfo) * object_info->num_attributes);
+    }
+
     glad_glBindBuffer(GL_ARRAY_BUFFER, object_info->id);
     glad_glBufferData(
         GL_ARRAY_BUFFER,

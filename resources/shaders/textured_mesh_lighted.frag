@@ -1,41 +1,40 @@
 #version 330 core
 
+layout(std140) uniform LightBlock
+{
+    vec4 uAmbient;
+
+    ivec4 uParCount;
+    vec4 uParDir[3];
+    vec4 uParDiffuse[3];
+
+    ivec4 uPointCount;
+    vec4 uPointPos[3];
+    vec4 uPointDiffuse[3];
+    vec4 uPointPower[3];
+
+    ivec4 uSpotCount;
+    vec4 uSpotPos[3];
+    vec4 uSpotDir[3];
+    vec4 uSpotDiffuse[3];
+    vec4 uSpotPower[3];
+    vec4 uSpotIntens[3];
+};
+
+/// Input variables from vertex shader
 in vec2 vUV;
 in vec4 vNormal;
 in vec4 oViewPosition;
 
 out vec4 FragColor;
 
+/// Texture Uniforms
 uniform sampler2D uTexture;
 uniform int renderNormals;
 
-/// Uniforms for fog
-uniform vec4 uFog;             // x=min, y=max, z=base, w=scale
+/// Fog uniforms (kept as regular uniforms)
+uniform vec4 uFog;      // x=min, y=max, z=base, w=scale
 uniform vec4 uFogColor;
-
-#define MAXL 16
-
-/// Uniforms for ambient light
-uniform vec4 uAmbient;
-
-// parallel (directional)
-uniform int  uParCount;
-uniform vec4 uParDir[MAXL];
-uniform vec4 uParDiffuse[MAXL];
-
-// point
-uniform int  uPointCount;
-uniform vec4 uPointPos[MAXL];
-uniform vec4 uPointDiffuse[MAXL];
-uniform float uPointPower[MAXL];
-
-// spot
-uniform int  uSpotCount;
-uniform vec4 uSpotPos[MAXL];
-uniform vec4 uSpotDir[MAXL];
-uniform vec4 uSpotDiffuse[MAXL];
-uniform float uSpotPower[MAXL];
-uniform float uSpotIntens[MAXL];
 
 vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
 {
@@ -43,14 +42,14 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
     vec3 result = uAmbient.rgb * baseColor;
 
     // Directional (parallel)
-    for (int i = 0; i < uParCount; i++)
+    for (int i = 0; i < uParCount.x; i++)
     {
         float NdotL = max(dot(N.xyz, normalize(uParDir[i].xyz)), 0.0);
         result += baseColor * uParDiffuse[i].rgb * NdotL;
     }
 
     // Point
-    for (int i = 0; i < uPointCount; i++)
+    for (int i = 0; i < uPointCount.x; i++)
     {
         vec3 L = uPointPos[i].xyz - viewPos.xyz;
         float dist = length(L);
@@ -61,18 +60,16 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
         float colscale =
         (uPointDiffuse[i].r +
         uPointDiffuse[i].g +
-        uPointDiffuse[i].b) * uPointPower[i];
+        uPointDiffuse[i].b) * uPointPower[i].x;
 
-        // ---- proper quadratic distance falloff ----
-        float distAtt = 1.0 / (1.0 + 0.01f * dist * dist);
-
+        float distAtt = 1.0 / (1.0 + 0.01 * dist * dist);
         float att = colscale * distAtt;
 
         result += baseColor * NdotL * att;
     }
 
     // Spot
-    for (int i = 0; i < uSpotCount; i++)
+    for (int i = 0; i < uSpotCount.x; i++)
     {
         vec3 L = uSpotPos[i].xyz - viewPos.xyz;
         float dist = length(L);
@@ -81,24 +78,27 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
         vec3 Sdir = normalize(uSpotDir[i].xyz);
 
         float cd = dot(Ldir, Sdir);
-        if (cd * cd < uSpotIntens[i]) continue;
+        if (cd * cd < uSpotIntens[i].x)
+        {
+            continue;
+        }
 
-        // ---- derive cone from your existing value ----
-        float outerCos = sqrt(uSpotIntens[i]);
-        float innerCos = min(outerCos + 0.15f, 0.999);
+        float outerCos = sqrt(uSpotIntens[i].x);
+        float innerCos = min(outerCos + 0.15, 0.999);
 
         float spot = clamp((cd - outerCos) / (innerCos - outerCos), 0.0, 1.0);
-        if (spot <= 0.0) continue;
+        if (spot <= 0.0)
+        {
+            continue;
+        }
 
-        // ---- proper quadratic distance falloff ----
-        float distAtt = 1.0 / (1.0 + 0.01f * dist * dist);
-
+        float distAtt = 1.0 / (1.0 + 0.01 * dist * dist);
         float NdotL = max(dot(N.xyz, Ldir), 0.0);
 
         float colscale =
         (uSpotDiffuse[i].r +
         uSpotDiffuse[i].g +
-        uSpotDiffuse[i].b) * uSpotPower[i];
+        uSpotDiffuse[i].b) * uSpotPower[i].x;
 
         float att = colscale * distAtt * spot;
 
@@ -110,27 +110,22 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
 
 void main()
 {
-    // Sample texture
     vec4 tex = texture(uTexture, vUV);
 
-    // Early discard for fully transparent pixels
-    if(tex.a == 0.0)
+    if (tex.a == 0.0)
     {
         discard;
     }
 
-    vec4 color = tex;
-
-    // Apply fog
+    // Fog
     float fogFactor = uFog.w * (1.0 / -oViewPosition.z) + uFog.z;
     fogFactor = clamp(fogFactor, uFog.x, uFog.y);
-    color = mix(uFogColor, color, fogFactor);
+    vec4 color = mix(uFogColor, tex, fogFactor);
 
+    // Lighting
     color.rgb = ApplyPS2Lights(vNormal, oViewPosition, color.rgb);
-    color.a = color.a;
 
-    // Optionally render normals
-    if(renderNormals == 1)
+    if (renderNormals == 1)
     {
         FragColor = vNormal;
     }

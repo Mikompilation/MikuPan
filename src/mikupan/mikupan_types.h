@@ -11,6 +11,32 @@ typedef float LMATRIX[3][4];
 typedef float VECTOR3[3];
 typedef unsigned int void_type[4];
 
+typedef struct __attribute__((packed))
+{
+    /// Ambient Lighting
+    float uAmbient[4];
+
+    /// Parallel Lighting
+    int   uParCount[4];
+    float uParDir[3][4];
+    float uParDiffuse[3][4];
+
+    /// Point Lighting
+    int   uPointCount[4];
+    float uPointPos[3][4];
+    float uPointDiffuse[3][4];
+    float uPointPower[3][4];
+
+    /// Spot Lighting
+    int   uSpotCount[4];
+    float uSpotPos[3][4];
+    float uSpotDir[3][4];
+    float uSpotDiffuse[3][4];
+    float uSpotPower[3][4];
+    float uSpotIntens[3][4];
+
+} MikuPan_LightData;
+
 typedef struct
 {
     unsigned char GRD : 1;
