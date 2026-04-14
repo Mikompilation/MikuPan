@@ -27,6 +27,9 @@ bool controller_rumble_test = false;
 bool camera_debug = false;
 int render_wireframe = 0;
 int render_normals = 0;
+int msaa_samples = 0;
+int render_resolution_width = 640;
+int render_resolution_height = 448;
 bool show_texture_list = false;
 bool show_bounding_boxes = false;
 bool show_mesh_0x82 = true;
@@ -301,10 +304,12 @@ void MikuPan_UiMenuBar()
                     MikuPan_RequestFlushTextureCache();
                 }
 
-                if (ImGui::SliderFloat4("Light Color", light_color, 0.0f, 1.0f, "%.3f"))
-                {
-
-                }
+                ImGui::SliderInt("MSAA", &msaa_samples, 0, 5, "");
+                ImGui::SameLine();
+                ImGui::Text("%dx", msaa_samples << 1);
+                ImGui::SliderInt("Width",  &render_resolution_width,  640, 5120);
+                ImGui::SliderInt("Height", &render_resolution_height,  448, 1440);
+                ImGui::SliderFloat4("Light Color", light_color, 1.0f, 10.0f, "%.3f");
 
                 ImGui::EndMenu();
             }
@@ -355,4 +360,19 @@ int MikuPan_IsMesh0x2Rendering()
 float* MikuPan_GetLightColor()
 {
     return light_color;
+}
+
+int MikuPan_GetRenderResolutionWidth()
+{
+    return render_resolution_width;
+}
+
+int MikuPan_GetRenderResolutionHeight()
+{
+    return render_resolution_height;
+}
+
+int MikuPan_GetMSAA()
+{
+    return msaa_samples<<1;
 }

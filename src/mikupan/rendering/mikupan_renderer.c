@@ -45,6 +45,11 @@ mat4 WorldClip = {0};
 
 MikuPan_LightData mikupan_light_data = {0};
 
+GLuint fbo, fbo_texture, rbo, colorTex, depthRb, msaaDepthRb, msaaFbo, msaaColorRb;
+int render_w = 640;
+int render_h = 448;
+int msaa_r = 0;
+
 SDL_AppResult MikuPan_Init()
 {
     MikuPan_SetupOpenGLContext();
@@ -73,7 +78,7 @@ SDL_AppResult MikuPan_Init()
 
     info_log("Creating SDL Window");
 
-    mikupan_render.window = SDL_CreateWindow("MikuPan", 640, 448,
+    mikupan_render.window = SDL_CreateWindow("MikuPan", 1920, 1080,
                               SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
     if (mikupan_render.window == NULL)
@@ -81,6 +86,8 @@ SDL_AppResult MikuPan_Init()
         info_log(SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+    SDL_GetWindowSize(mikupan_render.window, &mikupan_render.width, &mikupan_render.height);
 
     SDL_Surface* iconSurface = SDL_LoadPNG("resources/mikupan.png");
     if (!SDL_SetWindowIcon(mikupan_render.window, iconSurface))
@@ -120,7 +127,44 @@ SDL_AppResult MikuPan_Init()
 
     MikuPan_Setup3D();
 
+    MikuPan_CreateInternalBuffer(render_w, render_h, msaa_r);
+
     return SDL_APP_CONTINUE;
+}
+
+void MikuPan_DestroyInternalBuffer()
+{
+    // --- MSAA FBO attachments ---
+    if (msaaColorRb)
+    {
+        glad_glDeleteRenderbuffers(1, &msaaColorRb);
+        msaaColorRb = 0;
+    }
+
+    if (msaaDepthRb)
+    {
+        glad_glDeleteRenderbuffers(1, &msaaDepthRb);
+        msaaDepthRb = 0;
+    }
+
+    if (msaaFbo)
+    {
+        glad_glDeleteFramebuffers(1, &msaaFbo);
+        msaaFbo = 0;
+    }
+
+    // --- Resolve FBO attachments ---
+    if (colorTex)
+    {
+        glad_glDeleteTextures(1, &colorTex);
+        colorTex = 0;
+    }
+
+    if (fbo)
+    {
+        glad_glDeleteFramebuffers(1, &fbo);
+        fbo = 0;
+    }
 }
 
 void MikuPan_SetupOpenGLContext()
@@ -129,17 +173,185 @@ void MikuPan_SetupOpenGLContext()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+    //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 0);
+}
+
+void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
+{
+    render_w = w;
+    render_h = h;
+    msaa_r = msaa;
+
+    // ============================
+    // 1) RESOLVE FBO (texture)
+    // ============================
+    glad_glGenFramebuffers(1, &fbo);
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    glad_glGenTextures(1, &colorTex);
+    glad_glBindTexture(GL_TEXTURE_2D, colorTex);
+
+    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
+                      w, h, 0,
+                      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glad_glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                GL_COLOR_ATTACHMENT0,
+                                GL_TEXTURE_2D,
+                                colorTex, 0);
+
+    if (glad_glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        info_log("Resolve FBO failed!");
+
+    // ============================
+    // 2) MSAA FBO (render here)
+    // ============================
+    glad_glGenFramebuffers(1, &msaaFbo);
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, msaaFbo);
+
+    // MSAA color
+    glad_glGenRenderbuffers(1, &msaaColorRb);
+    glad_glBindRenderbuffer(GL_RENDERBUFFER, msaaColorRb);
+
+    glad_glRenderbufferStorageMultisample(
+        GL_RENDERBUFFER,
+       msaa_r,              // ← your MSAA samples
+        GL_RGBA8,
+        w, h
+    );
+
+    glad_glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0,
+        GL_RENDERBUFFER,
+        msaaColorRb
+    );
+
+    // MSAA depth
+    glad_glGenRenderbuffers(1, &msaaDepthRb);
+    glad_glBindRenderbuffer(GL_RENDERBUFFER, msaaDepthRb);
+
+    glad_glRenderbufferStorageMultisample(
+        GL_RENDERBUFFER,
+        msaa_r,
+        GL_DEPTH24_STENCIL8,
+        w, h
+    );
+
+    glad_glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_STENCIL_ATTACHMENT,
+        GL_RENDERBUFFER,
+        msaaDepthRb
+    );
+
+    if (glad_glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        info_log("MSAA FBO failed!");
+
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void MikuPan_Clear()
 {
     MikuPan_RenderSetDebugValues();
+
+    /*
     glad_glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
                  | GL_STENCIL_BUFFER_BIT);
+                 */
+
+    int curr_render_width = MikuPan_GetRenderResolutionWidth();
+    int curr_render_height = MikuPan_GetRenderResolutionHeight();
+    int curr_msaa = MikuPan_GetMSAA();
+
+    if (render_w != curr_render_width || render_h != curr_render_height || msaa_r != curr_msaa)
+    {
+        MikuPan_DestroyInternalBuffer();
+        MikuPan_CreateInternalBuffer(curr_render_width, curr_render_height, curr_msaa);
+    }
+
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, msaaFbo);
+    //glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+
+    glad_glViewport(0, 0, render_w, render_h);
+
+    glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void MikuPan_EndFrame()
+{
+    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, msaaFbo);
+    glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+
+    glad_glBlitFramebuffer(
+        0, 0, render_w, render_h,
+        0, 0, render_w, render_h,
+        GL_COLOR_BUFFER_BIT,
+        GL_LINEAR
+    );
+
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    int winW, winH;
+    SDL_GetWindowSize(mikupan_render.window, &winW, &winH);
+
+    int vpX, vpY, vpW, vpH;
+
+    float targetAspect = (float)render_w / (float)render_h;
+    float windowAspect = (float)winW / (float)winH;
+
+    if (windowAspect > targetAspect)
+    {
+        // window is wider → pillarbox
+        vpH = winH;
+        vpW = (int)(winH * targetAspect);
+        vpX = (winW - vpW) / 2;
+        vpY = 0;
+    }
+    else
+    {
+        // window is taller → letterbox
+        vpW = winW;
+        vpH = (int)(winW / targetAspect);
+        vpX = 0;
+        vpY = (winH - vpH) / 2;
+    }
+
+    float quad[] = {
+        0,0,0,0,   1,1,1,1,   -1,-1,0,1,
+        1,0,0,0,   1,1,1,1,    1,-1,0,1,
+        0,1,0,0,   1,1,1,1,   -1, 1,0,1,
+        1,1,0,0,   1,1,1,1,    1, 1,0,1
+    };
+
+    glad_glViewport(vpX, vpY, vpW, vpH);
+    glad_glClear(GL_COLOR_BUFFER_BIT);
+
+    glad_glBindTexture(GL_TEXTURE_2D, colorTex);
+
+    MikuPan_SetRenderState2D();
+    MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+
+    glad_glBindBuffer(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
+    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, pipeline->buffers[0].buffer_length, quad);
+
+    glad_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    //info_log("Total state changes and draw calls this frame: %d, %d", state_changes, draw_calls);
+    draw_calls = 0;
+    state_changes = 0;
+
+    MikuPan_DrawUi();
+    MikuPan_RenderUi();
+    SDL_GL_SwapWindow(mikupan_render.window);
 }
 
 void MikuPan_UpdateWindowSize(int width, int height)
@@ -150,12 +362,12 @@ void MikuPan_UpdateWindowSize(int width, int height)
 
 int MikuPan_GetWindowWidth()
 {
-    return mikupan_render.width;
+    return render_w;
 }
 
 int MikuPan_GetWindowHeight()
 {
-    return mikupan_render.height;
+    return render_h;
 }
 
 int MikuPan_GetRenderMode()
@@ -167,8 +379,8 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
 {
 #define MAX_LIGHTS 3
     mikupan_light_data.uAmbient[0] = lp->ambient[0];
-    mikupan_light_data.uAmbient[1] = lp->ambient[1];
-    mikupan_light_data.uAmbient[2] = lp->ambient[2];
+    mikupan_light_data.uAmbient[1] = lp->ambient[2];
+    mikupan_light_data.uAmbient[2] = lp->ambient[1];
     mikupan_light_data.uAmbient[3] = lp->ambient[3] / 128.0f;
 
     int parCount = lp->parallel_num > MAX_LIGHTS ? MAX_LIGHTS : lp->parallel_num;
@@ -195,8 +407,8 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
         mikupan_light_data.uParDir[i][3] = 1.0f;
 
         mikupan_light_data.uParDiffuse[i][0] = lp->parallel[i].diffuse[0];
-        mikupan_light_data.uParDiffuse[i][1] = lp->parallel[i].diffuse[1];
-        mikupan_light_data.uParDiffuse[i][2] = lp->parallel[i].diffuse[2];
+        mikupan_light_data.uParDiffuse[i][1] = lp->parallel[i].diffuse[2];
+        mikupan_light_data.uParDiffuse[i][2] = lp->parallel[i].diffuse[1];
         mikupan_light_data.uParDiffuse[i][3] = lp->parallel[i].diffuse[3] / 128.0f;
     }
 
@@ -221,8 +433,8 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
         mikupan_light_data.uPointPos[i][3] = 1.0f;
 
         mikupan_light_data.uPointDiffuse[i][0] = lp->point[i].diffuse[0];
-        mikupan_light_data.uPointDiffuse[i][1] = lp->point[i].diffuse[1];
-        mikupan_light_data.uPointDiffuse[i][2] = lp->point[i].diffuse[2];
+        mikupan_light_data.uPointDiffuse[i][1] = lp->point[i].diffuse[2];
+        mikupan_light_data.uPointDiffuse[i][2] = lp->point[i].diffuse[1];
         mikupan_light_data.uPointDiffuse[i][3] = lp->point[i].diffuse[3] / 128.0f;
 
         mikupan_light_data.uPointPower[i][0] = lp->point[i].power;  // .x used in shader
@@ -265,14 +477,13 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
         mikupan_light_data.uSpotDir[i][3] = 1.0f;
 
         mikupan_light_data.uSpotDiffuse[i][0] = lp->spot[i].diffuse[0];
-        mikupan_light_data.uSpotDiffuse[i][1] = lp->spot[i].diffuse[1];
-        mikupan_light_data.uSpotDiffuse[i][2] = lp->spot[i].diffuse[2];
+        mikupan_light_data.uSpotDiffuse[i][1] = lp->spot[i].diffuse[2];
+        mikupan_light_data.uSpotDiffuse[i][2] = lp->spot[i].diffuse[1];
         mikupan_light_data.uSpotDiffuse[i][3] = lp->spot[i].diffuse[3];
 
         mikupan_light_data.uSpotPower[i][0]  = lp->spot[i].power;   // .x in shader
         mikupan_light_data.uSpotIntens[i][0] = lp->spot[i].intens;  // .x in shader
     }
-
 
     glad_glBufferSubData(
         GL_UNIFORM_BUFFER,
@@ -284,6 +495,8 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
 void MikuPan_RenderSetDebugValues()
 {
     MikuPan_SetUniform1iToAllShaders(MikuPan_IsNormalsRendering(), "renderNormals");
+    float* cc = MikuPan_GetLightColor();
+    MikuPan_SetUniform1fToAllShaders(cc[0], "uColorScale");
 }
 
 MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
@@ -451,8 +664,8 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
 
     float ndc[4] = {0};
 
-    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(ndc, (float)mikupan_render.width, (float)mikupan_render.height, dst.x, dst.y);
-    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(&ndc[2], (float)mikupan_render.width, (float)mikupan_render.height, dst.x + src.w, dst.y + src.h);
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(ndc, (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(), dst.x, dst.y);
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(&ndc[2], (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(), dst.x + src.w, dst.y + src.h);
 
     // Container size (PS2 texture memory size)
     float texW = (float) (texture_info->width);
@@ -641,17 +854,6 @@ void MikuPan_Shutdown()
     SDL_DestroyWindow(mikupan_render.window);
 }
 
-void MikuPan_EndFrame()
-{
-    //info_log("Total state changes and draw calls this frame: %d, %d", state_changes, draw_calls);
-    draw_calls = 0;
-    state_changes = 0;
-
-    MikuPan_DrawUi();
-    MikuPan_RenderUi();
-    SDL_GL_SwapWindow(mikupan_render.window);
-}
-
 void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
 {
     // View -> camera->wv
@@ -666,7 +868,7 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     glm_lookat(mikupan_camera->p, center, up, WorldView);
 
     // Projection -> camera->vcv
-    float aspect = (float) mikupan_render.width / (float) mikupan_render.height;
+    float aspect = (float) MikuPan_GetWindowWidth() / (float) MikuPan_GetWindowHeight();
     glm_perspective(mikupan_camera->fov, aspect, 10.0f, mikupan_camera->farz, projection);
 
     glm_mat4_mul(projection, WorldView, WorldClipView);
@@ -679,8 +881,8 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     float gs_width  = 4096.0f;
     float gs_height = 4096.0f;
 
-    float scaleX = mikupan_render.width  / gs_width;
-    float scaleY = mikupan_render.height / gs_height;
+    float scaleX = (float)MikuPan_GetWindowWidth()  / gs_width;
+    float scaleY = (float)MikuPan_GetWindowHeight() / gs_height;
 
     mat4 vc;
     glm_mat4_identity(vc);

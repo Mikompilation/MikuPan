@@ -36,16 +36,21 @@ uniform int renderNormals;
 uniform vec4 uFog;      // x=min, y=max, z=base, w=scale
 uniform vec4 uFogColor;
 
+uniform float uColorScale;
+
 vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
 {
-    vec4 N = normalize(normal);
+    vec4 N = vec4(normalize(normal.xyz), normal.w);
     vec3 result = uAmbient.rgb * baseColor;
 
     // Directional (parallel)
     for (int i = 0; i < uParCount.x; i++)
     {
-        float NdotL = max(dot(N.xyz, normalize(uParDir[i].xyz)), 0.0);
-        result += baseColor * uParDiffuse[i].rgb * NdotL;
+        float NdotL = max(dot(normal, uParDir[i]), 0.0);
+
+        vec3 Lc = uParDiffuse[i].rgb;
+
+        result += baseColor * Lc * NdotL;
     }
 
     // Point
@@ -62,7 +67,7 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
         uPointDiffuse[i].g +
         uPointDiffuse[i].b) * uPointPower[i].x;
 
-        float distAtt = 1.0 / (1.0 + 0.01 * dist * dist);
+        float distAtt = 1.0 / (1.0 + dist);
         float att = colscale * distAtt;
 
         result += baseColor * NdotL * att;
@@ -92,7 +97,7 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
             continue;
         }
 
-        float distAtt = 1.0 / (1.0 + 0.01 * dist * dist);
+        float distAtt = 1.0 / (1.0 + dist);
         float NdotL = max(dot(N.xyz, Ldir), 0.0);
 
         float colscale =

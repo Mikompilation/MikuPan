@@ -43,6 +43,8 @@ typedef struct
 SDL_AppResult MikuPan_Init();
 void MikuPan_SetupOpenGLContext();
 void MikuPan_Clear();
+void MikuPan_CreateInternalBuffer(int w, int h, int msaa);
+void MikuPan_DestroyInternalBuffer();
 void MikuPan_UpdateWindowSize(int width, int height);
 int MikuPan_GetWindowWidth();
 int MikuPan_GetWindowHeight();
