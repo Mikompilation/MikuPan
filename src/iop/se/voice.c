@@ -88,8 +88,11 @@ static void FillMono(int vNo)
                 v->buffer = MixSamples(sampleCount, v->buffer, *v);
 
                 SDL_SetAudioStreamFrequencyRatio(v->stream, v->pitch / (float) 0x1000);
-                SDL_PutAudioStreamData(v->stream, v->buffer, byteCount);
 
+                if (SDL_GetAudioStreamQueued(v->stream) < 4096)
+                {
+                    SDL_PutAudioStreamData(v->stream, v->buffer, byteCount);
+                }
                 sampleCount = 0;
 
                 if (!loopRepeat)
