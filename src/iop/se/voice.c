@@ -8,14 +8,12 @@
 #include "mikupan/mikupan_logging_c.h"
 #include <stdlib.h>
 
-VOICE voices[24];
-
 bool loopEnd;
 bool loopRepeat;
+VOICE voices[24];
 
 void VoicesInit()
 {
-
     // The ps2 contains 24 seperate voices
     for (int i = 0; i < 24; i++)
     {
@@ -24,7 +22,6 @@ void VoicesInit()
         voices[i].buffer = malloc(0x15160 * 10);
         memset(&voices[i].header, 0, sizeof(AudioHeader));
     }
-
     memset(iop_stat.sev_stat, 0, 24);
 }
 
@@ -42,10 +39,10 @@ VOICE *GetFreeVoice()
 
 static s16* MixSamples(int sampleCount, s16 *samples, VOICE v)
 {
-
     s16 *buffer = samples;
-
     s16 volume = (s32) v.volL;
+
+    volume = volume * v.mVolL / 16383;
 
     for (int i = 0; i < sampleCount; i++)
     {
@@ -58,8 +55,6 @@ static s16* MixSamples(int sampleCount, s16 *samples, VOICE v)
 
 static void FillMono(int vNo)
 {
-    //s32 histL[2] = {0}, histR[2] = {0};
-
     s16 *src;
 
     VOICE *v = &voices[vNo];
@@ -120,14 +115,13 @@ void VoiceRun()
     {
         if (voices[i].isPlaying)
         {
-            //FillAdpcmHeader(i);
             FillMono(i);
         }
     }
 }
 
 void Key_On(int vNo)
-{    
+{
     SDL_AudioSpec spec;
     spec.channels = 1;
     spec.format = SDL_AUDIO_S16;
@@ -138,16 +132,13 @@ void Key_On(int vNo)
 
     v->histL[0] = 0;
     v->histL[1] = 0;
-
     v->nax = v->ssa;
 
     v->stream = SDL_CreateAudioStream(&spec, NULL);
     SDL_BindAudioStream(audio_dev, v->stream);
 
-    //SaveDebugBuffer();
-    v->isPlaying = true;    
+    v->isPlaying = true;
     FillAdpcmHeader(vNo);
-    //FillMono(vNo);
     if (SDL_AudioStreamDevicePaused(v->stream))
     {
         SDL_ResumeAudioStreamDevice(v->stream);
@@ -173,7 +164,7 @@ void CloseVoice(int vNo)
 {
     voices[vNo].size = 0;
     free(voices[vNo].buffer);
-        
+
     SDL_UnbindAudioStream(voices[vNo].stream);
     SDL_DestroyAudioStream(voices[vNo].stream);
     voices[vNo].stream = NULL;
