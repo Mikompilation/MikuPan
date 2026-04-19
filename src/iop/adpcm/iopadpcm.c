@@ -783,8 +783,6 @@ SDLCALL int IAdpcmReadCh1(void *data)
                     iop_adpcm[1].dbidi ^= 1;
                 }
 
-                //FillStereo(iop_adpcm[1].lreq_size, 1, AdpcmSpuBuf);
-
                 // ????
                 if (iop_adpcm[1].stat != ADPCM_STAT_PLAY)
                 {
@@ -974,4 +972,8 @@ void CloseAudio()
     SDL_ClearAudioStream(iop_adpcm[0].stream);
     SDL_DestroyAudioStream(iop_adpcm[0].stream);
     SDL_CloseAudioDevice(audio_dev);
+
+    free(AdpcmSpuBuf[0]);
+    free(AdpcmSpuBuf[1]);
+    free(AdpcmIopBuf[0]);
 }
