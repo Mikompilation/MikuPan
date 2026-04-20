@@ -18,6 +18,7 @@ s16 *AdpcmSpuBuf[2];
 s16 *AdpcmIopBuf[2];
 
 u_short mVolL, mVolR;
+u_short volL, volR;
 u_short adsr1L, adsr2L;
 u_short adsr1R, adsr2R;
 
@@ -92,14 +93,18 @@ void IAdpcmPreLoad(ADPCM_CMD *acp)
                       channel, 1u, endld_flg);
 }
 
-static void MixSamples(int sampleCount, s16 *samples, u_short vol)
+static s16* MixSamples(int sampleCount, s16 *samples, s32 vol)
 {
+    s16 *buffer = samples;
+    
     for (int i = 0; i < sampleCount; i++)
     {
         s16 sample = samples[i];
-        sample = ApplyVolume(sample, vol);
-        samples[i] = sample;
+        s16 mixed = ApplyVolume(sample, vol);
+        sample = mixed;
+        buffer[i] = sample;
     }
+    return buffer;
 }
 
 static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
@@ -131,7 +136,10 @@ static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
             src += 8;
         }
 
-        MixSamples(3584, dst, mVolL);
+        s16 volumeL = ((s32) volL * iop_adpcm[channel].vol) / 32767;
+        volumeL = volumeL * mVolL / 16383;
+
+        dec[0] = MixSamples(3584, dec_buf[0], volumeL);
 
         dst = dec_buf[1];
         for (int j = 0; j < 128; j++)
@@ -142,7 +150,9 @@ static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
             src += 8;
         }
 
-        MixSamples(3584, dst, mVolR);
+        s16 volumeR = ((s32) volR * iop_adpcm[channel].vol) / 32767;
+        volumeR = volumeR * mVolR / 16383;
+        dec[1] = MixSamples(3584, dec_buf[1], volumeR);
 
         SDL_PutAudioStreamPlanarData(stream, (void *) dec, CHANNELS, 3584);
     }
@@ -159,8 +169,6 @@ void IAdpcmPreLoadEnd(int channel)
         iop_adpcm[channel].start +=
             (iop_adpcm[channel].lreq_size + 2047) / 2048;
         iop_adpcm[channel].str_lpos = iop_adpcm[channel].lreq_size;
-        FillStereo(now_cmd.size, channel, AdpcmIopBuf, AdpcmSpuBuf,
-                   iop_adpcm[channel].stream);
         iop_adpcm[channel].str_tpos = 0x2000;
         iop_adpcm[channel].pos = 0x2000;
     }
@@ -187,6 +195,7 @@ void IAdpcmPlay(ADPCM_CMD *acp)
         IaSetRegPitch(channel);
         IaSetRegAdsr(channel);
         iop_adpcm[channel].stat = ADPCM_STAT_PLAY;
+        FillStereo(now_cmd.size, channel, AdpcmIopBuf, AdpcmSpuBuf, iop_adpcm[channel].stream);
         SDL_SetAudioStreamFrequencyRatio(iop_adpcm[channel].stream,
                                          (float) acp->pitch / (float) 0x1000);
         SDL_ResumeAudioStreamDevice(iop_adpcm[channel].stream);
@@ -774,8 +783,6 @@ SDLCALL int IAdpcmReadCh1(void *data)
                     iop_adpcm[1].dbidi ^= 1;
                 }
 
-                //FillStereo(iop_adpcm[1].lreq_size, 1, AdpcmSpuBuf);
-
                 // ????
                 if (iop_adpcm[1].stat != ADPCM_STAT_PLAY)
                 {
@@ -965,4 +972,8 @@ void CloseAudio()
     SDL_ClearAudioStream(iop_adpcm[0].stream);
     SDL_DestroyAudioStream(iop_adpcm[0].stream);
     SDL_CloseAudioDevice(audio_dev);
+
+    free(AdpcmSpuBuf[0]);
+    free(AdpcmSpuBuf[1]);
+    free(AdpcmIopBuf[0]);
 }
