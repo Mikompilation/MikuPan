@@ -8,6 +8,8 @@
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sglight.h"
+
+#include "cglm/mat4.h"
 #include "graphics/graph3d/sgsu.h"
 
 #include "mikupan/mikupan_logging_c.h"
@@ -26,6 +28,25 @@ static int stack_light_num[9];
 
 #define GET_MESH_TYPE(intpointer) (char) ((char *) intpointer)[13]
 #define GET_MESH_GLOOPS(intpointer) (int) ((char *) intpointer)[14]
+
+sceVu0FVECTOR vf0 = {0.0f, 0.0f, 0.0f, 1.0f};
+sceVu0FVECTOR vf1 = {1.0f, 1.0f, 1.0f, -1.0f};
+mat4 matrix_vf4 = {0};
+mat4 matrix_vf7 = {0};
+sceVu0FVECTOR vf12 = {0};
+sceVu0FVECTOR vf13 = {0};
+sceVu0FVECTOR vf14 = {0};
+sceVu0FVECTOR vf15 = {0};
+sceVu0FVECTOR vf16 = {0};
+sceVu0FVECTOR vf17 = {0};
+sceVu0FVECTOR vf18 = {0};
+sceVu0FVECTOR vf19 = {0};
+sceVu0FVECTOR vf20 = {0};
+sceVu0FVECTOR vf21 = {0};
+sceVu0FVECTOR vf22 = {0};
+sceVu0FVECTOR vf26 = {0};
+sceVu0FVECTOR vf27 = {0};
+sceVu0FVECTOR vf28 = {0};
 
 //#define SCRATCHPAD ((u_char *)0x70000000)
 #define SCRATCHPAD ((u_char *) ps2_virtual_scratchpad)
@@ -371,6 +392,7 @@ void SetMaterialDataVU(u_int *prim)
             return;
         }
     }
+
 label:
     base = (qword *) getObjWrk();
 
@@ -452,6 +474,7 @@ void SetMaterialPointerCoordVU()
 
 inline static void load_abmient(float *amb)
 {
+    memcpy(vf19, amb, sizeof(sceVu0FVECTOR));
     //__asm__ volatile ("\n\
     //    lqc2    $vf19,0(%0)\n\
     //    ": :"r"(amb)
@@ -471,6 +494,8 @@ void SetMaterialDataPrerender()
     //    ": :"r"(&SCRATCHPAD[0x110]), "r"(&SCRATCHPAD[0x150])
     //);
 
+    glm_mat4_make((float*)&SCRATCHPAD[0x110], matrix_vf4);
+    glm_mat4_make((float*)&SCRATCHPAD[0x150], matrix_vf7);
     load_abmient(SgLightParallelp->Parallel_Ambient);
 }
 
@@ -1030,6 +1055,85 @@ static void _CalcPointA(sceVu0FMATRIX grc, float *grm, float *len)
     //    sqc2           $vf27,   0x00(%2)        \n\
     //    ": :"r"(grc), "r"(grm), "r"(len)
     //);
+
+    sceVu0FVECTOR p0, p1, p2;
+    sceVu0FVECTOR d0, d1, d2;
+    sceVu0FVECTOR basisDot;
+
+    // Load 3 reference points from grc
+    memcpy(p0, grc[0], sizeof(sceVu0FVECTOR));
+    memcpy(p1, grc[1], sizeof(sceVu0FVECTOR));
+    memcpy(p2, grc[2], sizeof(sceVu0FVECTOR));
+
+    // vsub.xyz  p -= vf12   (vector from vertex to light refs)
+    for (int i = 0; i < 3; i++)
+    {
+        p0[i] -= vf12[i];
+        p1[i] -= vf12[i];
+        p2[i] -= vf12[i];
+    }
+
+    // vmulax/vmadday/vmaddz using vf4–vf6 and vf13
+    basisDot[0] = matrix_vf4[0][0]*vf13[0] + matrix_vf4[1][0]*vf13[1] + matrix_vf4[2][0]*vf13[2];
+    basisDot[1] = matrix_vf4[0][1]*vf13[0] + matrix_vf4[1][1]*vf13[1] + matrix_vf4[2][1]*vf13[2];
+    basisDot[2] = matrix_vf4[0][2]*vf13[0] + matrix_vf4[1][2]*vf13[1] + matrix_vf4[2][2]*vf13[2];
+
+    // squared lengths (vf23/24/25)
+    float l0 = p0[0]*p0[0] + p0[1]*p0[1] + p0[2]*p0[2];
+    float l1 = p1[0]*p1[0] + p1[1]*p1[1] + p1[2]*p1[2];
+    float l2 = p2[0]*p2[0] + p2[1]*p2[1] + p2[2]*p2[2];
+
+    // scale vectors by basisDot (vf26 * p)
+    for (int i = 0; i < 3; i++)
+    {
+        d0[i] = basisDot[i] * p0[i];
+        d1[i] = basisDot[i] * p1[i];
+        d2[i] = basisDot[i] * p2[i];
+    }
+
+    // reciprocal lengths (vdiv Q, vf0w, l)
+    float q0 = 1.0f / l0;
+    float q1 = 1.0f / l1;
+    float q2 = 1.0f / l2;
+
+    // combine components like vadd*/vmadd* sequence into vf17
+    vf17[0] = (d0[0] + d0[1] + d0[2]) * q0;
+    vf17[1] = (d1[0] + d1[1] + d1[2]) * q1;
+    vf17[2] = (d2[0] + d2[1] + d2[2]) * q2;
+
+    // multiply by attenuation parameters from grm
+    //    lqc2           $vf20,   0x10(%1)        \n\
+    //    lqc2           $vf21,   0x20(%1)        \n\
+    //    lqc2           $vf22,   0x30(%1)        \n\
+    //    lqc2           $vf14,   0x40(%1)        \n\
+    //    lqc2           $vf15,   0x50(%1)        \n\
+    //    lqc2           $vf16,   0x60(%1)        \n\
+
+    memcpy(vf20, &grm[4], sizeof(sceVu0FVECTOR));
+    memcpy(vf21, &grm[4], sizeof(sceVu0FVECTOR));
+    memcpy(vf22, &grm[8], sizeof(sceVu0FVECTOR));
+
+    memcpy(vf14, &grm[12], sizeof(sceVu0FVECTOR));
+    memcpy(vf15, &grm[16], sizeof(sceVu0FVECTOR));
+    memcpy(vf16, &grm[20], sizeof(sceVu0FVECTOR));
+
+    for (int i = 0; i < 3; i++)
+    {
+        vf17[i] *= vf20[i];
+        if (vf17[i] < 0.0f)
+        {
+            vf17[i] = 0.0f; // vmaxx with zero
+        }
+    }
+
+    // store results (vf27)
+    len[0] = vf17[0];
+    len[1] = vf17[1];
+    len[2] = vf17[2];
+
+    vf27[0] = len[0];
+    vf27[1] = len[1];
+    vf27[2] = len[2];
 }
 
 static void _CalcPointB(float *len)
@@ -1050,6 +1154,57 @@ static void _CalcPointB(float *len)
     //    vmadd.xyz      $vf18, $vf18,   $vf1   \n\
     //    ": :"r"(len)
     //);
+
+    memcpy(vf27, len, sizeof(sceVu0FVECTOR));
+
+    // vf25 = vf27 * vf17
+    sceVu0FVECTOR vf25;
+    for (int i = 0; i < 3; i++)
+    {
+        vf25[i] = vf27[i] * vf17[i];
+    }
+
+    // clamp to 1.0 (vminiw with vf0w)
+    for (int i = 0; i < 3; i++)
+    {
+        if (vf25[i] > 1.0f)
+        {
+            vf25[i] = 1.0f;
+        }
+    }
+
+    // raise to 4th power
+    sceVu0FVECTOR vf23;
+    for (int i = 0; i < 3; i++)
+    {
+        vf23[i] = vf25[i] * vf25[i];   // ^2
+        vf25[i] = vf23[i] * vf23[i];  // ^4
+    }
+
+    // colorA = vf20*x + vf21*y + vf22*z
+    sceVu0FVECTOR colorA;
+    for (int c = 0; c < 3; c++)
+    {
+        colorA[c] = vf20[c]*vf25[0] +
+                    vf21[c]*vf25[1] +
+                    vf22[c]*vf25[2];
+    }
+
+
+    // colorB = vf14*x + vf15*y + vf16*z
+    sceVu0FVECTOR colorB;
+    for (int c = 0; c < 3; c++)
+    {
+        colorB[c] = vf14[c]*vf25[0] +
+                    vf15[c]*vf25[1] +
+                    vf16[c]*vf25[2];
+    }
+
+    // accumulate into vf18 (vertex color)
+    for (int i = 0; i < 3; i++)
+    {
+        vf18[i] += colorA[i] + colorB[i] + vf1[i];
+    }
 }
 
 void CalcPointLight()
@@ -1164,6 +1319,153 @@ inline static void asm_CalcSpotLight(LMATRIX cdata, sceVu0FVECTOR mdata)
     //    vmaddz.xyz     $vf18, $vf16,    $vf25z  \n\
     //    ": :"r"(cdata), "r"(mdata)
     //);
+
+    memcpy(vf26, mdata, sizeof(sceVu0FVECTOR));
+    memcpy(vf20, &mdata[4], sizeof(sceVu0FVECTOR));
+    memcpy(vf21, &mdata[8], sizeof(sceVu0FVECTOR));
+    memcpy(vf22, &mdata[12], sizeof(sceVu0FVECTOR));
+
+
+    sceVu0FVECTOR L0, L1, L2;
+    sceVu0FVECTOR dirDot;
+    sceVu0FVECTOR proj0, proj1, proj2;
+    sceVu0FVECTOR d0, d1, d2;
+    sceVu0FVECTOR spot, spot2, spot4;
+    sceVu0FVECTOR colA, colB;
+    sceVu0FVECTOR intensity;
+
+    /* ------------------------------------------------------------
+       Load light cone points (vf14–vf16)
+       ------------------------------------------------------------ */
+    memcpy(L0, cdata[0], sizeof(sceVu0FVECTOR));
+    memcpy(L1, cdata[1], sizeof(sceVu0FVECTOR));
+    memcpy(L2, cdata[2], sizeof(sceVu0FVECTOR));
+
+    /* ------------------------------------------------------------
+       Subtract vertex position (vf12)
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        L0[i] -= vf12[i];
+        L1[i] -= vf12[i];
+        L2[i] -= vf12[i];
+    }
+
+    /* ------------------------------------------------------------
+       Direction basis dot (vf4–vf6 with vf13)
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        dirDot[i] =
+            matrix_vf4[0][i] * vf13[0] +
+            matrix_vf4[1][i] * vf13[1] +
+            matrix_vf4[2][i] * vf13[2];
+    }
+
+    /* ------------------------------------------------------------
+       Squared distances
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        d0[i] = L0[i] * L0[i];
+        d1[i] = L1[i] * L1[i];
+        d2[i] = L2[i] * L2[i];
+    }
+
+    /* ------------------------------------------------------------
+       Direction projection
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        proj0[i] = L0[i] * dirDot[i];
+        proj1[i] = L1[i] * dirDot[i];
+        proj2[i] = L2[i] * dirDot[i];
+    }
+
+    /* ------------------------------------------------------------
+       Inverse distance (vdiv Q)
+       ------------------------------------------------------------ */
+    float inv0 = 1.0f / (d0[0] + d0[1] + d0[2]);
+    float inv1 = 1.0f / (d1[0] + d1[1] + d1[2]);
+    float inv2 = 1.0f / (d2[0] + d2[1] + d2[2]);
+
+    spot[0] = inv0;
+    spot[1] = inv1;
+    spot[2] = inv2;
+
+    /* ------------------------------------------------------------
+       PS2 falloff curve (square then square again = power 4)
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        spot2[i] = spot[i] * spot[i];
+        spot4[i] = spot2[i] * spot2[i];
+
+        /* clamp (vminiw / vmaxx style) */
+        if (spot4[i] < 0.0f) spot4[i] = 0.0f;
+        if (spot4[i] > 1.0f) spot4[i] = 1.0f;
+    }
+
+    /* ------------------------------------------------------------
+       Cone / material modulation
+       vf26 = material color
+       vf27/vf28 = cone parameters
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        intensity[i] =
+            (spot[i] * vf27[i] + vf28[i]) * vf26[i];
+    }
+
+    /* ------------------------------------------------------------
+       Build diffuse contribution (dual-lobe lighting)
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        colA[i] =
+            vf20[i] * spot4[0] +
+            vf21[i] * spot4[1] +
+            vf22[i] * spot4[2];
+
+        colB[i] =
+            vf14[i] * spot4[0] +
+            vf15[i] * spot4[1] +
+            vf16[i] * spot4[2];
+
+        vf17[i] = colA[i] + colB[i];
+    }
+
+    /* ------------------------------------------------------------
+       Final attenuation shaping (vf1 bias + saturation)
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        vf17[i] = vf17[i] * vf17[i];
+    }
+
+    /* ------------------------------------------------------------
+       Distance weighting
+       ------------------------------------------------------------ */
+    vf17[0] *= spot4[0];
+    vf17[1] *= spot4[1];
+    vf17[2] *= spot4[2];
+
+    /* ------------------------------------------------------------
+       Clamp
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        if (vf17[i] < 0.0f) vf17[i] = 0.0f;
+    }
+
+    /* ------------------------------------------------------------
+       Final spot light contribution accumulation
+       vf18 += diffuse + ambient bias (vf1)
+       ------------------------------------------------------------ */
+    for (int i = 0; i < 3; i++)
+    {
+        vf18[i] += vf17[i] + vf1[i];
+    }
 }
 
 void CalcSpotLight()
@@ -1205,11 +1507,11 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient,
     if (cp != NULL)
     {
         scale =
-            SgSqrtf(inline_asm__libsg_g_line_463(cp->lwmtx[0], cp->lwmtx[0]));
+            SgSqrtf(Vu0DotProduct(cp->lwmtx[0], cp->lwmtx[0]));
         scale +=
-            SgSqrtf(inline_asm__libsg_g_line_463(cp->lwmtx[1], cp->lwmtx[1]));
+            SgSqrtf(Vu0DotProduct(cp->lwmtx[1], cp->lwmtx[1]));
         scale +=
-            SgSqrtf(inline_asm__libsg_g_line_463(cp->lwmtx[2], cp->lwmtx[2]));
+            SgSqrtf(Vu0DotProduct(cp->lwmtx[2], cp->lwmtx[2]));
         scale /= 3.0f;
     }
     else
@@ -1411,7 +1713,7 @@ u_int *GetNextUnpackAddr(u_int *prim)
     }
 }
 
-inline static void asm_1__SetPreRenderTYPE0(sceVu0FVECTOR normal,
+inline static void Vu0RowMajorMatrixMultiply(sceVu0FVECTOR normal,
                                             sceVu0FVECTOR vertex)
 {
     //asm volatile("                              \n\
@@ -1423,23 +1725,53 @@ inline static void asm_1__SetPreRenderTYPE0(sceVu0FVECTOR normal,
     //    vmaddw.xyzw     $vf12, $vf10,   $vf12w  \n\
     //    ": :"r"(normal), "r"(vertex)
     //);
+
+    const float (*M)[4] = (const float (*)[4])matrix_vf7;
+    const float x = vertex[0];
+    const float y = vertex[1];
+    const float z = vertex[2];
+    const float w = vertex[3];
+
+    // Exact equivalent of:
+    // vmulax / vmadday / vmaddaz / vmaddw
+
+    vf12[0] = M[0][0] * x + M[1][0] * y + M[2][0] * z + M[3][0] * w;
+    vf12[1] = M[0][1] * x + M[1][1] * y + M[2][1] * z + M[3][1] * w;
+    vf12[2] = M[0][2] * x + M[1][2] * y + M[2][2] * z + M[3][2] * w;
+    vf12[3] = M[0][3] * x + M[1][3] * y + M[2][3] * z + M[3][3] * w;
+
+    vf13[0] = normal[0];
+    vf13[1] = normal[1];
+    vf13[2] = normal[2];
+    vf13[3] = normal[3];
 }
 
-inline static void asm_2__SetPreRenderTYPE0(sceVu0FVECTOR first)
+
+inline static void Vu0LoadVectorRegisterVF18(sceVu0FVECTOR first)
 {
+    memcpy(vf18, first, sizeof(sceVu0FVECTOR));
     //asm volatile("              \n\
     //    lqc2    $vf18, 0x00(%0) \n\
     //    ": :"r"(first)
     //);
 }
 
-inline static void asm_3__SetPreRenderTYPE0(sceVu0FVECTOR pcol)
+inline static void Vu0ClampColors(sceVu0FVECTOR pcol)
 {
     //asm volatile("                           \n\
     //    vminiw.xyzw    $vf18, $vf18, $vf19w  \n\
     //    sqc2           $vf18, 0x00(%0)       \n\
     //    ": :"r"(pcol)
     //);
+
+    const float maxv = vf19[3]; // 255.0f
+
+    vf18[0] = vf18[0] > maxv ? maxv : vf18[0];
+    vf18[1] = vf18[1] > maxv ? maxv : vf18[1];
+    vf18[2] = vf18[2] > maxv ? maxv : vf18[2];
+    vf18[3] = vf18[3] > maxv ? maxv : vf18[3];
+
+    memcpy(pcol, vf18, sizeof(sceVu0FVECTOR));
 }
 
 void SetPreRenderTYPE0(int gloops, u_int *prim)
@@ -1491,18 +1823,18 @@ void SetPreRenderTYPE0(int gloops, u_int *prim)
                 normal[1] = vp[4];
                 normal[2] = vp[5];
 
-                asm_1__SetPreRenderTYPE0(normal, vertex);
+                Vu0RowMajorMatrixMultiply(normal, vertex);
 
                 first[0] = ((float *) prim)[0];
                 first[1] = ((float *) prim)[1];
                 first[2] = ((float *) prim)[2];
 
-                asm_2__SetPreRenderTYPE0(first);
+                Vu0LoadVectorRegisterVF18(first);
 
                 CalcPointLight();
                 CalcSpotLight();
 
-                asm_3__SetPreRenderTYPE0(pcol);
+                Vu0ClampColors(pcol);
 
                 ((float *) prim)[0] = pcol[0];
                 ((float *) prim)[1] = pcol[1];
@@ -1564,18 +1896,18 @@ void SetPreRenderTYPE2(int gloops, u_int *prim)
                 normal[1] = vp[4];
                 normal[2] = vp[5];
 
-                asm_1__SetPreRenderTYPE0(normal, vertex);
+                Vu0RowMajorMatrixMultiply(normal, vertex);
 
                 first[0] = ((float *) prim)[0];
                 first[1] = ((float *) prim)[1];
                 first[2] = ((float *) prim)[2];
 
-                asm_2__SetPreRenderTYPE0(first);
+                Vu0LoadVectorRegisterVF18(first);
 
                 CalcPointLight();
                 CalcSpotLight();
 
-                asm_3__SetPreRenderTYPE0(pcol);
+                Vu0ClampColors(pcol);
 
                 if (dbg_flg != 0)
                 {
@@ -1652,19 +1984,35 @@ void SetPreRenderTYPE2F(int gloops, u_int *prim)
                 vertex[1] = vp[1];
                 vertex[2] = vp[2];
 
-                asm_1__SetPreRenderTYPE0(normal, vertex);
+                Vu0RowMajorMatrixMultiply(normal, vertex);
 
                 first[0] = ((float *) prim)[0];
                 first[1] = ((float *) prim)[1];
                 first[2] = ((float *) prim)[2];
 
-                asm_2__SetPreRenderTYPE0(first);
+                Vu0LoadVectorRegisterVF18(first);
 
                 CalcPointLight();
                 CalcSpotLight();
 
-                asm_3__SetPreRenderTYPE0(pcol);
+                Vu0ClampColors(pcol);
 
+                // First few values
+                //0.000000 0.000000 0.000000
+                //0.000000 0.000000 0.000000
+                //0.000000 0.000000 0.000000
+                //4.524766 3.929444 2.738700
+                //3.921486 3.400946 2.370684
+                //5.327498 4.616670 3.218387
+                //4.544187 3.932461 2.741800
+                //6.348903 5.485382 3.825170
+                //5.315338 4.586745 3.198924
+                //3.862828 3.340322 2.329127
+                //4.422683 3.814847 2.660697
+                //3.921486 3.400946 2.370684
+                //3.390773 2.938075 2.048220
+                //4.544187 3.932461 2.741800
+                //3.862828 3.340322 2.329127
                 if (dbg_flg != 0)
                 {
                     info_log("%f %f %f", pcol[0], pcol[1], pcol[2]);
@@ -1754,7 +2102,7 @@ void SelectLight(u_int *prim)
     int j;
     int k;
 
-    if (SgSpotNum == 0 && SgPointNum == 0)// Line 1614
+    if (SgSpotNum == 0 && SgPointNum == 0)
     {
         return;
     }
@@ -1834,16 +2182,18 @@ void SelectLight(u_int *prim)
             TmpLight->SEnable = 1;
 
             Vu0CopyVector(plain, TmpLight->direction);
-            plain[3] = -inline_asm__libsg_g_line_463(plain, TmpLight->pos);
+
+            /// plain[3] is the dot product of direction and pos
+            plain[3] = -Vu0DotProduct(plain, TmpLight->pos);
 
             Vu0AddVector(interest, TmpLight->pos, TmpLight->direction);
 
-            spotdir = inline_asm__libsg_g_line_463(plain, interest) + plain[3];
+            spotdir = Vu0DotProduct(plain, interest) + plain[3];
 
             for (j = 0; j < 8; j++)
             {
                 spotvalue[j] =
-                    inline_asm__libsg_g_line_463(plain, tmpvec[j]) + plain[3];
+                    Vu0DotProduct(plain, tmpvec[j]) + plain[3];
                 if (spotvalue[j] * spotdir < 0.0f)
                 {
                     break;

@@ -13,6 +13,11 @@ enum ShaderPrograms
     MAX_SHADER_PROGRAMS
 };
 
+enum UniformBuffers
+{
+    LightBlock = 0
+};
+
 extern u_int shader_list[MAX_SHADER_PROGRAMS];
 
 int MikuPan_InitShaders();

@@ -381,7 +381,7 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp)
     mikupan_light_data.uAmbient[0] = lp->ambient[0];
     mikupan_light_data.uAmbient[1] = lp->ambient[2];
     mikupan_light_data.uAmbient[2] = lp->ambient[1];
-    mikupan_light_data.uAmbient[3] = lp->ambient[3] / 128.0f;
+    mikupan_light_data.uAmbient[3] = lp->ambient[3];
 
     int parCount = lp->parallel_num > MAX_LIGHTS ? MAX_LIGHTS : lp->parallel_num;
     mikupan_light_data.uParCount[0] = parCount;
@@ -868,15 +868,35 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     glm_lookat(mikupan_camera->p, center, up, WorldView);
 
     // Projection -> camera->vcv
-    float aspect = (float) MikuPan_GetWindowWidth() / (float) MikuPan_GetWindowHeight();
-    glm_perspective(mikupan_camera->fov, aspect, 10.0f, mikupan_camera->farz, projection);
+    glm_mat4_zero(projection);
+    //glm_perspective(mikupan_camera->fov, aspect, 10.0f, mikupan_camera->farz, projection);
+    float nearz = 10.0f;
+    float farz  = mikupan_camera->farz;
+    float halfW = (float) MikuPan_GetWindowWidth()  / 2.0f;
+    float halfH = (float) MikuPan_GetWindowHeight() / 4.0f;
+    float scrz = halfH / tanf(mikupan_camera->fov * 0.5f) * 2.0f;
+    float rscrz = nearz / scrz;
+    float gsxv = halfW * rscrz;
+    float gsyv = halfH * rscrz;
+    float l = -gsxv;
+    float r =  gsxv;
+    float b = -gsyv;
+    float t =  gsyv;
+
+    projection[0][0] = (2.0f * nearz) / (r - l);
+    projection[1][1] = (2.0f * nearz) / (t - b);
+    projection[0][2] = (r + l) / (r - l);
+    projection[1][2] = (t + b) / (t - b);
+    projection[2][2] = -(farz + nearz) / (farz - nearz);
+    projection[2][3] = -1.0f;
+    projection[3][2] = -(2.0f * farz * nearz) / (farz - nearz);
+    projection[3][3] = 0.0f;
+    projection[0][0] *= mikupan_camera->ax;
+    projection[1][1] *= mikupan_camera->ay;
 
     glm_mat4_mul(projection, WorldView, WorldClipView);
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)WorldView, "view");
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)projection, "projection");
-
-    float nearz = mikupan_camera->nearz;
-    float farz  = mikupan_camera->farz;
 
     float gs_width  = 4096.0f;
     float gs_height = 4096.0f;
@@ -1165,84 +1185,4 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
 
     draw_calls++;
     glad_glDrawElements(MikuPan_GetRenderMode(), v->nnum + GET_NUM_MESH(pPUHead), GL_UNSIGNED_INT, vertex_index);
-}
-
-static GLenum gsABDtoGL(int v)
-{
-    switch (v)
-    {
-        case SCE_GS_ALPHA_CS:   return GL_SRC_COLOR;
-        case SCE_GS_ALPHA_CD:   return GL_DST_COLOR;
-        case SCE_GS_ALPHA_ZERO: return GL_ZERO;
-    }
-    return GL_ZERO;
-}
-
-static GLenum gsCtoGL(int v)
-{
-    switch (v)
-    {
-        case SCE_GS_ALPHA_AS:  return GL_SRC_ALPHA;
-        case SCE_GS_ALPHA_AD:  return GL_DST_ALPHA;
-        case SCE_GS_ALPHA_FIX: return GL_CONSTANT_COLOR;
-    }
-    return GL_ZERO;
-}
-
-u_long GSAlphaToOpenGL(int A, int B, int C, int D, int fix)
-{
-    glad_glEnable(GL_BLEND);
-
-    // FIX handling (0..128 on GS)
-    //float f = (float)fix / 128.0f;
-    //glad_glBlendColor(f, f, f, f);
-
-    GLenum glA = gsABDtoGL(A);
-    GLenum glB = gsABDtoGL(B);
-    GLenum glC = gsCtoGL(C);
-    GLenum glD = gsABDtoGL(D);
-
-#define SCE_GS_SET_ALPHA22(a, b, c, d, fix) \
-((u_long)(a)       | ((u_long)(b) << 2)     | ((u_long)(c) << 4) | \
-((u_long)(d) << 6) | ((u_long)(fix) << 32))
-
-    u_long out = SCE_GS_SET_ALPHA22(A, B, C, D, fix);
-
-    /*
-        GS: (A - B) * C + D
-
-        We implement this using:
-        glBlendFuncSeparate + glBlendEquation
-    */
-
-    // (CS - CD) * AS + CD  -> standard alpha blend
-    if (A == SCE_GS_ALPHA_CS &&
-        B == SCE_GS_ALPHA_CD &&
-        C == SCE_GS_ALPHA_AS &&
-        D == SCE_GS_ALPHA_CD)
-    {
-        glad_glBlendEquation(GL_FUNC_ADD);
-        glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        return out;
-    }
-
-    // (CS - 0) * AS + 0  -> pure modulate
-    if (B == SCE_GS_ALPHA_ZERO && D == SCE_GS_ALPHA_ZERO)
-    {
-        glad_glBlendEquation(GL_FUNC_ADD);
-        glad_glBlendFunc(glC, GL_ZERO);
-        return out;
-    }
-
-    // (CS - CD) * FIX + CD  -> fog / fades / particles
-    if (C == SCE_GS_ALPHA_FIX)
-    {
-        glad_glBlendEquation(GL_FUNC_ADD);
-        glad_glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_CONSTANT_COLOR);
-        return out;
-    }
-
-    // General case (rare but needed)
-    glad_glBlendEquation(GL_FUNC_ADD);
-    glad_glBlendFuncSeparate(glC, glD, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }

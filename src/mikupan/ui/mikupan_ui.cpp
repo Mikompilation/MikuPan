@@ -308,8 +308,8 @@ void MikuPan_UiMenuBar()
                 ImGui::SameLine();
                 ImGui::Text("%dx", msaa_samples << 1);
                 ImGui::SliderInt("Width",  &render_resolution_width,  640, 5120);
-                ImGui::SliderInt("Height", &render_resolution_height,  448, 1440);
-                ImGui::SliderFloat4("Light Color", light_color, 1.0f, 10.0f, "%.3f");
+                ImGui::SliderInt("Height", &render_resolution_height,  224, 1440);
+                ImGui::SliderFloat4("Light Color", light_color, 0.0f, 3.0f, "%.3f");
 
                 ImGui::EndMenu();
             }

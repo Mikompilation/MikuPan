@@ -237,6 +237,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/rendering/mikupan_pipeline.c
         "src/mikupan/mikupan_utils.c"
         src/ingame/map/furn_spe/fsla_dat.c
+        src/mikupan/mikupan_config.c
+        src/mikupan/mikupan_config.h
 )
 
 add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})

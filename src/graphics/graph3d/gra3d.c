@@ -2058,7 +2058,17 @@ void gra3dDraw()
     if (disp_room != 0xff && room_addr_tbl[disp_room].near_sgd != NULL)
     {
         FogSelection(disp_room);
-        SgReadLights(room_addr_tbl[disp_room].near_sgd, room_addr_tbl[disp_room].lit_data, room_ambient_light, room_pararell_light, 3, room_point_light, 16, room_spot_light, 16);
+        SgReadLights(
+            room_addr_tbl[disp_room].near_sgd,
+            room_addr_tbl[disp_room].lit_data,
+            room_ambient_light,
+            room_pararell_light,
+            3,
+            room_point_light,
+            16,
+            room_spot_light,
+            16
+            );
 
         map_wrk.mirror_flg = 0;
         mir_reflect_flg = 0;

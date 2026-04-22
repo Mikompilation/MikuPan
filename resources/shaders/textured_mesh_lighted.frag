@@ -46,11 +46,13 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
     // Directional (parallel)
     for (int i = 0; i < uParCount.x; i++)
     {
-        float NdotL = max(dot(normal, uParDir[i]), 0.0);
+        float NdotL = max(dot(N.xyz, uParDir[i].xyz), 0.0);
 
-        vec3 Lc = uParDiffuse[i].rgb;
+        float colscale = (uParDiffuse[i].r +
+        uParDiffuse[i].g +
+        uParDiffuse[i].b) / 3.0f;
 
-        result += baseColor * Lc * NdotL;
+        result += baseColor * colscale * NdotL;
     }
 
     // Point
@@ -77,37 +79,28 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
     for (int i = 0; i < uSpotCount.x; i++)
     {
         vec3 L = uSpotPos[i].xyz - viewPos.xyz;
-        float dist = length(L);
-        vec3 Ldir = L / dist;
 
-        vec3 Sdir = normalize(uSpotDir[i].xyz);
+        float dist2 = length(L);
+        vec3 Ldir = normalize(L);
 
-        float cd = dot(Ldir, Sdir);
-        if (cd * cd < uSpotIntens[i].x)
-        {
-            continue;
-        }
+        vec3 Z = normalize(uSpotDir[i].xyz);
 
-        float outerCos = sqrt(uSpotIntens[i].x);
-        float innerCos = min(outerCos + 0.15, 0.999);
+        float cd = max(dot(Ldir, Z), 0.0);
+        float cone = cd * cd;
 
-        float spot = clamp((cd - outerCos) / (innerCos - outerCos), 0.0, 1.0);
-        if (spot <= 0.0)
-        {
-            continue;
-        }
+        if (cone < uSpotIntens[i].x)
+        continue;
 
-        float distAtt = 1.0 / (1.0 + dist);
+        float atten = 1.0 / dist2;
+
         float NdotL = max(dot(N.xyz, Ldir), 0.0);
 
-        float colscale =
-        (uSpotDiffuse[i].r +
-        uSpotDiffuse[i].g +
-        uSpotDiffuse[i].b) * uSpotPower[i].x;
+        float w = cone * atten * uSpotPower[i].x;
 
-        float att = colscale * distAtt * spot;
-
-        result += baseColor * NdotL * att;
+        result += baseColor *
+        uSpotDiffuse[i].rgb *
+        NdotL *
+        w;
     }
 
     return result;
@@ -115,9 +108,9 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
 
 void main()
 {
-    vec4 tex = texture(uTexture, vUV);
+    vec4 color = texture(uTexture, vUV);
 
-    if (tex.a == 0.0)
+    if (color.a == 0.0)
     {
         discard;
     }
@@ -125,10 +118,12 @@ void main()
     // Fog
     float fogFactor = uFog.w * (1.0 / -oViewPosition.z) + uFog.z;
     fogFactor = clamp(fogFactor, uFog.x, uFog.y);
-    vec4 color = mix(uFogColor, tex, fogFactor);
+
 
     // Lighting
     color.rgb = ApplyPS2Lights(vNormal, oViewPosition, color.rgb);
+
+    color = mix(uFogColor, color, fogFactor);
 
     if (renderNormals == 1)
     {

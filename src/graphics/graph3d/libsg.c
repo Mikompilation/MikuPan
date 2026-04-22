@@ -224,7 +224,7 @@ void Vu0LoadMatrix(sceVu0FMATRIX m0)
 // Line 448
 void Vu0ApplyVectorInline(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
-    sceVu0FVECTOR *m0 = work_matrix_0;// in [vf4:vf7]
+    sceVu0FVECTOR *m0 = work_matrix_0;
     vec4 out = {0};
 
     out[0] = (m0[0][0] * v1[0]) + (m0[1][0] * v1[1]) + (m0[2][0] * v1[2])
@@ -240,7 +240,7 @@ void Vu0ApplyVectorInline(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 }
 
 // Line 463
-float inline_asm__libsg_g_line_463(float *v0, float *v1)
+float Vu0DotProduct(float *v0, float *v1)
 {
     float ret;
 
