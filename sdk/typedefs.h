@@ -27,10 +27,14 @@ typedef unsigned int u_long128 __attribute__ ((mode (TI)));
 typedef int (*sceSdTransIntrHandler)(int, void *);
 typedef int (*sceSdSpu2IntrHandler)(int, void *);
 
+#ifdef _WIN32
 typedef unsigned long long u_long;
 typedef unsigned short u_short;
 typedef unsigned char u_char;
 typedef unsigned int u_int;
+#else
+#include <sys/types.h>  // provides u_long, u_short, u_char, u_int on POSIX
+#endif
 
 typedef long long int dword[2] ;
 ATTRIBUTE_ALIGNED(16, typedef int qword[4]);

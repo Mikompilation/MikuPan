@@ -1,4 +1,5 @@
 #include "mikupan_file.h"
+#include "typedefs.h"
 #include "gs/mikupan_texture_manager.h"
 #include "mikupan_logging.h"
 #include "spdlog/spdlog.h"
@@ -10,7 +11,7 @@ extern "C" {
 #include "mikupan_memory.h"
 }
 
-static inline std::vector<int> file_loaded_address;
+std::vector<int> file_loaded_address;
 
 void MikuPan_LoadImgHdFile()
 {
@@ -42,19 +43,19 @@ void MikuPan_ReadFileInArchive(int sector, int size, u_int *address)
 {
     if (!std::filesystem::exists("./IMG_BD.BIN"))
     {
-        spdlog::critical("IMG_BD.BIN not found!");
+        spdlog::info("IMG_BD.BIN not found!");
         return;
     }
 
     if (address == nullptr)
     {
-        spdlog::critical("File loading address is NULL, abort load request!");
+        spdlog::info("File loading address is NULL, abort load request!");
         return;
     }
 
     if (!MikuPan_IsPs2MemoryPointer((int64_t) address))
     {
-        spdlog::critical("File loading address is not in PS2 memory range!");
+        spdlog::info("File loading address is not in PS2 memory range!");
         return;
     }
 
@@ -81,6 +82,7 @@ void MikuPan_ReadFileInArchive64(int sector, int size, int64_t address)
 {
     if (!std::filesystem::exists("./IMG_BD.BIN"))
     {
+        spdlog::info("Failed to locate the IMG_BD.BIN file!");
         return;
     }
 

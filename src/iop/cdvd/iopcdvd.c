@@ -93,7 +93,6 @@ void ICdvdInitSoftReset()
 
 void ICdvdDoTransfer(CDVD_REQ_BUF *rq)
 {
-    int sizeRead;
     switch (rq->tmem)
     {
         case TRANS_MEM_EE:// EE
@@ -110,7 +109,7 @@ void ICdvdDoTransfer(CDVD_REQ_BUF *rq)
             break;
     }
 
-    cdvd_stat.now_size = sizeRead - cdvd_stat.end_size;
+    cdvd_stat.now_size = rq->size_sector;
 }
 
 static void ICdvdAdpcmLoad()
@@ -137,15 +136,13 @@ static void ICdvdAdpcmLoad()
 
 static void ICdvdDataReadOnceSector(CDVD_REQ_BUF *rq)
 {
-    if (cdvd_stat.now_size > 204800)
-    {
-        cdvd_stat.now_size = 204800;
-        cdvd_trans[cdvd_stat.now_lbuf].ltrans = 0;
-    }
-    else
-    {
-        cdvd_trans[cdvd_stat.now_lbuf].ltrans = 1;
-    }
+    // On PC, MikuPan_ReadFileInArchive reads the entire file in one shot,
+    // so every transfer is always the final (and only) transfer.
+    // The original ltrans=0 path was for PS2 DMA chunking (204800-byte limit);
+    // that logic checked the *previous* request's now_size, which caused any
+    // load following a >200 KB file to get ltrans=0 and hang forever waiting
+    // for a "next chunk" that never comes.
+    cdvd_trans[cdvd_stat.now_lbuf].ltrans = 1;
 
     ICdvdDoTransfer(rq);
 }
@@ -195,7 +192,7 @@ void ICdvdMain()
     {
         //if (!sceCdSync(1))
         {
-            int error_stat;
+            int error_stat = 0;
 
             cdvd_stat.ctime = 0;
 

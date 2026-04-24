@@ -1,8 +1,7 @@
 #ifndef MIKUPAN_FILE_LOADING_H
 #define MIKUPAN_FILE_LOADING_H
-
+#include "typedefs.h"
 #include <cstdint>
-#include <typedefs.h>
 #include <string>
 
 typedef struct

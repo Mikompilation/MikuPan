@@ -6,6 +6,7 @@
 
 extern "C" {
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 }
 
 GS::GSHelper gsHelper;
@@ -233,6 +234,42 @@ void GS::GSHelper::Clear()
     memset(mem_.data(), 0, mem_.size() * sizeof(char));
 }
 
+// Evict cached GPU textures whose texture data lives at block address dbp.
+//
+// Only TBP0 is checked — CBP (palette pointer) is intentionally excluded.
+// A GS upload at dbp overwrites texture pixel data (addressed by TBP0), so
+// any cached texture at that block must be re-sampled.  CLUTs (CBP) are stored
+// via GetPixelAddressPSMCT32 into the same memory, but a PSMCT32 data upload
+// at an address that coincides with a paletted texture's CBP does not mean the
+// palette was intentionally replaced — it is just as likely to be unrelated
+// texture data landing at that block number.  Re-creating a paletted texture
+// from a stale-but-correct pixel-data sample while the CLUT block was
+// incidentally overwritten produces badly wrong colours, whereas keeping the
+// cached texture one upload behind is a harmless visual artefact.
+static void invalidate_textures_at_dbp(int dbp)
+{
+    auto it = mikupan_render_texture_atlas.begin();
+    while (it != mikupan_render_texture_atlas.end())
+    {
+        MikuPan_TextureInfo *info = it->second;
+        if (MikuPan_IsFontTexture(info))
+        {
+            ++it;
+            continue;
+        }
+        const sceGsTex0 *tex0 = reinterpret_cast<const sceGsTex0 *>(&info->tex0);
+        if (static_cast<int>(tex0->TBP0) == dbp)
+        {
+            MikuPan_DeleteTexture(info);
+            it = mikupan_render_texture_atlas.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
 void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image)
 {
     spdlog::debug("GS upload request for DBP {:#x} DPSM {} X: {} Y: {}",
@@ -241,6 +278,7 @@ void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image)
                   static_cast<int>(image_load->trxreg.RRW),
                   static_cast<int>(image_load->trxreg.RRH));
 
+    invalidate_textures_at_dbp(image_load->bitbltbuf.DBP);
     MikuPan_FirstUploadDone();
 
     switch (static_cast<PixelStorageFormat>(image_load->bitbltbuf.DPSM))
@@ -336,16 +374,64 @@ uint64_t MikuPan_GetTextureHash(sceGsTex0 *tex0)
         return 0;
     }
 
-    int width = (1 << tex0->TW);
-    int height = (1 << tex0->TH);
-    int addr = GetPixelAddressPSMCT32(tex0->CBP, tex0->TBW, 0, 0);
+    // Hash strategy: tex0 register as seed + fixed-size GS memory sample at TBP0.
+    //
+    // Requirements:
+    //   Stable  – same tex0 + same VRAM content  → same hash → cache hit.
+    //   Unique  – different slot OR different content → different hash.
+    //
+    // Why not pure tex0 hash?
+    //   Ignores VRAM content: when a slot is reused for a different texture
+    //   (same TBP0/CBP/format) the hash is identical and the stale cached GPU
+    //   texture is returned → wrong texture shown (e.g. font instead of noise).
+    //
+    // Why not pure content hash over width×height bytes?
+    //   The window overruns the 4 MB GS boundary for textures at high VRAM
+    //   addresses → bounds check returns hash=0 → no GPU texture is ever created
+    //   → previous pipeline binding stays active → wrong texture shown.
+    //
+    // Why not CBP-based hash (original code)?
+    //   CBP is the palette pointer, not the texture data pointer.  The sampled
+    //   window at CBP is much larger than the actual palette and overlaps GS
+    //   regions modified by other uploads every frame → new unique hash each
+    //   frame → unbounded GPU texture allocation → 3+ GB memory leak.
+    //
+    // Combined approach: use the full 64-bit tex0 register as the XXH3 seed
+    // (encodes TBP0, CBP, PSM, TW, TH, etc. — all slot identity fields) and
+    // hash a small fixed-size sample of GS memory at TBP0 as a content
+    // fingerprint.  Different logical textures always have different seeds even
+    // if they happen to occupy the same VRAM address.  The 256-byte sample is
+    // large enough to detect content changes on slot reuse, and small enough to
+    // never exceed the 4 MB GS address space.
+    uint64_t seed = *(const uint64_t *)tex0;
 
-    if ((addr + width * height) > 4 * 1024 * 1024)
+    // Resolve the byte address of pixel (0,0) using the format-appropriate
+    // block layout.  MikuPan_GsUpload writes PSMT8 data with GetPixelAddressPSMT8
+    // and PSMT4 data with GetPixelAddressPSMT4 — using PSMCT32 for those formats
+    // samples bytes that were never written by their uploads (zeroes or stale
+    // data from a different texture), breaking the content fingerprint.
+    int addr;
+    switch (static_cast<PixelStorageFormat>(tex0->PSM))
     {
-        return 0;
+        case PSMT8:
+            addr = GetPixelAddressPSMT8(tex0->TBP0, tex0->TBW, 0, 0);
+            break;
+        case PSMT4:
+            // GetPixelAddressPSMT4 returns a nibble index; shift to byte address.
+            addr = GetPixelAddressPSMT4(tex0->TBP0, tex0->TBW, 0, 0) >> 1;
+            break;
+        default:    // PSMCT32, PSMCT24, PSMCT16, PSMZ32, …
+            addr = GetPixelAddressPSMCT32(tex0->TBP0, tex0->TBW, 0, 0);
+            break;
     }
 
-    XXH64_hash_t hash = XXH3_64bits(&gsHelper.mem_[addr], width*height);
+    const int gs_size  = 4 * 1024 * 1024;
+    const int max_samp = 256;
 
-    return hash;
+    if (addr < 0 || addr >= gs_size)
+        return 0;
+
+    int sample = (addr + max_samp <= gs_size) ? max_samp : (gs_size - addr);
+
+    return XXH3_64bits_withSeed(&gsHelper.mem_[addr], sample, seed);
 }

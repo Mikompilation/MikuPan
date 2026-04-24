@@ -54,6 +54,6 @@ typedef float f32;
 
 // #define PI 3.1415928f
 
-#define BSS __attribute__ ((section (".bss")))
+#define BSS
 
 #endif /* COMMON_H */

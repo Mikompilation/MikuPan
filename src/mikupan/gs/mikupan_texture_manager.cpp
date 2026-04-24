@@ -22,6 +22,8 @@ bool MikuPan_IsFirstUploadDone()
 
 /**
  * Flushes the texture cache by freeing all stored textures.
+ * Font textures (held by s_fnt_texture[]) are preserved in the atlas so
+ * they remain accessible after the flush without re-creation.
  * SHOULD ONLY BE CALLED FROM THE MAIN THREAD!
  */
 void MikuPan_FlushTextureCache()
@@ -31,12 +33,19 @@ void MikuPan_FlushTextureCache()
         return;
     }
 
-    for (auto texture : mikupan_render_texture_atlas)
+    auto it = mikupan_render_texture_atlas.begin();
+    while (it != mikupan_render_texture_atlas.end())
     {
-        MikuPan_DeleteTexture(texture.second);
+        if (MikuPan_IsFontTexture(it->second))
+        {
+            ++it;
+        }
+        else
+        {
+            MikuPan_DeleteTexture(it->second);
+            it = mikupan_render_texture_atlas.erase(it);
+        }
     }
-
-    mikupan_render_texture_atlas.clear();
 
     request_texture_cache_flush = false;
 }
@@ -92,4 +101,17 @@ MikuPan_TextureInfo* MikuPan_GetTextureInfo(uint64_t hash)
 void MikuPan_AddTexture(uint64_t hash, MikuPan_TextureInfo* texture_info)
 {
     mikupan_render_texture_atlas[hash] = texture_info;
+}
+
+void MikuPan_ShutdownTextureCache()
+{
+    auto it = mikupan_render_texture_atlas.begin();
+    while (it != mikupan_render_texture_atlas.end())
+    {
+        if (!MikuPan_IsFontTexture(it->second))
+        {
+            MikuPan_DeleteTexture(it->second);
+        }
+        it = mikupan_render_texture_atlas.erase(it);
+    }
 }

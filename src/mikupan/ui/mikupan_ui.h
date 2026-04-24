@@ -1,8 +1,7 @@
 #ifndef MIKUPAN_IMGUI_WINDOW_H
 #define MIKUPAN_IMGUI_WINDOW_H
 
-#include "SDL3/SDL_video.h"
-#include "SDL3/SDL_events.h"
+#include "SDL3/SDL.h"
 
 #include <imgui.h>
 #include <vector>
@@ -29,8 +28,11 @@ private:
 
 extern "C"
 {
-    void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer);
-    void MikuPan_RenderUi();
+    void MikuPan_InitUi(SDL_Window *window, SDL_GPUDevice *device);
+    // PrepareUi: upload ImGui vertex/index data — must be called OUTSIDE a render pass
+    void MikuPan_PrepareUi(SDL_GPUCommandBuffer *cmd);
+    // RenderUi: record ImGui draw commands — must be called INSIDE a render pass
+    void MikuPan_RenderUi(SDL_GPUCommandBuffer *cmd, SDL_GPURenderPass *pass);
     void MikuPan_StartFrameUi();
     void MikuPan_DrawUi();
     void MikuPan_ShutDownUi();

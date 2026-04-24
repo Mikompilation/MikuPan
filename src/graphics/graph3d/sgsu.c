@@ -18,15 +18,15 @@
 
 #define min(x, y) (((x) > (y))? (y): (x))
 
-extern void DRAWTYPE2() __attribute__((section(".vutext")));
-extern void DRAWTYPE2W() __attribute__((section(".vutext")));
-extern void DRAWTYPE0() __attribute__((section(".vutext")));
-extern void MULTI_PROLOGUE() __attribute__((section(".vutext")));
+extern void DRAWTYPE2();
+extern void DRAWTYPE2W();
+extern void DRAWTYPE0();
+extern void MULTI_PROLOGUE();
 
-extern SgSourceChainTag SgSu_dma_start() __attribute__((section(".vutext")));
-extern SgSourceChainTag SgSuP0_dma_start() __attribute__((section(".vutext")));
-extern SgSourceChainTag SgSuP2_dma_start() __attribute__((section(".vutext")));
-extern SgSourceChainTag SgSu_dma_starts() __attribute__((section(".vutext")));
+extern SgSourceChainTag SgSu_dma_start();
+extern SgSourceChainTag SgSuP0_dma_start();
+extern SgSourceChainTag SgSuP2_dma_start();
+extern SgSourceChainTag SgSu_dma_starts();
 
 #define Q12_4(i, f) (((i) << 4) | ((f) & 0xF))
 #define SCRATCHPAD ((u_int *) ps2_virtual_scratchpad)

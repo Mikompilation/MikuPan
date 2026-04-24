@@ -1,7 +1,6 @@
 #include "typedefs.h"
 #include "mikupan_ui.h"
-#include "glad/gl.h"
-#include "imgui_impl_opengl3.h"
+#include "imgui_impl_sdlgpu3.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_internal.h"
 #include "imgui_toggle/imgui_toggle.h"
@@ -19,7 +18,7 @@ extern "C"
 }
 
 FrameTimeGraph g_frame_graph(600);
-bool show_fps = true;
+bool show_fps = false;
 bool show_menu_bar = false;
 bool show_frame_time_graph = false;
 bool controller_config = false;
@@ -142,27 +141,39 @@ void FrameTimeGraph::clear()
     times_.clear();
 }
 
-void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
+void MikuPan_InitUi(SDL_Window *window, SDL_GPUDevice *device)
 {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-    ImGui_ImplSDL3_InitForOpenGL(window, renderer);
-    ImGui_ImplOpenGL3_Init("#version 330");
+    ImGui_ImplSDL3_InitForSDLGPU(window);
+
+    SDL_GPUTextureFormat swapchain_fmt =
+        SDL_GetGPUSwapchainTextureFormat(device, window);
+
+    ImGui_ImplSDLGPU3_InitInfo init_info = {};
+    init_info.Device             = device;
+    init_info.ColorTargetFormat  = swapchain_fmt;
+    init_info.MSAASamples        = SDL_GPU_SAMPLECOUNT_1;
+    ImGui_ImplSDLGPU3_Init(&init_info);
 }
 
-void MikuPan_RenderUi()
+void MikuPan_PrepareUi(SDL_GPUCommandBuffer *cmd)
 {
-    ImGui::Render();
-    glad_glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    // Upload ImGui vertex/index data — must be called outside a render pass
+    ImGui_ImplSDLGPU3_PrepareDrawData(ImGui::GetDrawData(), cmd);
+}
+
+void MikuPan_RenderUi(SDL_GPUCommandBuffer *cmd, SDL_GPURenderPass *pass)
+{
+    // Record draw commands — must be called inside a render pass
+    ImGui_ImplSDLGPU3_RenderDrawData(ImGui::GetDrawData(), cmd, pass);
 }
 
 void MikuPan_StartFrameUi()
 {
-    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDLGPU3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 }
@@ -201,11 +212,13 @@ void MikuPan_DrawUi()
     {
         SetString2(0x10, 0.0f, 420.0f, 1, 0x80, 0x80, 0x80, (char*)"FPS %d", (int)MikuPan_GetFrameRate());
     }
+
+    ImGui::Render();
 }
 
 void MikuPan_ShutDownUi()
 {
-    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDLGPU3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 }
@@ -232,31 +245,35 @@ int MikuPan_IsNormalsRendering()
 
 void MikuPan_ShowTextureList()
 {
-    ImGui::Begin("OpenGL Texture");
+    ImGui::Begin("GPU Texture Cache");
 
-    std::vector<MikuPan_TextureInfo*> sorted_textures;
-    sorted_textures.reserve(mikupan_render_texture_atlas.size());
+    ImGui::Text("Cached textures: %zu", mikupan_render_texture_atlas.size());
+    ImGui::Separator();
 
     for (const auto& pair : mikupan_render_texture_atlas)
     {
-        sorted_textures.push_back(pair.second);
-    }
+        const MikuPan_TextureInfo *t = pair.second;
+        char label[64];
+        SDL_snprintf(label, sizeof(label), "hash %016llx",
+                     (unsigned long long)t->hash);
 
-    std::sort(sorted_textures.begin(), sorted_textures.end(),
-        [](const MikuPan_TextureInfo* a, const MikuPan_TextureInfo* b)
+        if (ImGui::CollapsingHeader(label))
         {
-            return a->id < b->id;
-        });
+            ImGui::Text("  size: %d x %d", t->width, t->height);
+            ImGui::Text("  ptr:  %p", (void *)t->texture);
 
-    for (auto texture : sorted_textures)
-    {
-        std::string label = "Texture ID ";
-        label += std::to_string(texture->id);
-
-        if (ImGui::CollapsingHeader(label.c_str()))
-        {
-            ImGui::Text("%d: %d x %d", texture->id, texture->width, texture->height);
-            ImGui::Image(static_cast<ImTextureID>(static_cast<intptr_t>(texture->id)), ImVec2(texture->width, texture->height));
+            const float max_dim = 256.0f;
+            float display_w = (float)t->width;
+            float display_h = (float)t->height;
+            float largest = display_w > display_h ? display_w : display_h;
+            if (largest > max_dim)
+            {
+                float scale = max_dim / largest;
+                display_w *= scale;
+                display_h *= scale;
+            }
+            ImGui::Image((ImTextureID)(intptr_t)t->texture,
+                         ImVec2(display_w, display_h));
         }
     }
 
@@ -304,7 +321,7 @@ void MikuPan_UiMenuBar()
                     MikuPan_RequestFlushTextureCache();
                 }
 
-                ImGui::SliderInt("MSAA", &msaa_samples, 0, 5, "");
+                ImGui::SliderInt("MSAA", &msaa_samples, 0, 3, "");
                 ImGui::SameLine();
                 ImGui::Text("%dx", msaa_samples << 1);
                 ImGui::SliderInt("Width",  &render_resolution_width,  640, 5120);

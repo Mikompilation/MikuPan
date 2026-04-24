@@ -38,10 +38,10 @@ static sceVu0FMATRIX IPMatrix;
 static sceVu0FMATRIX CullingMatrix;
 static sceVu0FVECTOR wbbox[8];
 
-extern void SHADOWDRAWTYPE0()   __attribute__((section(".vutext")));
-extern void SHADOWDRAWTYPE2()   __attribute__((section(".vutext")));
-extern void DIVPS_PROLOGUE()    __attribute__((section(".vutext")));
-extern void DPS_PROLOGUE()      __attribute__((section(".vutext")));
+extern void SHADOWDRAWTYPE0();
+extern void SHADOWDRAWTYPE2();
+extern void DIVPS_PROLOGUE();
+extern void DPS_PROLOGUE();
 
 #define SCREENX_TO_GSX_UL(x, swidth) (((2048 - (swidth >> 1)) + (x)) << 4)
 #define SCREENY_TO_GSY_UL(y, sheight) (((2048 - (sheight >> 1)) + (y)) << 4)

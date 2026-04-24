@@ -29,8 +29,8 @@
 #include <mikupan/mikupan_memory.h>
 #include <sce/libpad.h>
 
-#include <fenv.h>
-#include <xmmintrin.h>
+//#include <fenv.h>
+//#include <xmmintrin.h>
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {

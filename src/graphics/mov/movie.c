@@ -225,7 +225,7 @@ static u_long128 *viBufData;
 
 static u_long128 viBufTag[257];
 static TimeStamp timeStamp[512];
-static char _0_buf[2048] __attribute__ ((aligned(64))) __attribute__ ((section (".bss")));
+static char _0_buf[2048] __attribute__ ((aligned(64)));
 
 #define min(x, y) (((x) > (y))? (y): (x))
 #define max(x, y) (((x) < (y))? (y): (x))

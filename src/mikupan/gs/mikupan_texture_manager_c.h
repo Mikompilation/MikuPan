@@ -11,5 +11,6 @@ void MikuPan_FirstUploadDone();
 int MikuPan_IsFirstUploadDone();
 void MikuPan_FlushTextureCache();
 void MikuPan_RequestFlushTextureCache();
+void MikuPan_ShutdownTextureCache();
 
 #endif //MIKUPAN_TEXTURE_MANAGER_C_H

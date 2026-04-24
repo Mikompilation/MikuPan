@@ -13,6 +13,9 @@ endif()
 
 set(BUILD_SHARED_LIBS OFF)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)
 
@@ -21,6 +24,7 @@ include(imgui)
 include(spdlog)
 include(cglm)
 include(xxhash)
+include(shadercross)
 
 set(MIKUPAN_SOURCES
         "src/mikupan/mikupan_file.cpp"
@@ -232,7 +236,6 @@ set(MIKUPAN_SOURCES
         extern/imgui_toggle/imgui_toggle_presets.cpp
         extern/imgui_toggle/imgui_toggle_renderer.cpp
         src/graphics/graph3d/libsg.c
-        extern/glad/src/gl.c
         src/ingame/map/find_dat.c
         src/mikupan/rendering/mikupan_pipeline.c
         "src/mikupan/mikupan_utils.c"
@@ -241,11 +244,50 @@ set(MIKUPAN_SOURCES
         src/mikupan/mikupan_config.h
 )
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SPIRV shader compilation via SDL_shadercross
+# HLSL sources (.vert.hlsl / .frag.hlsl) are compiled to .vert.spv / .frag.spv
+# so the names match what mikupan_shader.c expects.
+# ─────────────────────────────────────────────────────────────────────────────
+set(SHADER_SRC_DIR "${CMAKE_SOURCE_DIR}/resources/shaders")
+set(SHADER_OUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders")
+
+set(SHADER_SOURCES
+    mesh_0x2.vert.hlsl
+    mesh_0xA.vert.hlsl
+    mesh_0x12.vert.hlsl
+    textured_mesh_lighted.frag.hlsl
+    sprite.vert.hlsl
+    sprite.frag.hlsl
+    untextured_coloured_sprite.vert.hlsl
+    untextured_coloured_sprite.frag.hlsl
+    bounding_box.vert.hlsl
+)
+
+set(SPIRV_OUTPUTS)
+foreach(SHADER ${SHADER_SOURCES})
+    set(SRC "${SHADER_SRC_DIR}/${SHADER}")
+    string(REPLACE ".hlsl" "" SPV_BASE "${SHADER}")
+    set(SPV "${SHADER_OUT_DIR}/${SPV_BASE}.spv")
+    add_custom_command(
+        OUTPUT  ${SPV}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_OUT_DIR}
+        COMMAND $<TARGET_FILE:shadercross> -o ${SPV} ${SRC}
+        DEPENDS ${SRC} shadercross
+        COMMENT "shadercross: ${SHADER} → ${SPV_BASE}.spv"
+    )
+    list(APPEND SPIRV_OUTPUTS ${SPV})
+endforeach()
+
+add_custom_target(MikuPan_Shaders ALL DEPENDS ${SPIRV_OUTPUTS})
+
 add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
 
-target_include_directories(MikuPan PRIVATE "sdk/" "src" "extern/" "extern/glad/include/" ${SDL3_INCLUDE_DIR})
+target_include_directories(MikuPan PRIVATE "sdk/" "src" "extern/" ${SDL3_INCLUDE_DIR})
 
-target_link_libraries(MikuPan PRIVATE m imgui SDL3::SDL3 spdlog::spdlog cglm xxHash::xxhash)
+target_link_libraries(MikuPan PRIVATE m imgui SDL3::SDL3 spdlog::spdlog cglm xxHash::xxhash SDL3_shadercross::SDL3_shadercross-static)
+
+add_dependencies(MikuPan MikuPan_Shaders)
 
 add_custom_command(TARGET MikuPan POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:MikuPan>/resources

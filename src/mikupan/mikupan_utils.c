@@ -123,15 +123,32 @@ void MikuPan_FixUV(float *uv, int num)
     }
 }
 
+// Builds a degenerate-triangle-stitched index run for triangle strips.
+// SDL_GPU has no primitive restart, so multiple strips are joined with two
+// degenerate (zero-area) indices: {last_of_prev, first_of_curr}.
+//
+// Index buffer layout for strip i starting at vertex_offset V with N vertices:
+//   base = V + mesh_index * 2
+//   if mesh_index > 0: buf[base-2] = V-1 (last of previous), buf[base-1] = V (first of current)
+//   buf[base .. base+N-1] = V .. V+N-1
+//
+// Total draw count: sum_of_all_vertices + 2 * (num_meshes - 1)
 void MikuPan_SetTriangleIndex(int *triangle_index, int vertex_count,
-                              int vertex_offset, int mesh_offset)
+                              int vertex_offset, int mesh_index)
 {
-    for (int j = 0; j < vertex_count; j++)
+    int idx_base = vertex_offset + mesh_index * 2;
+
+    if (mesh_index > 0)
     {
-        triangle_index[vertex_offset + j + mesh_offset] = vertex_offset + j;
+        // Stitch to previous strip with two degenerate vertices
+        triangle_index[idx_base - 2] = vertex_offset - 1; // last vertex of previous strip
+        triangle_index[idx_base - 1] = vertex_offset;     // first vertex of this strip
     }
 
-    triangle_index[vertex_offset + mesh_offset + vertex_count] = -1;
+    for (int j = 0; j < vertex_count; j++)
+    {
+        triangle_index[idx_base + j] = vertex_offset + j;
+    }
 }
 
 unsigned int *MikuPan_GetNextUnpackAddr(unsigned int *prim)
