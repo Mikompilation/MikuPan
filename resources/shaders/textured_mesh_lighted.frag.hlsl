@@ -101,8 +101,8 @@ float4 main(PSInput input) : SV_Target
     fogFactor = clamp(fogFactor, uFog.x, uFog.y);
 
     // Lighting
-    //color.rgb = ApplyPS2Lights(input.vNormal, input.oViewPosition, color.rgb);
-    //color     = lerp(uFogColor, color, fogFactor);
+    color.rgb = ApplyPS2Lights(input.vNormal, input.oViewPosition, color.rgb);
+    color     = lerp(uFogColor, color, fogFactor);
 
     return (renderNormals == 1) ? input.vNormal : color;
 }

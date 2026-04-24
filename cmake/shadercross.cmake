@@ -8,10 +8,10 @@ FetchContent_Declare(
 
 set(SDLSHADERCROSS_SHARED    OFF)
 set(SDLSHADERCROSS_STATIC    ON)
-set(SDLSHADERCROSS_CLI       ON)
+set(SDLSHADERCROSS_CLI       OFF)
 set(SDLSHADERCROSS_INSTALL   OFF)
 set(SDLSHADERCROSS_VENDORED  ON)
-set(SDLSHADERCROSS_DXC       ON)
+set(SDLSHADERCROSS_DXC       OFF)
 
 # DXC's bundled LLVM specializes std::is_nothrow_constructible, which
 # Apple libc++ (Xcode 16+ / macOS 26+) now prohibits. Suppress the diagnostic.

@@ -127,7 +127,7 @@ static SDL_GPUGraphicsPipeline *make_pipeline(SDL_GPUDevice *device,
         },
         .multisample_state = {
             .sample_count = d->samples,
-            .sample_mask  = 0xFFFFFFFF,
+            .sample_mask  = 0,
         },
         .depth_stencil_state = {
             .enable_depth_test  = d->depth_test,
@@ -293,7 +293,7 @@ static int create_pipelines_internal(SDL_GPUDevice       *device,
             },
             .multisample_state = {
                 .sample_count = SDL_GPU_SAMPLECOUNT_1,
-                .sample_mask  = 0xFFFFFFFF,
+                .sample_mask  = 0,
             },
             .depth_stencil_state = {
                 .enable_depth_test  = false,

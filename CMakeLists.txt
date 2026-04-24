@@ -249,6 +249,9 @@ set(MIKUPAN_SOURCES
 # HLSL sources (.vert.hlsl / .frag.hlsl) are compiled to .vert.spv / .frag.spv
 # so the names match what mikupan_shader.c expects.
 # ─────────────────────────────────────────────────────────────────────────────
+set(SHADERCROSS_ZIP "${CMAKE_SOURCE_DIR}/extern/shadercross.zip")
+set(SHADERCROSS_DIR "${CMAKE_BINARY_DIR}/tools/shadercross")
+set(SHADERCROSS_EXE "${SHADERCROSS_DIR}/bin/shadercross.exe")
 set(SHADER_SRC_DIR "${CMAKE_SOURCE_DIR}/resources/shaders")
 set(SHADER_OUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders")
 
@@ -264,18 +267,32 @@ set(SHADER_SOURCES
     bounding_box.vert.hlsl
 )
 
+add_custom_command(
+        OUTPUT ${SHADERCROSS_EXE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERCROSS_DIR}
+        COMMAND ${CMAKE_COMMAND} -E tar xzf ${SHADERCROSS_ZIP}
+        WORKING_DIRECTORY ${SHADERCROSS_DIR}
+        COMMENT "Extracting shadercross"
+)
+
+add_custom_target(shadercross_extracted
+        DEPENDS ${SHADERCROSS_EXE}
+)
+
 set(SPIRV_OUTPUTS)
 foreach(SHADER ${SHADER_SOURCES})
     set(SRC "${SHADER_SRC_DIR}/${SHADER}")
     string(REPLACE ".hlsl" "" SPV_BASE "${SHADER}")
     set(SPV "${SHADER_OUT_DIR}/${SPV_BASE}.spv")
+
     add_custom_command(
-        OUTPUT  ${SPV}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_OUT_DIR}
-        COMMAND $<TARGET_FILE:shadercross> -o ${SPV} ${SRC}
-        DEPENDS ${SRC} shadercross
-        COMMENT "shadercross: ${SHADER} → ${SPV_BASE}.spv"
+            OUTPUT  ${SPV}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_OUT_DIR}
+            COMMAND ${SHADERCROSS_EXE} -o ${SPV} ${SRC}
+            DEPENDS ${SRC} shadercross_extracted
+            COMMENT "shadercross: ${SHADER} → ${SPV_BASE}.spv"
     )
+
     list(APPEND SPIRV_OUTPUTS ${SPV})
 endforeach()
 

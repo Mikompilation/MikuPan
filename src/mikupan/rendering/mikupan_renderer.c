@@ -1,5 +1,6 @@
 #include "mikupan_renderer.h"
 #include "../mikupan_types.h"
+#include "SDL3/SDL_filesystem.h"
 #include "SDL3/SDL_hints.h"
 #include "SDL3/SDL_init.h"
 #include "cglm/cglm.h"
@@ -9,8 +10,9 @@
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/ui/mikupan_ui_c.h"
-#include "mikupan_shader.h"
 #include "mikupan_pipeline.h"
+#include "mikupan_shader.h"
+
 #include <stdlib.h>
 
 #include "graphics/graph3d/sglib.h"
@@ -281,9 +283,8 @@ void MikuPan_SetupGpuDevice(void)
 {
     // Prefer Vulkan → Metal → D3D12 in that order; fall back to whatever works
     mikupan_render.device = SDL_CreateGPUDevice(
-        SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL |
-        SDL_GPU_SHADERFORMAT_DXIL,
-        false, NULL);
+        SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL,
+        true, NULL);
 }
 
 SDL_AppResult MikuPan_Init(void)
@@ -1135,6 +1136,10 @@ static void draw_sprite_pass(SDL_GPUGraphicsPipeline *pipe,
             .texture = tex_info->texture, .sampler = g_gpu_sampler };
         SDL_BindGPUFragmentSamplers(pass, 0, &tb, 1);
     }
+    {
+        SDL_BindGPUFragmentSamplers(pass, 0, NULL, 0);
+    }
+
 
     SDL_GPUBufferBinding vb = { .buffer = pl_info->buffers[0].buffer, .offset = 0 };
     SDL_BindGPUVertexBuffers(pass, 0, &vb, 1);
@@ -1376,17 +1381,19 @@ static void draw_mesh_indexed(SDL_GPURenderPass       *pass,
                               int                      shader_type,
                               Uint32                   index_count)
 {
+    if (!tex_info)
+    {
+        return;
+    }
+
     SDL_BindGPUGraphicsPipeline(pass, pipe);
     SDL_PushGPUVertexUniformData(s_cmd_buf, 0, &g_vert_uniforms, sizeof(g_vert_uniforms));
     SDL_PushGPUFragmentUniformData(s_cmd_buf, 0, &s_light_data, sizeof(s_light_data));
     SDL_PushGPUFragmentUniformData(s_cmd_buf, 1, &g_frag_misc_uniforms, sizeof(g_frag_misc_uniforms));
 
-    if (tex_info)
-    {
-        SDL_GPUTextureSamplerBinding tb = {
-            .texture = tex_info->texture, .sampler = g_gpu_sampler };
-        SDL_BindGPUFragmentSamplers(pass, 0, &tb, 1);
-    }
+    SDL_GPUTextureSamplerBinding tb = {
+        .texture = tex_info->texture, .sampler = g_gpu_sampler };
+    SDL_BindGPUFragmentSamplers(pass, 0, &tb, 1);
 
     SDL_GPUBufferBinding vb0 = { .buffer = pl_info->buffers[0].buffer, .offset = 0 };
     SDL_GPUBufferBinding vb1 = { .buffer = pl_info->buffers[1].buffer, .offset = 0 };
@@ -1492,7 +1499,7 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN,
         queue_upload(pl_info->buffers[0].buffer, 0, vertices, (Uint32)vert_bytes, false);
 
     Uint32 index_count = (Uint32)(pVUVN->VUVNDesc.sNumVertex
-                                  + 2 * (num_mesh - 1));
+                                  + 4 * (num_mesh - 1));
     queue_upload(g_index_buffer, 0,
                  s_vertex_index, index_count * sizeof(int), true);
 
@@ -1578,7 +1585,7 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
         vertex_offset += vertex_count;
     }
 
-    Uint32 index_count = (Uint32)(v->nnum + 2 * (num_mesh - 1));
+    Uint32 index_count = (Uint32)(v->nnum + 4 * (num_mesh - 1));
     queue_upload(g_index_buffer, 0,
                  s_vertex_index, index_count * sizeof(int), true);
 
@@ -1684,7 +1691,7 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN,
         vertex_offset += vertex_count;
     }
 
-    Uint32 index_count = (Uint32)(v->nnum + 2 * (num_mesh - 1));
+    Uint32 index_count = (Uint32)(v->nnum + 4 * (num_mesh - 1));
     queue_upload(g_index_buffer, 0,
                  s_vertex_index, index_count * sizeof(int), true);
 
