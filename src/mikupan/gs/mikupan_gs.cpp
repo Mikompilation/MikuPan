@@ -9,7 +9,7 @@ extern "C" {
 }
 
 GS::GSHelper gsHelper;
-std::vector<uint8_t> texture_buffer = std::vector<uint8_t>(4096 * 4096 * 4);
+std::vector<uint8_t> texture_buffer = std::vector<uint8_t>(4096 * 4096 * 8);
 
 int __attribute__((optimize("O3"))) GetBlockIdPSMCT32(int block, int x, int y)
 {
@@ -283,6 +283,11 @@ unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash)
 
     int width = (1 << tex0->TW);
     int height = (1 << tex0->TH);
+
+    if (width > 4096 || height > 4096)
+    {
+        return nullptr;
+    }
 
     spdlog::debug("GS download request for DBP {:#x} CBP {:#x} DPSM {} ",
                   static_cast<int>(tex0->TBP0),

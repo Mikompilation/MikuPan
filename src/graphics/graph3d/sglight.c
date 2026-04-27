@@ -28,25 +28,25 @@ static int stack_light_num[9];
 
 #define GET_MESH_TYPE(intpointer) (char) ((char *) intpointer)[13]
 #define GET_MESH_GLOOPS(intpointer) (int) ((char *) intpointer)[14]
+#define POW2(x) ((x) * (x))
+#define MIN(x, y) (x) < (y) ? (x) : (y)
+#define MAX(x, y) (x) < (y) ? (y) : (x)
 
 sceVu0FVECTOR vf0 = {0.0f, 0.0f, 0.0f, 1.0f};
 sceVu0FVECTOR vf1 = {1.0f, 1.0f, 1.0f, -1.0f};
-mat4 matrix_vf4 = {0};
-mat4 matrix_vf7 = {0};
-sceVu0FVECTOR vf12 = {0};
-sceVu0FVECTOR vf13 = {0};
-sceVu0FVECTOR vf14 = {0};
-sceVu0FVECTOR vf15 = {0};
-sceVu0FVECTOR vf16 = {0};
-sceVu0FVECTOR vf17 = {0};
-sceVu0FVECTOR vf18 = {0};
-sceVu0FVECTOR vf19 = {0};
-sceVu0FVECTOR vf20 = {0};
-sceVu0FVECTOR vf21 = {0};
-sceVu0FVECTOR vf22 = {0};
-sceVu0FVECTOR vf26 = {0};
-sceVu0FVECTOR vf27 = {0};
-sceVu0FVECTOR vf28 = {0};
+LMATRIX __work_matrix_0; // in [vf4:vf6], set in SetMaterialDataPrerender (from SPAD[0x110])
+sceVu0FMATRIX __work_matrix_1; // in [vf7:vf10], set in SetMaterialDataPrerender (from SPAD[0x150])
+sceVu0FMATRIX __work_matrix_2; // in [vf14:vf16], set in _CalcPointA
+sceVu0FMATRIX __work_matrix_3; // in [vf20:vf22], set in asm_CalcSpotlight and read in _ReadDLightMtx and _CalcPointB
+
+sceVu0FMATRIX __work_matrix_4; // in [vf23:vf25], read in _ReadSLightMtx which is unused so can be treated as a local in the remaining functions
+sceVu0FMATRIX __work_matrix_5; // in [vf26:vf28], read in _ReadDColor which is unused so can be treated as a local in the remaining functions
+
+sceVu0FVECTOR __work_vf12; // in vf12, set in _SetSpotPos (pos)
+sceVu0FVECTOR __work_vf13; // in vf13, set in _SetSpotPos (dir)
+sceVu0FVECTOR __work_vf17; // in vf17, set in _CalcPointA
+sceVu0FVECTOR __work_vf18; // in vf18, set in asm_2__SetPreRenderTYPE0, asm_CalcSpotLight and _CalcPointB
+sceVu0FVECTOR __work_vf19; // in vf19, set in load_abmient
 
 //#define SCRATCHPAD ((u_char *)0x70000000)
 #define SCRATCHPAD ((u_char *) ps2_virtual_scratchpad)
@@ -129,80 +129,65 @@ void SgSetDefaultLight(sceVu0FVECTOR eye, SgLIGHT *p0, SgLIGHT *p1, SgLIGHT *p2)
     DColorMtx[0][3] = 1.0f;
 }
 
-static void _SetColorMtx(sceVu0FMATRIX dc, sceVu0FMATRIX sc, sceVu0FVECTOR am,
-                         sceVu0FVECTOR v)
+static void _SetColorMtx(sceVu0FMATRIX dc, sceVu0FMATRIX sc, sceVu0FVECTOR am, sceVu0FVECTOR* v)
 {
-    //__asm__ volatile ("\n\
-    //    lqc2      $vf16,0(%3)\n\
-    //    lqc2      $vf12,0(%2)\n\
-    //    vmul.xyz  $vf19xyz,$vf16xyz,$vf12xyz\n\
-    //    vmulw.xyz $vf19xyz,$vf19xyz,$vf12w\n\
-    //    lqc2      $vf16,0x30(%3)\n\
-    //    lqc2      $vf12,0(%0)\n\
-    //    vmulw.xyz $vf16xyz,$vf16xyz,$vf12w\n\
-    //    vadd.xyz  $vf19xyz,$vf19xyz,$vf16xyz\n\
-    //    lqc2      $vf16,0x10(%3)\n\
-    //    vmove.w   $vf19w,$vf12w\n\
-    //    lqc2      $vf12,0(%0)\n\
-    //    lqc2      $vf13,0x10(%0)\n\
-    //    lqc2      $vf14,0x20(%0)\n\
-    //    vmul.xyz  $vf26xyz,$vf12xyz,$vf16xyz\n\
-    //    vmul.xyz  $vf27xyz,$vf13xyz,$vf16xyz\n\
-    //    vmul.xyz  $vf28xyz,$vf14xyz,$vf16xyz\n\
-    //    vmulw.xyz $vf26xyz,$vf26xyz,$vf12w\n\
-    //    vmulw.xyz $vf27xyz,$vf27xyz,$vf12w\n\
-    //    vmulw.xyz $vf28xyz,$vf28xyz,$vf12w\n\
-    //    vmove.w   $vf27w,$vf16w\n\
-    //    lqc2      $vf16,0x20(%3)\n\
-    //    lqc2      $vf12,0(%1)\n\
-    //    lqc2      $vf13,0x10(%1)\n\
-    //    lqc2      $vf14,0x20(%1)\n\
-    //    vmul.xyz  $vf12xyz,$vf12xyz,$vf16xyz\n\
-    //    vmul.xyz  $vf13xyz,$vf13xyz,$vf16xyz\n\
-    //    vmul.xyz  $vf14xyz,$vf14xyz,$vf16xyz\n\
-    //    vmulw.xyz $vf12xyz,$vf12xyz,$vf13w\n\
-    //    vmulw.xyz $vf13xyz,$vf13xyz,$vf13w\n\
-    //    vmulw.xyz $vf14xyz,$vf14xyz,$vf13w\n\
-    //    vmove.w   $vf12w,$vf16w\n\
-    //    vmove.w   $vf13w,$vf27w\n\
-    //    vmove.w   $vf19w,$vf14w\n\
-    //    viaddi    $vi2,$vi0,0xf\n\
-    //    viaddi    $vi2,$vi2,0xb\n\
-    //    vsqi.xyzw $vf26xyzw,($vi2++)\n\
-    //    vsqi.xyzw $vf27xyzw,($vi2++)\n\
-    //    vsqi.xyzw $vf28xyzw,($vi2++)\n\
-    //    vsqi.xyzw $vf12xyzw,($vi2++)\n\
-    //    vsqi.xyzw $vf13xyzw,($vi2++)\n\
-    //    vsqi.xyzw $vf14xyzw,($vi2++)\n\
-    //    vsqi.xyzw $vf19xyzw,($vi2++) \n\
-    //": :"r"(dc), "r"(sc), "r"(am), "r"(v));
+    sceVu0FVECTOR vf12, vf13, vf14, vf19;
+
+    vf19[0] = (v[0][0] * am[0] * am[3]) + (v[3][0] * dc[0][3]);
+    vf19[1] = (v[0][1] * am[1] * am[3]) + (v[3][1] * dc[0][3]);
+    vf19[2] = (v[0][2] * am[2] * am[3]) + (v[3][2] * dc[0][3]);
+    vf19[3] = dc[0][3];
+
+    __work_matrix_5[0][0] = dc[0][0] * v[1][0] * dc[0][3];
+    __work_matrix_5[0][1] = dc[0][1] * v[1][1] * dc[0][3];
+    __work_matrix_5[0][2] = dc[0][2] * v[1][2] * dc[0][3];
+
+    __work_matrix_5[1][0] = dc[1][0] * v[1][0] * dc[0][3];
+    __work_matrix_5[1][1] = dc[1][1] * v[1][1] * dc[0][3];
+    __work_matrix_5[1][2] = dc[1][2] * v[1][2] * dc[0][3];
+    __work_matrix_5[1][3] = v[1][3];
+
+    __work_matrix_5[2][0] = dc[2][0] * v[1][0] * dc[0][3];
+    __work_matrix_5[2][1] = dc[2][1] * v[1][1] * dc[0][3];
+    __work_matrix_5[2][2] = dc[2][2] * v[1][2] * dc[0][3];
+
+    vf12[0] = sc[0][0] * v[2][0] * sc[1][3];
+    vf12[1] = sc[0][1] * v[2][1] * sc[1][3];
+    vf12[2] = sc[0][2] * v[2][2] * sc[1][3];
+    vf12[3] = v[2][3];
+
+    vf13[0] = sc[1][0] * v[2][0] * sc[1][3];
+    vf13[1] = sc[1][1] * v[2][1] * sc[1][3];
+    vf13[2] = sc[1][2] * v[2][2] * sc[1][3];
+    vf13[3] = v[1][3];
+
+    vf14[0] = sc[2][0] * v[2][0] * sc[1][3];
+    vf14[1] = sc[2][1] * v[2][1] * sc[1][3];
+    vf14[2] = sc[2][2] * v[2][2] * sc[1][3];
+    vf14[3] = sc[2][3];
+
+    vf19[3] = sc[2][3]; // ?
+
+    // Move __work_matrix_5 into VU MEM+0x1A0
+    // Move vf12 into VU MEM+0x1D0
+    // Move vf13 into VU MEM+0x1E0
+    // Move vf14 into VU MEM+0x1F0
+    // Move vf19 into VU MEM+0x200
 }
 
 void _ReadDLightMtx(sceVu0FMATRIX tmp)
 {
-    //__asm__ volatile ("\n\
-    //    sqc2    $vf20,0(%0)\n\
-    //    sqc2    $vf21,0x10(%0)\n\
-    //    sqc2    $vf22,0x20(%0)\n\
-    //": :"r"(tmp));
+    memcpy(tmp, __work_matrix_3, sizeof(LMATRIX));
 }
 
 static void _ReadSLightMtx(sceVu0FMATRIX tmp)
 {
-    //__asm__ volatile ("\n\
-    //    sqc2    $vf23,0(%0)\n\
-    //    sqc2    $vf24,0x10(%0)\n\
-    //    sqc2    $vf25,0x20(%0)\n\
-    //": :"r"(tmp));
+    memcpy(tmp, __work_matrix_4, sizeof(LMATRIX));
 }
 
 void _ReadDColor(sceVu0FMATRIX tmp)
 {
-    //__asm__ volatile ("\n\
-    //    sqc2    $vf26,0(%0)\n\
-    //    sqc2    $vf27,0x10(%0)\n\
-    //    sqc2    $vf28,0x20(%0)\n\
-    //": :"r"(tmp));
+    memcpy(tmp, __work_matrix_5, sizeof(LMATRIX));
 }
 
 static int Tim2CalcBufWidth(int psm, int w)
@@ -472,30 +457,16 @@ void SetMaterialPointerCoordVU()
     SgLightCoordp = (SgVULightCoord *) &((u_char *) getObjWrk())[0x1a0];
 }
 
-inline static void load_abmient(float *amb)
+inline static void load_abmient(sceVu0FVECTOR amb)
 {
-    memcpy(vf19, amb, sizeof(sceVu0FVECTOR));
-    //__asm__ volatile ("\n\
-    //    lqc2    $vf19,0(%0)\n\
-    //    ": :"r"(amb)
-    //);
+    memcpy(__work_vf19, amb, sizeof(sceVu0FVECTOR));
 }
 
 void SetMaterialDataPrerender()
 {
-    //__asm__ volatile ("\n\
-    //    lqc2    $vf4,0(%0)\n\
-    //    lqc2    $vf5,0x10(%0)\n\
-    //    lqc2    $vf6,0x20(%0)\n\
-    //    lqc2    $vf7,0(%1)\n\
-    //    lqc2    $vf8,0x10(%1)\n\
-    //    lqc2    $vf9,0x20(%1)\n\
-    //    lqc2    $vf10,0x30(%1)\n\
-    //    ": :"r"(&SCRATCHPAD[0x110]), "r"(&SCRATCHPAD[0x150])
-    //);
+    memcpy(__work_matrix_0, &SCRATCHPAD[0x110], sizeof(LMATRIX));
+    memcpy(__work_matrix_1, &SCRATCHPAD[0x150], sizeof(sceVu0FMATRIX));
 
-    glm_mat4_make((float*)&SCRATCHPAD[0x110], matrix_vf4);
-    glm_mat4_make((float*)&SCRATCHPAD[0x150], matrix_vf7);
     load_abmient(SgLightParallelp->Parallel_Ambient);
 }
 
@@ -608,32 +579,14 @@ void SetMaterialData(u_int *prim)
 
 static void _SetDLight(sceVu0FMATRIX m0)
 {
-    //__asm__ volatile ("\n\
-    //    lqc2      $vf20,0(%0)\n\
-    //    lqc2      $vf21,0x10(%0)\n\
-    //    lqc2      $vf22,0x20(%0)\n\
-    //    viaddi    $vi2,$vi0,0xf\n\
-    //    viaddi    $vi2,$vi2,5\n\
-    //    vsqi.xyzw $vf20,($vi2++)\n\
-    //    vsqi.xyzw $vf21,($vi2++)\n\
-    //    vsqi.xyzw $vf22,($vi2++)\n\
-    //    ": :"r"(m0)
-    //);
+    memcpy(__work_matrix_3, m0, sizeof(LMATRIX));
+    /* Sends m0 to VU mem+0x140 */
 }
 
 static void _SetSLight(sceVu0FMATRIX m0)
 {
-    //__asm__ volatile ("\n\
-    //    lqc2      $vf23,0(%0)\n\
-    //    lqc2      $vf24,0x10(%0)\n\
-    //    lqc2      $vf25,0x20(%0)\n\
-    //    viaddi    $vi2,$vi0,0xf\n\
-    //    viaddi    $vi2,$vi2,8\n\
-    //    vsqi.xyzw $vf23,($vi2++)\n\
-    //    vsqi.xyzw $vf24,($vi2++)\n\
-    //    vsqi.xyzw $vf25,($vi2++)\n\
-    //    ": :"r"(m0)
-    //);
+    memcpy(__work_matrix_4, m0, sizeof(LMATRIX));
+    /* Sends m0 to VU mem+0x170 */
 }
 
 void SetPointGroup()
@@ -894,6 +847,8 @@ void SetLightData(SgCOORDUNIT *cp0, SgCOORDUNIT *cp1)
 
     *((int *) &SCRATCHPAD[0x64]) = SgSpotGroupNum;
     *((int *) &SCRATCHPAD[0x68]) = SgPointGroupNum;
+
+    MikuPan_SetupAmbientLighting2();
 }
 
 void SgSetInfiniteLights(sceVu0FVECTOR eye, SgLIGHT *lights, int num)
@@ -1006,205 +961,82 @@ void ClearLightStack()
 
 static void _CalcPointA(sceVu0FMATRIX grc, float *grm, float *len)
 {
-    //asm volatile("                              \n\
-    //    lqc2           $vf14,   0x00(%0)        \n\
-    //    lqc2           $vf15,   0x10(%0)        \n\
-    //    lqc2           $vf16,   0x20(%0)        \n\
-    //    vsub.xyz       $vf14,   $vf14,   $vf12  \n\
-    //    vsub.xyz       $vf15,   $vf15,   $vf12  \n\
-    //    vsub.xyz       $vf16,   $vf16,   $vf12  \n\
-    //    vmulax.xyz     ACC,     $vf4,    $vf13x \n\
-    //    vmadday.xyz    ACC,     $vf5,    $vf13y \n\
-    //    vmaddz.xyz     $vf26,   $vf6,    $vf13z \n\
-    //    vmul.xyz       $vf23,   $vf14,   $vf14  \n\
-    //    vmul.xyz       $vf24,   $vf15,   $vf15  \n\
-    //    vmul.xyz       $vf25,   $vf16,   $vf16  \n\
-    //    vmul.xyz       $vf14,   $vf26,   $vf14  \n\
-    //    vmul.xyz       $vf15,   $vf26,   $vf15  \n\
-    //    vmul.xyz       $vf16,   $vf26,   $vf16  \n\
-    //    vadday.x       ACCx,    $vf23x,  $vf23y \n\
-    //    vmaddz.x       $vf23x,  $vf1x,   $vf23z \n\
-    //    vaddax.y       ACCy,    $vf24y,  $vf24x \n\
-    //    vmaddz.y       $vf23y,  $vf1y,   $vf24z \n\
-    //    vaddax.z       ACCz,    $vf25z,  $vf25x \n\
-    //    vmaddy.z       $vf23z,  $vf1z,   $vf25y \n\
-    //    vdiv           Q,       $vf0w,   $vf23x \n\
-    //    vadday.x       ACCx,    $vf14x,  $vf14y \n\
-    //    vmaddz.x       $vf17x,  $vf1x,   $vf14z \n\
-    //    vaddaz.y       ACCy,    $vf15y,  $vf15z \n\
-    //    vmaddx.y       $vf17y,  $vf1y,   $vf15x \n\
-    //    vaddax.z       ACCz,    $vf16z,  $vf16x \n\
-    //    vmaddy.z       $vf17z,  $vf1z,   $vf16y \n\
-    //    vwaitq                                  \n\
-    //    vaddq.x        $vf27x,  $vf0x,   Q      \n\
-    //    vdiv           Q,$vf0w, $vf23y          \n\
-    //    lqc2           $vf24,   0x00(%1)        \n\
-    //    vmul.xyz       $vf17,   $vf17,   $vf24  \n\
-    //    vmaxx.xyz      $vf17,   $vf17,   $vf0x  \n\
-    //    vwaitq                                  \n\
-    //    vaddq.y        $vf27y,  $vf0y,   Q      \n\
-    //    vdiv           Q,$vf0w, $vf23z          \n\
-    //    lqc2           $vf20,   0x10(%1)        \n\
-    //    lqc2           $vf21,   0x20(%1)        \n\
-    //    lqc2           $vf22,   0x30(%1)        \n\
-    //    lqc2           $vf14,   0x40(%1)        \n\
-    //    lqc2           $vf15,   0x50(%1)        \n\
-    //    lqc2           $vf16,   0x60(%1)        \n\
-    //    vwaitq                                  \n\
-    //    vaddq.z        $vf27z,  $vf0z,   Q      \n\
-    //    sqc2           $vf27,   0x00(%2)        \n\
-    //    ": :"r"(grc), "r"(grm), "r"(len)
-    //);
+    sceVu0FVECTOR* wk0 = __work_matrix_0; // in [vf4:vf6]
+    sceVu0FVECTOR* grm1 = (sceVu0FVECTOR*)grm; // in [vf4:vf6]
+    float *lPos = __work_vf12; // in vf12
+    float *lDir = __work_vf13; // in vf13
+    sceVu0FVECTOR vf14, vf15, vf16, vf17;
+    sceVu0FVECTOR vf23, vf24, vf25, vf26;
 
-    sceVu0FVECTOR p0, p1, p2;
-    sceVu0FVECTOR d0, d1, d2;
-    sceVu0FVECTOR basisDot;
+    vf14[0] = grc[0][0] - lPos[0];
+    vf14[1] = grc[0][1] - lPos[1];
+    vf14[2] = grc[0][2] - lPos[2];
 
-    // Load 3 reference points from grc
-    memcpy(p0, grc[0], sizeof(sceVu0FVECTOR));
-    memcpy(p1, grc[1], sizeof(sceVu0FVECTOR));
-    memcpy(p2, grc[2], sizeof(sceVu0FVECTOR));
+    vf15[0] = grc[1][0] - lPos[0];
+    vf15[1] = grc[1][1] - lPos[1];
+    vf15[2] = grc[1][2] - lPos[2];
 
-    // vsub.xyz  p -= vf12   (vector from vertex to light refs)
-    for (int i = 0; i < 3; i++)
-    {
-        p0[i] -= vf12[i];
-        p1[i] -= vf12[i];
-        p2[i] -= vf12[i];
-    }
+    vf16[0] = grc[2][0] - lPos[0];
+    vf16[1] = grc[2][1] - lPos[1];
+    vf16[2] = grc[2][2] - lPos[2];
 
-    // vmulax/vmadday/vmaddz using vf4–vf6 and vf13
-    basisDot[0] = matrix_vf4[0][0]*vf13[0] + matrix_vf4[1][0]*vf13[1] + matrix_vf4[2][0]*vf13[2];
-    basisDot[1] = matrix_vf4[0][1]*vf13[0] + matrix_vf4[1][1]*vf13[1] + matrix_vf4[2][1]*vf13[2];
-    basisDot[2] = matrix_vf4[0][2]*vf13[0] + matrix_vf4[1][2]*vf13[1] + matrix_vf4[2][2]*vf13[2];
+    vf26[0] = (wk0[0][0] * lDir[0]) + (wk0[1][0] * lDir[1]) + (wk0[2][0] * lDir[2]);
+    vf26[1] = (wk0[0][1] * lDir[0]) + (wk0[1][1] * lDir[1]) + (wk0[2][1] * lDir[2]);
+    vf26[2] = (wk0[0][2] * lDir[0]) + (wk0[1][2] * lDir[1]) + (wk0[2][2] * lDir[2]);
 
-    // squared lengths (vf23/24/25)
-    float l0 = p0[0]*p0[0] + p0[1]*p0[1] + p0[2]*p0[2];
-    float l1 = p1[0]*p1[0] + p1[1]*p1[1] + p1[2]*p1[2];
-    float l2 = p2[0]*p2[0] + p2[1]*p2[1] + p2[2]*p2[2];
+    // These 2 actually use vf01, but it's set to [1, 1, 1, -1]
+    // in SgPreRender, by calling Set12Register
+    vf23[0] = POW2(vf14[0]) + POW2(vf14[1]) + POW2(vf14[2]);
+    vf23[1] = POW2(vf15[0]) + POW2(vf15[1]) + POW2(vf15[2]);
+    vf23[2] = POW2(vf16[0]) + POW2(vf16[1]) + POW2(vf16[2]);
 
-    // scale vectors by basisDot (vf26 * p)
-    for (int i = 0; i < 3; i++)
-    {
-        d0[i] = basisDot[i] * p0[i];
-        d1[i] = basisDot[i] * p1[i];
-        d2[i] = basisDot[i] * p2[i];
-    }
+    vf17[0] = (vf26[0] * vf14[0]) + (vf26[1] * vf14[1]) + (vf26[2] * vf14[2]);
+    vf17[1] = (vf26[0] * vf15[0]) + (vf26[1] * vf15[1]) + (vf26[2] * vf15[2]);
+    vf17[2] = (vf26[0] * vf16[0]) + (vf26[1] * vf16[1]) + (vf26[2] * vf16[2]);
 
-    // reciprocal lengths (vdiv Q, vf0w, l)
-    float q0 = 1.0f / l0;
-    float q1 = 1.0f / l1;
-    float q2 = 1.0f / l2;
+    __work_vf17[0] = MAX(vf17[0] * grm1[0][0], 0.0f);
+    __work_vf17[1] = MAX(vf17[1] * grm1[0][1], 0.0f);
+    __work_vf17[2] = MAX(vf17[2] * grm1[0][2], 0.0f);
 
-    // combine components like vadd*/vmadd* sequence into vf17
-    vf17[0] = (d0[0] + d0[1] + d0[2]) * q0;
-    vf17[1] = (d1[0] + d1[1] + d1[2]) * q1;
-    vf17[2] = (d2[0] + d2[1] + d2[2]) * q2;
+    memcpy(__work_matrix_3, &grm1[1][0], sizeof(LMATRIX));
+    memcpy(__work_matrix_2, &grm1[4][0], sizeof(LMATRIX));
 
-    // multiply by attenuation parameters from grm
-    //    lqc2           $vf20,   0x10(%1)        \n\
-    //    lqc2           $vf21,   0x20(%1)        \n\
-    //    lqc2           $vf22,   0x30(%1)        \n\
-    //    lqc2           $vf14,   0x40(%1)        \n\
-    //    lqc2           $vf15,   0x50(%1)        \n\
-    //    lqc2           $vf16,   0x60(%1)        \n\
+    //vf27[0] = 1.0f / vf23[0];
+    //vf27[1] = 1.0f / vf23[1];
+    //vf27[2] = 1.0f / vf23[2];
 
-    memcpy(vf20, &grm[4], sizeof(sceVu0FVECTOR));
-    memcpy(vf21, &grm[4], sizeof(sceVu0FVECTOR));
-    memcpy(vf22, &grm[8], sizeof(sceVu0FVECTOR));
-
-    memcpy(vf14, &grm[12], sizeof(sceVu0FVECTOR));
-    memcpy(vf15, &grm[16], sizeof(sceVu0FVECTOR));
-    memcpy(vf16, &grm[20], sizeof(sceVu0FVECTOR));
-
-    for (int i = 0; i < 3; i++)
-    {
-        vf17[i] *= vf20[i];
-        if (vf17[i] < 0.0f)
-        {
-            vf17[i] = 0.0f; // vmaxx with zero
-        }
-    }
-
-    // store results (vf27)
-    len[0] = vf17[0];
-    len[1] = vf17[1];
-    len[2] = vf17[2];
-
-    vf27[0] = len[0];
-    vf27[1] = len[1];
-    vf27[2] = len[2];
+    // vf27 is also set by this
+    len[0] = 1.0f / vf23[0];
+    len[1] = 1.0f / vf23[1];
+    len[2] = 1.0f / vf23[2];
+    // len[3] = vf27[3]; // undefined, vf27[3] is not set here ever
 }
 
-static void _CalcPointB(float *len)
+static void _CalcPointB(sceVu0FVECTOR len)
 {
-    //asm volatile("\n\
-    //    lqc2           $vf27, 0x00(%0)        \n\
-    //    vmul.xyz       $vf25, $vf27,   $vf17  \n\
-    //    vminiw.xyz     $vf25, $vf25,   $vf0w  \n\
-    //    vmul.xyz       $vf23, $vf25,   $vf25  \n\
-    //    vmulax.xyz     ACC,   $vf20,   $vf25x \n\
-    //    vmadday.xyz    ACC,   $vf21,   $vf25y \n\
-    //    vmaddaz.xyz    ACC,   $vf22,   $vf25z \n\
-    //    vmul.xyz       $vf25, $vf23,   $vf23  \n\
-    //    vmul.xyz       $vf25, $vf25,   $vf25  \n\
-    //    vmaddax.xyz    ACC,   $vf14,   $vf25x \n\
-    //    vmadday.xyz    ACC,   $vf15,   $vf25y \n\
-    //    vmaddaz.xyz    ACC,   $vf16,   $vf25z \n\
-    //    vmadd.xyz      $vf18, $vf18,   $vf1   \n\
-    //    ": :"r"(len)
-    //);
+    sceVu0FVECTOR* wk0 = __work_matrix_3; // in [vf20:vf22]
+    sceVu0FVECTOR* wk1 = __work_matrix_2; // in [vf14:vf16]
+    float *wk18 = __work_vf18; // in vf18
+    float x0, y0, z0, x1, y1, z1;
 
-    memcpy(vf27, len, sizeof(sceVu0FVECTOR));
+    x0 = MIN(len[0] * __work_vf17[0], 1.0f);
+    y0 = MIN(len[1] * __work_vf17[1], 1.0f);
+    z0 = MIN(len[2] * __work_vf17[2], 1.0f);
 
-    // vf25 = vf27 * vf17
-    sceVu0FVECTOR vf25;
-    for (int i = 0; i < 3; i++)
-    {
-        vf25[i] = vf27[i] * vf17[i];
-    }
+    // pow8
+    x1 = POW2(x0);
+    y1 = POW2(x0);
+    z1 = POW2(x0);
+    x1 *= x1;
+    y1 *= y1;
+    z1 *= z1;
+    x1 *= x1;
+    y1 *= y1;
+    z1 *= z1;
 
-    // clamp to 1.0 (vminiw with vf0w)
-    for (int i = 0; i < 3; i++)
-    {
-        if (vf25[i] > 1.0f)
-        {
-            vf25[i] = 1.0f;
-        }
-    }
-
-    // raise to 4th power
-    sceVu0FVECTOR vf23;
-    for (int i = 0; i < 3; i++)
-    {
-        vf23[i] = vf25[i] * vf25[i];   // ^2
-        vf25[i] = vf23[i] * vf23[i];  // ^4
-    }
-
-    // colorA = vf20*x + vf21*y + vf22*z
-    sceVu0FVECTOR colorA;
-    for (int c = 0; c < 3; c++)
-    {
-        colorA[c] = vf20[c]*vf25[0] +
-                    vf21[c]*vf25[1] +
-                    vf22[c]*vf25[2];
-    }
-
-
-    // colorB = vf14*x + vf15*y + vf16*z
-    sceVu0FVECTOR colorB;
-    for (int c = 0; c < 3; c++)
-    {
-        colorB[c] = vf14[c]*vf25[0] +
-                    vf15[c]*vf25[1] +
-                    vf16[c]*vf25[2];
-    }
-
-    // accumulate into vf18 (vertex color)
-    for (int i = 0; i < 3; i++)
-    {
-        vf18[i] += colorA[i] + colorB[i] + vf1[i];
-    }
+    wk18[0] = (wk0[0][0] * x0) + (wk0[1][0] * y0) + (wk0[2][0] * z0) + (wk1[0][0] * x1) + (wk1[1][0] * y1) + (wk1[2][0] * z1) + wk18[0];
+    wk18[1] = (wk0[0][1] * x0) + (wk0[1][1] * y0) + (wk0[2][1] * z0) + (wk1[0][1] * x1) + (wk1[1][1] * y1) + (wk1[2][1] * z1) + wk18[1];
+    wk18[2] = (wk0[0][2] * x0) + (wk0[1][2] * y0) + (wk0[2][2] * z0) + (wk1[0][2] * x1) + (wk1[1][2] * y1) + (wk1[2][2] * z1) + wk18[2];
 }
 
 void CalcPointLight()
@@ -1235,244 +1067,92 @@ void CalcPointLight()
     }
 }
 
-inline static void asm_CalcSpotLight(LMATRIX cdata, sceVu0FVECTOR mdata)
+inline static void asm_CalcSpotLight(LMATRIX cdata, sceVu0FMATRIX mdata)
 {
-    //asm volatile("                              \n\
-    //    lqc2           $vf14, 0x00(%0)          \n\
-    //    lqc2           $vf15, 0x10(%0)          \n\
-    //    lqc2           $vf16, 0x20(%0)          \n\
-    //    vsub.xyz       $vf14, $vf14,    $vf12   \n\
-    //    vsub.xyz       $vf15, $vf15,    $vf12   \n\
-    //    vsub.xyz       $vf16, $vf16,    $vf12   \n\
-    //    vmulax.xyz     ACC,   $vf4,     $vf13x  \n\
-    //    vmadday.xyz    ACC,   $vf5,     $vf13y  \n\
-    //    vmaddz.xyz     $vf26, $vf6,     $vf13z  \n\
-    //    vmul.xyz       $vf23, $vf14,    $vf14   \n\
-    //    vmul.xyz       $vf24, $vf15,    $vf15   \n\
-    //    vmul.xyz       $vf25, $vf16,    $vf16   \n\
-    //    lqc2           $vf20, 0x50(%0)          \n\
-    //    lqc2           $vf21, 0x60(%0)          \n\
-    //    lqc2           $vf22, 0x70(%0)          \n\
-    //    vmul.xyz       $vf20, $vf20,    $vf14   \n\
-    //    vmul.xyz       $vf21, $vf21,    $vf15   \n\
-    //    vmul.xyz       $vf22, $vf22,    $vf16   \n\
-    //    vadday.x       ACC,   $vf23,    $vf23y  \n\
-    //    vmaddz.x       $vf23, $vf1,     $vf23z  \n\
-    //    vaddax.y       ACC,   $vf24,    $vf24x  \n\
-    //    vmaddz.y       $vf23, $vf1,     $vf24z  \n\
-    //    vaddax.z       ACC,   $vf25,    $vf25x  \n\
-    //    vmaddy.z       $vf23, $vf1,     $vf25y  \n\
-    //    vdiv           Q,     $vf0w,    $vf23x  \n\
-    //    vadday.x       ACC,   $vf20,    $vf20y  \n\
-    //    vmaddz.x       $vf17, $vf1,     $vf20z  \n\
-    //    vaddaz.y       ACC,   $vf21,    $vf21z  \n\
-    //    vmaddx.y       $vf17, $vf1,     $vf21x  \n\
-    //    vaddax.z       ACC,   $vf22,    $vf22x  \n\
-    //    vmaddy.z       $vf17, $vf1,     $vf22y  \n\
-    //    vwaitq                                  \n\
-    //    vaddq.x        $vf23, $vf0,     Q       \n\
-    //    vdiv           Q,     $vf0w,    $vf23y  \n\
-    //    vmul.xyz       $vf14, $vf26,    $vf14   \n\
-    //    vmul.xyz       $vf15, $vf26,    $vf15   \n\
-    //    vmul.xyz       $vf16, $vf26,    $vf16   \n\
-    //    vmaxx.xyz      $vf17, $vf17,    $vf0x   \n\
-    //    vwaitq                                  \n\
-    //    vaddq.y        $vf23, $vf0,     Q       \n\
-    //    vdiv           Q,     $vf0w,    $vf23z  \n\
-    //    vadday.x       ACC,   $vf14,    $vf14y  \n\
-    //    vmaddz.x       $vf24, $vf1,     $vf14z  \n\
-    //    vaddaz.y       ACC,   $vf15,    $vf15z  \n\
-    //    vmaddx.y       $vf24, $vf1,     $vf15x  \n\
-    //    vaddax.z       ACC,   $vf16,    $vf16x  \n\
-    //    vmaddy.z       $vf24, $vf1,     $vf16y  \n\
-    //    vmaxx.xyz      $vf24, $vf24,    $vf0x   \n\
-    //    vwaitq                                  \n\
-    //    vaddq.z        $vf23, $vf0,     Q       \n\
-    //    vmul.xyz       $vf17, $vf17,    $vf17   \n\
-    //    lqc2           $vf27, 0x30(%0)          \n\
-    //    lqc2           $vf28, 0x40(%0)          \n\
-    //    vmula.xyz      ACC,   $vf17,    $vf23   \n\
-    //    vmsub.xyz      $vf17, $vf27,    $vf1    \n\
-    //    vmaxx.xyz      $vf17, $vf17,    $vf0x   \n\
-    //    vmul.xyz       $vf17, $vf17,    $vf28   \n\
-    //    lqc2           $vf26, 0x00(%1)          \n\
-    //    vmul.xyz       $vf24, $vf24,    $vf23   \n\
-    //    vmul.xyz       $vf24, $vf24,    $vf26   \n\
-    //    vminiw.xyz     $vf24, $vf24,    $vf0w   \n\
-    //    vmul.xyz       $vf25, $vf24,    $vf24   \n\
-    //    vmul.xyz       $vf25, $vf25,    $vf25   \n\
-    //    vmul.xyz       $vf25, $vf25,    $vf25   \n\
-    //    vmul.xyz       $vf24, $vf24,    $vf17   \n\
-    //    vmul.xyz       $vf25, $vf25,    $vf17   \n\
-    //    lqc2           $vf20, 0x10(%1)          \n\
-    //    lqc2           $vf21, 0x20(%1)          \n\
-    //    lqc2           $vf22, 0x30(%1)          \n\
-    //    vmulax.xyz     ACC,   $vf18,    $vf1x   \n\
-    //    vmaddax.xyz    ACC,   $vf20,    $vf24x  \n\
-    //    vmadday.xyz    ACC,   $vf21,    $vf24y  \n\
-    //    vmaddaz.xyz    ACC,   $vf22,    $vf24z  \n\
-    //    lqc2           $vf14, 0x40(%1)          \n\
-    //    lqc2           $vf15, 0x50(%1)          \n\
-    //    lqc2           $vf16, 0x60(%1)          \n\
-    //    vmaddax.xyz    ACC,   $vf14,    $vf25x  \n\
-    //    vmadday.xyz    ACC,   $vf15,    $vf25y  \n\
-    //    vmaddz.xyz     $vf18, $vf16,    $vf25z  \n\
-    //    ": :"r"(cdata), "r"(mdata)
-    //);
+    sceVu0FVECTOR *wk0 = __work_matrix_0; // in [vf4:vf6]
+    float *lPos = __work_vf12; // in vf12
+    float *lDir = __work_vf13; // in vf13
+    float *wk18 = __work_vf18; // in vf18
+    sceVu0FVECTOR vf14, vf15, vf16, vf17;
+    sceVu0FVECTOR vf23, vf24, vf25, vf26;
+    LMATRIX dLgtMtx;
 
-    memcpy(vf26, mdata, sizeof(sceVu0FVECTOR));
-    memcpy(vf20, &mdata[4], sizeof(sceVu0FVECTOR));
-    memcpy(vf21, &mdata[8], sizeof(sceVu0FVECTOR));
-    memcpy(vf22, &mdata[12], sizeof(sceVu0FVECTOR));
+    vf14[0] = cdata[0][0] - lPos[0];
+    vf14[1] = cdata[0][1] - lPos[1];
+    vf14[2] = cdata[0][2] - lPos[2];
 
+    vf15[0] = cdata[1][0] - lPos[0];
+    vf15[1] = cdata[1][1] - lPos[1];
+    vf15[2] = cdata[1][2] - lPos[2];
 
-    sceVu0FVECTOR L0, L1, L2;
-    sceVu0FVECTOR dirDot;
-    sceVu0FVECTOR proj0, proj1, proj2;
-    sceVu0FVECTOR d0, d1, d2;
-    sceVu0FVECTOR spot, spot2, spot4;
-    sceVu0FVECTOR colA, colB;
-    sceVu0FVECTOR intensity;
+    vf16[0] = cdata[2][0] - lPos[0];
+    vf16[1] = cdata[2][1] - lPos[1];
+    vf16[2] = cdata[2][2] - lPos[2];
 
-    /* ------------------------------------------------------------
-       Load light cone points (vf14–vf16)
-       ------------------------------------------------------------ */
-    memcpy(L0, cdata[0], sizeof(sceVu0FVECTOR));
-    memcpy(L1, cdata[1], sizeof(sceVu0FVECTOR));
-    memcpy(L2, cdata[2], sizeof(sceVu0FVECTOR));
+    vf26[0] = (wk0[0][0] * lDir[0]) + (wk0[1][0] * lDir[1]) + (wk0[2][0] * lDir[2]);
+    vf26[1] = (wk0[0][1] * lDir[0]) + (wk0[1][1] * lDir[1]) + (wk0[2][1] * lDir[2]);
+    vf26[2] = (wk0[0][2] * lDir[0]) + (wk0[1][2] * lDir[1]) + (wk0[2][2] * lDir[2]);
 
-    /* ------------------------------------------------------------
-       Subtract vertex position (vf12)
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        L0[i] -= vf12[i];
-        L1[i] -= vf12[i];
-        L2[i] -= vf12[i];
-    }
+    dLgtMtx[0][0] = cdata[5][0] * vf14[0];
+    dLgtMtx[0][1] = cdata[5][1] * vf14[1];
+    dLgtMtx[0][2] = cdata[5][2] * vf14[2];
 
-    /* ------------------------------------------------------------
-       Direction basis dot (vf4–vf6 with vf13)
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        dirDot[i] =
-            matrix_vf4[0][i] * vf13[0] +
-            matrix_vf4[1][i] * vf13[1] +
-            matrix_vf4[2][i] * vf13[2];
-    }
+    dLgtMtx[1][0] = cdata[6][0] * vf15[0];
+    dLgtMtx[1][1] = cdata[6][1] * vf15[1];
+    dLgtMtx[1][2] = cdata[6][2] * vf15[2];
 
-    /* ------------------------------------------------------------
-       Squared distances
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        d0[i] = L0[i] * L0[i];
-        d1[i] = L1[i] * L1[i];
-        d2[i] = L2[i] * L2[i];
-    }
+    dLgtMtx[2][0] = cdata[7][0] * vf16[0];
+    dLgtMtx[2][1] = cdata[7][1] * vf16[1];
+    dLgtMtx[2][2] = cdata[7][2] * vf16[2];
 
-    /* ------------------------------------------------------------
-       Direction projection
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        proj0[i] = L0[i] * dirDot[i];
-        proj1[i] = L1[i] * dirDot[i];
-        proj2[i] = L2[i] * dirDot[i];
-    }
+    vf23[0] = 1.0f / (POW2(vf14[0]) + POW2(vf14[1]) + POW2(vf14[2]));
+    vf23[1] = 1.0f / (POW2(vf15[0]) + POW2(vf15[1]) + POW2(vf15[2]));
+    vf23[2] = 1.0f / (POW2(vf16[0]) + POW2(vf16[1]) + POW2(vf16[2]));
 
-    /* ------------------------------------------------------------
-       Inverse distance (vdiv Q)
-       ------------------------------------------------------------ */
-    float inv0 = 1.0f / (d0[0] + d0[1] + d0[2]);
-    float inv1 = 1.0f / (d1[0] + d1[1] + d1[2]);
-    float inv2 = 1.0f / (d2[0] + d2[1] + d2[2]);
+    vf17[0] = MAX(dLgtMtx[0][0] + dLgtMtx[0][1] + dLgtMtx[0][2], 0.0f);
+    vf17[1] = MAX(dLgtMtx[1][0] + dLgtMtx[1][1] + dLgtMtx[1][2], 0.0f);
+    vf17[2] = MAX(dLgtMtx[2][0] + dLgtMtx[2][1] + dLgtMtx[2][2], 0.0f);
 
-    spot[0] = inv0;
-    spot[1] = inv1;
-    spot[2] = inv2;
+    vf17[0] = MAX((POW2(vf17[0]) * vf23[0]) - cdata[3][0], 0.0f) * cdata[4][0];
+    vf17[1] = MAX((POW2(vf17[1]) * vf23[1]) - cdata[3][1], 0.0f) * cdata[4][1];
+    vf17[2] = MAX((POW2(vf17[2]) * vf23[2]) - cdata[3][2], 0.0f) * cdata[4][2];
 
-    /* ------------------------------------------------------------
-       PS2 falloff curve (square then square again = power 4)
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        spot2[i] = spot[i] * spot[i];
-        spot4[i] = spot2[i] * spot2[i];
+    vf24[0] = MAX((vf26[0] * vf14[0]) + (vf26[1] * vf14[1]) + (vf26[2] * vf14[2]), 0.0f);
+    vf24[1] = MAX((vf26[0] * vf15[0]) + (vf26[1] * vf15[1]) + (vf26[2] * vf15[2]), 0.0f);
+    vf24[2] = MAX((vf26[0] * vf16[0]) + (vf26[1] * vf16[1]) + (vf26[2] * vf16[2]), 0.0f);
 
-        /* clamp (vminiw / vmaxx style) */
-        if (spot4[i] < 0.0f) spot4[i] = 0.0f;
-        if (spot4[i] > 1.0f) spot4[i] = 1.0f;
-    }
+    vf24[0] = MIN(vf24[0] * vf23[0] * mdata[0][0], 1.0f);
+    vf24[1] = MIN(vf24[1] * vf23[1] * mdata[0][1], 1.0f);
+    vf24[2] = MIN(vf24[2] * vf23[2] * mdata[0][2], 1.0f);
 
-    /* ------------------------------------------------------------
-       Cone / material modulation
-       vf26 = material color
-       vf27/vf28 = cone parameters
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        intensity[i] =
-            (spot[i] * vf27[i] + vf28[i]) * vf26[i];
-    }
+    // POW8
+    vf25[0] = POW2(vf24[0]);
+    vf25[1] = POW2(vf24[1]);
+    vf25[2] = POW2(vf24[2]);
+    vf25[0] *= vf25[0];
+    vf25[1] *= vf25[1];
+    vf25[2] *= vf25[2];
+    vf25[0] *= vf25[0];
+    vf25[1] *= vf25[1];
+    vf25[2] *= vf25[2];
 
-    /* ------------------------------------------------------------
-       Build diffuse contribution (dual-lobe lighting)
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        colA[i] =
-            vf20[i] * spot4[0] +
-            vf21[i] * spot4[1] +
-            vf22[i] * spot4[2];
+    vf24[0] *= vf17[0];
+    vf24[1] *= vf17[1];
+    vf24[2] *= vf17[2];
+    vf25[0] *= vf17[0];
+    vf25[1] *= vf17[1];
+    vf25[2] *= vf17[2];
 
-        colB[i] =
-            vf14[i] * spot4[0] +
-            vf15[i] * spot4[1] +
-            vf16[i] * spot4[2];
-
-        vf17[i] = colA[i] + colB[i];
-    }
-
-    /* ------------------------------------------------------------
-       Final attenuation shaping (vf1 bias + saturation)
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        vf17[i] = vf17[i] * vf17[i];
-    }
-
-    /* ------------------------------------------------------------
-       Distance weighting
-       ------------------------------------------------------------ */
-    vf17[0] *= spot4[0];
-    vf17[1] *= spot4[1];
-    vf17[2] *= spot4[2];
-
-    /* ------------------------------------------------------------
-       Clamp
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        if (vf17[i] < 0.0f) vf17[i] = 0.0f;
-    }
-
-    /* ------------------------------------------------------------
-       Final spot light contribution accumulation
-       vf18 += diffuse + ambient bias (vf1)
-       ------------------------------------------------------------ */
-    for (int i = 0; i < 3; i++)
-    {
-        vf18[i] += vf17[i] + vf1[i];
-    }
+    wk18[0] += (mdata[1][0] * vf24[0]) + (mdata[2][0] * vf24[1]) + (mdata[3][0] * vf24[2]) + (mdata[4][0] * vf25[0]) + (mdata[5][0] * vf25[1]) + (mdata[6][0] * vf25[2]);
+    wk18[1] += (mdata[1][1] * vf24[0]) + (mdata[2][1] * vf24[1]) + (mdata[3][1] * vf24[2]) + (mdata[4][1] * vf25[0]) + (mdata[5][1] * vf25[1]) + (mdata[6][1] * vf25[2]);
+    wk18[2] += (mdata[1][2] * vf24[0]) + (mdata[2][2] * vf24[1]) + (mdata[3][2] * vf24[2]) + (mdata[4][2] * vf25[0]) + (mdata[5][2] * vf25[1]) + (mdata[6][2] * vf25[2]);
 }
 
 void CalcSpotLight()
 {
     if (SgSpotGroupNum > 0)
     {
-        asm_CalcSpotLight(SgLightCoordp->Spot_pos, SgLightSpotp->Spot_btimes);
+        asm_CalcSpotLight(SgLightCoordp->Spot_pos, &SgLightSpotp->Spot_btimes);
     }
 }
 
@@ -1716,62 +1396,28 @@ u_int *GetNextUnpackAddr(u_int *prim)
 inline static void Vu0RowMajorMatrixMultiply(sceVu0FVECTOR normal,
                                             sceVu0FVECTOR vertex)
 {
-    //asm volatile("                              \n\
-    //    lqc2            $vf13, 0x00(%0)         \n\
-    //    lqc2            $vf12, 0x00(%1)         \n\
-    //    vmulax.xyzw     ACC,   $vf7,    $vf12x  \n\
-    //    vmadday.xyzw    ACC,   $vf8,    $vf12y  \n\
-    //    vmaddaz.xyzw    ACC,   $vf9,    $vf12z  \n\
-    //    vmaddw.xyzw     $vf12, $vf10,   $vf12w  \n\
-    //    ": :"r"(normal), "r"(vertex)
-    //);
+    sceVu0FVECTOR *wk0 = __work_matrix_1; // in [vf7:vf10]
 
-    const float (*M)[4] = (const float (*)[4])matrix_vf7;
-    const float x = vertex[0];
-    const float y = vertex[1];
-    const float z = vertex[2];
-    const float w = vertex[3];
+    memcpy(__work_vf13, normal, sizeof(sceVu0FVECTOR));
 
-    // Exact equivalent of:
-    // vmulax / vmadday / vmaddaz / vmaddw
-
-    vf12[0] = M[0][0] * x + M[1][0] * y + M[2][0] * z + M[3][0] * w;
-    vf12[1] = M[0][1] * x + M[1][1] * y + M[2][1] * z + M[3][1] * w;
-    vf12[2] = M[0][2] * x + M[1][2] * y + M[2][2] * z + M[3][2] * w;
-    vf12[3] = M[0][3] * x + M[1][3] * y + M[2][3] * z + M[3][3] * w;
-
-    vf13[0] = normal[0];
-    vf13[1] = normal[1];
-    vf13[2] = normal[2];
-    vf13[3] = normal[3];
+    __work_vf12[0] = (wk0[0][0] * vertex[0]) + (wk0[1][0] * vertex[1]) + (wk0[2][0] * vertex[2]) + (wk0[3][0] * vertex[3]);
+    __work_vf12[1] = (wk0[0][1] * vertex[0]) + (wk0[1][1] * vertex[1]) + (wk0[2][1] * vertex[2]) + (wk0[3][1] * vertex[3]);
+    __work_vf12[2] = (wk0[0][2] * vertex[0]) + (wk0[1][2] * vertex[1]) + (wk0[2][2] * vertex[2]) + (wk0[3][2] * vertex[3]);
+    __work_vf12[3] = (wk0[0][3] * vertex[0]) + (wk0[1][3] * vertex[1]) + (wk0[2][3] * vertex[2]) + (wk0[3][3] * vertex[3]);
 }
 
 
 inline static void Vu0LoadVectorRegisterVF18(sceVu0FVECTOR first)
 {
-    memcpy(vf18, first, sizeof(sceVu0FVECTOR));
-    //asm volatile("              \n\
-    //    lqc2    $vf18, 0x00(%0) \n\
-    //    ": :"r"(first)
-    //);
+    memcpy(__work_vf18, first, sizeof(sceVu0FVECTOR));
 }
 
 inline static void Vu0ClampColors(sceVu0FVECTOR pcol)
 {
-    //asm volatile("                           \n\
-    //    vminiw.xyzw    $vf18, $vf18, $vf19w  \n\
-    //    sqc2           $vf18, 0x00(%0)       \n\
-    //    ": :"r"(pcol)
-    //);
-
-    const float maxv = vf19[3]; // 255.0f
-
-    vf18[0] = vf18[0] > maxv ? maxv : vf18[0];
-    vf18[1] = vf18[1] > maxv ? maxv : vf18[1];
-    vf18[2] = vf18[2] > maxv ? maxv : vf18[2];
-    vf18[3] = vf18[3] > maxv ? maxv : vf18[3];
-
-    memcpy(pcol, vf18, sizeof(sceVu0FVECTOR));
+    pcol[0] = __work_vf18[0] = MIN(__work_vf18[0], __work_vf19[3]);
+    pcol[1] = __work_vf18[1] = MIN(__work_vf18[1], __work_vf19[3]);
+    pcol[2] = __work_vf18[2] = MIN(__work_vf18[2], __work_vf19[3]);
+    pcol[3] = __work_vf18[3] = MIN(__work_vf18[3], __work_vf19[3]);
 }
 
 void SetPreRenderTYPE0(int gloops, u_int *prim)
@@ -2058,28 +1704,19 @@ void SetPreRenderMeshData(u_int *prim)
 
 static void _SetSpotPos(sceVu0FVECTOR pos, sceVu0FVECTOR dir)
 {
-    //asm volatile("              \n\
-    //    lqc2    $vf12, 0(%0)    \n\
-    //    lqc2    $vf13, 0(%1)    \n\
-    //    ": :"r"(pos), "r"(dir)
-    //);
+    memcpy(__work_vf12, pos, sizeof(sceVu0FVECTOR));
+    memcpy(__work_vf13, dir, sizeof(sceVu0FVECTOR));
 }
 
 static float _SpotInnerProduct(sceVu0FVECTOR bpos)
 {
-    float ret = 0.5f;
+    float x, y, z;
 
-    //asm volatile("\n\
-    //    lqc2        $vf14, 0(%1)          \n\
-    //    vsub.xyz    $vf14, $vf12, $vf14   \n\
-    //    vmul.xyz    $vf14, $vf13, $vf14   \n\
-    //    vaddy.x     $vf14, $vf14, $vf14y  \n\
-    //    vaddz.x     $vf14, $vf14, $vf14z  \n\
-    //    qmfc2       %0,    $vf14          \n\
-    //    ":"=r"(ret) :"r"(bpos)
-    //);
+    x = __work_vf13[0] * (__work_vf12[0] - bpos[0]);
+    y = __work_vf13[1] * (__work_vf12[1] - bpos[1]);
+    z = __work_vf13[2] * (__work_vf12[2] - bpos[2]);
 
-    return ret;
+    return x + y + z;
 }
 
 void SelectLight(u_int *prim)

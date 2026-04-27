@@ -138,6 +138,12 @@ void Key_On(int vNo)
     v->nax = v->ssa;
 
     v->stream = SDL_CreateAudioStream(&spec, NULL);
+    if (v->stream == NULL)
+    {
+        info_log("Failed to create audio stream %s", SDL_GetError());
+        return;
+    }
+
     SDL_BindAudioStream(audio_dev, v->stream);
 
     v->isPlaying = true;

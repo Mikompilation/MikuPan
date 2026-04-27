@@ -62,6 +62,7 @@ void MikuPan_SetWorldClipView();
 float* MikuPan_GetWorldClipView();
 float* MikuPan_GetWorldClip();
 void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp);
+void MikuPan_SetupAmbientLighting2();
 void MikuPan_SetFontTexture(int fnt);
 void MikuPan_DeleteTexture(MikuPan_TextureInfo* texture_info);
 MikuPan_TextureInfo* MikuPan_CreateGLTexture(sceGsTex0 *tex0);

@@ -25,6 +25,7 @@ layout(std140) uniform LightBlock
 in vec2 vUV;
 in vec4 vNormal;
 in vec4 oViewPosition;
+in vec3 oVertexColor;
 
 out vec4 FragColor;
 
@@ -41,18 +42,15 @@ uniform float uColorScale;
 vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
 {
     vec4 N = vec4(normalize(normal.xyz), normal.w);
-    vec3 result = uAmbient.rgb * baseColor;
+    //vec3 result = uAmbient.rgb * baseColor.rgb;
+    vec3 result = vec3(0.0f, 0.0f, 0.0f);
 
     // Directional (parallel)
     for (int i = 0; i < uParCount.x; i++)
     {
         float NdotL = max(dot(N.xyz, uParDir[i].xyz), 0.0);
 
-        float colscale = (uParDiffuse[i].r +
-        uParDiffuse[i].g +
-        uParDiffuse[i].b) / 3.0f;
-
-        result += baseColor * colscale * NdotL;
+        result += baseColor.rgb * uParDiffuse[i].rgb * NdotL;
     }
 
     // Point
@@ -64,15 +62,9 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
 
         float NdotL = max(dot(N.xyz, Ldir), 0.0);
 
-        float colscale =
-        (uPointDiffuse[i].r +
-        uPointDiffuse[i].g +
-        uPointDiffuse[i].b) * uPointPower[i].x;
+        float atten = uPointPower[i].x / (dist);
 
-        float distAtt = 1.0 / (1.0 + dist);
-        float att = colscale * distAtt;
-
-        result += baseColor * NdotL * att;
+        result += baseColor.rgb * uPointDiffuse[i].rgb * NdotL * atten;
     }
 
     // Spot
@@ -91,17 +83,22 @@ vec3 ApplyPS2Lights(vec4 normal, vec4 viewPos, vec3 baseColor)
         if (cone < uSpotIntens[i].x)
         continue;
 
-        float atten = 1.0 / dist2;
+        float atten = 1.0f / dist2;
 
         float NdotL = max(dot(N.xyz, Ldir), 0.0);
 
         float w = cone * atten * uSpotPower[i].x;
 
-        result += baseColor *
+        result += baseColor.rgb *
         uSpotDiffuse[i].rgb *
         NdotL *
         w;
     }
+
+    vec3 min_color = uAmbient.rgb * baseColor.rgb;
+    result.r = clamp(result.r, min_color.r, 1.0f);
+    result.g = clamp(result.g, min_color.g, 1.0f);
+    result.b = clamp(result.b, min_color.b, 1.0f);
 
     return result;
 }
@@ -115,19 +112,25 @@ void main()
         discard;
     }
 
+    vec3 albedo = color.rgb * oVertexColor;
+
     // Fog
     float fogFactor = uFog.w * (1.0 / -oViewPosition.z) + uFog.z;
     fogFactor = clamp(fogFactor, uFog.x, uFog.y);
 
-
     // Lighting
-    color.rgb = ApplyPS2Lights(vNormal, oViewPosition, color.rgb);
+    color.rgb = ApplyPS2Lights(vNormal, oViewPosition, albedo.rgb);
 
+    // Fog after lighting
     color = mix(uFogColor, color, fogFactor);
+
+    color.r = clamp(color.r, albedo.r, 1.0f);
+    color.g = clamp(color.g, albedo.g, 1.0f);
+    color.b = clamp(color.b, albedo.b, 1.0f);
 
     if (renderNormals == 1)
     {
-        FragColor = vNormal;
+        FragColor = vec4(oVertexColor, 1.0f);
     }
     else
     {

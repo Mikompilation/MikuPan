@@ -128,7 +128,7 @@ class GSHelper
                                             int cbw, int csa, char alpha_reg);
     void Clear();
 
-    std::vector<char> mem_ = std::vector<char> (4 * 1024 * 1024);
+    std::vector<char> mem_ = std::vector<char> (8 * 1024 * 1024);
 };
 }// namespace GS
 

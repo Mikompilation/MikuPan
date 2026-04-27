@@ -23,6 +23,15 @@ include(cglm)
 include(xxhash)
 
 set(MIKUPAN_SOURCES
+        resources/shaders/textured_mesh_lighted.frag
+        resources/shaders/bounding_box.vert
+        resources/shaders/mesh_0x2.vert
+        resources/shaders/mesh_0x12.vert
+        resources/shaders/mesh_0xA.vert
+        resources/shaders/sprite.frag
+        resources/shaders/sprite.vert
+        resources/shaders/untextured_coloured_sprite.frag
+        resources/shaders/untextured_coloured_sprite.vert
         "src/mikupan/mikupan_file.cpp"
         "src/common/ul_math.c"
         "src/common/utility.c"

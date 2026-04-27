@@ -10,6 +10,7 @@ uniform mat4 projection;
 out vec2 vUV;
 out vec4 vNormal;
 out vec4 oViewPosition;
+out vec3 oVertexColor;
 
 void main()
 {
@@ -24,5 +25,5 @@ void main()
 
     vec4 a = view * aPos;
     oViewPosition = a;
-
+    oVertexColor = vec3(0.0f, 0.0f, 0.0f);
 }

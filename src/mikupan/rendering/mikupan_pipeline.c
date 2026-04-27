@@ -11,7 +11,7 @@ void MikuPan_InitPipeline()
 {
     ///////// MESH_0x12_SHADER /////////
     MikuPan_PipelineInfo* curr_pipeline = &pipelines[POSITION3_NORMAL3_UV2];
-    MikuPan_CreateBufferObjectsInfo(curr_pipeline, 2);
+    MikuPan_CreateBufferObjectsInfo(curr_pipeline, 3);
     glad_glGenVertexArrays(1, &curr_pipeline->vao);
     glad_glBindVertexArray(curr_pipeline->vao);
 
@@ -38,6 +38,15 @@ void MikuPan_InitPipeline()
         &curr_pipeline->buffers[1].attributes[0],
         2, 2,
         sizeof(float[2]), 0);
+
+    /// BUFFER 3: Vertex Color
+    MikuPan_SetBufferObjectInfo(
+        &curr_pipeline->buffers[2],
+        1024 * 32, 1);
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[2].attributes[0],
+        3, 3,
+        sizeof(float[3]), 0);
 
     glad_glBindVertexArray(0);
 
@@ -141,8 +150,6 @@ void MikuPan_InitPipeline()
         4, 2,
         sizeof(float[3][4]), sizeof(float[2][4]));
 
-    glad_glEnableVertexAttribArray(0);
-
     ///////// LIGHT DATA BUFFER /////////
     curr_pipeline = &pipelines[LIGHTING_DATA];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 1);
@@ -151,6 +158,8 @@ void MikuPan_InitPipeline()
     MikuPan_SetUniformBufferObjectInfo(&curr_pipeline->buffers[0], sizeof(MikuPan_LightData), 0);
     glad_glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glad_glBindBufferBase(GL_UNIFORM_BUFFER, 0, curr_pipeline->buffers[0].id);
+
+    glad_glEnableVertexAttribArray(0);
 }
 
 void MikuPan_CreateBufferObjectsInfo(MikuPan_PipelineInfo* pipeline_info, u_int num_buffers)
@@ -167,6 +176,8 @@ void MikuPan_SetVertexBufferAttributeInfo(MikuPan_AttributeInfo *attribute_info,
     attribute_info->index = index;
     attribute_info->stride = stride;
     attribute_info->offset = offset;
+
+
 
     glad_glEnableVertexAttribArray(attribute_info->index);
     glad_glVertexAttribPointer(

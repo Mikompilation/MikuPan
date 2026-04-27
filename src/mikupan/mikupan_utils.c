@@ -123,6 +123,28 @@ void MikuPan_FixUV(float *uv, int num)
     }
 }
 
+void MikuPan_FixColors(float *color_buf, int num)
+{
+    typedef struct
+    {
+        float r;
+        float g;
+        float b;
+    } colour;
+
+    colour *uvf = (colour *) color_buf;
+
+    for (int i = 0; i < num; i++)
+    {
+        if (*((int *) &uvf[i].r) == 1)
+        {
+            uvf[i].r = uvf[i - 2].r;
+            uvf[i].g = uvf[i - 2].g;
+            uvf[i].b = uvf[i - 2].b;
+        }
+    }
+}
+
 void MikuPan_SetTriangleIndex(int *triangle_index, int vertex_count,
                               int vertex_offset, int mesh_offset)
 {
@@ -251,4 +273,27 @@ void MikuPan_GSToNDC(int Xgs, int Ygs, int Zgs, float* x, float* y, float* z, fl
 
     float z01 = (float)((float)Zgs - 255.0f) / (32768.0f - 255.0f);
     *z = z01 * 2.0f - 1.0f;
+}
+
+void MikuPan_ConvertScreenToNDCCoord(int *out, float ref_width,
+                                     float ref_height, float target_width,
+                                     float target_height)
+{
+    float target_aspect = target_width / target_height;
+    float window_aspect = (float)ref_width / (float)ref_height;
+
+    if (window_aspect > target_aspect)
+    {
+        out[3] = (int)ref_height;
+        out[2] = (int)(ref_height * target_aspect);
+        out[0] = (int) ((ref_width - (float)out[2]) / 2);
+        out[1] = 0;
+    }
+    else
+    {
+        out[2] = (int)ref_width;
+        out[3] = (int)(ref_width / target_aspect);
+        out[0] = 0;
+        out[1] = (int) ((ref_height - (float)out[3]) / 2);
+    }
 }

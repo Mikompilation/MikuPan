@@ -23,3 +23,4 @@ cmake-build-debug-mingw/
 cmake-build-release-mingw/
 /.vs
 /out
+/cmake-build-mingw

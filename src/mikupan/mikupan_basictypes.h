@@ -4,11 +4,13 @@
 
 typedef struct
 {
-    float x;
-    float y;
-    float w;
-    float h;
-} MikuPan_Rect;
+    u_int id;
+} MikuPan_RenderBufferObject;
+
+typedef struct
+{
+    u_int id;
+} MikuPan_FrameBufferObject;
 
 typedef struct
 {
@@ -18,6 +20,24 @@ typedef struct
     uint64_t tex0;
     uint64_t hash;
 } MikuPan_TextureInfo;
+
+typedef struct
+{
+    int msaa;
+    MikuPan_FrameBufferObject framebuffer;
+    MikuPan_RenderBufferObject depth;
+    MikuPan_RenderBufferObject colour;
+    MikuPan_TextureInfo texture;
+    MikuPan_RenderBufferObject framebuffer_readback;
+} MikuPan_MsaaBufferObject;
+
+typedef struct
+{
+    float x;
+    float y;
+    float w;
+    float h;
+} MikuPan_Rect;
 
 typedef struct
 {
