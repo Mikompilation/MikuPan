@@ -105,8 +105,8 @@ void ICdvdDoTransfer(CDVD_REQ_BUF *rq)
             break;
         case TRANS_MEM_SPU:// SPU
             SeSetStartPoint(rq->se_buf_no, rq->file_no);
-            MikuPan_ReadFileInArchive64(rq->start_sector, rq->size_sector,
-                                        &load_buf_table[cdvd_stat.now_lbuf]);
+            MikuPan_BufferFile(rq->start_sector, rq->size_sector,
+                               &load_buf_table[cdvd_stat.now_lbuf]);
             break;
     }
 
@@ -127,9 +127,9 @@ static void ICdvdAdpcmLoad()
         pos = 1;
     }
 
-    MikuPan_ReadFileInArchive64(cdvd_stat.adpcm[pos].start,
-                                cdvd_stat.adpcm[pos].size_now,
-                                &AdpcmIopBuf[pos]);
+    MikuPan_BufferFile(cdvd_stat.adpcm[pos].start,
+                       cdvd_stat.adpcm[pos].size_now, 
+                       &AdpcmIopBuf[pos]);
 
     cdvd_stat.adpcm[0].now_load = 1;
     cdvd_stat.adpcm_req = 1;
