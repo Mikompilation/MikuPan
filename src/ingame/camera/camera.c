@@ -1,5 +1,7 @@
 #include "common.h"
 #include "graphics/graph3d/sglib.h"
+#include "mikupan/mikupan_file_c.h"
+#include "mikupan/mikupan_logging_c.h"
 
 #include <common/ul_math.h>
 #include <graphics/graph2d/effect.h>
@@ -39,7 +41,7 @@ int renewal_data_chk_cnt = 0;
 u_short cdcopy[2] = {0};
 u_char cam_info_disp = 1;
 
-#define DEG2RAD(x) ((float)(x)*PI/180.0f)
+#define DEG2RAD(x) ((float) (x) * PI / 180.0f)
 
 #include "camera.h"
 
@@ -73,397 +75,605 @@ u_int ncam_025[] = {41788, 42812, 4294967295};
 u_int ncam_026[] = {42044, 42300, 4294967295};
 
 u_int *ncam_comple_dat1[] = {
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_012, ncam_000,
-    ncam_000, ncam_011, ncam_000, ncam_014, ncam_000, ncam_009, ncam_000, ncam_013, ncam_010, ncam_001, ncam_000,
-    ncam_015, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_002, ncam_000, ncam_000, ncam_003, ncam_000, ncam_000, ncam_000, ncam_021,
-    ncam_022, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_023, ncam_024,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_016, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_012, ncam_000, ncam_000, ncam_011,
+    ncam_000, ncam_014, ncam_000, ncam_009, ncam_000, ncam_013, ncam_010,
+    ncam_001, ncam_000, ncam_015, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_002, ncam_000, ncam_000, ncam_003, ncam_000,
+    ncam_000, ncam_000, ncam_021, ncam_022, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_023, ncam_024, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_016, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000,
 };
 
 u_int *ncam_comple_dat2[] = {
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000,
 };
 
 u_int *ncam_comple_dat3[] = {
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000,
 };
 
 u_int *ncam_comple_dat4[] = {
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
-    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000, ncam_000,
+    ncam_000, ncam_000, ncam_000,
 };
 
 u_int bcam_000[] = {4294967295};
 
 u_int *bcam_comple_dat1[] = {
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000,
 };
 
 u_int *bcam_comple_dat2[] = {
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000,
 };
 
 u_int *bcam_comple_dat3[] = {
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000,
 };
 
 u_int *bcam_comple_dat4[] = {
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
-    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000, bcam_000,
+    bcam_000, bcam_000, bcam_000,
 };
 
 u_short dc0000[] = {1, 65535};
@@ -610,154 +820,219 @@ u_short dc3280[] = {65535};
 u_short dc3290[] = {65535};
 
 u_short *dc_no_tbl0[] = {
-    dc0000, dc0010, dc0020, dc0030, dc0040, dc0050, dc0060, dc0070, dc0080, dc0090, dc0100, dc0110, dc0120,
-    dc0130, dc0140, dc0150, dc0160, dc0170, dc0180, dc0190, dc0200, dc0210, dc0220, dc0230, dc0240, dc0250,
-    dc0260, dc0270, dc0280, dc0290, dc0300, dc0310, dc0320, dc0330, dc0340, dc0350, dc0360, dc0370, dc0380,
-    dc0390, dc0400, dc0410, dc0420, dc0430, dc0440, dc0450, dc0460, dc0470, dc0480, dc0490, dc0500, dc0510,
+    dc0000, dc0010, dc0020, dc0030, dc0040, dc0050, dc0060, dc0070, dc0080,
+    dc0090, dc0100, dc0110, dc0120, dc0130, dc0140, dc0150, dc0160, dc0170,
+    dc0180, dc0190, dc0200, dc0210, dc0220, dc0230, dc0240, dc0250, dc0260,
+    dc0270, dc0280, dc0290, dc0300, dc0310, dc0320, dc0330, dc0340, dc0350,
+    dc0360, dc0370, dc0380, dc0390, dc0400, dc0410, dc0420, dc0430, dc0440,
+    dc0450, dc0460, dc0470, dc0480, dc0490, dc0500, dc0510,
 };
 
 u_short *dc_no_tbl1[] = {
-    dc1000, dc1010, dc1020, dc1030, dc1040, dc1050, dc1060, dc1070, dc1080, dc1090,
-    dc1100, dc1110, dc1120, dc1130, dc1140, dc1150, dc1160, dc1170, dc1180, dc1190,
-    dc1200, dc1210, dc1220, dc1230, dc1240, dc1250, dc1260, dc1270, dc1280, dc1290,
+    dc1000, dc1010, dc1020, dc1030, dc1040, dc1050, dc1060, dc1070,
+    dc1080, dc1090, dc1100, dc1110, dc1120, dc1130, dc1140, dc1150,
+    dc1160, dc1170, dc1180, dc1190, dc1200, dc1210, dc1220, dc1230,
+    dc1240, dc1250, dc1260, dc1270, dc1280, dc1290,
 };
 
 u_short *dc_no_tbl2[] = {
-    dc2000, dc2010, dc2020, dc2030, dc2040, dc2050, dc2060, dc2070, dc2080, dc2090,
-    dc2100, dc2110, dc2120, dc2130, dc2140, dc2150, dc2160, dc2170, dc2180, dc2190,
-    dc2200, dc2210, dc2220, dc2230, dc2240, dc2250, dc2260, dc2270, dc2280, dc2290,
+    dc2000, dc2010, dc2020, dc2030, dc2040, dc2050, dc2060, dc2070,
+    dc2080, dc2090, dc2100, dc2110, dc2120, dc2130, dc2140, dc2150,
+    dc2160, dc2170, dc2180, dc2190, dc2200, dc2210, dc2220, dc2230,
+    dc2240, dc2250, dc2260, dc2270, dc2280, dc2290,
 };
 
 u_short *dc_no_tbl3[] = {
-    dc3000, dc3010, dc3020, dc3030, dc3040, dc3050, dc3060, dc3070, dc3080, dc3090,
-    dc3100, dc3110, dc3120, dc3130, dc3140, dc3150, dc3160, dc3170, dc3180, dc3190,
-    dc3200, dc3210, dc3220, dc3230, dc3240, dc3250, dc3260, dc3270, dc3280, dc3290,
+    dc3000, dc3010, dc3020, dc3030, dc3040, dc3050, dc3060, dc3070,
+    dc3080, dc3090, dc3100, dc3110, dc3120, dc3130, dc3140, dc3150,
+    dc3160, dc3170, dc3180, dc3190, dc3200, dc3210, dc3220, dc3230,
+    dc3240, dc3250, dc3260, dc3270, dc3280, dc3290,
 };
 
 u_int dcam_000[] = {4294967295};
 
 u_int *dcam_comple_dat1[] = {
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
 };
 
 u_int *dcam_comple_dat2[] = {
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
 };
 
 u_int *dcam_comple_dat3[] = {
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
 };
 
 u_int *dcam_comple_dat4[] = {
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
-    dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
+    dcam_000, dcam_000, dcam_000, dcam_000, dcam_000, dcam_000,
 };
 
 void CameraMain()
@@ -814,51 +1089,53 @@ void CameraMain()
 
     plyr_wrk.pr_info.cam_type = 0xff;
 
-    if (plyr_wrk.ap_timer != 0 || SaveCamChk() != 0 || SoulTellingCameraInCtrl() != 0)
+    if (plyr_wrk.ap_timer != 0 || SaveCamChk() != 0
+        || SoulTellingCameraInCtrl() != 0)
     {
         return;
     }
 
-    switch(plyr_wrk.mode)
+    switch (plyr_wrk.mode)
     {
-    case PMODE_FINDER_IN:
-        FinderInCameraCtrl();
-        cam_mode_old = 6;
-    break;
-    case PMODE_FIN_CAM:
-        if (ene_wrk[plyr_wrk.rock_trgt].sta & 1 && ene_wrk[plyr_wrk.rock_trgt].tr_rate != 0)
-        {
-            camera.i[0] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[0];
-            camera.i[1] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[1];
-            camera.i[2] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[2];
-            camera.i[3] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[3];
-        }
-    break;
-    case PMODE_FINDER:
-          if (cam_mode_old != 1)
-          {
-              camera.fov = fov;
-          }
-          FinderModeCameraCtrl();
-          cam_mode_old = 1;
-    break;
-    case PMODE_DMG:
-    case PMODE_PRE_DMG:
-        PlyrDmgCameraCtrl();
-        cam_mode_old = 2;
-    break;
-    default:
-        if (plyr_wrk.cond == 2)
-        {
-            KonwakuCamCtrl();
-            cam_mode_old = 0;
-        }
-        else
-        {
-            NormalCameraCtrl();
-            cam_mode_old = 0;
-        }
-    break;
+        case PMODE_FINDER_IN:
+            FinderInCameraCtrl();
+            cam_mode_old = 6;
+            break;
+        case PMODE_FIN_CAM:
+            if (ene_wrk[plyr_wrk.rock_trgt].sta & 1
+                && ene_wrk[plyr_wrk.rock_trgt].tr_rate != 0)
+            {
+                camera.i[0] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[0];
+                camera.i[1] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[1];
+                camera.i[2] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[2];
+                camera.i[3] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[3];
+            }
+            break;
+        case PMODE_FINDER:
+            if (cam_mode_old != 1)
+            {
+                camera.fov = fov;
+            }
+            FinderModeCameraCtrl();
+            cam_mode_old = 1;
+            break;
+        case PMODE_DMG:
+        case PMODE_PRE_DMG:
+            PlyrDmgCameraCtrl();
+            cam_mode_old = 2;
+            break;
+        default:
+            if (plyr_wrk.cond == 2)
+            {
+                KonwakuCamCtrl();
+                cam_mode_old = 0;
+            }
+            else
+            {
+                NormalCameraCtrl();
+                cam_mode_old = 0;
+            }
+            break;
     }
 
     plyr_wrk.pr_info.camera_no_old = plyr_wrk.pr_info.camera_no;
@@ -939,7 +1216,7 @@ void FinderInCameraCtrl()
         {
             ReqFinderInOverRap(30);
         }
-  }
+    }
 }
 
 void NormalCameraCtrl()
@@ -982,26 +1259,26 @@ void NormalCameraCtrl()
             plyr_wrk.cp_old[3] = camera.p[3];
         }
 
-        switch(mci.type)
+        switch (mci.type)
         {
-        case 0:
-            SetCamPos0(&tc, &mci);
-        break;
-        case 1:
-            SetCamPos1(&tc, &mci);
-        break;
-        case 2:
-            SetCamPos2(&tc, &mci);
-        break;
-        case 3:
-            SetCamPos3(&tc, &mci);
-        break;
-        case 4:
-            SetCamPos4(&tc, &mci);
-        break;
-        case 5:
-            SetCamPos5(&tc, &mci);
-        break;
+            case 0:
+                SetCamPos0(&tc, &mci);
+                break;
+            case 1:
+                SetCamPos1(&tc, &mci);
+                break;
+            case 2:
+                SetCamPos2(&tc, &mci);
+                break;
+            case 3:
+                SetCamPos3(&tc, &mci);
+                break;
+            case 4:
+                SetCamPos4(&tc, &mci);
+                break;
+            case 5:
+                SetCamPos5(&tc, &mci);
+                break;
         }
 
         tc2 = tc;
@@ -1034,14 +1311,10 @@ int GetCameraInfo(MAP_CAM_INFO *mci)
     mci->change = 0;
 
     GetCameraData(kind_old, mci);
-    if (
-        (kind_old != 2 && drm_cam_req != 0) ||
-        (
-            (kind_old == 2 && drm_cam_req == 0) ||
-             plyr_wrk.pr_info.camera_door != 0xffff ||
-            mci->no != mci->no_old
-        )
-    )
+    if ((kind_old != 2 && drm_cam_req != 0)
+        || ((kind_old == 2 && drm_cam_req == 0)
+            || plyr_wrk.pr_info.camera_door != 0xffff
+            || mci->no != mci->no_old))
     {
         mci->change = 1;
 
@@ -1075,12 +1348,12 @@ int GetCameraInfo(MAP_CAM_INFO *mci)
         {
             switch (dbg_wrk.cam_hold_mode)
             {
-            case 1:
-                mci->kind = 1;
-            break;
-            case 2:
-                mci->kind = 2;
-            break;
+                case 1:
+                    mci->kind = 1;
+                    break;
+                case 2:
+                    mci->kind = 2;
+                    break;
             }
         }
 
@@ -1111,25 +1384,25 @@ void GetCameraData(u_char kind, MAP_CAM_INFO *mci)
             mci->no_old = plyr_wrk.pr_info.camera_no_old;
             mci->mcd = &map_cam_dat[mci->no];
             mci->type = map_cam_dat[mci->no].type;
-        break;
+            break;
         case 1:
             mci->no = plyr_wrk.pr_info.camera_btl;
             mci->no_old = plyr_wrk.pr_info.camera_btl_old;
             mci->mcd = &map_cam_dat2[mci->no];
             mci->type = map_cam_dat2[mci->no].type;
-        break;
+            break;
         case 2:
             mci->no = plyr_wrk.pr_info.camera_drm;
             mci->no_old = plyr_wrk.pr_info.camera_drm_old;
             mci->mcd = &map_cam_dat3[mci->no];
             mci->type = map_cam_dat3[mci->no].type;
-        break;
+            break;
         case 3:
             mci->no = plyr_wrk.pr_info.camera_door;
             mci->no_old = plyr_wrk.pr_info.camera_door_old;
             mci->mcd = &map_cam_dat4[mci->no];
             mci->type = map_cam_dat4[mci->no].type;
-        break;
+            break;
     }
 }
 
@@ -1139,7 +1412,7 @@ void SetCamPos0(SgCAMERA *tc, MAP_CAM_INFO *mci)
 
     GetMCLocalPosPer(0, 0, 0xff);
 
-    tc->i[1] = (short)mci->mcd->p0[1];
+    tc->i[1] = (short) mci->mcd->p0[1];
     tc->i[0] = mci->mcd->p0[0];
     tc->i[2] = mci->mcd->p0[2];
 
@@ -1148,7 +1421,7 @@ void SetCamPos0(SgCAMERA *tc, MAP_CAM_INFO *mci)
     tc->i[3] = tv[3] = 0.0f;
 
     tv[0] = mci->mcd->p1[0];
-    tv[1] = (short)mci->mcd->p1[1];
+    tv[1] = (short) mci->mcd->p1[1];
     tv[2] = mci->mcd->p1[2];
     tv[3] = tc->i[3];
 
@@ -1164,15 +1437,15 @@ void SetCamPos0(SgCAMERA *tc, MAP_CAM_INFO *mci)
 void SetCamPos1(SgCAMERA *tc, MAP_CAM_INFO *mci)
 {
     sceVu0FVECTOR tv2;
-    static sceVu0FVECTOR tv = { 0.0f, 0.0f, 0.0f, 0.0f };
+    static sceVu0FVECTOR tv = {0.0f, 0.0f, 0.0f, 0.0f};
 
     GetMCLocalPosPer(0, 0, 0xff);
 
     if (mci->change != 0)
     {
-        tv[0] = (short)mci->mcd->p1[0];
-        tv[1] = (short)mci->mcd->p1[1];
-        tv[2] = (short)mci->mcd->p1[2];
+        tv[0] = (short) mci->mcd->p1[0];
+        tv[1] = (short) mci->mcd->p1[1];
+        tv[2] = (short) mci->mcd->p1[2];
         tv[3] = 0.0f;
 
         RotFvector(plyr_wrk.move_box.rot, tv);
@@ -1186,7 +1459,7 @@ void SetCamPos1(SgCAMERA *tc, MAP_CAM_INFO *mci)
     tc->i[3] = tv2[3];
 
     tv2[0] = mci->mcd->p0[0];
-    tv2[1] = (short)mci->mcd->p0[1];
+    tv2[1] = (short) mci->mcd->p0[1];
     tv2[2] = mci->mcd->p0[2];
     tv2[3] = 0.0f;
 
@@ -1205,9 +1478,9 @@ void SetCamPos2(SgCAMERA *tc, MAP_CAM_INFO *mci)
     sceVu0FVECTOR bv;
     float per;
 
-    tv[0] = (u_short)mci->mcd->p0[0];
-    tv[1] = (short)mci->mcd->p0[1];
-    tv[2] = (u_short)mci->mcd->p0[2];
+    tv[0] = (u_short) mci->mcd->p0[0];
+    tv[1] = (short) mci->mcd->p0[1];
+    tv[2] = (u_short) mci->mcd->p0[2];
     tv[3] = 0.0f;
 
     tc->i[0] = tv[0];
@@ -1217,14 +1490,14 @@ void SetCamPos2(SgCAMERA *tc, MAP_CAM_INFO *mci)
 
     per = GetMCLocalPosPer(mci->no, mci->kind, mci->mcd->id);
 
-    tv[0] = ((u_short)mci->mcd->p2[0] - (u_short)mci->mcd->p1[0]) * per;
-    tv[1] = ((short)mci->mcd->p2[1] - (short)mci->mcd->p1[1]) * per;
-    tv[2] = ((u_short)mci->mcd->p2[2] - (u_short)mci->mcd->p1[2]) * per;
+    tv[0] = ((u_short) mci->mcd->p2[0] - (u_short) mci->mcd->p1[0]) * per;
+    tv[1] = ((short) mci->mcd->p2[1] - (short) mci->mcd->p1[1]) * per;
+    tv[2] = ((u_short) mci->mcd->p2[2] - (u_short) mci->mcd->p1[2]) * per;
     tv[3] = 0.0f;
 
-    bv[0] = (u_short)mci->mcd->p1[0];
-    bv[1] = (short)mci->mcd->p1[1];
-    bv[2] = (u_short)mci->mcd->p1[2];
+    bv[0] = (u_short) mci->mcd->p1[0];
+    bv[1] = (short) mci->mcd->p1[1];
+    bv[2] = (u_short) mci->mcd->p1[2];
     bv[3] = 0.0f;
 
     sceVu0AddVector(tc->p, bv, tv);
@@ -1261,13 +1534,13 @@ void SetCamPos3(SgCAMERA *tc, MAP_CAM_INFO *mci)
     sceVu0FVECTOR tv2 = {0};
     sceVu0FVECTOR bv = {0};
     float per;
-    static sceVu0FVECTOR tv = { 0.0f, 0.0f, 0.0f, 0.0f };
+    static sceVu0FVECTOR tv = {0.0f, 0.0f, 0.0f, 0.0f};
 
     if (mci->change != 0)
     {
-        tv[0] = (short)mci->mcd->p2[0];
-        tv[1] = (short)mci->mcd->p2[1];
-        tv[2] = (short)mci->mcd->p2[2];
+        tv[0] = (short) mci->mcd->p2[0];
+        tv[1] = (short) mci->mcd->p2[1];
+        tv[2] = (short) mci->mcd->p2[2];
         tv[3] = 0.0f;
 
         RotFvector(plyr_wrk.move_box.rot, tv);
@@ -1284,14 +1557,14 @@ void SetCamPos3(SgCAMERA *tc, MAP_CAM_INFO *mci)
 
     per = GetMCLocalPosPer(mci->no, mci->kind, mci->mcd->id);
 
-    tv2[0] = ((u_short)mci->mcd->p1[0] - (u_short)mci->mcd->p0[0]) * per;
-    tv2[1] = ((short)mci->mcd->p1[1] - (short)mci->mcd->p0[1]) * per;
-    tv2[2] = ((u_short)mci->mcd->p1[2] - (u_short)mci->mcd->p0[2]) * per;
+    tv2[0] = ((u_short) mci->mcd->p1[0] - (u_short) mci->mcd->p0[0]) * per;
+    tv2[1] = ((short) mci->mcd->p1[1] - (short) mci->mcd->p0[1]) * per;
+    tv2[2] = ((u_short) mci->mcd->p1[2] - (u_short) mci->mcd->p0[2]) * per;
     tv2[3] = 0.0f;
 
-    bv[0] = (u_short)mci->mcd->p0[0];
-    bv[1] = (short)mci->mcd->p0[1];
-    bv[2] = (u_short)mci->mcd->p0[2];
+    bv[0] = (u_short) mci->mcd->p0[0];
+    bv[1] = (short) mci->mcd->p0[1];
+    bv[2] = (u_short) mci->mcd->p0[2];
     bv[3] = 0.0f;
 
     sceVu0AddVector(tc->p, bv, tv2);
@@ -1333,26 +1606,26 @@ void SetCamPos4(SgCAMERA *tc, MAP_CAM_INFO *mci)
 
     per = GetMCLocalPosPer(mci->no, mci->kind, mci->mcd->id);
 
-    tv[0] = ((u_short)mci->mcd->p1[0] - (u_short)mci->mcd->p0[0]) * per;
-    tv[1] = ((short)mci->mcd->p1[1] - (short)mci->mcd->p0[1]) * per;
-    tv[2] = ((u_short)mci->mcd->p1[2] - (u_short)mci->mcd->p0[2]) * per;
+    tv[0] = ((u_short) mci->mcd->p1[0] - (u_short) mci->mcd->p0[0]) * per;
+    tv[1] = ((short) mci->mcd->p1[1] - (short) mci->mcd->p0[1]) * per;
+    tv[2] = ((u_short) mci->mcd->p1[2] - (u_short) mci->mcd->p0[2]) * per;
     tv[3] = 0.0f;
 
-    bv[0] = (u_short)mci->mcd->p0[0];
-    bv[1] = (short)mci->mcd->p0[1];
-    bv[2] = (u_short)mci->mcd->p0[2];
+    bv[0] = (u_short) mci->mcd->p0[0];
+    bv[1] = (short) mci->mcd->p0[1];
+    bv[2] = (u_short) mci->mcd->p0[2];
     bv[3] = 0.0f;
 
     sceVu0AddVector(tc->i, bv, tv);
 
-    tv[0] = ((u_short)mci->mcd->p3[0] - (u_short)mci->mcd->p2[0]) * per;
-    tv[1] = ((short)mci->mcd->p3[1] - (short)mci->mcd->p2[1]) * per;
-    tv[2] = ((u_short)mci->mcd->p3[2] - (u_short)mci->mcd->p2[2]) * per;
+    tv[0] = ((u_short) mci->mcd->p3[0] - (u_short) mci->mcd->p2[0]) * per;
+    tv[1] = ((short) mci->mcd->p3[1] - (short) mci->mcd->p2[1]) * per;
+    tv[2] = ((u_short) mci->mcd->p3[2] - (u_short) mci->mcd->p2[2]) * per;
     tv[3] = 0.0f;
 
-    bv[0] = (u_short)mci->mcd->p2[0];
-    bv[1] = (short)mci->mcd->p2[1];
-    bv[2] = (u_short)mci->mcd->p2[2];
+    bv[0] = (u_short) mci->mcd->p2[0];
+    bv[1] = (short) mci->mcd->p2[1];
+    bv[2] = (u_short) mci->mcd->p2[2];
     bv[3] = 0.0f;
 
     sceVu0AddVector(tc->p, bv, tv);
@@ -1389,15 +1662,15 @@ void SetCamPos4(SgCAMERA *tc, MAP_CAM_INFO *mci)
 void SetCamPos5(SgCAMERA *tc, MAP_CAM_INFO *mci)
 {
     sceVu0FVECTOR tv2;
-    static sceVu0FVECTOR tv = { 0.0f, 0.0f, 0.0f, 0.0f };
+    static sceVu0FVECTOR tv = {0.0f, 0.0f, 0.0f, 0.0f};
 
     GetMCLocalPosPer(0, 0x0, 0xff);
 
     if (mci->change != 0x0)
     {
-        tv[0] = (short)mci->mcd->p1[0];
-        tv[1] = (short)mci->mcd->p1[1];
-        tv[2] = (short)mci->mcd->p1[2];
+        tv[0] = (short) mci->mcd->p1[0];
+        tv[1] = (short) mci->mcd->p1[1];
+        tv[2] = (short) mci->mcd->p1[2];
         tv[3] = 0.0f;
 
         RotFvector(plyr_wrk.move_box.rot, tv);
@@ -1410,9 +1683,9 @@ void SetCamPos5(SgCAMERA *tc, MAP_CAM_INFO *mci)
     tc->i[2] = tv2[2];
     tc->i[3] = tv2[3];
 
-    tv2[0] = (short)mci->mcd->p0[0];
-    tv2[1] = (short)mci->mcd->p0[1];
-    tv2[2] = (short)mci->mcd->p0[2];
+    tv2[0] = (short) mci->mcd->p0[0];
+    tv2[1] = (short) mci->mcd->p0[1];
+    tv2[2] = (short) mci->mcd->p0[2];
     tv2[3] = 0.0f;
 
     sceVu0AddVector(tc->p, plyr_wrk.move_box.pos, tv2);
@@ -1427,7 +1700,7 @@ float GetMCLocalPosPer(u_short cn, u_char kind, u_char id)
     u_short xmax;
     u_short zmin;
     u_short zmax;
-    u_char kind_tbl[4] = { 1, 2, 3, 4 };
+    u_char kind_tbl[4] = {1, 2, 3, 4};
     static float min;
     static float max;
     static u_short req_cam_no_save = 0xFFFF;
@@ -1468,6 +1741,7 @@ float GetMCLocalPosPer(u_short cn, u_char kind, u_char id)
     return __builtin_fabsf((plyr_wrk.bwp[2] - min) / (max - min));
 }
 
+// One of the main loops
 void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
 {
     sceVu0FVECTOR tc0;
@@ -1484,8 +1758,8 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
     static u_char comple_cnt;
     static u_char comple_spd_dwn;
     static u_char comple_dwn_tm;
-    static sceVu0FVECTOR comple_adjr = { 0.0f, 0.0f, 0.0f, 0.0f };
-    static sceVu0FVECTOR comple_adjp = { 0.0f, 0.0f, 0.0f, 0.0f };
+    static sceVu0FVECTOR comple_adjr = {0.0f, 0.0f, 0.0f, 0.0f};
+    static sceVu0FVECTOR comple_adjp = {0.0f, 0.0f, 0.0f, 0.0f};
     static float comple_adjfov = 0.0f;
     static float comple_adjroll = 0.0f;
 
@@ -1493,67 +1767,68 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
     {
         switch (mci->kind)
         {
-        case 0:
-            switch(ingame_wrk.msn_no)
-            {
             case 0:
-                tbl = ncam_comple_dat1[mci->no_old];
-            break;
+                switch (ingame_wrk.msn_no)
+                {
+                    case 0:
+                        tbl = ncam_comple_dat1[mci->no_old];
+                        break;
+                    case 1:
+                        tbl = ncam_comple_dat1[mci->no_old];
+                        break;
+                    case 2:
+                        tbl = ncam_comple_dat2[mci->no_old];
+                        break;
+                    case 3:
+                        tbl = ncam_comple_dat3[mci->no_old];
+                        break;
+                    case 4:
+                        tbl = ncam_comple_dat4[mci->no_old];
+                        break;
+                }
+                break;
             case 1:
-                tbl = ncam_comple_dat1[mci->no_old];
-            break;
+                switch (ingame_wrk.msn_no)
+                {
+                    case 0:
+                        tbl = bcam_comple_dat1[mci->no_old];
+                        break;
+                    case 1:
+                        tbl = bcam_comple_dat1[mci->no_old];
+                        break;
+                    case 2:
+                        tbl = bcam_comple_dat2[mci->no_old];
+                        break;
+                    case 3:
+                        tbl = bcam_comple_dat3[mci->no_old];
+                        break;
+                    case 4:
+                        tbl = bcam_comple_dat4[mci->no_old];
+                        break;
+                }
+                break;
             case 2:
-                tbl = ncam_comple_dat2[mci->no_old];
-            break;
-            case 3:
-                tbl = ncam_comple_dat3[mci->no_old];
-            break;
-            case 4:
-                tbl = ncam_comple_dat4[mci->no_old];
-            break;
-            }
-        break;
-        case 1:
-            switch(ingame_wrk.msn_no)
-            {
-            case 0:
-                tbl = bcam_comple_dat1[mci->no_old];
-            break;
-            case 1:
-                tbl = bcam_comple_dat1[mci->no_old];
-            break;
-            case 2:
-                tbl = bcam_comple_dat2[mci->no_old];
-            break;
-            case 3:
-                tbl = bcam_comple_dat3[mci->no_old];
-            break;
-            case 4:
-                tbl = bcam_comple_dat4[mci->no_old];
-            break;
-            }
-        break;
-        case 2:
-            switch(ingame_wrk.msn_no)
-            {
-            case 0:
-                tbl = dcam_comple_dat1[mci->no_old];
-            break;
-            case 1:
-                tbl = dcam_comple_dat1[mci->no_old];
-            break;
-            case 2:
-                tbl = dcam_comple_dat2[mci->no_old];
-            break;
-            case 3:
-                tbl = dcam_comple_dat3[mci->no_old];
-            break;
-            case 4:
-                tbl = dcam_comple_dat4[mci->no_old];
-            break;
-            }
-        break;
-        default: return;
+                switch (ingame_wrk.msn_no)
+                {
+                    case 0:
+                        tbl = dcam_comple_dat1[mci->no_old];
+                        break;
+                    case 1:
+                        tbl = dcam_comple_dat1[mci->no_old];
+                        break;
+                    case 2:
+                        tbl = dcam_comple_dat2[mci->no_old];
+                        break;
+                    case 3:
+                        tbl = dcam_comple_dat3[mci->no_old];
+                        break;
+                    case 4:
+                        tbl = dcam_comple_dat4[mci->no_old];
+                        break;
+                }
+                break;
+            default:
+                return;
         }
 
         for (i = 0; tbl[i] != 0xffffffff; i++)
@@ -1562,17 +1837,17 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
             {
                 if (tbl[i] & 0x60000000)
                 {
-                    switch((tbl[i] >> 28) & 0x3)
+                    switch ((tbl[i] >> 28) & 0x3)
                     {
-                    case 1:
-                        CallFocus(0, 1, 50);
-                    break;
-                    case 2:
-                        CallFocus(0, 2, 70);
-                    break;
-                    case 3:
-                        CallFocus(0, 3, 100);
-                    break;
+                        case 1:
+                            CallFocus(0, 1, 50);
+                            break;
+                        case 2:
+                            CallFocus(0, 2, 70);
+                            break;
+                        case 3:
+                            CallFocus(0, 3, 100);
+                            break;
                     }
                 }
 
@@ -1592,15 +1867,26 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                     sceVu0SubVector(comple_adjr, tc->i, camera.i);
                     sceVu0DivVector(comple_adjr, comple_adjr, comple_div);
 
-                    rmax = (__builtin_fabsf(comple_adjr[0]) > __builtin_fabsf(comple_adjr[1])) ? 0 : 1;
-                    rmax = (__builtin_fabsf(comple_adjr[rmax]) > __builtin_fabsf(comple_adjr[2])) ? rmax : 2;
+                    rmax = (__builtin_fabsf(comple_adjr[0])
+                            > __builtin_fabsf(comple_adjr[1]))
+                               ? 0
+                               : 1;
+                    rmax = (__builtin_fabsf(comple_adjr[rmax])
+                            > __builtin_fabsf(comple_adjr[2]))
+                               ? rmax
+                               : 2;
 
                     sceVu0SubVector(comple_adjp, tc->p, camera.p);
                     sceVu0DivVector(comple_adjp, comple_adjp, comple_div);
 
-                    pmax = (__builtin_fabsf(comple_adjr[0]) > __builtin_fabsf(comple_adjr[1])) ? 0 : 1;
-                    pmax = (__builtin_fabsf(comple_adjr[pmax]) > __builtin_fabsf(comple_adjr[2])) ? pmax : 2;
-
+                    pmax = (__builtin_fabsf(comple_adjr[0])
+                            > __builtin_fabsf(comple_adjr[1]))
+                               ? 0
+                               : 1;
+                    pmax = (__builtin_fabsf(comple_adjr[pmax])
+                            > __builtin_fabsf(comple_adjr[2]))
+                               ? pmax
+                               : 2;
 
                     comple_adjfov = (tc->fov - camera.fov);
                     comple_adjfov /= comple_div;
@@ -1695,7 +1981,8 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
         return;
     }
 
-    if (((comple_spd_dwn & 0x1) && (plyr_wrk.mvsta & 0xf) == 0) || comple_spd_dwn == 2)
+    if (((comple_spd_dwn & 0x1) && (plyr_wrk.mvsta & 0xf) == 0)
+        || comple_spd_dwn == 2)
     {
         if (comple_cnt <= comple_dwn_tm)
         {
@@ -1816,7 +2103,8 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
         }
     }
 
-    if ((comple_adjfov > 0.0f && tc->fov > camera.fov) || (comple_adjfov < 0.0f && tc->fov < camera.fov))
+    if ((comple_adjfov > 0.0f && tc->fov > camera.fov)
+        || (comple_adjfov < 0.0f && tc->fov < camera.fov))
     {
         tc->fov = camera.fov + comple_adjfov;
         chk = 1;
@@ -1826,7 +2114,8 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
         comple_adjfov = 0.0f;
     }
 
-    if ((comple_adjroll > 0.0f && tc->roll > camera.roll) ||  (comple_adjroll < 0.0f && tc->roll < camera.roll))
+    if ((comple_adjroll > 0.0f && tc->roll > camera.roll)
+        || (comple_adjroll < 0.0f && tc->roll < camera.roll))
     {
         tc->roll = camera.roll + comple_adjroll;
         chk = 1;
@@ -1910,7 +2199,8 @@ void FinderModeCameraCtrl()
 
     if (plyr_wrk.sta & 0x1000)
     {
-        if ((ene_wrk[plyr_wrk.rock_trgt].sta & 0x1) != 0 && ene_wrk[plyr_wrk.rock_trgt].tr_rate != 0)
+        if ((ene_wrk[plyr_wrk.rock_trgt].sta & 0x1) != 0
+            && ene_wrk[plyr_wrk.rock_trgt].tr_rate != 0)
         {
             camera.i[0] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[0];
             camera.i[1] = ene_wrk[plyr_wrk.rock_trgt].mpos.p0[1];
@@ -1994,13 +2284,13 @@ void PlyrCamCondChk()
 {
     switch (plyr_wrk.cond)
     {
-    case 1:
-        PconMahiCameraCtrl();
-    break;
-    case 3:
-    case 5:
-        PconTebureCameraCtrl();
-    break;
+        case 1:
+            PconMahiCameraCtrl();
+            break;
+        case 3:
+        case 5:
+            PconTebureCameraCtrl();
+            break;
     }
 }
 
@@ -2019,7 +2309,7 @@ void PconMahiCameraCtrl()
     }
     else
     {
-        time --;
+        time--;
     }
 
     if (flag == 0)
@@ -2110,7 +2400,8 @@ void PconTebureCameraCtrl()
 
 u_short fior_tm = 0;
 
-int FinderModePadChk(char *pad_x, char *pad_y, float *ax, float *ay, u_char *jpad_on)
+int FinderModePadChk(char *pad_x, char *pad_y, float *ax, float *ay,
+                     u_char *jpad_on)
 {
     *pad_y = 0;
     *pad_x = 0;
@@ -2118,27 +2409,28 @@ int FinderModePadChk(char *pad_x, char *pad_y, float *ax, float *ay, u_char *jpa
 
     *ax = *ay = 0.0f;
 
-    if (*key_now[0] != 0 || *key_now[1] != 0 || *key_now[3] != 0 || *key_now[2] != 0)
+    if (DPAD_UP_PRESSED() != 0 || DPAD_DOWN_PRESSED() != 0
+        || DPAD_RIGHT_PRESSED() != 0 || DPAD_LEFT_PRESSED() != 0)
     {
         *jpad_on = 1;
     }
 
     if (pad[0].id == 0x79 || *jpad_on != 0)
     {
-        if (*key_now[0] != 0)
+        if (DPAD_UP_PRESSED() != 0)
         {
             *ay = -40.0f;
         }
-        else if (*key_now[1] != 0)
+        else if (DPAD_DOWN_PRESSED() != 0)
         {
             *ay = 40.0f;
         }
 
-        if (*key_now[3] != 0)
+        if (DPAD_RIGHT_PRESSED() != 0)
         {
             *ax = 40.0f;
         }
-        else if (*key_now[2] != 0)
+        else if (DPAD_LEFT_PRESSED() != 0)
         {
             *ax = -40.0f;
         }
@@ -2167,7 +2459,9 @@ int FinderModePadChk(char *pad_x, char *pad_y, float *ax, float *ay, u_char *jpa
             *pad_y = -1;
         }
 
-        if (*pad_y != 0 && (opt_wrk.key_type == 4 || opt_wrk.key_type == 5 || opt_wrk.key_type == 6 || opt_wrk.key_type  == 7))
+        if (*pad_y != 0
+            && (opt_wrk.key_type == 4 || opt_wrk.key_type == 5
+                || opt_wrk.key_type == 6 || opt_wrk.key_type == 7))
         {
             *pad_y = -*pad_y;
         }
@@ -2218,7 +2512,7 @@ void SetFinderRot()
         ax = spd * SgSinf(rot);
         ay = spd * SgCosf(rot);
 
-        plyr_wrk.fp[0] += (short)ax;
+        plyr_wrk.fp[0] += (short) ax;
 
         if (spd == 2.0f)
         {
@@ -2236,7 +2530,6 @@ void SetFinderRot()
             if (ax > 0.0f && plyr_wrk.fp[0] >= 0x141)
             {
                 plyr_wrk.fp[0] = 0x140;
-
             }
             else if (ax < 0.0f && plyr_wrk.fp[0] < 0x140)
             {
@@ -2244,7 +2537,7 @@ void SetFinderRot()
             }
         }
 
-        plyr_wrk.fp[1] += (short)ay;
+        plyr_wrk.fp[1] += (short) ay;
 
         if (spd == 2.0f)
         {
@@ -2262,7 +2555,6 @@ void SetFinderRot()
             if (ay > 0.0f && plyr_wrk.fp[1] >= 0xd2)
             {
                 plyr_wrk.fp[1] = 0xd1;
-
             }
             else if (ay < 0.0f && plyr_wrk.fp[1] < 0xd1)
             {
@@ -2273,7 +2565,7 @@ void SetFinderRot()
 
     if (cam_custom_wrk.set_spe == 2)
     {
-        if (*key_now[9] != 0)
+        if (L2_PRESSED() != 0)
         {
             camera.fov -= 0.01f;
 
@@ -2282,7 +2574,7 @@ void SetFinderRot()
                 camera.fov = 0.45f;
             }
         }
-        else if (*key_now[0xb] != 0)
+        else if (R2_PRESSED() != 0)
         {
             camera.fov += 0.01f;
 
@@ -2293,7 +2585,7 @@ void SetFinderRot()
         }
     }
 
-    if (*key_now[6] != 0)
+    if (SQUARE_PRESSED() != 0)
     {
         delta = DEG2RAD(1.8f);
     }
@@ -2346,11 +2638,12 @@ void SetFinderRot()
     RotLimitChk(&plyr_wrk.frot_x);
 }
 
+// EDITOR CODE
 void CameraIdMoveCtrl()
 {
     MAP_CAM_DAT *mcd;
-    sceVu0FVECTOR tv = { 0.0f, 0.0f, 0.0f, 0.0f };
-    sceVu0FVECTOR rav = { 0.0f, 0.0f, 1000.0f, 0.0f };
+    sceVu0FVECTOR tv = {0.0f, 0.0f, 0.0f, 0.0f};
+    sceVu0FVECTOR rav = {0.0f, 0.0f, 1000.0f, 0.0f};
     float delta = DEG2RAD(1.0f);
     u_short cn;
     char *str = "NORMAL       ";
@@ -2366,53 +2659,53 @@ void CameraIdMoveCtrl()
     char *str_renewal = "RENEWAL DATA!!";
     char *str_norenewal = "NO RENEWAL DATA";
 
-    if (*key_now[15] == 1)
+    if (R3_PRESSED() == 1)
     {
         cam_info_disp ^= 1;
     }
 
     switch (cam_kind)
     {
-    case 0:
-        cn = plyr_wrk.pr_info.camera_no;
-        mcd = &map_cam_dat[cn];
+        case 0:
+            cn = plyr_wrk.pr_info.camera_no;
+            mcd = &map_cam_dat[cn];
 
-        if (cam_info_disp != 0)
-        {
-            SetASCIIString2(0, 430.0f, 10.0f, 1, 0xdc, 0xdc, 0x32, str);
-            SetInteger2(0, 540.0f, 10.0f, 1, 0xff, 0xff, 0x32, cn);
-        }
-    break;
-    case 1:
-        cn = plyr_wrk.pr_info.camera_btl;
-        mcd = &map_cam_dat2[cn];
+            if (cam_info_disp != 0)
+            {
+                SetASCIIString2(0, 430.0f, 10.0f, 1, 0xdc, 0xdc, 0x32, str);
+                SetInteger2(0, 540.0f, 10.0f, 1, 0xff, 0xff, 0x32, cn);
+            }
+            break;
+        case 1:
+            cn = plyr_wrk.pr_info.camera_btl;
+            mcd = &map_cam_dat2[cn];
 
-        if (cam_info_disp != 0)
-        {
-            SetASCIIString2(0, 430.0f, 10.0f, 1, 0xdc, 0x64, 0x64, str5);
-            SetInteger2(0, 540.0f, 10.0f, 1, 0xff, 0x64, 0x64, cn);
-        }
-    break;
-    case 2:
-        cn = plyr_wrk.pr_info.camera_drm;
-        mcd = &map_cam_dat3[cn];
+            if (cam_info_disp != 0)
+            {
+                SetASCIIString2(0, 430.0f, 10.0f, 1, 0xdc, 0x64, 0x64, str5);
+                SetInteger2(0, 540.0f, 10.0f, 1, 0xff, 0x64, 0x64, cn);
+            }
+            break;
+        case 2:
+            cn = plyr_wrk.pr_info.camera_drm;
+            mcd = &map_cam_dat3[cn];
 
-        if (cam_info_disp != 0)
-        {
-            SetASCIIString2(0, 430.0f, 10.0f, 1, 0x32, 0xdc, 0x32, str6);
-            SetInteger2(0, 540.0f, 10.0f, 1, 0x32, 0xff, 0x32, cn);
-        }
-    break;
-    case 3:
-        cn = plyr_wrk.pr_info.camera_door;
-        mcd = &map_cam_dat4[cn];
+            if (cam_info_disp != 0)
+            {
+                SetASCIIString2(0, 430.0f, 10.0f, 1, 0x32, 0xdc, 0x32, str6);
+                SetInteger2(0, 540.0f, 10.0f, 1, 0x32, 0xff, 0x32, cn);
+            }
+            break;
+        case 3:
+            cn = plyr_wrk.pr_info.camera_door;
+            mcd = &map_cam_dat4[cn];
 
-        if (cam_info_disp != 0)
-        {
-            SetASCIIString2(0, 430.0f, 10.0f, 1, 0x32, 0xdc, 0x32, str7);
-            SetInteger2(0, 540.0f, 10.0f, 1, 0x32, 0xff, 0x32, cn);
-        }
-    break;
+            if (cam_info_disp != 0)
+            {
+                SetASCIIString2(0, 430.0f, 10.0f, 1, 0x32, 0xdc, 0x32, str7);
+                SetInteger2(0, 540.0f, 10.0f, 1, 0x32, 0xff, 0x32, cn);
+            }
+            break;
     }
 
     if (cam_info_disp != 0)
@@ -2437,28 +2730,28 @@ void CameraIdMoveCtrl()
         }
     }
 
-    if (*key_now[8] != 0 && *key_now[10] != 0 && *key_now[11] == 1)
+    if (L1_PRESSED() != 0 && R1_PRESSED() != 0 && R2_PRESSED() == 1)
     {
         switch (cdcopy[0])
         {
-        case 0:
-            map_cam_dat[cdcopy[1]] = *mcd;
-        break;
-        case 1:
-            map_cam_dat2[cdcopy[1]] = *mcd;
-        break;
-        case 2:
-            map_cam_dat3[cdcopy[1]] = *mcd;
-        break;
-        case 3:
-            map_cam_dat4[cdcopy[1]] = *mcd;
-        break;
+            case 0:
+                map_cam_dat[cdcopy[1]] = *mcd;
+                break;
+            case 1:
+                map_cam_dat2[cdcopy[1]] = *mcd;
+                break;
+            case 2:
+                map_cam_dat3[cdcopy[1]] = *mcd;
+                break;
+            case 3:
+                map_cam_dat4[cdcopy[1]] = *mcd;
+                break;
         }
 
         renewal_data_chk = 1;
     }
 
-    if (*key_now[9] == 1 && *key_now[8] != 0)
+    if (L2_PRESSED() == 1 && L1_PRESSED() != 0)
     {
         cam_kind++;
 
@@ -2474,7 +2767,7 @@ void CameraIdMoveCtrl()
     {
         if (cd_step == 0)
         {
-            if (*key_now[9] == 1 && *key_now[8] == 0)
+            if (L2_PRESSED() == 1 && L1_PRESSED() == 0)
             {
                 if (cam_type > 5)
                 {
@@ -2494,48 +2787,48 @@ void CameraIdMoveCtrl()
         }
         else
         {
-            if (*key_now[9] == 1 && *key_now[8] == 0)
+            if (L2_PRESSED() == 1 && L1_PRESSED() == 0)
             {
                 cam_id ^= 1;
             }
         }
     }
 
-    if (*key_now[8] != 0 && *key_now[14] == 1)
+    if (L1_PRESSED() != 0 && L3_PRESSED() == 1)
     {
         cd_step = 0;
     }
 
-    if (*key_now[13] == 1)
+    if (SELECT_PRESSED() == 1)
     {
-        switch(cam_type)
+        switch (cam_type)
         {
-        case 0:
-            cd_edit_end = SetMapCamDat0(mcd);
-        break;
-        case 1:
-            cd_edit_end = SetMapCamDat1(mcd);
-        break;
-        case 2:
-            cd_edit_end = SetMapCamDat2(mcd, cam_id);
-        break;
-        case 3:
-            cd_edit_end = SetMapCamDat3(mcd, cam_id);
-        break;
-        case 4:
-            cd_edit_end = SetMapCamDat4(mcd, cam_id);
-        break;
-        case 5:
-            cd_edit_end = SetMapCamDat5(mcd);
-        break;
-        default:
-            if (renewal_data_chk != 0)
-            {
-                SaveCamDat(cam_kind, msn_no);
-            }
+            case 0:
+                cd_edit_end = SetMapCamDat0(mcd);
+                break;
+            case 1:
+                cd_edit_end = SetMapCamDat1(mcd);
+                break;
+            case 2:
+                cd_edit_end = SetMapCamDat2(mcd, cam_id);
+                break;
+            case 3:
+                cd_edit_end = SetMapCamDat3(mcd, cam_id);
+                break;
+            case 4:
+                cd_edit_end = SetMapCamDat4(mcd, cam_id);
+                break;
+            case 5:
+                cd_edit_end = SetMapCamDat5(mcd);
+                break;
+            default:
+                if (renewal_data_chk != 0)
+                {
+                    SaveCamDat(cam_kind, msn_no);
+                }
 
-            cd_edit_end = 1;
-        break;
+                cd_edit_end = 1;
+                break;
         }
     }
 
@@ -2552,7 +2845,8 @@ void CameraIdMoveCtrl()
         {
             if (renewal_data_chk != 0)
             {
-                SetASCIIString2(0, 430.0f, 90.0f, 1, 0xf0, 0x32, 0x32, str_renewal);
+                SetASCIIString2(0, 430.0f, 90.0f, 1, 0xf0, 0x32, 0x32,
+                                str_renewal);
 
                 if (renewal_data_chk_cnt > 40)
                 {
@@ -2564,7 +2858,8 @@ void CameraIdMoveCtrl()
             }
             else
             {
-                SetASCIIString2(0, 430.0f, 90.0f, 1, 0xdc, 0xdc, 0x32, str_norenewal);
+                SetASCIIString2(0, 430.0f, 90.0f, 1, 0xdc, 0xdc, 0x32,
+                                str_norenewal);
             }
         }
 
@@ -2574,41 +2869,45 @@ void CameraIdMoveCtrl()
 
     if (dbg_wrk.mode_on == 0)
     {
-        if (*key_now[10] != 0)
+        // Zoom in
+        if (R1_PRESSED() != 0)
         {
             tv[2] = 20.0f;
         }
         else
         {
-            if (*key_now[11] != 0)
+            // Zoom out
+            if (R2_PRESSED() != 0)
             {
                 tv[2] = -20.0f;
             }
         }
 
-        if (*key_now[8] != 0)
+        // Panning
+        if (L1_PRESSED() != 0)
         {
-            if (*key_now[3] != 0)
+            if (DPAD_RIGHT_PRESSED() != 0)
             {
                 tv[0] = 20.0f;
             }
-            else if (*key_now[2] != 0)
+            else if (DPAD_LEFT_PRESSED() != 0)
             {
                 tv[0] = -20.0f;
             }
 
-            if (*key_now[0] != 0)
+            if (DPAD_UP_PRESSED() != 0)
             {
                 tv[1] = -20.0f;
             }
-            else if (*key_now[1] != 0)
+            else if (DPAD_DOWN_PRESSED() != 0)
             {
                 tv[1] = 20.0f;
             }
         }
-        else if (*key_now[5] != 0)
+        // Rotation
+        else if (CROSS_PRESSED() != 0)
         {
-            if (*key_now[3] != 0)
+            if (DPAD_RIGHT_PRESSED() != 0)
             {
                 camera.roll -= delta;
 
@@ -2617,7 +2916,7 @@ void CameraIdMoveCtrl()
                     camera.roll += PI * 2;
                 }
             }
-            else if (*key_now[2] != 0)
+            else if (DPAD_LEFT_PRESSED() != 0)
             {
                 camera.roll += delta;
 
@@ -2626,14 +2925,15 @@ void CameraIdMoveCtrl()
                     camera.roll -= PI * 2;
                 }
             }
-            else if (*key_now[4] != 0)
+            else if (TRIANGLE_PRESSED() != 0)
             {
                 camera.roll = PI;
             }
         }
-        else if (*key_now[6] != 0)
+        // FOV Pull
+        else if (SQUARE_PRESSED() != 0)
         {
-            if (*key_now[0] != 0)
+            if (DPAD_UP_PRESSED() != 0)
             {
                 camera.fov -= 0.01f;
 
@@ -2642,7 +2942,7 @@ void CameraIdMoveCtrl()
                     camera.fov = 0.1f;
                 }
             }
-            else if (*key_now[1] != 0)
+            else if (DPAD_DOWN_PRESSED() != 0)
             {
                 camera.fov += 0.01f;
 
@@ -2651,14 +2951,16 @@ void CameraIdMoveCtrl()
                     camera.fov = PI;
                 }
             }
-            else if (*key_now[4] != 0)
+            // Reset FOV
+            else if (TRIANGLE_PRESSED() != 0)
             {
                 camera.fov = DEG2RAD(60.0f);
             }
         }
+        // Rotation
         else
         {
-            if (*key_now[3] != 0)
+            if (DPAD_RIGHT_PRESSED() != 0)
             {
                 cam_id_move.rot_y[1] += delta;
 
@@ -2669,7 +2971,7 @@ void CameraIdMoveCtrl()
 
                 cd_edit_end = 0x0;
             }
-            else if (*key_now[2] != 0)
+            else if (DPAD_LEFT_PRESSED() != 0)
             {
                 cam_id_move.rot_y[1] -= delta;
 
@@ -2681,7 +2983,7 @@ void CameraIdMoveCtrl()
                 cd_edit_end = 0x0;
             }
 
-            if (*key_now[0] != 0)
+            if (DPAD_UP_PRESSED() != 0)
             {
                 cam_id_move.rot_x[0] += delta;
 
@@ -2692,7 +2994,7 @@ void CameraIdMoveCtrl()
 
                 cd_edit_end = 0;
             }
-            else if (*key_now[1] != 0)
+            else if (DPAD_DOWN_PRESSED() != 0)
             {
                 cam_id_move.rot_x[0] -= delta;
 
@@ -2730,6 +3032,7 @@ void CameraIdMoveCtrl()
     camera.p[3] = cam_id_move.p[3];
 }
 
+// Editor Sets
 u_char SetMapCamDat0(MAP_CAM_DAT *mcd)
 {
     u_char i;
@@ -2812,16 +3115,16 @@ u_char SetMapCamDat2(MAP_CAM_DAT *mcd, u_char id)
 
     switch (cd_step)
     {
-    case 0:
-            tmpd = (MAP_CAM_DAT){0};
+        case 0:
+            tmpd = (MAP_CAM_DAT) {0};
 
             mcd->type = 2;
 
-            if (*key_now[8] == 0)
+            if (L1_PRESSED() == 0)
             {
                 for (i = 0; i < 3; i++)
                 {
-                    tmpd.p0[i] = (u_short)(int)camera.i[i];
+                    tmpd.p0[i] = (u_short) (int) camera.i[i];
                 }
 
                 for (i = 0; i < 3; i++)
@@ -2834,73 +3137,73 @@ u_char SetMapCamDat2(MAP_CAM_DAT *mcd, u_char id)
             }
 
             cd_step++;
-    break;
-    case 1:
-        if (*key_now[8] == 0)
-        {
+            break;
+        case 1:
+            if (L1_PRESSED() == 0)
+            {
+                for (i = 0; i < 3; i++)
+                {
+                    tmpd.p2[i] = camera.p[i];
+                }
+
+                if (mcd->roll[0] != camera.roll)
+                {
+                    mcd->roll[1] = camera.roll;
+                }
+                else
+                {
+                    mcd->roll[1] = 0.0f;
+                }
+
+                if (mcd->fov[0] != camera.fov)
+                {
+                    mcd->fov[1] = camera.fov;
+                }
+                else
+                {
+                    mcd->fov[1] = 0.0f;
+                }
+            }
+
+            cd_step++;
+            break;
+        case 2:
+            mcd->id = id;
+
+            if (tmpd.p0[0] != 0 || tmpd.p0[1] != 0 || tmpd.p0[2] != 0)
+            {
+                for (i = 0; i < 3; i++)
+                {
+                    mcd->p0[i] = tmpd.p0[i];
+                }
+            }
+
+            if (tmpd.p1[0] != 0 || tmpd.p1[1] != 0 || tmpd.p1[2] != 0)
+            {
+                for (i = 0; i < 3; i++)
+                {
+                    mcd->p1[i] = tmpd.p1[i];
+                }
+            }
+
+            if (tmpd.p2[0] != 0 || tmpd.p2[1] != 0 || tmpd.p2[2] != 0)
+            {
+                for (i = 0; i < 3; i++)
+                {
+                    mcd->p2[i] = tmpd.p2[i];
+                }
+            }
+
             for (i = 0; i < 3; i++)
             {
-                tmpd.p2[i] = camera.p[i];
+                mcd->p3[i] = 0;
             }
 
-            if (mcd->roll[0] != camera.roll)
-            {
-                mcd->roll[1] = camera.roll;
-            }
-            else
-            {
-                mcd->roll[1] = 0.0f;
-            }
-
-            if (mcd->fov[0] != camera.fov)
-            {
-                mcd->fov[1] = camera.fov;
-            }
-            else
-            {
-                mcd->fov[1] = 0.0f;
-            }
-        }
-
-        cd_step++;
-    break;
-    case 2:
-        mcd->id = id;
-
-        if (tmpd.p0[0] != 0 || tmpd.p0[1] != 0 || tmpd.p0[2] != 0)
-        {
-            for (i = 0; i < 3; i++)
-            {
-                mcd->p0[i] = tmpd.p0[i];
-            }
-        }
-
-        if (tmpd.p1[0] != 0 || tmpd.p1[1] != 0 || tmpd.p1[2] != 0)
-        {
-            for (i = 0; i < 3; i++)
-            {
-                mcd->p1[i] = tmpd.p1[i];
-            }
-        }
-
-        if (tmpd.p2[0] != 0 || tmpd.p2[1] != 0 || tmpd.p2[2] != 0)
-        {
-            for (i = 0; i < 3; i++)
-            {
-                mcd->p2[i] = tmpd.p2[i];
-            }
-        }
-
-        for (i = 0; i < 3; i++)
-        {
-            mcd->p3[i] = 0;
-        }
-
-        end = 1;
-    break;
-    default:
-        end = 1;
-    break;
+            end = 1;
+            break;
+        default:
+            end = 1;
+            break;
     }
 
     return end;
@@ -2916,12 +3219,12 @@ u_char SetMapCamDat3(MAP_CAM_DAT *mcd, u_char id)
 
     switch (cd_step)
     {
-    case 0:
-            tmpd = (MAP_CAM_DAT){0};
+        case 0:
+            tmpd = (MAP_CAM_DAT) {0};
 
             mcd->type = 3;
 
-            if (*key_now[8] == 0)
+            if (L1_PRESSED() == 0)
             {
                 for (i = 0; i < 3; i++)
                 {
@@ -2933,70 +3236,70 @@ u_char SetMapCamDat3(MAP_CAM_DAT *mcd, u_char id)
             }
 
             cd_step++;
-    break;
-    case 1:
-        if (*key_now[8] == 0)
-        {
+            break;
+        case 1:
+            if (L1_PRESSED() == 0)
+            {
+                for (i = 0; i < 3; i++)
+                {
+                    tmpd.p1[i] = camera.p[i];
+                }
+
+                if (mcd->roll[0] != camera.roll)
+                {
+                    mcd->roll[1] = camera.roll;
+                }
+                else
+                {
+                    mcd->roll[1] = 0.0f;
+                }
+
+                if (mcd->fov[0] != camera.fov)
+                {
+                    mcd->fov[1] = camera.fov;
+                }
+                else
+                {
+                    mcd->fov[1] = 0.0f;
+                }
+            }
+
+            cd_step++;
+            break;
+        case 2:
+            mcd->id = id;
+
+            if (tmpd.p0[0] != 0 || tmpd.p0[1] != 0 || tmpd.p0[2] != 0)
+            {
+                for (i = 0; i < 3; i++)
+                {
+                    mcd->p0[i] = tmpd.p0[i];
+                }
+            }
+
+            if (tmpd.p1[0] != 0 || tmpd.p1[1] != 0 || tmpd.p1[2] != 0)
+            {
+                for (i = 0; i < 3; i++)
+                {
+                    mcd->p1[i] = tmpd.p1[i];
+                }
+            }
+
             for (i = 0; i < 3; i++)
             {
-                tmpd.p1[i] = camera.p[i];
+                mcd->p2[i] = plyr_adj[i];
             }
 
-            if (mcd->roll[0] != camera.roll)
-            {
-                mcd->roll[1] = camera.roll;
-            }
-            else
-            {
-                mcd->roll[1] = 0.0f;
-            }
-
-            if ( mcd->fov[0] != camera.fov)
-            {
-                mcd->fov[1] = camera.fov;
-            }
-            else
-            {
-                mcd->fov[1] = 0.0f;
-            }
-        }
-
-        cd_step++;
-    break;
-    case 2:
-        mcd->id = id;
-
-        if (tmpd.p0[0] != 0 || tmpd.p0[1] != 0 || tmpd.p0[2] != 0)
-        {
             for (i = 0; i < 3; i++)
             {
-                mcd->p0[i] = tmpd.p0[i];
+                mcd->p3[i] = 0;
             }
-        }
 
-        if (tmpd.p1[0] != 0 || tmpd.p1[1] != 0 || tmpd.p1[2] != 0)
-        {
-            for (i = 0; i < 3; i++)
-            {
-                mcd->p1[i] = tmpd.p1[i];
-            }
-        }
-
-        for (i = 0; i < 3; i++)
-        {
-            mcd->p2[i] = plyr_adj[i];
-        }
-
-        for (i = 0; i < 3; i++)
-        {
-            mcd->p3[i] = 0;
-        }
-
-        end = 1;
-    break;
-    default:
-        end = 1;
-    break;
+            end = 1;
+            break;
+        default:
+            end = 1;
+            break;
     }
 
     return end;
@@ -3012,12 +3315,12 @@ u_char SetMapCamDat4(MAP_CAM_DAT *mcd, u_char id)
 
     switch (cd_step)
     {
-    case 0:
-            tmpd = (MAP_CAM_DAT){0};
+        case 0:
+            tmpd = (MAP_CAM_DAT) {0};
 
             mcd->type = 4;
 
-            if (*key_now[8] == 0)
+            if (L1_PRESSED() == 0)
             {
                 for (i = 0; i < 3; i++)
                 {
@@ -3034,81 +3337,81 @@ u_char SetMapCamDat4(MAP_CAM_DAT *mcd, u_char id)
             }
 
             cd_step++;
-    break;
-    case 1:
-        if (*key_now[8] == 0)
-        {
-            for (i = 0; i < 3; i++)
+            break;
+        case 1:
+            if (L1_PRESSED() == 0)
             {
-                tmpd.p1[i] = (u_short)(int)camera.i[i];
+                for (i = 0; i < 3; i++)
+                {
+                    tmpd.p1[i] = (u_short) (int) camera.i[i];
+                }
+
+                for (i = 0; i < 3; i++)
+                {
+                    tmpd.p3[i] = (u_short) (int) camera.p[i];
+                }
+
+                if (mcd->roll[0] != camera.roll)
+                {
+                    mcd->roll[1] = camera.roll;
+                }
+                else
+                {
+                    mcd->roll[1] = 0.0f;
+                }
+
+                if (mcd->fov[0] != camera.fov)
+                {
+                    mcd->fov[1] = camera.fov;
+                }
+                else
+                {
+                    mcd->fov[1] = 0.0f;
+                }
             }
 
-            for (i = 0; i < 3; i++)
+            cd_step++;
+            break;
+        case 2:
+            mcd->id = id;
+
+            if (tmpd.p0[0] != 0 || tmpd.p0[1] != 0 || tmpd.p0[2] != 0)
             {
-                tmpd.p3[i] = (u_short)(int)camera.p[i];
+                for (i = 0; i < 3; i++)
+                {
+                    mcd->p0[i] = tmpd.p0[i];
+                }
             }
 
-            if (mcd->roll[0] != camera.roll)
+            if (tmpd.p1[0] != 0 || tmpd.p1[1] != 0 || tmpd.p1[2] != 0)
             {
-                mcd->roll[1] = camera.roll;
-            }
-            else
-            {
-                mcd->roll[1] = 0.0f;
+                for (i = 0; i < 3; i++)
+                {
+                    mcd->p1[i] = tmpd.p1[i];
+                }
             }
 
-            if (mcd->fov[0] != camera.fov)
+            if (tmpd.p2[0] != 0 || tmpd.p2[1] != 0 || tmpd.p2[2] != 0)
             {
-                mcd->fov[1] = camera.fov;
+                for (i = 0; i < 3; i++)
+                {
+                    mcd->p2[i] = tmpd.p2[i];
+                }
             }
-            else
+
+            if (tmpd.p3[0] != 0 || tmpd.p3[1] != 0 || tmpd.p3[2] != 0)
             {
-                mcd->fov[1] = 0.0f;
+                for (i = 0; i < 3; i++)
+                {
+                    mcd->p3[i] = tmpd.p3[i];
+                }
             }
-        }
 
-        cd_step++;
-    break;
-    case 2:
-        mcd->id = id;
-
-        if (tmpd.p0[0] != 0 || tmpd.p0[1] != 0 || tmpd.p0[2] != 0)
-        {
-            for (i = 0; i < 3; i++)
-            {
-                mcd->p0[i] = tmpd.p0[i];
-            }
-        }
-
-        if (tmpd.p1[0] != 0 || tmpd.p1[1] != 0 || tmpd.p1[2] != 0)
-        {
-            for (i = 0; i < 3; i++)
-            {
-                mcd->p1[i] = tmpd.p1[i];
-            }
-        }
-
-        if (tmpd.p2[0] != 0 || tmpd.p2[1] != 0 || tmpd.p2[2] != 0)
-        {
-            for (i = 0; i < 3; i++)
-            {
-                mcd->p2[i] = tmpd.p2[i];
-            }
-        }
-
-        if (tmpd.p3[0] != 0 || tmpd.p3[1] != 0 || tmpd.p3[2] != 0)
-        {
-            for (i = 0; i < 3; i++)
-            {
-                mcd->p3[i] = tmpd.p3[i];
-            }
-        }
-
-        end = 1;
-    break;
-    default:
-        end = 1;
-    break;
+            end = 1;
+            break;
+        default:
+            end = 1;
+            break;
     }
 
     return end;
@@ -3150,43 +3453,38 @@ u_char SetMapCamDat5(MAP_CAM_DAT *mcd)
     return 1;
 }
 
+// Editor save file
 void SaveCamDat(u_char kind, u_char mn)
 {
-    int fd;
-    char fname[38] = "host0:../bin/data/camera/map_cam1.obj";
-    char fname2[39] = "host0:../bin/data/camera/bmap_cam1.obj";
-    char fname3[39] = "host0:../bin/data/camera/dmap_cam1.obj";
-    char fname4[39] = "host0:../bin/data/camera/tmap_cam1.obj";
+    char fname[38] = "/data/camera/map_cam1.obj";
+    char fname2[39] = "/data/camera/bmap_cam1.obj";
+    char fname3[39] = "/data/camera/dmap_cam1.obj";
+    char fname4[39] = "/data/camera/tmap_cam1.obj";
+
+    if (!MikuPan_FolderExists("data"))
+    {
+        MikuPan_CreateFolder("data/camera");
+    }
 
     switch (kind)
     {
-    case 0:
-        fname[32] = '1' + mn; // replace the '1' map_cam1 with 'mn + 1'
-        fd = sceOpen(fname, 0x202);
-        sceLseek(fd, 0, 0);
-        sceWrite(fd, map_cam_dat, 22000);
-    break;
-    case 1:
-        fname2[33] = '1' + mn; // replace the '1' bmap_cam1 with 'mn + 1'
-        fd = sceOpen(fname2, 0x202);
-        sceLseek(fd, 0, 0);
-        sceWrite(fd, map_cam_dat2, 22000);
-    break;
-    case 2:
-        fname3[33] = '1' + mn; // replace the '1' dmap_cam1 with 'mn + 1'
-        fd = sceOpen(fname3, 0x202);
-        sceLseek(fd, 0, 0);
-        sceWrite(fd, map_cam_dat3, 0x3390);
-    break;
-    case 3:
-        fname4[33] = '1' + mn; // replace the '1' tmap_cam1 with 'mn + 1'
-        fd = sceOpen(fname4, 0x202);
-        sceLseek(fd, 0, 0);
-        sceWrite(fd, map_cam_dat4, 0x3390);
-    break;
+        case 0:
+            fname[32] = '1' + mn;// replace the '1' map_cam1 with 'mn + 1'
+            MikuPan_WriteFile(fname, map_cam_dat, 22000);
+            break;
+        case 1:
+            fname2[33] = '1' + mn;// replace the '1' bmap_cam1 with 'mn + 1'
+            MikuPan_WriteFile(fname2, map_cam_dat2, 22000);
+            break;
+        case 2:
+            fname3[33] = '1' + mn;// replace the '1' dmap_cam1 with 'mn + 1'
+            MikuPan_WriteFile(fname3, map_cam_dat3, 0x3390);
+            break;
+        case 3:
+            fname4[33] = '1' + mn;// replace the '1' tmap_cam1 with 'mn + 1'
+            MikuPan_WriteFile(fname4, map_cam_dat4, 0x3390);
+            break;
     }
-
-    sceClose(fd);
 }
 
 void ReqFinderInOverRap(u_short time)
@@ -3209,56 +3507,55 @@ void PlyrDmgCameraCtrl()
     sceVu0FVECTOR tr;
     sceVu0FVECTOR tv;
     static int cnt = 0;
-    static sceVu0FVECTOR cv = { 0.0f, 0.0f, 0.0f, 0.0f };
+    static sceVu0FVECTOR cv = {0.0f, 0.0f, 0.0f, 0.0f};
     float dist;
 
     switch (plyr_wrk.dmg_cam_flag)
     {
-    case 0:
-        NormalCameraCtrl();
+        case 0:
+            NormalCameraCtrl();
 
-        camera.i[0] = plyr_wrk.move_box.pos[0];
-        camera.i[1] = plyr_wrk.move_box.pos[1];
-        camera.i[2] = plyr_wrk.move_box.pos[2];
-        camera.i[3] = plyr_wrk.move_box.pos[3];
+            camera.i[0] = plyr_wrk.move_box.pos[0];
+            camera.i[1] = plyr_wrk.move_box.pos[1];
+            camera.i[2] = plyr_wrk.move_box.pos[2];
+            camera.i[3] = plyr_wrk.move_box.pos[3];
 
-        camera.i[1] -= 500.0f;
+            camera.i[1] -= 500.0f;
 
-        GetTrgtRotFromPlyr(camera.p, tr, 3);
+            GetTrgtRotFromPlyr(camera.p, tr, 3);
 
-        tv[0] = 0.0f;
-        tv[1] = 0.0f;
-        tv[2] = 700.0f;
-        tv[3] = 0.0f;
+            tv[0] = 0.0f;
+            tv[1] = 0.0f;
+            tv[2] = 700.0f;
+            tv[3] = 0.0f;
 
-        RotFvector(tr, tv);
-        sceVu0AddVector(tv, camera.i, tv);
+            RotFvector(tr, tv);
+            sceVu0AddVector(tv, camera.i, tv);
 
-        dist = GetDistV2(tv, camera.p);
-        cnt = dist / 60.0f;
+            dist = GetDistV2(tv, camera.p);
+            cnt = dist / 60.0f;
 
-        sceVu0SubVector(cv, tv, camera.p);
-        sceVu0DivVector(cv, cv, cnt);
+            sceVu0SubVector(cv, tv, camera.p);
+            sceVu0DivVector(cv, cv, cnt);
 
-        plyr_wrk.dmg_cam_flag = 1;
-    break;
-    case 1:
-        if (cnt == 0)
-        {
-            plyr_wrk.dmg_cam_flag = 2;
-        }
-        else
-        {
-            cnt--;
+            plyr_wrk.dmg_cam_flag = 1;
+            break;
+        case 1:
+            if (cnt == 0)
+            {
+                plyr_wrk.dmg_cam_flag = 2;
+            }
+            else
+            {
+                cnt--;
 
-            sceVu0AddVector(camera.p, camera.p, cv);
-        }
-    break;
-    case 2:
-        // do nothing ...
-    break;
+                sceVu0AddVector(camera.p, camera.p, cv);
+            }
+            break;
+        case 2:
+            // do nothing ...
+            break;
     }
-
 }
 
 CAM_ID_MOVE cam_id_move = {0};
@@ -3279,23 +3576,23 @@ void ReqDramaCamera(u_char req, u_short no, u_short time)
         drm_cam_req = 1;
         drm_cam_tm = time;
 
-        switch(ingame_wrk.msn_no)
+        switch (ingame_wrk.msn_no)
         {
-        case 0:
-            tbl = dc_no_tbl0[no];
-        break;
-        case 1:
-            tbl = dc_no_tbl0[no];
-        break;
-        case 2:
-            tbl = dc_no_tbl1[no];
-        break;
-        case 3:
-            tbl = dc_no_tbl2[no];
-        break;
-        case 4:
-            tbl = dc_no_tbl3[no];
-        break;
+            case 0:
+                tbl = dc_no_tbl0[no];
+                break;
+            case 1:
+                tbl = dc_no_tbl0[no];
+                break;
+            case 2:
+                tbl = dc_no_tbl1[no];
+                break;
+            case 3:
+                tbl = dc_no_tbl2[no];
+                break;
+            case 4:
+                tbl = dc_no_tbl3[no];
+                break;
         }
 
         for (i = 0; i < 12; i++)

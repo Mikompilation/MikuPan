@@ -16,7 +16,7 @@ static inline std::vector<int> file_loaded_address;
 void MikuPan_LoadImgHdFile()
 {
     return MikuPan_ReadFullFile("./IMG_HD.BIN",
-                                static_cast<char *>(MikuPan_GetHostPointer(ImgHdAddress)));
+        static_cast<char *>(MikuPan_GetHostPointer(ImgHdAddress)));
 }
 
 void MikuPan_ReadFullFile(const char *filename, char *buffer)
@@ -78,7 +78,7 @@ void MikuPan_ReadFileInArchive(int sector, int size, u_int *address)
     infile.close();
 }
 
-void MikuPan_ReadFileInArchive64(int sector, int size, int64_t address)
+void MikuPan_BufferFile(int sector, int size, int64_t address)
 {
     if (!std::filesystem::exists("./IMG_BD.BIN"))
     {
@@ -162,7 +162,7 @@ u_char MikuPan_CreateFolder(const char *folder)
 
     if (!std::filesystem::exists(relative_path))
     {
-        return std::filesystem::create_directory(relative_path);
+        return std::filesystem::create_directories(relative_path);
     }
 
     return 1;
@@ -192,9 +192,8 @@ int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table)
     return i;
 }
 
-std::string MikuPan_GetRelativePath(const char* path)
+std::string MikuPan_GetRelativePath(const char *path)
 {
-    auto relative_path = std::filesystem::path("./");
-    relative_path += path;
-    return relative_path.generic_u8string();
+    auto relative_path = std::filesystem::path(path);
+    return relative_path.relative_path().generic_u8string();
 }
