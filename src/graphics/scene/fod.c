@@ -461,7 +461,7 @@ void FodSetMyLight(FOD_LIGHT *fl, char *pfx, float *eye)
         memcpy(&lp.spot[i].pos, slight[i].pos, sizeof(sceVu0FVECTOR));
     }
 
-    MikuPan_SetupAmbientLighting(&lp, eye);
+    MikuPan_SetupAmbientLighting(&lp);
 }
 
 void FodSetSpotLights(SgLIGHT *sl, u_int num)

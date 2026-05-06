@@ -1058,7 +1058,7 @@ void SetMyLight(LIGHT_PACK *light_pack, float *eyevec)
     static SgLIGHT point[6];
     static SgLIGHT spot[6];
 
-    MikuPan_SetupAmbientLighting(light_pack, eyevec);
+    MikuPan_SetupAmbientLighting(light_pack);
 
     SgSetAmbient(light_pack->ambient);
 
