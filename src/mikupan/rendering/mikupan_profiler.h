@@ -114,6 +114,45 @@ int MikuPan_PerfGetMeshCacheHitsCurrent(void);
 int MikuPan_PerfGetMeshCacheMissesNewCurrent(void);
 int MikuPan_PerfGetMeshCacheMissesFullCurrent(void);
 
+/* ── Per-draw-call capture (debug inspector) ───────────────────────── */
+/// One captured glDraw* invocation. Populated from inside the timed-draw
+/// wrappers when capture is enabled; consumed by the ImGui inspector.
+typedef struct
+{
+    GLenum  mode;          ///< GL primitive (GL_TRIANGLES, GL_TRIANGLE_STRIP, …)
+    int     count;         ///< vertex / index count
+    int     first;         ///< glDrawArrays.first (0 for elements)
+    int     is_elements;   ///< 1 = glDrawElements, 0 = glDrawArrays
+    GLenum  index_type;    ///< GL_UNSIGNED_INT/SHORT for elements (0 for arrays)
+    unsigned int program;  ///< raw GL program id at draw time
+    int     shader_idx;    ///< index in shader_list[] for the program (-1 if unknown)
+    unsigned int vao;      ///< bound VAO at draw time (cached)
+    unsigned int texture0; ///< bound 2D texture on unit 0 (cached)
+    int     skipped;       ///< 1 if isolation suppressed this draw
+    float   ms;            ///< CPU submit wall-clock (0 when skipped)
+} MikuPan_DrawCapEntry;
+
+/// Master switch — when off, the timed-draw wrappers run their fast path
+/// and contribute nothing to the inspector. When on, every draw is logged
+/// (capped at the ring's capacity) until the next BeginFrame clears it.
+void MikuPan_DrawCapEnable(int enabled);
+int  MikuPan_DrawCapEnabled(void);
+
+/// Cleared at frame start (called from MikuPan_PerfBeginFrame).
+void MikuPan_DrawCapBeginFrame(void);
+
+/// `MikuPan_DrawCapCount` returns how many entries were captured in the
+/// last completed frame; `EntryAt` returns NULL when idx is out of range.
+int                                 MikuPan_DrawCapLastCount(void);
+const MikuPan_DrawCapEntry *        MikuPan_DrawCapLastEntryAt(int idx);
+
+/// Isolation: when set to a non-negative value, the timed-draw wrappers
+/// skip every draw whose 0-based index in the current frame is NOT equal
+/// to `idx`. Pass -1 to draw everything. Useful for "what does just this
+/// one draw paint?" — the inspector wires a Solo button to it per row.
+void MikuPan_DrawCapSetIsolate(int idx);
+int  MikuPan_DrawCapGetIsolate(void);
+
 #ifdef __cplusplus
 }
 #endif

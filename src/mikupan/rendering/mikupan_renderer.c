@@ -143,6 +143,35 @@ mat4 ViewClip = {0};
 /// SgCMtx or camera->wc
 mat4 WorldClip = {0};
 
+/// ---- Shadow pass state ---------------------------------------------------
+/// 256×256 R8 alpha texture — one shadow per scene, written once per frame
+/// inside DrawShadow and sampled by every subsequent mesh draw. R8 not RGBA
+/// because the silhouette is monochrome and the receiver only reads `.r`.
+#define SHADOW_FBO_SIZE 256
+static GLuint g_shadow_fbo  = 0;
+static GLuint g_shadow_tex  = 0;
+static int    g_shadow_init = 0;
+static int    g_shadow_enabled = 1;
+
+/// Saved during BeginShadowPass so EndShadowPass can restore the main pass.
+static GLint  g_shadow_saved_fbo      = 0;
+static int    g_shadow_saved_viewport[4] = {0};
+
+/// The shadow camera's world-clip-view matrix, captured for the receiver
+/// shaders to sample with each frame. Identity before any shadow has been
+/// rendered → the sampling path is gated by `g_shadow_enabled`, so an
+/// uninitialised matrix is never read by a real shader.
+static mat4 g_shadow_world_clip_view;
+static int  g_shadow_matrix_valid = 0;
+
+/// 1 while DrawShadow is iterating the caster prims — the mesh-type
+/// renderers consult this to bypass the user-facing visibility toggles
+/// (we always want all caster polys in the silhouette regardless of
+/// "Mesh 0x12" debug filters) and to skip per-mesh state setup that the
+/// silhouette shader doesn't need (texture binding, lighting mode, etc.).
+static int g_shadow_pass_active = 0;
+int  MikuPan_IsShadowPassActive(void) { return g_shadow_pass_active; }
+
 MikuPan_LightData    mikupan_light_data    = {0};
 MikuPan_MaterialData mikupan_material_data = {
     {1.0f, 1.0f, 1.0f, 1.0f}, // Ambient — identity until first SetMaterial
@@ -271,6 +300,144 @@ void MikuPan_DestroyInternalBuffer()
         render_back_msaa.framebuffer.id = 0;
     }
 }
+
+/// Lazily allocate the shadow FBO + R8 texture on first use. Re-creating
+/// elsewhere would also work but Begin is the natural choke-point.
+static void MikuPan_EnsureShadowFbo(void)
+{
+    if (g_shadow_init) return;
+
+    glad_glGenTextures(1, &g_shadow_tex);
+    MikuPan_BindTexture2DCached(g_shadow_tex);
+    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_R8,
+                      SHADOW_FBO_SIZE, SHADOW_FBO_SIZE, 0,
+                      GL_RED, GL_UNSIGNED_BYTE, NULL);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // CLAMP_TO_BORDER with a zero border keeps the receiver-side sample
+    // outside the shadow frustum from accidentally reading wraparound darkness.
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float border[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    glad_glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
+
+    glad_glGenFramebuffers(1, &g_shadow_fbo);
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, g_shadow_fbo);
+    glad_glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                GL_TEXTURE_2D, g_shadow_tex, 0);
+
+    if (glad_glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        info_log("Shadow FBO incomplete!");
+    }
+
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    g_shadow_init = 1;
+}
+
+void MikuPan_BeginShadowPass(float *world_clip_view)
+{
+    MikuPan_EnsureShadowFbo();
+
+    // Snapshot the previous render target + viewport so EndShadowPass can
+    // hand the renderer back to the main scene pass without it noticing.
+    glad_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &g_shadow_saved_fbo);
+    glad_glGetIntegerv(GL_VIEWPORT, g_shadow_saved_viewport);
+
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, g_shadow_fbo);
+    MikuPan_SetViewportCached(0, 0, SHADOW_FBO_SIZE, SHADOW_FBO_SIZE);
+
+    glad_glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (world_clip_view != NULL)
+    {
+        memcpy(g_shadow_world_clip_view, world_clip_view, sizeof(g_shadow_world_clip_view));
+        g_shadow_matrix_valid = 1;
+    }
+
+    // Override every shader bind for the duration of the pass — the mesh
+    // renderers call MikuPan_SetCurrentShaderProgram(MESH_*_SHADER) and the
+    // override silently routes them to SHADOW_SILHOUETTE_SHADER. Cleared in
+    // MikuPan_EndShadowPass so subsequent main-pass draws are unaffected.
+    MikuPan_SetShaderOverride(SHADOW_SILHOUETTE_SHADER);
+    g_shadow_pass_active = 1;
+}
+
+void MikuPan_DrawShadowSilhouetteEllipse(void)
+{
+    // Reuse the fullscreen sprite VAO — the same one the postprocess pass
+    // uses. The shadow caster shader ignores the vertex attributes (all
+    // computation is done from gl_FragCoord) so any layout works as long as
+    // we issue 4 vertices for a fullscreen TRIANGLE_STRIP.
+    MikuPan_PipelineInfo *pi = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+    if (pi == NULL) return;
+
+    MikuPan_BindVAO(pi->vao);
+    MikuPan_SetCurrentShaderProgram(SHADOW_BLOB_SHADER);
+
+    GLuint prog = MikuPan_GetCurrentShaderProgram();
+    GLint sz_loc = glad_glGetUniformLocation(prog, "uShadowSize");
+    GLint dk_loc = glad_glGetUniformLocation(prog, "uShadowDarkness");
+    if (sz_loc >= 0) glad_glUniform2f(sz_loc, (float)SHADOW_FBO_SIZE, (float)SHADOW_FBO_SIZE);
+    if (dk_loc >= 0) glad_glUniform1f(dk_loc, 0.6f);
+
+    // Need additive/normal blending so the ellipse alpha isn't clobbered.
+    glad_glDisable(GL_DEPTH_TEST);
+    glad_glEnable(GL_BLEND);
+    glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glad_glEnable(GL_DEPTH_TEST);
+    // The render-state cache is now out of sync with the GL we just toggled;
+    // force the scene pass to reissue depth/blend on its next state change.
+    MikuPan_ResetRenderStateCache();
+}
+
+void MikuPan_EndShadowPass(void)
+{
+    // Drop the override + active flag *before* we start pushing scene-side
+    // uniforms below — those uniform pushes go through SetCurrentShaderProgram
+    // internally and would otherwise route into the silhouette shader.
+    MikuPan_SetShaderOverride(-1);
+    g_shadow_pass_active = 0;
+
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)g_shadow_saved_fbo);
+    MikuPan_SetViewportCached(g_shadow_saved_viewport[0],
+                              g_shadow_saved_viewport[1],
+                              g_shadow_saved_viewport[2],
+                              g_shadow_saved_viewport[3]);
+
+    // The clear colour above clobbered the renderer's; restore the value the
+    // scene clear path expects. The actual main-pass clear runs next frame so
+    // a single push here is enough.
+    glad_glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    // Push shadow uniforms to every shader that declares them. The mesh
+    // fragment shader gates on uShadowEnabled and ignores uShadowTex /
+    // uShadowMatrix when the toggle is off — but the texture unit must be
+    // bound either way so a stale binding from a previous frame can't be
+    // sampled. Texture unit 1 is reserved for the shadow map; unit 0 stays
+    // the diffuse path so uTexture continues to work without changes.
+    int enabled = (g_shadow_enabled && g_shadow_matrix_valid) ? 1 : 0;
+    MikuPan_SetUniform1iToAllShaders(enabled,                                          "uShadowEnabled");
+    MikuPan_SetUniform1iToAllShaders(1,                                                "uShadowTex");
+    MikuPan_SetUniform1fToAllShaders(0.6f,                                             "uShadowStrength");
+    MikuPan_SetUniformMatrix4fvToAllShaders((float *)g_shadow_world_clip_view,         "uShadowMatrix");
+
+    MikuPan_ActiveTextureCached(GL_TEXTURE1);
+    glad_glBindTexture(GL_TEXTURE_2D, g_shadow_tex);
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+}
+
+unsigned int MikuPan_GetShadowTexture(void) { return g_shadow_tex; }
+float       *MikuPan_GetShadowMatrix(void)
+{
+    return g_shadow_matrix_valid ? (float *)g_shadow_world_clip_view : NULL;
+}
+int  MikuPan_IsShadowEnabled(void)         { return g_shadow_enabled; }
+void MikuPan_SetShadowEnabled(int enabled) { g_shadow_enabled = enabled ? 1 : 0; }
 
 int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *out_rgba)
 {
@@ -1600,11 +1767,18 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
 
     char mesh_type = GET_MESH_TYPE(pPUHead);
 
-    if ((mesh_type != 0x12 && mesh_type != 0x10 && mesh_type != 0x32) ||
-        ((mesh_type == 0x12 || mesh_type == 0x10) && !MikuPan_IsMesh0x12Rendering()) ||
-        (mesh_type == 0x32 && !MikuPan_IsMesh0x32Rendering()))
+    // Mesh-type gate. The first leg is always required (we only know how to
+    // process 0x10/0x12/0x32 here). The user-facing visibility filters are
+    // skipped during the shadow caster pass so the silhouette covers the
+    // full caster regardless of debug toggles in the UI.
+    if (mesh_type != 0x12 && mesh_type != 0x10 && mesh_type != 0x32) return;
+    if (!g_shadow_pass_active)
     {
-        return;
+        if (((mesh_type == 0x12 || mesh_type == 0x10) && !MikuPan_IsMesh0x12Rendering()) ||
+            (mesh_type == 0x32 && !MikuPan_IsMesh0x32Rendering()))
+        {
+            return;
+        }
     }
 
     // Per-type sub-section: 0x32 uses the SoA path, 0x12/0x10 use the AoS path
@@ -1762,7 +1936,9 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
 {
     MIKUPAN_PERF_SCOPE(PERF_SECT_MESH_RENDER);
 
-    if (!MikuPan_IsMesh0x82Rendering())
+    // Visibility filter is skipped during the shadow pass so the silhouette
+    // captures all of the caster regardless of UI debug toggles.
+    if (!g_shadow_pass_active && !MikuPan_IsMesh0x82Rendering())
     {
         return;
     }
@@ -1855,7 +2031,9 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
 {
     MIKUPAN_PERF_SCOPE(PERF_SECT_MESH_RENDER);
 
-    if (!MikuPan_IsMesh0x2Rendering())
+    // Visibility filter is skipped during the shadow pass so the silhouette
+    // captures all of the caster regardless of UI debug toggles.
+    if (!g_shadow_pass_active && !MikuPan_IsMesh0x2Rendering())
     {
         return;
     }

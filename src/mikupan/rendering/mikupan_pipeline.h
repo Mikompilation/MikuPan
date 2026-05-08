@@ -35,4 +35,10 @@ void MikuPan_BindTexture2DCached(u_int texture);
 void MikuPan_SetViewportCached(int x, int y, int w, int h);
 void MikuPan_ResetGLBindCache(void);
 
+/// Read-only accessors for the cached bind state — used by the draw-call
+/// inspector to record which VAO/texture each draw was using without paying
+/// for a glGetIntegerv round-trip.
+u_int MikuPan_GetBoundVAO(void);
+u_int MikuPan_GetBoundTexture2D(void);
+
 #endif//MIKUPAN_MIKUPAN_PIPELINE_H

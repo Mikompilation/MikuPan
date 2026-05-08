@@ -1,7 +1,10 @@
 #include "mikupan_profiler.h"
 
 #include "SDL3/SDL_timer.h"
+#include "mikupan_shader.h"
+#include "mikupan_pipeline.h"
 #include <glad/gl.h>
+#include <string.h>
 
 /// Per-section CPU timers — accumulate time spent in each high-level area of
 /// rendering. Reset at frame start; sampled by the perf graph from the *last*
@@ -89,24 +92,136 @@ void MikuPan_PerfScopeEnd(MikuPan_PerfScope *s)
         (double)(t1 - s->t0) * 1000.0 / (double)SDL_GetPerformanceFrequency();
 }
 
+/* ── Per-draw-call capture ──────────────────────────────────────────── */
+/// Fixed-cap ring of draw records. Two slots so the UI can read the *last*
+/// frame's draws while the *current* frame is still being filled in — same
+/// double-buffer pattern used for section timings above.
+#define DRAWCAP_CAPACITY 2048
+
+static int g_drawcap_enabled    = 0;
+static int g_drawcap_isolate    = -1;
+
+static MikuPan_DrawCapEntry g_drawcap_curr[DRAWCAP_CAPACITY];
+static MikuPan_DrawCapEntry g_drawcap_last[DRAWCAP_CAPACITY];
+static int g_drawcap_curr_count  = 0;
+static int g_drawcap_curr_index  = 0; ///< draws issued this frame (whether captured or skipped)
+static int g_drawcap_last_count  = 0;
+
+void MikuPan_DrawCapEnable(int enabled)
+{
+    g_drawcap_enabled = enabled ? 1 : 0;
+    if (!enabled)
+    {
+        // Releasing isolation when disabling avoids accidentally leaving
+        // the renderer rendering only one draw after the panel is closed.
+        g_drawcap_isolate = -1;
+    }
+}
+
+int MikuPan_DrawCapEnabled(void)              { return g_drawcap_enabled; }
+int MikuPan_DrawCapLastCount(void)            { return g_drawcap_last_count; }
+void MikuPan_DrawCapSetIsolate(int idx)       { g_drawcap_isolate = idx; }
+int MikuPan_DrawCapGetIsolate(void)           { return g_drawcap_isolate; }
+
+const MikuPan_DrawCapEntry *MikuPan_DrawCapLastEntryAt(int idx)
+{
+    if (idx < 0 || idx >= g_drawcap_last_count) return NULL;
+    return &g_drawcap_last[idx];
+}
+
+void MikuPan_DrawCapBeginFrame(void)
+{
+    // Snapshot the just-finished frame for the UI, then reset for the new one.
+    if (g_drawcap_curr_count > 0)
+    {
+        memcpy(g_drawcap_last, g_drawcap_curr,
+               (size_t)g_drawcap_curr_count * sizeof(MikuPan_DrawCapEntry));
+    }
+    g_drawcap_last_count = g_drawcap_curr_count;
+    g_drawcap_curr_count = 0;
+    g_drawcap_curr_index = 0;
+}
+
+/// Look up which entry in shader_list[] holds `program`, returning -1 if the
+/// draw was issued via a program we don't manage (currently nothing — but
+/// guards against external GL clients in the future).
+static int FindShaderIndexForProgram(unsigned int program)
+{
+    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
+    {
+        if (shader_list[i] == program) return i;
+    }
+    return -1;
+}
+
 /* ── Timed glDraw wrappers ──────────────────────────────────────────── */
 
 void MikuPan_TimedDrawElements(GLenum mode, GLsizei count, GLenum type, const void *indices)
 {
+    int draw_index = g_drawcap_curr_index++;
+    int skip = (g_drawcap_isolate >= 0 && draw_index != g_drawcap_isolate);
+
     Uint64 t0 = SDL_GetPerformanceCounter();
-    glad_glDrawElements(mode, count, type, indices);
+    if (!skip)
+    {
+        glad_glDrawElements(mode, count, type, indices);
+    }
     Uint64 t1 = SDL_GetPerformanceCounter();
-    g_perf_section_ms_curr[PERF_SECT_DRAW_SUBMIT] +=
-        (double)(t1 - t0) * 1000.0 / (double)SDL_GetPerformanceFrequency();
+    double ms = (double)(t1 - t0) * 1000.0 / (double)SDL_GetPerformanceFrequency();
+    if (!skip)
+    {
+        g_perf_section_ms_curr[PERF_SECT_DRAW_SUBMIT] += ms;
+    }
+
+    if (g_drawcap_enabled && g_drawcap_curr_count < DRAWCAP_CAPACITY)
+    {
+        MikuPan_DrawCapEntry *e = &g_drawcap_curr[g_drawcap_curr_count++];
+        e->mode        = mode;
+        e->count       = (int)count;
+        e->first       = 0;
+        e->is_elements = 1;
+        e->index_type  = type;
+        e->program     = MikuPan_GetCurrentShaderProgram();
+        e->shader_idx  = FindShaderIndexForProgram(e->program);
+        e->vao         = MikuPan_GetBoundVAO();
+        e->texture0    = MikuPan_GetBoundTexture2D();
+        e->skipped     = skip;
+        e->ms          = skip ? 0.0f : (float)ms;
+    }
 }
 
 void MikuPan_TimedDrawArrays(GLenum mode, GLint first, GLsizei count)
 {
+    int draw_index = g_drawcap_curr_index++;
+    int skip = (g_drawcap_isolate >= 0 && draw_index != g_drawcap_isolate);
+
     Uint64 t0 = SDL_GetPerformanceCounter();
-    glad_glDrawArrays(mode, first, count);
+    if (!skip)
+    {
+        glad_glDrawArrays(mode, first, count);
+    }
     Uint64 t1 = SDL_GetPerformanceCounter();
-    g_perf_section_ms_curr[PERF_SECT_DRAW_SUBMIT] +=
-        (double)(t1 - t0) * 1000.0 / (double)SDL_GetPerformanceFrequency();
+    double ms = (double)(t1 - t0) * 1000.0 / (double)SDL_GetPerformanceFrequency();
+    if (!skip)
+    {
+        g_perf_section_ms_curr[PERF_SECT_DRAW_SUBMIT] += ms;
+    }
+
+    if (g_drawcap_enabled && g_drawcap_curr_count < DRAWCAP_CAPACITY)
+    {
+        MikuPan_DrawCapEntry *e = &g_drawcap_curr[g_drawcap_curr_count++];
+        e->mode        = mode;
+        e->count       = (int)count;
+        e->first       = (int)first;
+        e->is_elements = 0;
+        e->index_type  = 0;
+        e->program     = MikuPan_GetCurrentShaderProgram();
+        e->shader_idx  = FindShaderIndexForProgram(e->program);
+        e->vao         = MikuPan_GetBoundVAO();
+        e->texture0    = MikuPan_GetBoundTexture2D();
+        e->skipped     = skip;
+        e->ms          = skip ? 0.0f : (float)ms;
+    }
 }
 
 /* ── Frame timing ───────────────────────────────────────────────────── */
@@ -114,6 +229,7 @@ void MikuPan_TimedDrawArrays(GLenum mode, GLint first, GLsizei count)
 void MikuPan_PerfBeginFrame(void)
 {
     g_frame_cpu_start_ticks = SDL_GetPerformanceCounter();
+    MikuPan_DrawCapBeginFrame();
 }
 
 void MikuPan_PerfEndFrame(void)

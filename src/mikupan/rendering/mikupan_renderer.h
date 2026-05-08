@@ -99,4 +99,38 @@ u_long GSAlphaToOpenGL(int A, int B, int C, int D, int fix);
 /// because glad and the FBO struct live in this TU.
 int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *out_rgba);
 
+/// ----- Shadow pass --------------------------------------------------------
+/// PS2-style projector shadow. The original engine (graphics/graph3d/shadow.c)
+/// renders each shadow caster's silhouette into a small GS texture from the
+/// light's POV, then projects that texture onto receiver geometry as a
+/// multiplicative decal. This is the GL equivalent: a 256×256 R8 alpha FBO,
+/// an orthographic projection lifted from the PS2 shadow camera, and a
+/// world-space sampling path baked into the regular mesh fragment shader.
+///
+/// Lifecycle each frame, called from shadow.c:DrawShadow:
+///   1. `BeginShadowPass(world_clip_view)` — bind FBO, save matrices, push
+///      the shadow VP onto the mesh shaders' viewProj/mvp uniforms so any
+///      caster mesh you draw afterward lands in shadow space.
+///   2. Render caster silhouettes (currently a single fitted ellipse — the
+///      DrawShadowModel iteration is still on the TODO list).
+///   3. `EndShadowPass()` — unbind FBO, restore the main camera matrices.
+///   4. Subsequent regular mesh draws sample the shadow texture using the
+///      saved `uShadowMatrix` and darken receiver fragments.
+void MikuPan_BeginShadowPass(float *world_clip_view);
+void MikuPan_EndShadowPass(void);
+/// Stub silhouette renderer — fits an ellipse into the shadow camera's
+/// frustum (which SetShadowCamera in shadow.c already sized to the bbox).
+/// Replace with the real DrawShadowModel-equivalent draw loop once the
+/// caster's prim list is wired through MikuPan_RenderMeshType*.
+void MikuPan_DrawShadowSilhouetteEllipse(void);
+unsigned int MikuPan_GetShadowTexture(void);
+float       *MikuPan_GetShadowMatrix(void);
+int          MikuPan_IsShadowEnabled(void);
+void         MikuPan_SetShadowEnabled(int enabled);
+
+/// 1 while the shadow caster pass is iterating prims. The mesh-type
+/// renderers consult this to skip user-facing visibility toggles and the
+/// per-mesh state setup that the silhouette shader doesn't need.
+int  MikuPan_IsShadowPassActive(void);
+
 #endif //MIKUPAN_SDL_RENDERER_H

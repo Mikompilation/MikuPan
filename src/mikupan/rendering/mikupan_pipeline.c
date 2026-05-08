@@ -496,3 +496,6 @@ void MikuPan_ResetGLBindCache(void)
     g_viewport[2] = -1;
     g_viewport[3] = -1;
 }
+
+GLuint MikuPan_GetBoundVAO(void)         { return g_bound_vao; }
+GLuint MikuPan_GetBoundTexture2D(void)   { return g_bound_texture_2d; }

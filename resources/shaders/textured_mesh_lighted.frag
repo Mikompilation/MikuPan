@@ -43,6 +43,7 @@ layout(std140) uniform MaterialBlock
 in vec2 vUV;
 in vec4 vNormal;
 in vec4 oViewPosition;
+in vec4 oWorldPosition;
 in vec3 oVertexColor;
 
 out vec4 FragColor;
@@ -50,6 +51,16 @@ out vec4 FragColor;
 /// Texture Uniforms
 uniform sampler2D uTexture;
 uniform int renderNormals;
+
+/// Shadow uniforms — fed by the renderer when MikuPan_IsShadowEnabled() is on.
+/// uShadowMatrix is the shadow camera's world-clip-view (PS2 scamera.wcv,
+/// captured inside MikuPan_BeginShadowPass). Sampling outside the shadow
+/// frustum is gated by the texture's CLAMP_TO_BORDER + zero border colour
+/// so out-of-frustum fragments always read a 0 alpha and do nothing.
+uniform sampler2D uShadowTex;
+uniform mat4      uShadowMatrix;
+uniform int       uShadowEnabled;
+uniform float     uShadowStrength;
 
 /// Debug toggle: when set, skip ApplyPS2Lights entirely and output the raw
 /// texture × vertex-color albedo. Fog is still applied so depth perception
@@ -284,9 +295,32 @@ void main()
     if (renderNormals == 1)
     {
         FragColor = vec4(oVertexColor, 1.0f);
+        return;
     }
-    else
+
+    // PS2-style projector shadow — sample the silhouette texture using the
+    // shadow camera's world-clip-view. Anything outside the [0,1] square of
+    // shadow UVs reads 0 (CLAMP_TO_BORDER), so fragments outside the caster's
+    // bounding-box footprint stay untouched.
+    if (uShadowEnabled == 1)
     {
-        FragColor = color;
+        vec4 shadowClip = uShadowMatrix * oWorldPosition;
+        if (shadowClip.w > 0.0)
+        {
+            vec3 sndc = shadowClip.xyz / shadowClip.w;
+            vec2 suv  = sndc.xy * 0.5 + 0.5;
+            // Sampling guard: only inside the projector frustum AND the
+            // receiver must be in front of the light (sndc.z >= -1) — keeps
+            // us from "casting up" onto fragments behind the light plane.
+            if (suv.x >= 0.0 && suv.x <= 1.0 &&
+                suv.y >= 0.0 && suv.y <= 1.0 &&
+                sndc.z >= -1.0 && sndc.z <= 1.0)
+            {
+                float occluded = texture(uShadowTex, suv).r;
+                color.rgb *= 1.0 - occluded * uShadowStrength;
+            }
+        }
     }
+
+    FragColor = color;
 }

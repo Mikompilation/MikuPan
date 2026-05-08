@@ -1,6 +1,7 @@
 __pycache__
 .venv/
 build/
+build-*/
 assets/
 asm/
 .ninja_log

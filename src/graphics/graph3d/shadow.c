@@ -484,7 +484,11 @@ void ShadowModelMesh(u_int *prim)
         case 2:
             read_p = SetVUVNDataShadowModel(vuvnprim);
 
-            //MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER*)vuvnprim, (SGDPROCUNITHEADER*)prim, (float*)read_p);
+            // GL silhouette draw — the shader override set by
+            // MikuPan_BeginShadowPass redirects this onto SHADOW_SILHOUETTE_SHADER
+            // and the shadow-pass-active flag bypasses the user-facing visibility
+            // toggles inside MikuPan_RenderMeshType0x2.
+            MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER*)vuvnprim, (SGDPROCUNITHEADER*)prim, (float*)read_p);
 
             read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE2 >> 3);
             read_p[1] = 0x17000000;
@@ -500,6 +504,9 @@ void ShadowModelMesh(u_int *prim)
             AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
 
+            // 0x80 is the same NVL-style layout as 0x82 minus the post-VU
+            // dispatch — the GL silhouette is identical, so route through
+            // the same renderer.
             //MikuPan_RenderMeshType0x82(vuvnprim, prim);
 
             read_p = (u_int *) getObjWrk();
@@ -512,7 +519,7 @@ void ShadowModelMesh(u_int *prim)
             FlushModel(0);
             break;
         case 0x82:
-            //MikuPan_RenderMeshType0x82(vuvnprim, prim);
+            MikuPan_RenderMeshType0x82(vuvnprim, prim);
             AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
             AppendDmaTag((u_int) &prim[4], prim[2]);
@@ -1712,7 +1719,35 @@ void DrawShadow(ShadowHandle *shandle, EnvFuncCallback env_func)
 
     SetShadowEnvironment();
 
-    DrawShadowModel(hs, shandle->smodel_num);
+    // GL shadow pass — replaces the GS-side DrawShadowModel pipeline. The PS2
+    // path here would render the caster's silhouette via DMA + VU; on the host
+    // we render into a small FBO instead. SetShadowCamera filled scamera.wcv
+    // with the projector's world-clip-view, so we hand that to the renderer
+    // both as the caster pass's projection matrix and as the receiver-side
+    // sampling matrix (captured inside MikuPan_BeginShadowPass).
+    //
+    // The caster iteration goes through DrawShadowModel → DrawShadowModelPrim
+    // → ShadowModelMesh, which dispatches each prim to the regular
+    // MikuPan_RenderMeshType* paths. The shader-override mechanism in
+    // MikuPan_BeginShadowPass redirects every shader bind to
+    // SHADOW_SILHOUETTE_SHADER, so the same code that draws the model in the
+    // main pass produces a silhouette in the shadow pass — the only
+    // difference is the bound program and the active FBO.
+    if (MikuPan_IsShadowEnabled())
+    {
+        MikuPan_BeginShadowPass((float *)scamera.wcv);
+        // Push the shadow camera into the GL renderer so mvp = shadow_proj
+        // * shadow_view * model is correct for every caster mesh draw.
+        // Layouts of SgCAMERA and MikuPan_Camera match (see SgSetRefCamera
+        // in sgcam.c which does the same cast), so the cast is safe.
+        MikuPan_SetupCamera((MikuPan_Camera *)&scamera);
+        DrawShadowModel(hs, shandle->smodel_num);
+        MikuPan_EndShadowPass();
+    }
+    else
+    {
+        DrawShadowModel(hs, shandle->smodel_num);
+    }
 
     SgSetWsMtx(shandle->camera->ws);
     SgSetClipMtx(shandle->camera->wc);

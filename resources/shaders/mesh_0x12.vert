@@ -9,11 +9,13 @@ layout (location = 3) in vec3 aColor;
 // to hoist out of the per-vertex code).
 uniform mat4 mvp;          // projection * view * model
 uniform mat4 modelView;    // view * model
+uniform mat4 model;        // world transform — used for shadow projection
 uniform mat3 normalMatrix; // transpose(inverse(view * model))
 
 out vec2 vUV;
 out vec4 vNormal;
 out vec4 oViewPosition;
+out vec4 oWorldPosition; // for shadow-space sampling in the fragment shader
 out vec3 oVertexColor;
 
 void main()
@@ -24,7 +26,8 @@ void main()
     vec3 normalVS = normalize(normalMatrix * aNormal);
     vNormal = vec4(normalVS, 1.0f);
 
-    oViewPosition = modelView * vec4(aPos, 1.0f);
+    oViewPosition  = modelView * vec4(aPos, 1.0f);
+    oWorldPosition = model * vec4(aPos, 1.0f);
 
     // For 0x10/0x12/0x32 the per-vertex colour is the SgPreRender output —
     // ambient+point+spot already baked, so we keep the raw value and let the

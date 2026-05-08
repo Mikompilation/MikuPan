@@ -5,10 +5,81 @@
 #include "os/pad.h"
 #include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_scancode.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 SDL_Gamepad *gamepad = NULL;
+
+// Default mappings — applied at startup and by scePadResetBindings. Indices
+// match sce_pad[] in src/os/pad.c (0=Triangle, 1=Cross, 2=Square, 3=Circle,
+// 4-7=DPad, 8=R3, 9=Select, 10=Start, 11=L3, 12=R1, 13=L2, 14=R2, 15=L1).
+static const SceGpBinding kGpDefaults[SCE_PAD_LOGICAL_COUNT] = {
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_NORTH          },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_SOUTH          },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_WEST           },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_EAST           },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_DPAD_UP        },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_DPAD_DOWN      },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_DPAD_LEFT      },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_DPAD_RIGHT     },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_RIGHT_STICK    },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_BACK           },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_START          },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_LEFT_STICK     },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER },
+    { SCE_BIND_AXIS,   SDL_GAMEPAD_AXIS_LEFT_TRIGGER     },
+    { SCE_BIND_AXIS,   SDL_GAMEPAD_AXIS_RIGHT_TRIGGER    },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER  },
+};
+
+static const int kKbDefaults[SCE_PAD_LOGICAL_COUNT] = {
+    SDL_SCANCODE_I, SDL_SCANCODE_K, SDL_SCANCODE_J, SDL_SCANCODE_L,
+    SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,
+    SDL_SCANCODE_M, SDL_SCANCODE_BACKSPACE, SDL_SCANCODE_ESCAPE, SDL_SCANCODE_N,
+    SDL_SCANCODE_O, SDL_SCANCODE_8, SDL_SCANCODE_9, SDL_SCANCODE_U,
+};
+
+SceGpBinding sce_gp_map[SCE_PAD_LOGICAL_COUNT] = {
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_NORTH          },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_SOUTH          },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_WEST           },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_EAST           },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_DPAD_UP        },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_DPAD_DOWN      },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_DPAD_LEFT      },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_DPAD_RIGHT     },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_RIGHT_STICK    },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_BACK           },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_START          },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_LEFT_STICK     },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER },
+    { SCE_BIND_AXIS,   SDL_GAMEPAD_AXIS_LEFT_TRIGGER     },
+    { SCE_BIND_AXIS,   SDL_GAMEPAD_AXIS_RIGHT_TRIGGER    },
+    { SCE_BIND_BUTTON, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER  },
+};
+
+int sce_kb_map[SCE_PAD_LOGICAL_COUNT] = {
+    SDL_SCANCODE_I, SDL_SCANCODE_K, SDL_SCANCODE_J, SDL_SCANCODE_L,
+    SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,
+    SDL_SCANCODE_M, SDL_SCANCODE_BACKSPACE, SDL_SCANCODE_ESCAPE, SDL_SCANCODE_N,
+    SDL_SCANCODE_O, SDL_SCANCODE_8, SDL_SCANCODE_9, SDL_SCANCODE_U,
+};
+
+void scePadResetBindings(void)
+{
+    for (int i = 0; i < SCE_PAD_LOGICAL_COUNT; i++)
+    {
+        sce_gp_map[i] = kGpDefaults[i];
+        sce_kb_map[i] = kKbDefaults[i];
+    }
+}
+
+SDL_Gamepad *scePadGetSdlGamepad(void)
+{
+    return gamepad;
+}
 
 int scePadPortOpen(int port, int slot, void* addr)
 {
@@ -70,22 +141,22 @@ int scePadRead(int port, int slot, unsigned char* rdata)
 
     if (gamepad != NULL)
     {
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_NORTH)          ? sce_pad[0] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_SOUTH)          ? sce_pad[1] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_WEST)           ? sce_pad[2] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_EAST)           ? sce_pad[3] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP)        ? sce_pad[4] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN)      ? sce_pad[5] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT)      ? sce_pad[6] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT)     ? sce_pad[7] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_RIGHT_STICK)    ? sce_pad[8] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_BACK)           ? sce_pad[9] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_START)          ? sce_pad[10] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_STICK)     ? sce_pad[11] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) ? sce_pad[12] : 0;
-        data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER)       ? sce_pad[13] : 0;
-        data[1] ^= SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)      ? sce_pad[14] : 0;
-        data[1] ^= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)  ? sce_pad[15] : 0;
+        for (int i = 0; i < SCE_PAD_LOGICAL_COUNT; i++)
+        {
+            int pressed = 0;
+            switch (sce_gp_map[i].kind)
+            {
+                case SCE_BIND_BUTTON:
+                    pressed = SDL_GetGamepadButton(gamepad, (SDL_GamepadButton)sce_gp_map[i].code);
+                    break;
+                case SCE_BIND_AXIS:
+                    pressed = SDL_GetGamepadAxis(gamepad, (SDL_GamepadAxis)sce_gp_map[i].code) != 0;
+                    break;
+                default:
+                    break;
+            }
+            data[1] ^= pressed ? sce_pad[i] : 0;
+        }
 
         rdata[5] = MikuPan_GamePadAxisToPS2(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTY), 0);
         rdata[4] = MikuPan_GamePadAxisToPS2(SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTX), 0);
@@ -96,22 +167,12 @@ int scePadRead(int port, int slot, unsigned char* rdata)
     {
         const bool *key_states = SDL_GetKeyboardState(NULL);
 
-        data[1] ^= key_states[SDL_SCANCODE_I]           ? sce_pad[0] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_K]           ? sce_pad[1] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_J]           ? sce_pad[2] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_L]           ? sce_pad[3] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_UP]          ? sce_pad[4] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_DOWN]        ? sce_pad[5] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_LEFT]        ? sce_pad[6] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_RIGHT]       ? sce_pad[7] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_M]           ? sce_pad[8] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_BACKSPACE]   ? sce_pad[9] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_ESCAPE]      ? sce_pad[10] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_N]           ? sce_pad[11] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_O]           ? sce_pad[12] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_8]           ? sce_pad[13] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_9]           ? sce_pad[14] : 0;
-        data[1] ^= key_states[SDL_SCANCODE_U]           ? sce_pad[15] : 0;
+        for (int i = 0; i < SCE_PAD_LOGICAL_COUNT; i++)
+        {
+            int sc = sce_kb_map[i];
+            int pressed = (sc >= 0 && sc < SDL_SCANCODE_COUNT) ? (int)key_states[sc] : 0;
+            data[1] ^= pressed ? sce_pad[i] : 0;
+        }
 
         rdata[5] = 127;
         rdata[4] = 127;
@@ -172,4 +233,54 @@ int scePadSetActDirect(int port, int slot, const unsigned char* data)
     }
 
     return SDL_RumbleGamepad(gamepad, data[0] * 32896, data[1] * 257, 100);
+}
+
+const char *scePadBindingLabel(SceGpBinding binding)
+{
+    if (binding.kind == SCE_BIND_BUTTON)
+    {
+        switch (binding.code)
+        {
+            case SDL_GAMEPAD_BUTTON_NORTH:          return "Y / Triangle";
+            case SDL_GAMEPAD_BUTTON_SOUTH:          return "A / Cross";
+            case SDL_GAMEPAD_BUTTON_WEST:           return "X / Square";
+            case SDL_GAMEPAD_BUTTON_EAST:           return "B / Circle";
+            case SDL_GAMEPAD_BUTTON_DPAD_UP:        return "DPad Up";
+            case SDL_GAMEPAD_BUTTON_DPAD_DOWN:      return "DPad Down";
+            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:      return "DPad Left";
+            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:     return "DPad Right";
+            case SDL_GAMEPAD_BUTTON_LEFT_STICK:     return "Left Stick (L3)";
+            case SDL_GAMEPAD_BUTTON_RIGHT_STICK:    return "Right Stick (R3)";
+            case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:  return "L1 / LB";
+            case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER: return "R1 / RB";
+            case SDL_GAMEPAD_BUTTON_START:          return "Start";
+            case SDL_GAMEPAD_BUTTON_BACK:           return "Select / Back";
+            case SDL_GAMEPAD_BUTTON_GUIDE:          return "Guide";
+            default:                                return "Unknown Button";
+        }
+    }
+    if (binding.kind == SCE_BIND_AXIS)
+    {
+        switch (binding.code)
+        {
+            case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:  return "L2 / LT (axis)";
+            case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER: return "R2 / RT (axis)";
+            default:                             return "Unknown Axis";
+        }
+    }
+    return "<unmapped>";
+}
+
+const char *scePadScancodeLabel(int scancode)
+{
+    if (scancode < 0 || scancode >= SDL_SCANCODE_COUNT)
+    {
+        return "<unmapped>";
+    }
+    const char *name = SDL_GetScancodeName((SDL_Scancode)scancode);
+    if (name == NULL || name[0] == '\0')
+    {
+        return "<unknown>";
+    }
+    return name;
 }
