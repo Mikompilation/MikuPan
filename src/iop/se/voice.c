@@ -3,9 +3,10 @@
 #include "iop/se/iopse.h"
 #include "mikupan/mikupan_audio.h"
 #include "mikupan/mikupan_file_c.h"
+#include "mikupan/mikupan_logging_c.h"
 #include "sce/libsd.h"
 #include "typedefs.h"
-#include "mikupan/mikupan_logging_c.h"
+#include <stdint.h>
 #include <stdlib.h>
 
 bool loopEnd;
@@ -37,18 +38,17 @@ VOICE *GetFreeVoice()
     return NULL;
 }
 
-static s16* MixSamples(int sampleCount, s16 *samples, VOICE v)
+static s16 *MixSamples(int sampleCount, s16 *samples, VOICE v)
 {
     s16 *buffer = samples;
-    s16 volume = (s32) v.volL;
-
-    volume = volume * v.mVolL / 16383;
+    s16 volume = v.mVolL * v.volL / INT16_MAX;
 
     for (int i = 0; i < sampleCount; i++)
     {
         s16 sample = samples[i];
-        s16 mixed = ApplyVolume(sample, volume);
-        buffer[i] = mixed;
+        sample = ApplyVolume(sample, volume);
+        //sample = ApplyVolume(sample, v.volL);
+        buffer[i] = sample;
     }
     return buffer;
 }
@@ -87,7 +87,8 @@ static void FillMono(int vNo)
 
                 v->buffer = MixSamples(sampleCount, v->buffer, *v);
 
-                SDL_SetAudioStreamFrequencyRatio(v->stream, v->pitch / (float) 0x1000);
+                SDL_SetAudioStreamFrequencyRatio(v->stream,
+                                                 v->pitch / (float) 0x1000);
 
                 if (SDL_GetAudioStreamQueued(v->stream) < 4096)
                 {
@@ -114,7 +115,7 @@ static void SaveDebugBuffer()
 
 void VoiceRun()
 {
-    for(int i = 0; i < VOICE_NUM; i++)
+    for (int i = 0; i < VOICE_NUM; i++)
     {
         if (voices[i].isPlaying)
         {

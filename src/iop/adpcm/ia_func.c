@@ -105,8 +105,8 @@ void IaSetRegAdsr(u_char channel)
 void IaSetRegVol(u_char channel)
 {
 
-    volL = iop_adpcm[channel].vol_ll;
-    volR = iop_adpcm[channel].vol_rr;
+    volL = iop_adpcm[channel].vol_ll << 1;
+    volR = iop_adpcm[channel].vol_rr << 1;
 }
 
 void IaSetRegPitch(u_char channel)
@@ -236,6 +236,6 @@ static void IaSetStopBlock(u_char channel)
 
 void IaSetMasterVol(u_short mvol)
 {
-    mVolL = mvol & 0x3FFF;
-    mVolR = mvol & 0x3FFF;
+    mVolL = mvol & 0x3FFF << 1;
+    mVolR = mvol & 0x3FFF << 1;
 }
