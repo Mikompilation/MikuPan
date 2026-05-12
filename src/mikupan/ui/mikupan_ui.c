@@ -3,6 +3,14 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 
+#include "typedefs.h"
+#include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/mikupan_controller.h"
+#include "mikupan/mikupan_screenshot.h"
+#include "mikupan/gs/mikupan_texture_manager_c.h"
+#include "mikupan/rendering/mikupan_shader.h"
+#include "mikupan/rendering/mikupan_profiler.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 #include "glad/gl.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/message.h"
@@ -81,13 +89,26 @@ static int render_wireframe = 0;
 static int render_normals = 0;
 static int msaa_samples = 0;
 
-// Render resolution defaults to the primary display's current mode and the
-// sliders cap there. MikuPan_InitUi queries SDL once at startup and fills in
-// these values; until that runs they fall back to a sensible 1080p.
-static int render_resolution_width = 1920;
+// Render resolution defaults to the primary display's current mode. The combo
+// box below is populated from the primary display's supported fullscreen modes
+// in MikuPan_InitUi; until that runs it falls back to a sensible 1080p.
+static int render_resolution_width  = 1920;
 static int render_resolution_height = 1080;
-static int screen_resolution_width = 1920;
-static int screen_resolution_height = 1080;
+
+#define MIKUPAN_MAX_RESOLUTIONS 64
+
+typedef struct
+{
+    int w;
+    int h;
+} MikuPan_Resolution;
+
+static MikuPan_Resolution resolution_list[MIKUPAN_MAX_RESOLUTIONS];
+static char               resolution_labels[MIKUPAN_MAX_RESOLUTIONS][32];
+static const char        *resolution_label_ptrs[MIKUPAN_MAX_RESOLUTIONS];
+static int                resolution_count = 0;
+static int                resolution_selected = 0;
+
 static int show_texture_list = 0;
 static int show_controller_remap = 0;
 static int show_shader_reload = 0;
@@ -607,6 +628,84 @@ void MikuPan_UiDrawCallInspector(void)
 
 // -- Public API --------------------------------------------------------------
 
+static int CompareResolutionDesc(const void *a, const void *b)
+{
+    const MikuPan_Resolution *ra = (const MikuPan_Resolution *)a;
+    const MikuPan_Resolution *rb = (const MikuPan_Resolution *)b;
+    int area_a = ra->w * ra->h;
+    int area_b = rb->w * rb->h;
+    return area_b - area_a;
+}
+
+static void MikuPan_PopulateResolutionList(SDL_DisplayID display, const SDL_DisplayMode *current_mode)
+{
+    resolution_count = 0;
+
+    int n = 0;
+    SDL_DisplayMode **modes = SDL_GetFullscreenDisplayModes(display, &n);
+    if (modes != NULL)
+    {
+        for (int i = 0; i < n && resolution_count < MIKUPAN_MAX_RESOLUTIONS; i++)
+        {
+            int w = modes[i]->w;
+            int h = modes[i]->h;
+            if (w <= 0 || h <= 0) continue;
+
+            int dup = 0;
+            for (int j = 0; j < resolution_count; j++)
+            {
+                if (resolution_list[j].w == w && resolution_list[j].h == h)
+                {
+                    dup = 1;
+                    break;
+                }
+            }
+            if (dup) continue;
+
+            resolution_list[resolution_count].w = w;
+            resolution_list[resolution_count].h = h;
+            resolution_count++;
+        }
+        SDL_free(modes);
+    }
+
+    // Always include the current desktop mode — older SDL backends sometimes
+    // omit it from the fullscreen list.
+    if (current_mode != NULL && current_mode->w > 0 && current_mode->h > 0)
+    {
+        int present = 0;
+        for (int i = 0; i < resolution_count; i++)
+        {
+            if (resolution_list[i].w == current_mode->w &&
+                resolution_list[i].h == current_mode->h)
+            {
+                present = 1;
+                break;
+            }
+        }
+        if (!present && resolution_count < MIKUPAN_MAX_RESOLUTIONS)
+        {
+            resolution_list[resolution_count].w = current_mode->w;
+            resolution_list[resolution_count].h = current_mode->h;
+            resolution_count++;
+        }
+    }
+
+    qsort(resolution_list, resolution_count, sizeof(MikuPan_Resolution), CompareResolutionDesc);
+
+    for (int i = 0; i < resolution_count; i++)
+    {
+        snprintf(resolution_labels[i], sizeof(resolution_labels[i]),
+                 "%d x %d", resolution_list[i].w, resolution_list[i].h);
+        resolution_label_ptrs[i] = resolution_labels[i];
+        if (resolution_list[i].w == render_resolution_width &&
+            resolution_list[i].h == render_resolution_height)
+        {
+            resolution_selected = i;
+        }
+    }
+}
+
 void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
 {
     igCreateContext(NULL);
@@ -619,11 +718,11 @@ void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
         const SDL_DisplayMode *mode = SDL_GetCurrentDisplayMode(primary);
         if (mode != NULL && mode->w > 0 && mode->h > 0)
         {
-            screen_resolution_width = mode->w;
-            screen_resolution_height = mode->h;
-            render_resolution_width = mode->w;
+            render_resolution_width  = mode->w;
             render_resolution_height = mode->h;
         }
+
+        MikuPan_PopulateResolutionList(primary, mode);
     }
 
     MikuPan_ImGui_ImplInit(window, renderer);
@@ -757,6 +856,11 @@ void MikuPan_UiHandleShortcuts(void)
             show_shader_reload = 1;
         }
     }
+
+    if (igIsKeyPressed_Bool(ImGuiKey_F12, 0))
+    {
+        MikuPan_ScreenshotRequest();
+    }
 }
 
 void MikuPan_UiMenuBar(void)
@@ -814,37 +918,44 @@ void MikuPan_UiMenuBar(void)
             MikuPan_RequestFlushTextureCache();
         }
 
-        char msaa_dropdown_list[32];
-        snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%d", msaa_list[msaa_samples]);
+            igSliderInt("MSAA", &msaa_samples, 0, 5, "", 0);
+            igSameLine(0.0f, -1.0f);
+            igText("%dx", msaa_samples << 1);
 
-        if (igBeginCombo("MSAA", msaa_dropdown_list, 0))
-        {
-            for (int i = 0; i < 6; i++)
+            // Resolution dropdown populated from the primary display's
+            // supported fullscreen modes (queried once in MikuPan_InitUi).
+            if (resolution_count > 0)
             {
-                bool is_selected = (msaa_samples == i);
-                snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%d", msaa_list[i]);
-
-                if (igSelectable_Bool(msaa_dropdown_list, is_selected, 0, (ImVec2){0,0}))
+                if (igCombo_Str_arr("Resolution", &resolution_selected,
+                                    resolution_label_ptrs, resolution_count, -1))
                 {
-                    msaa_samples = i;
-                }
-
-                if (is_selected)
-                {
-                    igSetItemDefaultFocus();
+                    render_resolution_width  = resolution_list[resolution_selected].w;
+                    render_resolution_height = resolution_list[resolution_selected].h;
                 }
             }
+            else
+            {
+                igTextDisabled("Resolution: no display modes available");
+            }
 
-            igEndCombo();
+            // Brightness / gamma — read by the renderer each frame and
+            // pushed as uniforms on POSTPROCESS_SHADER for the final
+            // scene-to-window blit (see MikuPan_GetBrightness/Gamma below
+            // and the EndFrame post-process bind in mikupan_renderer.c).
+            igSliderFloat("Brightness", &brightness,  0.0f, 2.0f, "%.2f", 0);
+            igSliderFloat("Gamma",      &gamma_value, 0.1f, 3.0f, "%.2f", 0);
+
+            igEndMenu();
         }
 
-        int max_w = screen_resolution_width < 640 ? 640 : screen_resolution_width;
-        int max_h = screen_resolution_height < 448 ? 448 : screen_resolution_height;
-        igSliderInt("Width", &render_resolution_width, 640, max_w, "%d", 0);
-        igSliderInt("Height", &render_resolution_height, 448, max_h, "%d", 0);
+        igCheckbox("Ingame Debug Menu", (bool *)&dbg_wrk.mode_on);
+        igCheckbox("Shader Reload",     (bool *)&show_shader_reload);
+        igCheckbox("Draw Call Inspector", (bool *)&show_draw_inspector);
 
-        igSliderFloat("Brightness", &brightness, 0.0f, 2.0f, "%.2f", 0);
-        igSliderFloat("Gamma", &gamma_value, 0.1f, 3.0f, "%.2f", 0);
+        if (igMenuItem_Bool("Take Screenshot (F12)", NULL, false, true))
+        {
+            MikuPan_ScreenshotRequest();
+        }
 
         igEndMenu();
     }
@@ -858,7 +969,11 @@ void MikuPan_UiMenuBar(void)
 
     if (igBeginMenu("Input", 1))
     {
-        igCheckbox("Controller Mapping", (bool *) &show_controller_remap);
+        igCheckbox("Controller / Joystick Mapping", (bool *)&show_controller_remap);
+        if (igMenuItem_Bool("Reset Bindings to Defaults", NULL, false, true))
+        {
+            MikuPan_ControllerResetBindings();
+        }
         igEndMenu();
     }
 

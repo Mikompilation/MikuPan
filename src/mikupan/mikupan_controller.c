@@ -11,6 +11,13 @@
 static int remap_target = -1;
 static int remap_target_kb = 0;
 
+/// Active stick remap row (0..MIKUPAN_STICK_COUNT-1) or -1 when idle.
+static int remap_stick_target = -1;
+
+/// 0 = remapping the gamepad axis, 1 = remapping keyboard neg key,
+/// 2 = remapping keyboard pos key. Only meaningful while remap_stick_target >= 0.
+static int remap_stick_mode = 0;
+
 SDL_Gamepad *mikupan_gamepad = NULL;
 
 static const char *mikupan_controller_labels[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
@@ -79,6 +86,9 @@ MikuPan_ControllerBindings mikupan_controller_map[MIKUPAN_CONTROLLER_LOGICAL_COU
     {MIKUPAN_CONTROLLER_BIND_BUTTON,  SDL_GAMEPAD_BUTTON_LEFT_SHOULDER},
 };
 
+/// rdata-byte slot for each logical stick axis (LX/LY/RX/RY).
+static const int mikupan_stick_rdata_byte[MIKUPAN_STICK_COUNT] = {6, 7, 4, 5};
+
 int mikupan_keyboard_map[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
     SDL_SCANCODE_I,         SDL_SCANCODE_K,      SDL_SCANCODE_J,
     SDL_SCANCODE_L,         SDL_SCANCODE_UP,     SDL_SCANCODE_DOWN,
@@ -86,6 +96,41 @@ int mikupan_keyboard_map[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
     SDL_SCANCODE_BACKSPACE, SDL_SCANCODE_ESCAPE, SDL_SCANCODE_N,
     SDL_SCANCODE_O,         SDL_SCANCODE_8,      SDL_SCANCODE_9,
     SDL_SCANCODE_U,
+};
+
+static const char *mikupan_stick_labels[MIKUPAN_STICK_COUNT] = {
+    "Left Stick X",
+    "Left Stick Y",
+    "Right Stick X",
+    "Right Stick Y",
+};
+
+static const MikuPan_StickGamepadBinding mikupan_stick_controller_map_defaults[MIKUPAN_STICK_COUNT] = {
+    {SDL_GAMEPAD_AXIS_LEFTX,  0},
+    {SDL_GAMEPAD_AXIS_LEFTY,  0},
+    {SDL_GAMEPAD_AXIS_RIGHTX, 0},
+    {SDL_GAMEPAD_AXIS_RIGHTY, 0},
+};
+
+static const MikuPan_StickKeyboardBinding mikupan_stick_keyboard_map_defaults[MIKUPAN_STICK_COUNT] = {
+    {SDL_SCANCODE_A, SDL_SCANCODE_D},
+    {SDL_SCANCODE_W, SDL_SCANCODE_S},
+    {0,              0             },
+    {0,              0             },
+};
+
+MikuPan_StickGamepadBinding mikupan_stick_controller_map[MIKUPAN_STICK_COUNT] = {
+    {SDL_GAMEPAD_AXIS_LEFTX,  0},
+    {SDL_GAMEPAD_AXIS_LEFTY,  0},
+    {SDL_GAMEPAD_AXIS_RIGHTX, 0},
+    {SDL_GAMEPAD_AXIS_RIGHTY, 0},
+};
+
+MikuPan_StickKeyboardBinding mikupan_stick_keyboard_map[MIKUPAN_STICK_COUNT] = {
+    {SDL_SCANCODE_A, SDL_SCANCODE_D},
+    {SDL_SCANCODE_W, SDL_SCANCODE_S},
+    {0,              0             },
+    {0,              0             },
 };
 
 u_short mikupan_controller_game_bitmask[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
@@ -132,6 +177,11 @@ void MikuPan_ControllerResetBindings(void)
         mikupan_controller_map[i] = mikupan_controller_map_defaults[i];
         mikupan_keyboard_map[i] = mikupan_keyboard_map_defaults[i];
     }
+    for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+    {
+        mikupan_stick_controller_map[i] = mikupan_stick_controller_map_defaults[i];
+        mikupan_stick_keyboard_map[i] = mikupan_stick_keyboard_map_defaults[i];
+    }
 }
 
 int MikuPan_ReadController(unsigned char *rdata)
@@ -171,14 +221,20 @@ int MikuPan_ReadController(unsigned char *rdata)
             data[1] ^= pressed ? mikupan_controller_game_bitmask[i] : 0;
         }
 
-        rdata[5] = MikuPan_GamePadAxisToPS2(
-            SDL_GetGamepadAxis(mikupan_gamepad, SDL_GAMEPAD_AXIS_RIGHTY), 0);
-        rdata[4] = MikuPan_GamePadAxisToPS2(
-            SDL_GetGamepadAxis(mikupan_gamepad, SDL_GAMEPAD_AXIS_RIGHTX), 0);
-        rdata[7] = MikuPan_GamePadAxisToPS2(
-            SDL_GetGamepadAxis(mikupan_gamepad, SDL_GAMEPAD_AXIS_LEFTY), 0);
-        rdata[6] = MikuPan_GamePadAxisToPS2(
-            SDL_GetGamepadAxis(mikupan_gamepad, SDL_GAMEPAD_AXIS_LEFTX), 0);
+        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+        {
+            MikuPan_StickGamepadBinding b = mikupan_stick_controller_map[i];
+            int raw = 0;
+            if (b.axis >= 0)
+            {
+                raw = SDL_GetGamepadAxis(mikupan_gamepad, (SDL_GamepadAxis) b.axis);
+                if (b.invert)
+                {
+                    raw = -raw;
+                }
+            }
+            rdata[mikupan_stick_rdata_byte[i]] = MikuPan_GamePadAxisToPS2(raw, 0);
+        }
     }
     else
     {
@@ -192,10 +248,20 @@ int MikuPan_ReadController(unsigned char *rdata)
             data[1] ^= pressed ? mikupan_controller_game_bitmask[i] : 0;
         }
 
-        rdata[5] = 127;
-        rdata[4] = 127;
-        rdata[7] = 127;
-        rdata[6] = 127;
+        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+        {
+            MikuPan_StickKeyboardBinding b = mikupan_stick_keyboard_map[i];
+            int neg = (b.neg_scancode > 0 && b.neg_scancode < SDL_SCANCODE_COUNT)
+                          ? (int) key_states[b.neg_scancode]
+                          : 0;
+            int pos = (b.pos_scancode > 0 && b.pos_scancode < SDL_SCANCODE_COUNT)
+                          ? (int) key_states[b.pos_scancode]
+                          : 0;
+            unsigned char v = 127;
+            if (neg && !pos) v = 0;
+            else if (pos && !neg) v = 255;
+            rdata[mikupan_stick_rdata_byte[i]] = v;
+        }
     }
 
     return 1;
@@ -260,7 +326,7 @@ const char *MikuPan_ControllerBindingLabel(MikuPan_ControllerBindings binding)
 
 const char *MikuPan_ControllerScanCodeLabel(int scancode)
 {
-    if (scancode < 0 || scancode >= SDL_SCANCODE_COUNT)
+    if (scancode <= 0 || scancode >= SDL_SCANCODE_COUNT)
     {
         return "<unmapped>";
     }
@@ -272,6 +338,18 @@ const char *MikuPan_ControllerScanCodeLabel(int scancode)
     }
 
     return name;
+}
+
+const char *MikuPan_ControllerStickAxisLabel(int sdl_axis)
+{
+    switch (sdl_axis)
+    {
+        case SDL_GAMEPAD_AXIS_LEFTX:  return "Left Stick X";
+        case SDL_GAMEPAD_AXIS_LEFTY:  return "Left Stick Y";
+        case SDL_GAMEPAD_AXIS_RIGHTX: return "Right Stick X";
+        case SDL_GAMEPAD_AXIS_RIGHTY: return "Right Stick Y";
+        default:                      return "<unmapped>";
+    }
 }
 
 SDL_Gamepad *MikuPan_GetController(void)
@@ -326,6 +404,35 @@ static int MikuPan_ControllerFindPressedInput(SDL_Gamepad *gp, int *out_kind, in
         return 1;
     }
 
+    return 0;
+}
+
+static int MikuPan_ControllerFindMovedStickAxis(SDL_Gamepad *gp, int *out_axis)
+{
+    if (gp == NULL)
+    {
+        return 0;
+    }
+
+    // Generous threshold so resting drift on a worn stick doesn't accidentally
+    // bind. We only consider the four stick axes, not the triggers.
+    const int threshold = 20000;
+    const int axes[] = {
+        SDL_GAMEPAD_AXIS_LEFTX,
+        SDL_GAMEPAD_AXIS_LEFTY,
+        SDL_GAMEPAD_AXIS_RIGHTX,
+        SDL_GAMEPAD_AXIS_RIGHTY,
+    };
+
+    for (int i = 0; i < 4; i++)
+    {
+        int v = SDL_GetGamepadAxis(gp, (SDL_GamepadAxis) axes[i]);
+        if (v > threshold || v < -threshold)
+        {
+            *out_axis = axes[i];
+            return 1;
+        }
+    }
     return 0;
 }
 
@@ -621,6 +728,157 @@ static void MikuPan_ControllerDrawKeyboardBindingList(void)
     }
 }
 
+static void MikuPan_ControllerDrawStickGamepadList(SDL_Gamepad *gp)
+{
+    igTextDisabled(gp != NULL
+                       ? "Click 'Edit' on a stick row, then move a stick on your controller."
+                       : "No controller connected. Connect one to remap stick axes.");
+
+    for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+    {
+        igPushID_Int(0x200 + i);
+
+        igText("%-18s", mikupan_stick_labels[i]);
+        igSameLine(180.0f, -1.0f);
+        igText("%-18s", MikuPan_ControllerStickAxisLabel(mikupan_stick_controller_map[i].axis));
+        igSameLine(340.0f, -1.0f);
+
+        bool invert = mikupan_stick_controller_map[i].invert != 0;
+        if (igCheckbox("Invert", &invert))
+        {
+            mikupan_stick_controller_map[i].invert = invert ? 1 : 0;
+        }
+        igSameLine(0.0f, -1.0f);
+
+        if (remap_stick_target == i && remap_stick_mode == 0)
+        {
+            igTextColored((ImVec4){1.0f, 0.7f, 0.2f, 1.0f}, "Move a stick...");
+            igSameLine(0.0f, -1.0f);
+            if (igButton("Cancel", (ImVec2){0, 0}))
+            {
+                remap_stick_target = -1;
+            }
+        }
+        else
+        {
+            if (igButton("Edit", (ImVec2){60, 0}))
+            {
+                remap_stick_target = i;
+                remap_stick_mode = 0;
+            }
+            igSameLine(0.0f, -1.0f);
+            if (igButton("Clear", (ImVec2){60, 0}))
+            {
+                mikupan_stick_controller_map[i].axis = -1;
+            }
+        }
+
+        igPopID();
+    }
+
+    if (remap_stick_target >= 0 && remap_stick_mode == 0)
+    {
+        int axis = 0;
+        if (MikuPan_ControllerFindMovedStickAxis(gp, &axis))
+        {
+            mikupan_stick_controller_map[remap_stick_target].axis = axis;
+            remap_stick_target = -1;
+        }
+        if (igIsKeyPressed_Bool(ImGuiKey_Escape, 0))
+        {
+            remap_stick_target = -1;
+        }
+    }
+}
+
+static void MikuPan_ControllerDrawStickKeyboardList(void)
+{
+    igTextDisabled("Active when no controller is connected. Two keys per axis drive it to its extremes.");
+
+    for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+    {
+        igPushID_Int(0x300 + i);
+
+        igText("%-16s", mikupan_stick_labels[i]);
+        igSameLine(170.0f, -1.0f);
+        igText("- %-10s", MikuPan_ControllerScanCodeLabel(mikupan_stick_keyboard_map[i].neg_scancode));
+        igSameLine(0.0f, -1.0f);
+
+        if (remap_stick_target == i && remap_stick_mode == 1)
+        {
+            igTextColored((ImVec4){1.0f, 0.7f, 0.2f, 1.0f}, "Press key...");
+            igSameLine(0.0f, -1.0f);
+            if (igButton("Cancel##neg", (ImVec2){0, 0}))
+            {
+                remap_stick_target = -1;
+            }
+        }
+        else
+        {
+            if (igButton("Edit##neg", (ImVec2){60, 0}))
+            {
+                remap_stick_target = i;
+                remap_stick_mode = 1;
+            }
+            igSameLine(0.0f, -1.0f);
+            if (igButton("Clear##neg", (ImVec2){60, 0}))
+            {
+                mikupan_stick_keyboard_map[i].neg_scancode = 0;
+            }
+        }
+
+        igSameLine(0.0f, 18.0f);
+        igText("+ %-10s", MikuPan_ControllerScanCodeLabel(mikupan_stick_keyboard_map[i].pos_scancode));
+        igSameLine(0.0f, -1.0f);
+
+        if (remap_stick_target == i && remap_stick_mode == 2)
+        {
+            igTextColored((ImVec4){1.0f, 0.7f, 0.2f, 1.0f}, "Press key...");
+            igSameLine(0.0f, -1.0f);
+            if (igButton("Cancel##pos", (ImVec2){0, 0}))
+            {
+                remap_stick_target = -1;
+            }
+        }
+        else
+        {
+            if (igButton("Edit##pos", (ImVec2){60, 0}))
+            {
+                remap_stick_target = i;
+                remap_stick_mode = 2;
+            }
+            igSameLine(0.0f, -1.0f);
+            if (igButton("Clear##pos", (ImVec2){60, 0}))
+            {
+                mikupan_stick_keyboard_map[i].pos_scancode = 0;
+            }
+        }
+
+        igPopID();
+    }
+
+    if (remap_stick_target >= 0 && (remap_stick_mode == 1 || remap_stick_mode == 2))
+    {
+        int sc = MikuPan_ControllerFindPressedScanCode();
+        if (sc >= 0)
+        {
+            if (remap_stick_mode == 1)
+            {
+                mikupan_stick_keyboard_map[remap_stick_target].neg_scancode = sc;
+            }
+            else
+            {
+                mikupan_stick_keyboard_map[remap_stick_target].pos_scancode = sc;
+            }
+            remap_stick_target = -1;
+        }
+        if (igIsKeyPressed_Bool(ImGuiKey_Escape, 0))
+        {
+            remap_stick_target = -1;
+        }
+    }
+}
+
 void MikuPan_ControllerDrawRemapWindow(void)
 {
     if (!MikuPan_ShowControllerRemapWindow())
@@ -648,22 +906,34 @@ void MikuPan_ControllerDrawRemapWindow(void)
     {
         MikuPan_ControllerResetBindings();
         remap_target = -1;
+        remap_stick_target = -1;
     }
 
     igSameLine(0.0f, -1.0f);
-    igTextDisabled("(restores both gamepad and keyboard mappings)");
+    igTextDisabled("(restores buttons, sticks, and keyboard mappings)");
+
     igSpacing();
 
     if (igBeginTabBar("##remap_tabs", 0))
     {
-        if (igBeginTabItem("Gamepad", NULL, 0))
+        if (igBeginTabItem("Gamepad Buttons", NULL, 0))
         {
             MikuPan_ControllerDrawControllerBindingList(gp);
             igEndTabItem();
         }
-        if (igBeginTabItem("Keyboard", NULL, 0))
+        if (igBeginTabItem("Gamepad Sticks", NULL, 0))
+        {
+            MikuPan_ControllerDrawStickGamepadList(gp);
+            igEndTabItem();
+        }
+        if (igBeginTabItem("Keyboard Buttons", NULL, 0))
         {
             MikuPan_ControllerDrawKeyboardBindingList();
+            igEndTabItem();
+        }
+        if (igBeginTabItem("Keyboard Sticks", NULL, 0))
+        {
+            MikuPan_ControllerDrawStickKeyboardList();
             igEndTabItem();
         }
         igEndTabBar();

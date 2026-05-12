@@ -252,6 +252,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/mikupan_config.h
         src/mikupan/mikupan_controller.c
         src/mikupan/mikupan_controller.h
+        src/mikupan/mikupan_screenshot.c
+        src/mikupan/mikupan_screenshot.h
 )
 
 add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})

@@ -8,6 +8,7 @@
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_logging_c.h"
+#include "mikupan/mikupan_screenshot.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
@@ -700,6 +701,14 @@ void MikuPan_EndFrame()
                              (GLsizeiptr)sizeof(quad), quad);
 
     glad_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    // Capture the post-processed scene before the debug UI is composited so
+    // screenshots show the game without ImGui overlays.
+    {
+        int gl_w = 0, gl_h = 0;
+        SDL_GetWindowSizeInPixels(mikupan_render.window, &gl_w, &gl_h);
+        MikuPan_ScreenshotCaptureIfRequested(gl_w, gl_h);
+    }
 
     //info_log("Frame: state_changes=%d, draw_calls=%d, mesh_cache hits=%d misses_new=%d misses_full=%d",
     //    MikuPan_PerfGetStateChangesCurrent(),
