@@ -9,6 +9,7 @@
 #include "mikupan/mikupan_logging_c.h"
 #include "typedefs.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 
 IOP_ADPCM iop_adpcm[2];
@@ -93,15 +94,14 @@ void IAdpcmPreLoad(ADPCM_CMD *acp)
                       channel, 1u, endld_flg);
 }
 
-static s16* MixSamples(int sampleCount, s16 *samples, s32 vol)
+static s16 *MixSamples(int sampleCount, s16 *samples, s32 vol)
 {
     s16 *buffer = samples;
-    
+
     for (int i = 0; i < sampleCount; i++)
     {
         s16 sample = samples[i];
-        s16 mixed = ApplyVolume(sample, vol);
-        sample = mixed;
+        sample = ApplyVolume(sample, vol);
         buffer[i] = sample;
     }
     return buffer;
@@ -136,8 +136,7 @@ static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
             src += 8;
         }
 
-        s16 volumeL = ((s32) volL * iop_adpcm[channel].vol) / 32767;
-        volumeL = volumeL * mVolL / 16383;
+        s16 volumeL = (s32) mVolL * volL / INT16_MAX;
 
         dec[0] = MixSamples(3584, dec_buf[0], volumeL);
 
@@ -150,8 +149,7 @@ static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
             src += 8;
         }
 
-        s16 volumeR = ((s32) volR * iop_adpcm[channel].vol) / 32767;
-        volumeR = volumeR * mVolR / 16383;
+        s16 volumeR = (s32) mVolR * volR / INT16_MAX;
         dec[1] = MixSamples(3584, dec_buf[1], volumeR);
 
         SDL_PutAudioStreamPlanarData(stream, (void *) dec, CHANNELS, 3584);
@@ -195,7 +193,8 @@ void IAdpcmPlay(ADPCM_CMD *acp)
         IaSetRegPitch(channel);
         IaSetRegAdsr(channel);
         iop_adpcm[channel].stat = ADPCM_STAT_PLAY;
-        FillStereo(now_cmd.size, channel, AdpcmIopBuf, AdpcmSpuBuf, iop_adpcm[channel].stream);
+        FillStereo(now_cmd.size, channel, AdpcmIopBuf, AdpcmSpuBuf,
+                   iop_adpcm[channel].stream);
         SDL_SetAudioStreamFrequencyRatio(iop_adpcm[channel].stream,
                                          (float) acp->pitch / (float) 0x1000);
         SDL_ResumeAudioStreamDevice(iop_adpcm[channel].stream);

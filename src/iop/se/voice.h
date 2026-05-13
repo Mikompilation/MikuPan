@@ -5,6 +5,12 @@
 #include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_thread.h>
 
+ #define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+
+
 #define VOICE_NUM 24
 
 enum SE_VOICE_STAT
@@ -43,8 +49,8 @@ typedef struct
 
     u_short volL;
     u_short volR;
-    u_short mVolL;
-    u_short mVolR;
+    s32 mVolL;
+    s32 mVolR;
 
     u_short pitch;
     u_short adsr1;
@@ -72,22 +78,22 @@ static inline void SetPitch(int vNo, u_short val)
 
 static inline void SetVolLeft(int vNo, u_short val)
 {
-    voices[vNo].volL = val;
+    voices[vNo].volL = val << 1;
 }
 
 static inline void SetVolRight(int vNo, u_short val)
 {
-    voices[vNo].volR = val;
+    voices[vNo].volR = val << 1;
 }
 
-static inline void SetMasterVolLeft(int vNo, u_short val)
+static inline void SetMasterVolLeft(int vNo, s32 val)
 {
-    voices[vNo].mVolL = val;
+    voices[vNo].mVolL = val << 1;
 }
 
-static inline void SetMasterVolRight(int vNo, u_short val)
+static inline void SetMasterVolRight(int vNo, s32 val)
 {
-    voices[vNo].mVolR = val;
+    voices[vNo].mVolR = val << 1;
 }
 
 static inline void SetAdsr1(int vNo, u_short val)
