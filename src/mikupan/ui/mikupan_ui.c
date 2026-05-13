@@ -938,6 +938,7 @@ void MikuPan_UiMenuBar(void)
                     igSetItemDefaultFocus();
                 }
             }
+            igEndCombo();
         }
 
         // Resolution dropdown populated from the primary display's
