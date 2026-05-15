@@ -65,10 +65,10 @@ void IaInitVolume()
     sceSdSetSwitch(SD_S_VMIXR | 0, 0xFFFFFFu);
     sceSdSetSwitch(SD_S_VMIXEL | 0, 0);
     sceSdSetSwitch(SD_S_VMIXER | 0, 0);
-    sceSdSetParam(SD_VP_VOLL | 0 | 0, 0);
-    sceSdSetParam(SD_VP_VOLR | 0 | 0, 0);
-    sceSdSetParam(SD_VP_VOLL | 1 | 0, 0);
-    sceSdSetParam(SD_VP_VOLR | 1 | 0, 0);
+    sceSdSetParam(SD_VP_VOLL | SD_VOICE(0) | 0, 0);
+    sceSdSetParam(SD_VP_VOLR | SD_VOICE(0) | 0, 0);
+    sceSdSetParam(SD_VP_VOLL | SD_VOICE(1) | 0, 0);
+    sceSdSetParam(SD_VP_VOLR | SD_VOICE(1) | 0, 0);
 }
 
 void IaDbgMemoryCheck()
@@ -236,6 +236,6 @@ static void IaSetStopBlock(u_char channel)
 
 void IaSetMasterVol(u_short mvol)
 {
-    mVolL = mvol & 0x3FFF << 1;
-    mVolR = mvol & 0x3FFF << 1;
+    sceSdSetParam(SD_P_MVOLL, mvol & 0x3FFF);
+    sceSdSetParam(SD_P_MVOLR, mvol & 0x3FFF);
 }

@@ -36,7 +36,14 @@
 #define SD_P_EVOLL ((0x0b << 8) + (0x01 << 7))
 #define SD_P_EVOLR ((0x0c << 8) + (0x01 << 7))
 
+#define SD_VOICE(no)   ((no)<<1)
+
+
 extern s16 spuRam[(1024*1024*2) >> 1];
+
+extern s32 mVolL;
+extern s32 mVolR;
+
 
 extern void sceSdSetParam(u_short entry, u_short value);
 extern u_short sceSdGetParam(u_short entry);

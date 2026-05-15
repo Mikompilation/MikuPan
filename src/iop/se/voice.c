@@ -1,11 +1,9 @@
 #include "voice.h"
 #include "iop/iopmain.h"
-#include "iop/se/iopse.h"
 #include "mikupan/mikupan_audio.h"
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "sce/libsd.h"
-#include "typedefs.h"
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -41,7 +39,7 @@ VOICE *GetFreeVoice()
 static s16 *MixSamples(int sampleCount, s16 *samples, VOICE v)
 {
     s16 *buffer = samples;
-    s16 volume = v.mVolL * v.volL / INT16_MAX;
+    s16 volume = mVolL * v.volL / INT16_MAX;
 
     for (int i = 0; i < sampleCount; i++)
     {

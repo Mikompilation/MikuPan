@@ -5,8 +5,8 @@
 #include "iop/cdvd/iopcdvd.h"
 #include "iop/iopmain.h"
 #include "mikupan/mikupan_audio.h"
-#include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_logging_c.h"
+#include "sce/libsd.h"
 #include "typedefs.h"
 
 #include <stdint.h>
@@ -18,7 +18,6 @@ ADPCM_CMD cmd_buf[8];
 s16 *AdpcmSpuBuf[2];
 s16 *AdpcmIopBuf[2];
 
-u_short mVolL, mVolR;
 u_short volL, volR;
 u_short adsr1L, adsr2L;
 u_short adsr1R, adsr2R;
@@ -136,7 +135,7 @@ static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
             src += 8;
         }
 
-        s16 volumeL = (s32) mVolL * volL / INT16_MAX;
+        s16 volumeL = mVolL * volL / INT16_MAX;
 
         dec[0] = MixSamples(3584, dec_buf[0], volumeL);
 
@@ -149,7 +148,7 @@ static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
             src += 8;
         }
 
-        s16 volumeR = (s32) mVolR * volR / INT16_MAX;
+        s16 volumeR = mVolR * volR / INT16_MAX;
         dec[1] = MixSamples(3584, dec_buf[1], volumeR);
 
         SDL_PutAudioStreamPlanarData(stream, (void *) dec, CHANNELS, 3584);
@@ -404,6 +403,9 @@ void IAdpcmMain2()
 void IAdpcmInit(int dev_init)
 {
     SDL_AudioSpec spec;
+
+    sceSdSetParam(SD_P_MVOLL | 0, 0);
+    sceSdSetParam(SD_P_MVOLR | 0, 0);
 
     if (!dev_init)
         IaInitDev(0);

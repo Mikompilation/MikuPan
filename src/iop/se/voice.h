@@ -49,8 +49,6 @@ typedef struct
 
     u_short volL;
     u_short volR;
-    s32 mVolL;
-    s32 mVolR;
 
     u_short pitch;
     u_short adsr1;
@@ -84,16 +82,6 @@ static inline void SetVolLeft(int vNo, u_short val)
 static inline void SetVolRight(int vNo, u_short val)
 {
     voices[vNo].volR = val << 1;
-}
-
-static inline void SetMasterVolLeft(int vNo, s32 val)
-{
-    voices[vNo].mVolL = val << 1;
-}
-
-static inline void SetMasterVolRight(int vNo, s32 val)
-{
-    voices[vNo].mVolR = val << 1;
 }
 
 static inline void SetAdsr1(int vNo, u_short val)

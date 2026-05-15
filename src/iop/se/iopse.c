@@ -3,12 +3,9 @@
 #include "sce/libsd.h"
 
 #include "iop/adpcm/iopadpcm.h"
-#include "iop/cdvd/iopcdvd.h"
 #include "iop/iopmain.h"
 
-#include "SDL3/SDL_audio.h"
 #include "enums.h"
-#include "mikupan/mikupan_audio.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "os/eeiop/eeiop.h"
 #include "stdio.h"
@@ -75,8 +72,6 @@ void ISeInit(int mode)
         SeSetSeWrk(swsp);
     }
 
-    sceSdSetParam(SD_P_MVOLL | 1, iop_mv.vol);
-    sceSdSetParam(SD_P_MVOLR | 1, iop_mv.vol);
     //sceSdSetAddr(SD_A_EEA | 1, 0x1FFFFFu);
     // sceSdSetCoreAttr(3u, 1u);
 
@@ -216,7 +211,7 @@ void ISeCmd(IOP_COMMAND *icp)
 
 static void IopSoundMasterVolChange(IOP_COMMAND *icp)
 {
-    SeSetMasterVol(icp->data1);
+    //SeSetMasterVol(icp->data1);
     IaSetMasterVol(icp->data1);
 }
 
@@ -733,7 +728,8 @@ static void SeSetSeWrk(SE_WRK_SET *swsp)
 
     num = swsp->v_no;
     candv = CidAndVnum(num + 24, 1);
-    sceSdSetAddr(candv | SD_VA_SSA, GetSeAdrs(swsp->prm_no) + snd_buf_top[swsp->buf_no]);
+    sceSdSetAddr(candv | SD_VA_SSA,
+                 GetSeAdrs(swsp->prm_no) + snd_buf_top[swsp->buf_no]);
     sceSdSetParam(candv | SD_VP_ADSR1, swsp->adsr1);
     sceSdSetParam(candv | SD_VP_ADSR2, swsp->adsr2);
     sceSdSetParam(candv | SD_VP_VOLL, swsp->vol_l);
