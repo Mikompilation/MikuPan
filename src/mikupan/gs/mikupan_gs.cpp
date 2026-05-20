@@ -1,12 +1,15 @@
 #include "mikupan_gs.h"
+#include "SDL3/SDL_timer.h"
+
 #include "mikupan_texture_manager.h"
 #include "spdlog/spdlog.h"
 #include "xxhash.h"
-#include "SDL3/SDL_timer.h"
-#include <cstring>
+
 #include <atomic>
+#include <cstring>
 
 extern "C" {
+#include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/mikupan_utils.h"
 }
 
@@ -260,6 +263,11 @@ void GS::GSHelper::Clear()
 
 void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image)
 {
+    if (MikuPan_IsGsUploadsDisabled())
+    {
+        return;
+    }
+
     // spdlog::debug() always formats its arguments at runtime (only the *write*
     // is gated by log level), so leaving it on the hot path is wasteful even
     // with debug logging disabled. Use SPDLOG_DEBUG so the entire call site is

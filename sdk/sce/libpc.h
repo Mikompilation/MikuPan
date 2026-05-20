@@ -1,12 +1,7 @@
 #ifndef SCE_LIBPC_H
 #define SCE_LIBPC_H
 
-static inline int scePcGetCounter0(void) {
-    //register int ctr0;
-    //__asm__ volatile ("mfpc %0, 0": "=r" (ctr0));
-    //return ctr0;
-    return 1;
-}
+
 
 #define SCE_PC0_RESERVED            (0  <<  5)
 #define SCE_PC0_CPU_CYCLE           (1  <<  5)
@@ -56,6 +51,7 @@ static inline int scePcGetCounter0(void) {
 #define SCE_PC_EVENT1               (31 << 15)
 #define SCE_PC_CTE                  (1  << 31)
 
+int scePcGetCounter0(void);
 void scePcStart(int control, int counter0, int counter1);
 void scePcStop();
 

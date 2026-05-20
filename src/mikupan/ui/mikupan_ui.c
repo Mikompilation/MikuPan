@@ -117,6 +117,7 @@ static int show_draw_inspector = 0;
 // flying past in the log.
 static char last_reload_error[1280] = {0};
 
+static int disable_gs_uploads = 0;
 static int show_bounding_boxes = 0;
 static int show_mesh_0x82 = 1;
 static int show_mesh_0x32 = 1;
@@ -1143,6 +1144,7 @@ void MikuPan_UiMenuBar(void)
         igCheckbox("Disable Lighting", (bool *) &disable_lighting);
         igCheckbox("Static Lighting", (bool *) &show_static_lighting);
         igCheckbox("Normals", (bool *) &render_normals);
+        igCheckbox("GS Uploads", (bool *) &disable_gs_uploads);
 
         if (render_normals)
         {
@@ -1293,6 +1295,11 @@ int MikuPan_IsMesh0x2Rendering(void)
 int MikuPan_IsLightingDisabled(void)
 {
     return disable_lighting;
+}
+
+int MikuPan_IsGsUploadsDisabled(void)
+{
+    return disable_gs_uploads;
 }
 
 int MikuPan_ShowStaticLighting(void)

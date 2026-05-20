@@ -144,7 +144,7 @@ void gra2dDraw(int fl)
         break;
     }
 
-    if (*key_now[13] != 0 && dbg_wrk.oth_perf != 0)
+    if (SELECT_PRESSED() != 0 && dbg_wrk.oth_perf != 0)
     {
         InitPerformanceCounter();
     }

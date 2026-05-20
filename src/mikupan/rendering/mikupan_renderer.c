@@ -195,6 +195,12 @@ SDL_AppResult MikuPan_Init()
 
     info_log("GLad version loaded %d", gladLoadGLLoader((void*)SDL_GL_GetProcAddress));
 
+    /* Disable vsync */
+    if (!SDL_GL_SetSwapInterval(0))
+    {
+        info_log("Failed to disable GL vsync: %s", SDL_GetError());
+    }
+
     int desired_render_width = mikupan_configuration.renderer.render.width;
     int desired_render_height = mikupan_configuration.renderer.render.height;
     int desired_msaa = mikupan_configuration.renderer.msaa_index;

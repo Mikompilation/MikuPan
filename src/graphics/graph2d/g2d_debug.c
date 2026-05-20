@@ -974,7 +974,6 @@ void DrawPerformanceCounter()
 
 void WaitFrameTop(int type)
 {
-    return;
     if (type != 0)
     {
         while ((scePcGetCounter0() / 0x4a2b80 & 1) == 0) {};
