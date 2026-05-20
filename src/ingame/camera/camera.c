@@ -2673,7 +2673,7 @@ void CameraIdMoveCtrl()
 
     switch (cam_kind)
     {
-        case 0:
+        case NORMAL:
             cn = plyr_wrk.pr_info.camera_no;
             mcd = &map_cam_dat[cn];
 
@@ -2686,7 +2686,7 @@ void CameraIdMoveCtrl()
                 igTextColored((ImVec4){1.00f, 1.00f, 0.20f, 1.0f}, "%s%d", str, cn);
             }
             break;
-        case 1:
+        case BATTLE:
             cn = plyr_wrk.pr_info.camera_btl;
             mcd = &map_cam_dat2[cn];
 
@@ -2698,7 +2698,7 @@ void CameraIdMoveCtrl()
                 igTextColored((ImVec4){1.00f, 0.39f, 0.39f, 1.0f}, "%s%d", str5, cn);
             }
             break;
-        case 2:
+        case DRAMA:
             cn = plyr_wrk.pr_info.camera_drm;
             mcd = &map_cam_dat3[cn];
 
@@ -2710,7 +2710,7 @@ void CameraIdMoveCtrl()
                 igTextColored((ImVec4){0.20f, 1.00f, 0.20f, 1.0f}, "%s%d", str6, cn);
             }
             break;
-        case 3:
+        case DOOR:
             cn = plyr_wrk.pr_info.camera_door;
             mcd = &map_cam_dat4[cn];
 
@@ -3142,6 +3142,7 @@ u_char SetMapCamDat1(MAP_CAM_DAT *mcd)
     return 0x1;
 }
 
+/// Assign multiple points, press select to set point
 u_char SetMapCamDat2(MAP_CAM_DAT *mcd, u_char id)
 {
     u_char i;

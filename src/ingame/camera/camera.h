@@ -202,6 +202,14 @@ extern int cd_step;
 extern int cam_id;
 extern short int plyr_adj[4];
 
+
+typedef enum  {
+	NORMAL,
+	BATTLE,
+	DRAMA,
+	DOOR
+} CamKind;
+
 void CameraMain();
 void KonwakuCamCtrl();
 void FinderInCameraCtrl();
