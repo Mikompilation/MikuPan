@@ -28,13 +28,13 @@ typedef unsigned int u_long128 __attribute__ ((mode (TI)));
 typedef int (*sceSdTransIntrHandler)(int, void *);
 typedef int (*sceSdSpu2IntrHandler)(int, void *);
 
-#ifdef _WIN32
+#ifdef __APPLE__
+#include <sys/types.h>
+#else
 typedef unsigned long long u_long;
 typedef unsigned short u_short;
 typedef unsigned char u_char;
 typedef unsigned int u_int;
-#else
-#include <sys/types.h>
 #endif
 
 typedef long long int dword[2] ;
