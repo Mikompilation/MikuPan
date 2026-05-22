@@ -2835,7 +2835,7 @@ void CameraIdMoveCtrl()
     }
 
     // Used to set points for camera to follow
-    // CamDat, CamType. CamSet. All represent type of angle and follow motion
+    // CamDat, CamType, CamSet, All represent type of angle and follow motion
     if (SELECT_PRESSED() == 1)
     {
         switch (cam_type)

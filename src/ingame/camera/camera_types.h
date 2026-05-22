@@ -31,8 +31,8 @@ typedef struct {
 typedef struct {
 	u_char type;
 	u_char id;
-	u_short p0[3]; // Interest
-	u_short p1[3]; /// Position
+	u_short p0[3];
+	u_short p1[3];
 	u_short p2[3];
 	u_short p3[3];
 	float roll[2];
