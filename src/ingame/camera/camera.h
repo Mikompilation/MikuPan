@@ -4,6 +4,14 @@
 #include "camera_types.h"
 #include "typedefs.h"
 
+#define CAMERA_BLEND_FRAMES(tbl)   ((tbl) & 0xff)
+#define CAMERA_NO(tbl)             (((tbl) >> 8) & 0x1ff)
+#define CAMERA_FOCUS_ENABLED(tbl) (tbl & 0x60000000)
+#define CAMERA_FOCUS_DATA(tbl)     (((tbl) >> 28) & 0x3)
+#define CAMERA_EASING_MODE(tbl)    (((tbl) >> 30) & 0x3)
+#define CAMERA_END                 0xffffffff
+#define CAMERA_LIST_END            0xffff
+
 extern u_int ncam_000[];
 extern u_int ncam_001[];
 extern u_int ncam_002[];

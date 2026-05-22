@@ -55,6 +55,9 @@ u_short drm_cam_no[12] = {
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };
 
+// Below are serialized camera properties
+// They represent properties and property data used on camera compile when new data is set.
+
 u_int ncam_000[] = {4294967295};
 u_int ncam_001[] = {1342188308, 4294967295};
 u_int ncam_002[] = {34108, 4294967295};
@@ -1307,6 +1310,7 @@ void NormalCameraCtrl()
     plyr_wrk.prot = GetTrgtRotY(camera.p, plyr_wrk.move_box.pos);
 }
 
+/// Updates MapCamInfo with new data
 int GetCameraInfo(MAP_CAM_INFO *mci)
 {
     static u_char kind_old = 0;
@@ -1378,6 +1382,7 @@ int GetCameraInfo(MAP_CAM_INFO *mci)
     return 0;
 }
 
+/// Updates MapCamInfo with new data
 void GetCameraData(u_char kind, MAP_CAM_INFO *mci)
 {
     switch (kind)
@@ -1409,6 +1414,8 @@ void GetCameraData(u_char kind, MAP_CAM_INFO *mci)
     }
 }
 
+// SetCamPos functions Represent the type of motions
+// The camera can do to follow the set interest
 void SetCamPos0(SgCAMERA *tc, MAP_CAM_INFO *mci)
 {
     sceVu0FVECTOR tv;
@@ -1697,6 +1704,7 @@ void SetCamPos5(SgCAMERA *tc, MAP_CAM_INFO *mci)
     tc->fov = mci->mcd->fov[0];
 }
 
+/// Used for point motion bounds checks
 float GetMCLocalPosPer(u_short cn, u_char kind, u_char id)
 {
     u_short xmin;
@@ -1744,7 +1752,8 @@ float GetMCLocalPosPer(u_short cn, u_char kind, u_char id)
     return __builtin_fabsf((plyr_wrk.bwp[2] - min) / (max - min));
 }
 
-// One of the main loops
+/// Compiles the current map cam data stored in MapCamInfo into an SgCamera *tc
+/// This includes applying the serialized properties above as tbl and bitmasks
 void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
 {
     sceVu0FVECTOR tc0;
@@ -1830,17 +1839,15 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                         break;
                 }
                 break;
-            default:
-                return;
         }
 
-        for (i = 0; tbl[i] != 0xffffffff; i++)
+        for (i = 0; tbl[i] != CAMERA_END; i++)
         {
-            if (((tbl[i] >> 8) & 0x1ff) == mci->no)
+            if (CAMERA_NO(tbl[i]) == mci->no)
             {
-                if (tbl[i] & 0x60000000)
+                if (CAMERA_FOCUS_ENABLED(tbl[i]))
                 {
-                    switch ((tbl[i] >> 28) & 0x3)
+                    switch (CAMERA_FOCUS_DATA(tbl[i]))
                     {
                         case 1:
                             CallFocus(0, 1, 50);
@@ -1854,13 +1861,13 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                     }
                 }
 
-                if (tbl[i] & 0xff)
+                if (CAMERA_BLEND_FRAMES(tbl[i]))
                 {
                     compling = mci->no;
 
-                    comple_div = tbl[i] & 0xff;
+                    comple_div = CAMERA_BLEND_FRAMES(tbl[i]);
                     comple_cnt = comple_div;
-                    comple_spd_dwn = tbl[i] >> 30;
+                    comple_spd_dwn = CAMERA_EASING_MODE(tbl[i]);
 
                     if (comple_spd_dwn != 0)
                     {
@@ -1933,12 +1940,6 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                 tc0[3] = 0.0f;
 
                 tca1 = GetDistV(tc0, tc1);
-
-                if (tca0 == 0.0f)
-                {
-                    tca0 = 1.0f;
-                }
-
                 sceVu0DivVector(comple_adjp, tc1, tca1 / tca0);
             }
             if (mci->type == 0x4)
@@ -1969,11 +1970,7 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                     tc0[3] = 0.0f;
 
                     tca1 = GetDistV(tc0, tc1);
-
-                    if (tca0 != 0.0f && !isnan(tca0))
-                    {
-                        sceVu0DivVector(comple_adjr, tc1, tca1 / tca0);
-                    }
+                    sceVu0DivVector(comple_adjr, tc1, tca1 / tca0);
                 }
             }
         }
@@ -2137,7 +2134,7 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
     }
     else
     {
-        compling = -1;
+        compling = 0xffff;
     }
 }
 
@@ -2641,7 +2638,7 @@ void SetFinderRot()
     RotLimitChk(&plyr_wrk.frot_x);
 }
 
-// EDITOR CODE
+/// EDITOR CODE
 void CameraIdMoveCtrl()
 {
     MAP_CAM_DAT *mcd;
@@ -2649,17 +2646,17 @@ void CameraIdMoveCtrl()
     sceVu0FVECTOR rav = {0.0f, 0.0f, 1000.0f, 0.0f};
     float delta = DEG2RAD(1.0f);
     u_short cn;
-    char *str           = "NORMAL       ";
-    char *str5          = "BATTLE       ";
-    char *str6          = "DRAMA        ";
-    char *str7          = "DOOR         ";
-    char *str0          = "CAMERA TYPE  ";
-    char *str1          = "STEP         ";
-    char *str2          = "MOVE ID      ";
-    char *str3          = "NEW DATA SET!!";
-    char *str4          = "MISSION NO   ";
-    char *str_save      = "FILE SAVE MODE";
-    char *str_renewal   = "RENEWAL DATA!!";
+    char *str = "NORMAL       ";
+    char *str5 = "BATTLE       ";
+    char *str6 = "DRAMA        ";
+    char *str7 = "DOOR         ";
+    char *str0 = "CAMERA TYPE  ";
+    char *str1 = "STEP         ";
+    char *str2 = "MOVE ID      ";
+    char *str3 = "NEW DATA SET!!";
+    char *str4 = "MISSION NO   ";
+    char *str_save = "FILE SAVE MODE";
+    char *str_renewal = "RENEWAL DATA!!";
     char *str_norenewal = "NO RENEWAL DATA";
 
     igBegin("Camera Id Move Ctrl", NULL, ImGuiWindowFlags_NoTitleBar);
@@ -2669,7 +2666,8 @@ void CameraIdMoveCtrl()
         cam_info_disp ^= 1;
     }
 
-    igTextColored((ImVec4){1.0f, 0.6f, 0.3f, 1.0f}, "Camera Kind %d", cam_kind);
+    igTextColored((ImVec4) {1.0f, 0.6f, 0.3f, 1.0f}, "Camera Kind %d",
+                  cam_kind);
 
     switch (cam_kind)
     {
@@ -2683,7 +2681,8 @@ void CameraIdMoveCtrl()
                 SetInteger2(0, 540.0f, 10.0f, 1, 0xff, 0xff, 0x32, cn);
                 // Mirror in ImGui: yellow for the NORMAL camera-kind row.
                 // Colour ≈ 0xff,0xff,0x32 normalised (matches the integer's tint).
-                igTextColored((ImVec4){1.00f, 1.00f, 0.20f, 1.0f}, "%s%d", str, cn);
+                igTextColored((ImVec4) {1.00f, 1.00f, 0.20f, 1.0f}, "%s%d", str,
+                              cn);
             }
             break;
         case BATTLE:
@@ -2695,7 +2694,8 @@ void CameraIdMoveCtrl()
                 SetASCIIString2(0, 430.0f, 10.0f, 1, 0xdc, 0x64, 0x64, str5);
                 SetInteger2(0, 540.0f, 10.0f, 1, 0xff, 0x64, 0x64, cn);
                 // Mirror in ImGui: red for BATTLE.
-                igTextColored((ImVec4){1.00f, 0.39f, 0.39f, 1.0f}, "%s%d", str5, cn);
+                igTextColored((ImVec4) {1.00f, 0.39f, 0.39f, 1.0f}, "%s%d",
+                              str5, cn);
             }
             break;
         case DRAMA:
@@ -2707,7 +2707,8 @@ void CameraIdMoveCtrl()
                 SetASCIIString2(0, 430.0f, 10.0f, 1, 0x32, 0xdc, 0x32, str6);
                 SetInteger2(0, 540.0f, 10.0f, 1, 0x32, 0xff, 0x32, cn);
                 // Mirror in ImGui: green for DRAMA.
-                igTextColored((ImVec4){0.20f, 1.00f, 0.20f, 1.0f}, "%s%d", str6, cn);
+                igTextColored((ImVec4) {0.20f, 1.00f, 0.20f, 1.0f}, "%s%d",
+                              str6, cn);
             }
             break;
         case DOOR:
@@ -2719,7 +2720,8 @@ void CameraIdMoveCtrl()
                 SetASCIIString2(0, 430.0f, 10.0f, 1, 0x32, 0xdc, 0x32, str7);
                 SetInteger2(0, 540.0f, 10.0f, 1, 0x32, 0xff, 0x32, cn);
                 // Mirror in ImGui: green for DOOR (same palette as DRAMA).
-                igTextColored((ImVec4){0.20f, 1.00f, 0.20f, 1.0f}, "%s%d", str7, cn);
+                igTextColored((ImVec4) {0.20f, 1.00f, 0.20f, 1.0f}, "%s%d",
+                              str7, cn);
             }
             break;
     }
@@ -2741,9 +2743,12 @@ void CameraIdMoveCtrl()
             // x=430/540 with the label tinted blue and the integer in white;
             // we collapse each pair to a single line and pick a neutral
             // light-blue tint that reads on dark backgrounds either way.
-            igTextColored((ImVec4){0.39f, 0.39f, 0.98f, 1.0f}, "%s%d", str0, cam_type);
-            igTextColored((ImVec4){0.39f, 0.39f, 0.98f, 1.0f}, "%s%d", str1, cd_step);
-            igTextColored((ImVec4){0.39f, 0.39f, 0.98f, 1.0f}, "%s%d", str2, cam_id);
+            igTextColored((ImVec4) {0.39f, 0.39f, 0.98f, 1.0f}, "%s%d", str0,
+                          cam_type);
+            igTextColored((ImVec4) {0.39f, 0.39f, 0.98f, 1.0f}, "%s%d", str1,
+                          cd_step);
+            igTextColored((ImVec4) {0.39f, 0.39f, 0.98f, 1.0f}, "%s%d", str2,
+                          cam_id);
         }
         else
         {
@@ -2754,8 +2759,9 @@ void CameraIdMoveCtrl()
 
             // Mirror in ImGui — pink for the file-save indicator (matches
             // original 0xf5,0x67,0xcb), light-blue for the mission-number row.
-            igTextColored((ImVec4){0.96f, 0.40f, 0.80f, 1.0f}, "%s",   str_save);
-            igTextColored((ImVec4){0.39f, 0.39f, 0.98f, 1.0f}, "%s%d", str4, msn_no);
+            igTextColored((ImVec4) {0.96f, 0.40f, 0.80f, 1.0f}, "%s", str_save);
+            igTextColored((ImVec4) {0.39f, 0.39f, 0.98f, 1.0f}, "%s%d", str4,
+                          msn_no);
         }
     }
 
@@ -2828,6 +2834,8 @@ void CameraIdMoveCtrl()
         cd_step = 0;
     }
 
+    // Used to set points for camera to follow
+    // CamDat, CamType. CamSet. All represent type of angle and follow motion
     if (SELECT_PRESSED() == 1)
     {
         switch (cam_type)
@@ -2867,7 +2875,7 @@ void CameraIdMoveCtrl()
         {
             SetASCIIString2(0, 430.0f, 90.0f, 1, 0xff, 0x32, 0x32, str3);
             // Mirror in ImGui — bright red "NEW DATA SET!!" banner.
-            igTextColored((ImVec4){1.00f, 0.20f, 0.20f, 1.0f}, "%s", str3);
+            igTextColored((ImVec4) {1.00f, 0.20f, 0.20f, 1.0f}, "%s", str3);
             renewal_data_chk = 1;
             renewal_data_chk_cnt = 0;
             GetMCLocalPosPer(0, 0x0, 0xff);
@@ -2879,7 +2887,8 @@ void CameraIdMoveCtrl()
                 SetASCIIString2(0, 430.0f, 90.0f, 1, 0xf0, 0x32, 0x32,
                                 str_renewal);
                 // Mirror in ImGui — slightly darker red for "RENEWAL DATA!!".
-                igTextColored((ImVec4){0.94f, 0.20f, 0.20f, 1.0f}, "%s", str_renewal);
+                igTextColored((ImVec4) {0.94f, 0.20f, 0.20f, 1.0f}, "%s",
+                              str_renewal);
 
                 if (renewal_data_chk_cnt > 40)
                 {
@@ -2894,7 +2903,8 @@ void CameraIdMoveCtrl()
                 SetASCIIString2(0, 430.0f, 90.0f, 1, 0xdc, 0xdc, 0x32,
                                 str_norenewal);
                 // Mirror in ImGui — yellow for the "NO RENEWAL DATA" path.
-                igTextColored((ImVec4){0.86f, 0.86f, 0.20f, 1.0f}, "%s", str_norenewal);
+                igTextColored((ImVec4) {0.86f, 0.86f, 0.20f, 1.0f}, "%s",
+                              str_norenewal);
             }
         }
 
