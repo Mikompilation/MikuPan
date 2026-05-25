@@ -16,11 +16,6 @@
 #include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/message.h"
 #include "main/glob.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
-#include "mikupan/rendering/mikupan_profiler.h"
-#include "mikupan/rendering/mikupan_renderer.h"
-#include "mikupan/rendering/mikupan_shader.h"
-#include "mikupan/ui/mikupan_ui.h"
 
 #include "mikupan/mikupan_config.h"
 
@@ -117,6 +112,8 @@ static int show_draw_inspector = 0;
 // flying past in the log.
 static char last_reload_error[1280] = {0};
 
+static int is_fullscreen = 0;
+static int is_vsync = 0;
 static int disable_gs_uploads = 0;
 static int show_bounding_boxes = 0;
 static int show_mesh_0x82 = 1;
@@ -724,12 +721,6 @@ static void MikuPan_PopulateResolutionList(SDL_DisplayID display, const SDL_Disp
     }
 }
 
-// -- Fatal Frame 1 inspired style --------------------------------------------
-// Palette evokes the PS2-era survival horror look: parchment-cream text on
-// near-black warm sepia backgrounds, deep blood-red borders/title bars, and
-// burnt-amber highlights (camera filament / lantern light). Squared corners
-// and visible borders give windows the etched, antique feeling of the
-// in-game journal pages and the Camera Obscura viewfinder.
 static void MikuPan_ApplyFatalFrameStyle(int theme)
 {
     ImGuiStyle *s = igGetStyle();
@@ -956,7 +947,7 @@ void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
 {
     igCreateContext(NULL);
     ImGuiIO *io = igGetIO_Nil();
-    io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
 
     MikuPan_ApplyFatalFrameStyle(mikupan_configuration.selected_theme);
 
@@ -973,6 +964,15 @@ void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
     msaa_samples = mikupan_configuration.renderer.msaa_index;
     brightness = mikupan_configuration.renderer.brightness;
     gamma_value = mikupan_configuration.renderer.gamma;
+    is_fullscreen = mikupan_configuration.renderer.is_fullscreen;
+    mesh_lighting_mode = mikupan_configuration.renderer.lighting_mode;
+    is_vsync = mikupan_configuration.renderer.vsync;
+
+    if (mesh_lighting_mode > 1 || mesh_lighting_mode < 0)
+    {
+        mesh_lighting_mode = 0;
+        mikupan_configuration.renderer.lighting_mode = 0;
+    }
     
     if (gamma_value < 0.0f || gamma_value > 3.0f)
     {
@@ -1096,7 +1096,8 @@ void MikuPan_ShowTextureList(void)
 
 void MikuPan_UiHandleShortcuts(void)
 {
-    if (igIsKeyPressed_Bool(ImGuiKey_F1, 0))
+    if (igIsKeyPressed_Bool(ImGuiKey_F1, 0) ||
+        (igIsKeyPressed_Bool(ImGuiKey_GamepadL3, 1) && igIsKeyPressed_Bool(ImGuiKey_GamepadStart, 1)))
     {
         show_menu_bar = !show_menu_bar;
     }
@@ -1140,15 +1141,11 @@ void MikuPan_UiMenuBar(void)
 
     if (igBeginMenu("Rendering", 1))
     {
-        igBeginGroup();
         igCheckbox("Wireframe", (bool *) &render_wireframe);
         igCheckbox("Disable Lighting", (bool *) &disable_lighting);
         igCheckbox("Static Lighting", (bool *) &show_static_lighting);
-        {
-            const char *lighting_modes[] = {"Per-Fragment", "Per-Vertex"};
-            igCombo_Str_arr("Lighting Mode", &mesh_lighting_mode,
-                            lighting_modes, 2, -1);
-        }
+        const char *lighting_modes[] = {"Per-Fragment", "Per-Vertex"};
+        igCombo_Str_arr("Lighting Mode", &mesh_lighting_mode, lighting_modes, 2, -1);
 
         igCheckbox("Normals", (bool *) &render_normals);
         if (render_normals)
@@ -1157,8 +1154,6 @@ void MikuPan_UiMenuBar(void)
         }
 
         igCheckbox("GS Uploads", (bool *) &disable_gs_uploads);
-
-        igEndGroup();
 
         int shadows_on = MikuPan_IsShadowEnabled();
         if (igCheckbox("Shadows", (bool *) &shadows_on))
@@ -1195,8 +1190,35 @@ void MikuPan_UiMenuBar(void)
             MikuPan_MeshCache_Flush();
         }
 
+        if (igMenuItem_Bool("Take Screenshot (F12)", "F12", false, true))
+        {
+            MikuPan_ScreenshotRequest();
+        }
+
+        igEndMenu();
+    }
+
+    if (igBeginMenu("Display", 1))
+    {
+        igCheckbox("Fullscreen", (bool*)&is_fullscreen);
+        igCheckbox("VSync", (bool*)&is_vsync);
+
         char msaa_dropdown_list[32];
         snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%d", msaa_list[msaa_samples]);
+
+        if (resolution_count > 0)
+        {
+            if (igCombo_Str_arr("Resolution", &resolution_selected,
+                                resolution_label_ptrs, resolution_count, -1))
+            {
+                render_resolution_width  = resolution_list[resolution_selected].width;
+                render_resolution_height = resolution_list[resolution_selected].height;
+            }
+        }
+        else
+        {
+            igTextDisabled("Resolution: no display modes available");
+        }
 
         if (igBeginCombo("MSAA", msaa_dropdown_list, 0))
         {
@@ -1215,36 +1237,12 @@ void MikuPan_UiMenuBar(void)
                     igSetItemDefaultFocus();
                 }
             }
+
             igEndCombo();
         }
 
-        // Resolution dropdown populated from the primary display's
-        // supported fullscreen modes (queried once in MikuPan_InitUi).
-        if (resolution_count > 0)
-        {
-            if (igCombo_Str_arr("Resolution", &resolution_selected,
-                                resolution_label_ptrs, resolution_count, -1))
-            {
-                render_resolution_width  = resolution_list[resolution_selected].width;
-                render_resolution_height = resolution_list[resolution_selected].height;
-            }
-        }
-        else
-        {
-            igTextDisabled("Resolution: no display modes available");
-        }
-
-        // Brightness / gamma — read by the renderer each frame and
-        // pushed as uniforms on POSTPROCESS_SHADER for the final
-        // scene-to-window blit (see MikuPan_GetBrightness/Gamma below
-        // and the EndFrame post-process bind in mikupan_renderer.c).
         igSliderFloat("Brightness", &brightness,  0.0f, 2.0f, "%.2f", 0);
         igSliderFloat("Gamma",      &gamma_value, 0.1f, 3.0f, "%.2f", 0);
-
-        if (igMenuItem_Bool("Take Screenshot (F12)", NULL, false, true))
-        {
-            MikuPan_ScreenshotRequest();
-        }
 
         igEndMenu();
     }
@@ -1259,10 +1257,12 @@ void MikuPan_UiMenuBar(void)
     if (igBeginMenu("Input", 1))
     {
         igCheckbox("Controller / Joystick Mapping", (bool *)&show_controller_remap);
+
         if (igMenuItem_Bool("Reset Bindings to Defaults", NULL, false, true))
         {
             MikuPan_ControllerResetBindings();
         }
+
         igEndMenu();
     }
 
@@ -1352,4 +1352,14 @@ float MikuPan_GetBrightness(void)
 float MikuPan_GetGamma(void)
 {
     return gamma_value;
+}
+
+int MikuPan_IsFullScreen(void)
+{
+    return is_fullscreen;
+}
+
+int MikuPan_IsVsync(void)
+{
+    return is_vsync;
 }

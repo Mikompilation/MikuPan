@@ -75,6 +75,9 @@ typedef struct
 {
     MikuPan_Resolution window;
     MikuPan_Resolution render;
+    int is_fullscreen;
+    int vsync;
+    int lighting_mode;
     int msaa_index;
     float brightness;
     float gamma;

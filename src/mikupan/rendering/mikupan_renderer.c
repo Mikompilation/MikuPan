@@ -100,11 +100,22 @@ SDL_AppResult MikuPan_Init()
         mikupan_configuration.renderer.window.height = desired_window_height;
     }
 
+    int config_window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL;
+
+    if (mikupan_configuration.renderer.is_fullscreen > 0 && mikupan_configuration.renderer.is_fullscreen)
+    {
+        config_window_flags |= SDL_WINDOW_FULLSCREEN;
+    }
+    else
+    {
+        mikupan_configuration.renderer.is_fullscreen = 0;
+    }
+
     mikupan_render.window = SDL_CreateWindow(
         "MikuPan",
         desired_window_width,
         desired_window_height,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
+        config_window_flags
         );
 
     if (mikupan_render.window == NULL)
@@ -137,18 +148,12 @@ SDL_AppResult MikuPan_Init()
     }
 
     SDL_GL_MakeCurrent(mikupan_render.window, gl_context);
-
     info_log("GLad version loaded %d", gladLoadGLLoader((void*)SDL_GL_GetProcAddress));
-
-    /* Disable vsync */
-    if (!SDL_GL_SetSwapInterval(1))
-    {
-        info_log("Failed to disable GL vsync: %s", SDL_GetError());
-    }
 
     int desired_render_width = mikupan_configuration.renderer.render.width;
     int desired_render_height = mikupan_configuration.renderer.render.height;
     int desired_msaa = mikupan_configuration.renderer.msaa_index;
+    int desired_vsync = mikupan_configuration.renderer.vsync;
 
     const int msaa_list[] = {0, 2, 4, 8, 16, 32};
 
@@ -168,6 +173,17 @@ SDL_AppResult MikuPan_Init()
     {
         desired_render_height = mode->h;
         mikupan_configuration.renderer.render.height = desired_render_height;
+    }
+
+    if (desired_vsync < 0 || desired_vsync > 1)
+    {
+        desired_vsync = 1;
+        mikupan_configuration.renderer.vsync = desired_vsync;
+    }
+
+    if (!SDL_GL_SetSwapInterval(desired_vsync))
+    {
+        info_log("Failed to disable GL vsync: %s", SDL_GetError());
     }
 
     MikuPan_InitUi(mikupan_render.window, gl_context);
@@ -351,12 +367,7 @@ void MikuPan_SetupOpenGLContext()
 {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-#ifndef NDEBUG
-    // Debug GL contexts route every call through driver-side validation and
-    // can add 30–80% overhead per call. Only request one in debug builds —
-    // release builds get a regular context for full performance.
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-#endif
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 0);
@@ -439,21 +450,11 @@ void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
 
 void MikuPan_Clear()
 {
-    // Start the per-frame CPU/GPU timing window — we measure from here through
-    // the moment right before SDL_GL_SwapWindow, which captures all of our
-    // command-submission work.
     MikuPan_PerfBeginFrame();
 
-    // Roll the per-frame GS instrumentation counters: the values currently in
-    // g_gs_frame_metrics become "last frame" for the perf graph to read, and
-    // the live counters reset to zero for the new frame.
     MikuPan_GsResetFrameMetrics();
     MikuPan_PerfResetFrame();
 
-    // ImGui (and other GL-touching code outside our wrappers) leaves the
-    // shader/texture/render-state caches potentially stale at the end of the
-    // previous frame. Force-invalidate them so the first call into our state
-    // setters this frame actually executes the underlying GL calls.
     MikuPan_ResetShaderCache();
     MikuPan_ResetRenderStateCache();
     MikuPan_ResetGLBindCache();
@@ -475,6 +476,21 @@ void MikuPan_Clear()
     MikuPan_SetViewportCached(0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height);
 
     glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    if (mikupan_configuration.renderer.is_fullscreen != MikuPan_IsFullScreen())
+    {
+        SDL_SetWindowFullscreen(mikupan_render.window, MikuPan_IsFullScreen());
+        mikupan_configuration.renderer.is_fullscreen = MikuPan_IsFullScreen();
+    }
+
+    if (mikupan_configuration.renderer.vsync != MikuPan_IsVsync())
+    {
+        mikupan_configuration.renderer.vsync = MikuPan_IsVsync();
+        if (!SDL_GL_SetSwapInterval(mikupan_configuration.renderer.vsync))
+        {
+            info_log("Failed to disable GL vsync: %s", SDL_GetError());
+        }
+    }
 }
 
 void MikuPan_EndFrame()
@@ -528,13 +544,9 @@ void MikuPan_EndFrame()
 
     glad_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    // Capture the post-processed scene before the debug UI is composited so
-    // screenshots show the game without ImGui overlays.
-    {
-        int gl_w = 0, gl_h = 0;
-        SDL_GetWindowSizeInPixels(mikupan_render.window, &gl_w, &gl_h);
-        MikuPan_ScreenshotCaptureIfRequested(gl_w, gl_h);
-    }
+    int screenshot_width = 0, screenshot_height = 0;
+    SDL_GetWindowSizeInPixels(mikupan_render.window, &screenshot_width, &screenshot_height);
+    MikuPan_ScreenshotCaptureIfRequested(screenshot_width, screenshot_height);
 
     //info_log("Frame: state_changes=%d, draw_calls=%d, mesh_cache hits=%d misses_new=%d misses_full=%d",
     //    MikuPan_PerfGetStateChangesCurrent(),

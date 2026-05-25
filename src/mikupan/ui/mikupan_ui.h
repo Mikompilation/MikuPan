@@ -38,5 +38,7 @@ int MikuPan_GetMSAA(void);
 int MikuPan_ShowControllerRemapWindow(void);
 float MikuPan_GetBrightness(void);
 float MikuPan_GetGamma(void);
+int MikuPan_IsFullScreen(void);
+int MikuPan_IsVsync(void);
 
 #endif // MIKUPAN_IMGUI_WINDOW_H
