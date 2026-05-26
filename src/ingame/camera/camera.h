@@ -209,7 +209,7 @@ extern int cam_type;
 extern int cd_step;
 extern int cam_id;
 extern short int plyr_adj[4];
-
+extern int current_camera_type;
 
 typedef enum  {
 	NORMAL,

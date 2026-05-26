@@ -44,6 +44,8 @@ int renewal_data_chk_cnt = 0;
 u_short cdcopy[2] = {0};
 u_char cam_info_disp = 1;
 
+int current_camera_type;
+
 #define DEG2RAD(x) ((float) (x) * PI / 180.0f)
 
 #include "camera.h"
@@ -1412,6 +1414,8 @@ void GetCameraData(u_char kind, MAP_CAM_INFO *mci)
             mci->type = map_cam_dat4[mci->no].type;
             break;
     }
+
+    current_camera_type = mci->type;
 }
 
 // SetCamPos functions Represent the type of motions

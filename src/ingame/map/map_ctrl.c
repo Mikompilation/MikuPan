@@ -1,7 +1,6 @@
 #include "common.h"
-#include "typedefs.h"
 #include "enums.h"
-#include "common.h"
+#include "typedefs.h"
 
 #include "common/ul_math.h"
 #include "graphics/graph2d/effect_oth.h"
@@ -33,7 +32,7 @@
 
 #include <string.h>
 
-static void CameraNoRenew() ;
+static void CameraNoRenew();
 static u_short CameraGetDoramaCameraNo(u_short now_cam_no);
 static u_short CameraCheckDoorCameraNo(u_short door_id, u_char room_id);
 static void PlayerHeightRenew();
@@ -48,12 +47,14 @@ static u_char GetNowRoom();
 static u_char GetDoorRoomIdFromRoomNo(u_char room_no);
 static u_char GetDoorRoomIdFromRoomNoFloor(u_char room_no, u_char floor);
 static u_char GetDoorDataRoom(u_char room_id);
-static u_short GetNowCameraEach(u_char cam_type, u_char cam_num, u_char *rm_cam_no);
+static u_short GetNowCameraEach(u_char cam_type, u_char cam_num,
+                                u_char *rm_cam_no);
 static u_short GetNowCamera();
 static float GetNowHeight();
 static void GetPlayerRoom(u_char room);
 static void GetRoomDispPos(u_char room);
-static u_char PosInAreaJudge0Floor(u_char room, u_short pos_x, u_short pos_y, u_char floor);
+static u_char PosInAreaJudge0Floor(u_char room, u_short pos_x, u_short pos_y,
+                                   u_char floor);
 static void GetNowOpenEvent();
 static void GetNowOpenFindAct();
 static void GetNowPlayerMoveMotion();
@@ -62,12 +63,15 @@ static void MapSetFloorSeNo();
 u_char room_pass[42] = {0};
 
 const u_char floor_exist[5][4] = {
-    { 0, 1, 1, 0 }, { 0, 1, 1, 0 }, { 1, 1, 1, 0 },
-    { 1, 1, 1, 1 }, { 1, 1, 1, 1 },
+    {0, 1, 1, 0},
+    {0, 1, 1, 0},
+    {1, 1, 1, 0},
+    {1, 1, 1, 1},
+    {1, 1, 1, 1},
 };
 
 #define PI 3.1415927f
-#define RAD2DEG(x) ((float)(x)*180.0f/PI)
+#define RAD2DEG(x) ((float) (x) * 180.0f / PI)
 
 int MissonMapDataLoad(u_char msn_no)
 {
@@ -140,7 +144,7 @@ void MapFloorChange(u_char new_floor)
 
 int64_t GetFloorTopAddr(u_char floor)
 {
-    int *addr = (int *)MikuPan_GetHostAddress(MAP_DATA_ADDRESS);
+    int *addr = (int *) MikuPan_GetHostAddress(MAP_DATA_ADDRESS);
 
     return MikuPan_GetHostAddress(addr[floor] + MAP_DATA_ADDRESS);
 }
@@ -149,9 +153,9 @@ void InitMap()
 {
     int i;
 
-    room_wrk = (ROOM_WRK){0};
+    room_wrk = (ROOM_WRK) {0};
 
-    for(i = 0; i < 60; i++)
+    for (i = 0; i < 60; i++)
     {
         FurnSetWrkNoUse(&furn_wrk[i], i);
     }
@@ -228,92 +232,109 @@ void MapCtrlMain()
     SetInteger2(0, 20.0f, 30.0f, 1, 0x80, 0x80, 0x80, room_wrk.room_no);
     SetInteger2(0, 70.0f, 30.0f, 1, 0x80, 0x80, 0x80, room_wrk.disp_no[0]);
     SetInteger2(0, 120.0f, 30.0f, 1, 0x80, 0x80, 0x80, room_wrk.disp_no[1]);
-    SetInteger2(0, 180.0f, 30.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.room_no);
+    SetInteger2(0, 180.0f, 30.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.pr_info.room_no);
     // Mirror in ImGui (gray ≈ 0x80,0x80,0x80). Original packs four ints
     // along y=30 at x=20/70/120/180; we collapse the row into one labelled
     // line so the ImGui panel reads as one logical "room" row.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
-                  "room: room_no=%d  disp_no[0]=%d  disp_no[1]=%d  plyr.room_no=%d",
-                  room_wrk.room_no, room_wrk.disp_no[0], room_wrk.disp_no[1],
-                  plyr_wrk.pr_info.room_no);
+    igTextColored(
+        (ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
+        "room: room_no=%d  disp_no[0]=%d  disp_no[1]=%d  plyr.room_no=%d",
+        room_wrk.room_no, room_wrk.disp_no[0], room_wrk.disp_no[1],
+        plyr_wrk.pr_info.room_no);
 
-    SetInteger2(0, 20.0f, 50.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.camera_no);
-    SetInteger2(0, 90.0f, 50.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.camera_btl);
-    SetInteger2(0, 160.0f, 50.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.camera_drm);
-    SetInteger2(0, 230.0f, 50.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.camera_door);
+    SetInteger2(0, 20.0f, 50.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.pr_info.camera_no);
+    SetInteger2(0, 90.0f, 50.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.pr_info.camera_btl);
+    SetInteger2(0, 160.0f, 50.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.pr_info.camera_drm);
+    SetInteger2(0, 230.0f, 50.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.pr_info.camera_door);
     // Mirror: y=50 row — four camera-kind indices.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
-                  "camera: no=%d  btl=%d  drm=%d  door=%d",
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
+                  "camera: no=%d  btl=%d  drm=%d  door=%d type=%d",
                   plyr_wrk.pr_info.camera_no, plyr_wrk.pr_info.camera_btl,
-                  plyr_wrk.pr_info.camera_drm, plyr_wrk.pr_info.camera_door);
+                  plyr_wrk.pr_info.camera_drm, plyr_wrk.pr_info.camera_door,
+                  (int) current_camera_type);
 
     SetInteger2(0, 30.0f, 80.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[0]);
-    SetInteger2(0, 100.0f, 80.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[2]);
+    SetInteger2(0, 100.0f, 80.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.move_box.pos[2]);
     SetInteger2(0, 170.0f, 80.0f, 1, 0x80, 0x80, 0x80, room_wrk.room_height);
-    SetInteger2(0, 240.0f, 80.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[1]);
+    SetInteger2(0, 240.0f, 80.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.move_box.pos[1]);
     // Mirror: y=80 row — player position (note original packs X at x=30,
     // Z at x=100, height between, then Y last, matching the on-screen layout).
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
                   "plyr.box.pos: x=%d  z=%d  room_height=%d  y=%d",
-                  (int)plyr_wrk.move_box.pos[0], (int)plyr_wrk.move_box.pos[2],
-                  room_wrk.room_height, (int)plyr_wrk.move_box.pos[1]);
+                  (int) plyr_wrk.move_box.pos[0],
+                  (int) plyr_wrk.move_box.pos[2], room_wrk.room_height,
+                  (int) plyr_wrk.move_box.pos[1]);
 
     SetInteger2(0, 30.0f, 100.0f, 1, 0x80, 0x80, 0x80, room_wrk.pos[0][0]);
     SetInteger2(0, 100.0f, 100.0f, 1, 0x80, 0x80, 0x80, room_wrk.pos[0][1]);
     SetInteger2(0, 170.0f, 100.0f, 1, 0x80, 0x80, 0x80, room_wrk.pos[0][2]);
     // Mirror: y=100 row — room reference position vector.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
-                  "room.pos[0]: x=%d  y=%d  z=%d",
-                  (int)room_wrk.pos[0][0], (int)room_wrk.pos[0][1],
-                  (int)room_wrk.pos[0][2]);
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
+                  "room.pos[0]: x=%d  y=%d  z=%d", (int) room_wrk.pos[0][0],
+                  (int) room_wrk.pos[0][1], (int) room_wrk.pos[0][2]);
 
     SetInteger2(0, 30.0f, 120.0f, 1, 0x80, 0x80, 0x80, camera.i[0]);
     SetInteger2(0, 100.0f, 120.0f, 1, 0x80, 0x80, 0x80, camera.i[1]);
     SetInteger2(0, 170.0f, 120.0f, 1, 0x80, 0x80, 0x80, camera.i[2]);
     // Mirror: y=120 row — camera interest/look-at point.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
-                  "camera.i: x=%d  y=%d  z=%d",
-                  (int)camera.i[0], (int)camera.i[1], (int)camera.i[2]);
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
+                  "camera.i: x=%d  y=%d  z=%d", (int) camera.i[0],
+                  (int) camera.i[1], (int) camera.i[2]);
 
     SetInteger2(0, 30.0f, 140.0f, 1, 0x80, 0x80, 0x80, camera.p[0]);
     SetInteger2(0, 100.0f, 140.0f, 1, 0x80, 0x80, 0x80, camera.p[1]);
     SetInteger2(0, 170.0f, 140.0f, 1, 0x80, 0x80, 0x80, camera.p[2]);
     // Mirror: y=140 row — camera position.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
-                  "camera.p: x=%d  y=%d  z=%d",
-                  (int)camera.p[0], (int)camera.p[1], (int)camera.p[2]);
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
+                  "camera.p: x=%d  y=%d  z=%d", (int) camera.p[0],
+                  (int) camera.p[1], (int) camera.p[2]);
 
-    SetInteger2(0, 30.0f, 160.0f, 1, 0x80, 0x80, 0x80, item_dsp_wrk[0][0].pos[0]);
-    SetInteger2(0, 100.0f, 160.0f, 1, 0x80, 0x80, 0x80, item_dsp_wrk[0][0].pos[1]);
-    SetInteger2(0, 170.0f, 160.0f, 1, 0x80, 0x80, 0x80, item_dsp_wrk[0][0].pos[2]);
+    SetInteger2(0, 30.0f, 160.0f, 1, 0x80, 0x80, 0x80,
+                item_dsp_wrk[0][0].pos[0]);
+    SetInteger2(0, 100.0f, 160.0f, 1, 0x80, 0x80, 0x80,
+                item_dsp_wrk[0][0].pos[1]);
+    SetInteger2(0, 170.0f, 160.0f, 1, 0x80, 0x80, 0x80,
+                item_dsp_wrk[0][0].pos[2]);
     // Mirror: y=160 row — first item display-work position.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
                   "item_dsp_wrk[0][0].pos: x=%d  y=%d  z=%d",
-                  (int)item_dsp_wrk[0][0].pos[0], (int)item_dsp_wrk[0][0].pos[1],
-                  (int)item_dsp_wrk[0][0].pos[2]);
+                  (int) item_dsp_wrk[0][0].pos[0],
+                  (int) item_dsp_wrk[0][0].pos[1],
+                  (int) item_dsp_wrk[0][0].pos[2]);
 
-    SetInteger2(0, 100.0f, 300.0f, 1, 0x80, 0x80, 0x80, (int)(RAD2DEG(plyr_wrk.move_box.rot[1]) + 360.0f) % 360);
+    SetInteger2(0, 100.0f, 300.0f, 1, 0x80, 0x80, 0x80,
+                (int) (RAD2DEG(plyr_wrk.move_box.rot[1]) + 360.0f) % 360);
     // Mirror: y=300 — player Y rotation in degrees, normalised 0..359.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
                   "plyr.box.rot.y_deg = %d",
-                  (int)(RAD2DEG(plyr_wrk.move_box.rot[1]) + 360.0f) % 360);
+                  (int) (RAD2DEG(plyr_wrk.move_box.rot[1]) + 360.0f) % 360);
 
-    SetInteger2(0, 30.0f, 350.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[0] - room_wrk.pos[0][0]);
-    SetInteger2(0, 100.0f, 350.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[1] - room_wrk.pos[0][1]);
-    SetInteger2(0, 170.0f, 350.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[2] - room_wrk.pos[0][2]);
+    SetInteger2(0, 30.0f, 350.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.move_box.pos[0] - room_wrk.pos[0][0]);
+    SetInteger2(0, 100.0f, 350.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.move_box.pos[1] - room_wrk.pos[0][1]);
+    SetInteger2(0, 170.0f, 350.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.move_box.pos[2] - room_wrk.pos[0][2]);
     // Mirror: y=350 — player position relative to room reference.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
                   "plyr - room.pos: dx=%d  dy=%d  dz=%d",
-                  (int)(plyr_wrk.move_box.pos[0] - room_wrk.pos[0][0]),
-                  (int)(plyr_wrk.move_box.pos[1] - room_wrk.pos[0][1]),
-                  (int)(plyr_wrk.move_box.pos[2] - room_wrk.pos[0][2]));
+                  (int) (plyr_wrk.move_box.pos[0] - room_wrk.pos[0][0]),
+                  (int) (plyr_wrk.move_box.pos[1] - room_wrk.pos[0][1]),
+                  (int) (plyr_wrk.move_box.pos[2] - room_wrk.pos[0][2]));
 
     SetInteger2(0, 50.0f, 400.0f, 1, 0x80, 0x80, 0x80, room_wrk.mot_num);
     SetInteger2(0, 120.0f, 400.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_mot);
     // Mirror: y=400 — motion-data counts.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
-                  "motion: room.mot_num=%d  plyr.move_mot=%d",
-                  room_wrk.mot_num, plyr_wrk.move_mot);
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
+                  "motion: room.mot_num=%d  plyr.move_mot=%d", room_wrk.mot_num,
+                  plyr_wrk.move_mot);
 
     get_room = GetPointRoom(25000, 5500);
     get_y = GetPointHeight(plyr_wrk.move_box.pos[0], plyr_wrk.move_box.pos[2]);
@@ -321,17 +342,17 @@ void MapCtrlMain()
     SetInteger2(0, 100.0f, 190.0f, 1, 0x80, 0x80, 0x80, get_room);
     SetInteger2(0, 170.0f, 190.0f, 1, 0x80, 0x80, 0x80, get_y);
     // Mirror: y=190 — point-room/height query result.
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
-                  "GetPoint: room=%d  height=%d",
-                  get_room, (int)get_y);
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
+                  "GetPoint: room=%d  height=%d", get_room, (int) get_y);
 
     SetInteger2(0, 170.0f, 220.0f, 1, 0x80, 0x80, 0x80, GetNowHeight());
-    SetInteger2(0, 100.0f, 220.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[1]);
+    SetInteger2(0, 100.0f, 220.0f, 1, 0x80, 0x80, 0x80,
+                plyr_wrk.move_box.pos[1]);
     // Mirror: y=220 — current floor height vs player Y. Original puts
     // plyr.y at x=100 and GetNowHeight() at x=170 (left-to-right).
-    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
-                  "height: plyr.y=%d  now=%d",
-                  (int)plyr_wrk.move_box.pos[1], GetNowHeight());
+    igTextColored((ImVec4) {0.50f, 0.50f, 0.50f, 1.0f},
+                  "height: plyr.y=%d  now=%d", (int) plyr_wrk.move_box.pos[1],
+                  GetNowHeight());
 
     igEnd();
 }
@@ -348,7 +369,7 @@ void GetNewRoomData()
     room_wrk.camera_num = GetDataNum(1, plyr_wrk.pr_info.room_no);
     room_wrk.camera_bnum = GetDataNum(2, plyr_wrk.pr_info.room_no);
     room_wrk.camera_tnum = GetDataNum(4, plyr_wrk.pr_info.room_no);
-    room_wrk.height_num = GetDataNum(5 ,plyr_wrk.pr_info.room_no);
+    room_wrk.height_num = GetDataNum(5, plyr_wrk.pr_info.room_no);
 
     room_wrk.hit_num_next = room_wrk.hit_num;
 
@@ -363,9 +384,12 @@ void GetNewRoomData()
     DoorPassRoom(room_wrk.disp_no[0]);
     DoorPassRoom(room_wrk.disp_no[1]);
 
-    plyr_wrk.pr_info.camera_no = GetNowCameraEach(1, room_wrk.camera_num, &room_wrk.camera_no);
-    plyr_wrk.pr_info.camera_btl = GetNowCameraEach(2, room_wrk.camera_bnum, &room_wrk.camera_bno);
-    plyr_wrk.pr_info.camera_drm = CameraGetDoramaCameraNo(plyr_wrk.pr_info.camera_drm);
+    plyr_wrk.pr_info.camera_no =
+        GetNowCameraEach(1, room_wrk.camera_num, &room_wrk.camera_no);
+    plyr_wrk.pr_info.camera_btl =
+        GetNowCameraEach(2, room_wrk.camera_bnum, &room_wrk.camera_bno);
+    plyr_wrk.pr_info.camera_drm =
+        CameraGetDoramaCameraNo(plyr_wrk.pr_info.camera_drm);
     plyr_wrk.pr_info.hight = GetNowHeight() + room_wrk.room_height;
 
     for (i = 0; i < 60; i++)
@@ -411,35 +435,42 @@ void CameraNoRenewEach(u_char cam_type)
 
     switch (cam_type)
     {
-    case 1:
-        if (CameraChangeJudgeEach(1, room_wrk.camera_no) == 0)
-        {
-            plyr_wrk.pr_info.camera_no = GetNowCameraEach(1, room_wrk.camera_num, &room_wrk.camera_no);
-        }
-    break;
-
-    case 2:
-        if (CameraChangeJudgeEach(2, room_wrk.camera_bno) == 0)
-        {
-            plyr_wrk.pr_info.camera_btl = GetNowCameraEach(2, room_wrk.camera_bnum, &room_wrk.camera_bno);
-        }
-    break;
-
-    case 3:
-        plyr_wrk.pr_info.camera_drm = CameraGetDoramaCameraNo(plyr_wrk.pr_info.camera_drm);
-    break;
-
-    case 4:
-        if (plyr_wrk.pr_info.camera_door != 0xffff)
-        {
-            plyr_wrk.pr_info.camera_door = CameraCheckDoorCameraNo(plyr_wrk.pr_info.camera_door_did, plyr_wrk.pr_info.camera_door_rid);
-
-            if (plyr_wrk.pr_info.camera_door == 0xffff && plyr_wrk.mode != PMODE_FINDER && plyr_wrk.pr_info.cam_type == 3)
+        case 1:
+            if (CameraChangeJudgeEach(1, room_wrk.camera_no) == 0)
             {
-                AllCloseConnectDoor();
+                plyr_wrk.pr_info.camera_no = GetNowCameraEach(
+                    1, room_wrk.camera_num, &room_wrk.camera_no);
             }
-        }
-    break;
+            break;
+
+        case 2:
+            if (CameraChangeJudgeEach(2, room_wrk.camera_bno) == 0)
+            {
+                plyr_wrk.pr_info.camera_btl = GetNowCameraEach(
+                    2, room_wrk.camera_bnum, &room_wrk.camera_bno);
+            }
+            break;
+
+        case 3:
+            plyr_wrk.pr_info.camera_drm =
+                CameraGetDoramaCameraNo(plyr_wrk.pr_info.camera_drm);
+            break;
+
+        case 4:
+            if (plyr_wrk.pr_info.camera_door != 0xffff)
+            {
+                plyr_wrk.pr_info.camera_door =
+                    CameraCheckDoorCameraNo(plyr_wrk.pr_info.camera_door_did,
+                                            plyr_wrk.pr_info.camera_door_rid);
+
+                if (plyr_wrk.pr_info.camera_door == 0xffff
+                    && plyr_wrk.mode != PMODE_FINDER
+                    && plyr_wrk.pr_info.cam_type == 3)
+                {
+                    AllCloseConnectDoor();
+                }
+            }
+            break;
     }
 }
 
@@ -447,7 +478,7 @@ static void CameraNoRenew()
 {
     if (CameraChangeJudge() == 0)
     {
-       plyr_wrk.pr_info.camera_no = GetNowCamera();
+        plyr_wrk.pr_info.camera_no = GetNowCamera();
     }
 }
 
@@ -462,7 +493,6 @@ void DbgGetDrmCamNo()
             // debug code
         }
     }
-
 }
 
 static u_short CameraGetDoramaCameraNo(u_short now_cam_no)
@@ -494,30 +524,36 @@ static u_short CameraGetDoramaCameraNo(u_short now_cam_no)
         return 0xffff;
     }
 
-    dat_addr = (u_int *)map_wrk.dat_adr;
-    addr_ui0 = (u_int *)MikuPan_GetHostPointer(dat_addr[3] + MAP_DATA_ADDRESS);
-    addr_ui0 = (u_int *)((int64_t)&addr_ui0[1] + room_no * 4);
-    addr_ui0 = (u_int *)MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
-    data_num = *(u_char *)MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
+    dat_addr = (u_int *) map_wrk.dat_adr;
+    addr_ui0 = (u_int *) MikuPan_GetHostPointer(dat_addr[3] + MAP_DATA_ADDRESS);
+    addr_ui0 = (u_int *) ((int64_t) &addr_ui0[1] + room_no * 4);
+    addr_ui0 = (u_int *) MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
+    data_num =
+        *(u_char *) MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
 
     addr_ui0++;
 
     for (i = 0; i < data_num; addr_ui0++, i++)
     {
-        if (PosInAreaJudge1(3, room_no, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]) == 0)
+        if (PosInAreaJudge1(3, room_no, i, plyr_wrk.move_box.pos[2],
+                            plyr_wrk.move_box.pos[0])
+            == 0)
         {
             continue;
         }
 
-        addr_ui1 = (u_int *)MikuPan_GetHostPointer(*addr_ui0 + MAP_DATA_ADDRESS);
+        addr_ui1 =
+            (u_int *) MikuPan_GetHostPointer(*addr_ui0 + MAP_DATA_ADDRESS);
 
         if (get_flg)
         {
-            cam_no[1] = *(u_short *)MikuPan_GetHostPointer(*addr_ui1 + MAP_DATA_ADDRESS);
+            cam_no[1] = *(u_short *) MikuPan_GetHostPointer(*addr_ui1
+                                                            + MAP_DATA_ADDRESS);
         }
         else
         {
-            cam_no[1] = cam_no[0] = *(u_short *)MikuPan_GetHostPointer(*addr_ui1 + MAP_DATA_ADDRESS);
+            cam_no[1] = cam_no[0] = *(u_short *) MikuPan_GetHostPointer(
+                *addr_ui1 + MAP_DATA_ADDRESS);
 
             get_flg = 1;
         }
@@ -552,7 +588,8 @@ static u_short CameraGetDoramaCameraNo(u_short now_cam_no)
 
         if (!now_camera_get_flg)
         {
-            if (now_cam_no == cam_no[1]) now_camera_get_flg = 1;
+            if (now_cam_no == cam_no[1])
+                now_camera_get_flg = 1;
         }
     }
 
@@ -587,19 +624,22 @@ u_short CameraGetDoorCameraNo(u_short door_id0, u_short door_id1)
         return 0xffff;
     }
 
-    dat_addr = (u_int *)map_wrk.dat_adr;
-    addr_ui0 = (u_int *)MikuPan_GetHostPointer(dat_addr[4] + MAP_DATA_ADDRESS);
-    addr_ui0 = (u_int *)((int64_t)&addr_ui0[1] + room_no * 4);
-    addr_ui0 = (u_int *)MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
+    dat_addr = (u_int *) map_wrk.dat_adr;
+    addr_ui0 = (u_int *) MikuPan_GetHostPointer(dat_addr[4] + MAP_DATA_ADDRESS);
+    addr_ui0 = (u_int *) ((int64_t) &addr_ui0[1] + room_no * 4);
+    addr_ui0 = (u_int *) MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
 
-    data_num = *(u_char *)MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
+    data_num =
+        *(u_char *) MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
 
     addr_ui0++;
 
     for (i = 0; i < data_num; addr_ui0++, i++)
     {
-        addr_ui1 = (u_int *)MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
-        cdpp = (CAMERA4_DATA_POP *)MikuPan_GetHostPointer(addr_ui1[0] + MAP_DATA_ADDRESS);
+        addr_ui1 =
+            (u_int *) MikuPan_GetHostPointer(addr_ui0[0] + MAP_DATA_ADDRESS);
+        cdpp = (CAMERA4_DATA_POP *) MikuPan_GetHostPointer(addr_ui1[0]
+                                                           + MAP_DATA_ADDRESS);
 
         if (cdpp->room_id != plyr_wrk.pr_info.room_no)
         {
@@ -615,7 +655,8 @@ u_short CameraGetDoorCameraNo(u_short door_id0, u_short door_id1)
 
             if (dr_id[j] == cdpp->door_id[0] || dr_id[j] == cdpp->door_id[1])
             {
-                if (PosInAreaJudge1(4, room_no, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]))
+                if (PosInAreaJudge1(4, room_no, i, plyr_wrk.move_box.pos[2],
+                                    plyr_wrk.move_box.pos[0]))
                 {
                     return cdpp->camera_no;
                 }
@@ -649,13 +690,14 @@ static u_short CameraCheckDoorCameraNo(u_short door_id, u_char room_id)
         return -1;
     }
 
-    dat_adr = &((int *)(map_wrk.dat_adr))[4];
+    dat_adr = &((int *) (map_wrk.dat_adr))[4];
 
-    addr_ui0 = (u_int *)MikuPan_GetHostPointer(*dat_adr + MAP_DATA_ADDRESS);
+    addr_ui0 = (u_int *) MikuPan_GetHostPointer(*dat_adr + MAP_DATA_ADDRESS);
     addr_ui0 = &addr_ui0[room_no + 1];
-    addr_ui0 = (u_int *)((int *)MikuPan_GetHostPointer(*addr_ui0 + MAP_DATA_ADDRESS));
+    addr_ui0 = (u_int *) ((int *) MikuPan_GetHostPointer(*addr_ui0
+                                                         + MAP_DATA_ADDRESS));
 
-    data_num = *(u_char *)MikuPan_GetHostPointer(*addr_ui0 + MAP_DATA_ADDRESS);
+    data_num = *(u_char *) MikuPan_GetHostPointer(*addr_ui0 + MAP_DATA_ADDRESS);
 
     addr_ui0++;
 
@@ -663,14 +705,18 @@ static u_short CameraCheckDoorCameraNo(u_short door_id, u_char room_id)
 
     for (i = 0; i < data_num; i++)
     {
-        addr_ui1 = (u_int *)((int *)MikuPan_GetHostPointer(*addr_ui0 + MAP_DATA_ADDRESS));
-        cdpp = (CAMERA4_DATA_POP *)MikuPan_GetHostPointer(*addr_ui1 + MAP_DATA_ADDRESS);
+        addr_ui1 = (u_int *) ((int *) MikuPan_GetHostPointer(
+            *addr_ui0 + MAP_DATA_ADDRESS));
+        cdpp = (CAMERA4_DATA_POP *) MikuPan_GetHostPointer(*addr_ui1
+                                                           + MAP_DATA_ADDRESS);
 
         if (cdpp->room_id == room_id)
         {
             if (door_id == cdpp->door_id[0] || door_id == cdpp->door_id[1])
             {
-                if (PosInAreaJudge1(4, room_no, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]) != 0)
+                if (PosInAreaJudge1(4, room_no, i, plyr_wrk.move_box.pos[2],
+                                    plyr_wrk.move_box.pos[0])
+                    != 0)
                 {
                     return cdpp->camera_no;
                 }
@@ -684,14 +730,18 @@ static u_short CameraCheckDoorCameraNo(u_short door_id, u_char room_id)
 
     for (i = 0; i < data_num; i++)
     {
-        addr_ui1 = (u_int *)MikuPan_GetHostPointer(*addr_ui0 + MAP_DATA_ADDRESS);
-        cdpp = (CAMERA4_DATA_POP *)MikuPan_GetHostPointer(*addr_ui1 + MAP_DATA_ADDRESS);
+        addr_ui1 =
+            (u_int *) MikuPan_GetHostPointer(*addr_ui0 + MAP_DATA_ADDRESS);
+        cdpp = (CAMERA4_DATA_POP *) MikuPan_GetHostPointer(*addr_ui1
+                                                           + MAP_DATA_ADDRESS);
 
         if (cdpp->room_id == room_id)
         {
             if (door_id == cdpp->door_id[0] || door_id == cdpp->door_id[1])
             {
-                if (PosInAreaJudge1(4, room_no, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]) != 0)
+                if (PosInAreaJudge1(4, room_no, i, plyr_wrk.move_box.pos[2],
+                                    plyr_wrk.move_box.pos[0])
+                    != 0)
                 {
                     return cdpp->camera_no;
                 }
@@ -716,22 +766,22 @@ static u_char GetRoomNum()
 {
     int *addr;
 
-    addr = (int *)(map_wrk.dat_adr);
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) (map_wrk.dat_adr);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-    return *(u_char *)addr;
+    return *(u_char *) addr;
 }
 
 static u_char GetRoomNumFloor(u_char floor)
 {
     int *addr;
 
-    addr = (int *)GetFloorTopAddr(floor);
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) GetFloorTopAddr(floor);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-    return *(u_char *)addr;
+    return *(u_char *) addr;
 }
 
 static u_char GetDataNum(u_char map, u_char room)
@@ -746,10 +796,11 @@ static u_char GetDataNum(u_char map, u_char room)
         return 0;
     }
 
-    addr = (int *)(map_wrk.dat_adr + map * 4);
-    addr = (int *)MikuPan_GetHostPointer(addr[0] + MAP_DATA_ADDRESS + (data_room * 4));
-    addr = (int *)MikuPan_GetHostPointer(addr[1] + MAP_DATA_ADDRESS);
-    addr = (int *)MikuPan_GetHostPointer(addr[0] + MAP_DATA_ADDRESS);
+    addr = (int *) (map_wrk.dat_adr + map * 4);
+    addr = (int *) MikuPan_GetHostPointer(addr[0] + MAP_DATA_ADDRESS
+                                          + (data_room * 4));
+    addr = (int *) MikuPan_GetHostPointer(addr[1] + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(addr[0] + MAP_DATA_ADDRESS);
 
     return *addr;
 }
@@ -758,7 +809,8 @@ static u_char GetDataNum(u_char map, u_char room)
 
 static u_char RoomChangeJudge()
 {
-    return PosInAreaJudge0(room_wrk.room_no, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]);
+    return PosInAreaJudge0(room_wrk.room_no, plyr_wrk.move_box.pos[2],
+                           plyr_wrk.move_box.pos[0]);
 }
 
 static u_char CameraChangeJudgeEach(u_char cam_type, u_short cam_no)
@@ -771,20 +823,22 @@ static u_char CameraChangeJudgeEach(u_char cam_type, u_short cam_no)
     room_no = GetDataRoom(cam_type, plyr_wrk.pr_info.room_no);
     gtmp_room = room_no;
 
-    return PosInAreaJudge1(cam_type, room_no, cam_no, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]);
+    return PosInAreaJudge1(cam_type, room_no, cam_no, plyr_wrk.move_box.pos[2],
+                           plyr_wrk.move_box.pos[0]);
 }
 
 static u_char CameraChangeJudge()
 {
-    return PosInAreaJudge1(MAP_CAMERA, GetDataRoom(MAP_CAMERA, plyr_wrk.pr_info.room_no), room_wrk.camera_no, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]);
+    return PosInAreaJudge1(
+        MAP_CAMERA, GetDataRoom(MAP_CAMERA, plyr_wrk.pr_info.room_no),
+        room_wrk.camera_no, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]);
 }
 
 static u_char HeightChangeJudge()
 {
     return PosInAreaJudge1(
         MAP_HEIGHT, GetDataRoom(MAP_HEIGHT, plyr_wrk.pr_info.room_no),
-        room_wrk.height_no, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]
-    );
+        room_wrk.height_no, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]);
 }
 
 static u_char GetNowRoom()
@@ -793,7 +847,8 @@ static u_char GetNowRoom()
 
     for (i = 0; i < room_wrk.room_num; i++)
     {
-        if (PosInAreaJudge0(i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]))
+        if (PosInAreaJudge0(i, plyr_wrk.move_box.pos[2],
+                            plyr_wrk.move_box.pos[0]))
         {
             return i;
         }
@@ -815,10 +870,10 @@ u_char GetRoomIdFromRoomNo(u_char map, u_char room_no)
         return GetDoorRoomIdFromRoomNo(room_no);
     }
 
-    addr0 = (int *)(map_wrk.dat_adr + map * 4);
-    addr0 = (int *)MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
-    addr1 = (u_char *)MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
-    room_num = *(u_char *)MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
+    addr0 = (int *) (map_wrk.dat_adr + map * 4);
+    addr0 = (int *) MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
+    addr1 = (u_char *) MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
+    room_num = *(u_char *) MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
 
     room_id = 0xff;
 
@@ -852,12 +907,12 @@ u_char GetRoomIdFromRoomNoFloor(u_char map, u_char room_no, u_char floor)
         return GetDoorRoomIdFromRoomNoFloor(room_no, floor);
     }
 
-    addr0 = (int *)(GetFloorTopAddr(floor) + map * 4);
-    addr0 = (int *)MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
+    addr0 = (int *) (GetFloorTopAddr(floor) + map * 4);
+    addr0 = (int *) MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
 
-    addr1 = (u_char *)MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
+    addr1 = (u_char *) MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
 
-    room_num = *(u_char *)MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
+    room_num = *(u_char *) MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
 
     room_id = 0xff;
 
@@ -893,7 +948,7 @@ static u_char GetDoorRoomIdFromRoomNo(u_char room_no)
 
     addr1++;
 
-    for(i = 0; i < room_num; i++)
+    for (i = 0; i < room_num; i++)
     {
         if (room_no == i)
         {
@@ -950,9 +1005,9 @@ u_char GetDataRoom(u_char map, u_char room_id)
         return GetDoorDataRoom(room_id);
     }
 
-    addr0 = (int *)(map_wrk.dat_adr + map * 4);
-    addr0 = (int *)MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
-    addr1 = (u_char *)MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
+    addr0 = (int *) (map_wrk.dat_adr + map * 4);
+    addr0 = (int *) MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
+    addr1 = (u_char *) MikuPan_GetHostPointer(*addr0 + MAP_DATA_ADDRESS);
 
     room_num = *addr1;
 
@@ -985,14 +1040,15 @@ static u_char GetDoorDataRoom(u_char room_id)
     {
         if (room_id == *addr1)
         {
-                return i;
+            return i;
         }
     }
 
     return 0xff;
 }
 
-static u_short GetNowCameraEach(u_char cam_type, u_char cam_num, u_char *rm_cam_no)
+static u_short GetNowCameraEach(u_char cam_type, u_char cam_num,
+                                u_char *rm_cam_no)
 {
     u_char i;
     u_char room;
@@ -1003,18 +1059,20 @@ static u_short GetNowCameraEach(u_char cam_type, u_char cam_num, u_char *rm_cam_
 
     for (i = 0; i < cam_num; i++)
     {
-        if (PosInAreaJudge1(cam_type, room, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]) != 0)
+        if (PosInAreaJudge1(cam_type, room, i, plyr_wrk.move_box.pos[2],
+                            plyr_wrk.move_box.pos[0])
+            != 0)
         {
             *rm_cam_no = i;
 
-            addr = (int *)(map_wrk.dat_adr + (cam_type * 4));
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) (map_wrk.dat_adr + (cam_type * 4));
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[room] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[i] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-            val = *(int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            val = *(int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
             return val;
         }
@@ -1034,20 +1092,21 @@ static u_short GetNowCamera()
 
     room = GetDataRoom(MAP_CAMERA, plyr_wrk.pr_info.room_no);
 
-    for ( i = 0; i < room_wrk.camera_num; i++)
+    for (i = 0; i < room_wrk.camera_num; i++)
     {
-        if (PosInAreaJudge1(1, room, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]))
+        if (PosInAreaJudge1(1, room, i, plyr_wrk.move_box.pos[2],
+                            plyr_wrk.move_box.pos[0]))
         {
             room_wrk.camera_no = i;
 
-            addr = (int *)(map_wrk.dat_adr + 4);
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) (map_wrk.dat_adr + 4);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[room] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[i] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-            val = *(int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            val = *(int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
             return val;
         }
@@ -1067,18 +1126,19 @@ static float GetNowHeight()
 
     for (i = 0; i < room_wrk.height_num; i++)
     {
-        if (PosInAreaJudge1(MAP_HEIGHT, room, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]))
+        if (PosInAreaJudge1(MAP_HEIGHT, room, i, plyr_wrk.move_box.pos[2],
+                            plyr_wrk.move_box.pos[0]))
         {
             room_wrk.height_no = i;
 
-            addr = (int *)(map_wrk.dat_adr + 5 * 4);
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) (map_wrk.dat_adr + 5 * 4);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[room] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[i] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-            val = *(short *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            val = *(short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
             return val;
         }
@@ -1126,10 +1186,11 @@ int GetPointRoom(u_short pos_x, u_short pos_z)
 {
     int *addr;
 
-    addr = (int *)(map_wrk.dat_adr);
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) (map_wrk.dat_adr);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-    return *(u_char *)MikuPan_GetHostPointer(*addr + GetPointRoomNo(pos_x, pos_z) + 1 + MAP_DATA_ADDRESS);
+    return *(u_char *) MikuPan_GetHostPointer(
+        *addr + GetPointRoomNo(pos_x, pos_z) + 1 + MAP_DATA_ADDRESS);
 }
 
 float GetPointHeight(u_short pos_x, u_short pos_z)
@@ -1145,10 +1206,11 @@ float GetPointHeight(u_short pos_x, u_short pos_z)
 
     room = GetPointRoomNo(pos_x, pos_z);
 
-    addr = (int *)(map_wrk.dat_adr);
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) (map_wrk.dat_adr);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-    room_id = *(u_char *)MikuPan_GetHostPointer(*addr + room + 1 + MAP_DATA_ADDRESS);
+    room_id =
+        *(u_char *) MikuPan_GetHostPointer(*addr + room + 1 + MAP_DATA_ADDRESS);
 
     room = GetDataRoom(5, room_id);
 
@@ -1158,20 +1220,22 @@ float GetPointHeight(u_short pos_x, u_short pos_z)
         {
             room_wrk.height_no = i;
 
-            addr = (int *)(map_wrk.dat_adr + 5 * 4);
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) (map_wrk.dat_adr + 5 * 4);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[room] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[i] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-            val1 = *(short *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            val1 = *(short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-            addr = (int *)MikuPan_GetHostPointer(*(int *)map_wrk.dat_adr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*(int *) map_wrk.dat_adr
+                                                  + MAP_DATA_ADDRESS);
             addr = &addr[room] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-            val2 = *(short *)MikuPan_GetHostPointer(*addr + 6 + MAP_DATA_ADDRESS);
+            val2 =
+                *(short *) MikuPan_GetHostPointer(*addr + 6 + MAP_DATA_ADDRESS);
 
             return val1 + val2;
         }
@@ -1189,11 +1253,12 @@ static void GetPlayerRoom(u_char room)
         return;
     }
 
-    addr = (int*)map_wrk.dat_adr;
-    addr = (int*)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) map_wrk.dat_adr;
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
     plyr_wrk.pr_info.room_old = plyr_wrk.pr_info.room_no;
-    plyr_wrk.pr_info.room_no = *(int *)MikuPan_GetHostPointer(*addr + room + 1 + MAP_DATA_ADDRESS);
+    plyr_wrk.pr_info.room_no =
+        *(int *) MikuPan_GetHostPointer(*addr + room + 1 + MAP_DATA_ADDRESS);
 }
 
 static void GetRoomDispPos(u_char room)
@@ -1205,8 +1270,8 @@ static void GetRoomDispPos(u_char room)
         return;
     }
 
-    addr = (int *)map_wrk.dat_adr;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) map_wrk.dat_adr;
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
     room_wrk.disp_no[1] = room_wrk.disp_no[0];
 
@@ -1214,19 +1279,24 @@ static void GetRoomDispPos(u_char room)
     room_wrk.pos[1][1] = room_wrk.pos[0][1];
     room_wrk.pos[1][2] = room_wrk.pos[0][2];
 
-    room_wrk.disp_no[0] = *(u_char *)MikuPan_GetHostPointer(*addr + room + 1 + MAP_DATA_ADDRESS);
+    room_wrk.disp_no[0] =
+        *(u_char *) MikuPan_GetHostPointer(*addr + room + 1 + MAP_DATA_ADDRESS);
 
     map_wrk.now_room = room_wrk.disp_no[0];
     map_wrk.next_room = room_wrk.disp_no[1];
 
     addr = &addr[room] + 1;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-    room_wrk.pos[0][0] = ((u_short *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[0];
-    room_wrk.pos[0][1] = ((short *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[1];
-    room_wrk.pos[0][2] = ((u_short *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[2];
+    room_wrk.pos[0][0] =
+        ((u_short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[0];
+    room_wrk.pos[0][1] =
+        ((short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[1];
+    room_wrk.pos[0][2] =
+        ((u_short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[2];
 
-    room_wrk.room_height = ((short *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[3];
+    room_wrk.room_height =
+        ((short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[3];
 }
 
 u_char PosInAreaJudge0(u_char room, u_short pos_x, u_short pos_y)
@@ -1242,21 +1312,22 @@ u_char PosInAreaJudge0(u_char room, u_short pos_x, u_short pos_y)
         return 0;
     }
 
-    addr = (int *)map_wrk.dat_adr;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) map_wrk.dat_adr;
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
     addr = &addr[room] + 1;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-    sq_num = *(u_char *)MikuPan_GetHostPointer(*addr + 8 + MAP_DATA_ADDRESS);
+    sq_num = *(u_char *) MikuPan_GetHostPointer(*addr + 8 + MAP_DATA_ADDRESS);
 
     addr_bak = addr;
 
     for (i = 0; i < sq_num; i++)
     {
-        type = *(char *)MikuPan_GetHostPointer(*addr + i + 9 + MAP_DATA_ADDRESS);
+        type =
+            *(char *) MikuPan_GetHostPointer(*addr + i + 9 + MAP_DATA_ADDRESS);
 
         addr = &addr[i] + 1;
-        addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+        addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
         if (PosInAreaJudgeSub(addr, pos_x, pos_y, type) != 0)
         {
@@ -1269,7 +1340,8 @@ u_char PosInAreaJudge0(u_char room, u_short pos_x, u_short pos_y)
     return 0;
 }
 
-static u_char PosInAreaJudge0Floor(u_char room, u_short pos_x, u_short pos_y, u_char floor)
+static u_char PosInAreaJudge0Floor(u_char room, u_short pos_x, u_short pos_y,
+                                   u_char floor)
 {
     int i;
     int *addr;
@@ -1287,21 +1359,22 @@ static u_char PosInAreaJudge0Floor(u_char room, u_short pos_x, u_short pos_y, u_
         return 0;
     }
 
-    addr = (int *)GetFloorTopAddr(floor);
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) GetFloorTopAddr(floor);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
     addr = &addr[room] + 1;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-    sq_num = *(u_char *)MikuPan_GetHostPointer(*addr + 8 + MAP_DATA_ADDRESS);
+    sq_num = *(u_char *) MikuPan_GetHostPointer(*addr + 8 + MAP_DATA_ADDRESS);
 
     addr_bak = addr;
 
     for (i = 0; i < sq_num; i++)
     {
-        type = *(char *)MikuPan_GetHostPointer(*addr + i + 9 + MAP_DATA_ADDRESS);
+        type =
+            *(char *) MikuPan_GetHostPointer(*addr + i + 9 + MAP_DATA_ADDRESS);
 
         addr = &addr[i] + 1;
-        addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+        addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
         if (PosInAreaJudgeSub(addr, pos_x, pos_y, type) != 0)
         {
@@ -1314,13 +1387,14 @@ static u_char PosInAreaJudge0Floor(u_char room, u_short pos_x, u_short pos_y, u_
     return 0;
 }
 
-u_char PosInAreaJudge1(u_char map, u_char room, u_char data, u_short pos_x, u_short pos_y)
+u_char PosInAreaJudge1(u_char map, u_char room, u_char data, u_short pos_x,
+                       u_short pos_y)
 {
     int i;
     int *addr;
     int *addr_bak;
     u_char sq_num;
-    u_char ofs[13] = { 8, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 24, 4 };
+    u_char ofs[13] = {8, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 24, 4};
     char type;
 
     if (room == 0xff)
@@ -1328,23 +1402,25 @@ u_char PosInAreaJudge1(u_char map, u_char room, u_char data, u_short pos_x, u_sh
         return 0;
     }
 
-    addr = (int *)map_wrk.dat_adr + map;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) map_wrk.dat_adr + map;
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
     addr = &addr[room] + 1;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
     addr = &addr[data] + 1;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-    sq_num = *(u_char *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS + ofs[map]);
+    sq_num =
+        *(u_char *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS + ofs[map]);
 
     addr_bak = addr;
 
     for (i = 0; i < sq_num; i++)
     {
-        type = *(char *)MikuPan_GetHostPointer(*addr + i + 1 + (long)MAP_DATA_ADDRESS + ofs[map]); // cast to long?
+        type = *(char *) MikuPan_GetHostPointer(
+            *addr + i + 1 + (long) MAP_DATA_ADDRESS + ofs[map]);// cast to long?
 
         addr = &addr[i] + 1;
-        addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+        addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
         if (PosInAreaJudgeSub(addr, pos_x, pos_y, type) != 0)
         {
@@ -1415,7 +1491,8 @@ u_char MapHitCheckAll(u_short pos_x, u_short pos_y, u_char room_id)
     return hit_flg;
 }
 
-void PlyrHitRot(sceVu0FVECTOR pos, sceVu0FVECTOR dst, float *go_rot, float *no_rot, u_char div, u_char room_id)
+void PlyrHitRot(sceVu0FVECTOR pos, sceVu0FVECTOR dst, float *go_rot,
+                float *no_rot, u_char div, u_char room_id)
 {
     sceVu0FVECTOR rpos;
     float chk_rot;
@@ -1426,8 +1503,10 @@ void PlyrHitRot(sceVu0FVECTOR pos, sceVu0FVECTOR dst, float *go_rot, float *no_r
 
     if (__builtin_fabs(*go_rot - *no_rot) >= 0.03490658476948738)
     {
-        rpos[0] = SgCosf(chk_rot) * (dst[0] * SgCosf(chk_rot) + dst[2] * SgSinf(chk_rot));
-        rpos[2] = SgCosf(chk_rot) * (-dst[0] * SgSinf(chk_rot) + dst[2] * SgCosf(chk_rot));
+        rpos[0] = SgCosf(chk_rot)
+                  * (dst[0] * SgCosf(chk_rot) + dst[2] * SgSinf(chk_rot));
+        rpos[2] = SgCosf(chk_rot)
+                  * (-dst[0] * SgSinf(chk_rot) + dst[2] * SgCosf(chk_rot));
 
         pos_y = rpos[0] + pos[0];
         pos_x = rpos[2] + pos[2];
@@ -1445,7 +1524,8 @@ void PlyrHitRot(sceVu0FVECTOR pos, sceVu0FVECTOR dst, float *go_rot, float *no_r
     }
 }
 
-u_char PlyrMapHitCheck(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char div, u_char room_id)
+u_char PlyrMapHitCheck(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char div,
+                       u_char room_id)
 {
     sceVu0FVECTOR rpos;
     float chk_rot;
@@ -1468,7 +1548,7 @@ u_char PlyrMapHitCheck(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char div, u_char 
 
     div_bk = 0;
 
-    for(i = 0; i < div - 1; i++)
+    for (i = 0; i < div - 1; i++)
     {
         pos_y = (pos[0] + dst[0] * (i + 1)) / div;
         pos_x = (pos[2] + dst[2] * (i + 1)) / div;
@@ -1494,11 +1574,11 @@ u_char PlyrMapHitCheck(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char div, u_char 
 
         if (i != 0)
         {
-            chk_rot = -1.5607964f; // almost -PI / 2;
+            chk_rot = -1.5607964f;// almost -PI / 2;
         }
         else
         {
-            chk_rot = +1.5607964f; // almost +PI / 2;
+            chk_rot = +1.5607964f;// almost +PI / 2;
         }
 
         chk_rotbk[0] = 0.0f;
@@ -1521,7 +1601,7 @@ u_char PlyrMapHitCheck(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char div, u_char 
             {
                 chk_rot = (chk_rotbk[0] + chk_rotbk[1]) * 0.5f;
 
-                rpos[0] =  dst[0] * SgCosf(chk_rot) + dst[2] * SgSinf(chk_rot);
+                rpos[0] = dst[0] * SgCosf(chk_rot) + dst[2] * SgSinf(chk_rot);
                 rpos[2] = -dst[0] * SgSinf(chk_rot) + dst[2] * SgCosf(chk_rot);
 
                 pos_y = rpos[0] + pos[0];
@@ -1556,8 +1636,10 @@ u_char PlyrMapHitCheck(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char div, u_char 
         }
     }
 
-    rpos[0] = SgCosf(ok_rot[0]) * ( dst[0] * SgCosf(ok_rot[0]) + dst[2] * SgSinf(ok_rot[0]));
-    rpos[2] = SgCosf(ok_rot[0]) * (-dst[0] * SgSinf(ok_rot[0]) + dst[2] * SgCosf(ok_rot[0]));
+    rpos[0] = SgCosf(ok_rot[0])
+              * (dst[0] * SgCosf(ok_rot[0]) + dst[2] * SgSinf(ok_rot[0]));
+    rpos[2] = SgCosf(ok_rot[0])
+              * (-dst[0] * SgSinf(ok_rot[0]) + dst[2] * SgCosf(ok_rot[0]));
 
     pos_y = rpos[0] + pos[0];
     pos_x = rpos[2] + pos[2];
@@ -1576,7 +1658,8 @@ u_char PlyrMapHitCheck(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char div, u_char 
     return 1;
 }
 
-int PlyrMapHitMoveOfs(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char room, u_char flr_room)
+int PlyrMapHitMoveOfs(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char room,
+                      u_char flr_room)
 {
     int i;
     int j;
@@ -1662,15 +1745,19 @@ static void GetNowOpenEvent()
 
     for (i = 0; i < room_wrk.ev_num; i++)
     {
-        if (PosInAreaJudge1(MAP_REQ_EVENT, room, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]) != 0)
+        if (PosInAreaJudge1(MAP_REQ_EVENT, room, i, plyr_wrk.move_box.pos[2],
+                            plyr_wrk.move_box.pos[0])
+            != 0)
         {
-            addr = (int *)MikuPan_GetHostPointer(*(int *)(map_wrk.dat_adr + 7 * 4) + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(
+                *(int *) (map_wrk.dat_adr + 7 * 4) + MAP_DATA_ADDRESS);
             addr = &addr[room] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[i] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-            ev_wrk.pos_req[cnt] = *(u_char *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            ev_wrk.pos_req[cnt] =
+                *(u_char *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
             cnt++;
         }
@@ -1700,15 +1787,19 @@ static void GetNowOpenFindAct()
 
     for (i = 0; i < room_wrk.find_num; i++)
     {
-        if (PosInAreaJudge1(MAP_FIND_DAT, room, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]))
+        if (PosInAreaJudge1(MAP_FIND_DAT, room, i, plyr_wrk.move_box.pos[2],
+                            plyr_wrk.move_box.pos[0]))
         {
-            addr = (int *)MikuPan_GetHostPointer(*(int *)(map_wrk.dat_adr + MAP_FIND_DAT * 4) + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(
+                *(int *) (map_wrk.dat_adr + MAP_FIND_DAT * 4)
+                + MAP_DATA_ADDRESS);
             addr = &addr[room] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[i] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-            find_wrk.pos_req[cnt] = *(u_short *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            find_wrk.pos_req[cnt] =
+                *(u_short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
             cnt++;
         }
@@ -1717,7 +1808,8 @@ static void GetNowOpenFindAct()
 
 static void GetNowPlayerMoveMotion()
 {
-    plyr_wrk.move_mot = GetPointMoveMotion(plyr_wrk.move_box.pos, plyr_wrk.pr_info.room_no);
+    plyr_wrk.move_mot =
+        GetPointMoveMotion(plyr_wrk.move_box.pos, plyr_wrk.pr_info.room_no);
 }
 
 u_char GetPointMoveMotion(sceVu0FVECTOR p, u_char no)
@@ -1735,20 +1827,23 @@ u_char GetPointMoveMotion(sceVu0FVECTOR p, u_char no)
     {
         if (PosInAreaJudge1(MAP_MOVE_MOT, room, i, p[2], p[0]) != 0)
         {
-            addr = (int *)MikuPan_GetHostPointer(*(int *)(map_wrk.dat_adr + MAP_MOVE_MOT * 4) + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(
+                *(int *) (map_wrk.dat_adr + MAP_MOVE_MOT * 4)
+                + MAP_DATA_ADDRESS);
             addr = &addr[room] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
             addr = &addr[i] + 1;
-            addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-            mot = *(u_char *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+            mot = *(u_char *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
         }
     }
 
     return mot;
 }
 
-u_char MapCameraCdivideAB(u_short data_no, u_short *xmin, u_short *xmax, u_short *ymin, u_short *ymax, u_char cam_type)
+u_char MapCameraCdivideAB(u_short data_no, u_short *xmin, u_short *xmax,
+                          u_short *ymin, u_short *ymax, u_char cam_type)
 {
     int i;
     int x_cnt, y_cnt;
@@ -1766,19 +1861,20 @@ u_char MapCameraCdivideAB(u_short data_no, u_short *xmin, u_short *xmax, u_short
         return 0xff;
     }
 
-    addr = (int *)map_wrk.dat_adr + cam_type;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) map_wrk.dat_adr + cam_type;
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
     addr = &addr[room] + 1;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
     i = 0;
 
     while (1)
     {
         dat_addr = &addr[i] + 1;
-        dat_addr = (int *)MikuPan_GetHostPointer(*dat_addr + MAP_DATA_ADDRESS);
+        dat_addr = (int *) MikuPan_GetHostPointer(*dat_addr + MAP_DATA_ADDRESS);
 
-        if (data_no == *(short *)MikuPan_GetHostPointer(*dat_addr + MAP_DATA_ADDRESS))
+        if (data_no
+            == *(short *) MikuPan_GetHostPointer(*dat_addr + MAP_DATA_ADDRESS))
         {
             break;
         }
@@ -1787,22 +1883,24 @@ u_char MapCameraCdivideAB(u_short data_no, u_short *xmin, u_short *xmax, u_short
     }
 
     dat_addr = &addr[i] + 1;
-    addr = (int *)MikuPan_GetHostPointer(*dat_addr + MAP_DATA_ADDRESS);
-    dat_addr2 = (int *)MikuPan_GetHostPointer(addr[1]);
+    addr = (int *) MikuPan_GetHostPointer(*dat_addr + MAP_DATA_ADDRESS);
+    dat_addr2 = (int *) MikuPan_GetHostPointer(addr[1]);
 
     x_cnt = 0;
     y_cnt = 0;
 
     for (i = 0; i < 4; i++)
     {
-        if (((short *)((int64_t)dat_addr2 + MAP_DATA_ADDRESS))[1] != 0)
+        if (((short *) ((int64_t) dat_addr2 + MAP_DATA_ADDRESS))[1] != 0)
         {
             if (x_cnt > 1)
             {
                 return 0;
             }
 
-            cmpx[x_cnt] = ((int*)((int64_t)dat_addr2 + MAP_DATA_ADDRESS))[1] / ((short *)((int64_t)dat_addr2 + MAP_DATA_ADDRESS))[1];
+            cmpx[x_cnt] =
+                ((int *) ((int64_t) dat_addr2 + MAP_DATA_ADDRESS))[1]
+                / ((short *) ((int64_t) dat_addr2 + MAP_DATA_ADDRESS))[1];
 
             if (cmpx[x_cnt] < 0)
             {
@@ -1813,9 +1911,11 @@ u_char MapCameraCdivideAB(u_short data_no, u_short *xmin, u_short *xmax, u_short
         }
         else
         {
-            if (((short *)((int64_t)dat_addr2 + MAP_DATA_ADDRESS))[0] != 0)
+            if (((short *) ((int64_t) dat_addr2 + MAP_DATA_ADDRESS))[0] != 0)
             {
-                cmpy[y_cnt] = ((int *)((int64_t)dat_addr2 + MAP_DATA_ADDRESS))[1] / ((short *)((int64_t)dat_addr2 + MAP_DATA_ADDRESS))[0];
+                cmpy[y_cnt] =
+                    ((int *) ((int64_t) dat_addr2 + MAP_DATA_ADDRESS))[1]
+                    / ((short *) ((int64_t) dat_addr2 + MAP_DATA_ADDRESS))[0];
 
                 if (cmpy[y_cnt] < 0)
                 {
@@ -1830,7 +1930,7 @@ u_char MapCameraCdivideAB(u_short data_no, u_short *xmin, u_short *xmax, u_short
             y_cnt++;
         }
 
-         dat_addr2 += 2;
+        dat_addr2 += 2;
     }
 
     if (cmpx[0] > cmpx[1])
@@ -1908,7 +2008,9 @@ static void MapSetFloorSeNo()
 
     for (i = 0; i < room_wrk.se_num; i++)
     {
-        if (PosInAreaJudge1(MAP_REQ_SE, room, i, plyr_wrk.move_box.pos[2], plyr_wrk.move_box.pos[0]) != 0)
+        if (PosInAreaJudge1(MAP_REQ_SE, room, i, plyr_wrk.move_box.pos[2],
+                            plyr_wrk.move_box.pos[0])
+            != 0)
         {
             data_no = i;
 
@@ -1921,27 +2023,27 @@ static void MapSetFloorSeNo()
         return;
     }
 
-    addr_si = (int *)map_wrk.dat_adr + 2 * 4;
-    addr_si = (int *)MikuPan_GetHostPointer(*addr_si + MAP_DATA_ADDRESS);
+    addr_si = (int *) map_wrk.dat_adr + 2 * 4;
+    addr_si = (int *) MikuPan_GetHostPointer(*addr_si + MAP_DATA_ADDRESS);
     addr_si = &addr_si[room + 1];
-    addr_si = (int *)MikuPan_GetHostPointer(*addr_si + MAP_DATA_ADDRESS);
+    addr_si = (int *) MikuPan_GetHostPointer(*addr_si + MAP_DATA_ADDRESS);
     addr_si = &addr_si[data_no + 1];
-    addr_si = (int *)MikuPan_GetHostPointer(*addr_si + MAP_DATA_ADDRESS);
-    addr_si = (int *)MikuPan_GetHostPointer(*addr_si + MAP_DATA_ADDRESS);
+    addr_si = (int *) MikuPan_GetHostPointer(*addr_si + MAP_DATA_ADDRESS);
+    addr_si = (int *) MikuPan_GetHostPointer(*addr_si + MAP_DATA_ADDRESS);
 
-    switch (*(u_short *)addr_si)
+    switch (*(u_short *) addr_si)
     {
-    case 0:
-        plyr_wrk.pr_info.se_foot = 44;
-    break;
+        case 0:
+            plyr_wrk.pr_info.se_foot = 44;
+            break;
 
-    case 1:
-        plyr_wrk.pr_info.se_foot = 45;
-    break;
+        case 1:
+            plyr_wrk.pr_info.se_foot = 45;
+            break;
 
-    case 2:
-        plyr_wrk.pr_info.se_foot = 46;
-    break;
+        case 2:
+            plyr_wrk.pr_info.se_foot = 46;
+            break;
     }
 }
 
@@ -1957,14 +2059,17 @@ int GetRoomPos(u_char room_no, sceVu0FVECTOR room_pos)
         return 1;
     }
 
-    addr = (int *)(map_wrk.dat_adr);
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) (map_wrk.dat_adr);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
     addr = &addr[dat_room] + 1;
-    addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
+    addr = (int *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);
 
-    room_pos[0] = ((u_short*)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[0];
-    room_pos[1] = ((short *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[1];
-    room_pos[2] = ((u_short *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[2];
+    room_pos[0] =
+        ((u_short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[0];
+    room_pos[1] =
+        ((short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[1];
+    room_pos[2] =
+        ((u_short *) MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS))[2];
 
     return 0;
 }
