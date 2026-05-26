@@ -1781,9 +1781,10 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
 
     if (CompleReqChk(mci) != 0)
     {
+        // Grab settings per kind of camera
         switch (mci->kind)
         {
-            case 0:
+            case NORMAL:
                 switch (ingame_wrk.msn_no)
                 {
                     case 0:
@@ -1803,7 +1804,7 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                         break;
                 }
                 break;
-            case 1:
+            case BATTLE:
                 switch (ingame_wrk.msn_no)
                 {
                     case 0:
@@ -1823,7 +1824,7 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                         break;
                 }
                 break;
-            case 2:
+            case DRAMA:
                 switch (ingame_wrk.msn_no)
                 {
                     case 0:
