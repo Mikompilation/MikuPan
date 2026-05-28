@@ -25,6 +25,7 @@
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_rng.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
@@ -1767,7 +1768,7 @@ void MakeOutDither()
     static sceGsLoadImage gs_limage1;
     static sceGsLoadImage gs_limage2;
 
-    SetVURand(0.51387006f);
+    SetVURand(MikuPan_Rand() / (float)MikuPan_RAND_MAX);
 
     for (i = 0; i < 0x4000; i++)
     {

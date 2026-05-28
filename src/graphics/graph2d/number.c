@@ -413,8 +413,6 @@ SPRT_DAT number_tex[][10] = {
         .alpha = 128,
     }},};
 
-
-
 void NumberDisp(int number, short int pos_x, short int pos_y, u_char font, u_char r, u_char g, u_char b, u_char alpha, int pri, int digit, int type)
 {
 	int i;

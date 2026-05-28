@@ -28,6 +28,9 @@
 #include "os/eeiop/sd_room.h"
 #include "os/eeiop/se_ev.h"
 
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "cimgui.h"
+
 #include <string.h>
 
 static void CameraNoRenew() ;
@@ -220,44 +223,117 @@ void MapCtrlMain()
         return;
     }
 
+    igBegin("Map Ctrl Main", NULL, 0);
+
     SetInteger2(0, 20.0f, 30.0f, 1, 0x80, 0x80, 0x80, room_wrk.room_no);
     SetInteger2(0, 70.0f, 30.0f, 1, 0x80, 0x80, 0x80, room_wrk.disp_no[0]);
     SetInteger2(0, 120.0f, 30.0f, 1, 0x80, 0x80, 0x80, room_wrk.disp_no[1]);
     SetInteger2(0, 180.0f, 30.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.room_no);
+    // Mirror in ImGui (gray ≈ 0x80,0x80,0x80). Original packs four ints
+    // along y=30 at x=20/70/120/180; we collapse the row into one labelled
+    // line so the ImGui panel reads as one logical "room" row.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "room: room_no=%d  disp_no[0]=%d  disp_no[1]=%d  plyr.room_no=%d",
+                  room_wrk.room_no, room_wrk.disp_no[0], room_wrk.disp_no[1],
+                  plyr_wrk.pr_info.room_no);
+
     SetInteger2(0, 20.0f, 50.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.camera_no);
     SetInteger2(0, 90.0f, 50.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.camera_btl);
     SetInteger2(0, 160.0f, 50.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.camera_drm);
     SetInteger2(0, 230.0f, 50.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.pr_info.camera_door);
+    // Mirror: y=50 row — four camera-kind indices.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "camera: no=%d  btl=%d  drm=%d  door=%d",
+                  plyr_wrk.pr_info.camera_no, plyr_wrk.pr_info.camera_btl,
+                  plyr_wrk.pr_info.camera_drm, plyr_wrk.pr_info.camera_door);
+
     SetInteger2(0, 30.0f, 80.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[0]);
     SetInteger2(0, 100.0f, 80.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[2]);
     SetInteger2(0, 170.0f, 80.0f, 1, 0x80, 0x80, 0x80, room_wrk.room_height);
     SetInteger2(0, 240.0f, 80.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[1]);
+    // Mirror: y=80 row — player position (note original packs X at x=30,
+    // Z at x=100, height between, then Y last, matching the on-screen layout).
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "plyr.box.pos: x=%d  z=%d  room_height=%d  y=%d",
+                  (int)plyr_wrk.move_box.pos[0], (int)plyr_wrk.move_box.pos[2],
+                  room_wrk.room_height, (int)plyr_wrk.move_box.pos[1]);
+
     SetInteger2(0, 30.0f, 100.0f, 1, 0x80, 0x80, 0x80, room_wrk.pos[0][0]);
     SetInteger2(0, 100.0f, 100.0f, 1, 0x80, 0x80, 0x80, room_wrk.pos[0][1]);
     SetInteger2(0, 170.0f, 100.0f, 1, 0x80, 0x80, 0x80, room_wrk.pos[0][2]);
+    // Mirror: y=100 row — room reference position vector.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "room.pos[0]: x=%d  y=%d  z=%d",
+                  (int)room_wrk.pos[0][0], (int)room_wrk.pos[0][1],
+                  (int)room_wrk.pos[0][2]);
+
     SetInteger2(0, 30.0f, 120.0f, 1, 0x80, 0x80, 0x80, camera.i[0]);
     SetInteger2(0, 100.0f, 120.0f, 1, 0x80, 0x80, 0x80, camera.i[1]);
     SetInteger2(0, 170.0f, 120.0f, 1, 0x80, 0x80, 0x80, camera.i[2]);
+    // Mirror: y=120 row — camera interest/look-at point.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "camera.i: x=%d  y=%d  z=%d",
+                  (int)camera.i[0], (int)camera.i[1], (int)camera.i[2]);
+
     SetInteger2(0, 30.0f, 140.0f, 1, 0x80, 0x80, 0x80, camera.p[0]);
     SetInteger2(0, 100.0f, 140.0f, 1, 0x80, 0x80, 0x80, camera.p[1]);
     SetInteger2(0, 170.0f, 140.0f, 1, 0x80, 0x80, 0x80, camera.p[2]);
+    // Mirror: y=140 row — camera position.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "camera.p: x=%d  y=%d  z=%d",
+                  (int)camera.p[0], (int)camera.p[1], (int)camera.p[2]);
+
     SetInteger2(0, 30.0f, 160.0f, 1, 0x80, 0x80, 0x80, item_dsp_wrk[0][0].pos[0]);
     SetInteger2(0, 100.0f, 160.0f, 1, 0x80, 0x80, 0x80, item_dsp_wrk[0][0].pos[1]);
     SetInteger2(0, 170.0f, 160.0f, 1, 0x80, 0x80, 0x80, item_dsp_wrk[0][0].pos[2]);
+    // Mirror: y=160 row — first item display-work position.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "item_dsp_wrk[0][0].pos: x=%d  y=%d  z=%d",
+                  (int)item_dsp_wrk[0][0].pos[0], (int)item_dsp_wrk[0][0].pos[1],
+                  (int)item_dsp_wrk[0][0].pos[2]);
+
     SetInteger2(0, 100.0f, 300.0f, 1, 0x80, 0x80, 0x80, (int)(RAD2DEG(plyr_wrk.move_box.rot[1]) + 360.0f) % 360);
+    // Mirror: y=300 — player Y rotation in degrees, normalised 0..359.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "plyr.box.rot.y_deg = %d",
+                  (int)(RAD2DEG(plyr_wrk.move_box.rot[1]) + 360.0f) % 360);
+
     SetInteger2(0, 30.0f, 350.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[0] - room_wrk.pos[0][0]);
     SetInteger2(0, 100.0f, 350.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[1] - room_wrk.pos[0][1]);
     SetInteger2(0, 170.0f, 350.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[2] - room_wrk.pos[0][2]);
+    // Mirror: y=350 — player position relative to room reference.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "plyr - room.pos: dx=%d  dy=%d  dz=%d",
+                  (int)(plyr_wrk.move_box.pos[0] - room_wrk.pos[0][0]),
+                  (int)(plyr_wrk.move_box.pos[1] - room_wrk.pos[0][1]),
+                  (int)(plyr_wrk.move_box.pos[2] - room_wrk.pos[0][2]));
+
     SetInteger2(0, 50.0f, 400.0f, 1, 0x80, 0x80, 0x80, room_wrk.mot_num);
     SetInteger2(0, 120.0f, 400.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_mot);
+    // Mirror: y=400 — motion-data counts.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "motion: room.mot_num=%d  plyr.move_mot=%d",
+                  room_wrk.mot_num, plyr_wrk.move_mot);
 
     get_room = GetPointRoom(25000, 5500);
     get_y = GetPointHeight(plyr_wrk.move_box.pos[0], plyr_wrk.move_box.pos[2]);
 
     SetInteger2(0, 100.0f, 190.0f, 1, 0x80, 0x80, 0x80, get_room);
     SetInteger2(0, 170.0f, 190.0f, 1, 0x80, 0x80, 0x80, get_y);
+    // Mirror: y=190 — point-room/height query result.
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "GetPoint: room=%d  height=%d",
+                  get_room, (int)get_y);
+
     SetInteger2(0, 170.0f, 220.0f, 1, 0x80, 0x80, 0x80, GetNowHeight());
     SetInteger2(0, 100.0f, 220.0f, 1, 0x80, 0x80, 0x80, plyr_wrk.move_box.pos[1]);
+    // Mirror: y=220 — current floor height vs player Y. Original puts
+    // plyr.y at x=100 and GetNowHeight() at x=170 (left-to-right).
+    igTextColored((ImVec4){0.50f, 0.50f, 0.50f, 1.0f},
+                  "height: plyr.y=%d  now=%d",
+                  (int)plyr_wrk.move_box.pos[1], GetNowHeight());
+
+    igEnd();
 }
 
 void GetNewRoomData()

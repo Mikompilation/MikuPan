@@ -2,10 +2,12 @@
 #include "iop/se/voice.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "typedefs.h"
-#include <stdlib.h>
 
 // 2mb
 s16 spuRam[(1024 * 1024 * 2) >> 1];
+
+s32 mVolL;
+s32 mVolR;
 
 int sceSdVoiceTrans(short channel, u_short mode, void *m_addr, u_int s_addr,
                     u_int size)
@@ -28,6 +30,8 @@ void sceSdSetSwitch(u_short entry, u_int value)
             switch (reg)
             {
                 case SD_S_KON:
+                    info_log("Voice No SE: %u", voice);
+
                     Key_On(voice);
                     break;
 
@@ -61,6 +65,16 @@ u_int sceSdGetSwitch(u_short entry)
 {
 }
 
+static inline void SetMasterVolLeft(s32 val)
+{
+    mVolL = val << 1;
+}
+
+static inline void SetMasterVolRight(s32 val)
+{
+    mVolR = val << 1;
+}
+
 void sceSdSetParam(u_short entry, u_short value)
 {
     u32 reg = entry & ~0x3f;
@@ -81,11 +95,11 @@ void sceSdSetParam(u_short entry, u_short value)
             break;
 
         case SD_P_MVOLL:
-            SetMasterVolLeft(voice_id, value);
+            SetMasterVolLeft(value);
             break;
 
         case SD_P_MVOLR:
-            SetMasterVolRight(voice_id, value);
+            SetMasterVolRight(value);
             break;
 
         case SD_VP_ADSR1:

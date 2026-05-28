@@ -92,7 +92,7 @@ void InitEffectOthEF()
 {
     int i;
 
-    for(i = 0; i < cont_facespr_tbl[3]; i++) // out of bounds access!
+    for(i = 0; i < cont_facespr_tbl[2]; i++) // out of bounds access!
     {
         cont_facespr_otbl[i] = cont_facespr_tbl[i];
         cont_facespr_tbl[i] = -1;
@@ -484,11 +484,14 @@ void SetEffSQTex(int n, float *v, int tp, float w, float h, u_char r, u_char g, 
         | SCE_GS_XYZF2 << (4 * 2);
 
     float* buf = (float*)&pbuf[ndpkt];
+    const float win_w = (float)MikuPan_GetWindowWidth();
+    const float win_h = (float)MikuPan_GetWindowHeight();
+    float stq[2] = {0.01f, 0.99f};
 
     for (i = 0; i < 4; i++)
     {
-        pbuf[ndpkt].fl32[0] = (float)(i % 2 ? tw - 8 : 8) / tw;
-        pbuf[ndpkt].fl32[1] = (float)(i / 2 ? th - 8 : 8) / th;
+        pbuf[ndpkt].fl32[0] = stq[i % 2];
+        pbuf[ndpkt].fl32[1] = stq[i / 2];
         pbuf[ndpkt].fl32[2] = 0;
         pbuf[ndpkt++].fl32[3] = 0;
 
@@ -497,10 +500,11 @@ void SetEffSQTex(int n, float *v, int tp, float w, float h, u_char r, u_char g, 
         pbuf[ndpkt].fl32[2] = MikuPan_ConvertScaleColor(bb);
         pbuf[ndpkt++].fl32[3] = MikuPan_ConvertScaleColor(a);
 
-        pbuf[ndpkt].fl32[0] = ((float)(xx[i % 2] - 2048.0f) / 2048.0f) * 2.0f - 1.0f;
-        pbuf[ndpkt].fl32[1] = 1.0f - ((float)(yy[i / 2] - 2048.0f) / 2048.0f) * 2.0f;
+        float ndc[2];
+        MikuPan_ConvertPs2GSCoordToNDC(ndc, win_w, win_h, xx[i % 2], yy[i / 2]);
+        pbuf[ndpkt].fl32[0] = ndc[0];
+        pbuf[ndpkt].fl32[1] = ndc[1];
         pbuf[ndpkt].fl32[2] = 0.0f;
-        //pbuf[ndpkt].fl32[2] = (float)(v[2] - 2048.0f) / 2048.0f;
         pbuf[ndpkt++].fl32[3] = 1.0f;
     }
 
@@ -527,7 +531,7 @@ void SetEffSQTex(int n, float *v, int tp, float w, float h, u_char r, u_char g, 
     //}
 }
 
-void SetEffSQITex(int n, int *v, int tp, float w, float h, u_char r, u_char g, u_char b, u_char a)
+void SetEffSQITex(int n, int *v, float depth_z, int tp, float w, float h, u_char r, u_char g, u_char b, u_char a)
 {
     u_char rr;
     u_char gg;
@@ -605,6 +609,8 @@ void SetEffSQITex(int n, int *v, int tp, float w, float h, u_char r, u_char g, u
         | SCE_GS_XYZF2 << (4 * 2);
 
     float* buffer = (float*)&pbuf[ndpkt];
+    const float win_w = (float)MikuPan_GetWindowWidth();
+    const float win_h = (float)MikuPan_GetWindowHeight();
 
     for (i = 0; i < 4; i++)
     {
@@ -618,13 +624,11 @@ void SetEffSQITex(int n, int *v, int tp, float w, float h, u_char r, u_char g, u
         pbuf[ndpkt].fl32[2] = MikuPan_ConvertScaleColor(bb);
         pbuf[ndpkt++].fl32[3] = MikuPan_ConvertScaleColor(a);
 
-        float o_x, o_y, o_z = 0.0f;
-
-        MikuPan_GSToNDC(xx[i % 2], yy[i / 2], v[2], &o_x, &o_y, &o_z, (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight());
-
-        pbuf[ndpkt].fl32[0] = o_x;
-        pbuf[ndpkt].fl32[1] = o_y;
-        pbuf[ndpkt].fl32[2] = 0.0f;
+        float ndc[2];
+        MikuPan_ConvertPs2GSSubPixelToNDC(ndc, win_w, win_h, xx[i % 2], yy[i / 2]);
+        pbuf[ndpkt].fl32[0] = ndc[0];
+        pbuf[ndpkt].fl32[1] = ndc[1];
+        pbuf[ndpkt].fl32[2] = depth_z;
         pbuf[ndpkt++].fl32[3] = 1.0f;
     }
 
@@ -667,9 +671,11 @@ void SubFire1(EFFECT_CONT *ec)
 {
     sceVu0FMATRIX wlm;
     sceVu0FMATRIX slm;
+    sceVu0FMATRIX fslm;
     sceVu0IVECTOR ipos;
-    sceVu0FVECTOR ivec[4];
-    //sceVu0IVECTOR ivec[4];
+    sceVu0FVECTOR fpos;
+    sceVu0IVECTOR ivec[4];
+    sceVu0FVECTOR fvec[4];
     sceVu0FVECTOR vpos;
     sceVu0FVECTOR vtw[4];
     sceVu0FVECTOR wpos[4] = {
@@ -808,15 +814,16 @@ void SubFire1(EFFECT_CONT *ec)
     sceVu0RotMatrixX(wlm, wlm, PI);
     sceVu0RotMatrixY(wlm, wlm, rot_y);
     sceVu0TransMatrix(wlm, wlm, vpos);
-    sceVu0MulMatrix(slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
-    //sceVu0MulMatrix(slm, SgWSMtx, wlm);
+
+    sceVu0MulMatrix(fslm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
+    sceVu0MulMatrix(slm, SgWSMtx, wlm);
 
     w = 0;
 
     for (i = 0; i < 4; i++)
     {
-        sceVu0RotTransPersF(ivec[i], slm, wpos[i], 0);
-        //sceVu0RotTransPers(ivec[i], slm, wpos[i], 0);
+        sceVu0RotTransPersF(fvec[i], fslm, wpos[i], 0);
+        sceVu0RotTransPers(ivec[i], slm, wpos[i], 0);
 
         if (0x8000 < ivec[i][0] - 0x4000U)
         {
@@ -834,12 +841,19 @@ void SubFire1(EFFECT_CONT *ec)
         }
     }
 
+    w = MikuPan_IsVisibleOnScreen(fvec);
+
     if (w == 0)
     {
         ipos[0] = (ivec[0][0] + ivec[3][0]) / 2;
         ipos[1] = (ivec[0][1] - ivec[3][1]) * 0.3f + ivec[3][1];
         ipos[2] = ec->z;
         ipos[3] = 0;
+
+        fpos[0] = (fvec[0][0] + fvec[3][0]) / 2;
+        fpos[1] = (fvec[0][1] - fvec[3][1]) * 0.3f + fvec[3][1];
+        fpos[2] = fvec[3][2];
+        fpos[3] = 0;
 
         f = (((ivec[3][1] - ivec[0][1]) / 2) < ((ivec[3][0] - ivec[0][0]) / 2) ? ((ivec[3][0] - ivec[0][0]) / 2) : ((ivec[3][1] - ivec[0][1]) / 2)) * 0.0625f;
 
@@ -852,8 +866,8 @@ void SubFire1(EFFECT_CONT *ec)
             rn = rnbk;
         }
 
-        SetEffSQITex(monochrome_mode + 0x16, ipos, 3, f * msch, f * msch, mrh, mgh, mbh, ((int)(rn / 2) + 5) * arate);
-        SetEffSQITex(monochrome_mode + 0x16, ipos, 3, f * msch * 0.5f, f * msch * 0.5f, mrh, mgh, mbh, (rn + 2) * arate);
+        SetEffSQITex(monochrome_mode + 0x16, ipos, fpos[2], 3, f * msch, f * msch, mrh, mgh, mbh, ((int)(rn / 2) + 5) * arate);
+        SetEffSQITex(monochrome_mode + 0x16, ipos, fpos[2], 3, f * msch * 0.5f, f * msch * 0.5f, mrh, mgh, mbh, (rn + 2) * arate);
 
         Reserve2DPacket(0x1000);
 
@@ -902,9 +916,9 @@ void SubFire1(EFFECT_CONT *ec)
             pbuf[ndpkt].fl32[2] = (float)mb/128.0f;
             pbuf[ndpkt++].fl32[3] = (arate * 96.0f)/128.0f;
 
-            pbuf[ndpkt].fl32[0] = ivec[i][0];
-            pbuf[ndpkt].fl32[1] = ivec[i][1];
-            pbuf[ndpkt].fl32[2] = ivec[i][2];
+            pbuf[ndpkt].fl32[0] = fvec[i][0];
+            pbuf[ndpkt].fl32[1] = fvec[i][1];
+            pbuf[ndpkt].fl32[2] = fvec[0][2];
             pbuf[ndpkt++].fl32[3] = 1.0f;
         }
 
@@ -977,8 +991,11 @@ void SubHalo(float *p, int type, int textp, u_int z, u_char r, u_char g, u_char 
 {
     sceVu0FMATRIX wlm;
     sceVu0FMATRIX slm;
+    sceVu0FMATRIX fslm;
     sceVu0IVECTOR ipos;
+    sceVu0FVECTOR fpos;
     sceVu0IVECTOR ivec[4];
+    sceVu0FVECTOR fvec[4];
     sceVu0FVECTOR vpos;
     sceVu0FVECTOR vtw[4];
     sceVu0FVECTOR wpos[4] = {
@@ -1010,11 +1027,14 @@ void SubHalo(float *p, int type, int textp, u_int z, u_char r, u_char g, u_char 
     sceVu0TransMatrix(wlm, wlm, vpos);
     sceVu0MulMatrix(slm, SgWSMtx, wlm);
 
+    sceVu0MulMatrix(fslm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
+
     w = 0;
 
     for (i = 0; i < 4; i++)
     {
         sceVu0RotTransPers(ivec[i], slm, wpos[i], 0);
+        sceVu0RotTransPersF(fvec[i], fslm, wpos[i], 0);
 
         if (0x5000 < ivec[i][0] - 0x5800U)
         {
@@ -1039,6 +1059,11 @@ void SubHalo(float *p, int type, int textp, u_int z, u_char r, u_char g, u_char 
         ipos[2] = (ivec[0][2] + ivec[3][2]) / 2;
         ipos[3] = 0;
 
+        fpos[0] = (fvec[0][0] + fvec[3][0]) / 2;
+        fpos[1] = (fvec[0][1] + fvec[3][1]) / 2;
+        fpos[2] = (fvec[0][2] + fvec[3][2]) / 2;
+        fpos[3] = 0;
+
         n = (((ivec[3][1] - ivec[0][1]) / 2) < ((ivec[3][0] - ivec[0][0]) / 2) ? ((ivec[3][0] - ivec[0][0]) / 2) : ((ivec[3][1] - ivec[0][1]) / 2));
         f = n * 0.0625f;
 
@@ -1060,9 +1085,8 @@ void SubHalo(float *p, int type, int textp, u_int z, u_char r, u_char g, u_char 
             rn = rnbk;
         }
 
-        SetEffSQITex((textp * 2 + 0x16) + monochrome_mode, ipos, 1, f * 2, f * 2, r, g, b, ((int)((rn / 2 + 7) * alp) / 100));
-        SetEffSQITex((textp * 2 + 0x16) + monochrome_mode, ipos, 1, f, f, r, g, b, ((int)((rn + 3) * alp) / 100));
-
+        SetEffSQITex((textp * 2 + 0x16) + monochrome_mode, ipos, fpos[2], 1, f * 2, f * 2, r, g, b, ((int)((rn / 2 + 7) * alp) / 100));
+        SetEffSQITex((textp * 2 + 0x16) + monochrome_mode, ipos, fpos[2], 1, f, f, r, g, b, ((int)((rn + 3) * alp) / 100));
     }
 }
 
@@ -4410,7 +4434,7 @@ void RunLeafSub(EFF_LEAF *lep)
             }
         }
 
-        disp[i] = !w;
+        disp[i] = !MikuPan_IsVisibleOnScreen(ivec[i]);
     }
 
     j = 0;
@@ -4489,7 +4513,7 @@ void RunLeafSub(EFF_LEAF *lep)
         {
             k = so[j];
 
-            //if (disp[k] != 0)
+            if (disp[k] != 0)
             {
                 pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_TRUE, SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 1, 1, 0, 1, 0, 1, 0, 0), SCE_GIF_PACKED, 3);
                 pbuf[ndpkt++].ul64[1] = 0 \
@@ -4518,9 +4542,9 @@ void RunLeafSub(EFF_LEAF *lep)
                     pbuf[ndpkt].fl32[2] = 0;
                     pbuf[ndpkt++].fl32[3] = 1.0f;
 
-                    pbuf[ndpkt].fl32[0] = MikuPan_ConvertScaleColor(rr);
-                    pbuf[ndpkt].fl32[1] = MikuPan_ConvertScaleColor(bb);
-                    pbuf[ndpkt].fl32[2] = MikuPan_ConvertScaleColor(gg);
+                    pbuf[ndpkt].fl32[0] = MikuPan_ConvertColorFloat(rr);
+                    pbuf[ndpkt].fl32[1] = MikuPan_ConvertColorFloat(bb);
+                    pbuf[ndpkt].fl32[2] = MikuPan_ConvertColorFloat(gg);
                     pbuf[ndpkt++].fl32[3] = MikuPan_ConvertScaleColor(elo[k].a);
 
                     pbuf[ndpkt].fl32[0] = ivec[k][i][0];
@@ -5273,11 +5297,11 @@ void SetGlowOfAFirefly(float *p, float sc, u_char r1, u_char g1, u_char b1, u_ch
 {
     sceVu0FMATRIX wlm;
     sceVu0FMATRIX slm;
+    sceVu0FMATRIX fslm;
     sceVu0IVECTOR ipos;
-
+    sceVu0FVECTOR fpos;
     sceVu0IVECTOR ivec[4];
-    //sceVu0FVECTOR ivec[4];
-
+    sceVu0FVECTOR fvec[4];
     sceVu0FVECTOR vpos;
     sceVu0FVECTOR vtw[4];
     sceVu0FVECTOR wpos[4] = {
@@ -5303,14 +5327,14 @@ void SetGlowOfAFirefly(float *p, float sc, u_char r1, u_char g1, u_char b1, u_ch
     sceVu0RotMatrixY(wlm, wlm, rot_y);
     sceVu0TransMatrix(wlm, wlm, vpos);
     sceVu0MulMatrix(slm, SgWSMtx, wlm);
-    //sceVu0MulMatrix(slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
+    sceVu0MulMatrix(fslm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
 
     w = 0;
 
     for (i = 0; i < 4; i++)
     {
         sceVu0RotTransPers(ivec[i], slm, wpos[i], 0);
-        //sceVu0RotTransPersF(ivec[i], slm, wpos[i], 0);
+        sceVu0RotTransPersF(fvec[i], fslm, wpos[i], 0);
 
         if (0x5000 < ivec[i][0] - 0x5800U)
         {
@@ -5336,13 +5360,18 @@ void SetGlowOfAFirefly(float *p, float sc, u_char r1, u_char g1, u_char b1, u_ch
         ipos[2] = (ivec[0][2] + ivec[3][2]) / 2;
         ipos[3] = 0;
 
+        fpos[0] = (fvec[0][0] + fvec[3][0]) / 2;
+        fpos[1] = (fvec[0][1] + fvec[3][1]) / 2;
+        fpos[2] = (fvec[0][2] + fvec[3][2]) / 2;
+        fpos[3] = 0.0f;
+
         n = (((ivec[3][1] - ivec[0][1]) / 2) < ((ivec[3][0] - ivec[0][0]) / 2) ? ((ivec[3][0] - ivec[0][0]) / 2) : ((ivec[3][1] - ivec[0][1]) / 2));
         f = n * 0.0625f;
 
         n = alp;
 
-        SetEffSQITex(24, ipos, 1, f * 7.0f, f * 7.0f, r1, g1, b1, n / 4);
-        SetEffSQITex(24, ipos, 1, f, f, r2, g2, b2, n);
+        SetEffSQITex(24, ipos, fpos[2], 1, f * 7.0f, f * 7.0f, r1, g1, b1, n / 4);
+        SetEffSQITex(24, ipos, fpos[2], 1, f, f, r2, g2, b2, n);
     }
 }
 

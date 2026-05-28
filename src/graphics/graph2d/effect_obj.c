@@ -18,6 +18,7 @@
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_shader.h"
 
 #include <math.h>
@@ -1657,8 +1658,10 @@ void SetRenzFlare(EFFECT_CONT *ec)
     static float f1bk = 0.0f;
     sceVu0FMATRIX wlm;
     sceVu0FMATRIX slm;
+    sceVu0FMATRIX fslm;
     sceVu0FVECTOR tpos;
     sceVu0FVECTOR pos1;
+    sceVu0FVECTOR pos2;
     sceVu0FVECTOR vpos;
     sceVu0FVECTOR trot;
     sceVu0FVECTOR wppos = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -1736,6 +1739,10 @@ void SetRenzFlare(EFFECT_CONT *ec)
     sceVu0MulMatrix(slm, SgWSMtx, wlm);
     sceVu0ApplyMatrix(pos1, slm, wppos);
     sceVu0ScaleVector(pos1, pos1, 1.0f / pos1[3]);
+
+    sceVu0MulMatrix(fslm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
+    sceVu0ApplyMatrix(pos2, fslm, wppos);
+    sceVu0ScaleVector(pos2, pos2, 1.0f / pos2[3]);
 
     if (plyr_wrk.sta & 1)
     {
@@ -1913,8 +1920,12 @@ void SetStarRay(float *bpos, int tp, float sc, int num, float aang)
         ss = SgSinfd(f + aang);
         cc = SgCosfd(f + aang);
 
+        //float* buf = (float*)&pbuf[ndpkt];
+
         for (i = 0; i < 4; i++)
         {
+
+
             pos2[i][0] = pos[i][0] * ss - pos[i][1] * cc;
             pos2[i][1] = pos[i][0] * cc + pos[i][1] * ss;
 
@@ -1930,7 +1941,10 @@ void SetStarRay(float *bpos, int tp, float sc, int num, float aang)
             pbuf[ndpkt].ui32[1] = y[i];
             pbuf[ndpkt].ui32[2] = z;
             pbuf[ndpkt++].ui32[3] = (i > 1) ? 0 : 0x8000;
+
         }
+
+        //MikuPan_RenderSprite3D((sceGsTex0*)&tx0, buf);
     }
 }
 

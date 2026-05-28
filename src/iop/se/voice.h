@@ -5,6 +5,14 @@
 #include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_thread.h>
 
+ #define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+
+
+#define VOICE_NUM 24
+
 enum SE_VOICE_STAT
 {
     VOICE_FREE = 0,
@@ -27,16 +35,20 @@ typedef struct
 {
     int vNo;
     int size;
+
+    bool isPlaying;
+
     s16 *buffer;
     u16 header;
     u_int ssa;// Single Playback Address
     u_int lsa;// Looped Playback Address
     u_int nax;
 
+    s32 histL[2], histR[2];
+
+
     u_short volL;
     u_short volR;
-    u_short mVolL;
-    u_short mVolR;
 
     u_short pitch;
     u_short adsr1;
@@ -46,14 +58,16 @@ typedef struct
 
 extern VOICE voices[24];
 
-extern SDL_Mutex *voice_lock;
-
+extern bool loopEnd;
+extern bool loopRepeat;
 
 void VoicesInit();
 VOICE *GetFreeVoice();
 void FillAdpcmHeader(int vNo);
 void Key_On(int vNo);
 void Key_Off(int vNo);
+void VoiceRun();
+
 
 static inline void SetPitch(int vNo, u_short val)
 {
@@ -62,22 +76,12 @@ static inline void SetPitch(int vNo, u_short val)
 
 static inline void SetVolLeft(int vNo, u_short val)
 {
-    voices[vNo].volL = val;
+    voices[vNo].volL = val << 1;
 }
 
 static inline void SetVolRight(int vNo, u_short val)
 {
-    voices[vNo].volR = val;
-}
-
-static inline void SetMasterVolLeft(int vNo, u_short val)
-{
-    voices[vNo].mVolL = val;
-}
-
-static inline void SetMasterVolRight(int vNo, u_short val)
-{
-    voices[vNo].mVolR = val;
+    voices[vNo].volR = val << 1;
 }
 
 static inline void SetAdsr1(int vNo, u_short val)

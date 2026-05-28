@@ -52,7 +52,7 @@
 #define UNCACHED(ptr)          ((void*)((int64_t)(ptr) | CachedBuffer))
 #define UNCACHED_ACCEL(ptr)    ((void*)((int64_t)(ptr) | 0x30000000))
 
-extern unsigned int dma /* __attribute__((section(".vutext"))) */;
+extern unsigned int dma;
 
 static u_int ene_display[4] = {0, 0, 0, 0};
 u_int fly_display[3] = {0, 0, 0};
@@ -1058,7 +1058,7 @@ void SetMyLight(LIGHT_PACK *light_pack, float *eyevec)
     static SgLIGHT point[6];
     static SgLIGHT spot[6];
 
-    MikuPan_SetupAmbientLighting(light_pack);
+    MikuPan_SetupAmbientLighting(light_pack, eyevec);
 
     SgSetAmbient(light_pack->ambient);
 
@@ -2058,7 +2058,17 @@ void gra3dDraw()
     if (disp_room != 0xff && room_addr_tbl[disp_room].near_sgd != NULL)
     {
         FogSelection(disp_room);
-        SgReadLights(room_addr_tbl[disp_room].near_sgd, room_addr_tbl[disp_room].lit_data, room_ambient_light, room_pararell_light, 3, room_point_light, 16, room_spot_light, 16);
+        SgReadLights(
+            room_addr_tbl[disp_room].near_sgd,
+            room_addr_tbl[disp_room].lit_data,
+            room_ambient_light,
+            room_pararell_light,
+            3,
+            room_point_light,
+            16,
+            room_spot_light,
+            16
+            );
 
         map_wrk.mirror_flg = 0;
         mir_reflect_flg = 0;
@@ -2136,6 +2146,7 @@ void gra3dDraw()
     }
 
     CheckDMATrans();
+    MikuPan_RenderCameraDebug();
 }
 
 int CheckModelBoundingBox(sceVu0FMATRIX lwmtx, sceVu0FVECTOR *bbox)

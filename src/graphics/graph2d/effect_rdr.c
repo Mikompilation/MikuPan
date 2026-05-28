@@ -8,21 +8,22 @@
 
 #include "sce/libvu0.h"
 
-#include "os/pad.h"
-#include "main/glob.h"
-#include "os/eeiop/eese.h"
-#include "os/eeiop/cdvd/eecdvd.h"
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_oth.h"
-#include "graphics/graph2d/rare_ene.h"
-#include "graphics/graph2d/g2d_main.h"
 #include "graphics/graph2d/effect_sub.h"
-#include "graphics/graph2d/tim2_new.h"
+#include "graphics/graph2d/g2d_main.h"
+#include "graphics/graph2d/rare_ene.h"
 #include "graphics/graph2d/tim2.h"
-#include "graphics/graph3d/sglib.h"
+#include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/libsg.h"
-#include "ingame/map/furn_spe/furn_spe.h"
+#include "graphics/graph3d/sglib.h"
 #include "ingame/map/furn_spe/fsla_main.h"
+#include "ingame/map/furn_spe/furn_spe.h"
+#include "main/glob.h"
+#include "mikupan/rendering/mikupan_renderer.h"
+#include "os/eeiop/cdvd/eecdvd.h"
+#include "os/eeiop/eese.h"
+#include "os/pad.h"
 
 typedef struct {
 	sceVu0FVECTOR bpos;
@@ -239,8 +240,11 @@ void SubRDFire(EFFECT_CONT *ec)
 	u_long tx0;
 	sceVu0FMATRIX wlm;
 	sceVu0FMATRIX slm;
+	sceVu0FMATRIX fslm;
 	sceVu0IVECTOR ipos;
+	sceVu0FVECTOR fpos;
 	sceVu0IVECTOR ivec[48];
+	sceVu0FVECTOR fvec[48];
 	sceVu0FVECTOR vtw[48];
 	sceVu0FVECTOR vpos;
 	sceVu0FVECTOR wcpos = { 0.0f, 4.0f, 0.0f, 1.0f };
@@ -255,6 +259,7 @@ void SubRDFire(EFFECT_CONT *ec)
     };
     int mm; // not in STAB!
     int *ivec47; // not in STAB!
+    float *fvec47; // not in STAB!
     float ss; // not in STAB!
 
     clpx2 = 0xe400;
@@ -407,6 +412,7 @@ void SubRDFire(EFFECT_CONT *ec)
     sceVu0RotMatrixY(wlm, wlm, rot_y);
     sceVu0TransMatrix(wlm, wlm, vpos);
     sceVu0MulMatrix(slm, SgWSMtx, wlm);
+    sceVu0MulMatrix(fslm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
     sceVu0ApplyMatrix(bf->ligpos, wlm, wcpos);
 
     for (i = 0; i < 24; i++)
@@ -436,6 +442,7 @@ void SubRDFire(EFFECT_CONT *ec)
     bf->rate = bf->rate + fire1;
 
     sceVu0RotTransPersN(ivec, slm, vtw, 48, 0);
+    sceVu0RotTransPersNF(fvec, fslm, vtw, 48, 0);
 
     w = 0;
 
@@ -460,11 +467,17 @@ void SubRDFire(EFFECT_CONT *ec)
     if (!w)
     {
         ivec47 = ivec[47];
+        fvec47 = fvec[47];
 
         ipos[0] = (ivec[0][0] + ivec47[0]) / 2;
         ipos[1] = ((ivec[0][1] - ivec47[1]) * 0.3f) + ivec47[1];
         ipos[2] = ec->z;
         ipos[3] = 0;
+
+        fpos[0] = (fvec[0][0] + fvec47[0]) / 2;
+        fpos[1] = ((fvec[0][1] - fvec47[1]) * 0.3f) + fvec47[1];
+        fpos[2] = fvec47[2];
+        fpos[3] = 0;
 
         n = ((((ivec47[1] - ivec[0][1]) / 2) < ((ivec47[0] - ivec[0][0]) / 2)) ? ((ivec47[0] - ivec[0][0]) / 2) : ((ivec47[1] - ivec[0][1]) / 2));
         f = n * 0.0625f;
@@ -481,19 +494,14 @@ void SubRDFire(EFFECT_CONT *ec)
         fire7 = (int)(rn / 2 + 5);
         bf->ligpow = (fire7 * 2 + ligpow) * arate;
 
-        SetEffSQITex(monochrome_mode + 0x16, ipos, 3, f * msch, f * msch, mrh, mgh, mbh, (fire7 * arate));
-        SetEffSQITex(monochrome_mode + 0x16, ipos, 3, f * msch * 0.5f, f * msch * 0.5f, mrh, mgh, mbh, (rn + 2) * arate);
+        SetEffSQITex(monochrome_mode + 0x16, ipos, fpos[2], 3, f * msch, f * msch, mrh, mgh, mbh, (fire7 * arate));
+        SetEffSQITex(monochrome_mode + 0x16, ipos, fpos[2], 3, f * msch * 0.5f, f * msch * 0.5f, mrh, mgh, mbh, (rn + 2) * arate);
 
         Reserve2DPacket(0x1000);
 
         bak = ndpkt;
 
         pbuf[ndpkt++].ul128 = (u_long128)0;
-        //pbuf[ndpkt].ul128[0] = 0;
-        //pbuf[ndpkt].ul128[1] = 0;
-        //pbuf[ndpkt].ul128[2] = 0;
-        //pbuf[ndpkt].ul128[3] = 0;
-        //ndpkt++;
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;

@@ -37,7 +37,7 @@
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
-#include "mikupan/ui/mikupan_ui_c.h"
+#include "mikupan/ui/mikupan_ui.h"
 
 #include <ctype.h>
 #include <stdbool.h>

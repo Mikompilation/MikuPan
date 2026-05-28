@@ -12,18 +12,33 @@ if(WIN32)
 endif()
 
 set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)
 
 include(sdl3)
-include(imgui)
+include(cimgui)
 include(spdlog)
 include(cglm)
 include(ffmpeg)
 include(xxhash)
+include(inipp)
 
-set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
+set(MIKUPAN_SOURCES
+        resources/shaders/textured_mesh_lighted.frag
+        resources/shaders/bounding_box.vert
+        resources/shaders/mesh_0x2.vert
+        resources/shaders/mesh_0x12.vert
+        resources/shaders/mesh_0xA.vert
+        resources/shaders/sprite.frag
+        resources/shaders/sprite.vert
+        resources/shaders/untextured_coloured_sprite.frag
+        resources/shaders/untextured_coloured_sprite.vert
+        resources/shaders/normals_debug.geom
+        resources/shaders/normals_debug.frag
+        "src/mikupan/mikupan_file.cpp"
         "src/common/ul_math.c"
         "src/common/utility.c"
         "src/edit/test_2d.c"
@@ -228,21 +243,36 @@ set(MIKUPAN_SOURCES "src/mikupan/mikupan_file.cpp"
         "src/mikupan/av/mikupan_audio_decoder_c.h"
         src/mikupan/av/mikupan_audio_decoder_c.cpp
         src/mikupan/ui/mikupan_ui.cpp
+        src/mikupan/ui/mikupan_ui.c
+        src/mikupan/rendering/mikupan_profiler.c
+        src/mikupan/rendering/mikupan_camera.c
+        src/mikupan/rendering/mikupan_debug_draw.c
+        src/mikupan/rendering/mikupan_lighting.c
+        src/mikupan/rendering/mikupan_mesh_render.c
         src/mikupan/rendering/mikupan_renderer.c
+        src/mikupan/rendering/mikupan_shadow.c
         src/mikupan/rendering/mikupan_shader.c
+        src/mikupan/rendering/mikupan_sprite.c
+        src/mikupan/rendering/mikupan_texture.c
         src/mikupan/gs/mikupan_gs.cpp
         src/mikupan/gs/mikupan_texture_manager.cpp
         src/mikupan/mikupan_logging.cpp
-        extern/imgui_toggle/imgui_toggle.cpp
-        extern/imgui_toggle/imgui_toggle_palette.cpp
-        extern/imgui_toggle/imgui_toggle_presets.cpp
-        extern/imgui_toggle/imgui_toggle_renderer.cpp
         src/graphics/graph3d/libsg.c
         extern/glad/src/gl.c
         src/ingame/map/find_dat.c
         src/mikupan/rendering/mikupan_pipeline.c
+        src/mikupan/rendering/mikupan_meshcache.c
         "src/mikupan/mikupan_utils.c"
         src/ingame/map/furn_spe/fsla_dat.c
+        src/mikupan/mikupan_config.c
+        src/mikupan/mikupan_config_ini.cpp
+        src/mikupan/mikupan_config.h
+        src/mikupan/mikupan_controller.c
+        src/mikupan/mikupan_controller.h
+        src/mikupan/mikupan_screenshot.c
+        src/mikupan/mikupan_screenshot.h
+        src/mikupan/mikupan_rng.c
+        src/mikupan/mikupan_rng.h
 )
 
 add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
@@ -253,14 +283,14 @@ target_include_directories(MikuPan PRIVATE
         "extern/"
         "extern/glad/include/"
         ${SDL3_INCLUDE_DIR}
-        ${ffmpeg_SOURCE_DIR}
+        "${FFMPEG_ROOT}/include"
 )
-
 
 target_link_libraries(MikuPan PRIVATE
         m
-        imgui
+        cimgui
         SDL3::SDL3
+        SDL3_mixer::SDL3_mixer
         spdlog::spdlog
         cglm
         avcodec
@@ -268,6 +298,7 @@ target_link_libraries(MikuPan PRIVATE
         avutil
         avformat
         xxHash::xxhash
+        inipp::inipp
 )
 
 add_custom_command(TARGET MikuPan POST_BUILD

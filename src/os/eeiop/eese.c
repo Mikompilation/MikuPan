@@ -1,8 +1,8 @@
 #include "eese.h"
 #include "common.h"
 #include "enums.h"
-#include "typedefs.h"
 #include "mikupan/mikupan_logging_c.h"
+#include "typedefs.h"
 
 #include "common/ul_math.h"
 #include "graphics/graph3d/sglib.h"

@@ -1,15 +1,43 @@
 #include "mikupan_gs.h"
+#include "SDL3/SDL_timer.h"
+
 #include "mikupan_texture_manager.h"
 #include "spdlog/spdlog.h"
 #include "xxhash.h"
+
+#include <atomic>
 #include <cstring>
 
 extern "C" {
+#include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/mikupan_utils.h"
 }
 
 GS::GSHelper gsHelper;
-std::vector<uint8_t> texture_buffer = std::vector<uint8_t>(4096 * 4096 * 4);
+std::vector<uint8_t> texture_buffer = std::vector<uint8_t>(4096 * 4096 * 8);
+
+/// Per-frame GS instrumentation. Reset by MikuPan_GsResetFrameMetrics() at the
+/// start of each frame; sampled by the perf graph.
+struct GsFrameMetrics
+{
+    int    upload_count;
+    int    upload_bytes;
+    double upload_ms;
+    int    download_count;
+    int    download_bytes;
+    double download_ms;
+};
+
+static GsFrameMetrics g_gs_frame_metrics = {0, 0, 0.0, 0, 0, 0.0};
+static GsFrameMetrics g_gs_last_frame    = {0, 0, 0.0, 0, 0, 0.0};
+
+/// Pending-upload regions accumulated since the last drain. The texture L1
+/// drains this list and invalidates only those L1 entries whose source GS
+/// region overlaps any of these — replacing the old "wipe everything on any
+/// upload" behavior that forced an XXH3 over GS memory for every fresh-this-
+/// frame tex0 (the dominant cost in PERF_SECT_SC_TEXTURE).
+struct GsUploadRegion { int addr; int size; };
+static std::vector<GsUploadRegion> g_pending_uploads;
 
 int __attribute__((optimize("O3"))) GetBlockIdPSMCT32(int block, int x, int y)
 {
@@ -235,13 +263,38 @@ void GS::GSHelper::Clear()
 
 void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image)
 {
-    spdlog::debug("GS upload request for DBP {:#x} DPSM {} X: {} Y: {}",
-                  static_cast<int>(image_load->bitbltbuf.DBP),
-                  static_cast<int>(image_load->bitbltbuf.DPSM),
-                  static_cast<int>(image_load->trxreg.RRW),
-                  static_cast<int>(image_load->trxreg.RRH));
+    if (MikuPan_IsGsUploadsDisabled())
+    {
+        return;
+    }
+
+    // spdlog::debug() always formats its arguments at runtime (only the *write*
+    // is gated by log level), so leaving it on the hot path is wasteful even
+    // with debug logging disabled. Use SPDLOG_DEBUG so the entire call site is
+    // eliminated by the preprocessor when SPDLOG_ACTIVE_LEVEL > debug.
+    SPDLOG_DEBUG("GS upload request for DBP {:#x} DPSM {} X: {} Y: {}",
+                 static_cast<int>(image_load->bitbltbuf.DBP),
+                 static_cast<int>(image_load->bitbltbuf.DPSM),
+                 static_cast<int>(image_load->trxreg.RRW),
+                 static_cast<int>(image_load->trxreg.RRH));
 
     MikuPan_FirstUploadDone();
+
+    // Record the upload's affected GS-memory region so the L1 cache can
+    // selectively invalidate just the entries it overlaps (instead of
+    // wiping the entire L1, which forced an XXH3 over GS memory for every
+    // fresh-this-frame tex0). Region uses the same byte-address convention
+    // as MikuPan_GetTextureHash so overlap testing is symmetrical.
+    {
+        int up_addr = GetPixelAddressPSMCT32(
+            image_load->bitbltbuf.DBP, image_load->bitbltbuf.DBW, 0, 0);
+        int up_size = (int)image_load->trxreg.RRW * (int)image_load->trxreg.RRH;
+        g_pending_uploads.push_back({up_addr, up_size});
+    }
+
+    Uint64 t0 = SDL_GetPerformanceCounter();
+    int upload_w = static_cast<int>(image_load->trxreg.RRW);
+    int upload_h = static_cast<int>(image_load->trxreg.RRH);
 
     switch (static_cast<PixelStorageFormat>(image_load->bitbltbuf.DPSM))
     {
@@ -272,6 +325,12 @@ void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image)
             spdlog::info("Texture Transfer Upload Info FAILED: DPSM {:#x}", static_cast<int>(image_load->bitbltbuf.DPSM));
             break;
     }
+
+    Uint64 t1 = SDL_GetPerformanceCounter();
+    g_gs_frame_metrics.upload_count++;
+    g_gs_frame_metrics.upload_bytes += upload_w * upload_h * 4; // approximate
+    g_gs_frame_metrics.upload_ms +=
+        (double)(t1 - t0) * 1000.0 / (double)SDL_GetPerformanceFrequency();
 }
 
 unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash)
@@ -284,10 +343,15 @@ unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash)
     int width = (1 << tex0->TW);
     int height = (1 << tex0->TH);
 
-    spdlog::debug("GS download request for DBP {:#x} CBP {:#x} DPSM {} ",
-                  static_cast<int>(tex0->TBP0),
-                  static_cast<int>(tex0->CBP),
-                  static_cast<int>(tex0->PSM));
+    if (width > 4096 || height > 4096)
+    {
+        return nullptr;
+    }
+
+    SPDLOG_DEBUG("GS download request for DBP {:#x} CBP {:#x} DPSM {} ",
+                 static_cast<int>(tex0->TBP0),
+                 static_cast<int>(tex0->CBP),
+                 static_cast<int>(tex0->PSM));
 
     *hash = MikuPan_GetTextureHash(tex0);
     auto texture = MikuPan_GetTextureInfo(*hash);
@@ -295,6 +359,8 @@ unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash)
     {
         return nullptr;
     }
+
+    Uint64 t0 = SDL_GetPerformanceCounter();
 
     switch (tex0->PSM)
     {
@@ -318,13 +384,19 @@ unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash)
                 width, height, tex0->CBP, tex0->TBW, -1);
             break;
         default:
-            spdlog::debug(
+            SPDLOG_DEBUG(
                 "Texture Transfer Upload Failed, Unsupported Format: DPSM {:#x}", static_cast<int>(tex0->PSM));
             *hash = 0;
             return nullptr;
     }
 
     unsigned char* image_data = MikuPan_ConvertImageAlpha(texture_buffer.data(), width, height);
+
+    Uint64 t1 = SDL_GetPerformanceCounter();
+    g_gs_frame_metrics.download_count++;
+    g_gs_frame_metrics.download_bytes += width * height * 4;
+    g_gs_frame_metrics.download_ms +=
+        (double)(t1 - t0) * 1000.0 / (double)SDL_GetPerformanceFrequency();
 
     return image_data;
 }
@@ -348,4 +420,84 @@ uint64_t MikuPan_GetTextureHash(sceGsTex0 *tex0)
     XXH64_hash_t hash = XXH3_64bits(&gsHelper.mem_[addr], width*height);
 
     return hash;
+}
+
+extern "C"
+{
+
+void MikuPan_GsResetFrameMetrics(void)
+{
+    g_gs_last_frame = g_gs_frame_metrics;
+    g_gs_frame_metrics.upload_count   = 0;
+    g_gs_frame_metrics.upload_bytes   = 0;
+    g_gs_frame_metrics.upload_ms      = 0.0;
+    g_gs_frame_metrics.download_count = 0;
+    g_gs_frame_metrics.download_bytes = 0;
+    g_gs_frame_metrics.download_ms    = 0.0;
+    // g_pending_uploads is preserved — invalidation is lazy (drained by the
+    // L1 cache on its next lookup).
+}
+
+int    MikuPan_GsGetUploadCount(void)    { return g_gs_last_frame.upload_count; }
+int    MikuPan_GsGetUploadBytes(void)    { return g_gs_last_frame.upload_bytes; }
+float  MikuPan_GsGetUploadMs(void)       { return (float)g_gs_last_frame.upload_ms; }
+int    MikuPan_GsGetDownloadCount(void)  { return g_gs_last_frame.download_count; }
+int    MikuPan_GsGetDownloadBytes(void)  { return g_gs_last_frame.download_bytes; }
+float  MikuPan_GsGetDownloadMs(void)     { return (float)g_gs_last_frame.download_ms; }
+
+int MikuPan_GsHasPendingUploads(void)
+{
+    return g_pending_uploads.empty() ? 0 : 1;
+}
+
+void MikuPan_GsConsumePendingUploads(
+    void (*cb)(int addr, int size, void *ud), void *ud)
+{
+    if (cb != NULL)
+    {
+        for (const auto &r : g_pending_uploads)
+        {
+            cb(r.addr, r.size, ud);
+        }
+    }
+    g_pending_uploads.clear();
+}
+
+void MikuPan_GetTextureGsRegion(sceGsTex0 *tex0, int *out_addr, int *out_size)
+{
+    // Match MikuPan_GetTextureHash exactly: same address calculation, same
+    // size convention. That way an overlap between this region and a
+    // pending-upload region == "an upload may have changed the bytes the
+    // hash function reads", which is precisely when the L1 entry is stale.
+    int width  = (1 << tex0->TW);
+    int height = (1 << tex0->TH);
+    *out_addr = GetPixelAddressPSMCT32(tex0->CBP, tex0->TBW, 0, 0);
+    *out_size = width * height;
+}
+
+void MikuPan_GsStore(sceGsStoreImage *sp, unsigned char *out)
+{
+    const int sbp  = static_cast<int>(sp->bitbltbuf.SBP);
+    const int sbw  = static_cast<int>(sp->bitbltbuf.SBW);
+    const int spsm = static_cast<int>(sp->bitbltbuf.SPSM);
+
+    const int x = static_cast<int>(sp->trxpos.SSAX);
+    const int y = static_cast<int>(sp->trxpos.SSAY);
+    const int w = static_cast<int>(sp->trxreg.RRW);
+    const int h = static_cast<int>(sp->trxreg.RRH);
+
+    switch (static_cast<PixelStorageFormat>(spsm))
+    {
+        case PSMZ32:
+        case PSMCT32:
+            gsHelper.DownloadPSMCT32(out, sbp, sbw, x, y, w, h);
+            break;
+
+        default:
+            spdlog::warn("Unsupported sceGsExecStoreImage SPSM: {:#x}", spsm);
+            memset(out, 0, w * h * 4);
+            break;
+    }
+}
+
 }

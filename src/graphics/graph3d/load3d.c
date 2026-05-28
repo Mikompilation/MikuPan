@@ -22,6 +22,7 @@
 #include "os/eeiop/se_srund.h"
 
 #include <mikupan/mikupan_memory.h>
+#include "mikupan/rendering/mikupan_meshcache.h"
 
 ROOM_LOAD_BLOCK room_load_block[2] = {0};
 #include "data/load_furn_num.h" // static short int load_furn_num[];
@@ -317,6 +318,11 @@ void SetRenewDoorAddrForMovie()
 void InitModelLoad()
 {
     u_int i;
+
+    /// All previously-loaded SGD memory regions are about to be reused for
+    /// the next chapter/save load, so any cached GPU buffers that still hold
+    /// pointers into them are stale.
+    MikuPan_MeshCache_Flush();
 
     for (i = 0; i < 2; i++)
     {

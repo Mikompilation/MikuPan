@@ -1,35 +1,26 @@
-#include "common.h"
-#include "typedefs.h"
 #include "mdlact.h"
+#include "common.h"
 #include "enums.h"
-
+#include "mikupan/mikupan_rng.h"
+#include "typedefs.h"
 #include "sce/libvu0.h"
-
-#include "main/glob.h"
-#include "os/pad.h"
-#include "os/eeiop/eese.h"
-#include "graphics/motion/motion.h"
-#include "graphics/motion/mdlact.h"
 #include "graphics/graph3d/sglib.h"
+#include "graphics/motion/mdlact.h"
+#include "graphics/motion/motion.h"
 #include "ingame/plyr/plyr_ctl.h"
+#include "main/glob.h"
+#include "os/eeiop/eese.h"
+#include "os/pad.h"
 
 plyr_act_func_t plyr_act_func[] = {
-    motPlyrActLookAt,
-    motPlyrActSurprise,
-    motPlyrActSowasowa,
-    motPlyrActKyoro,
-    motPlyrActKyoro,
-    motPlyrActKyoro,
-    motPlyrActKyoro,
+    motPlyrActLookAt, motPlyrActSurprise, motPlyrActSowasowa, motPlyrActKyoro,
+    motPlyrActKyoro,  motPlyrActKyoro,    motPlyrActKyoro,
 };
-#include "data/plyr_act_furi0.h" // PLYR_FURI_DAT plyr_act_furi0[];
-#include "data/plyr_act_furi1.h" // PLYR_FURI_DAT plyr_act_furi1[];
-#include "data/plyr_act_furi2.h" // PLYR_FURI_DAT plyr_act_furi2[];
-#include "data/plyr_act_furi3.h" // PLYR_FURI_DAT plyr_act_furi3[];
 
-// #include <cstdlib.h>
-// RAND_MAX = (2**31-1)
-#define RAND_MAX 2147483647
+#include "data/plyr_act_furi0.h"// PLYR_FURI_DAT plyr_act_furi0[];
+#include "data/plyr_act_furi1.h"// PLYR_FURI_DAT plyr_act_furi1[];
+#include "data/plyr_act_furi2.h"// PLYR_FURI_DAT plyr_act_furi2[];
+#include "data/plyr_act_furi3.h"// PLYR_FURI_DAT plyr_act_furi3[];
 
 #define PI 3.1415927f
 #define PI2 6.2831855f
@@ -38,7 +29,7 @@ plyr_act_func_t plyr_act_func[] = {
 char motPlayerActCtrl(SgCOORDUNIT *cp)
 {
     sceVu0FVECTOR p;
-    sceVu0FVECTOR trot = { 0.0f, 0.0f, 0.0f, 0.0f };
+    sceVu0FVECTOR trot = {0.0f, 0.0f, 0.0f, 0.0f};
     static float rot[2] = {0.0f, 0.0f};
     float spd;
     char type;
@@ -63,7 +54,8 @@ char motPlayerActCtrl(SgCOORDUNIT *cp)
     trot[0] = -yrot;
     trot[1] = xrot;
 
-    if (ani_mdl[0].anm.playnum <= 4 && __builtin_fabsf(plyr_wrk.soulp[3]) > 0.0001f)
+    if (ani_mdl[0].anm.playnum <= 4
+        && __builtin_fabsf(plyr_wrk.soulp[3]) > 0.0001f)
     {
         motGetPlyrNeckRot(cp, trot, plyr_wrk.soulp);
     }
@@ -81,12 +73,8 @@ char motPlayerActCtrl(SgCOORDUNIT *cp)
     {
         trot[0] = trot[1] = 0.0f;
     }
-    else if (
-        ani_mdl[0].anm.playnum < 5 &&
-        plyr_wrk.spot_rot[0] < 0.0001f &&
-        plyr_wrk.spot_rot[1] < 0.0001f &&
-        PlyrNeckDirectionChk(p) != 0
-    )
+    else if (ani_mdl[0].anm.playnum < 5 && plyr_wrk.spot_rot[0] < 0.0001f
+             && plyr_wrk.spot_rot[1] < 0.0001f && PlyrNeckDirectionChk(p) != 0)
     {
         motGetPlyrNeckRot(cp, trot, p);
     }
@@ -221,7 +209,8 @@ char motPlyrActSurprise(SgCOORDUNIT *cp)
 
     motGetPlyrNeckRot(cp, plyr_act_wrk.trot, plyr_act_wrk.pos);
 
-    if (((plyr_act_wrk.timer == 0) && (plyr_wrk.mode != 0x1)) && (ReqPlyrSpeAnime(68, 0) != 0))
+    if (((plyr_act_wrk.timer == 0) && (plyr_wrk.mode != 0x1))
+        && (ReqPlyrSpeAnime(68, 0) != 0))
     {
         plyr_wrk.mode = 0xA;
     }
@@ -284,20 +273,21 @@ char motPlyrActKyoro(SgCOORDUNIT *cp)
     {
         case 3:
             dat = plyr_act_furi0;
-        break;
+            break;
         case 4:
             dat = plyr_act_furi1;
-        break;
+            break;
         case 5:
             dat = plyr_act_furi2;
-        break;
+            break;
         case 6:
-            if (plyr_act_wrk.timer == 0 && plyr_wrk.mode != 1 && ReqPlyrSpeAnime(68, 0) != 0)
+            if (plyr_act_wrk.timer == 0 && plyr_wrk.mode != 1
+                && ReqPlyrSpeAnime(68, 0) != 0)
             {
                 plyr_wrk.mode = 10;
             }
             dat = plyr_act_furi3;
-        break;
+            break;
     }
 
     while (1)
@@ -547,38 +537,40 @@ char QuakeCamera()
 
 float motGetRandom(float upper, float lower)
 {
-    return (rand() / (float)RAND_MAX) * (upper - lower) + lower;
+    return (MikuPan_Rand() / (float) MikuPan_RAND_MAX) * (upper - lower)
+           + lower;
 }
 
-float motLinearSupValue(float moto, float saki, u_char mode, u_int cnt, u_int all_cnt)
+float motLinearSupValue(float moto, float saki, u_char mode, u_int cnt,
+                        u_int all_cnt)
 {
-    u_int now_cnt;
     float val;
-    float cnt_rate;
-    float dv;
 
-    now_cnt = all_cnt < cnt ? all_cnt : cnt;
+    u_int now_cnt = all_cnt < cnt ? all_cnt : cnt;
 
     if (all_cnt == 0)
     {
         all_cnt++;
     }
 
-    cnt_rate = (float)now_cnt / all_cnt;
+    float cnt_rate = (float) now_cnt / all_cnt;
 
-    dv = saki - moto;
+    float dv = saki - moto;
 
     switch (mode)
     {
-    case 0:
-        val = moto + dv * cnt_rate;
-    break;
-    case 1:
-        val = moto + dv * (SgSinf(cnt_rate * PI_HALF + -PI_HALF) + 1);
-    break;
-    case 2:
-        val = moto + dv * SgSinf(cnt_rate * PI_HALF);
-    break;
+        default:
+            val = 0;
+            break;
+        case 0:
+            val = moto + dv * cnt_rate;
+            break;
+        case 1:
+            val = moto + dv * (SgSinf(cnt_rate * PI_HALF + -PI_HALF) + 1);
+            break;
+        case 2:
+            val = moto + dv * SgSinf(cnt_rate * PI_HALF);
+            break;
     }
 
     return val;

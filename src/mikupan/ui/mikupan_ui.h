@@ -3,49 +3,45 @@
 
 #include "SDL3/SDL_video.h"
 #include "SDL3/SDL_events.h"
+#include "mikupan/mikupan_basictypes.h"
 
-#include <imgui.h>
-#include <vector>
+extern int show_fps;
+extern int show_menu_bar;
 
-extern bool show_fps;
-extern bool show_menu_bar;
+void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer);
+void MikuPan_RenderUi(void);
+void MikuPan_StartFrameUi(void);
+void MikuPan_DrawUi(void);
+void MikuPan_ShutDownUi(void);
+void MikuPan_ProcessEventUi(SDL_Event *event);
+float MikuPan_GetFrameRate(void);
+int MikuPan_IsWireframeRendering(void);
+int MikuPan_IsNormalsRendering(void);
+void MikuPan_ShowTextureList(void);
+void MikuPan_UiHandleShortcuts(void);
+void MikuPan_UiMenuBar(void);
+void MikuPan_UiShaderReloadWindow(void);
+void MikuPan_UiDrawCallInspector(void);
+int MikuPan_IsBoundingBoxRendering(void);
+int MikuPan_ShowCameraDebug(void);
+int MikuPan_IsMesh0x82Rendering(void);
+int MikuPan_IsMesh0x32Rendering(void);
+int MikuPan_IsMesh0x10Rendering(void);
+int MikuPan_IsMesh0x12Rendering(void);
+int MikuPan_IsMesh0x2Rendering(void);
+int MikuPan_IsLightingDisabled(void);
+int MikuPan_IsGsUploadsDisabled(void);
+int MikuPan_ShowStaticLighting(void);
+int MikuPan_GetMeshLightingMode(void);
+float MikuPan_GetNormalLength(void);
+int MikuPan_GetRenderResolutionWidth(void);
+int MikuPan_GetRenderResolutionHeight(void);
+int MikuPan_GetMSAA(void);
+int MikuPan_ShowControllerRemapWindow(void);
+float MikuPan_GetBrightness(void);
+float MikuPan_GetGamma(void);
+const MikuPan_ConfigCrt *MikuPan_GetCrtSettings(void);
+int MikuPan_IsFullScreen(void);
+int MikuPan_IsVsync(void);
 
-class FrameTimeGraph
-{
-public:
-    FrameTimeGraph(int max_samples = 300, float ms_scale = -1.0f);
-    void update(float dt_sec);
-    void draw(const char* label = "Frame Time", ImVec2 size = ImVec2(0,0));
-    void setMaxSamples(int max_samples);
-    void setManualScaleMs(float ms);
-    void clear();
-
-private:
-    std::vector<float> times_;
-    int max_samples_ = 300;
-    float ms_scale_ = -1.0f; // negative means auto scale
-    double sum_ms_ = 0.0; // reserved for future use
-};
-
-extern "C"
-{
-    void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer);
-    void MikuPan_RenderUi();
-    void MikuPan_StartFrameUi();
-    void MikuPan_DrawUi();
-    void MikuPan_ShutDownUi();
-    void MikuPan_ProcessEventUi(SDL_Event *event);
-    float MikuPan_GetFrameRate();
-    int MikuPan_IsWireframeRendering();
-    int MikuPan_IsNormalsRendering();
-    void MikuPan_ShowTextureList();
-    void MikuPan_UiHandleShortcuts();
-    void MikuPan_UiMenuBar();
-    int MikuPan_IsBoundingBoxRendering();
-    int MikuPan_IsMesh0x82Rendering();
-    int MikuPan_IsMesh0x32Rendering();
-    int MikuPan_IsMesh0x12Rendering();
-    int MikuPan_IsMesh0x2Rendering();
-    float* MikuPan_GetLightColor();
-}
-#endif //MIKUPAN_IMGUI_WINDOW_H
+#endif // MIKUPAN_IMGUI_WINDOW_H

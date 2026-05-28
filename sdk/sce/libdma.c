@@ -6,6 +6,7 @@ sceDmaChan* dma_chan = NULL;
 
 int sceDmaReset(int mode)
 {
+    return 1;
 }
 
 sceDmaEnv* sceDmaGetEnv(sceDmaEnv* env)
@@ -14,6 +15,7 @@ sceDmaEnv* sceDmaGetEnv(sceDmaEnv* env)
 
 int sceDmaPutEnv(sceDmaEnv* env)
 {
+    return 1;
 }
 
 sceDmaChan* sceDmaGetChan(int id)
@@ -33,4 +35,5 @@ void sceDmaSend(sceDmaChan* d, void* tag)
 
 int sceDmaSync(sceDmaChan* d, int mode, int timeout)
 {
+    return 1;
 }

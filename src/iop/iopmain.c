@@ -4,23 +4,23 @@
 #include "enums.h"
 #include "iop/adpcm/iopadpcm.h"
 #include "iop/se/iopse.h"
-#include "mikupan/mikupan_logging_c.h"
-#include "mikupan/mikupan_audio.h"
-#include "os/eeiop/eeiop.h"
-#include "iop/se/iopse.h"
 #include "iop/se/voice.h"
+#include "mikupan/mikupan_audio.h"
+#include "mikupan/mikupan_logging_c.h"
+#include "os/eeiop/eeiop.h"
 #include "sce/libsd.h"
 
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_audio.h>
+#include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_timer.h>
 
 IOP_STAT iop_stat;
 IOP_MASTER_VOL iop_mv;
 IOP_SYS_CTRL iop_sys_ctrl;
 
 static int request_shutdown = 0;
+static s32 mTick;
 
 SDL_AudioDeviceID audio_dev;
 
@@ -36,23 +36,23 @@ static int IsRealAudioDriver(const char *drv)
     }
 
 #if defined(_WIN32)
-    return (SDL_strcasecmp(drv, "wasapi") == 0 ||
-            SDL_strcasecmp(drv, "directsound") == 0 ||
-            SDL_strcasecmp(drv, "winmm") == 0);
+    return (SDL_strcasecmp(drv, "wasapi") == 0
+            || SDL_strcasecmp(drv, "directsound") == 0
+            || SDL_strcasecmp(drv, "winmm") == 0);
 
 #elif defined(__linux__)
-    return (SDL_strcasecmp(drv, "pipewire") == 0 ||
-            SDL_strcasecmp(drv, "pulseaudio") == 0 ||
-            SDL_strcasecmp(drv, "alsa") == 0 ||
-            SDL_strcasecmp(drv, "jack") == 0 ||
-            SDL_strcasecmp(drv, "sndio") == 0);
+    return (SDL_strcasecmp(drv, "pipewire") == 0
+            || SDL_strcasecmp(drv, "pulseaudio") == 0
+            || SDL_strcasecmp(drv, "alsa") == 0
+            || SDL_strcasecmp(drv, "jack") == 0
+            || SDL_strcasecmp(drv, "sndio") == 0);
 
 #elif defined(__APPLE__)
     return (SDL_strcasecmp(drv, "coreaudio") == 0);
 
 #else
-    return (SDL_strcasecmp(drv, "dummy") != 0 &&
-            SDL_strcasecmp(drv, "disk")  != 0);
+    return (SDL_strcasecmp(drv, "dummy") != 0
+            && SDL_strcasecmp(drv, "disk") != 0);
 #endif
 }
 
@@ -89,11 +89,20 @@ static void LogSDLAudioDiagnostics()
     info_log("WARNING: No real audio backend found.");
 
 #if defined(_WIN32)
-    info_log("WARNING: If you only see dummy or disk, SDL is likely built without Windows audio backends OR you are loading the wrong SDL3.dll at runtime.");
-    info_log("WARNING: Make sure the intended SDL3.dll is next to your .exe, and verify your SDL build enables WASAPI/DirectSound.");
+    info_log(
+        "WARNING: If you only see dummy or disk, SDL is likely built without "
+        "Windows audio backends OR you are loading the wrong SDL3.dll at "
+        "runtime.");
+    info_log(
+        "WARNING: Make sure the intended SDL3.dll is next to your .exe, and "
+        "verify your SDL build enables WASAPI/DirectSound.");
 #else
-    info_log("WARNING: If you only see dummy or disk, SDL may be built without system audio support.");
-    info_log("WARNING: Consider recompiling SDL with the proper audio development packages/backends enabled.");
+    info_log(
+        "WARNING: If you only see dummy or disk, SDL may be built without "
+        "system audio support.");
+    info_log(
+        "WARNING: Consider recompiling SDL with the proper audio development "
+        "packages/backends enabled.");
 #endif
 }
 
@@ -110,10 +119,8 @@ void *IopDrvFunc(unsigned int command, void *data, int size)
         IopInitDevice();
 
         iop_mv.vol = 0x3FFF;
-        //sceSdSetParam(SD_P_MVOLL | SD_CORE_0, iop_mv.vol);
-        //sceSdSetParam(SD_P_MVOLR | SD_CORE_0, iop_mv.vol);
-        //sceSdSetParam(SD_P_MVOLL | SD_CORE_1, iop_mv.vol);
-        //sceSdSetParam(SD_P_MVOLR | SD_CORE_1, iop_mv.vol);
+        sceSdSetParam(SD_P_MVOLL | 0, iop_mv.vol);
+        sceSdSetParam(SD_P_MVOLR | 0, iop_mv.vol);
 
         IopInitMain();
     }
@@ -164,8 +171,12 @@ static void IopInitDevice()
 
     if (!SDL_Init(SDL_INIT_AUDIO))
     {
-        info_log("Failed to initialize SDL audio subsystem: %s", SDL_GetError());
-        info_log("Hint: If SDL reports no audio devices and only dummy/disk drivers exist, verify your SDL build and which SDL library is being loaded at runtime.");
+        info_log("Failed to initialize SDL audio subsystem: %s",
+                 SDL_GetError());
+        info_log(
+            "Hint: If SDL reports no audio devices and only dummy/disk drivers "
+            "exist, verify your SDL build and which SDL library is being "
+            "loaded at runtime.");
         LogSDLAudioDiagnostics();
         info_log("Continuing without audio support");
         audio_dev = 0;
@@ -179,7 +190,8 @@ static void IopInitDevice()
         spec.format = SDL_AUDIO_S16;
         spec.freq = 48000;
 
-        audio_dev = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+        audio_dev =
+            SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
 
         if (!audio_dev)
         {
@@ -207,14 +219,24 @@ static int IopInitMain()
 
 static SDLCALL int IopMain(void *data)
 {
+    Uint64 nextTick = SDL_GetTicksNS();
+    const Uint64 interval = 4167000;
+
     while (!request_shutdown)
     {
-        // The thread was originally woken up by an IOP timer handler
-        SDL_DelayNS(4167000);
+        Uint64 now = SDL_GetTicksNS();
+        if (now < nextTick)
+        {
+            SDL_DelayNS(nextTick - now);
+        }
+
+        nextTick += interval;
+        mTick++;
 
         ISeMain();
         ICdvdMain();
         IAdpcmMain2();
+        VoiceRun();
     }
 
     return 0;

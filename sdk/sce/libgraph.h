@@ -94,8 +94,6 @@ typedef struct  {
   unsigned long long REGS15 : 4;
 } sceGifTag;
 
-
-
 typedef struct {
     sceGsFrame frame1;
     u_long frame1addr;

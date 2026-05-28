@@ -3,6 +3,7 @@
 #include "typedefs.h"
 
 #include "../../mikupan/mikupan_logging_c.h"
+#include "mikupan/rendering/mikupan_meshcache.h"
 
 #include <stdio.h>
 
@@ -274,6 +275,11 @@ void SgMapUnit(void *sgd_top)
     {
         return;
     }
+
+    /// Fresh SGD bytes at this address — if the loader recycled the memory
+    /// for a different asset, drop any cached GPU buffers tied to the old
+    /// occupant before pointer fix-up overwrites the source data.
+    MikuPan_MeshCache_InvalidateSgd(sgd_top);
 
     hs->MAPFLAG = 1;
 

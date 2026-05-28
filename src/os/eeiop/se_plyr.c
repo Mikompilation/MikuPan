@@ -10,6 +10,7 @@
 #include "ingame/map/map_ctrl.h"
 
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_rng.h"
 
 #include <stdlib.h>
 
@@ -104,13 +105,13 @@ int SeReqFootStep(sceVu0FVECTOR pos)
         return -1;
     }
     
-    rand();
+    MikuPan_Rand();
     
-    rd0 = ((0x73 - rand() % 0x1e) * 0x1000) / 100;
+    rd0 = ((0x73 - MikuPan_Rand() % 0x1e) * 0x1000) / 100;
         
-    if (rand() % 3 == 0) 
+    if (MikuPan_Rand() % 3 == 0) 
     {
-        rd1 = ((0x6e - rand() % 0x19) * 0x1000) / 100;
+        rd1 = ((0x6e - MikuPan_Rand() % 0x19) * 0x1000) / 100;
     }
     else
     {
@@ -137,7 +138,7 @@ int SeReqFootStep(sceVu0FVECTOR pos)
         
         if (dscv_flg) 
         {
-            foot_rand = rand() % (frand_tbl[0][0] + frand_tbl[0][1] + frand_tbl[0][2]);
+            foot_rand = MikuPan_Rand() % (frand_tbl[0][0] + frand_tbl[0][1] + frand_tbl[0][2]);
             
             if (frand_tbl[0][0] > foot_rand)
             {
@@ -161,7 +162,7 @@ int SeReqFootStep(sceVu0FVECTOR pos)
         }
         else 
         {
-            foot_rand = rand() % (frand_tbl[1][0] + frand_tbl[1][1]);
+            foot_rand = MikuPan_Rand() % (frand_tbl[1][0] + frand_tbl[1][1]);
             
             if (frand_tbl[0][0] > foot_rand)
             {

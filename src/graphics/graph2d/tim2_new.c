@@ -776,7 +776,6 @@ void DrawAll2DMes_P2()
 
     DrawPerformanceCounter();
 
-
     /// Section for sorting effects packets
     if (ndpri > 0)
     {

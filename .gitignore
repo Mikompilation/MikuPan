@@ -1,6 +1,7 @@
 __pycache__
 .venv/
 build/
+build-*/
 assets/
 asm/
 .ninja_log
@@ -23,3 +24,7 @@ cmake-build-debug-mingw/
 cmake-build-release-mingw/
 /.vs
 /out
+cmake-build-mingw/
+.DS_Store
+/cmake-build-mingw
+/cmake-build-mingw/.cmake

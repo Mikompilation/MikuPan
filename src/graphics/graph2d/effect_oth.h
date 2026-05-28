@@ -216,7 +216,7 @@ void* CallRipple(void *pos, void *rot, float scale, int num, int time);
 void SetRipple(EFFECT_CONT *ec);
 void RunRipple2();
 void SetEffSQTex(int n, float *v, int tp, float w, float h, u_char r, u_char g, u_char b, u_char a);
-void SetEffSQITex(int n, int *v, int tp, float w, float h, u_char r, u_char g, u_char b, u_char a);
+void SetEffSQITex(int n, int *v, float depth_z, int tp, float w, float h, u_char r, u_char g, u_char b, u_char a);
 void* CallFire(void *pos, u_char r, u_char g, u_char b, float scale);
 void* CallFire2(void *pos, u_char r, u_char g, u_char b, float scl, u_char r2, u_char g2, u_char b2, float scl2);
 void* CallFire3(void *pos, int type, u_char r, u_char g, u_char b, float scl, u_char r2, u_char g2, u_char b2, float scl2);

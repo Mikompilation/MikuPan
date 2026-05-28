@@ -31,6 +31,7 @@
 #include "enums.h"
 #include "graphics/graph3d/gra3d.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 
 static sceVu0FVECTOR reserve_lig;
 static sceVu0FVECTOR spos[96];
@@ -83,7 +84,9 @@ void SetETOCircleTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, float w, float h, u_cha
     u_int clpz2;
     u_long tx0;
     sceVu0FMATRIX slm;
+    sceVu0FMATRIX fslm;
     sceVu0IVECTOR ivec[4];
+    sceVu0FVECTOR fvec[4];
     sceVu0FVECTOR ppos[4] = {
         {-1.0f, +1.0f, 0.0f, 1.0f},
         {+1.0f, +1.0f, 0.0f, 1.0f},
@@ -110,6 +113,9 @@ void SetETOCircleTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, float w, float h, u_cha
     sceVu0MulMatrix(slm, SgWSMtx, wlm);
     sceVu0RotTransPersN(ivec, slm, ppos, 4, 1);
 
+    sceVu0MulMatrix(fslm, SgWSMtx, wlm);
+    sceVu0RotTransPersNF(fvec, fslm, ppos, 4, 1);
+
     w = 0.0f;
 
     for (i = 0; i < 4; i++)
@@ -134,7 +140,7 @@ void SetETOCircleTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, float w, float h, u_cha
         tt[i].fl32 = stq[i / 2] * 192.0f * tq[i].fl32 / 256.0f;
     }
 
-    //w = (float) MikuPan_IsVisibleOnScreen(ivec);
+    w = (float) MikuPan_IsVisibleOnScreen(fvec);
 
     if (w == 0.0f)
     {
@@ -173,8 +179,26 @@ void SetETOCircleTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, float w, float h, u_cha
             | SCE_GS_RGBAQ << (4 * 1)
             | SCE_GS_XYZF2 << (4 * 2);
 
+        float* buf = (float*)&pbuf[ndpkt];
+
         for (i = 0; i < 4; i++)
         {
+            pbuf[ndpkt].fl32[0] = stq[i % 2];
+            pbuf[ndpkt].fl32[1] = stq[i / 2];
+            pbuf[ndpkt].fl32[2] = 0;
+            pbuf[ndpkt++].fl32[3] = 0;
+
+            pbuf[ndpkt].fl32[0] = MikuPan_ConvertScaleColor(r);
+            pbuf[ndpkt].fl32[1] = MikuPan_ConvertScaleColor(g);
+            pbuf[ndpkt].fl32[2] = MikuPan_ConvertScaleColor(b);
+            pbuf[ndpkt++].fl32[3] = MikuPan_ConvertScaleColor(a);
+
+            pbuf[ndpkt].fl32[0] = fvec[i][0];
+            pbuf[ndpkt].fl32[1] = fvec[i][1];
+            pbuf[ndpkt].fl32[2] = fvec[i][2];
+            pbuf[ndpkt++].fl32[3] = 1.0f;
+
+            /*
             pbuf[ndpkt].ui32[0] = ts[i].ui32;
             pbuf[ndpkt].ui32[1] = tt[i].ui32;
             pbuf[ndpkt].ui32[2] = tq[i].ui32;
@@ -189,7 +213,10 @@ void SetETOCircleTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, float w, float h, u_cha
             pbuf[ndpkt].ui32[1] = ivec[i][1];
             pbuf[ndpkt].ui32[2] = ivec[i][2] * 16;
             pbuf[ndpkt++].ui32[3] = (i <= 1) ? 0x8000 : 0;
+            */
         }
+
+        MikuPan_RenderSprite3D((sceGsTex0*)&tx0, buf);
 
         pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
     }

@@ -128,7 +128,7 @@ class GSHelper
                                             int cbw, int csa, char alpha_reg);
     void Clear();
 
-    std::vector<char> mem_ = std::vector<char> (4 * 1024 * 1024);
+    std::vector<char> mem_ = std::vector<char> (8 * 1024 * 1024);
 };
 }// namespace GS
 
@@ -138,6 +138,7 @@ extern "C" {
 void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image);
 unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash);
 uint64_t MikuPan_GetTextureHash(sceGsTex0 *tex0);
+void MikuPan_GsStore(sceGsStoreImage *sp, unsigned char *out);
 }
 
 // Texture *DownloadGsTexture(sceGsTex0* pMeshTexReg);

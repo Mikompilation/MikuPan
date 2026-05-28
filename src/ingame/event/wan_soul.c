@@ -2,13 +2,8 @@
 #include "typedefs.h"
 #include "enums.h"
 #include "wan_soul.h"
-
-// #include <cstdlib.h>
-// RAND_MAX = (2**31-1)
-#define RAND_MAX 2147483647
-
+#include "mikupan/mikupan_rng.h"
 #include "sce/libvu0.h"
-
 #include "common/ul_math.h"
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/message.h"
@@ -325,12 +320,12 @@ void SetSoulNewMove(WANDER_SOUL_WRK *wswrk)
     }
     else if (dist <= 750.0f)
     {
-        wswrk->dist = (rand() / (float)RAND_MAX * 0.5f + 1.0f) * 250.0f;
+        wswrk->dist = (MikuPan_Rand() / (float)MikuPan_RAND_MAX * 0.5f + 1.0f) * 250.0f;
         wswrk->count = wswrk->dist / 10.5f;
     }
     else
     {
-        wswrk->dist = rand() * 500.0f / (float)RAND_MAX;
+        wswrk->dist = MikuPan_Rand() * 500.0f / (float)MikuPan_RAND_MAX;
         wswrk->count = wswrk->dist / 10.5f;
     }
 }

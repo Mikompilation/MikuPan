@@ -11,6 +11,53 @@ typedef float LMATRIX[3][4];
 typedef float VECTOR3[3];
 typedef unsigned int void_type[4];
 
+typedef struct __attribute__((packed))
+{
+    /// Ambient Lighting
+    float uAmbient[4];
+
+    /// Parallel Lighting
+    int   uParCount[4];
+    float uParDir[3][4];
+    float uParDiffuse[3][4];
+    float uParSpecular[3][4];   ///< matches SgLIGHT.specular per sglight.c:116
+    float uParHalfway[3][4];    ///< pre-normalized halfway vec (-eye + dir) per sglight.c:118-120 — Blinn-Phong specular
+
+    /// Point Lighting
+    int   uPointCount[4];
+    float uPointPos[3][4];
+    float uPointDiffuse[3][4];
+    float uPointSpecular[3][4];
+    float uPointPower[3][4];
+
+    /// Spot Lighting
+    int   uSpotCount[4];
+    float uSpotPos[3][4];
+    float uSpotDir[3][4];
+    float uSpotDiffuse[3][4];
+    float uSpotSpecular[3][4];
+    float uSpotPower[3][4];
+    float uSpotIntens[3][4];   ///< .x = intens (cos²(half-angle), inner-cone threshold),
+                                ///< .y = intens_b = 1/(1-intens), reciprocal used by the
+                                ///<      shader to ramp the cone gate over (intens..1) per
+                                ///< asm_CalcSpotLight (sglight.c:1125-1127).
+    float uMaterialAlpha[4];   ///< .x = SgMaterial.Diffuse[3] in normalized GS alpha units.
+
+} MikuPan_LightData;
+
+/// Per-material colour block. Pushed by MikuPan_SetMaterial when the renderer
+/// switches material — mirrors the four SgMaterialC colour fields the original
+/// PS2 path bakes into Parallel_Ambient / Parallel_DColor / Parallel_SColor at
+/// SetMaterialData (sglight.c:473). Bound to UBO binding point 1 (LightBlock
+/// is binding point 0).
+typedef struct __attribute__((packed))
+{
+    float uMatAmbient[4];   ///< material ambient colour
+    float uMatDiffuse[4];   ///< material diffuse colour
+    float uMatSpecular[4];  ///< material specular colour; .w treated as shininess factor
+    float uMatEmission[4];  ///< material self-illumination
+} MikuPan_MaterialData;
+
 typedef struct
 {
     unsigned char GRD : 1;

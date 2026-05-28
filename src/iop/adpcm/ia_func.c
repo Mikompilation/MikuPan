@@ -22,8 +22,8 @@ void IaInitDev(u_char channel)
 {
     memset(&iop_adpcm[channel], 0, sizeof(IOP_ADPCM));
     AdpcmIopBuf[channel] = (void *) malloc(266240);
-    AdpcmSpuBuf[0] = (s16 *) MikuPan_GetHostPointer(0x1F3740);
-    AdpcmSpuBuf[1] = (s16 *) MikuPan_GetHostPointer(0x1F6780);
+    AdpcmSpuBuf[0] = (s16 *) malloc(266240);
+    AdpcmSpuBuf[1] = (s16 *) malloc(266240);
 }
 
 static int IAdpcmMakeThread(u_char channel)
@@ -65,10 +65,10 @@ void IaInitVolume()
     sceSdSetSwitch(SD_S_VMIXR | 0, 0xFFFFFFu);
     sceSdSetSwitch(SD_S_VMIXEL | 0, 0);
     sceSdSetSwitch(SD_S_VMIXER | 0, 0);
-    sceSdSetParam(SD_VP_VOLL | 0 | 0, 0);
-    sceSdSetParam(SD_VP_VOLR | 0 | 0, 0);
-    sceSdSetParam(SD_VP_VOLL | 1 | 0, 0);
-    sceSdSetParam(SD_VP_VOLR | 1 | 0, 0);
+    sceSdSetParam(SD_VP_VOLL | SD_VOICE(0) | 0, 0);
+    sceSdSetParam(SD_VP_VOLR | SD_VOICE(0) | 0, 0);
+    sceSdSetParam(SD_VP_VOLL | SD_VOICE(1) | 0, 0);
+    sceSdSetParam(SD_VP_VOLR | SD_VOICE(1) | 0, 0);
 }
 
 void IaDbgMemoryCheck()
@@ -82,10 +82,10 @@ void IaDbgMemoryCheck()
 
 void IaSetRegSsa(u_char channel)
 {
-    sceSdSetAddr(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VA_SSA,
+    /*sceSdSetAddr(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VA_SSA,
                  (u_int) AdpcmSpuBuf[channel]);
     sceSdSetAddr(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VA_SSA,
-                 (u_int) (AdpcmSpuBuf[channel] + 4096));
+                 (u_int) (AdpcmSpuBuf[channel] + 4096));*/
 }
 
 void IaSetRegAdsr(u_char channel)
@@ -104,14 +104,9 @@ void IaSetRegAdsr(u_char channel)
 
 void IaSetRegVol(u_char channel)
 {
-    /*sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_VOLL,
-                  iop_adpcm[channel].vol_ll);
-    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vl | SD_VP_VOLR,
-                  iop_adpcm[channel].vol_lr);
-    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_VOLL,
-                  iop_adpcm[channel].vol_rl);
-    sceSdSetParam(iop_adpcm[channel].core | iop_adpcm[channel].vr | SD_VP_VOLR,
-                  iop_adpcm[channel].vol_rr);*/
+
+    volL = iop_adpcm[channel].vol_ll << 1;
+    volR = iop_adpcm[channel].vol_rr << 1;
 }
 
 void IaSetRegPitch(u_char channel)
@@ -241,8 +236,6 @@ static void IaSetStopBlock(u_char channel)
 
 void IaSetMasterVol(u_short mvol)
 {
-    mVolL = mvol & 0x3FFF;
-    mVolR = mvol & 0x3FFF;
     sceSdSetParam(SD_P_MVOLL, mvol & 0x3FFF);
     sceSdSetParam(SD_P_MVOLR, mvol & 0x3FFF);
 }

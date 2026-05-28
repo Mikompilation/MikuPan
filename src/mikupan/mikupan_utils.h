@@ -16,10 +16,15 @@ float MikuPan_ConvertColorFloat(unsigned char color_fragment);
 unsigned char MikuPan_GamePadAxisToPS2(int sdl_axis, int deadzone);
 void MikuPan_GetPS2Viewport(int width, int height, float *vx, float *vy, float *vw, float *vh, float *scale);
 void MikuPan_FixUV(float* uv, int num);
-void MikuPan_SetTriangleIndex(int* triangle_index, int vertex_count, int vertex_offset, int mesh_offset);
+void MikuPan_FixColors(float *color_buf, int num);
+int MikuPan_SetTriangleIndex(int* triangle_index, int vertex_count, int vertex_offset, int index_write_offset);
 unsigned int *MikuPan_GetNextUnpackAddr(unsigned int *prim);
 unsigned char* MikuPan_ConvertImageAlpha(unsigned char* img, int width, int height);
 unsigned char MikuPan_AdjustPS2Alpha(unsigned char alpha);
 int MikuPan_IsVisibleOnScreen(const sceVu0FVECTOR* vector);
 void MikuPan_GSToNDC(int Xgs, int Ygs, int Zgs, float* x, float* y, float* z, float window_width, float window_height);
+void MikuPan_ConvertScreenToNDCCoord(int* out, float ref_width, float ref_height, float target_width, float target_height);
+void MikuPan_ConvertPs2GSCoordToNDC(float* out, float window_width, float window_height, float gs_x, float gs_y);
+void MikuPan_ConvertPs2GSSubPixelToNDC(float* out, float window_width, float window_height, int gs_sub_x, int gs_sub_y);
+
 #endif//MIKUPAN_MIKUPAN_UTILS_H

@@ -1,358 +1,39 @@
-#include "typedefs.h"
-#include "mikupan_ui.h"
-#include "glad/gl.h"
-#include "imgui_impl_opengl3.h"
+// C++ wrapper that compiles imgui backends and exposes them with C linkage
+// so they can be called from mikupan_ui.c (pure C).
+#include "SDL3/SDL.h"
+#include "imgui.h"
 #include "imgui_impl_sdl3.h"
-#include "imgui_internal.h"
-#include "imgui_toggle/imgui_toggle.h"
-#include "main/glob.h"
-#include "mikupan/gs/mikupan_texture_manager.h"
-#include <algorithm>
-#include <string>
+#include "imgui_impl_opengl3.h"
 
 extern "C"
 {
-#include "sce/libpad.h"
-#include "graphics/graph2d/g2d_debug.h"
-#include "graphics/graph2d/message.h"
-#include "graphics/graph3d/sglight.h"
-}
 
-FrameTimeGraph g_frame_graph(600);
-bool show_fps = true;
-bool show_menu_bar = false;
-bool show_frame_time_graph = false;
-bool controller_config = false;
-bool controller_rumble_test = false;
-bool camera_debug = false;
-int render_wireframe = 0;
-int render_normals = 0;
-bool show_texture_list = false;
-bool show_bounding_boxes = false;
-bool show_mesh_0x82 = true;
-bool show_mesh_0x32 = true;
-bool show_mesh_0x12 = true;
-bool show_mesh_0x2 = true;
-
-float light_color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-FrameTimeGraph::FrameTimeGraph(int max_samples, float ms_scale) : max_samples_(std::max(8, max_samples)), ms_scale_(ms_scale)
+void MikuPan_ImGui_ImplInit(SDL_Window *window, void *gl_context)
 {
-    times_.reserve(max_samples_);
-}
-
-void FrameTimeGraph::update(float dt_sec)
-{
-    float ms = dt_sec;
-
-    if ((int)times_.size() >= max_samples_)
-    {
-        times_.erase(times_.begin());
-    }
-
-    times_.push_back(ms);
-
-    sum_ms_ += ms;
-    if (times_.size() > 1) {
-    }
-}
-
-void FrameTimeGraph::draw(const char *label, ImVec2 size)
-{
-    if (times_.empty())
-    {
-        ImGui::TextUnformatted("No frame data yet");
-        return;
-    }
-
-    ImGui::Begin("Frame Time Graph");
-
-    float sum = 0.0f;
-    float minv = times_[0];
-    float maxv = times_[0];
-
-    for (float v : times_)
-    {
-        sum += v;
-        if (v < minv) minv = v;
-        if (v > maxv) maxv = v;
-    }
-
-    float avg = sum / (float)times_.size();
-    float latest = times_.back();
-
-    ImGui::Text("%s: %.1f ms (%.1f FPS)", label, latest, latest > 0.0f ? 1000.0f/latest : 0.0f);
-    ImGui::Text("Avg: %.2f ms (%.1f FPS)  Min: %.2f ms  Max: %.2f ms  Samples: %zu", avg, avg > 0.0f ? 1000.0f/avg : 0.0f, minv, maxv, times_.size());
-
-    float scale = ms_scale_ > 0.0f ? ms_scale_ : std::max(maxv, avg * 1.5f);
-    if (scale < 1.0f) scale = 1.0f;
-
-    ImGui::PlotLines("##plotlines", times_.data(), (int)times_.size(), 0, nullptr, 0.0f, scale, size);
-
-    ImGui::Spacing();
-    ImGui::Text("Frame time histogram (ms)");
-    const int buckets = 16;
-    std::vector<int> hist(buckets);
-    float step = scale / (float)buckets;
-    for (float v : times_)
-    {
-        int b = (int)std::floor(v / step);
-        if (b < 0) b = 0;
-        if (b >= buckets) b = buckets - 1;
-        hist[b]++;
-    }
-
-    std::vector<float> histf(buckets);
-    int maxcount = 1;
-    for (int i = 0; i < buckets; ++i)
-    {
-        histf[i] = (float)hist[i];
-
-        if (hist[i] > maxcount)
-        {
-            maxcount = hist[i];
-        }
-    }
-
-    ImGui::PlotLines("##hist", histf.data(), buckets, 0, nullptr, 0.0f, (float)maxcount, ImVec2(0,60));
-
-    ImGui::End();
-}
-
-void FrameTimeGraph::setMaxSamples(int max_samples)
-{
-    max_samples_ = std::max(8, max_samples);
-    times_.reserve(max_samples_);
-    if ((int)times_.size() > max_samples_)
-    {
-        times_.erase(times_.begin(), times_.begin() + ((int)times_.size() - max_samples_));
-    }
-}
-
-void FrameTimeGraph::setManualScaleMs(float ms)
-{
-    ms_scale_ = ms;
-}
-
-void FrameTimeGraph::clear()
-{
-    times_.clear();
-}
-
-void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
-{
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
-    ImGui_ImplSDL3_InitForOpenGL(window, renderer);
+    ImGui_ImplSDL3_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init("#version 330");
 }
 
-void MikuPan_RenderUi()
-{
-    ImGui::Render();
-    glad_glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void MikuPan_StartFrameUi()
-{
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL3_NewFrame();
-    ImGui::NewFrame();
-}
-
-void MikuPan_DrawUi()
-{
-    g_frame_graph.update(1000.0f / ImGui::GetIO().Framerate);
-
-    MikuPan_UiHandleShortcuts();
-
-    MikuPan_UiMenuBar();
-
-    if (controller_config)
-    {
-        ImGui::Begin("Controller");
-        ImGui::Toggle("Rumble", &controller_rumble_test, ImGuiToggleFlags_Animated);
-        ImGui::End();
-    }
-
-    if (dbg_wrk.mode_on == 1)
-    {
-        gra2dDrawDbgMenu();
-    }
-
-    if (show_frame_time_graph)
-    {
-        g_frame_graph.draw("Frame Time");
-    }
-
-    if (show_texture_list)
-    {
-        MikuPan_ShowTextureList();
-    }
-
-    if (show_fps)
-    {
-        SetString2(0x10, 0.0f, 420.0f, 1, 0x80, 0x80, 0x80, (char*)"FPS %d", (int)MikuPan_GetFrameRate());
-    }
-}
-
-void MikuPan_ShutDownUi()
+void MikuPan_ImGui_ImplShutdown(void)
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
 }
 
-void MikuPan_ProcessEventUi(SDL_Event *event)
+void MikuPan_ImGui_ImplNewFrame(void)
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+}
+
+void MikuPan_ImGui_ImplProcessEvent(SDL_Event *event)
 {
     ImGui_ImplSDL3_ProcessEvent(event);
 }
 
-float MikuPan_GetFrameRate()
+void MikuPan_ImGui_ImplRenderDrawData(void)
 {
-    return ImGui::GetIO().Framerate;
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-int MikuPan_IsWireframeRendering()
-{
-    return render_wireframe;
-}
-
-int MikuPan_IsNormalsRendering()
-{
-    return render_normals;
-}
-
-void MikuPan_ShowTextureList()
-{
-    ImGui::Begin("OpenGL Texture");
-
-    std::vector<MikuPan_TextureInfo*> sorted_textures;
-    sorted_textures.reserve(mikupan_render_texture_atlas.size());
-
-    for (const auto& pair : mikupan_render_texture_atlas)
-    {
-        sorted_textures.push_back(pair.second);
-    }
-
-    std::sort(sorted_textures.begin(), sorted_textures.end(),
-        [](const MikuPan_TextureInfo* a, const MikuPan_TextureInfo* b)
-        {
-            return a->id < b->id;
-        });
-
-    for (auto texture : sorted_textures)
-    {
-        std::string label = "Texture ID ";
-        label += std::to_string(texture->id);
-
-        if (ImGui::CollapsingHeader(label.c_str()))
-        {
-            ImGui::Text("%d: %d x %d", texture->id, texture->width, texture->height);
-            ImGui::Image(static_cast<ImTextureID>(static_cast<intptr_t>(texture->id)), ImVec2(texture->width, texture->height));
-        }
-    }
-
-    ImGui::End();
-}
-
-void MikuPan_UiHandleShortcuts()
-{
-    if (ImGui::IsKeyPressed(ImGuiKey_F1))
-    {
-        show_menu_bar = !show_menu_bar;
-    }
-
-    if (ImGui::IsKeyPressed(ImGuiKey_F2))
-    {
-        dbg_wrk.mode_on = !dbg_wrk.mode_on;
-    }
-}
-
-void MikuPan_UiMenuBar()
-{
-    if (show_menu_bar && ImGui::BeginMainMenuBar())
-    {
-        if (ImGui::BeginMenu("Debug"))
-        {
-            if (ImGui::BeginMenu("Rendering"))
-            {
-                //ImGui::Toggle("Camera", (bool*)&camera_debug, ImGuiToggleFlags_Animated);
-                ImGui::Toggle("Wireframe", (bool*)&render_wireframe, ImGuiToggleFlags_Animated);
-                ImGui::Toggle("Normals", (bool*)&render_normals, ImGuiToggleFlags_Animated);
-                ImGui::Toggle("Textures", (bool*)&show_texture_list, ImGuiToggleFlags_Animated);
-                ImGui::Toggle("BoundingBox", (bool*)&show_bounding_boxes, ImGuiToggleFlags_Animated);
-
-                if (ImGui::BeginMenu("Meshes"))
-                {
-                    ImGui::Toggle("Mesh 0x82", (bool*)&show_mesh_0x82, ImGuiToggleFlags_Animated);
-                    ImGui::Toggle("Mesh 0x32", (bool*)&show_mesh_0x32, ImGuiToggleFlags_Animated);
-                    ImGui::Toggle("Mesh 0x12", (bool*)&show_mesh_0x12, ImGuiToggleFlags_Animated);
-                    ImGui::Toggle("Mesh 0x2", (bool*)&show_mesh_0x2, ImGuiToggleFlags_Animated);
-                    ImGui::EndMenu();
-                }
-
-                if (ImGui::Button("Clear Texture Cache"))
-                {
-                    MikuPan_RequestFlushTextureCache();
-                }
-
-                if (ImGui::SliderFloat4("Light Color", light_color, 0.0f, 1.0f, "%.3f"))
-                {
-
-                }
-
-                ImGui::EndMenu();
-            }
-
-            ImGui::Toggle("Ingame Debug Menu", (bool*)&dbg_wrk.mode_on, ImGuiToggleFlags_Animated);
-            //ImGui::Toggle("Controller Config", &controller_config, ImGuiToggleFlags_Animated);
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Performance"))
-        {
-            ImGui::Toggle("FPS Counter", &show_fps, ImGuiToggleFlags_Animated);
-            ImGui::Toggle("Frame Time Graph", &show_frame_time_graph, ImGuiToggleFlags_Animated);
-
-            ImGui::EndMenu();
-        }
-
-        ImGui::EndMainMenuBar();
-    }
-}
-
-int MikuPan_IsBoundingBoxRendering()
-{
-    return show_bounding_boxes;
-}
-
-int MikuPan_IsMesh0x82Rendering()
-{
-    return show_mesh_0x82;
-}
-
-int MikuPan_IsMesh0x32Rendering()
-{
-    return show_mesh_0x32;
-}
-
-int MikuPan_IsMesh0x12Rendering()
-{
-    return show_mesh_0x12;
-}
-
-int MikuPan_IsMesh0x2Rendering()
-{
-    return show_mesh_0x2;
-}
-
-float* MikuPan_GetLightColor()
-{
-    return light_color;
 }

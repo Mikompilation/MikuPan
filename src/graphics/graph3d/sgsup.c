@@ -28,11 +28,10 @@ static int write_flg = 0;
 static int write_counter = 0;
 static int dbg_flg = 0;
 
-extern void DIVP0_PROLOGUE_and_DIVP2_PROLOGUE()
-    __attribute__((section(".vutext")));
-extern void MULTIP_PROLOGUE() __attribute__((section(".vutext")));
-extern void DP0_PROLOGUE() __attribute__((section(".vutext")));
-extern void DP2_PROLOGUE() __attribute__((section(".vutext")));
+extern void DIVP0_PROLOGUE_and_DIVP2_PROLOGUE();
+extern void MULTIP_PROLOGUE();
+extern void DP0_PROLOGUE();
+extern void DP2_PROLOGUE();
 
 #define GET_MESH_TYPE(intpointer) (char) ((char *) intpointer)[13]
 

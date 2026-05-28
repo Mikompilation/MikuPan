@@ -406,7 +406,6 @@ void FodSetMyLight(FOD_LIGHT *fl, char *pfx, float *eye)
         sceVu0AddVector(ambient, ambient, fl->amb[5]);
     }
 
-
     SgSetAmbient(ambient);
     memcpy(&lp.ambient, ambient, sizeof(sceVu0FVECTOR));
 
@@ -425,7 +424,6 @@ void FodSetMyLight(FOD_LIGHT *fl, char *pfx, float *eye)
     {
         SgSetInfiniteLights(eye, NULL, 0);
     }
-
 
     for (i = 0; i < pl_num; i++)
     {
@@ -463,7 +461,7 @@ void FodSetMyLight(FOD_LIGHT *fl, char *pfx, float *eye)
         memcpy(&lp.spot[i].pos, slight[i].pos, sizeof(sceVu0FVECTOR));
     }
 
-    MikuPan_SetupAmbientLighting(&lp);
+    MikuPan_SetupAmbientLighting(&lp, eye);
 }
 
 void FodSetSpotLights(SgLIGHT *sl, u_int num)

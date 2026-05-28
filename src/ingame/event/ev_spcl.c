@@ -2,6 +2,7 @@
 #include "typedefs.h"
 #include "enums.h"
 #include "ev_spcl.h"
+#include "mikupan/mikupan_rng.h"
 
 #include "graphics/graph2d/effect_scr.h" // SetBlackIn, SetBlackOut
 #include "graphics/graph2d/message.h"
@@ -5901,7 +5902,7 @@ void SpecialEventDisp014(int no)
 
     for (i = 0; i < 6; i++)
     {
-        if ((rand() % 10) != 6)
+        if ((MikuPan_Rand() % 10) != 6)
         {
             evcdl_dat.flame_time[i]++;
         }

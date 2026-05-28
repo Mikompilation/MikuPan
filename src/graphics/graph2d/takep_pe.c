@@ -1,6 +1,7 @@
 #include "common.h"
 #include "typedefs.h"
 #include "takep_pe.h"
+#include "mikupan/mikupan_rng.h"
 
 #include <stdlib.h>
 
@@ -23,10 +24,6 @@ static int rem_pe_ix;
 
 static int pe_callflg = 0;
 u_char eye_light_flg = 0;
-
-// #include <cstdlib.h>
-// RAND_MAX = (2**31-1)
-#define RAND_MAX 2147483647
 
 void GetBetweenABVecUnitLen(sceVu0FVECTOR out_a2bv, sceVu0FVECTOR out_unit_a2bv, float *out_len, sceVu0FVECTOR in_av, sceVu0FVECTOR in_bv)
 {
@@ -131,31 +128,31 @@ int SetPEObjPos(PARTICLE_EFF_OBJ *obj)
 
 void MakeRandomVec(float *output, int m)
 {
-    if (rand() > RAND_MAX / 2)
+    if (MikuPan_Rand() > MikuPan_RAND_MAX / 2)
     {
-        output[0] = rand() % m;
+        output[0] = MikuPan_Rand() % m;
     }
     else
     {
-        output[0] = -rand() % m;
+        output[0] = -MikuPan_Rand() % m;
     }
 
-    if (rand() > RAND_MAX / 2)
+    if (MikuPan_Rand() > MikuPan_RAND_MAX / 2)
     {
-        output[1] = rand() % m;
+        output[1] = MikuPan_Rand() % m;
     }
     else
     {
-        output[1] = -rand() % m;
+        output[1] = -MikuPan_Rand() % m;
     }
 
-    if (rand() > RAND_MAX / 2)
+    if (MikuPan_Rand() > MikuPan_RAND_MAX / 2)
     {
-        output[2] = rand() % m;
+        output[2] = MikuPan_Rand() % m;
     }
     else
     {
-        output[2] = -rand() % m;
+        output[2] = -MikuPan_Rand() % m;
     }
 }
 
@@ -198,7 +195,7 @@ void InitPEObj(PARTICLE_EFF_OBJ *obj, sceVu0FVECTOR ov, sceVu0FVECTOR sv, sceVu0
 
     tempkk = -(obj->c2olen * 0.2f);
 
-    randrate = rand() / (float)RAND_MAX;
+    randrate = MikuPan_Rand() / (float)RAND_MAX;
     randrate = -(obj->c2olen * 0.5f * randrate);
 
     tempkk += randrate;
@@ -206,7 +203,7 @@ void InitPEObj(PARTICLE_EFF_OBJ *obj, sceVu0FVECTOR ov, sceVu0FVECTOR sv, sceVu0
     obj->ka = (obj->c2slen * obj->c2olen + tempkk * (hhh - obj->c2slen)) / tempkk / obj->c2olen / (obj->c2olen - tempkk);
     obj->kb = -(obj->ka * (tempkk + obj->c2olen));
 
-    temptime = rand() % 0x28 + 0x28;
+    temptime = MikuPan_Rand() % 0x28 + 0x28;
     obj->m_time = temptime;
 
     if (obj->c2olen < 1000.0f)
@@ -444,7 +441,6 @@ void SetParticleEffect() {
 
     pbuf[ndpkt++].ul64[0] = effdat[46].tex0;
 
-    /// RE-enable this
     pbuf[ndpkt++].ul128 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0); // shouldn't this be a SCE_GS_TEX0_2 ??
 
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
@@ -536,8 +532,7 @@ void EyeLightCtrl() {
         qd->ul64[0] = effdat[46].tex0;
         qd++;
 
-        /// TODO: re-enable this
-        /// qd->ul128 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0); // shouldn't this be a SCE_GS_TEX0_2 ??
+        qd->ul128 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0); // shouldn't this be a SCE_GS_TEX0_2 ??
         qd++;
 
         qd->ul64[0] = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);

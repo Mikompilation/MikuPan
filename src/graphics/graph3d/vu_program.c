@@ -1,6 +1,6 @@
 #include "vu_program.h"
 
-unsigned int dma = 0 /* __attribute__((section(".vutext"))) */;
+unsigned int dma = 0;
 
 void DRAWTYPE2()
 {

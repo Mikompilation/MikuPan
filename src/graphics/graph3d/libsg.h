@@ -25,7 +25,7 @@ void Vu0MulVectorXYZ(sceVu0FVECTOR v, sceVu0FVECTOR v0, sceVu0FVECTOR v1);
 void Vu0CopyMatrix(sceVu0FMATRIX m0, sceVu0FMATRIX m1);
 void Vu0LoadMatrix(sceVu0FMATRIX m0);
 void Vu0ApplyVectorInline(sceVu0FVECTOR v0, sceVu0FVECTOR v1);
-float inline_asm__libsg_g_line_463(float *v0, float*v1);
+float Vu0DotProduct(float *v0, float*v1);
 void Vu0MulVectorX(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float sc);
 qword* getObjWrk();
 

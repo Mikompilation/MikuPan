@@ -2,6 +2,7 @@
 #include "typedefs.h"
 #include "enums.h"
 #include "inf_disp.h"
+#include "mikupan/mikupan_rng.h"
 
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_ene.h"
@@ -13632,9 +13633,9 @@ static void JetCD(JET_SET *ninjin, u_char num, u_char tim, u_char spd, u_char wi
     {
         if (ninjin[i].tim == 0)
         {
-            ninjin[i].tim = rand() % tim + 1;
-            ninjin[i].spd = rand() % spd + 1;
-            ninjin[i].mov_x = rand() % wid + 1;
+            ninjin[i].tim = MikuPan_Rand() % tim + 1;
+            ninjin[i].spd = MikuPan_Rand() % spd + 1;
+            ninjin[i].mov_x = MikuPan_Rand() % wid + 1;
             ninjin[i].mov_y = 0;
             ninjin[i].tim_max = ninjin[i].tim;
         }

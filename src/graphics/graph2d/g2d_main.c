@@ -1,6 +1,7 @@
 #include "common.h"
 #include "typedefs.h"
 #include "g2d_main.h"
+#include "mikupan/mikupan_rng.h"
 
 #include <stdlib.h>
 
@@ -26,8 +27,6 @@
 #endif
 
 // #include <cstdlib.h>
-// RAND_MAX = (2**31-1)
-#define RAND_MAX 2147483647
 
 G2D_LOAD_FLG g2d_load_flg = {0};
 
@@ -114,7 +113,7 @@ static void gra2dSubLAST()
 
 void gra2dDraw(int fl)
 {
-    SetVURand(rand() / (float)RAND_MAX);
+    SetVURand(MikuPan_Rand() / (float)MikuPan_RAND_MAX);
 
     switch (fl)
     {
@@ -145,7 +144,7 @@ void gra2dDraw(int fl)
         break;
     }
 
-    if (*key_now[13] != 0 && dbg_wrk.oth_perf != 0)
+    if (SELECT_PRESSED() != 0 && dbg_wrk.oth_perf != 0)
     {
         InitPerformanceCounter();
     }

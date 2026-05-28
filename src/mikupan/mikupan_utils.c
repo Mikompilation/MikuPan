@@ -114,7 +114,7 @@ void MikuPan_FixUV(float *uv, int num)
 
     v2 *uvf = (v2 *) uv;
 
-    for (int i = 0; i < num; i++)
+    for (int i = 2; i < num; i++)
     {
         if (*((int *) &uvf[i].v) == 1)
         {
@@ -123,15 +123,48 @@ void MikuPan_FixUV(float *uv, int num)
     }
 }
 
-void MikuPan_SetTriangleIndex(int *triangle_index, int vertex_count,
-                              int vertex_offset, int mesh_offset)
+void MikuPan_FixColors(float *color_buf, int num)
 {
-    for (int j = 0; j < vertex_count; j++)
+    typedef struct
     {
-        triangle_index[vertex_offset + j + mesh_offset] = vertex_offset + j;
-    }
+        float r;
+        float g;
+        float b;
+    } colour;
 
-    triangle_index[vertex_offset + mesh_offset + vertex_count] = -1;
+    colour *uvf = (colour *) color_buf;
+
+    for (int i = 2; i < num; i++)
+    {
+        if (*((int *) &uvf[i].r) == 1)
+        {
+            uvf[i].r = uvf[i - 2].r;
+            uvf[i].g = uvf[i - 2].g;
+            uvf[i].b = uvf[i - 2].b;
+        }
+    }
+}
+
+int MikuPan_SetTriangleIndex(int *triangle_index, int vertex_count,
+                             int vertex_offset, int index_write_offset)
+{
+    int idx = index_write_offset;
+    for (int j = 0; j < vertex_count - 2; j++)
+    {
+        if (j % 2 == 0)
+        {
+            triangle_index[idx++] = vertex_offset + j;
+            triangle_index[idx++] = vertex_offset + j + 1;
+            triangle_index[idx++] = vertex_offset + j + 2;
+        }
+        else
+        {
+            triangle_index[idx++] = vertex_offset + j + 1;
+            triangle_index[idx++] = vertex_offset + j;
+            triangle_index[idx++] = vertex_offset + j + 2;
+        }
+    }
+    return idx - index_write_offset;
 }
 
 unsigned int *MikuPan_GetNextUnpackAddr(unsigned int *prim)
@@ -251,4 +284,53 @@ void MikuPan_GSToNDC(int Xgs, int Ygs, int Zgs, float* x, float* y, float* z, fl
 
     float z01 = (float)((float)Zgs - 255.0f) / (32768.0f - 255.0f);
     *z = z01 * 2.0f - 1.0f;
+}
+
+void MikuPan_ConvertPs2GSCoordToNDC(float *out,
+                                    float window_width, float window_height,
+                                    float gs_x, float gs_y)
+{
+    float screen_x       = gs_x - (2048.0f - PS2_CENTER_X);            // gs_x - 1728
+    float screen_y_field = gs_y - (2048.0f - PS2_CENTER_Y * 0.5f);     // gs_y - 1936
+    float screen_y_frame = screen_y_field * (PS2_RESOLUTION_Y_FLOAT / PS2_CENTER_Y); // ×2
+
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(
+        out, window_width, window_height, screen_x, screen_y_frame);
+}
+
+void MikuPan_ConvertPs2GSSubPixelToNDC(float *out,
+                                       float window_width, float window_height,
+                                       int gs_sub_x, int gs_sub_y)
+{
+    // GS wire-format coordinates are sub-pixel fixed-point at 1/16 px (see
+    // FLT_TO_FIX4 in sdk/sce/libvu0.c) — that's why values around the
+    // framebuffer origin land near 32768 instead of 2048. Recover pixel space
+    // and forward to the shared pixel-space converter so both paths use the
+    // exact same letterboxing / NDC mapping.
+    MikuPan_ConvertPs2GSCoordToNDC(out, window_width, window_height,
+                                   (float)gs_sub_x / 16.0f,
+                                   (float)gs_sub_y / 16.0f);
+}
+
+void MikuPan_ConvertScreenToNDCCoord(int *out, float ref_width,
+                                     float ref_height, float target_width,
+                                     float target_height)
+{
+    float target_aspect = target_width / target_height;
+    float window_aspect = (float)ref_width / (float)ref_height;
+
+    if (window_aspect > target_aspect)
+    {
+        out[3] = (int)ref_height;
+        out[2] = (int)(ref_height * target_aspect);
+        out[0] = (int) ((ref_width - (float)out[2]) / 2);
+        out[1] = 0;
+    }
+    else
+    {
+        out[2] = (int)ref_width;
+        out[3] = (int)(ref_width / target_aspect);
+        out[0] = 0;
+        out[1] = (int) ((ref_height - (float)out[3]) / 2);
+    }
 }

@@ -1585,9 +1585,7 @@ void tes_p20()
         {
             alp = dbg_wrk.eff_new_ene_ef_alp;
 
-            // inlined from ../../graphics/graph3d/libsg.h
             Vu0CopyVector(fire_pos, plyr_wrk.move_box.pos);
-            // end of inlined section
 
             fx = (fire_pos[0] - camera.p[0]) * (fire_pos[0] - camera.p[0]);
             fy = (fire_pos[1] - camera.p[1]) * (fire_pos[1] - camera.p[1]);
@@ -1603,9 +1601,7 @@ void tes_p20()
 
             fire_pos[3] = 1.0f;
 
-            // inlined from ../../graphics/graph3d/libsg.h
             Vu0CopyVector(fire_pos2, fire_pos);
-            // end of inlined section
 
             fire_pos2[0] += off_x;
             fire_pos2[1] -= 700.0f;
