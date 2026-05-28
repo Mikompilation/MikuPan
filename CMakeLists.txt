@@ -23,6 +23,7 @@ include(cimgui)
 include(spdlog)
 include(cglm)
 include(xxhash)
+include(inipp)
 
 set(MIKUPAN_SOURCES
         resources/shaders/textured_mesh_lighted.frag
@@ -238,6 +239,7 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui.c
         src/mikupan/rendering/mikupan_profiler.c
         src/mikupan/rendering/mikupan_camera.c
+        src/mikupan/rendering/mikupan_debug_draw.c
         src/mikupan/rendering/mikupan_lighting.c
         src/mikupan/rendering/mikupan_mesh_render.c
         src/mikupan/rendering/mikupan_renderer.c
@@ -256,6 +258,7 @@ set(MIKUPAN_SOURCES
         "src/mikupan/mikupan_utils.c"
         src/ingame/map/furn_spe/fsla_dat.c
         src/mikupan/mikupan_config.c
+        src/mikupan/mikupan_config_ini.cpp
         src/mikupan/mikupan_config.h
         src/mikupan/mikupan_controller.c
         src/mikupan/mikupan_controller.h
@@ -269,7 +272,7 @@ add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
 
 target_include_directories(MikuPan PRIVATE "sdk/" "src" "extern/" "extern/glad/include/" ${SDL3_INCLUDE_DIR})
 
-target_link_libraries(MikuPan PRIVATE m cimgui SDL3::SDL3 SDL3_mixer::SDL3_mixer spdlog::spdlog cglm xxHash::xxhash)
+target_link_libraries(MikuPan PRIVATE m cimgui SDL3::SDL3 SDL3_mixer::SDL3_mixer spdlog::spdlog cglm xxHash::xxhash inipp::inipp)
 
 add_custom_command(TARGET MikuPan POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:MikuPan>/resources

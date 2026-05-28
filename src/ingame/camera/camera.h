@@ -219,6 +219,7 @@ typedef enum  {
 } CamKind;
 
 void CameraMain();
+const CAMERA_DEBUG_PATH *CameraGetDebugPath(void);
 void KonwakuCamCtrl();
 void FinderInCameraCtrl();
 void NormalCameraCtrl();

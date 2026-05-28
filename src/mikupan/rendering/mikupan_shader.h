@@ -15,6 +15,7 @@ enum ShaderPrograms
     POSTPROCESS_SHADER,
     SHADOW_BLOB_SHADER,       ///< debug fallback — fitted ellipse in the shadow FBO
     SHADOW_SILHOUETTE_SHADER, ///< real per-mesh silhouette into the shadow FBO
+    CAMERA_DEBUG_SHADER,
     MAX_SHADER_PROGRAMS
 };
 

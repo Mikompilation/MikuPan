@@ -77,6 +77,8 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
     // vertex layout they normally use (location 0 = position).
     {         "./resources/shaders/shadow_silhouette.vert", NULL,
      "./resources/shaders/shadow_silhouette.frag"                                                 },
+    {             "./resources/shaders/camera_debug.vert", NULL,
+     "./resources/shaders/untextured_coloured_sprite.frag"                                        },
 };
 
 static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
@@ -85,7 +87,7 @@ static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
     "BOUNDING_BOX",      "SPRITE",
     "NORMALS_0x12",      "NORMALS_0x2",
     "POSTPROCESS",       "SHADOW_BLOB",
-    "SHADOW_SILHOUETTE",
+    "SHADOW_SILHOUETTE", "CAMERA_DEBUG",
 };
 
 /// Linear scan — MAX_SHADER_PROGRAMS is 8, so this is faster than maintaining

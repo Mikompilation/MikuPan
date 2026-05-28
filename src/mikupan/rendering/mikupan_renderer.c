@@ -58,6 +58,7 @@ void MikuPan_StreamUploadFull(GLenum target, GLuint buffer,
 
 SDL_AppResult MikuPan_Init()
 {
+    MikuPan_LoadConfiguration(NULL);
     MikuPan_SetupOpenGLContext();
     SDL_SetAppMetadata("MikuPan", "1.0", "MikuPan");
 
@@ -125,6 +126,8 @@ SDL_AppResult MikuPan_Init()
     }
 
     SDL_GetWindowSize(mikupan_render.window, &mikupan_render.width, &mikupan_render.height);
+    mikupan_configuration.renderer.window.width = mikupan_render.width;
+    mikupan_configuration.renderer.window.height = mikupan_render.height;
 
     SDL_Surface* iconSurface = SDL_LoadPNG("resources/mikupan.png");
     if (!SDL_SetWindowIcon(mikupan_render.window, iconSurface))
@@ -370,7 +373,7 @@ void MikuPan_SetupOpenGLContext()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 0);
+    SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, -1);
 }
 
 void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
@@ -579,6 +582,16 @@ void MikuPan_UpdateWindowSize(int width, int height)
 {
     mikupan_render.width = width;
     mikupan_render.height = height;
+
+    if (width > 0)
+    {
+        mikupan_configuration.renderer.window.width = width;
+    }
+
+    if (height > 0)
+    {
+        mikupan_configuration.renderer.window.height = height;
+    }
 }
 
 int MikuPan_GetWindowWidth()

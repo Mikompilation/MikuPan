@@ -15,6 +15,7 @@
 #include "glad/gl.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/message.h"
+#include "ingame/camera/camera.h"
 #include "main/glob.h"
 
 #include "mikupan/mikupan_config.h"
@@ -106,6 +107,8 @@ static int show_texture_list = 0;
 static int show_controller_remap = 0;
 static int show_shader_reload = 0;
 static int show_draw_inspector = 0;
+static int show_camera_debug = 0;
+static char config_save_status[128] = {0};
 
 // Last reload error (per-shader: index 0..MAX-1; index MAX = "reload all")
 // — kept around so the user can read why the last reload failed without it
@@ -132,6 +135,18 @@ static float normal_length = 10.0f;
 // pushes them as uniforms.
 static float brightness = 1.0f;
 static float gamma_value = 1.0f;
+
+static void MikuPan_UiStoreRuntimeConfiguration(void)
+{
+    mikupan_configuration.renderer.render.width = render_resolution_width;
+    mikupan_configuration.renderer.render.height = render_resolution_height;
+    mikupan_configuration.renderer.is_fullscreen = is_fullscreen;
+    mikupan_configuration.renderer.vsync = is_vsync;
+    mikupan_configuration.renderer.lighting_mode = mesh_lighting_mode;
+    mikupan_configuration.renderer.msaa_index = msaa_samples;
+    mikupan_configuration.renderer.brightness = brightness;
+    mikupan_configuration.renderer.gamma = gamma_value;
+}
 
 // -- FrameTimeGraph ----------------------------------------------------------
 #define FRAME_GRAPH_CAPACITY 600
@@ -623,6 +638,91 @@ void MikuPan_UiDrawCallInspector(void)
     igEnd();
 }
 
+static const char *MikuPan_CameraDebugKindName(int kind)
+{
+    switch (kind)
+    {
+        case 0: return "Normal";
+        case 1: return "Battle";
+        case 2: return "Drama";
+        case 3: return "Door";
+        default: return "Unknown";
+    }
+}
+
+static void MikuPan_CameraDebugVec3(const char *label,
+                                    const sceVu0FVECTOR v,
+                                    ImVec4 color)
+{
+    igTextColored(color, "%-15s %8.1f %8.1f %8.1f", label, v[0], v[1], v[2]);
+}
+
+static void MikuPan_UiCameraDebugWindow(void)
+{
+    if (!show_camera_debug)
+    {
+        return;
+    }
+
+    const CAMERA_DEBUG_PATH *path = CameraGetDebugPath();
+    sceVu0FVECTOR view_vec = {
+        camera.i[0] - camera.p[0],
+        camera.i[1] - camera.p[1],
+        camera.i[2] - camera.p[2],
+        0.0f
+    };
+    float view_dist = sqrtf(view_vec[0] * view_vec[0] +
+                            view_vec[1] * view_vec[1] +
+                            view_vec[2] * view_vec[2]);
+
+    igSetNextWindowSize((ImVec2) {360.0f, 0.0f}, ImGuiCond_FirstUseEver);
+    if (!igBegin("Camera World Info", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        igEnd();
+        return;
+    }
+
+    if (path->active)
+    {
+        igText("Map camera: %s  no=%u old=%u  type=%u",
+               MikuPan_CameraDebugKindName(path->kind),
+               path->no, path->no_old, path->type);
+    }
+    else
+    {
+        igText("Map camera: runtime/free camera");
+    }
+
+    igText("Distance camera -> interest: %.1f", view_dist);
+    igSeparator();
+
+    MikuPan_CameraDebugVec3("camera.p", camera.p,
+                            (ImVec4){1.0f, 0.78f, 0.10f, 1.0f});
+    MikuPan_CameraDebugVec3("camera.i", camera.i,
+                            (ImVec4){0.15f, 1.0f, 0.35f, 1.0f});
+    MikuPan_CameraDebugVec3("view line", view_vec,
+                            (ImVec4){1.0f, 1.0f, 1.0f, 1.0f});
+
+    if (path->active)
+    {
+        igSeparator();
+        igTextColored((ImVec4){1.0f, 0.42f, 0.08f, 1.0f},
+                      "authored camera path points: %u",
+                      path->camera_path_points);
+        igTextColored((ImVec4){0.05f, 0.80f, 1.0f, 1.0f},
+                      "authored interest path points: %u",
+                      path->interest_path_points);
+
+        if (path->change || path->no != path->no_old)
+        {
+            igTextColored((ImVec4){1.0f, 0.10f, 0.30f, 1.0f},
+                          "transition target active");
+        }
+    }
+
+    igEnd();
+}
+
 // -- Public API --------------------------------------------------------------
 
 static int CompareResolutionDesc(const void *a, const void *b)
@@ -1028,6 +1128,7 @@ void MikuPan_DrawUi(void)
 
     MikuPan_UiShaderReloadWindow();
     MikuPan_UiDrawCallInspector();
+    MikuPan_UiCameraDebugWindow();
 
     if (show_fps)
     {
@@ -1135,6 +1236,7 @@ void MikuPan_UiMenuBar(void)
         igCheckbox("Ingame Debug Menu", (bool *) &dbg_wrk.mode_on);
         igCheckbox("Shader Reload", (bool *) &show_shader_reload);
         igCheckbox("Draw Call Inspector", (bool *) &show_draw_inspector);
+        igCheckbox("Camera World Info", (bool *) &show_camera_debug);
 
         igEndMenu();
     }
@@ -1244,6 +1346,31 @@ void MikuPan_UiMenuBar(void)
         igSliderFloat("Brightness", &brightness,  0.0f, 2.0f, "%.2f", 0);
         igSliderFloat("Gamma",      &gamma_value, 0.1f, 3.0f, "%.2f", 0);
 
+        if (igMenuItem_Bool("Save Configuration", NULL, false, true))
+        {
+            MikuPan_UiStoreRuntimeConfiguration();
+            if (MikuPan_SaveConfiguration(NULL))
+            {
+                snprintf(config_save_status, sizeof(config_save_status),
+                         "Saved to mikupan.ini");
+            }
+            else
+            {
+                snprintf(config_save_status, sizeof(config_save_status),
+                         "Failed to save mikupan.ini");
+            }
+        }
+
+        if (config_save_status[0] != '\0')
+        {
+            igTextDisabled("%s", config_save_status);
+        }
+
+        if (igMenuItem_Bool("Take Screenshot (F12)", NULL, false, true))
+        {
+            MikuPan_ScreenshotRequest();
+        }
+
         igEndMenu();
     }
 
@@ -1272,6 +1399,11 @@ void MikuPan_UiMenuBar(void)
 int MikuPan_IsBoundingBoxRendering(void)
 {
     return show_bounding_boxes;
+}
+
+int MikuPan_ShowCameraDebug(void)
+{
+    return show_camera_debug;
 }
 
 int MikuPan_IsMesh0x82Rendering(void)

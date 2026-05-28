@@ -22,6 +22,7 @@ void MikuPan_UiMenuBar(void);
 void MikuPan_UiShaderReloadWindow(void);
 void MikuPan_UiDrawCallInspector(void);
 int MikuPan_IsBoundingBoxRendering(void);
+int MikuPan_ShowCameraDebug(void);
 int MikuPan_IsMesh0x82Rendering(void);
 int MikuPan_IsMesh0x32Rendering(void);
 int MikuPan_IsMesh0x10Rendering(void);

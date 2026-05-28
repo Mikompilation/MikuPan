@@ -56,4 +56,21 @@ typedef struct {
 	sceVu0FVECTOR rot_x;
 } CAM_ID_MOVE;
 
+#define CAMERA_DEBUG_PATH_MAX_POINTS 4
+
+typedef struct {
+    u_char active;
+    u_char kind;
+    u_char type;
+    u_char change;
+    u_short no;
+    u_short no_old;
+    u_char camera_path_points;
+    u_char interest_path_points;
+    sceVu0FVECTOR camera_path[CAMERA_DEBUG_PATH_MAX_POINTS];
+    sceVu0FVECTOR interest_path[CAMERA_DEBUG_PATH_MAX_POINTS];
+    sceVu0FVECTOR target_p;
+    sceVu0FVECTOR target_i;
+} CAMERA_DEBUG_PATH;
+
 #endif // INGAME_CAMERA_CAMERA_TYPES_H

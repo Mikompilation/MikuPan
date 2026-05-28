@@ -45,6 +45,7 @@ void MikuPan_RenderSetDebugValues();
 void MikuPan_Render2DMessage(DISP_SPRT* sprite);
 void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r, u_char g, u_char b, u_char a);
 void MikuPan_RenderBoundingBox(sceVu0FVECTOR* vertices);
+void MikuPan_RenderCameraDebug(void);
 void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r, u_char g, u_char b, u_char a, MikuPan_TextureInfo* texture_info);
 void MikuPan_RenderSprite2D(sceGsTex0 *tex, float* buffer);
 void MikuPan_RenderUntexturedSprite(float* buffer);

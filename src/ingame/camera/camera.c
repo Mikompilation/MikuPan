@@ -49,6 +49,85 @@ u_char cam_info_disp = 1;
 #include "camera.h"
 
 sceVu0FVECTOR adj_cam_pos = {100.0f, -1400.0f, -1200.0f, 0.0f};
+static CAMERA_DEBUG_PATH camera_debug_path = {0};
+
+static void CameraDebugClear(void)
+{
+    camera_debug_path.active = 0;
+    camera_debug_path.camera_path_points = 0;
+    camera_debug_path.interest_path_points = 0;
+}
+
+static void CameraDebugCopyVector(sceVu0FVECTOR dst, const sceVu0FVECTOR src)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+    dst[2] = src[2];
+    dst[3] = src[3];
+}
+
+static void CameraDebugSetMapPoint(sceVu0FVECTOR dst, const u_short point[3])
+{
+    dst[0] = (float)(u_short)point[0];
+    dst[1] = (float)(short)point[1];
+    dst[2] = (float)(u_short)point[2];
+    dst[3] = 0.0f;
+}
+
+static void CameraDebugSetFromMapInfo(const MAP_CAM_INFO *mci, const SgCAMERA *target)
+{
+    camera_debug_path.active = 1;
+    camera_debug_path.kind = mci->kind;
+    camera_debug_path.type = mci->type;
+    camera_debug_path.change = mci->change;
+    camera_debug_path.no = mci->no;
+    camera_debug_path.no_old = mci->no_old;
+    camera_debug_path.camera_path_points = 0;
+    camera_debug_path.interest_path_points = 0;
+    CameraDebugCopyVector(camera_debug_path.target_p, target->p);
+    CameraDebugCopyVector(camera_debug_path.target_i, target->i);
+
+    switch (mci->type)
+    {
+        case 0:
+            camera_debug_path.camera_path_points = 1;
+            camera_debug_path.interest_path_points = 1;
+            CameraDebugSetMapPoint(camera_debug_path.camera_path[0], mci->mcd->p1);
+            CameraDebugSetMapPoint(camera_debug_path.interest_path[0], mci->mcd->p0);
+            break;
+        case 1:
+            camera_debug_path.camera_path_points = 1;
+            CameraDebugSetMapPoint(camera_debug_path.camera_path[0], mci->mcd->p0);
+            break;
+        case 2:
+            camera_debug_path.camera_path_points = 2;
+            camera_debug_path.interest_path_points = 1;
+            CameraDebugSetMapPoint(camera_debug_path.camera_path[0], mci->mcd->p1);
+            CameraDebugSetMapPoint(camera_debug_path.camera_path[1], mci->mcd->p2);
+            CameraDebugSetMapPoint(camera_debug_path.interest_path[0], mci->mcd->p0);
+            break;
+        case 3:
+            camera_debug_path.camera_path_points = 2;
+            CameraDebugSetMapPoint(camera_debug_path.camera_path[0], mci->mcd->p0);
+            CameraDebugSetMapPoint(camera_debug_path.camera_path[1], mci->mcd->p1);
+            break;
+        case 4:
+            camera_debug_path.camera_path_points = 2;
+            camera_debug_path.interest_path_points = 2;
+            CameraDebugSetMapPoint(camera_debug_path.interest_path[0], mci->mcd->p0);
+            CameraDebugSetMapPoint(camera_debug_path.interest_path[1], mci->mcd->p1);
+            CameraDebugSetMapPoint(camera_debug_path.camera_path[0], mci->mcd->p2);
+            CameraDebugSetMapPoint(camera_debug_path.camera_path[1], mci->mcd->p3);
+            break;
+        default:
+            break;
+    }
+}
+
+const CAMERA_DEBUG_PATH *CameraGetDebugPath(void)
+{
+    return &camera_debug_path;
+}
 
 u_short drm_cam_no[12] = {
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
@@ -1045,6 +1124,8 @@ void CameraMain()
 {
     float fov = DEG2RAD(51.0f);
 
+    CameraDebugClear();
+
     if (dbg_wrk.cam_mode == 1 && DBG_cam_id_move_chk == 0)
     {
         cam_id_move.i[0] = camera.i[0];
@@ -1288,6 +1369,7 @@ void NormalCameraCtrl()
         }
 
         tc2 = tc;
+        CameraDebugSetFromMapInfo(&mci, &tc2);
 
         CompleCameraPos(&tc, &oc, &mci);
 

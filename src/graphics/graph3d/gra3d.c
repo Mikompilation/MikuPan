@@ -2146,6 +2146,7 @@ void gra3dDraw()
     }
 
     CheckDMATrans();
+    MikuPan_RenderCameraDebug();
 }
 
 int CheckModelBoundingBox(sceVu0FMATRIX lwmtx, sceVu0FVECTOR *bbox)
