@@ -772,23 +772,12 @@ static inline void inline_asm__mirror_c_line_639(sceVu0FVECTOR v0,
 
 void CalcMirrorMatrix(SgCAMERA *camera)
 {
-    sceVu0FMATRIX quat = {0};
     sceVu0FMATRIX tmpmat = {0};
-    sceVu0FMATRIX newws = {0};
-    sceVu0FMATRIX newwc = {0};
-    sceVu0FMATRIX newwcv = {0};
     sceVu0FVECTOR centerpos = {0};
     sceVu0FVECTOR norm = {0};
-    sceVu0FVECTOR milpos[3];
-    sceVu0FVECTOR tmpvec = {0};
-    sceVu0FVECTOR vaxis = {0};
-    sceVu0FVECTOR qvert = {0};
-    sceVu0FVECTOR eye = {0};
-    float qrot;
+    float center_dot;
 
-    Vu0SubVector(eye, camera->i, camera->p);
-
-    _NormalizeVector(eye, eye);
+    (void)camera;
 
     Vu0AddVector(centerpos, mirror_lpos[0], mirror_lpos[1]);
     Vu0AddVector(centerpos, centerpos, mirror_lpos[2]);
@@ -803,66 +792,28 @@ void CalcMirrorMatrix(SgCAMERA *camera)
     inline_asm__mirror_c_line_639(norm, mirror_lpos[0], mirror_lpos[1],
                                   mirror_lpos[2]);
 
-    _ApplyRotMatrix(norm, norm);
+    _ApplyMatrixXYZ(norm, *(sceVu0FMATRIX *) &SCRATCHPAD[0x430], norm);
     _NormalizeVector(norm, norm);
-
-    eye[0] = 0.0f;
-    eye[1] = 0.0f;
-    eye[2] = -1.0f;
-    eye[3] = 1.0f;
-
-    if (norm[0] == 0.0f && norm[1] == 0.0f && norm[2] == -1.0f)
-    {
-        vaxis[0] = 0.0f;
-        vaxis[1] = 1.0f;
-        vaxis[2] = 0.0f;
-        vaxis[3] = 1.0f;
-    }
-    else
-    {
-        _GetNormalVectorFromVector(vaxis, eye, norm);
-    }
-
-    _NormalizeVector(vaxis, vaxis);
-
-    tmpvec[0] = -eye[0];
-    tmpvec[1] = -eye[1];
-    tmpvec[2] = -eye[2];
-
-    qrot = SgACosf(sceVu0InnerProduct(tmpvec, norm));
-
-    GetMatrixRotateAxis(quat, vaxis, qrot);
-    Vu0LoadMatrix(quat);
-    Vu0ApplyVectorInline(tmpvec, norm);
-
-    if (tmpvec[2] * eye[2] > 0.0f)
-    {
-        qrot = -qrot;
-    }
 
     sceVu0UnitMatrix(tmpmat);
 
-    /// Flipping Z axis
-    //tmpmat[2][2] = -1.0f;
-    tmpmat[1][1] = -1.0f;
+    center_dot = sceVu0InnerProduct(norm, centerpos);
 
-    GetMatrixRotateAxis(quat, vaxis, qrot);
-    _MulMatrix(tmpmat, tmpmat, quat);
+    tmpmat[0][0] = 1.0f - 2.0f * norm[0] * norm[0];
+    tmpmat[0][1] =       - 2.0f * norm[0] * norm[1];
+    tmpmat[0][2] =       - 2.0f * norm[0] * norm[2];
 
-    GetMatrixRotateAxis(quat, vaxis, -qrot);
-    _MulMatrix(tmpmat, quat, tmpmat);
+    tmpmat[1][0] =       - 2.0f * norm[1] * norm[0];
+    tmpmat[1][1] = 1.0f - 2.0f * norm[1] * norm[1];
+    tmpmat[1][2] =       - 2.0f * norm[1] * norm[2];
 
-    sceVu0UnitMatrix(quat);
+    tmpmat[2][0] =       - 2.0f * norm[2] * norm[0];
+    tmpmat[2][1] =       - 2.0f * norm[2] * norm[1];
+    tmpmat[2][2] = 1.0f - 2.0f * norm[2] * norm[2];
 
-    quat[3][0] = -centerpos[0];
-    quat[3][1] = -centerpos[1];
-    quat[3][2] = -centerpos[2];
-
-    sceVu0MulMatrix(tmpmat, tmpmat, quat);
-
-    Vu0CopyVector(quat[3], centerpos);
-
-    sceVu0MulMatrix(tmpmat, quat, tmpmat);
+    tmpmat[3][0] = 2.0f * center_dot * norm[0];
+    tmpmat[3][1] = 2.0f * center_dot * norm[1];
+    tmpmat[3][2] = 2.0f * center_dot * norm[2];
 
     Vu0CopyVector(mir_center, centerpos);
     Vu0CopyVector(mir_norm, norm);
