@@ -2593,12 +2593,19 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
     float y0 = my;
     float y1 = y0 + mszh;
 
+    float texture_w = (float)(1 << mikupan_texture_load->TW);
+    float texture_h = (float)(1 << mikupan_texture_load->TH);
+    float u0 = 8.0f / (texture_w * 16.0f);
+    float v0 = 8.0f / (texture_h * 16.0f);
+    float u1 = ((float)tw - 8.0f) / (texture_w * 16.0f);
+    float v1 = ((float)th - 8.0f) / (texture_h * 16.0f);
+
     float vertices[4][12] = {
         /// UV,               COLOUR,                                                                                  POS
-        {0.0f, 0.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y0, 0.0f, 1.0f, }, // top-left
-        {1.0f, 0.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y0, 0.0f, 1.0f, }, // top-right
-        {0.0f, 1.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y1, 0.0f, 1.0f, }, // bottom-left
-        {1.0f, 1.0f, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y1, 0.0f, 1.0f, }, // bottom-right
+        {u0, v0, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y0, 0.0f, 1.0f, }, // top-left
+        {u1, v0, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y0, 0.0f, 1.0f, }, // top-right
+        {u0, v1, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y1, 0.0f, 1.0f, }, // bottom-left
+        {u1, v1, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y1, 0.0f, 1.0f, }, // bottom-right
     };
 
     for (i = 0; i < 4; i++)
