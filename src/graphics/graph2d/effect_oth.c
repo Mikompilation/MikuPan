@@ -26,6 +26,8 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 
+#include <math.h>
+
 int stop_lf = 0;
 
 static int init_pond;
@@ -51,8 +53,167 @@ static RIPPLE2 rip[8];
 
 #define PI 3.1415927f
 #define PI2 6.2831855f
+// This was defined somewhere else
+#define VU0_CLIP_X_POS (1 << 0)
+#define VU0_CLIP_X_NEG (1 << 1)
+#define VU0_CLIP_Y_POS (1 << 2)
+#define VU0_CLIP_Y_NEG (1 << 3)
+#define VU0_CLIP_Z_POS (1 << 4)
+#define VU0_CLIP_Z_NEG (1 << 5)
+
+#define FLT_TO_FIX4(_val) ((int)((_val) * 16.0f))
+#define DISTORTION_PARTICLE_VERTICES 12
+#define DISTORTION_PARTICLE_MAX_PARTICLES 200
+#define DISTORTION_PARTICLE_MAX_VERTICES (DISTORTION_PARTICLE_VERTICES * DISTORTION_PARTICLE_MAX_PARTICLES)
 
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
+
+static u_char EffectClampColor(int value)
+{
+    if (value < 0)
+    {
+        return 0;
+    }
+
+    if (value > 0xff)
+    {
+        return 0xff;
+    }
+
+    return (u_char)value;
+}
+
+static float EffectTextureWidth(int tex_no)
+{
+    sceGsTex0 *tex0;
+
+    if (effdat[tex_no].w > 0)
+    {
+        return (float)effdat[tex_no].w;
+    }
+
+    tex0 = (sceGsTex0 *)&effdat[tex_no].tex0;
+    return (float)(1 << tex0->TW);
+}
+
+static float EffectTextureHeight(int tex_no)
+{
+    sceGsTex0 *tex0;
+
+    if (effdat[tex_no].h > 0)
+    {
+        return (float)effdat[tex_no].h;
+    }
+
+    tex0 = (sceGsTex0 *)&effdat[tex_no].tex0;
+    return (float)(1 << tex0->TH);
+}
+
+static void EffectWriteWaterVertex(
+    float *dst,
+    u_int u,
+    u_int v,
+    float tex_w,
+    float tex_h,
+    int r,
+    int g,
+    int b,
+    int a,
+    int fog,
+    int fog_r,
+    int fog_g,
+    int fog_b,
+    const sceVu0FVECTOR pos)
+{
+    float fog_rate;
+    float base_r;
+    float base_g;
+    float base_b;
+    float fr;
+    float fg;
+    float fb;
+
+    fog_rate = (float)EffectClampColor(fog) / 255.0f;
+
+    base_r = MikuPan_ConvertScaleColor(EffectClampColor(r));
+    base_g = MikuPan_ConvertScaleColor(EffectClampColor(g));
+    base_b = MikuPan_ConvertScaleColor(EffectClampColor(b));
+
+    fr = MikuPan_ConvertScaleColor(EffectClampColor(fog_r));
+    fg = MikuPan_ConvertScaleColor(EffectClampColor(fog_g));
+    fb = MikuPan_ConvertScaleColor(EffectClampColor(fog_b));
+
+    dst[0] = ((float)u / 16.0f) / tex_w;
+    dst[1] = ((float)v / 16.0f) / tex_h;
+    dst[2] = 0.0f;
+    dst[3] = 0.0f;
+    dst[4] = fr + (base_r - fr) * fog_rate;
+    dst[5] = fg + (base_g - fg) * fog_rate;
+    dst[6] = fb + (base_b - fb) * fog_rate;
+    dst[7] = MikuPan_ConvertScaleColor(EffectClampColor(a));
+    dst[8] = pos[0];
+    dst[9] = pos[1];
+    dst[10] = pos[2];
+    dst[11] = 1.0f;
+}
+
+static void EffectWriteDistortionTexturedVertex(
+    float *dst,
+    float window_w,
+    float window_h,
+    float dst_gs_x,
+    float dst_gs_y,
+    float src_gs_x,
+    float src_gs_y,
+    float z,
+    float r,
+    float g,
+    float b,
+    float a)
+{
+    float pos[2];
+
+    MikuPan_ConvertPs2GSCoordToNDC(pos, window_w, window_h, dst_gs_x, dst_gs_y);
+
+    dst[0] = (src_gs_x - 1728.0f) / 1024.0f;
+    dst[1] = (src_gs_y - 1936.0f) / 256.0f;
+    dst[2] = (dst_gs_x - 1728.0f) / 1024.0f;
+    dst[3] = (dst_gs_y - 1936.0f) / 256.0f;
+    dst[4] = r;
+    dst[5] = g;
+    dst[6] = b;
+    dst[7] = a;
+    dst[8] = pos[0];
+    dst[9] = pos[1];
+    dst[10] = z;
+    dst[11] = 1.0f;
+}
+
+static void EffectWriteDistortionUntexturedVertex(
+    float *dst,
+    float window_w,
+    float window_h,
+    float dst_gs_x,
+    float dst_gs_y,
+    float z,
+    float r,
+    float g,
+    float b,
+    float a)
+{
+    float pos[2];
+
+    MikuPan_ConvertPs2GSCoordToNDC(pos, window_w, window_h, dst_gs_x, dst_gs_y);
+
+    dst[0] = r;
+    dst[1] = g;
+    dst[2] = b;
+    dst[3] = a;
+    dst[4] = pos[0];
+    dst[5] = pos[1];
+    dst[6] = z;
+    dst[7] = 1.0f;
+}
 
 void InitEffectOth()
 {
@@ -221,9 +382,12 @@ void RunRipple2()
     u_int clpz2;
     float add;
     float q;
+    u_long tx0;
     sceVu0IVECTOR vtiw[48][4];
+    sceVu0FVECTOR fvec[48][4];
     sceVu0FMATRIX wlm;
     sceVu0FMATRIX slm;
+    sceVu0FMATRIX fslm;
     sceVu0FVECTOR vtw[4] = {
         { -4.0, -0.5, +4.0, +1.0 },
         { +4.0, -0.5, +4.0, +1.0 },
@@ -268,7 +432,9 @@ void RunRipple2()
                 sceVu0RotMatrixY(wlm, wlm, rs[j].rot[1]);
                 sceVu0TransMatrix(wlm, wlm, rs[j].pos);
                 sceVu0MulMatrix(slm, SgWSMtx, wlm);
+                sceVu0MulMatrix(fslm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
                 sceVu0RotTransPersN(vtiw[j], slm, vtw, 4, 1);
+                sceVu0RotTransPersNF(fvec[j], fslm, vtw, 4, 0);
 
                 clip[j] = 0;
 
@@ -350,16 +516,18 @@ void RunRipple2()
 
                         if (rs[j].rot[3] > 1.0f)
                         {
-                            pbuf[ndpkt].ul64[0] = effdat[monochrome_mode + 0x2e].tex0;
+                            tx0 = effdat[monochrome_mode + 0x2e].tex0;
                         }
                         else if (rs[j].rot[3] > 0.0f)
                         {
-                            pbuf[ndpkt].ul64[0] = effdat[monochrome_mode + 4].tex0;
+                            tx0 = effdat[monochrome_mode + 4].tex0;
                         }
                         else
                         {
-                            pbuf[ndpkt].ul64[0] = effdat[monochrome_mode + 2].tex0;
+                            tx0 = effdat[monochrome_mode + 2].tex0;
                         }
+
+                        pbuf[ndpkt].ul64[0] = tx0;
                         pbuf[ndpkt++].ul64[1] = SCE_GS_TEX0_1;
 
                         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_TRUE, 92, SCE_GIF_PACKED, 3);
@@ -367,6 +535,36 @@ void RunRipple2()
                             | SCE_GS_ST    << (4 * 0)
                             | SCE_GS_RGBAQ << (4 * 1)
                             | SCE_GS_XYZF2 << (4 * 2);
+
+                        {
+                            static const int fan[6] = {0, 1, 2, 1, 3, 2};
+                            float render_buffer[6][12];
+                            float cr = MikuPan_ConvertScaleColor(rs[j].r);
+                            float cg = MikuPan_ConvertScaleColor(rs[j].g);
+                            float cb = MikuPan_ConvertScaleColor(rs[j].b);
+                            float ca = MikuPan_ConvertScaleColor(rs[j].alp);
+
+                            for (i = 0; i < 6; i++)
+                            {
+                                int v = fan[i];
+
+                                render_buffer[i][0] = v % 2 ? 0.98f : 0.02f;
+                                render_buffer[i][1] = v / 2 ? 0.98f : 0.02f;
+                                render_buffer[i][2] = 0.0f;
+                                render_buffer[i][3] = 0.0f;
+                                render_buffer[i][4] = cr;
+                                render_buffer[i][5] = cg;
+                                render_buffer[i][6] = cb;
+                                render_buffer[i][7] = ca;
+                                render_buffer[i][8] = fvec[j][v][0];
+                                render_buffer[i][9] = fvec[j][v][1];
+                                render_buffer[i][10] = fvec[j][v][2];
+                                render_buffer[i][11] = 1.0f;
+                            }
+
+                            MikuPan_RenderTexturedTriangles3DWithState(
+                                (sceGsTex0 *)&tx0, &render_buffer[0][0], 6, 0, 0);
+                        }
 
                         for (i = 0;  i < 4; i++)
                         {
@@ -1156,16 +1354,31 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
     float gg;
     float bb;
     sceVu0FVECTOR warp_add = { distortion_amount + y_correction, 0.0f, 0.0f, 0.0f };
-    sceVu0FVECTOR screen_size = { 639.0f, 223.0f, 0.0f, 0.0f };
     sceVu0FVECTOR particle_size = { psize, psize * 0.5f, 0.0f, 0.0f };
     sceVu0FVECTOR *p;
+    u_long distortion_tex0;
     int dtex;
-    sceVu0FVECTOR ones = { 1.0f, 1.0f, 1.0f, 0.0f };
     sceVu0FVECTOR st_add = { -1728.0f, -1936.0f, 0.0f, 0.0f };
     sceVu0FVECTOR st_scale = { 1.0 / 1024.0f, 1.0f / 256.0f, 0.0f, 0.0f };
     unsigned int clip_flags;
+    float window_w;
+    float window_h;
+    int render_vertices;
+    int depth_always;
+    int additive_blend;
+    int can_render_gl;
+    static float textured_render_buffer[DISTORTION_PARTICLE_MAX_VERTICES][12];
+    static float untextured_render_buffer[DISTORTION_PARTICLE_MAX_VERTICES][8];
 
+    (void)fr;
     p = (sceVu0FVECTOR *)particles;
+    window_w = (float)MikuPan_GetWindowWidth();
+    window_h = (float)MikuPan_GetWindowHeight();
+    render_vertices = 0;
+    depth_always = type == 9;
+    additive_blend = type != 13;
+    can_render_gl = window_w > 0.0f && window_h > 0.0f;
+    distortion_tex0 = SCE_GS_SET_TEX0_1(0x1a40, 10, SCE_GS_PSMCT32, 10, 8, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 0);
 
     switch (type)
     {
@@ -1173,6 +1386,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
     case 10:
     case 11:
         dtex = 1;
+        depth_always = 1;
     break;
     case 8:
     case 12:
@@ -1242,7 +1456,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
     d[n++] = 0;
     d[n++] = SCE_GS_TEXFLUSH;
 
-    d[n++] = SCE_GS_SET_TEX0_1(0x1a40, 10, SCE_GS_PSMCT32, 10, 8, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 0);
+    d[n++] = distortion_tex0;
     d[n++] = SCE_GS_TEX0_1;
 
     d[n++] = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
@@ -1257,34 +1471,13 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
     d[n++] = areg;
     d[n++] = SCE_GS_ALPHA_1;
 
-    //asm __volatile__ (
-    //    "lqc2 $vf4,0(%0)\n"
-    //    "lqc2 $vf5,0x10(%0)\n"
-    //    "lqc2 $vf6,0x20(%0)\n"
-    //    "lqc2 $vf7,0x30(%0)\n"
-    //    "lqc2 $vf28,0(%1)\n"
-    //    "lqc2 $vf29,0x10(%1)\n"
-    //    "lqc2 $vf30,0x20(%1)\n"
-    //    "lqc2 $vf31,0x30(%1)\n"
-    //    : :"r"(local_screen),"r"(local_clip)
-    //);
-
-    //asm __volatile__ (
-    //    "lqc2 $vf3,0(%0)\n"
-    //    "lqc2 $vf1,0(%1)\n"
-    //    "lqc2 $vf25,0(%2)\n"
-    //    "lqc2 $vf26,0(%3)\n"
-    //    "lqc2 $vf19,0(%4)\n"
-    //    "lqc2 $vf24,0(%5)\n"
-    //    : :"r"(particle_size),"r"(warp_add),"r"(st_add),"r"(st_scale),"r"(ones),"r"(screen_size)
-    //);
-
     num = 0;
 
     for (i = 0; i < t_particles; i++, p = (sceVu0FVECTOR *)((u_char *)p + size_of_particle))
     {
         if (p[1][3] > 0.0f)
         {
+            sceVu0FVECTOR tmp;
             num++;
 
             rr = p[1][0];
@@ -1296,43 +1489,114 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
                 p[1][0] = p[1][1] = p[1][2] = (rr + gg + bb) / 3.0f;
             }
 
-            //asm __volatile__ (
-            //    "lqc2 $vf8, 0x0(%1)\n"
-            //    "lqc2 $vf22, 0x10(%1)\n"
-            //    "vmulax.xyzw  ACC, $vf28, $vf8x\n"
-            //    "vmadday.xyzw ACC, $vf29, $vf8y\n"
-            //    "vmaddaz.xyzw ACC, $vf30, $vf8z\n"
-            //    "vmaddw.xyzw  $vf12, $vf31, $vf8w\n"
-            //    "vclipw.xyz   $vf12xyz,$vf12w\n"
-            //    "vnop\n"
-            //    "vnop\n"
-            //    "vnop\n"
-            //    "vnop\n"
-            //    "vnop\n"
-            //    "cfc2 %0, $vi18\n"
-            //    :"=r"(clip_flags) :"r"(p)
-            //);
+            tmp[0] = (local_clip[0][0][0] * p[0][0]) + (local_clip[0][1][0] * p[0][1]) + (local_clip[0][2][0] * p[0][2]) + (local_clip[0][3][0] * p[0][3]);
+            tmp[1] = (local_clip[0][0][1] * p[0][0]) + (local_clip[0][1][1] * p[0][1]) + (local_clip[0][2][1] * p[0][2]) + (local_clip[0][3][1] * p[0][3]);
+            tmp[2] = (local_clip[0][0][2] * p[0][0]) + (local_clip[0][1][2] * p[0][1]) + (local_clip[0][2][2] * p[0][2]) + (local_clip[0][3][2] * p[0][3]);
+            tmp[3] = (local_clip[0][0][3] * p[0][0]) + (local_clip[0][1][3] * p[0][1]) + (local_clip[0][2][3] * p[0][2]) + (local_clip[0][3][3] * p[0][3]);
+
+            // Clipping, maybe turn into a macro?
+            clip_flags = 0;
+            if (tmp[0] > +fabsf(tmp[3])) clip_flags |= VU0_CLIP_X_POS;
+            if (tmp[0] < -fabsf(tmp[3])) clip_flags |= VU0_CLIP_X_NEG;
+            if (tmp[1] > +fabsf(tmp[3])) clip_flags |= VU0_CLIP_Y_POS;
+            if (tmp[1] < -fabsf(tmp[3])) clip_flags |= VU0_CLIP_Y_NEG;
+            if (tmp[2] > +fabsf(tmp[3])) clip_flags |= VU0_CLIP_Z_POS;
+            if (tmp[2] < -fabsf(tmp[3])) clip_flags |= VU0_CLIP_Z_NEG;
 
             if ((clip_flags & 0x3f) == 0)
             {
-                //asm __volatile__ (
-                //    "vmulax.xyzw  ACC, $vf4, $vf8x\n"
-                //    "vmadday.xyzw ACC, $vf5, $vf8y\n"
-                //    "vmaddaz.xyzw ACC, $vf6, $vf8z\n"
-                //    "vmaddw.xyzw $vf12, $vf7, $vf8w\n"
-                //    "vdiv Q, $vf0w, $vf12w\n"
-                //    "vwaitq\n"
-                //    "vmulq.xyzw $vf12, $vf12, Q\n"
-                //    "vmulq.xyz $vf9, $vf3, Q\n"
-                //    "vadd.xyzw $vf14, $vf12, $vf25\n"
-                //    "vadd.xyzw $vf27, $vf14, $vf1\n"
-                //    "vsub.xyzw $vf13, $vf27, $vf9\n"
-                //    "vsub.xyzw $vf13, $vf13, $vf19\n"
-                //    "vmax.xyzw $vf13, $vf13, $vf0\n"
-                //    "vadd.xyzw $vf14, $vf27, $vf9\n"
-                //    "vadd.xyzw $vf14, $vf14, $vf19\n"
-                //    "vmini.xyzw $vf14, $vf14, $vf24\n"
-                //);
+                sceVu0FVECTOR vf8, vf9, vf14, vf22, vf27;
+                float gl_z = tmp[3] != 0.0f ? tmp[2] / tmp[3] : 0.0f;
+                tmp[0] = (local_screen[0][0][0] * p[0][0]) + (local_screen[0][1][0] * p[0][1]) + (local_screen[0][2][0] * p[0][2]) + (local_screen[0][3][0] * p[0][3]);
+                tmp[1] = (local_screen[0][0][1] * p[0][0]) + (local_screen[0][1][1] * p[0][1]) + (local_screen[0][2][1] * p[0][2]) + (local_screen[0][3][1] * p[0][3]);
+                tmp[2] = (local_screen[0][0][2] * p[0][0]) + (local_screen[0][1][2] * p[0][1]) + (local_screen[0][2][2] * p[0][2]) + (local_screen[0][3][2] * p[0][3]);
+                tmp[3] = (local_screen[0][0][3] * p[0][0]) + (local_screen[0][1][3] * p[0][1]) + (local_screen[0][2][3] * p[0][2]) + (local_screen[0][3][3] * p[0][3]);
+
+                float q = 1.0f / tmp[3];
+
+                tmp[0] *= q;
+                tmp[1] *= q;
+                tmp[2] *= q;
+                tmp[3] *= q;
+
+                vf9[0] = particle_size[0] * q; // __work_vf3[0] * q;
+                vf9[1] = particle_size[1] * q; // __work_vf3[1] * q;
+                vf9[2] = particle_size[2] * q; // __work_vf3[2] * q; // always 0.0f...
+
+                vf27[0] = tmp[0] + st_add[0] + warp_add[0];
+                vf27[1] = tmp[1] + st_add[1] + warp_add[1];
+                vf27[2] = tmp[2] + st_add[2] + warp_add[2];
+                vf27[3] = tmp[3] + st_add[3] + warp_add[3];
+
+                if (can_render_gl && render_vertices + DISTORTION_PARTICLE_VERTICES <= DISTORTION_PARTICLE_MAX_VERTICES)
+                {
+                    static const int fan[DISTORTION_PARTICLE_VERTICES] = {
+                        0, 1, 2,
+                        0, 2, 3,
+                        0, 3, 4,
+                        0, 4, 1,
+                    };
+                    float dst_x[5] = { tmp[0], tmp[0], tmp[0] + vf9[0], tmp[0], tmp[0] - vf9[0] };
+                    float dst_y[5] = { tmp[1], tmp[1] - vf9[1], tmp[1], tmp[1] + vf9[1], tmp[1] };
+                    float src_x[5] = {
+                        dst_x[0] + warp_add[0],
+                        dst_x[1] + warp_add[0],
+                        dst_x[2] + warp_add[0],
+                        dst_x[3] + warp_add[0],
+                        dst_x[4] + warp_add[0],
+                    };
+                    float src_y[5] = {
+                        dst_y[0] + warp_add[1],
+                        dst_y[1] + warp_add[1],
+                        dst_y[2] + warp_add[1],
+                        dst_y[3] + warp_add[1],
+                        dst_y[4] + warp_add[1],
+                    };
+                    float cr = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][0]));
+                    float cg = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][1]));
+                    float cb = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][2]));
+                    float ca = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][3]));
+                    int k;
+
+                    for (k = 0; k < DISTORTION_PARTICLE_VERTICES; k++)
+                    {
+                        int v = fan[k];
+                        float alpha = v == 0 ? ca : 0.0f;
+
+                        if (dtex != 0)
+                        {
+                            EffectWriteDistortionTexturedVertex(
+                                &textured_render_buffer[render_vertices][0],
+                                window_w, window_h,
+                                dst_x[v], dst_y[v],
+                                src_x[v], src_y[v],
+                                gl_z,
+                                cr, cg, cb, alpha);
+                        }
+                        else
+                        {
+                            EffectWriteDistortionUntexturedVertex(
+                                &untextured_render_buffer[render_vertices][0],
+                                window_w, window_h,
+                                dst_x[v], dst_y[v],
+                                gl_z,
+                                cr, cg, cb, alpha);
+                        }
+
+                        render_vertices++;
+                    }
+                }
+
+                // These two are promptly overwritten without being used just below...
+                // vf13[0] = MAX(vf27[0] - vf9[0] - ones[0], vf0[0]);
+                // vf13[1] = MAX(vf27[1] - vf9[1] - ones[1], vf0[1]);
+                // vf13[2] = MAX(vf27[2] - vf9[2] - ones[2], vf0[2]);
+                // vf13[3] = MAX(vf27[3] - vf9[3] - ones[3], vf0[3]);
+
+                // vf14[0] = MIN(vf27[0] + vf9[0] + ones[0], screen_size[0]);
+                // vf14[1] = MIN(vf27[1] + vf9[1] + ones[1], screen_size[1]);
+                // vf14[2] = MIN(vf27[2] + vf9[2] + ones[2], screen_size[2]);
+                // vf14[3] = MIN(vf27[3] + vf9[3] + ones[3], screen_size[3]);
 
                 //                                                    prim 0x4d or 0x5d depending on dtex being 0 or 1
                 d[n++] = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_TRUE, (u_long)dtex << 4 | 0x4d, SCE_GIF_PACKED, 14);
@@ -1353,51 +1617,94 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
                     | (long long)SCE_GS_ST    << (4 * 12)
                     | (long long)SCE_GS_XYZF2 << (4 * 13);
 
-                //asm __volatile__ (
-                //    "vftoi0.xyzw $vf22, $vf22\n"
-                //    "sqc2 $vf22, 0x0(%0)\n"
-                //    "vmove.w $vf22, $vf19\n"
-                //    "sqc2 $vf22, 0x30(%0)\n"
-                //    "vmove.w $vf9, $vf19\n"
-                //    "vmul.xyzw $vf8, $vf9, $vf26\n"
-                //    "vmove.xyzw $vf14, $vf8\n"
-                //    "vmove.y $vf8, $vf0\n"
-                //    "vmove.x $vf14, $vf0\n"
-                //    "vmove.xyzw $vf22, $vf9\n"
-                //    "vmove.y $vf9, $vf0\n"
-                //    "vmove.x $vf22, $vf0\n"
-                //    "vmove.z $vf27, $vf19\n"
-                //    "vmul.xy $vf27, $vf27, $vf26\n"
-                //    "sqc2 $vf27, 0x10(%0)\n"
-                //    "vftoi4.xyzw $vf13, $vf12\n"
-                //    "sqc2 $vf13, 0x20(%0)\n"
-                //    "vsub.xyzw $vf13, $vf27, $vf14\n"
-                //    "sqc2 $vf13, 0x40(%0)\n"
-                //    "vsub.xyzw $vf10, $vf12, $vf22\n"
-                //    "vftoi4.xyzw $vf13, $vf10\n"
-                //    "sqc2 $vf13, 0x50(%0)\n"
-                //    "vadd.xyzw $vf13, $vf27, $vf8\n"
-                //    "sqc2 $vf13, 0x60(%0)\n"
-                //    "vadd.xyzw $vf10, $vf12, $vf9\n"
-                //    "vftoi4.xyzw $vf13, $vf10\n"
-                //    "sqc2 $vf13, 0x70(%0)\n"
-                //    "vadd.xyzw $vf13, $vf27, $vf14\n"
-                //    "sqc2 $vf13, 0x80(%0)\n"
-                //    "vadd.xyzw $vf10, $vf12, $vf22\n"
-                //    "vftoi4.xyzw $vf13, $vf10\n"
-                //    "sqc2 $vf13, 0x90(%0)\n"
-                //    "vsub.xyzw $vf13, $vf27, $vf8\n"
-                //    "sqc2 $vf13, 0xa0(%0)\n"
-                //    "vsub.xyzw $vf13, $vf12, $vf9\n"
-                //    "vftoi4.xyzw $vf13, $vf13\n"
-                //    "sqc2 $vf13, 0xb0(%0)\n"
-                //    "vsub.xyzw $vf13, $vf27, $vf14\n"
-                //    "sqc2 $vf13, 0xc0(%0)\n"
-                //    "vsub.xyzw $vf13, $vf12, $vf22\n"
-                //    "vftoi4.xyzw $vf13, $vf13\n"
-                //    "sqc2 $vf13, 0xd0(%0)\n"
-                //    : :"r"(&d[n])
-                //);
+                //  PACKED RGBAQ is just RGBA, and ST becomes STQ instead
+
+                // SCE_GS_RGBAQ << (4 * 0)
+                ((sceVu0IVECTOR*)&d[n])[0][0] = (int)p[1][0]; // R
+                ((sceVu0IVECTOR*)&d[n])[0][1] = (int)p[1][1]; // G
+                ((sceVu0IVECTOR*)&d[n])[0][2] = (int)p[1][2]; // B
+                ((sceVu0IVECTOR*)&d[n])[0][3] = (int)p[1][3]; // A
+
+                // SCE_GS_RGBAQ << (4 * 3)
+                ((sceVu0IVECTOR*)&d[n])[3][0] = (int)p[1][0]; // R
+                ((sceVu0IVECTOR*)&d[n])[3][1] = (int)p[1][1]; // G
+                ((sceVu0IVECTOR*)&d[n])[3][2] = (int)p[1][2]; // B
+                ((sceVu0IVECTOR*)&d[n])[3][3] = 0;            // A
+
+                vf9[0] = vf9[0];
+                vf22[1] = vf9[1];
+
+                vf8[0] = vf9[0] * st_scale[0];
+                vf14[1] = vf9[1] * st_scale[1];
+
+                vf27[0] = vf27[0] * st_scale[0];
+                vf27[1] = vf27[1] * st_scale[1];
+
+                // SCE_GS_ST    << (4 * 1)
+                ((sceVu0FVECTOR*)&d[n])[1][0] = vf27[0]; // S
+                ((sceVu0FVECTOR*)&d[n])[1][1] = vf27[1]; // T
+                ((sceVu0FVECTOR*)&d[n])[1][2] = 1.0f; // Q
+
+                // SCE_GS_XYZF2 << (4 * 2)
+                ((sceVu0IVECTOR*)&d[n])[2][0] = FLT_TO_FIX4(tmp[0]); // X
+                ((sceVu0IVECTOR*)&d[n])[2][1] = FLT_TO_FIX4(tmp[1]); // Y
+                ((sceVu0IVECTOR*)&d[n])[2][2] = FLT_TO_FIX4(tmp[2]); // Z
+                ((sceVu0IVECTOR*)&d[n])[2][3] = FLT_TO_FIX4(tmp[3]); // F, is it 0?
+
+                // SCE_GS_ST    << (4 * 4)
+                ((sceVu0FVECTOR*)&d[n])[4][0] = vf27[0]; // S
+                ((sceVu0FVECTOR*)&d[n])[4][1] = vf27[1] - vf14[1]; // T
+                ((sceVu0FVECTOR*)&d[n])[4][2] = 1.0f; // Q
+
+                // SCE_GS_XYZF2 << (4 * 5)
+                ((sceVu0IVECTOR*)&d[n])[5][0] = FLT_TO_FIX4(tmp[0]); // X
+                ((sceVu0IVECTOR*)&d[n])[5][1] = FLT_TO_FIX4(tmp[1] - vf22[1]); // Y
+                ((sceVu0IVECTOR*)&d[n])[5][2] = FLT_TO_FIX4(tmp[2]); // Z
+                ((sceVu0IVECTOR*)&d[n])[5][3] = FLT_TO_FIX4(tmp[3]); // F, is it 0?
+
+                // SCE_GS_ST    << (4 * 6)
+                ((sceVu0FVECTOR*)&d[n])[6][0] = vf27[0] + vf8[0]; // S
+                ((sceVu0FVECTOR*)&d[n])[6][1] = vf27[1]; // T
+                ((sceVu0FVECTOR*)&d[n])[6][2] = 1.0f; // Q
+
+                // SCE_GS_XYZF2 << (4 * 7)
+                ((sceVu0IVECTOR*)&d[n])[7][0] = FLT_TO_FIX4(tmp[0] + vf9[0]); // X
+                ((sceVu0IVECTOR*)&d[n])[7][1] = FLT_TO_FIX4(tmp[1]); // Y
+                ((sceVu0IVECTOR*)&d[n])[7][2] = FLT_TO_FIX4(tmp[2]); // Z
+                ((sceVu0IVECTOR*)&d[n])[7][3] = FLT_TO_FIX4(tmp[3]); // F, is it 0?
+
+                // SCE_GS_ST    << (4 * 8)
+                ((sceVu0FVECTOR*)&d[n])[8][0] = vf27[0]; // S
+                ((sceVu0FVECTOR*)&d[n])[8][1] = vf27[1] + vf14[1]; // T
+                ((sceVu0FVECTOR*)&d[n])[8][2] = 1.0f; // Q
+
+                // SCE_GS_XYZF2 << (4 * 9)
+                ((sceVu0IVECTOR*)&d[n])[9][0] = FLT_TO_FIX4(tmp[0]); // X
+                ((sceVu0IVECTOR*)&d[n])[9][1] = FLT_TO_FIX4(tmp[1] + vf22[1]); // Y
+                ((sceVu0IVECTOR*)&d[n])[9][2] = FLT_TO_FIX4(tmp[2]); // Z
+                ((sceVu0IVECTOR*)&d[n])[9][3] = FLT_TO_FIX4(tmp[3]); // F, is it 0?
+
+                // SCE_GS_ST    << (4 * 10)
+                ((sceVu0FVECTOR*)&d[n])[10][0] = vf27[0] - vf8[0]; // S
+                ((sceVu0FVECTOR*)&d[n])[10][1] = vf27[1]; // T
+                ((sceVu0FVECTOR*)&d[n])[10][2] = 1.0f; // Q
+
+                // SCE_GS_XYZF2 << (4 * 11)
+                ((sceVu0IVECTOR*)&d[n])[11][0] = FLT_TO_FIX4(tmp[0] - vf9[0]); // X
+                ((sceVu0IVECTOR*)&d[n])[11][1] = FLT_TO_FIX4(tmp[1]); // Y
+                ((sceVu0IVECTOR*)&d[n])[11][2] = FLT_TO_FIX4(tmp[2]); // Z
+                ((sceVu0IVECTOR*)&d[n])[11][3] = FLT_TO_FIX4(tmp[3]); // F, is it 0?
+
+                // SCE_GS_ST    << (4 * 12)
+                ((sceVu0FVECTOR*)&d[n])[12][0] = vf27[0]; // S
+                ((sceVu0FVECTOR*)&d[n])[12][1] = vf27[1] - vf14[1]; // T
+                ((sceVu0FVECTOR*)&d[n])[12][2] = 1.0f; // Q
+
+                // SCE_GS_XYZF2 << (4 * 13)
+                ((sceVu0IVECTOR*)&d[n])[13][0] = FLT_TO_FIX4(tmp[0]); // X
+                ((sceVu0IVECTOR*)&d[n])[13][1] = FLT_TO_FIX4(tmp[1] - vf22[1]); // Y
+                ((sceVu0IVECTOR*)&d[n])[13][2] = FLT_TO_FIX4(tmp[2]); // Z
+                ((sceVu0IVECTOR*)&d[n])[13][3] = FLT_TO_FIX4(tmp[3]); // F, is it 0?
 
                 n += 14 * 2;
             }
@@ -1411,6 +1718,27 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
     d[0] = DMAend + (n - 1) / 2;
 
     ndpkt = ndpkt + (n + 1) / 2;
+
+    if (render_vertices > 0)
+    {
+        if (dtex != 0)
+        {
+            MikuPan_RenderScreenCopyTriangles3D(
+                (sceGsTex0 *)&distortion_tex0,
+                &textured_render_buffer[0][0],
+                render_vertices,
+                depth_always,
+                additive_blend);
+        }
+        else
+        {
+            MikuPan_RenderUntexturedTriangles3D(
+                &untextured_render_buffer[0][0],
+                render_vertices,
+                depth_always,
+                additive_blend);
+        }
+    }
 
     return num;
 }
@@ -1560,11 +1888,7 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
     static float pcnt1;
     static float pcnt2;
     int n1;
-#ifdef MATCHING_DECOMP
-    register int n2 asm("s6");
-#else
     int n2;
-#endif
     int i;
     float f;
     float fw1;
@@ -1688,23 +2012,6 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
     case 8:
         Vu0CopyVector(wpos, pos);
         wpos[1] -= 10.0f;
-
-#ifdef MATCHING_DECOMP
-        // matches most of the asm generated by the code
-        // that has been optimized out by the compiler.
-        // needs patching to fix 2 asm instructions
-        {
-            int a = hh->cnt / n1;
-
-            //asm volatile ("mfhi $3");
-            //asm volatile ("andi $2,$2,1");
-
-            if (hh->cnt / n1 <= n2 && hh->cnt / n1)
-            {
-                n2 = ~n2;
-            }
-        }
-#endif
 
         SubHalo(wpos, 1, 0, 0, 0x28, 0x28, 0x6e, 0x6e, 0.6f);
 
@@ -3868,7 +4175,9 @@ void SetWaterdrop(EFFECT_CONT *ec)
     u_long tx0;
     sceVu0FMATRIX wlm;
     sceVu0FMATRIX slm;
+    sceVu0FMATRIX gl_slm;
     sceVu0FVECTOR wpos;
+    sceVu0FVECTOR fvec[4];
     static sceVu0FVECTOR dummy_rot = {0.0f, 0.0f, 0.0f, 1.0f};
     static sceVu0FVECTOR wwpos[24];
     static int wwcnt = 0;
@@ -4013,12 +4322,14 @@ void SetWaterdrop(EFFECT_CONT *ec)
     sceVu0RotMatrixY(wlm, wlm, rot_y);
     sceVu0TransMatrix(wlm, wlm, wpos);
     sceVu0MulMatrix(slm, SgWSMtx, wlm);
+    sceVu0MulMatrix(gl_slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
 
     w = 0;
 
     for (i = 0; i < 4; i++)
     {
         sceVu0RotTransPers(ivec[i], slm, ppos[i], 0);
+        sceVu0RotTransPersF(fvec[i], gl_slm, ppos[i], 0);
 
         if (ivec[i][0] < 0x4000 || ivec[i][0] > 0xc000)
         {
@@ -4080,6 +4391,30 @@ void SetWaterdrop(EFFECT_CONT *ec)
                     | SCE_GS_RGBAQ << (4 * 0)
                     | SCE_GS_UV    << (4 * 1)
                     | SCE_GS_XYZF2 << (4 * 2);
+
+    {
+        float render_buffer[4][12];
+
+        for (i = 0; i < 4; i++)
+        {
+            render_buffer[i][0] = (float)((i & 1) != 0 ? tw - 8 : 8) / (float)tw;
+            render_buffer[i][1] = (float)((i / 2) == 0 ? th - 8 : 8) / (float)th;
+            render_buffer[i][2] = 0.0f;
+            render_buffer[i][3] = 0.0f;
+
+            render_buffer[i][4] = MikuPan_ConvertScaleColor(r);
+            render_buffer[i][5] = MikuPan_ConvertScaleColor(g);
+            render_buffer[i][6] = MikuPan_ConvertScaleColor(b);
+            render_buffer[i][7] = MikuPan_ConvertScaleColor(0x20);
+
+            render_buffer[i][8] = fvec[i][0];
+            render_buffer[i][9] = fvec[i][1];
+            render_buffer[i][10] = fvec[i][2];
+            render_buffer[i][11] = 1.0f;
+        }
+
+        MikuPan_RenderSprite3D((sceGsTex0 *)&tx0, &render_buffer[0][0]);
+    }
 
     for (i = 0; i < 4; i++)
     {
@@ -4642,6 +4977,9 @@ u_char SetCanalSub(int no, float *mpos)
     int v3;
     sceVu0FVECTOR wpos;
     sceVu0FMATRIX wlm;
+    sceVu0FMATRIX gl_slm;
+    sceVu0FVECTOR rw1_gl[275];
+    sceVu0FVECTOR rw2_gl[15];
     sceVu0IVECTOR c0;
     sceVu0FVECTOR c1;
     sceVu0FVECTOR sufcol;
@@ -4695,6 +5033,7 @@ u_char SetCanalSub(int no, float *mpos)
     sceVu0UnitMatrix(wlm);
     sceVu0TransMatrix(wlm, wlm, rw1.bpos);
     sceVu0MulMatrix(rw1.slm, SgWSMtx, wlm);
+    sceVu0MulMatrix(gl_slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
 
     for (i = 0; i < rw1.vnumw * rw1.vnumh; i++)
     {
@@ -4795,6 +5134,7 @@ u_char SetCanalSub(int no, float *mpos)
     }
 
     sceVu0RotTransPersN(rw1.vtiw, rw1.slm, rw1.vt, rw1.vnumw * rw1.vnumh, 1);
+    sceVu0RotTransPersNF(rw1_gl, gl_slm, rw1.vt, rw1.vnumw * rw1.vnumh, 0);
 
     j = rw1.pnumw + 1;
     m = rw1.vnumw * rw1.vnumh;
@@ -4873,6 +5213,7 @@ u_char SetCanalSub(int no, float *mpos)
     sceVu0UnitMatrix(wlm);
     sceVu0TransMatrix(wlm, wlm, rw2.bpos);
     sceVu0MulMatrix(rw2.slm, SgWSMtx, wlm);
+    sceVu0MulMatrix(gl_slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
 
     for (i = 0; i < rw2.vnumw * rw2.vnumh; i++)
     {
@@ -4893,6 +5234,7 @@ u_char SetCanalSub(int no, float *mpos)
     }
 
     sceVu0RotTransPersN(rw2.vtiw, rw2.slm, rw2.vt, rw2.vnumw * rw2.vnumh, 1);
+    sceVu0RotTransPersNF(rw2_gl, gl_slm, rw2.vt, rw2.vnumw * rw2.vnumh, 0);
 
     for (i = 0; i < rw2.vnumw * rw2.vnumh; i++)
     {
@@ -4917,6 +5259,74 @@ u_char SetCanalSub(int no, float *mpos)
     if (stop_effects == 0)
     {
         texsc[no] = texsc[no] + 0.02f > 256.0f ? texsc[no] + 0.02f - 256.0f : texsc[no] + 0.02f;
+    }
+
+    {
+        int water_tex = monochrome_mode + 54;
+        float tex_w = EffectTextureWidth(water_tex);
+        float tex_h = EffectTextureHeight(water_tex);
+        float water_buffer[24 * 6][12];
+
+        for (i = 0; i < rw1.pnumh; i++)
+        {
+            int out = 0;
+
+            for (j = 0; j < rw1.pnumw; j++)
+            {
+                int v00 = i * rw1.vnumw + j;
+                int v10 = v00 + 1;
+                int v01 = v00 + rw1.vnumw;
+                int v11 = v01 + 1;
+
+                if (rw1.clip[v00] && rw1.clip[v01] && rw1.clip[v10])
+                {
+                    EffectWriteWaterVertex(&water_buffer[out++][0], rw1.tx[v00], rw1.ty[v00], tex_w, tex_h, rw1.col[v00][0], rw1.col[v00][1], rw1.col[v00][2], 0x38, rw1.fg[v00], 0x13, 0x13, 0x14, rw1_gl[v00]);
+                    EffectWriteWaterVertex(&water_buffer[out++][0], rw1.tx[v01], rw1.ty[v01], tex_w, tex_h, rw1.col[v01][0], rw1.col[v01][1], rw1.col[v01][2], 0x38, rw1.fg[v01], 0x13, 0x13, 0x14, rw1_gl[v01]);
+                    EffectWriteWaterVertex(&water_buffer[out++][0], rw1.tx[v10], rw1.ty[v10], tex_w, tex_h, rw1.col[v10][0], rw1.col[v10][1], rw1.col[v10][2], 0x38, rw1.fg[v10], 0x13, 0x13, 0x14, rw1_gl[v10]);
+                }
+
+                if (rw1.clip[v01] && rw1.clip[v10] && rw1.clip[v11])
+                {
+                    EffectWriteWaterVertex(&water_buffer[out++][0], rw1.tx[v01], rw1.ty[v01], tex_w, tex_h, rw1.col[v01][0], rw1.col[v01][1], rw1.col[v01][2], 0x38, rw1.fg[v01], 0x13, 0x13, 0x14, rw1_gl[v01]);
+                    EffectWriteWaterVertex(&water_buffer[out++][0], rw1.tx[v10], rw1.ty[v10], tex_w, tex_h, rw1.col[v10][0], rw1.col[v10][1], rw1.col[v10][2], 0x38, rw1.fg[v10], 0x13, 0x13, 0x14, rw1_gl[v10]);
+                    EffectWriteWaterVertex(&water_buffer[out++][0], rw1.tx[v11], rw1.ty[v11], tex_w, tex_h, rw1.col[v11][0], rw1.col[v11][1], rw1.col[v11][2], 0x38, rw1.fg[v11], 0x13, 0x13, 0x14, rw1_gl[v11]);
+                }
+            }
+
+            MikuPan_RenderTexturedTriangles3D((sceGsTex0 *)&effdat[water_tex].tex0, &water_buffer[0][0], out);
+        }
+
+        if (setpoly == 0)
+        {
+            for (i = 0; i < rw2.pnumh; i++)
+            {
+                int out = 0;
+
+                for (j = 0; j < rw2.pnumw; j++)
+                {
+                    int v00 = i * rw2.vnumw + j;
+                    int v10 = v00 + 1;
+                    int v01 = v00 + rw2.vnumw;
+                    int v11 = v01 + 1;
+
+                    if (rw2.clip[v00] && rw2.clip[v01] && rw2.clip[v10])
+                    {
+                        EffectWriteWaterVertex(&water_buffer[out++][0], rw2.tx[v00], rw2.ty[v00], tex_w, tex_h, 0x80, 0x80, 0x80, 0x30, rw2.fg[v00], 0x13, 0x13, 0x14, rw2_gl[v00]);
+                        EffectWriteWaterVertex(&water_buffer[out++][0], rw2.tx[v01], rw2.ty[v01], tex_w, tex_h, 0x80, 0x80, 0x80, 0x30, rw2.fg[v01], 0x13, 0x13, 0x14, rw2_gl[v01]);
+                        EffectWriteWaterVertex(&water_buffer[out++][0], rw2.tx[v10], rw2.ty[v10], tex_w, tex_h, 0x80, 0x80, 0x80, 0x30, rw2.fg[v10], 0x13, 0x13, 0x14, rw2_gl[v10]);
+                    }
+
+                    if (rw2.clip[v01] && rw2.clip[v10] && rw2.clip[v11])
+                    {
+                        EffectWriteWaterVertex(&water_buffer[out++][0], rw2.tx[v01], rw2.ty[v01], tex_w, tex_h, 0x80, 0x80, 0x80, 0x30, rw2.fg[v01], 0x13, 0x13, 0x14, rw2_gl[v01]);
+                        EffectWriteWaterVertex(&water_buffer[out++][0], rw2.tx[v10], rw2.ty[v10], tex_w, tex_h, 0x80, 0x80, 0x80, 0x30, rw2.fg[v10], 0x13, 0x13, 0x14, rw2_gl[v10]);
+                        EffectWriteWaterVertex(&water_buffer[out++][0], rw2.tx[v11], rw2.ty[v11], tex_w, tex_h, 0x80, 0x80, 0x80, 0x30, rw2.fg[v11], 0x13, 0x13, 0x14, rw2_gl[v11]);
+                    }
+                }
+
+                MikuPan_RenderTexturedTriangles3D((sceGsTex0 *)&effdat[water_tex].tex0, &water_buffer[0][0], out);
+            }
+        }
     }
 
     Reserve2DPacket(0x1000);
@@ -5558,9 +5968,32 @@ void SetSky()
     u_int x2;
     u_int y1;
     u_int y2;
+    u_int y_clamp;
     int hori;
     int hline;
     int c;
+    int sky_tex;
+    int sky_v_pixels;
+    float tex_w;
+    float tex_h;
+    float uv_u1;
+    float uv_u2;
+    float uv_u_left;
+    float uv_u_right;
+    float uv_v_clamp;
+    float uv_v_edge;
+    float viewport_x;
+    float viewport_y;
+    float viewport_w;
+    float viewport_h;
+    float viewport_scale;
+    float uv_pad;
+    float ndc_1[2];
+    float ndc_2[2];
+    float ndc_clamp[2];
+    float color;
+    const float win_w = (float)MikuPan_GetWindowWidth();
+    const float win_h = (float)MikuPan_GetWindowHeight();
 
     clpx2 = 0xc000;
     clpy2 = 0x8f00;
@@ -5609,7 +6042,7 @@ void SetSky()
         {
             GetTrgtRot(camera.p, camera.i, rot, 2);
 
-            hori = ivec[1] / 16 - 1936;
+            hori = (int)((1.0f - ivec[1]) * (PS2_CENTER_Y * 0.5f));
             hline = hori < 128 ? 128 : (352 < hori ? 352 : hori);
 
             height = (rot[1] * 256.0f) * sc_speed / PI;
@@ -5619,8 +6052,8 @@ void SetSky()
             x1 = 0x6c00;
             x2 = 0x9400;
 
-            y1 = ivec[1];
-            y2 = ivec[1] - (hline * 16);
+            y1 = (u_int)((1936.0f + (float)hori) * 16.0f);
+            y2 = (u_int)((1936.0f + (float)(hori - hline)) * 16.0f);
 
             { // MACRO ?
             sceVu0IVECTOR ivec = {0};
@@ -5630,6 +6063,40 @@ void SetSky()
             u1 = ivec[0];
             u2 = ivec[1];
             }
+
+            sky_tex = monochrome_mode + 50;
+            tex_w = (float)effdat[sky_tex].w;
+            tex_h = (float)effdat[sky_tex].h;
+
+            if (tex_w <= 0.0f || tex_h <= 0.0f)
+            {
+                sceGsTex0 *tex0 = (sceGsTex0 *)&effdat[sky_tex].tex0;
+                tex_w = (float)(1 << tex0->TW);
+                tex_h = (float)(1 << tex0->TH);
+            }
+
+            uv_u1 = ((float)u1 / 16.0f) / tex_w;
+            uv_u2 = ((float)u2 / 16.0f) / tex_w;
+            MikuPan_GetPS2Viewport((int)win_w, (int)win_h, &viewport_x, &viewport_y, &viewport_w, &viewport_h, &viewport_scale);
+            uv_pad = viewport_scale > 0.0f ? ((viewport_x / viewport_scale) * ((uv_u2 - uv_u1) / PS2_RESOLUTION_X_FLOAT)) : 0.0f;
+            uv_u_left = uv_u1 - uv_pad;
+            uv_u_right = uv_u2 + uv_pad;
+            sky_v_pixels = hline < (int)tex_h ? hline : (int)tex_h;
+            uv_v_edge = (tex_h - 0.5f) / tex_h;
+            uv_v_clamp = (float)sky_v_pixels / tex_h;
+
+            if (uv_v_clamp >= 1.0f)
+            {
+                uv_v_clamp = uv_v_edge;
+            }
+
+            y_clamp = (u_int)((1936.0f + (float)(hori - sky_v_pixels)) * 16.0f);
+
+            MikuPan_ConvertPs2GSSubPixelToNDC(ndc_1, win_w, win_h, x1, y1);
+            MikuPan_ConvertPs2GSSubPixelToNDC(ndc_2, win_w, win_h, x2, y2);
+            MikuPan_ConvertPs2GSSubPixelToNDC(ndc_clamp, win_w, win_h, x2, y_clamp);
+            ndc_1[0] = -1.0f;
+            ndc_2[0] =  1.0f;
 
             Reserve2DPacket(0x1000);
 
@@ -5645,7 +6112,7 @@ void SetSky()
             pbuf[ndpkt].ul64[0] = 0;
             pbuf[ndpkt++].ul64[1] = SCE_GS_TEXFLUSH;
 
-            pbuf[ndpkt].ul64[0] = effdat[monochrome_mode + 50].tex0;
+            pbuf[ndpkt].ul64[0] = effdat[sky_tex].tex0;
             pbuf[ndpkt++].ul64[1] = SCE_GS_TEX0_1;
 
             pbuf[ndpkt].ul64[0] = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
@@ -5671,38 +6138,27 @@ void SetSky()
                 | SCE_GS_UV    << (4 * 3)
                 | SCE_GS_XYZF2 << (4 * 4);
 
-            float buffer[4][12];
-
-            float vertices[4][4] = {
-                /// POS,          UV
-                {-1.0f,  1.0f, (float)u1, 0.0f}, // top-left
-                {1.0f,   1.0f, (float)u2, 0.0f}, // top-right
-                {-1.0f, -1.0f, (float)u1, hline * 16}, // bottom-left
-                {1.0f,  -1.0f, (float)u2, hline * 16}, // bottom-right
+            color = (float)0x40 / 128.0f;
+            float buffer[4][12] = {
+                {uv_u_left, 0.0f, 0.0f, 0.0f, color, color, color, MikuPan_ConvertScaleColor(0x80), ndc_1[0], ndc_1[1], 1.0f, 1.0f},
+                {uv_u_right, 0.0f, 0.0f, 0.0f, color, color, color, MikuPan_ConvertScaleColor(0x80), ndc_2[0], ndc_1[1], 1.0f, 1.0f},
+                {uv_u_left, uv_v_clamp, 0.0f, 0.0f, color, color, color, MikuPan_ConvertScaleColor(0x80), ndc_1[0], ndc_clamp[1], 1.0f, 1.0f},
+                {uv_u_right, uv_v_clamp, 0.0f, 0.0f, color, color, color, MikuPan_ConvertScaleColor(0x80), ndc_2[0], ndc_clamp[1], 1.0f, 1.0f},
             };
 
-            for (int i = 0; i < 4; i++)
+            MikuPan_RenderSprite3D((sceGsTex0 *)&effdat[sky_tex].tex0, &buffer[0][0]);
+
+            if (sky_v_pixels < hline)
             {
-                /// UV
-                buffer[i][0] = vertices[i][2];
-                buffer[i][1] = vertices[i][3];
-                buffer[i][2] = 0.0f;
-                buffer[i][3] = 0.0f;
+                float clamp_buffer[4][12] = {
+                    {uv_u_left, uv_v_edge, 0.0f, 0.0f, color, color, color, MikuPan_ConvertScaleColor(0x80), ndc_1[0], ndc_clamp[1], 1.0f, 1.0f},
+                    {uv_u_right, uv_v_edge, 0.0f, 0.0f, color, color, color, MikuPan_ConvertScaleColor(0x80), ndc_2[0], ndc_clamp[1], 1.0f, 1.0f},
+                    {uv_u_left, uv_v_edge, 0.0f, 0.0f, color, color, color, MikuPan_ConvertScaleColor(0x80), ndc_1[0], ndc_2[1], 1.0f, 1.0f},
+                    {uv_u_right, uv_v_edge, 0.0f, 0.0f, color, color, color, MikuPan_ConvertScaleColor(0x80), ndc_2[0], ndc_2[1], 1.0f, 1.0f},
+                };
 
-                /// Color
-                buffer[i][4] = (float)0x40/128.0f;
-                buffer[i][5] = (float)0x40/128.0f;
-                buffer[i][6] = (float)0x40/128.0f;
-                buffer[i][7] = MikuPan_ConvertScaleColor(0x80);
-
-                /// Position
-                buffer[i][8] = vertices[i][0];
-                buffer[i][9] = vertices[i][1];
-                buffer[i][10] = 1.0f;
-                buffer[i][11] = 1.0f;
+                MikuPan_RenderSprite3D((sceGsTex0 *)&effdat[sky_tex].tex0, &clamp_buffer[0][0]);
             }
-
-            MikuPan_RenderSprite3D((sceGsTex0 *)&effdat[monochrome_mode + 50].tex0, &buffer[0][0]);
 
             /// RGBA
             pbuf[ndpkt].ui32[0] = 0x40;
@@ -5773,8 +6229,10 @@ void SetPond()
     sceVu0FVECTOR bpos = {19000.0f, 630.0f, 38000.0f, 1.0f};
     sceVu0FMATRIX wlm;
     sceVu0FMATRIX slm;
+    sceVu0FMATRIX gl_slm;
     sceVu0FVECTOR wfv;
     sceVu0FVECTOR wpos;
+    sceVu0FVECTOR gl_pos[1089];
 
     clpx2 = 0xfd00;
     clpy2 = 0xfd00;
@@ -5802,6 +6260,7 @@ void SetPond()
     sceVu0UnitMatrix(wlm);
     sceVu0TransMatrix(wlm, wlm, bpos);
     sceVu0MulMatrix(slm, SgWSMtx, wlm);
+    sceVu0MulMatrix(gl_slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
 
     t = (u_int)(texsc * fcana4);
 
@@ -5828,6 +6287,7 @@ void SetPond()
         txw[i].alp = ((0x80 - (txw[i].fg / 2) & 0xffff) / 2) + 0x40;
 
         sceVu0RotTransPers(txw[i].iv, slm, wfv, 1);
+        sceVu0RotTransPersF(gl_pos[i], gl_slm, wfv, 0);
 
         txw[i].cl = 1;
 
@@ -5851,6 +6311,42 @@ void SetPond()
     {
         wave = wave + 1.0f < 360.0f ? wave + 1.0f : wave + 1.0f - 360.0f;
         texsc = texsc + 0.015f > 512.0f ? (texsc + 0.015f) - 512.0f : texsc + 0.01f;
+    }
+
+    {
+        int water_tex = monochrome_mode + 54;
+        float tex_w = EffectTextureWidth(water_tex);
+        float tex_h = EffectTextureHeight(water_tex);
+        float water_buffer[32 * 6][12];
+
+        for (i = 0; i < pnumh; i++)
+        {
+            int out = 0;
+
+            for (j = 0; j < pnumw; j++)
+            {
+                int v00 = i * vnumw + j;
+                int v10 = v00 + 1;
+                int v01 = v00 + vnumw;
+                int v11 = v01 + 1;
+
+                if (txw[v00].cl && txw[v01].cl && txw[v10].cl)
+                {
+                    EffectWriteWaterVertex(&water_buffer[out++][0], txw[v00].tx, txw[v00].ty, tex_w, tex_h, 0x80, 0x80, 0x80, txw[v00].alp, txw[v00].fg, 0x0a, 0x0a, 0x0a, gl_pos[v00]);
+                    EffectWriteWaterVertex(&water_buffer[out++][0], txw[v01].tx, txw[v01].ty, tex_w, tex_h, 0x80, 0x80, 0x80, txw[v01].alp, txw[v01].fg, 0x0a, 0x0a, 0x0a, gl_pos[v01]);
+                    EffectWriteWaterVertex(&water_buffer[out++][0], txw[v10].tx, txw[v10].ty, tex_w, tex_h, 0x80, 0x80, 0x80, txw[v10].alp, txw[v10].fg, 0x0a, 0x0a, 0x0a, gl_pos[v10]);
+                }
+
+                if (txw[v01].cl && txw[v10].cl && txw[v11].cl)
+                {
+                    EffectWriteWaterVertex(&water_buffer[out++][0], txw[v01].tx, txw[v01].ty, tex_w, tex_h, 0x80, 0x80, 0x80, txw[v01].alp, txw[v01].fg, 0x0a, 0x0a, 0x0a, gl_pos[v01]);
+                    EffectWriteWaterVertex(&water_buffer[out++][0], txw[v10].tx, txw[v10].ty, tex_w, tex_h, 0x80, 0x80, 0x80, txw[v10].alp, txw[v10].fg, 0x0a, 0x0a, 0x0a, gl_pos[v10]);
+                    EffectWriteWaterVertex(&water_buffer[out++][0], txw[v11].tx, txw[v11].ty, tex_w, tex_h, 0x80, 0x80, 0x80, txw[v11].alp, txw[v11].fg, 0x0a, 0x0a, 0x0a, gl_pos[v11]);
+                }
+            }
+
+            MikuPan_RenderTexturedTriangles3D((sceGsTex0 *)&effdat[water_tex].tex0, &water_buffer[0][0], out);
+        }
     }
 
     Reserve2DPacket(0x1000);

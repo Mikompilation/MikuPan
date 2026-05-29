@@ -32,6 +32,17 @@ typedef struct {
     sceVu0FVECTOR yd;
 } MikuPan_Camera;
 
+typedef struct
+{
+    int vertex_count;
+    int depth_always;
+    int additive_blend;
+    float uv_min[2];
+    float uv_max[2];
+    float ndc_min[2];
+    float ndc_max[2];
+} MikuPan_ScreenCopyDebugInfo;
+
 SDL_AppResult MikuPan_Init();
 void MikuPan_SetupOpenGLContext();
 void MikuPan_Clear();
@@ -50,6 +61,12 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r, u_char g
 void MikuPan_RenderSprite2D(sceGsTex0 *tex, float* buffer);
 void MikuPan_RenderUntexturedSprite(float* buffer);
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer);
+void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count);
+void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int depth_always, int additive_blend);
+void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_always, int additive_blend);
+void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_always, int additive_blend);
+const MikuPan_TextureInfo *MikuPan_GetScreenCopyTextureInfo(void);
+const MikuPan_ScreenCopyDebugInfo *MikuPan_GetScreenCopyDebugInfo(void);
 void MikuPan_SetupFntTexture();
 void MikuPan_SetWorldClipView();
 float* MikuPan_GetWorldClipView();

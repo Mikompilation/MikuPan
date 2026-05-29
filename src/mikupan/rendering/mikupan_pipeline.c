@@ -163,7 +163,7 @@ void MikuPan_InitPipeline()
     glad_glBindVertexArray(curr_pipeline->vao);
 
     /// BUFFER 1: COLOURS + SPRITE POSITION
-    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], sizeof(float[8]) * 4, 2);
+    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 4096 * 8 * (int)sizeof(float), 2);
 
     /// COLOUR
     MikuPan_SetVertexBufferAttributeInfo(

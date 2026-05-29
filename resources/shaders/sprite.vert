@@ -5,11 +5,13 @@ layout(location = 1) in vec4 inColor;
 layout(location = 2) in vec4 aPos;
 
 out vec2 vUV;
+out vec2 vDstUV;
 out vec4 uColor;
 
 void main()
 {
     gl_Position = aPos;
     vUV = vec2(aUV);
+    vDstUV = aUV.zw;
     uColor = inColor;
 }

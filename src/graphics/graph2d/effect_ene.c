@@ -2921,10 +2921,7 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
     int pnumw;
     int pnumh;
     int wiy;
-
-    //register int sx2 asm("s6"); // HACK: fixes regswap
-    int sx2; // HACK: fixes regswap
-
+    int sx2;
     int sy2;
     int clip;
     float l;

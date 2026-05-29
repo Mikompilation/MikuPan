@@ -79,6 +79,8 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
      "./resources/shaders/shadow_silhouette.frag"                                                 },
     {             "./resources/shaders/camera_debug.vert", NULL,
      "./resources/shaders/untextured_coloured_sprite.frag"                                        },
+    {                    "./resources/shaders/sprite.vert", NULL,
+     "./resources/shaders/heat_haze.frag"                                                         },
 };
 
 static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
@@ -88,6 +90,7 @@ static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
     "NORMALS_0x12",      "NORMALS_0x2",
     "POSTPROCESS",       "SHADOW_BLOB",
     "SHADOW_SILHOUETTE", "CAMERA_DEBUG",
+    "HEAT_HAZE",
 };
 
 /// Linear scan — MAX_SHADER_PROGRAMS is 8, so this is faster than maintaining
