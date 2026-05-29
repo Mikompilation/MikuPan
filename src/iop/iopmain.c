@@ -220,7 +220,7 @@ static int IopInitMain()
 static SDLCALL int IopMain(void *data)
 {
     Uint64 nextTick = SDL_GetTicksNS();
-    const Uint64 interval = 1;
+    const Uint64 interval = 4167000;
 
     while (!request_shutdown)
     {
