@@ -22,6 +22,7 @@ include(sdl3)
 include(cimgui)
 include(spdlog)
 include(cglm)
+include(ffmpeg)
 include(xxhash)
 include(inipp)
 
@@ -235,6 +236,12 @@ set(MIKUPAN_SOURCES
         "src/mc/mc_at.c"
         "src/graphics/graph3d/vu_program.c"
         "src/mikupan/mikupan_memory.c"
+        "src/mikupan/av/mikupan_video_decoder.cpp"
+        "src/mikupan/av/mikupan_video_decoder_c.cpp"
+        "src/mikupan/av/mikupan_audio_decoder.h"
+        "src/mikupan/av/mikupan_audio_decoder.cpp"
+        "src/mikupan/av/mikupan_audio_decoder_c.h"
+        src/mikupan/av/mikupan_audio_decoder_c.cpp
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui.c
         src/mikupan/rendering/mikupan_profiler.c
@@ -269,11 +276,42 @@ set(MIKUPAN_SOURCES
 )
 
 add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
+if(TARGET ffmpeg_build)
+    add_dependencies(MikuPan ffmpeg_build)
+endif()
 
-target_include_directories(MikuPan PRIVATE "sdk/" "src" "extern/" "extern/glad/include/" ${SDL3_INCLUDE_DIR})
+target_include_directories(MikuPan PRIVATE
+        "sdk/"
+        "src"
+        "extern/"
+        "extern/glad/include/"
+        ${SDL3_INCLUDE_DIR}
+        "${FFMPEG_ROOT}/include"
+)
 
-target_link_libraries(MikuPan PRIVATE m cimgui SDL3::SDL3 SDL3_mixer::SDL3_mixer spdlog::spdlog cglm xxHash::xxhash inipp::inipp)
+target_link_libraries(MikuPan PRIVATE
+        m
+        cimgui
+        SDL3::SDL3
+        SDL3_mixer::SDL3_mixer
+        spdlog::spdlog
+        cglm
+        avcodec
+        swscale
+        avutil
+        swresample
+        avformat
+        xxHash::xxhash
+        inipp::inipp
+)
 
 add_custom_command(TARGET MikuPan POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:MikuPan>/resources
 )
+if(WIN32)
+    add_custom_command(TARGET MikuPan POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${FFMPEG_ROOT}/bin"
+            $<TARGET_FILE_DIR:MikuPan>
+    )
+endif()

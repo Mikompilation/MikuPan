@@ -87,7 +87,10 @@ void GameOverMenuMain()
         go_wrk.type = 2;
     break;
     case 2:
-        MoviePlay(SCENE_NO_9_00_0);
+        if (MoviePlay(SCENE_NO_9_00_0))
+        {
+            break;
+        }
         AdpcmSceneStop();
 
         go_wrk.type = 3;

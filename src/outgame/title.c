@@ -480,11 +480,17 @@ SPRT_DAT title_sprt[11] = {
 
         if (opening_movie_type != 0)
         {
-            MoviePlay(SCENE_NO_9_20_0);
+            if (MoviePlay(SCENE_NO_9_20_0))
+            {
+                break;
+            }
         }
         else
         {
-            MoviePlay(SCENE_NO_9_10_0);
+            if (MoviePlay(SCENE_NO_9_10_0))
+            {
+                break;
+            }
         }
 
         opening_movie_type = opening_movie_type == 0;

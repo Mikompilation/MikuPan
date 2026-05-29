@@ -88,12 +88,15 @@ void InGameCtrl(void)
             {
                 if (sys_wrk.load == 0 || (sys_wrk.load == 1 && mc_msn_flg == 1))
                 {
-                    ingame_wrk.mode = INGAME_MODE_MSN_TITLE;
                     if (ingame_wrk.msn_no == 0)
                     {
-                        //MoviePlay(SCENE_NO_0_01_0);
+                        if (MoviePlay(SCENE_NO_0_01_0))
+                        {
+                            break;
+                        }
                     }
-                    
+
+                    ingame_wrk.mode = INGAME_MODE_MSN_TITLE;
                     MissionTitleInit(ingame_wrk.msn_no);
                 }
                 else

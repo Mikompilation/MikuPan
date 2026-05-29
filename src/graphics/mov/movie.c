@@ -1,206 +1,162 @@
-#include "common.h"
-#include "typedefs.h"
-#include "enums.h"
 #include "movie.h"
+#include "common.h"
+#include "enums.h"
+#include "typedefs.h"
 
 #include "ee/eekernel.h"
 #include "ee/eeregs.h"
 #include "ee/eestruct.h"
 #include "ee/kernel.h"
 
-#include "sce/libdma.h"
-#include "sce/libgraph.h"
-#include "sce/sif.h"
-#include "sce/sifdev.h"
-#include "sce/libgifpk.h"
 #include "sce/libcdvd.h"
-#include "sce/libsdr.h"
-#include "sce/sdmacro.h"
-#include "sce/sdrcmd.h"
+#include "sce/libdma.h"
+#include "sce/libgifpk.h"
+#include "sce/libgraph.h"
 #include "sce/libpad.h"
 #include "sce/libpc.h"
+#include "sce/libsdr.h"
 #include "sce/misc/diei.h"
+#include "sce/mpeg/audiodec.h"
 #include "sce/mpeg/libmpeg.h"
 #include "sce/mpeg/readbuf.h"
 #include "sce/mpeg/videodec.h"
-#include "sce/mpeg/audiodec.h"
+#include "sce/sdmacro.h"
+#include "sce/sdrcmd.h"
+#include "sce/sif.h"
+#include "sce/sifdev.h"
 
-#include "os/pad.h"
-#include "main/glob.h"
-#include "os/system.h"
-#include "os/eeiop/eeiop.h"
-#include "os/eeiop/adpcm/ea_ctrl.h"
-#include "os/eeiop/eese.h"
 #include "graphics/graph3d/sglib.h"
+#include "main/glob.h"
+#include "os/eeiop/adpcm/ea_ctrl.h"
+#include "os/eeiop/eeiop.h"
+#include "os/eeiop/eese.h"
+#include "os/pad.h"
+#include "os/system.h"
 // #include "ingame/map/map_area.h"
+#include "SDL3/SDL_timer.h"
+#include "mikupan/mikupan_file_c.h"
+#include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/ui/mikupan_ui.h"
 
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
+
+#include <glad/gl.h>
+#include <mikupan/av/mikupan_audio_decoder_c.h>
+#include <mikupan/av/mikupan_video_decoder_c.h>
+#include <mikupan/rendering/mikupan_renderer.h>
+#include <stdlib.h>
+
+#define MOVIE_DEBUG 1
+#define MOVIE_EARLY_RETURN_MOVIE 0
+#define MOVIE_EARLY_RETURN_INITMOV 0
+
+#if MOVIE_DEBUG
+#define MDBG(fmt, ...) printf("[MOV] " fmt "\n", ##__VA_ARGS__)
+#else
+#define MDBG(fmt, ...)                                                         \
+    do                                                                         \
+    {                                                                          \
+    }                                                                          \
+    while (0)
+#endif
 
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sgdma.h"
+#include "graphics/scene/scene.h"
 #include "graphics/scene/scene_dat.h"
 #include "ingame/map/map_area.h"
-#include "graphics/scene/scene.h"
-
-#include <stdlib.h>
 
 #ifdef BUILD_EU_VERSION
 char *mpegName[][40] = {
-      {
-            "cdrom0:\\MOVIE3\\SCN0010P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN0031P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN1000P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN1031P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN1101P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN1240P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN1300P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN1331P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN1332P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2010P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2050P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2061P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2071P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2091P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2110P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2131P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2142P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2143P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN2171P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN3010P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN3040P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN3080P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN3081P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN3090P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN4010P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN4031P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN4041P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN4060P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN4080P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN4090P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN4100P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN4110P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN4120P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN5010P.PSS;1",
-            "cdrom0:\\MOVIE4\\SCN5020P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN9000P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN9001P.PSS;1",
-            "cdrom0:\\MOVIE3\\TECMOP.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN9100P.PSS;1",
-            "cdrom0:\\MOVIE3\\SCN9200P.PSS;1",
-      },
-      {
-            "cdrom0:\\MOVIE\\SCN0010.PSS;1",
-            "cdrom0:\\MOVIE\\SCN0031.PSS;1",
-            "cdrom0:\\MOVIE\\SCN1000.PSS;1",
-            "cdrom0:\\MOVIE\\SCN1031.PSS;1",
-            "cdrom0:\\MOVIE\\SCN1101.PSS;1",
-            "cdrom0:\\MOVIE\\SCN1240.PSS;1",
-            "cdrom0:\\MOVIE\\SCN1300.PSS;1",
-            "cdrom0:\\MOVIE\\SCN1331.PSS;1",
-            "cdrom0:\\MOVIE\\SCN1332.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2010.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2050.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2061.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2071.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2091.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2110.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2131.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2142.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2143.PSS;1",
-            "cdrom0:\\MOVIE\\SCN2171.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN3010.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN3040.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN3080.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN3081.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN3090.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN4010.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN4031.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN4041.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN4060.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN4080.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN4090.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN4100.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN4110.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN4120.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN5010.PSS;1",
-            "cdrom0:\\MOVIE2\\SCN5020.PSS;1",
-            "cdrom0:\\MOVIE\\SCN9000.PSS;1",
-            "cdrom0:\\MOVIE\\SCN9001.PSS;1",
-            "cdrom0:\\MOVIE\\TECMO.PSS;1",
-            "cdrom0:\\MOVIE\\SCN9100.PSS;1",
-            "cdrom0:\\MOVIE\\SCN9200.PSS;1",
-      }
+    {
+     "cdrom0:\\MOVIE3\\SCN0010P.PSS;1", "cdrom0:\\MOVIE3\\SCN0031P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN1000P.PSS;1", "cdrom0:\\MOVIE3\\SCN1031P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN1101P.PSS;1", "cdrom0:\\MOVIE3\\SCN1240P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN1300P.PSS;1", "cdrom0:\\MOVIE3\\SCN1331P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN1332P.PSS;1", "cdrom0:\\MOVIE3\\SCN2010P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN2050P.PSS;1", "cdrom0:\\MOVIE3\\SCN2061P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN2071P.PSS;1", "cdrom0:\\MOVIE3\\SCN2091P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN2110P.PSS;1", "cdrom0:\\MOVIE3\\SCN2131P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN2142P.PSS;1", "cdrom0:\\MOVIE3\\SCN2143P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN2171P.PSS;1", "cdrom0:\\MOVIE4\\SCN3010P.PSS;1",
+     "cdrom0:\\MOVIE4\\SCN3040P.PSS;1", "cdrom0:\\MOVIE4\\SCN3080P.PSS;1",
+     "cdrom0:\\MOVIE4\\SCN3081P.PSS;1", "cdrom0:\\MOVIE4\\SCN3090P.PSS;1",
+     "cdrom0:\\MOVIE4\\SCN4010P.PSS;1", "cdrom0:\\MOVIE4\\SCN4031P.PSS;1",
+     "cdrom0:\\MOVIE4\\SCN4041P.PSS;1", "cdrom0:\\MOVIE4\\SCN4060P.PSS;1",
+     "cdrom0:\\MOVIE4\\SCN4080P.PSS;1", "cdrom0:\\MOVIE4\\SCN4090P.PSS;1",
+     "cdrom0:\\MOVIE4\\SCN4100P.PSS;1", "cdrom0:\\MOVIE4\\SCN4110P.PSS;1",
+     "cdrom0:\\MOVIE4\\SCN4120P.PSS;1", "cdrom0:\\MOVIE4\\SCN5010P.PSS;1",
+     "cdrom0:\\MOVIE4\\SCN5020P.PSS;1", "cdrom0:\\MOVIE3\\SCN9000P.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN9001P.PSS;1", "cdrom0:\\MOVIE3\\TECMOP.PSS;1",
+     "cdrom0:\\MOVIE3\\SCN9100P.PSS;1", "cdrom0:\\MOVIE3\\SCN9200P.PSS;1",
+     },
+    {
+     "cdrom0:\\MOVIE\\SCN0010.PSS;1",  "cdrom0:\\MOVIE\\SCN0031.PSS;1",
+     "cdrom0:\\MOVIE\\SCN1000.PSS;1",  "cdrom0:\\MOVIE\\SCN1031.PSS;1",
+     "cdrom0:\\MOVIE\\SCN1101.PSS;1",  "cdrom0:\\MOVIE\\SCN1240.PSS;1",
+     "cdrom0:\\MOVIE\\SCN1300.PSS;1",  "cdrom0:\\MOVIE\\SCN1331.PSS;1",
+     "cdrom0:\\MOVIE\\SCN1332.PSS;1",  "cdrom0:\\MOVIE\\SCN2010.PSS;1",
+     "cdrom0:\\MOVIE\\SCN2050.PSS;1",  "cdrom0:\\MOVIE\\SCN2061.PSS;1",
+     "cdrom0:\\MOVIE\\SCN2071.PSS;1",  "cdrom0:\\MOVIE\\SCN2091.PSS;1",
+     "cdrom0:\\MOVIE\\SCN2110.PSS;1",  "cdrom0:\\MOVIE\\SCN2131.PSS;1",
+     "cdrom0:\\MOVIE\\SCN2142.PSS;1",  "cdrom0:\\MOVIE\\SCN2143.PSS;1",
+     "cdrom0:\\MOVIE\\SCN2171.PSS;1", "cdrom0:\\MOVIE2\\SCN3010.PSS;1",
+     "cdrom0:\\MOVIE2\\SCN3040.PSS;1",  "cdrom0:\\MOVIE2\\SCN3080.PSS;1",
+     "cdrom0:\\MOVIE2\\SCN3081.PSS;1",  "cdrom0:\\MOVIE2\\SCN3090.PSS;1",
+     "cdrom0:\\MOVIE2\\SCN4010.PSS;1",  "cdrom0:\\MOVIE2\\SCN4031.PSS;1",
+     "cdrom0:\\MOVIE2\\SCN4041.PSS;1",  "cdrom0:\\MOVIE2\\SCN4060.PSS;1",
+     "cdrom0:\\MOVIE2\\SCN4080.PSS;1",  "cdrom0:\\MOVIE2\\SCN4090.PSS;1",
+     "cdrom0:\\MOVIE2\\SCN4100.PSS;1",  "cdrom0:\\MOVIE2\\SCN4110.PSS;1",
+     "cdrom0:\\MOVIE2\\SCN4120.PSS;1",  "cdrom0:\\MOVIE2\\SCN5010.PSS;1",
+     "cdrom0:\\MOVIE2\\SCN5020.PSS;1",   "cdrom0:\\MOVIE\\SCN9000.PSS;1",
+     "cdrom0:\\MOVIE\\SCN9001.PSS;1",  "cdrom0:\\MOVIE\\TECMO.PSS;1",
+     "cdrom0:\\MOVIE\\SCN9100.PSS;1",  "cdrom0:\\MOVIE\\SCN9200.PSS;1",
+     }
 };
 char *mpegStaff[][5] = {
-      {
-            "cdrom0:\\MOVIE5\\SCN900EP.PSS;1",
-            "cdrom0:\\MOVIE5\\SCN900FP.PSS;1",
-            "cdrom0:\\MOVIE5\\SCN900GP.PSS;1",
-            "cdrom0:\\MOVIE5\\SCN900SP.PSS;1",
-            "cdrom0:\\MOVIE5\\SCN900IP.PSS;1",
-      },
-      {
-            "cdrom0:\\MOVIE5\\SCN900E.PSS;1",
-            "cdrom0:\\MOVIE5\\SCN900F.PSS;1",
-            "cdrom0:\\MOVIE5\\SCN900G.PSS;1",
-            "cdrom0:\\MOVIE5\\SCN900S.PSS;1",
-            "cdrom0:\\MOVIE5\\SCN900I.PSS;1",
-      }
+    {
+     "cdrom0:\\MOVIE5\\SCN900EP.PSS;1", "cdrom0:\\MOVIE5\\SCN900FP.PSS;1",
+     "cdrom0:\\MOVIE5\\SCN900GP.PSS;1", "cdrom0:\\MOVIE5\\SCN900SP.PSS;1",
+     "cdrom0:\\MOVIE5\\SCN900IP.PSS;1", },
+    {
+     "cdrom0:\\MOVIE5\\SCN900E.PSS;1",  "cdrom0:\\MOVIE5\\SCN900F.PSS;1",
+     "cdrom0:\\MOVIE5\\SCN900G.PSS;1",  "cdrom0:\\MOVIE5\\SCN900S.PSS;1",
+     "cdrom0:\\MOVIE5\\SCN900I.PSS;1", }
 };
 #else
 char *mpegName[] = {
-    "cdrom0:\\MOVIE\\SCN0010.PSS;1",
-    "cdrom0:\\MOVIE\\SCN0031.PSS;1",
-    "cdrom0:\\MOVIE\\SCN1000.PSS;1",
-    "cdrom0:\\MOVIE\\SCN1031.PSS;1",
-    "cdrom0:\\MOVIE\\SCN1101.PSS;1",
-    "cdrom0:\\MOVIE\\SCN1240.PSS;1",
-    "cdrom0:\\MOVIE\\SCN1300.PSS;1",
-    "cdrom0:\\MOVIE\\SCN1331.PSS;1",
-    "cdrom0:\\MOVIE\\SCN1332.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2010.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2050.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2061.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2071.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2091.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2110.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2131.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2142.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2143.PSS;1",
-    "cdrom0:\\MOVIE\\SCN2171.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN3010.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN3040.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN3080.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN3081.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN3090.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN4010.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN4031.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN4041.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN4060.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN4080.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN4090.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN4100.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN4110.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN4120.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN5010.PSS;1",
-    "cdrom0:\\MOVIE2\\SCN5020.PSS;1",
-    "cdrom0:\\MOVIE\\SCN9000.PSS;1",
-    "cdrom0:\\MOVIE\\SCN9001.PSS;1",
-    "cdrom0:\\MOVIE\\TECMO.PSS;1",
-    "cdrom0:\\MOVIE\\SCN9100.PSS;1",
-    "cdrom0:\\MOVIE\\SCN9200.PSS;1",
+    "cdrom0:\\MOVIE\\SCN0010.PSS;1",  "cdrom0:\\MOVIE\\SCN0031.PSS;1",
+    "cdrom0:\\MOVIE\\SCN1000.PSS;1",  "cdrom0:\\MOVIE\\SCN1031.PSS;1",
+    "cdrom0:\\MOVIE\\SCN1101.PSS;1",  "cdrom0:\\MOVIE\\SCN1240.PSS;1",
+    "cdrom0:\\MOVIE\\SCN1300.PSS;1",  "cdrom0:\\MOVIE\\SCN1331.PSS;1",
+    "cdrom0:\\MOVIE\\SCN1332.PSS;1",  "cdrom0:\\MOVIE\\SCN2010.PSS;1",
+    "cdrom0:\\MOVIE\\SCN2050.PSS;1",  "cdrom0:\\MOVIE\\SCN2061.PSS;1",
+    "cdrom0:\\MOVIE\\SCN2071.PSS;1",  "cdrom0:\\MOVIE\\SCN2091.PSS;1",
+    "cdrom0:\\MOVIE\\SCN2110.PSS;1",  "cdrom0:\\MOVIE\\SCN2131.PSS;1",
+    "cdrom0:\\MOVIE\\SCN2142.PSS;1",  "cdrom0:\\MOVIE\\SCN2143.PSS;1",
+    "cdrom0:\\MOVIE\\SCN2171.PSS;1",  "cdrom0:\\MOVIE2\\SCN3010.PSS;1",
+    "cdrom0:\\MOVIE2\\SCN3040.PSS;1", "cdrom0:\\MOVIE2\\SCN3080.PSS;1",
+    "cdrom0:\\MOVIE2\\SCN3081.PSS;1", "cdrom0:\\MOVIE2\\SCN3090.PSS;1",
+    "cdrom0:\\MOVIE2\\SCN4010.PSS;1", "cdrom0:\\MOVIE2\\SCN4031.PSS;1",
+    "cdrom0:\\MOVIE2\\SCN4041.PSS;1", "cdrom0:\\MOVIE2\\SCN4060.PSS;1",
+    "cdrom0:\\MOVIE2\\SCN4080.PSS;1", "cdrom0:\\MOVIE2\\SCN4090.PSS;1",
+    "cdrom0:\\MOVIE2\\SCN4100.PSS;1", "cdrom0:\\MOVIE2\\SCN4110.PSS;1",
+    "cdrom0:\\MOVIE2\\SCN4120.PSS;1", "cdrom0:\\MOVIE2\\SCN5010.PSS;1",
+    "cdrom0:\\MOVIE2\\SCN5020.PSS;1", "cdrom0:\\MOVIE\\SCN9000.PSS;1",
+    "cdrom0:\\MOVIE\\SCN9001.PSS;1",  "cdrom0:\\MOVIE\\TECMO.PSS;1",
+    "cdrom0:\\MOVIE\\SCN9100.PSS;1",  "cdrom0:\\MOVIE\\SCN9200.PSS;1",
 };
 #endif
 
-u_char mpeg_vol_rate[] = {
-    95,  90,  75,  90,  100, 100, 100, 90,  100, 100, 90, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 90,  90, 90,  100, 80,
-    100, 100, 100, 100, 100, 100, 100, 100, 85,  90,  85, 70
-};
+u_char mpeg_vol_rate[] = {95,  90,  75,  90,  100, 100, 100, 90,  100, 100,
+                          90,  100, 100, 100, 100, 100, 100, 100, 100, 100,
+                          100, 100, 100, 90,  90,  90,  100, 80,  100, 100,
+                          100, 100, 100, 100, 100, 100, 85,  90,  85,  70};
 
 VoBuf voBuf = {0};
 StrFile infile = {0};
@@ -208,13 +164,13 @@ VideoDec videoDec = {0};
 AudioDec audioDec = {0};
 sceGsDBuff db = {0};
 
-static VoData *voBufData = (VoData *)0x00470100;
-static VoTag *voBufTag = (VoTag *)0x006d8100;
+static VoData *voBufData = (VoData *) 0x00470100;
+static VoTag *voBufTag = (VoTag *) 0x006d8100;
 
 /// 0x00420000
 ReadBuf *readBuf = NULL;
-static u_char *audioBuff = (u_char *)0x006c8100;
-static char *videoDecStack = (u_char *)0x006d4100;
+static u_char *audioBuff = (u_char *) 0x006c8100;
+static char *videoDecStack = (u_char *) 0x006d4100;
 u_int scene_bg_color = 0;
 int isWithAudio = 1;
 char *commandname = NULL;
@@ -225,34 +181,90 @@ static u_long128 *viBufData;
 
 static u_long128 viBufTag[257];
 static TimeStamp timeStamp[512];
-static char _0_buf[2048] __attribute__ ((aligned(64)));
+static char _0_buf[2048] __attribute__((aligned(64)))
+__attribute__((section(".bss")));
 
-#define min(x, y) (((x) > (y))? (y): (x))
-#define max(x, y) (((x) < (y))? (y): (x))
+#define min(x, y) (((x) > (y)) ? (y) : (x))
+#define max(x, y) (((x) < (y)) ? (y) : (x))
 
-typedef struct {
+typedef struct
+{
     int x;
     int y;
     int w;
     int h;
 } Rect;
 
-static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file);
-static int isAudioOK();
-static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file) ;
+typedef struct VideoDecoder
+{
+    MovVidHandle mov;
+    int w, h;
+    GLuint tex;
+    MikuPan_TextureInfo *ti;
+    int started;
+    double wallBase;
+    double fps;
+} VideoDecoder;
+
+typedef struct ReadBuffer
+{
+    const unsigned char *rgba;
+    int strideBytes;
+    double ptsSec;
+} ReadBuffer;
+
+typedef struct AudioState
+{
+    AudioDecoder *decoder;
+    SDL_AudioDeviceID device;
+    SDL_AudioStream *stream;
+    int rate;
+    int channels;
+    uint8_t audio_buffer[16384];
+    size_t audio_queued;
+    int eof;
+} AudioState;
+
+//static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file);
+static int readMpeg(VideoDecoder *vd, ReadBuffer *rb);
+static int beginMovPlayback(char *name);
+static int stepMovPlayback(void);
+static void endMovPlayback(void);
+static void restoreAfterMovPlayback(void);
+static double now_sec();
 static int isAudioOK();
 static void termMov();
 static void usage();
-static void iopGetArea(int *pd0, int *d0, int *pd1, int *d1, AudioDec *ad, int pos);
-static int sendToIOP2area(int pd0, int d0, int pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1);
+static void iopGetArea(int *pd0, int *d0, int *pd1, int *d1, AudioDec *ad,
+                       int pos);
+static int sendToIOP2area(int pd0, int d0, int pd1, int d1, u_char *ps0, int s0,
+                          u_char *ps1, int s1);
 static int sendToIOP(int64_t dst, u_char *src, int size);
 static void changeMasterVolume(u_int val);
 static void changeInputVolume(u_int val);
-static int copy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1);
-static int cpy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1);
+static int copy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0,
+                     int s0, u_char *ps1, int s1);
+static int cpy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0,
+                    int s0, u_char *ps1, int s1);
 
-#define IOP_BUFF_SIZE (12288*2)
-#define STACK_SIZE (16*1024)
+static VideoDecoder g_vd = {0};
+static ReadBuffer g_rb = {0};
+static AudioState g_audio_state = {0};
+
+typedef struct {
+    int active;
+    int draining_audio;
+    int drain_safety;
+    int have_any_frame;
+    double frame_duration;
+    double start_time;
+    unsigned long long tick;
+} MoviePlaybackState;
+
+static MoviePlaybackState g_movie_playback = {0};
+
+#define IOP_BUFF_SIZE (12288 * 2)
+#define STACK_SIZE (16 * 1024)
 
 void MovieInitWrk(void)
 
@@ -271,14 +283,15 @@ int PlayMpegEvent()
 {
     int i;
     int ret;
+    int started;
 
     play_mov_no = 0;
 
-    switch(movie_wrk.play_event_sta)
+    switch (movie_wrk.play_event_sta)
     {
         case 0:
             ret = 0;
-        break;
+            break;
         case 1:
             if (checkIOP() == 0)
             {
@@ -289,116 +302,161 @@ int PlayMpegEvent()
             }
 
             ret = 0;
-        break;
+            break;
         case 2:
             movie_wrk.play_event_sta = 3;
 
             ret = 0;
-        break;
+            break;
         case 3:
-            for (i = 0; i < 99; i++ )
+            for (i = 0; i < 99; i++)
             {
-                u_char *smn = scene_movie_no; // HACK: regswap fix
+                u_char *smn = scene_movie_no;// HACK: regswap fix
                 if (scene_movie_no[i] == movie_wrk.play_event_no)
                 {
                     play_mov_no = i;
                     break;
                 }
-                smn = scene_movie_no; // HACK: regswap fix
+                smn = scene_movie_no;// HACK: regswap fix
             }
 
             //ClearDispRoom(1);
 
 #ifdef BUILD_EU_VERSION
-            movie(mpegName[sys_wrk.pal_disp_mode][play_mov_no]);
+            if (movie_wrk.play_event_no == 0x60)
+            {
+                started = beginMovPlayback(
+                    mpegStaff[sys_wrk.pal_disp_mode][sys_wrk.language]);
+            }
+            else
+            {
+                started = beginMovPlayback(
+                    mpegName[sys_wrk.pal_disp_mode][play_mov_no]);
+            }
 #else
-            movie(mpegName[play_mov_no]);
+            started = beginMovPlayback(mpegName[play_mov_no]);
 #endif
-            SetIopCmdSm(IC_SE_INIT, 1, 0, 0);
-            SeSetMVol(opt_wrk.bgm_vol);
-            SeSetSteMono(opt_wrk.sound_mode);
+            movie_wrk.play_event_sta = started ? 4 : 5;
+            ret = 1;
+            break;
 
-            movie_wrk.play_event_sta = 4;
         case 4:
-#ifdef BUILD_EU_VERSION
-            sceGsResetGraph(1, SCE_GS_INTERLACE, sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL: SCE_GS_NTSC, SCE_GS_FRAME);
-#else
-            sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
-#endif
-            sceGsSetDefDBuff(&g_db, 0, 0x280, 0xe0, 2, 0x31, 1);
-
-            pdrawenv = &g_db.draw0;
-
-#ifdef BUILD_EU_VERSION
-            if (sys_wrk.pal_disp_mode == 0)
+            if (stepMovPlayback())
             {
-                g_db.disp[1].display.DX = 656;
-                g_db.disp[0].display.DX = 656;
-                g_db.disp[1].display.DY = 104;
-                g_db.disp[0].display.DY = 104;
-            }
-            else
-            {
-                g_db.disp[1].display.DX = 636;
-                g_db.disp[0].display.DX = 636;
-                g_db.disp[1].display.DY = 50;
-                g_db.disp[0].display.DY = 50;
-            }
-#endif
-
-            sceGsSyncPath(0, 0);
-            SgInit3D();
-            sceGsSyncPath(0, 0);
-
-            vfunc();
-
-            if (scene_bg_color == 0)
-            {
-                SetSysBackColor(0, 0, 0);
-                clearGsMem(0, 0, 0, 0x280, 0x1c0);
-            }
-            else
-            {
-                SetSysBackColor(0xff, 0xff, 0xff);
-                clearGsMem(0xff, 0xff, 0xff, 0x280, 0x1c0);
+                ret = 1;
+                break;
             }
 
-            AdpcmReturnFromMovie();
-            EiMain();
+            endMovPlayback();
+            movie_wrk.play_event_sta = 5;
+            ret = 1;
+            break;
 
-
-            //*(int *)REG_DMAC_CTRL &= ~D_CTRL_RELE_M; // yeah ...
-
+        case 5:
+            restoreAfterMovPlayback();
             MovieInitWrk();
-
             ret = 0;
-        break;
+            break;
+        default:
+            MovieInitWrk();
+            ret = 0;
+            break;
     }
 
     return ret;
 }
 
+static void restoreAfterMovPlayback(void)
+{
+    SetIopCmdSm(IC_SE_INIT, 1, 0, 0);
+    SeSetMVol(opt_wrk.bgm_vol);
+    SeSetSteMono(opt_wrk.sound_mode);
+
+#ifdef BUILD_EU_VERSION
+    sceGsResetGraph(1, SCE_GS_INTERLACE,
+                    sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL
+                                               : SCE_GS_NTSC,
+                    SCE_GS_FRAME);
+#else
+    sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
+#endif
+    sceGsSetDefDBuff(&g_db, 0, 0x280, 0xe0, 2, 0x31, 1);
+
+    pdrawenv = &g_db.draw0;
+
+#ifdef BUILD_EU_VERSION
+    if (sys_wrk.pal_disp_mode == 0)
+    {
+        g_db.disp[1].display.DX = 656;
+        g_db.disp[0].display.DX = 656;
+        g_db.disp[1].display.DY = 104;
+        g_db.disp[0].display.DY = 104;
+    }
+    else
+    {
+        g_db.disp[1].display.DX = 636;
+        g_db.disp[0].display.DX = 636;
+        g_db.disp[1].display.DY = 50;
+        g_db.disp[0].display.DY = 50;
+    }
+#endif
+
+    sceGsSyncPath(0, 0);
+    SgInit3D();
+    sceGsSyncPath(0, 0);
+
+    vfunc();
+
+    if (scene_bg_color == 0)
+    {
+        SetSysBackColor(0, 0, 0);
+        clearGsMem(0, 0, 0, 0x280, 0x1c0);
+    }
+    else
+    {
+        SetSysBackColor(0xff, 0xff, 0xff);
+        clearGsMem(0xff, 0xff, 0xff, 0x280, 0x1c0);
+    }
+
+    AdpcmReturnFromMovie();
+    EiMain();
+
+    //*(int *)REG_DMAC_CTRL &= ~D_CTRL_RELE_M; // yeah ...
+}
+
 u_int movie(char *name)
 {
+    beginMovPlayback(name);
     return controller_val;
-    static int count = 0;
+}
+
+static int beginMovPlayback(char *name)
+{
+    if (MOVIE_EARLY_RETURN_MOVIE)
+    {
+        return 0;
+    }
+
+    if (g_movie_playback.active)
+    {
+        return 1;
+    }
 
     sceGsSyncPath(0, 0);
     sceGsResetPath();
     sceDmaReset(1);
 #ifdef BUILD_EU_VERSION
-            sceGsResetGraph(1, SCE_GS_INTERLACE, sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL: SCE_GS_NTSC, SCE_GS_FRAME);
+    sceGsResetGraph(1, SCE_GS_INTERLACE,
+                    sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL : SCE_GS_NTSC,
+                    SCE_GS_FRAME);
 #else
-            sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
+    sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
 #endif
+
     if (scene_bg_color == 0)
-    {
         clearGsMem(0, 0, 0, 0x280, 0x1c0);
-    }
     else
-    {
         clearGsMem(0xff, 0xff, 0xff, 0x280, 0x1c0);
-    }
 
 #ifdef BUILD_EU_VERSION
     SendFontTex();
@@ -426,16 +484,299 @@ u_int movie(char *name)
     FlushCache(0);
 
     thread_id = GetThreadId();
-
     ChangeThreadPriority(thread_id, 1);
 
     initMov(name);
-    readMpeg(&videoDec,readBuf,(StrFile *)&infile);
+    if (!g_vd.mov)
+    {
+        ChangeThreadPriority(GetThreadId(), thread_id);
+        memset(&g_movie_playback, 0, sizeof(g_movie_playback));
+        return 0;
+    }
+
+    double fps = g_vd.fps;
+    if (fps < 1.0 || fps > 120.0)
+    {
+        fps = 30.0;
+    }
+
+    g_movie_playback.active = 1;
+    g_movie_playback.draining_audio = 0;
+    g_movie_playback.drain_safety = 100;
+    g_movie_playback.have_any_frame = 0;
+    g_movie_playback.frame_duration = 1.0 / fps;
+    g_movie_playback.start_time = now_sec();
+    g_movie_playback.tick = 0;
+
+    return 1;
+}
+
+static double now_sec()
+{
+    return (double) SDL_GetPerformanceCounter()
+           / (double) SDL_GetPerformanceFrequency();
+}
+
+static size_t audioQueuedBytes()
+{
+    if (!g_audio_state.stream)
+    {
+        return 0;
+    }
+
+    return SDL_GetAudioStreamQueued(g_audio_state.stream);
+}
+
+static size_t audioBytesForMs(int ms)
+{
+    if (g_audio_state.rate <= 0 || g_audio_state.channels <= 0)
+    {
+        return 0;
+    }
+
+    return ((size_t) g_audio_state.rate
+            * (size_t) g_audio_state.channels
+            * sizeof(int16_t)
+            * (size_t) ms) / 1000;
+}
+
+static size_t audioLowWater()
+{
+    return audioBytesForMs(250);
+}
+
+static size_t audioHighWater()
+{
+    return audioBytesForMs(750);
+}
+
+static void feedAudio(void)
+{
+    if (!g_audio_state.decoder || !g_audio_state.stream)
+    {
+        return;
+    }
+
+    if (g_audio_state.eof)
+    {
+        return;
+    }
+
+    size_t queued = audioQueuedBytes();
+    size_t high_water = audioHighWater();
+
+    if (queued >= high_water)
+    {
+        return;
+    }
+
+    size_t to_feed = high_water - queued;
+
+    /*
+     * Do not force a large decode if the queue is only slightly below the
+     * high-water mark. The old code forced at least 4096 bytes, which could
+     * cause unnecessary decoder work.
+     */
+    if (to_feed > sizeof(g_audio_state.audio_buffer))
+    {
+        to_feed = sizeof(g_audio_state.audio_buffer);
+    }
+
+    if (to_feed == 0)
+    {
+        return;
+    }
+
+    if (!mikupan_decoder_pump(g_audio_state.decoder, to_feed))
+    {
+        g_audio_state.eof = 1;
+        return;
+    }
+
+    size_t n =
+        mikupan_decoder_pop(g_audio_state.decoder,
+                            g_audio_state.audio_buffer,
+                            to_feed);
+
+    if (n > 0)
+    {
+        SDL_PutAudioStreamData(g_audio_state.stream,
+                               g_audio_state.audio_buffer,
+                               (int)n);
+    }
+    else
+    {
+        g_audio_state.eof = 1;
+    }
+}
+
+void renderMovFrame(const MikuPan_TextureInfo *ti)
+{
+    if (!ti || !ti->id)
+    {
+        return;
+    }
+
+    MikuPan_Rect src = {0};
+    src.x = 0.0f;
+    src.y = 0.0f;
+    src.w = (float) ti->width;
+    src.h = (float) ti->height;
+
+    MikuPan_Rect dst = {0};
+    dst.x = 0.0f;
+    dst.y = 0.0f;
+    dst.w = 640.0f;
+    dst.h = 448.0f;
+
+    MikuPan_RenderSprite(src, dst, 255, 255, 255, 255,
+                         (MikuPan_TextureInfo *) ti);
+    MikuPan_FlushTexturedSpriteBatch();
+}
+
+static int stepMovPlayback(void)
+{
+    if (!g_movie_playback.active)
+    {
+        return 0;
+    }
+
+    movVblankPad();
+
+    if (*key_now[12] != 0
+        && g_movie_playback.tick >= 31
+        && movie_wrk.play_event_sta != 7)
+    {
+        return 0;
+    }
+
+    /*
+     * End-of-video path:
+     * keep showing the last decoded frame while queued audio drains.
+     *
+     * Do not call feedAudio() here if we are already draining.
+     */
+    if (g_movie_playback.draining_audio)
+    {
+        if (g_movie_playback.have_any_frame)
+        {
+            renderMovFrame(g_vd.ti);
+        }
+
+        if (g_audio_state.stream
+            && SDL_GetAudioStreamQueued(g_audio_state.stream) > 0
+            && g_movie_playback.drain_safety-- > 0)
+        {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    double t = now_sec();
+
+    double target_time =
+        g_movie_playback.start_time
+        + (double)g_movie_playback.tick * g_movie_playback.frame_duration;
+
+    double wait = target_time - t;
+
+    /*
+     * If the presentation clock somehow gets too far ahead,
+     * rebase it around the current decoded movie position.
+     *
+     * Do not reset tick unless the MPEG stream is also rewound.
+     */
+    if (wait > 0.5)
+    {
+        g_movie_playback.start_time =
+            t - (double)g_movie_playback.tick * g_movie_playback.frame_duration;
+
+        target_time =
+            g_movie_playback.start_time
+            + (double)g_movie_playback.tick * g_movie_playback.frame_duration;
+
+        wait = target_time - t;
+    }
+
+    int decoded_frames = 0;
+
+    /*
+     * If late, allow limited catch-up. This intentionally drops intermediate
+     * frames because only the latest decoded frame is rendered.
+     */
+    int max_decode_frames = 1;
+
+    if (wait < -g_movie_playback.frame_duration)
+    {
+        max_decode_frames = 3;
+    }
+
+    while (wait <= 0.0 && decoded_frames < max_decode_frames)
+    {
+        int r = readMpeg(&g_vd, &g_rb);
+
+        if (r < 0)
+        {
+            return 0;
+        }
+
+        if (r == 0)
+        {
+            break;
+        }
+
+        if (r == 2)
+        {
+            g_movie_playback.draining_audio = 1;
+            break;
+        }
+
+        g_movie_playback.have_any_frame = 1;
+        g_movie_playback.tick++;
+        decoded_frames++;
+
+        t = now_sec();
+
+        target_time =
+            g_movie_playback.start_time
+            + (double)g_movie_playback.tick * g_movie_playback.frame_duration;
+
+        wait = target_time - t;
+    }
+
+    /*
+     * If we are very late, do not try to decode an enormous backlog.
+     * Rebase the movie clock to the current decoded frame.
+     */
+    if (wait < -1.0)
+    {
+        g_movie_playback.start_time =
+            t - (double)g_movie_playback.tick * g_movie_playback.frame_duration;
+    }
+
+    if (g_movie_playback.have_any_frame)
+    {
+        renderMovFrame(g_vd.ti);
+    }
+
+    /*
+     * Prefer doing audio refill on movie ticks where we did not decode video.
+     * If the queue is genuinely low, refill anyway to avoid underruns.
+     */
+    if (decoded_frames == 0 || audioQueuedBytes() < audioLowWater())
+    {
+        feedAudio();
+    }
+
+    return 1;
+}
+
+static void endMovPlayback(void)
+{
     termMov();
-
+    memset(&g_movie_playback, 0, sizeof(g_movie_playback));
     ChangeThreadPriority(GetThreadId(), thread_id);
-
-    return controller_val;
 }
 
 volatile int isCountVblank = 0;
@@ -450,7 +791,60 @@ void switchThread()
     RotateThreadReadyQueue(1);
 }
 
-static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file)
+static int readMpeg(VideoDecoder *vd, ReadBuffer *rb)
+{
+    if (!vd || !vd->mov || !vd->tex || !rb)
+    {
+        return -1;
+    }
+
+    const char *err = NULL;
+    double pts = 0.0;
+    int r = movvid_decode_frame(vd->mov, NULL, 0, &pts, &err);
+
+    if (r < 0)
+    {
+        info_log("movvid_decode_frame error: %s", err ? err : "(no detail)");
+        return -1;
+    }
+
+    if (r == 0)
+    {
+        return 0;// EAGAIN
+    }
+
+    if (r == 2)
+    {
+        return 2;// EOF
+    }
+
+    int strideBytes = 0;
+    const unsigned char *rgba = movvid_rgba_ptr(vd->mov, &strideBytes);
+
+    if (!rgba || strideBytes <= 0)
+    {
+        info_log("movvid_rgba_ptr failed");
+        return -1;
+    }
+
+    rb->rgba = rgba;
+    rb->strideBytes = strideBytes;
+    rb->ptsSec = pts;
+
+    glad_glBindTexture(GL_TEXTURE_2D, vd->tex);
+    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glad_glPixelStorei(GL_UNPACK_ROW_LENGTH, strideBytes / 4);
+
+    glad_glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, vd->w, vd->h, GL_RGBA,
+                         GL_UNSIGNED_BYTE, rgba);
+
+    glad_glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glad_glBindTexture(GL_TEXTURE_2D, 0);
+
+    return 1;
+}
+
+/*static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file)
 {
     u_char cdata[32];
     int isStarted;
@@ -541,113 +935,194 @@ static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file)
     }
 
     return 1;
-}
+}*/
 
 static int isAudioOK()
 {
-    return (isWithAudio)? audioDecIsPreset(&audioDec): 1;
+    return (isWithAudio) ? audioDecIsPreset(&audioDec) : 1;
 }
 
 void initMov(char *bsfilename)
 {
-    return;
-    ThreadParam th_param;
-    void *val;
+    termMov();
 
-    //*REG_DMAC_CTRL |= 3;
-    //*REG_DMAC_STAT = 4;
-
-    scePcStop();
-
-    if (movie_wrk.play_event_sta == 6 || movie_wrk.play_event_sta == 7)
+    char resolvedPath[256];
+    if (!MikuPan_ResolveCdPath(bsfilename, resolvedPath, sizeof(resolvedPath)))
     {
-        mpegWork = (u_char *)MikuPan_GetHostAddress(MPEG_WORK_ADDRESS);
+        info_log("Failed to resolve path for file.bin");
+        return;
+    }
+
+    const char *err = NULL;
+    g_vd.mov = movvid_open(resolvedPath, &err);
+
+    if (!g_vd.mov)
+    {
+        info_log("movvid_open failed: %s", err ? err : "(no detail)");
+        return;
+    }
+
+    g_vd.w = movvid_w(g_vd.mov);
+    g_vd.h = movvid_h(g_vd.mov);
+
+    if (g_vd.w <= 0 || g_vd.h <= 0)
+    {
+        info_log("Invalid video size: %dx%d", g_vd.w, g_vd.h);
+        termMov();
+        return;
+    }
+
+    g_vd.fps = movvid_fps(g_vd.mov);
+
+    if (g_vd.fps <= 0.0)
+    {
+        g_vd.fps = 25.0;
+    }
+
+    memset(&g_audio_state, 0, sizeof(g_audio_state));
+    g_audio_state.decoder = mikupan_decoder_open(resolvedPath);
+
+    if (!g_audio_state.decoder)
+    {
+        info_log("audio decoder open failed");
     }
     else
     {
-        mpegWork = (u_char *)GetEmptyRoomAddr();
+        if (!mikupan_decoder_pump(g_audio_state.decoder, 4096))
+        {
+            info_log("initial audio pump failed");
+        }
+
+        g_audio_state.rate = mikupan_decoder_get_rate(g_audio_state.decoder);
+        g_audio_state.channels =
+            mikupan_decoder_get_channels(g_audio_state.decoder);
+
+        if (g_audio_state.rate <= 0 || g_audio_state.channels <= 0)
+        {
+            info_log("Invalid audio format: rate=%d channels=%d",
+                     g_audio_state.rate, g_audio_state.channels);
+            mikupan_decoder_close(g_audio_state.decoder);
+            g_audio_state.decoder = NULL;
+        }
+        else
+        {
+            info_log("[AUDIO] %d Hz %d ch", g_audio_state.rate,
+                     g_audio_state.channels);
+
+            SDL_AudioSpec spec = {0};
+            spec.freq = g_audio_state.rate;
+            spec.format = SDL_AUDIO_S16;
+            spec.channels = g_audio_state.channels;
+
+            g_audio_state.device =
+                SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+
+            if (!g_audio_state.device)
+            {
+                info_log("SDL_OpenAudioDevice failed: %s", SDL_GetError());
+                mikupan_decoder_close(g_audio_state.decoder);
+                g_audio_state.decoder = NULL;
+            }
+            else
+            {
+                g_audio_state.stream = SDL_CreateAudioStream(&spec, &spec);
+
+                if (!g_audio_state.stream)
+                {
+                    info_log("SDL_CreateAudioStream failed: %s",
+                             SDL_GetError());
+                    SDL_CloseAudioDevice(g_audio_state.device);
+                    g_audio_state.device = 0;
+                    mikupan_decoder_close(g_audio_state.decoder);
+                    g_audio_state.decoder = NULL;
+                }
+                else
+                {
+                    SDL_BindAudioStream(g_audio_state.device,
+                                        g_audio_state.stream);
+                    SDL_ResumeAudioDevice(g_audio_state.device);
+
+                    for (int i = 0; i < 8; i++)
+                    {
+                        feedAudio();
+                        if (audioQueuedBytes() >= audioLowWater())
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    val = mpegWork;
-    viBufData = (val + (SCE_MPEG_BUFFER_SIZE(MPEG_DISP_WIDTH, MPEG_DISP_HEIGHT) - 8192));
+    glad_glGenTextures(1, &g_vd.tex);
+    glad_glBindTexture(GL_TEXTURE_2D, g_vd.tex);
 
-    readBufCreate(readBuf);
-    //sceMpegInit();
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    videoDecCreate(&videoDec, mpegWork, (SCE_MPEG_BUFFER_SIZE(MAX_WIDTH, MAX_HEIGHT) - 8192), viBufData, viBufTag, VIBUF_SIZE, timeStamp, VIBUF_TS_SIZE);
+    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, g_vd.w, g_vd.h, 0, GL_RGBA,
+                      GL_UNSIGNED_BYTE, NULL);
 
-    sceSdRemoteInit();
-    sceSdRemote(1, rSdInit, SD_INIT_COLD);
+    glad_glBindTexture(GL_TEXTURE_2D, 0);
 
-    audioDecCreate(&audioDec, audioBuff, 0xc000, IOP_BUFF_SIZE);
-    videoDecSetStream(&videoDec, sceMpegStrM2V, 0, (sceMpegCallback)videoCallback, readBuf);
+    g_vd.ti = (MikuPan_TextureInfo *) malloc(sizeof(MikuPan_TextureInfo));
+    g_vd.ti->id = g_vd.tex;
+    g_vd.ti->width = g_vd.w;
+    g_vd.ti->height = g_vd.h;
 
-    if (isWithAudio != 0)
-    {
-        videoDecSetStream(&videoDec, sceMpegStrPCM, 0, (sceMpegCallback)pcmCallback, readBuf);
-    }
-
-    voBufCreate(&voBuf, UncAddr(voBufData), voBufTag, N_GSBUF);
-
-    th_param.entry = videoDecMain;
-    th_param.stack = videoDecStack;
-    th_param.stackSize = STACK_SIZE;
-    th_param.initPriority = 1;
-    th_param.gpReg = &_gp;
-    th_param.option = 0;
-
-    videoDecTh = CreateThread(&th_param);
-    StartThread(videoDecTh, &videoDec);
-
-    while (!strFileOpen(&infile, bsfilename)) {}
-
-    //sceGsSyncVCallback(vblankHandlerM);
-
-    //videoDec.hid_endimage = AddDmacHandler(DMAC_GIF, handler_endimage, 0);
-
-    //EnableDmac(2);
-
-    vblankCount = 0;
-    scn_vib_time1 = 0;
-    scn_vib_time0 = 0;
+    g_vd.started = 0;
+    g_vd.wallBase = 0.0;
 }
 
 static void termMov()
 {
-    sceGsGParam *gparam;
-    u_long UserIMR;
+    if (g_vd.tex)
+    {
+        glad_glDeleteTextures(1, &g_vd.tex);
+        g_vd.tex = 0;
+    }
+    if (g_vd.ti)
+    {
+        free(g_vd.ti);
+        g_vd.ti = NULL;
+    }
+    if (g_vd.mov)
+    {
+        movvid_close(g_vd.mov);
+        g_vd.mov = NULL;
+    }
+    g_vd.w = g_vd.h = 0;
 
-    readBufDelete(readBuf);
-    voBufDelete(&voBuf);
+    if (g_audio_state.stream)
+    {
+        SDL_DestroyAudioStream(g_audio_state.stream);
+        g_audio_state.stream = NULL;
+    }
 
-    //TerminateThread(videoDecTh);
-    //DeleteThread(videoDecTh);
+    if (g_audio_state.device)
+    {
+        SDL_CloseAudioDevice(g_audio_state.device);
+        g_audio_state.device = 0;
+    }
 
-    //DisableDmac(2);
-    //RemoveDmacHandler(2,videoDec.hid_endimage);
+    if (g_audio_state.decoder)
+    {
+        mikupan_decoder_close(g_audio_state.decoder);
+        g_audio_state.decoder = NULL;
+    }
 
-    videoDecDelete(&videoDec);
-    audioDecDelete(&audioDec);
-
-    strFileClose(&infile);
-
-    //UserIMR = sceGsPutIMR(0xff00);
-    gparam = sceGsGetGParam();
-
-    //DisableIntc(2);
-    //RemoveIntcHandler(2, gparam->sceGsVSCid);
-
-    gparam->sceGsVSCfunc = NULL;
-    gparam->sceGsVSCid = 0;
-
-    //sceGsPutIMR(UserIMR);
+    memset(&g_audio_state, 0, sizeof(g_audio_state));
 }
 
 void defMain(void)
 {
-    while(1)
+    while (1)
     {
-       switchThread();
+        switchThread();
     }
 }
 
@@ -669,13 +1144,30 @@ void proceedAudio()
 int MoviePlay(int scene_no)
 {
     int i;
+    int started;
+    static int movie_play_active = 0;
+    static int movie_play_scene_no = 0;
+
+    if (movie_play_active)
+    {
+        if (stepMovPlayback())
+        {
+            return 1;
+        }
+
+        endMovPlayback();
+        movie_play_active = 0;
+        scene_no = movie_play_scene_no;
+        goto movie_play_restore;
+    }
 
     SetSysBackColor(0, 0, 0);
     clearGsMem(0, 0, 0, DISP_WIDTH, DISP_HEIGHT);
 
-    while (checkIOP() != 0)
+    if (checkIOP() != 0)
     {
         vfunc();
+        return 1;
     }
 
     AdpcmShiftMovie();
@@ -689,15 +1181,18 @@ int MoviePlay(int scene_no)
 
         for (i = 0; i < 99; i++)
         {
-            u_char *smn = scene_movie_no; // HACK: regswap fix
+            u_char *smn = scene_movie_no;// HACK: regswap fix
+
             if (scene_movie_no[i] == movie_wrk.play_event_no)
             {
                 play_mov_no = i;
                 break;
             }
-            smn = scene_movie_no; // HACK: regswap fix
+
+            smn = scene_movie_no;// HACK: regswap fix
         }
-    } while (0);
+    }
+    while (0);
 
     if (scene_no != 0 && scene_no != 0x62 && scene_no != 99)
     {
@@ -707,25 +1202,35 @@ int MoviePlay(int scene_no)
 #ifdef BUILD_EU_VERSION
     if (scene_no == 0x60)
     {
-        movie(mpegStaff[sys_wrk.pal_disp_mode][sys_wrk.language]);
+        started = beginMovPlayback(mpegStaff[sys_wrk.pal_disp_mode][sys_wrk.language]);
     }
     else
     {
-        movie(mpegName[sys_wrk.pal_disp_mode][play_mov_no]);
+        started = beginMovPlayback(mpegName[sys_wrk.pal_disp_mode][play_mov_no]);
     }
 #else
-    movie(mpegName[play_mov_no]);
+    started = beginMovPlayback(mpegName[play_mov_no]);
 #endif
+    if (started)
+    {
+        movie_play_active = 1;
+        movie_play_scene_no = scene_no;
+        return 1;
+    }
 
+movie_play_restore:
     SetIopCmdSm(1, 1, 0, 0);
     SeSetMVol(opt_wrk.bgm_vol);
     SeSetSteMono(opt_wrk.sound_mode);
 #ifdef BUILD_EU_VERSION
-    sceGsResetGraph(1, SCE_GS_INTERLACE, sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL: SCE_GS_NTSC, SCE_GS_FRAME);
+    sceGsResetGraph(1, SCE_GS_INTERLACE,
+                    sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL : SCE_GS_NTSC,
+                    SCE_GS_FRAME);
 #else
     sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
 #endif
-    sceGsSetDefDBuff(&g_db, SCE_GS_PSMCT32, DISP_WIDTH, (DISP_HEIGHT/2), 2, 0x31, SCE_GS_CLEAR);
+    sceGsSetDefDBuff(&g_db, SCE_GS_PSMCT32, DISP_WIDTH, (DISP_HEIGHT / 2), 2,
+                     0x31, SCE_GS_CLEAR);
 
     pdrawenv = &g_db.draw0;
 
@@ -774,75 +1279,7 @@ int MoviePlay(int scene_no)
 
 void MovieTest(int scene_no)
 {
-    int i;
-
-    movie_wrk.play_event_no = scene_no;
-    movie_wrk.play_event_sta = 0x2 | 0x4;
-
-    for (i = 0; i < 99; i++)
-    {
-        u_char *smn = scene_movie_no; // HACK: regswap fix
-        if (scene_movie_no[i] == movie_wrk.play_event_no)
-        {
-            play_mov_no = i;
-            break;
-        }
-        smn = scene_movie_no; // HACK: regswap fix
-    }
-
-#ifdef BUILD_EU_VERSION
-    if (scene_no == 0x60)
-    {
-        movie(mpegStaff[sys_wrk.pal_disp_mode][sys_wrk.language]);
-    }
-    else
-    {
-        movie(mpegName[sys_wrk.pal_disp_mode][play_mov_no]);
-    }
-#else
-    movie(mpegName[play_mov_no]);
-#endif
-
-    SetIopCmdSm(1, 1, 0, 0);
-    SeSetMVol(opt_wrk.bgm_vol);
-    SeSetSteMono(opt_wrk.sound_mode);
-#ifdef BUILD_EU_VERSION
-    sceGsResetGraph(1, SCE_GS_INTERLACE, sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL: SCE_GS_NTSC, SCE_GS_FRAME);
-#else
-    sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
-#endif
-    sceGsSetDefDBuff(&g_db, SCE_GS_PSMCT32, DISP_WIDTH, (DISP_HEIGHT/2), 2, 0x31, SCE_GS_CLEAR);
-
-    pdrawenv = &g_db.draw0;
-
-#ifdef BUILD_EU_VERSION
-    if (sys_wrk.pal_disp_mode == 0)
-    {
-        g_db.disp[1].display.DX = 656;
-        g_db.disp[0].display.DX = 656;
-        g_db.disp[1].display.DY = 104;
-        g_db.disp[0].display.DY = 104;
-    }
-    else
-    {
-        g_db.disp[1].display.DX = 636;
-        g_db.disp[0].display.DX = 636;
-        g_db.disp[1].display.DY = 50;
-        g_db.disp[0].display.DY = 50;
-    }
-#endif
-
-    sceGsSyncPath(0, 0);
-    SgInit3D();
-    sceGsSyncPath(0, 0);
-
-    //vfunc();
-    AdpcmReturnFromMovie();
-    EiMain();
-
-    //*(int *)REG_DMAC_CTRL &= ~D_CTRL_RELE_M;
-
-    MovieInitWrk();
+    ReqMpegEvent(scene_no);
 }
 
 int PadSyncCallback2()
@@ -925,11 +1362,13 @@ int PadSyncCallback2()
                     psp->pad_direct[i] = 0;
                 }
 
-                if (scePadSetActAlign(psp->port, psp->slot, (const u_char *)&act_align) == 1)
+                if (scePadSetActAlign(psp->port, psp->slot,
+                                      (const u_char *) &act_align)
+                    == 1)
                 {
                     psp->step = 1;
                 }
-            break;
+                break;
             case 1:
                 if (scePadGetState(psp->port, psp->slot) != scePadStateExecCmd)
                 {
@@ -942,21 +1381,21 @@ int PadSyncCallback2()
                         psp->step = 0;
                     }
                 }
-            break;
+                break;
             case 2:
                 switch (scePadGetReqState(psp->port, psp->slot))
                 {
                     case scePadReqStateBusy:
                         // do nothing ...
-                    break;
+                        break;
                     case scePadReqStateFailed:
                         psp->step = 0;
-                    break;
+                        break;
                     case scePadReqStateComplete:
                         psp->step = 3;
-                    break;
+                        break;
                 }
-            break;
+                break;
             case 3:
                 id = scePadInfoMode(psp->port, psp->slot, InfoModeCurID, 0);
 
@@ -977,7 +1416,7 @@ int PadSyncCallback2()
                 {
                     psp->step = 10;
                 }
-            break;
+                break;
             case 10:
                 if (scePadInfoPressMode(psp->port, psp->slot) != 1)
                 {
@@ -989,7 +1428,7 @@ int PadSyncCallback2()
                 {
                     psp->step = 11;
                 }
-            break;
+                break;
             case 11:
                 wrk = scePadGetReqState(psp->port, psp->slot);
 
@@ -1002,7 +1441,7 @@ int PadSyncCallback2()
                 {
                     psp->step = 99;
                 }
-            break;
+                break;
             case 99:
                 if (state != scePadStateStable && state != scePadStateFindCTP1)
                 {
@@ -1027,7 +1466,7 @@ int PadSyncCallback2()
                         VibrateRequest(p_id, 0, 0);
                     }
                 }
-            break;
+                break;
         }
 
         psp++;
@@ -1042,7 +1481,8 @@ void movVblankPad()
     PadSyncCallback2();
 }
 
-void ReqLogoMovie(void) {
+void ReqLogoMovie(void)
+{
     movie_wrk.play_event_sta = 0x4 | 0x2 | 0x1;
     play_mov_no = 37;
 
@@ -1066,11 +1506,14 @@ void ReqLogoMovie(void) {
     SeSetSteMono(opt_wrk.sound_mode);
 
 #ifdef BUILD_EU_VERSION
-    sceGsResetGraph(1, SCE_GS_INTERLACE, sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL: SCE_GS_NTSC, SCE_GS_FRAME);
+    sceGsResetGraph(1, SCE_GS_INTERLACE,
+                    sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL : SCE_GS_NTSC,
+                    SCE_GS_FRAME);
 #else
     sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
 #endif
-    sceGsSetDefDBuff(&g_db, SCE_GS_PSMCT32, DISP_WIDTH, (DISP_HEIGHT/2), 2, 0x31, SCE_GS_CLEAR);
+    sceGsSetDefDBuff(&g_db, SCE_GS_PSMCT32, DISP_WIDTH, (DISP_HEIGHT / 2), 2,
+                     0x31, SCE_GS_CLEAR);
 
     pdrawenv = &g_db.draw0;
 
@@ -1099,7 +1542,7 @@ void ReqLogoMovie(void) {
 
     EiMain();
 
-    *(int *)REG_DMAC_CTRL &= ~D_CTRL_RELE_M; // yeah ...
+    *(int *) REG_DMAC_CTRL &= ~D_CTRL_RELE_M;// yeah ...
 
     MovieInitWrk();
 }
@@ -1117,14 +1560,14 @@ int audioDecCreate(AudioDec *ad, u_char *buff, int buffSize, int iopBuffSize)
     ad->data = buff;
     ad->size = buffSize;
     ad->iopBuffSize = iopBuffSize;
-    ad->iopBuff = (int64_t)sceSifAllocIopHeap(iopBuffSize);
+    ad->iopBuff = (int64_t) sceSifAllocIopHeap(iopBuffSize);
 
     if (ad->iopBuff < 0)
     {
         return 0;
     }
 
-    ad->iopZero = (int64_t)sceSifAllocIopHeap(0x800);
+    ad->iopZero = (int64_t) sceSifAllocIopHeap(0x800);
 
     if (ad->iopZero < 0)
     {
@@ -1133,38 +1576,47 @@ int audioDecCreate(AudioDec *ad, u_char *buff, int buffSize, int iopBuffSize)
 
     memset(_0_buf, 0, sizeof(_0_buf));
 
-    sendToIOP(ad->iopZero, (u_char *)_0_buf, 0x800);
-    changeMasterVolume(((opt_wrk.bgm_vol * VOLUME_MASTER_MAX) / 4096) * mpeg_vol_rate[play_mov_no] / 100);
+    sendToIOP(ad->iopZero, (u_char *) _0_buf, 0x800);
+    changeMasterVolume(((opt_wrk.bgm_vol * VOLUME_MASTER_MAX) / 4096)
+                       * mpeg_vol_rate[play_mov_no] / 100);
 
     return 1;
 }
 
 int audioDecDelete(AudioDec *ad)
 {
-    sceSifFreeIopHeap((void *)ad->iopBuff);
-    sceSifFreeIopHeap((void *)ad->iopZero);
+    sceSifFreeIopHeap((void *) ad->iopBuff);
+    sceSifFreeIopHeap((void *) ad->iopZero);
 
     changeMasterVolume(0);
 
     return 1;
 }
 
-void audioDecPause(AudioDec* ad)
+void audioDecPause(AudioDec *ad)
 {
     ad->state = AU_STATE_PAUSE;
 
     changeInputVolume(0);
 
-    ad->iopPausePos = (sceSdRemote(1, rSdBlockTrans, AUTODMA_CH, SD_TRANS_MODE_STOP, NULL, 0) & 0x00FFFFFF) - ad->iopBuff;
+    ad->iopPausePos =
+        (sceSdRemote(1, rSdBlockTrans, AUTODMA_CH, SD_TRANS_MODE_STOP, NULL, 0)
+         & 0x00FFFFFF)
+        - ad->iopBuff;
 
-    sceSdRemote(1, rSdVoiceTrans, AUTODMA_CH, SD_TRANS_MODE_WRITE | SD_TRANS_BY_DMA, ad->iopZero, 0x4000, 0x800);
+    sceSdRemote(1, rSdVoiceTrans, AUTODMA_CH,
+                SD_TRANS_MODE_WRITE | SD_TRANS_BY_DMA, ad->iopZero, 0x4000,
+                0x800);
 }
 
-void audioDecResume(AudioDec* ad)
+void audioDecResume(AudioDec *ad)
 {
     changeInputVolume(0x7FFF);
 
-    sceSdRemote(1, rSdBlockTrans, AUTODMA_CH, (SD_TRANS_MODE_WRITE_FROM | SD_BLOCK_LOOP), ad->iopBuff, (ad->iopBuffSize/UNIT_SIZE)*UNIT_SIZE, ad->iopBuff + ad->iopPausePos);
+    sceSdRemote(1, rSdBlockTrans, AUTODMA_CH,
+                (SD_TRANS_MODE_WRITE_FROM | SD_BLOCK_LOOP), ad->iopBuff,
+                (ad->iopBuffSize / UNIT_SIZE) * UNIT_SIZE,
+                ad->iopBuff + ad->iopPausePos);
 
     ad->state = AU_STATE_PLAY;
 }
@@ -1188,13 +1640,14 @@ void audioDecReset(AudioDec *ad)
     ad->iopPausePos = 0;
 }
 
-void audioDecBeginPut(AudioDec *ad, u_char **ptr0, int *len0, u_char **ptr1, int *len1)
+void audioDecBeginPut(AudioDec *ad, u_char **ptr0, int *len0, u_char **ptr1,
+                      int *len1)
 {
     int len;
 
     if (ad->state == AU_STATE_INIT)
     {
-        *ptr0 = (u_char*)ad + (ad->hdrCount + 4);
+        *ptr0 = (u_char *) ad + (ad->hdrCount + 4);
         *len0 = 0x28 - ad->hdrCount;
         *ptr1 = ad->data;
         *len1 = ad->size;
@@ -1204,7 +1657,8 @@ void audioDecBeginPut(AudioDec *ad, u_char **ptr0, int *len0, u_char **ptr1, int
 
     len = ad->size - ad->count;
 
-    if (len <= (ad->size - ad->put)) {
+    if (len <= (ad->size - ad->put))
+    {
         *ptr0 = ad->data + ad->put;
         *len0 = len;
         *ptr1 = NULL;
@@ -1218,7 +1672,6 @@ void audioDecBeginPut(AudioDec *ad, u_char **ptr0, int *len0, u_char **ptr1, int
     *ptr1 = ad->data;
     *len1 = len - (ad->size - ad->put);
 }
-
 
 void audioDecEndPut(AudioDec *ad, int size)
 {
@@ -1268,24 +1721,23 @@ int audioDecSendToIOP(AudioDec *ad)
 
     switch (ad->state)
     {
-    case 0:
-        return 0;
-    break;
-    case 1:
-        pd0 = ad->iopBuff + ad->totalBytesSent % ad->iopBuffSize;
-        d0 = ad->iopBuffSize - ad->totalBytesSent;
-        pd1 = 0;
-        d1 = 0;
-    break;
-    case 2:
-        pos = (sceSdRemote(1, 0x8100, 0) & 0x00ffffff)  - ad->iopBuff;
-        iopGetArea(&pd0, &d0, &pd1, &d1, ad, pos);
-    break;
-    case 3:
-        return 0;
-    break;
+        case 0:
+            return 0;
+            break;
+        case 1:
+            pd0 = ad->iopBuff + ad->totalBytesSent % ad->iopBuffSize;
+            d0 = ad->iopBuffSize - ad->totalBytesSent;
+            pd1 = 0;
+            d1 = 0;
+            break;
+        case 2:
+            pos = (sceSdRemote(1, 0x8100, 0) & 0x00ffffff) - ad->iopBuff;
+            iopGetArea(&pd0, &d0, &pd1, &d1, ad, pos);
+            break;
+        case 3:
+            return 0;
+            break;
     }
-
 
     offset = ((ad->put - ad->count) + ad->size) % ad->size;
     len = (ad->count / 1024) * 1024;
@@ -1309,7 +1761,8 @@ int audioDecSendToIOP(AudioDec *ad)
     return count_sent;
 }
 
-static void iopGetArea(int *pd0, int *d0, int *pd1, int *d1, AudioDec *ad, int pos)
+static void iopGetArea(int *pd0, int *d0, int *pd1, int *d1, AudioDec *ad,
+                       int pos)
 {
     int len;
 
@@ -1332,7 +1785,8 @@ static void iopGetArea(int *pd0, int *d0, int *pd1, int *d1, AudioDec *ad, int p
     }
 }
 
-static int sendToIOP2area(int pd0, int d0, int pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1)
+static int sendToIOP2area(int pd0, int d0, int pd1, int d1, u_char *ps0, int s0,
+                          u_char *ps1, int s1)
 {
     int diff;
 
@@ -1382,15 +1836,17 @@ static int sendToIOP(int64_t dst, u_char *src, int size)
         return 0;
     }
 
-    transData.data = (int64_t)src;
+    transData.data = (int64_t) src;
     transData.addr = dst;
     transData.size = size;
     transData.mode = 0;
 
     FlushCache(0);
 
-    did = sceSifSetDma(&transData,1);
-    while (sceSifDmaStat(did) >= 0) {}
+    did = sceSifSetDma(&transData, 1);
+    while (sceSifDmaStat(did) >= 0)
+    {
+    }
 
     return size;
 }
@@ -1431,15 +1887,12 @@ void clearGsMem(int r, int g, int b, int disp_width, int disp_height)
     db.giftag0.NREG = 1;
     db.giftag0.REGS0 = SCE_GIF_PACKED_AD;
 
-    sceGsSetDefDrawEnv(
-        &db.draw0,
-        SCE_GS_PSMCT32,
-        disp_width,
-        bound(disp_height / 2, 32) * 2 + bound(disp_height, 32) * 2,
-        SCE_GS_ZNOUSE,
-        SCE_GS_PSMCT32);
+    sceGsSetDefDrawEnv(&db.draw0, SCE_GS_PSMCT32, disp_width,
+                       bound(disp_height / 2, 32) * 2
+                           + bound(disp_height, 32) * 2,
+                       SCE_GS_ZNOUSE, SCE_GS_PSMCT32);
 
-    *(u_long *)&db.draw0.xyoffset1 = SCE_GS_SET_XYOFFSET_1(0, 0);
+    *(u_long *) &db.draw0.xyoffset1 = SCE_GS_SET_XYOFFSET_1(0, 0);
 
     FlushCache(0);
 
@@ -1451,11 +1904,13 @@ void clearGsMem(int r, int g, int b, int disp_width, int disp_height)
 
     sceGifPkEnd(&packet, 0, 0, 0);
 
-    sceGifPkOpenGifTag(&packet, *(u_long128*)&giftag_clear);
-    sceGifPkAddGsAD(&packet, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 0, 0, 0, 0, 0, 0, 0));
+    sceGifPkOpenGifTag(&packet, *(u_long128 *) &giftag_clear);
+    sceGifPkAddGsAD(&packet, SCE_GS_PRIM,
+                    SCE_GS_SET_PRIM(6, 0, 0, 0, 0, 0, 0, 0, 0));
     sceGifPkAddGsAD(&packet, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(r, g, b, 0, 0));
     sceGifPkAddGsAD(&packet, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(0 << 4, 0 << 4, 0));
-    sceGifPkAddGsAD(&packet, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(MAX_WIDTH << 4, MAX_HEIGHT * 5 << 4, 0));
+    sceGifPkAddGsAD(&packet, SCE_GS_XYZ2,
+                    SCE_GS_SET_XYZ2(MAX_WIDTH << 4, MAX_HEIGHT * 5 << 4, 0));
     sceGifPkCloseGifTag(&packet);
 
     sceGifPkTerminate(&packet);
@@ -1486,26 +1941,25 @@ void setImageTag(u_int *tags, void *image, int index, int image_w, int image_h)
         SCE_GIF_SET_TAG(0, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1),
         SCE_GIF_PACKED_AD,
     };
-    u_long* tag;
+    u_long *tag;
     u_int xdr;
 
     xdr = 0;
 
-    sceGifPkInit(&packet, (u_long128 *)UncAddr(tags));
+    sceGifPkInit(&packet, (u_long128 *) UncAddr(tags));
     sceGifPkReset(&packet);
 
     if (index == 0)
     {
         sceGifPkCnt(&packet, 0, 0, 0);
 
-        sceGifPkOpenGifTag(&packet, *(u_long128 *)&giftag);
+        sceGifPkOpenGifTag(&packet, *(u_long128 *) &giftag);
         sceGifPkAddGsAD(
-            &packet,
-            SCE_GS_BITBLTBUF,
-            SCE_GS_SET_BITBLTBUF(0, 0, SCE_GS_PSMCT32,
+            &packet, SCE_GS_BITBLTBUF,
+            SCE_GS_SET_BITBLTBUF(
+                0, 0, SCE_GS_PSMCT32,
                 (bound(MAX_WIDTH, 64) * bound((MAX_HEIGHT / 2), 32) * 2) / 64,
-                bound(MAX_WIDTH, 64) / 64,
-                SCE_GS_PSMCT32));
+                bound(MAX_WIDTH, 64) / 64, SCE_GS_PSMCT32));
         sceGifPkAddGsAD(&packet, SCE_GS_TRXREG, SCE_GS_SET_TRXREG(16, 16));
         sceGifPkCloseGifTag(&packet);
 
@@ -1515,23 +1969,25 @@ void setImageTag(u_int *tags, void *image, int index, int image_w, int image_h)
             {
                 sceGifPkCnt(&packet, 0, 0, 0);
 
-                sceGifPkOpenGifTag(&packet, *(u_long128 *)giftag);
-                sceGifPkAddGsAD(&packet, SCE_GS_TRXPOS, SCE_GS_SET_TRXPOS(0, 0, 16 * i, 16 * j, 0));
+                sceGifPkOpenGifTag(&packet, *(u_long128 *) giftag);
+                sceGifPkAddGsAD(&packet, SCE_GS_TRXPOS,
+                                SCE_GS_SET_TRXPOS(0, 0, 16 * i, 16 * j, 0));
                 sceGifPkAddGsAD(&packet, SCE_GS_TRXDIR, SCE_GS_SET_TRXDIR(xdr));
                 sceGifPkCloseGifTag(&packet);
 
-                tag = (u_long*)sceGifPkReserve(&packet, 4);
+                tag = (u_long *) sceGifPkReserve(&packet, 4);
                 tag[0] = SCE_GIF_SET_TAG(16 * 16 * 4 / 16, 0, 0, 0, 2, 0);
                 tag[1] = 0;
 
-                sceGifPkRef(&packet, (u_long128 *)DmaAddr(image), 16 * 16 * 4 / 16, 0, 0, 0);
-                image = (u_char*)image + 16 * 16 * 4;
+                sceGifPkRef(&packet, (u_long128 *) DmaAddr(image),
+                            16 * 16 * 4 / 16, 0, 0, 0);
+                image = (u_char *) image + 16 * 16 * 4;
             }
         }
     }
 
-    tex.x = 8; // 0.5 << 4
-    tex.y = 8; // 0.5 << 4
+    tex.x = 8;// 0.5 << 4
+    tex.y = 8;// 0.5 << 4
     tex.w = image_w << 4;
     tex.h = image_h << 4;
 
@@ -1542,21 +1998,24 @@ void setImageTag(u_int *tags, void *image, int index, int image_w, int image_h)
 
     sceGifPkEnd(&packet, 0, 0, 0);
 
-    sceGifPkOpenGifTag(&packet, *(u_long128 *)giftag_eop);
+    sceGifPkOpenGifTag(&packet, *(u_long128 *) giftag_eop);
     sceGifPkAddGsAD(&packet, SCE_GS_TEXFLUSH, 0);
-    sceGifPkAddGsAD(&packet, SCE_GS_TEX1_1, SCE_GS_SET_TEX1_1(0, 0, 1, 1, 0, 0, 0));
-    sceGifPkAddGsAD(&packet, SCE_GS_TEX0_1,
+    sceGifPkAddGsAD(&packet, SCE_GS_TEX1_1,
+                    SCE_GS_SET_TEX1_1(0, 0, 1, 1, 0, 0, 0));
+    sceGifPkAddGsAD(
+        &packet, SCE_GS_TEX0_1,
         SCE_GS_SET_TEX0_1(
             (bound(MAX_WIDTH, 64) * bound((MAX_HEIGHT / 2), 32) * 2) / 64,
-            bound(MAX_WIDTH, 64) / 64,
-            SCE_GS_PSMCT32, 10, 10, 0, 1, 0, 0, 0, 0, 0
-        )
-    );
-    sceGifPkAddGsAD(&packet, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 1, 0, 0, 0, 1, 0, 0));
+            bound(MAX_WIDTH, 64) / 64, SCE_GS_PSMCT32, 10, 10, 0, 1, 0, 0, 0, 0,
+            0));
+    sceGifPkAddGsAD(&packet, SCE_GS_PRIM,
+                    SCE_GS_SET_PRIM(6, 0, 1, 0, 0, 0, 1, 0, 0));
     sceGifPkAddGsAD(&packet, SCE_GS_UV, SCE_GS_SET_UV(tex.x, tex.y));
     sceGifPkAddGsAD(&packet, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(poly.x, poly.y, 0));
-    sceGifPkAddGsAD(&packet, SCE_GS_UV, SCE_GS_SET_UV(tex.x + tex.w, tex.y + tex.h));
-    sceGifPkAddGsAD(&packet, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(poly.x + poly.w, poly.y + poly.h, 0));
+    sceGifPkAddGsAD(&packet, SCE_GS_UV,
+                    SCE_GS_SET_UV(tex.x + tex.w, tex.y + tex.h));
+    sceGifPkAddGsAD(&packet, SCE_GS_XYZ2,
+                    SCE_GS_SET_XYZ2(poly.x + poly.w, poly.y + poly.h, 0));
     sceGifPkCloseGifTag(&packet);
 
     sceGifPkTerminate(&packet);
@@ -1605,12 +2064,10 @@ int vblankHandlerM(int val)
                 return 0;
             }
 
-            sceGsSetHalfOffset(
-                (sceGsDrawEnv1*)(oddeven & 1 ? UncAddr(&db.draw1) : UncAddr(&db.draw0)),
-                2048,
-                2048,
-                oddeven ^ 1
-            );
+            sceGsSetHalfOffset((sceGsDrawEnv1 *) (oddeven & 1
+                                                      ? UncAddr(&db.draw1)
+                                                      : UncAddr(&db.draw0)),
+                               2048, 2048, oddeven ^ 1);
 
             if (oddeven == 0 && tag->status == VOBUF_STATUS_FULL)
             {
@@ -1665,7 +2122,9 @@ int handler_endimage(int val)
 
 void startDisplay(int waitEven)
 {
-    while (sceGsSyncV(0) == waitEven) {}
+    while (sceGsSyncV(0) == waitEven)
+    {
+    }
 
     frd = 0;
     isCountVblank = 1;
@@ -1678,7 +2137,6 @@ void endDisplay()
 
     frd = 0;
 }
-
 
 int videoCallback(sceMpeg *mp, sceMpegCbDataStr *str, void *data)
 {
@@ -1695,7 +2153,7 @@ int videoCallback(sceMpeg *mp, sceMpegCbDataStr *str, void *data)
     u_char *pd0_unc;
     u_char *pd1_unc;
 
-    rb = (ReadBuf*)data;
+    rb = (ReadBuf *) data;
 
     ps0 = str->data;
     ps1 = rb->data;
@@ -1705,8 +2163,8 @@ int videoCallback(sceMpeg *mp, sceMpegCbDataStr *str, void *data)
 
     videoDecBeginPut(&videoDec, &pd0, &d0, &pd1, &d1);
 
-    pd0_unc = (u_char *)UncAddr(pd0);
-    pd1_unc = (u_char *)UncAddr(pd1);
+    pd0_unc = (u_char *) UncAddr(pd0);
+    pd1_unc = (u_char *) UncAddr(pd1);
 
     len = copy2area(pd0_unc, d0, pd1_unc, d1, ps0, s0, ps1, s1);
 
@@ -1734,7 +2192,7 @@ int pcmCallback(sceMpeg *mp, sceMpegCbDataStr *str, void *data)
     int len;
     int ret;
 
-    rb = (ReadBuf*)data;
+    rb = (ReadBuf *) data;
     ps0 = str->data;
     ps1 = rb->data;
 
@@ -1761,7 +2219,8 @@ int pcmCallback(sceMpeg *mp, sceMpegCbDataStr *str, void *data)
     return ret > 0;
 }
 
-static int copy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1)
+static int copy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0,
+                     int s0, u_char *ps1, int s1)
 {
     if (d0 + d1 < s0 + s1)
     {
@@ -1793,7 +2252,7 @@ void readBufCreate(ReadBuf *b)
 {
     if (b == NULL)
     {
-        b = (ReadBuf*)malloc(sizeof(ReadBuf));
+        b = (ReadBuf *) malloc(sizeof(ReadBuf));
     }
 
     b->put = b->count = 0;
@@ -1890,7 +2349,7 @@ int strFileOpen(StrFile *file, char *filename)
                 body[i] = toupper(body[i]);
             }
 
-            tail = (strchr(filename, ';'))? "": ";1";
+            tail = (strchr(filename, ';')) ? "" : ";1";
 
             sprintf(fn, "%s%s", body, tail);
         }
@@ -1919,9 +2378,9 @@ int strFileOpen(StrFile *file, char *filename)
 
         file->iopBuf = sceSifAllocIopHeap(2048 * 80 + 16);
 
-        sceCdStInit(80, 5, bound((u_int)file->iopBuf, 16));
+        sceCdStInit(80, 5, bound((u_int) file->iopBuf, 16));
 
-        if(sceCdSearchFile(&file->fp, fn) == 0)
+        if (sceCdSearchFile(&file->fp, fn) == 0)
         {
             return 0;
         }
@@ -1985,7 +2444,7 @@ int strFileRead(StrFile *file, void *buff, int size)
 
     if (file->isOnCD)
     {
-        count= sceCdStRead(size >> 11, (u_int *)buff, STMBLK, &err);
+        count = sceCdStRead(size >> 11, (u_int *) buff, STMBLK, &err);
         count <<= 11;
     }
     else
@@ -2006,7 +2465,7 @@ int getFIFOindex(ViBuf *f, void *addr)
     }
     else
     {
-        return ((u_int)addr - (u_int)f->data) / VIBUF_ELM_SIZE;
+        return ((u_int) addr - (u_int) f->data) / VIBUF_ELM_SIZE;
     }
 }
 
@@ -2039,12 +2498,14 @@ void setD4_CHCR(u_int val)
 void scTag2(QWORD *q, void *addr, u_int id, u_int qwc)
 {
     return;
-    addr = MikuPan_GetHostPointer((int)addr);
-    q = MikuPan_GetHostPointer((int)q);
-    q->l[0] = (u_long)(u_int)addr << 32 | (u_long)id << 28 | (u_long)qwc << 0;
+    addr = MikuPan_GetHostPointer((int) addr);
+    q = MikuPan_GetHostPointer((int) q);
+    q->l[0] =
+        (u_long) (u_int) addr << 32 | (u_long) id << 28 | (u_long) qwc << 0;
 }
 
-int viBufCreate(ViBuf *f, u_long128 *data, u_long128 *tag, int size, TimeStamp *ts, int n_ts)
+int viBufCreate(ViBuf *f, u_long128 *data, u_long128 *tag, int size,
+                TimeStamp *ts, int n_ts)
 {
     SemaParam param;
 
@@ -2086,23 +2547,14 @@ int viBufReset(ViBuf *f)
         f->ts[i].len = 0;
     }
 
-
     for (i = 0; i < f->n; i++)
     {
-        scTag2(
-            (QWORD*)(f->tag + i),
-            DmaAddr((char*)f->data + VIBUF_ELM_SIZE * i),
-            DMA_ID_REF,
-            VIBUF_ELM_SIZE / 16
-        );
+        scTag2((QWORD *) (f->tag + i),
+               DmaAddr((char *) f->data + VIBUF_ELM_SIZE * i), DMA_ID_REF,
+               VIBUF_ELM_SIZE / 16);
     }
 
-    scTag2(
-        (QWORD*)(f->tag + i),
-        DmaAddr(f->tag),
-        DMA_ID_NEXT,
-        0
-    );
+    scTag2((QWORD *) (f->tag + i), DmaAddr(f->tag), DMA_ID_NEXT, 0);
 
     //*D4_QWC = 0;
     //*D4_MADR = (u_int)DmaAddr(f->data);
@@ -2123,23 +2575,23 @@ void viBufBeginPut(ViBuf *f, u_char **ptr0, int *len0, u_char **ptr1, int *len1)
     WaitSema(f->sema);
 
     fs = ((f->dmaStart + f->dmaN) * VIBUF_ELM_SIZE);
-    fn = ((f->n - 2 -  f->dmaN) * VIBUF_ELM_SIZE);
+    fn = ((f->n - 2 - f->dmaN) * VIBUF_ELM_SIZE);
 
     es = (fs + f->readBytes) % f->buffSize;
     en = fn - f->readBytes;
 
     if (f->buffSize - es >= en)
     {
-        *ptr0 = (u_char*)f->data + es;
+        *ptr0 = (u_char *) f->data + es;
         *len0 = en;
         *ptr1 = NULL;
         *len1 = 0;
     }
     else
     {
-        *ptr0 = (u_char*)f->data + es;
+        *ptr0 = (u_char *) f->data + es;
         *len0 = f->buffSize - es;
-        *ptr1 = (u_char*)f->data;
+        *ptr1 = (u_char *) f->data;
         *len1 = en - (f->buffSize - es);
     }
 
@@ -2176,11 +2628,11 @@ int viBufAddDMA(ViBuf *f)
         return 0;
     }
 
-    setD4_CHCR((DMA_ID_REFE<<28) | (0<<8) | (1<<2) | 1);
+    setD4_CHCR((DMA_ID_REFE << 28) | (0 << 8) | (1 << 2) | 1);
 
     d4chcr = *D4_CHCR;
 
-    index = getFIFOindex(f, (void*)*D4_MADR);
+    index = getFIFOindex(f, (void *) *D4_MADR);
 
     done = (index + f->n - f->dmaStart) % f->n;
 
@@ -2188,19 +2640,16 @@ int viBufAddDMA(ViBuf *f)
     f->dmaN -= done;
 
     start = (f->dmaStart + f->dmaN) % f->n;
-    read_n = f->readBytes/VIBUF_ELM_SIZE;
+    read_n = f->readBytes / VIBUF_ELM_SIZE;
     f->readBytes %= VIBUF_ELM_SIZE;
 
     if (read_n > 0)
     {
         u_int offset = (f->dmaStart + f->dmaN - 1 + f->n) % f->n;
 
-        scTag2(
-            (QWORD*)(f->tag + offset),
-            (char*)f->data + VIBUF_ELM_SIZE * offset,
-            DMA_ID_REF,
-            VIBUF_ELM_SIZE / 16
-        );
+        scTag2((QWORD *) (f->tag + offset),
+               (char *) f->data + VIBUF_ELM_SIZE * offset, DMA_ID_REF,
+               VIBUF_ELM_SIZE / 16);
 
         isNewData = 1;
     }
@@ -2209,14 +2658,11 @@ int viBufAddDMA(ViBuf *f)
 
     for (i = 0; i < read_n; i++)
     {
-        u_int id = (i == read_n - 1)? DMA_ID_REFE: DMA_ID_REF;
+        u_int id = (i == read_n - 1) ? DMA_ID_REFE : DMA_ID_REF;
 
-        scTag2(
-            (QWORD*)(f->tag + index),
-            (char*)f->data + VIBUF_ELM_SIZE * index,
-            id,
-            VIBUF_ELM_SIZE / 16
-        );
+        scTag2((QWORD *) (f->tag + index),
+               (char *) f->data + VIBUF_ELM_SIZE * index, id,
+               VIBUF_ELM_SIZE / 16);
 
         index = (index + 1) % f->n;
     }
@@ -2248,15 +2694,17 @@ int viBufStopDMA(ViBuf *f)
 
     f->env.d4madr = *D4_MADR;
     f->env.d4tadr = *D4_TADR;
-    f->env.d4qwc =  *D4_QWC;
+    f->env.d4qwc = *D4_QWC;
     f->env.d4chcr = *D4_CHCR;
 
-    while (DGET_IPU_CTRL() & 0xf0) {}
+    while (DGET_IPU_CTRL() & 0xf0)
+    {
+    }
 
     setD3_CHCR(0 << 8 | 0);
 
     f->env.d3madr = *D3_MADR;
-    f->env.d3qwc =  *D3_QWC;
+    f->env.d3qwc = *D3_QWC;
     f->env.d3chcr = *D3_CHCR;
     f->env.ipubp = DGET_IPU_BP();
     f->env.ipuctrl = DGET_IPU_CTRL();
@@ -2289,13 +2737,15 @@ int viBufRestartDMA(ViBuf *f)
 
     WaitSema(f->sema);
 
-    if (d4madr_next < (u_int)f->data)
+    if (d4madr_next < (u_int) f->data)
     {
         d4qwc_next = (DATA_ADDR(0) - d4madr_next) >> 4;
-        d4madr_next += (u_int)(f->n * VIBUF_ELM_SIZE);
+        d4madr_next += (u_int) (f->n * VIBUF_ELM_SIZE);
         d4tadr_next = TAG_ADDR(0);
 
-        id = (f->env.d4madr == DATA_ADDR(0) || f->env.d4madr == DATA_ADDR(f->n)) ? DMA_ID_REFE : DMA_ID_REF;
+        id = (f->env.d4madr == DATA_ADDR(0) || f->env.d4madr == DATA_ADDR(f->n))
+                 ? DMA_ID_REFE
+                 : DMA_ID_REF;
 
         d4chcr_next = (f->env.d4chcr & 0x0fffffff) | id << 28 | 0x100;
 
@@ -2305,12 +2755,16 @@ int viBufRestartDMA(ViBuf *f)
             f->dmaN++;
         }
     }
-    else if ((index = getFIFOindex(f, (void*)f->env.d4madr)) != (index_next = getFIFOindex(f, (void*)d4madr_next)))
+    else if ((index = getFIFOindex(f, (void *) f->env.d4madr))
+             != (index_next = getFIFOindex(f, (void *) d4madr_next)))
     {
         d4tadr_next = TAG_ADDR(index);
         d4qwc_next = (DATA_ADDR(index) - d4madr_next) >> 4;
 
-        id = (WRAP_ADDR(f->env.d4madr) == DATA_ADDR((f->dmaStart + f->dmaN) % f->n)) ? DMA_ID_REFE : DMA_ID_REF;
+        id = (WRAP_ADDR(f->env.d4madr)
+              == DATA_ADDR((f->dmaStart + f->dmaN) % f->n))
+                 ? DMA_ID_REFE
+                 : DMA_ID_REF;
 
         d4chcr_next = (f->env.d4chcr & 0x0fffffff) | id << 28 | 0x100;
 
@@ -2324,23 +2778,27 @@ int viBufRestartDMA(ViBuf *f)
     if (f->env.d3madr && f->env.d3qwc)
     {
         *D3_MADR = f->env.d3madr;
-        *D3_QWC  = f->env.d3qwc;
+        *D3_QWC = f->env.d3qwc;
 
         setD3_CHCR(f->env.d3chcr | 0x100);
     }
 
     if (f->dmaN)
     {
-        while (sceIpuIsBusy()) {}
+        while (sceIpuIsBusy())
+        {
+        }
 
         sceIpuBCLR(bp);
 
-        while (sceIpuIsBusy()) {}
+        while (sceIpuIsBusy())
+        {
+        }
     }
 
     *D4_MADR = d4madr_next;
     *D4_TADR = d4tadr_next;
-    *D4_QWC  = d4qwc_next;
+    *D4_QWC = d4qwc_next;
 
     if (f->dmaN)
     {
@@ -2416,7 +2874,7 @@ int viBufModifyPts(ViBuf *f, TimeStamp *new_ts)
     int len;
 
     rd = (f->wt_ts - f->count_ts + f->n_ts) % f->n_ts;
-    datasize =  VIBUF_ELM_SIZE * f->n;
+    datasize = VIBUF_ELM_SIZE * f->n;
     loop = 1;
 
     if (f->count_ts > 0)
@@ -2430,7 +2888,8 @@ int viBufModifyPts(ViBuf *f, TimeStamp *new_ts)
                 break;
             }
 
-            if (/*IsPtsInRegion(ts->pos, new_ts->pos, new_ts->len, datasize)*/ false)
+            if (/*IsPtsInRegion(ts->pos, new_ts->pos, new_ts->len, datasize)*/
+                false)
             {
                 len = min(new_ts->pos + new_ts->len - ts->pos, ts->len);
 
@@ -2517,7 +2976,7 @@ int viBufGetTs(ViBuf *f, TimeStamp *ts)
     fp = (ipubp >> 16) & 0x3;
     ifc = (ipubp >> 8) & 0xf;
     d4madr_next = d4madr - ((fp + ifc) << 4);
-    datasize =  VIBUF_ELM_SIZE * f->n;
+    datasize = VIBUF_ELM_SIZE * f->n;
     isEnd = 0;
 
     WaitSema(f->sema);
@@ -2525,7 +2984,7 @@ int viBufGetTs(ViBuf *f, TimeStamp *ts)
     ts->pts = TS_NONE;
     ts->dts = TS_NONE;
 
-    stop = (d4madr_next + (bp >> 3) + datasize - (u_int)f->data) % datasize;
+    stop = (d4madr_next + (bp >> 3) + datasize - (u_int) f->data) % datasize;
 
     tscount = f->count_ts;
 
@@ -2554,15 +3013,19 @@ int viBufGetTs(ViBuf *f, TimeStamp *ts)
     return 1;
 }
 
-int videoDecCreate(VideoDec *vd, u_char *mpegWork, int mpegWorkSize, u_long128 *data, u_long128 *tag, int tagSize, TimeStamp *pts, int n_pts)
+int videoDecCreate(VideoDec *vd, u_char *mpegWork, int mpegWorkSize,
+                   u_long128 *data, u_long128 *tag, int tagSize, TimeStamp *pts,
+                   int n_pts)
 {
     sceMpegCreate(&vd->mpeg, mpegWork, mpegWorkSize);
 
-    sceMpegAddCallback(&vd->mpeg, sceMpegCbError, (sceMpegCallback)mpegError, NULL);
+    sceMpegAddCallback(&vd->mpeg, sceMpegCbError, (sceMpegCallback) mpegError,
+                       NULL);
     sceMpegAddCallback(&vd->mpeg, sceMpegCbNodata, mpegNodata, NULL);
     sceMpegAddCallback(&vd->mpeg, sceMpegCbStopDMA, mpegStopDMA, NULL);
     sceMpegAddCallback(&vd->mpeg, sceMpegCbRestartDMA, mpegRestartDMA, NULL);
-    sceMpegAddCallback(&vd->mpeg, sceMpegCbTimeStamp, (sceMpegCallback)mpegTS, NULL);
+    sceMpegAddCallback(&vd->mpeg, sceMpegCbTimeStamp, (sceMpegCallback) mpegTS,
+                       NULL);
 
     videoDecReset(vd);
 
@@ -2576,14 +3039,16 @@ void videoDecSetDecodeMode(VideoDec *vd, int ni, int np, int nb)
     sceMpegSetDecodeMode(&vd->mpeg, ni, np, nb);
 }
 
-int videoDecSetStream(VideoDec *vd, int strType, int ch, sceMpegCallback cb, void *data)
+int videoDecSetStream(VideoDec *vd, int strType, int ch, sceMpegCallback cb,
+                      void *data)
 {
     sceMpegAddStrCallback(&vd->mpeg, strType, ch, cb, data);
 
     return 1;
 }
 
-void videoDecBeginPut(VideoDec *vd, u_char **ptr0, int *len0, u_char **ptr1, int *len1)
+void videoDecBeginPut(VideoDec *vd, u_char **ptr0, int *len0, u_char **ptr1,
+                      int *len1)
 {
     viBufBeginPut(&vd->vibuf, ptr0, len0, ptr1, len1);
 }
@@ -2628,13 +3093,14 @@ u_int videoDecSetState(VideoDec *vd, u_int state)
     return old;
 }
 
-int videoDecPutTs(VideoDec *vd, long int pts_val, long int dts_val, u_char *start, int len)
+int videoDecPutTs(VideoDec *vd, long int pts_val, long int dts_val,
+                  u_char *start, int len)
 {
     TimeStamp ts;
 
     ts.pts = pts_val;
     ts.dts = dts_val;
-    ts.pos = start - (u_char *)vd->vibuf.data;
+    ts.pos = start - (u_char *) vd->vibuf.data;
     ts.len = len;
 
     return viBufPutTs(&videoDec.vibuf, &ts);
@@ -2675,8 +3141,8 @@ int videoDecFlush(VideoDec *vd)
         return 0;
     }
 
-    pd0_unc = (u_char*)UncAddr(pd0);
-    pd1_unc = (u_char*)UncAddr(pd1);
+    pd0_unc = (u_char *) UncAddr(pd0);
+    pd1_unc = (u_char *) UncAddr(pd1);
 
     size = cpy2area(pd0_unc, d0, pd1_unc, d1, seq_end_code, 4, NULL, 0);
 
@@ -2713,9 +3179,11 @@ void videoDecMain(VideoDec *vd)
 
     decBs0(vd);
 
-    while (voBuf.count) {}
+    while (voBuf.count)
+    {
+    }
 
-     videoDecSetState(vd, VD_STATE_END);
+    videoDecSetState(vd, VD_STATE_END);
 }
 
 int decBs0(VideoDec *vd)
@@ -2741,7 +3209,9 @@ int decBs0(VideoDec *vd)
             switchThread();
         }
 
-        if (sceMpegGetPicture(&vd->mpeg, (sceIpuRGB32*)voData->v, MAX_WIDTH / 16 * MAX_HEIGHT / 16) < 0)
+        if (sceMpegGetPicture(&vd->mpeg, (sceIpuRGB32 *) voData->v,
+                              MAX_WIDTH / 16 * MAX_HEIGHT / 16)
+            < 0)
         {
             ErrMessage("sceMpegGetPicture() decode error");
         }
@@ -2753,8 +3223,10 @@ int decBs0(VideoDec *vd)
 
             for (i = 0; i < voBuf.size; i++)
             {
-              setImageTag(voBuf.tag[i].v[0], voBuf.data[i].v, 0, image_w, image_h);
-              setImageTag(voBuf.tag[i].v[1], voBuf.data[i].v, 1, image_w, image_h);
+                setImageTag(voBuf.tag[i].v[0], voBuf.data[i].v, 0, image_w,
+                            image_h);
+                setImageTag(voBuf.tag[i].v[1], voBuf.data[i].v, 1, image_w,
+                            image_h);
             }
         }
 
@@ -2808,7 +3280,8 @@ int mpegTS(sceMpeg *mp, sceMpegCbDataTimeStamp *cbts, void *anyData)
     return 1;
 }
 
-static int cpy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0, int s0, u_char *ps1, int s1)
+static int cpy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0,
+                    int s0, u_char *ps1, int s1)
 {
     if (d0 + d1 < s0 + s1)
     {
@@ -2879,9 +3352,9 @@ void voBufIncCount(VoBuf *f)
     EIntr();
 }
 
-VoData* voBufGetData(VoBuf *f)
+VoData *voBufGetData(VoBuf *f)
 {
-    return voBufIsFull(f) ? NULL: f->data + f->write;
+    return voBufIsFull(f) ? NULL : f->data + f->write;
 }
 
 int voBufIsEmpty(VoBuf *f)
@@ -2889,9 +3362,11 @@ int voBufIsEmpty(VoBuf *f)
     return f->count == 0;
 }
 
-VoTag* voBufGetTag(VoBuf *f)
+VoTag *voBufGetTag(VoBuf *f)
 {
-    return voBufIsEmpty(f) ? NULL : f->tag + ((f->write - f->count + f->size) % f->size);
+    return voBufIsEmpty(f)
+               ? NULL
+               : f->tag + ((f->write - f->count + f->size) % f->size);
 }
 
 void voBufDecCount(VoBuf *f)

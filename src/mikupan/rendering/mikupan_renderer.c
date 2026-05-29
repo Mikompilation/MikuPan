@@ -27,8 +27,10 @@
 
 #include <glad/gl.h>
 
+SDL_GLContext gl_context = NULL;
 MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_MsaaBufferObject render_back_msaa = {0};
+
 void MikuPan_StreamUploadFull(GLenum target, GLuint buffer,
                                             GLsizeiptr size, const void *data)
 {
@@ -142,7 +144,7 @@ SDL_AppResult MikuPan_Init()
 
     info_log("Creating OpenGL Context");
 
-    SDL_GLContext gl_context = SDL_GL_CreateContext(mikupan_render.window);
+    gl_context = SDL_GL_CreateContext(mikupan_render.window);
 
     if (gl_context == NULL)
     {
