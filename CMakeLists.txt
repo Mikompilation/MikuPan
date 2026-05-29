@@ -299,6 +299,7 @@ target_link_libraries(MikuPan PRIVATE
         avcodec
         swscale
         avutil
+        swresample
         avformat
         xxHash::xxhash
         inipp::inipp

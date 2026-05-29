@@ -15,7 +15,7 @@ AudioDecoder* mikupan_decoder_open(const char* path)
         return nullptr;
     }
 
-    AudioDecoder* h = new AudioDecoder;
+    auto* h = new AudioDecoder;
     h->impl = new MikupanAudioDecoder(path);
 
     return h;

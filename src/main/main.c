@@ -107,6 +107,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             ClearTextureCache();
             SeCtrlMain();
         }
+        else
+        {
+            /// Empty the packets for 2D stuff otherwise it crashes
+            DrawAll2DMes_P2();
+        }
     }
     else
     {

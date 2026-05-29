@@ -94,6 +94,11 @@ void MoveCtrl(MOVE_BOX *mb)
             mb->job_no = *(mb->comm_add).pu8++;
         }
 
+        if (mb->job_no > sizeof(CommJmpTbl) / sizeof(CommJmpTbl[0]))
+        {
+            return;
+        }
+
         (*CommJmpTbl[mb->job_no])(mb);
 
         if (mb->wait_time == 0xff)

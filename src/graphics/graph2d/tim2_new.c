@@ -789,13 +789,10 @@ void DrawAll2DMes_P2()
 
             s = pbuf[n].us16[0];
 
-            //ReadAllPackets(&pbuf[n]);
-
             if (pbuf[n].uc8[3] == 0x70) // upper part of 0x70000000 (DMAend) ??
             {
                 pbuf[n].uc8[3] = 0x20; // upper part of 0x20000000 (DMAnext) ?? // Line 602
-                *(uint64_t*)&pbuf[ndpkt].ui32[1] = (uint64_t)&pbuf[m];
-                //pbuf[n].ui32[2] = 0;
+                pbuf[n].ui32[2] = 0;
 
                 if (s != 0)
                 {

@@ -323,7 +323,16 @@ int PlayMpegEvent()
             //ClearDispRoom(1);
 
 #ifdef BUILD_EU_VERSION
-            started = beginMovPlayback(mpegName[sys_wrk.pal_disp_mode][play_mov_no]);
+            if (movie_wrk.play_event_no == 0x60)
+            {
+                started = beginMovPlayback(
+                    mpegStaff[sys_wrk.pal_disp_mode][sys_wrk.language]);
+            }
+            else
+            {
+                started = beginMovPlayback(
+                    mpegName[sys_wrk.pal_disp_mode][play_mov_no]);
+            }
 #else
             started = beginMovPlayback(mpegName[play_mov_no]);
 #endif
@@ -541,9 +550,14 @@ static size_t audioHighWater()
     return audioBytesForMs(750);
 }
 
-static void feedAudio()
+static void feedAudio(void)
 {
     if (!g_audio_state.decoder || !g_audio_state.stream)
+    {
+        return;
+    }
+
+    if (g_audio_state.eof)
     {
         return;
     }
@@ -556,20 +570,21 @@ static void feedAudio()
         return;
     }
 
-    if (g_audio_state.eof)
-    {
-        return;
-    }
-
     size_t to_feed = high_water - queued;
-    if (to_feed < 4096)
-    {
-        to_feed = 4096;
-    }
 
+    /*
+     * Do not force a large decode if the queue is only slightly below the
+     * high-water mark. The old code forced at least 4096 bytes, which could
+     * cause unnecessary decoder work.
+     */
     if (to_feed > sizeof(g_audio_state.audio_buffer))
     {
         to_feed = sizeof(g_audio_state.audio_buffer);
+    }
+
+    if (to_feed == 0)
+    {
+        return;
     }
 
     if (!mikupan_decoder_pump(g_audio_state.decoder, to_feed))
@@ -579,13 +594,15 @@ static void feedAudio()
     }
 
     size_t n =
-        mikupan_decoder_pop(g_audio_state.decoder, g_audio_state.audio_buffer,
-                            sizeof(g_audio_state.audio_buffer));
+        mikupan_decoder_pop(g_audio_state.decoder,
+                            g_audio_state.audio_buffer,
+                            to_feed);
 
     if (n > 0)
     {
-        SDL_PutAudioStreamData(g_audio_state.stream, g_audio_state.audio_buffer,
-                               (int) n);
+        SDL_PutAudioStreamData(g_audio_state.stream,
+                               g_audio_state.audio_buffer,
+                               (int)n);
     }
     else
     {
@@ -625,16 +642,20 @@ static int stepMovPlayback(void)
     }
 
     movVblankPad();
-    feedAudio();
 
-    if (START_PRESSED() != 0
-        //&& g_movie_playback.tick >= 31
-        //&& movie_wrk.play_event_sta != 7
-        )
+    if (*key_now[12] != 0
+        && g_movie_playback.tick >= 31
+        && movie_wrk.play_event_sta != 7)
     {
         return 0;
     }
 
+    /*
+     * End-of-video path:
+     * keep showing the last decoded frame while queued audio drains.
+     *
+     * Do not call feedAudio() here if we are already draining.
+     */
     if (g_movie_playback.draining_audio)
     {
         if (g_movie_playback.have_any_frame)
@@ -653,21 +674,43 @@ static int stepMovPlayback(void)
     }
 
     double t = now_sec();
+
     double target_time =
         g_movie_playback.start_time
         + (double)g_movie_playback.tick * g_movie_playback.frame_duration;
+
     double wait = target_time - t;
 
+    /*
+     * If the presentation clock somehow gets too far ahead,
+     * rebase it around the current decoded movie position.
+     *
+     * Do not reset tick unless the MPEG stream is also rewound.
+     */
     if (wait > 0.5)
     {
-        g_movie_playback.start_time = t;
-        g_movie_playback.tick = 0;
-        wait = 0.0;
+        g_movie_playback.start_time =
+            t - (double)g_movie_playback.tick * g_movie_playback.frame_duration;
+
+        target_time =
+            g_movie_playback.start_time
+            + (double)g_movie_playback.tick * g_movie_playback.frame_duration;
+
+        wait = target_time - t;
     }
 
     int decoded_frames = 0;
-    int max_decode_frames =
-        wait < -g_movie_playback.frame_duration ? 3 : 1;
+
+    /*
+     * If late, allow limited catch-up. This intentionally drops intermediate
+     * frames because only the latest decoded frame is rendered.
+     */
+    int max_decode_frames = 1;
+
+    if (wait < -g_movie_playback.frame_duration)
+    {
+        max_decode_frames = 3;
+    }
 
     while (wait <= 0.0 && decoded_frames < max_decode_frames)
     {
@@ -694,26 +737,36 @@ static int stepMovPlayback(void)
         decoded_frames++;
 
         t = now_sec();
+
         target_time =
             g_movie_playback.start_time
             + (double)g_movie_playback.tick * g_movie_playback.frame_duration;
+
         wait = target_time - t;
     }
 
+    /*
+     * If we are very late, do not try to decode an enormous backlog.
+     * Rebase the movie clock to the current decoded frame.
+     */
     if (wait < -1.0)
     {
         g_movie_playback.start_time =
-            t - (double) g_movie_playback.tick * g_movie_playback.frame_duration;
-    }
-
-    if (decoded_frames > 0)
-    {
-        feedAudio();
+            t - (double)g_movie_playback.tick * g_movie_playback.frame_duration;
     }
 
     if (g_movie_playback.have_any_frame)
     {
         renderMovFrame(g_vd.ti);
+    }
+
+    /*
+     * Prefer doing audio refill on movie ticks where we did not decode video.
+     * If the queue is genuinely low, refill anyway to avoid underruns.
+     */
+    if (decoded_frames == 0 || audioQueuedBytes() < audioLowWater())
+    {
+        feedAudio();
     }
 
     return 1;
@@ -1226,78 +1279,7 @@ movie_play_restore:
 
 void MovieTest(int scene_no)
 {
-    int i;
-
-    movie_wrk.play_event_no = scene_no;
-    movie_wrk.play_event_sta = 0x2 | 0x4;
-
-    for (i = 0; i < 99; i++)
-    {
-        u_char *smn = scene_movie_no;// HACK: regswap fix
-        if (scene_movie_no[i] == movie_wrk.play_event_no)
-        {
-            play_mov_no = i;
-            break;
-        }
-        smn = scene_movie_no;// HACK: regswap fix
-    }
-
-#ifdef BUILD_EU_VERSION
-    if (scene_no == 0x60)
-    {
-        movie(mpegStaff[sys_wrk.pal_disp_mode][sys_wrk.language]);
-    }
-    else
-    {
-        movie(mpegName[sys_wrk.pal_disp_mode][play_mov_no]);
-    }
-#else
-    movie(mpegName[play_mov_no]);
-#endif
-
-    SetIopCmdSm(1, 1, 0, 0);
-    SeSetMVol(opt_wrk.bgm_vol);
-    SeSetSteMono(opt_wrk.sound_mode);
-#ifdef BUILD_EU_VERSION
-    sceGsResetGraph(1, SCE_GS_INTERLACE,
-                    sys_wrk.pal_disp_mode == 0 ? SCE_GS_PAL : SCE_GS_NTSC,
-                    SCE_GS_FRAME);
-#else
-    sceGsResetGraph(1, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME);
-#endif
-    sceGsSetDefDBuff(&g_db, SCE_GS_PSMCT32, DISP_WIDTH, (DISP_HEIGHT / 2), 2,
-                     0x31, SCE_GS_CLEAR);
-
-    pdrawenv = &g_db.draw0;
-
-#ifdef BUILD_EU_VERSION
-    if (sys_wrk.pal_disp_mode == 0)
-    {
-        g_db.disp[1].display.DX = 656;
-        g_db.disp[0].display.DX = 656;
-        g_db.disp[1].display.DY = 104;
-        g_db.disp[0].display.DY = 104;
-    }
-    else
-    {
-        g_db.disp[1].display.DX = 636;
-        g_db.disp[0].display.DX = 636;
-        g_db.disp[1].display.DY = 50;
-        g_db.disp[0].display.DY = 50;
-    }
-#endif
-
-    sceGsSyncPath(0, 0);
-    SgInit3D();
-    sceGsSyncPath(0, 0);
-
-    //vfunc();
-    AdpcmReturnFromMovie();
-    EiMain();
-
-    //*(int *)REG_DMAC_CTRL &= ~D_CTRL_RELE_M;
-
-    MovieInitWrk();
+    ReqMpegEvent(scene_no);
 }
 
 int PadSyncCallback2()

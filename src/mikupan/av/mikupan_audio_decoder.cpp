@@ -44,24 +44,43 @@ bool MikupanAudioDecoder::readN(uint8_t* dst, size_t n)
 
 bool MikupanAudioDecoder::findStartCode(uint8_t sid)
 {
-    uint8_t w[4];
+    constexpr size_t READ_CHUNK = 16 * 1024;
+    uint8_t buffer[READ_CHUNK + 3];
+    size_t carry = 0;
 
     while (!eof_)
     {
-        if (!readN(w, 4))
-        {
-            return false;
-        }
-
-        if (!memcmp(w, START_CODE, 3) && w[3] == sid)
-        {
-            return true;
-        }
-
-        if (std::fseek(file_, -3, SEEK_CUR))
+        size_t n = std::fread(buffer + carry, 1, READ_CHUNK, file_);
+        if (n == 0)
         {
             eof_ = true;
             return false;
+        }
+
+        size_t total = carry + n;
+
+        for (size_t i = 0; i + 4 <= total; i++)
+        {
+            if (!std::memcmp(buffer + i, START_CODE, 3)
+                && buffer[i + 3] == sid)
+            {
+                size_t unread = total - (i + 4);
+
+                if (unread != 0
+                    && std::fseek(file_, -(long) unread, SEEK_CUR) != 0)
+                {
+                    eof_ = true;
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        carry = total < 3 ? total : 3;
+        if (carry != 0)
+        {
+            std::memmove(buffer, buffer + total - carry, carry);
         }
     }
 
