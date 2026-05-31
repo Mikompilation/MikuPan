@@ -23,49 +23,99 @@
 
 #include <math.h>
 
+/*
+ * VU0 register emulation for SubPartsDeform1 / MakePartsDeformPacket.
+ *
+ * On PS2:
+ *   dummy1(slm)      loaded slm into VF registers vf4-vf7
+ *   dummy2(stqparam) loaded stqparam[3] into VF registers vf8-vf10
+ *   Vu0Func0000()    used those registers inline
+ *
+ * On PC we store the data in static globals that the C implementation uses.
+ */
+static sceVu0FMATRIX   g_vu0_stq_matrix;   /* vf4-vf7  = slm = SgWSMtx * wlm */
+static sceVu0FVECTOR   g_vu0_stq_params[3]; /* vf8-vf10 = stqparam             */
+
 static inline void Vu0Func0000(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
-    //__asm__ __volatile__("                     \n\
-    //    lqc2         $vf12,0(%1)               \n\
-    //    vmulz.xy     $vf12xy,$vf12xy,$vf8z     \n\
-    //    vmulaw.xyzw  ACCxyzw,$vf7xyzw,$vf0w    \n\
-    //    vmaddaz.xyzw ACCxyzw,$vf6xyzw,$vf12z   \n\
-    //    vmadday.xyzw ACCxyzw,$vf5xyzw,$vf12y   \n\
-    //    vmaddx.xyzw  $vf13xyzw,$vf4xyzw,$vf12x \n\
-    //    vdiv         Q,$vf0w,$vf13w            \n\
-    //    vwaitq                                 \n\
-    //    vmulq.xyz    $vf13xyz,$vf13xyz,Q       \n\
-    //    vsub.xy      $vf13xy,$vf13xy,$vf8xy    \n\
-    //    vmaxx.x      $vf13x,$vf13x,$vf9x       \n\
-    //    vminiy.x     $vf13x,$vf13x,$vf9y       \n\
-    //    vmaxz.y      $vf13y,$vf13y,$vf9z       \n\
-    //    vminiw.y     $vf13y,$vf13y,$vf9w       \n\
-    //    vmulq.xy     $vf14xy,$vf10xy,Q         \n\
-    //    vmul.xy      $vf13xy,$vf13xy,$vf14xy   \n\
-    //    vmulq.z      $vf13z,$vf10z,Q           \n\
-    //    vmulw.xyz    $vf13xyz,$vf13xyz,$vf10w  \n\
-    //    sqc2         $vf13,0(%0)               \n\
-    //    ": : "r" (v0), "r" (v1)
-    //);
+    /*
+     * VU0 decoded:
+     *   1. Scale v1.xy by stqparam[0][2] (trate, stored in vf8.z)
+     *   2. Multiply by slm (SgWSMtx*wlm, vf4-vf7) → GS coordinate space
+     *   3. Perspective divide (Q = 1/w)
+     *   4. Subtract (stqparam[0][0], stqparam[0][1]) = GS screen origin
+     *      → pixel coords in [0,639] x [0,223]
+     *   5. Clamp with stqparam[1] = {minX, maxX, minY, maxY}
+     *   6. Compute STQ packed as:
+     *        S = screen_x * (1/1024) * Q * (1/16)
+     *        T = screen_y * (1/256)  * Q * (1/16)
+     *        Q = 1 * Q * (1/16)
+     *      where stqparam[2] = {1/1024, 1/256, 1.0, 1/16}
+     *      Actual UV = S/Q, T/Q = screen_x/1024, screen_y/256
+     */
+    float trate = g_vu0_stq_params[0][2];
+
+    /* Step 1: scale xy by trate */
+    sceVu0FVECTOR vt_scaled;
+    vt_scaled[0] = v1[0] * trate;
+    vt_scaled[1] = v1[1] * trate;
+    vt_scaled[2] = v1[2];
+    vt_scaled[3] = v1[3];
+
+    /* Step 2: project through slm = SgWSMtx * wlm */
+    sceVu0FVECTOR projected;
+    sceVu0ApplyMatrix(projected, g_vu0_stq_matrix, vt_scaled);
+
+    if (projected[3] == 0.0f)
+    {
+        v0[0] = v0[1] = v0[2] = v0[3] = 0.0f;
+        return;
+    }
+
+    /* Step 3: perspective divide → GS pixel coordinates */
+    float inv_w = 1.0f / projected[3];
+    float gs_x  = projected[0] * inv_w;
+    float gs_y  = projected[1] * inv_w;
+
+    /* Step 4: subtract GS screen origin → screen pixel coords [0..640] x [0..224] */
+    float screen_x = gs_x - g_vu0_stq_params[0][0]; /* gs_x - 1726.5              */
+    float screen_y = gs_y - g_vu0_stq_params[0][1]; /* gs_y - (1936 - GetYOff)    */
+
+    /* Step 5: clamp */
+    float min_x = g_vu0_stq_params[1][0];
+    float max_x = g_vu0_stq_params[1][1];
+    float min_y = g_vu0_stq_params[1][2];
+    float max_y = g_vu0_stq_params[1][3];
+    screen_x = screen_x < min_x ? min_x : (screen_x > max_x ? max_x : screen_x);
+    screen_y = screen_y < min_y ? min_y : (screen_y > max_y ? max_y : screen_y);
+
+    /* Step 6: pack as STQ so that U = S/Q = screen_x/1024, V = T/Q = screen_y/256 */
+    float inv_tex_x  = g_vu0_stq_params[2][0]; /* 1/1024 */
+    float inv_tex_y  = g_vu0_stq_params[2][1]; /* 1/256  */
+    float q_base     = g_vu0_stq_params[2][2]; /* 1.0    */
+    float pack_scale = g_vu0_stq_params[2][3]; /* 1/16   */
+
+    v0[0] = screen_x * inv_tex_x * inv_w * pack_scale;
+    v0[1] = screen_y * inv_tex_y * inv_w * pack_scale;
+    v0[2] = q_base   *             inv_w * pack_scale;
+    v0[3] = 1.0f;
 }
 
 static inline void dummy1(sceVu0FMATRIX m0)
 {
-    //asm volatile ("\n\
-    //    lqc2 $vf4,0(%0) \n\
-    //    lqc2 $vf5,0x10(%0) \n\
-    //    lqc2 $vf6,0x20(%0) \n\
-    //    lqc2 $vf7,0x30(%0) \n\
-    //": :"r"(m0));
+    /* PS2: loaded m0 into VF registers vf4-vf7 (used by Vu0Func0000 as the
+     * projection matrix).  On PC we save it in the global so Vu0Func0000
+     * can read it. */
+    sceVu0CopyMatrix(g_vu0_stq_matrix, m0);
 }
 
 static inline void dummy2(sceVu0FVECTOR *v0)
 {
-    //asm volatile ("\n\
-    //    lqc2 $vf8,0(%0) \n\
-    //    lqc2 $vf9,0x10(%0) \n\
-    //    lqc2 $vf10,0x20(%0) \n\
-    //": :"r"(v0));
+    /* PS2: loaded v0[0..2] into VF registers vf8-vf10 (STQ params).
+     * On PC we save them in the global so Vu0Func0000 can read them. */
+    Vu0CopyVector(g_vu0_stq_params[0], v0[0]);
+    Vu0CopyVector(g_vu0_stq_params[1], v0[1]);
+    Vu0CopyVector(g_vu0_stq_params[2], v0[2]);
 }
 
 typedef struct {
@@ -549,6 +599,140 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
     Set2DPacketBufferAddress(ppbuf);
 
     pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
+
+    /* -------------------------------------------------------------------
+     * GL rendering path
+     *
+     * The PS2 tristrip iterates m = pnumh*(pnumw+1) pairs.  Each pair
+     * (i, j=i+17) represents a vertex from row r and row r+1 at the same
+     * column c.  When i%17==0 the strip restarts (no triangle emitted).
+     * Otherwise two triangles share the four corners of a grid cell:
+     *
+     *   TL = vt[i-1]     (row r,   col c-1)
+     *   BL = vt[i+pnumw] (row r+1, col c-1)   (== vt[j-1])
+     *   TR = vt[i]       (row r,   col c)
+     *   BR = vt[j]       (row r+1, col c)
+     *
+     * Triangle k : TL, BL, TR   (upper-left half)
+     * Triangle l : BL, TR, BR   (lower-right half)
+     *
+     * Screen-copy UV for each vertex: decode from stq[] that was filled by
+     * Vu0Func0000.  STQ is packed so U = stq.x/stq.z, V = stq.y/stq.z.
+     *
+     * GL clip-space position: project vt[i] through
+     *   fslm = MikuPan_GetWorldClipView() * wlm
+     * then perspective-divide.
+     * ------------------------------------------------------------------- */
+    {
+        /* Max grid: 17×17 = 289 vertices; max triangles: 16×16×2 = 512. */
+        #define PARTS_DEFORM_MAX_TRI_VERTS (16 * 16 * 2 * 3)
+        static float render_buffer[PARTS_DEFORM_MAX_TRI_VERTS][12];
+        int out = 0;
+
+        sceVu0FMATRIX fslm;
+        sceVu0MulMatrix(fslm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
+
+        /* Pre-project all vertices to GL NDC and decode screen-copy UV. */
+        int total = (pnumw + 1) * (pnumh + 1);
+        static float gl_ndc[289][3];   /* NDC (x,y,z) after perspective div */
+        static float sc_uv[289][2];    /* screen-copy UV decoded from stq    */
+
+        for (i = 0; i < total; i++)
+        {
+            sceVu0FVECTOR clip;
+            sceVu0ApplyMatrix(clip, fslm, vt[i]);
+
+            if (clip[3] != 0.0f)
+            {
+                float inv_w  = 1.0f / clip[3];
+                gl_ndc[i][0] = clip[0] * inv_w;
+                gl_ndc[i][1] = clip[1] * inv_w;
+                gl_ndc[i][2] = clip[2] * inv_w;
+            }
+            else
+            {
+                gl_ndc[i][0] = gl_ndc[i][1] = gl_ndc[i][2] = 0.0f;
+            }
+
+            /* U = stq.x/stq.z,  V = stq.y/stq.z */
+            float q = stq[i][2];
+            if (q != 0.0f)
+            {
+                sc_uv[i][0] = stq[i][0] / q;
+                sc_uv[i][1] = stq[i][1] / q;
+            }
+            else
+            {
+                sc_uv[i][0] = stq[i][0];
+                sc_uv[i][1] = stq[i][1];
+            }
+        }
+
+/* Write one vertex into the render_buffer. */
+#define WRITE_VERT(idx)                                                   \
+    do {                                                                  \
+        float *_v = render_buffer[out++];                                 \
+        float _u  = sc_uv[(idx)][0];                                      \
+        float _vv = sc_uv[(idx)][1];                                      \
+        float _a  = (float)((float)use_alpha[(idx)] * aprate) / 128.0f;  \
+        _v[0]  = _u;          /* src_u  */                                \
+        _v[1]  = _vv;         /* src_v  */                                \
+        _v[2]  = _u;          /* dst_u  */                                \
+        _v[3]  = _vv;         /* dst_v  */                                \
+        _v[4]  = 1.0f;        /* r      */                                \
+        _v[5]  = 1.0f;        /* g      */                                \
+        _v[6]  = 1.0f;        /* b      */                                \
+        _v[7]  = _a;          /* a      */                                \
+        _v[8]  = gl_ndc[(idx)][0]; /* x */                               \
+        _v[9]  = gl_ndc[(idx)][1]; /* y */                               \
+        _v[10] = gl_ndc[(idx)][2]; /* z */                               \
+        _v[11] = 1.0f;                                                    \
+    } while(0)
+
+        for (i = 0; i < m; i++)
+        {
+            j = i + pnumw + 1;
+
+            /* Strip restart column — no triangle on the first vertex of each column */
+            if (i % (pnumw + 1) == 0)
+                continue;
+
+            k = clip[i - 1] + clip[i + pnumw] + clip[i]; /* TL + BL + TR */
+            l = clip[i + pnumw] + clip[i] + clip[j];     /* BL + TR + BR */
+
+            if (out + 6 > PARTS_DEFORM_MAX_TRI_VERTS)
+                break;
+
+            /* Triangle k: TL (i-1), BL (i+pnumw), TR (i) */
+            if (k == 0)
+            {
+                WRITE_VERT(i - 1);
+                WRITE_VERT(i + pnumw);
+                WRITE_VERT(i);
+            }
+
+            /* Triangle l: BL (i+pnumw), TR (i), BR (j) */
+            if (l == 0)
+            {
+                WRITE_VERT(i + pnumw);
+                WRITE_VERT(i);
+                WRITE_VERT(j);
+            }
+        }
+
+#undef WRITE_VERT
+
+        if (out > 0)
+        {
+            MikuPan_RenderScreenCopyTriangles3D(
+                (sceGsTex0 *)&tex0,
+                &render_buffer[0][0],
+                out,
+                0,   /* depth_mode: LEQUAL */
+                0);  /* additive_blend: off — standard alpha blend */
+        }
+        #undef PARTS_DEFORM_MAX_TRI_VERTS
+    }
 }
 
 u_char SubPartsDeform1(EFFECT_CONT *ec, u_char num, int page, int sbj, float sclx, float scly, float vol, int fl, float spd, float rate, float trate)
@@ -2057,38 +2241,18 @@ void SetNegaCircle(EFFECT_CONT *ec)
 
 void _SetPartsDeformSTQRegs(sceVu0FVECTOR *params)
 {
-    //asm __volatile__(
-    //    "lqc2    $vf8,0(%0)\n"
-    //    "lqc2    $vf9,0x10(%0)\n"
-    //    "lqc2    $vf10,0x20(%0)\n"
-    //    : :"r"(params):"memory"
-    //);
+    /* PS2: loaded params[0..2] into VF registers vf8-vf10.
+     * On PC we store them in the same global that dummy2() uses. */
+    Vu0CopyVector(g_vu0_stq_params[0], params[0]);
+    Vu0CopyVector(g_vu0_stq_params[1], params[1]);
+    Vu0CopyVector(g_vu0_stq_params[2], params[2]);
 }
 
 void _CalcParstDeformSTQ(float *stq, float *vt)
 {
-    //asm __volatile__(
-    //    "lqc2       $vf12, 0x0(%0)\n"
-    //    "vmulz.xy   $vf12, $vf12, $vf8z\n"
-    //    "vmulaw.xyzw ACC, $vf7, $vf0w\n"
-    //    "vmaddaz.xyzw ACC, $vf6, $vf12z\n"
-    //    "vmadday.xyzw ACC, $vf5, $vf12y\n"
-    //    "vmaddx.xyzw $vf13, $vf4, $vf12x\n"
-    //    "vdiv       Q, $vf0w, $vf13w\n"
-    //    "vwaitq\n"
-    //    "vmulq.xyz  $vf13, $vf13, Q\n"
-    //    "vsub.xy    $vf13, $vf13, $vf8\n"
-    //    "vmaxx.x    $vf13, $vf13, $vf9x\n"
-    //    "vminiy.x   $vf13, $vf13, $vf9y\n"
-    //    "vmaxz.y    $vf13, $vf13, $vf9z\n"
-    //    "vminiw.y   $vf13, $vf13, $vf9w\n"
-    //    "vmulq.xy   $vf14, $vf10, Q\n"
-    //    "vmul.xy    $vf13, $vf13, $vf14\n"
-    //    "vmulq.z    $vf13, $vf10, Q\n"
-    //    "vmulw.xyz  $vf13, $vf13, $vf10w\n"
-    //    "sqc2       $vf13, 0x0(%1)\n"
-    //    : :"r"(vt),"r"(stq):"memory"
-    //);
+    /* PS2: same computation as Vu0Func0000 but called as a function.
+     * Delegate to the C implementation. */
+    Vu0Func0000(stq, vt);
 }
 
 EFFINFO2 efi[8] = {0};

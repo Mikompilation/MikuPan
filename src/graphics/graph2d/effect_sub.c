@@ -63,6 +63,11 @@ static u_char EffectSubClampColor(int value)
     return (u_char)value;
 }
 
+static float EffectSubConvertSpriteDepthToNDC(int z)
+{
+    return MikuPan_ConvertGsDepthToNDC((float)(u_int)z);
+}
+
 static void EffectSubWriteUntextured2DVertex(
     float *dst,
     float x,
@@ -243,6 +248,7 @@ static void EffectSubRenderTexturedSpriteQuad(
     float v0,
     float u1,
     float v1,
+    float z,
     int r,
     int g,
     int b,
@@ -250,10 +256,10 @@ static void EffectSubRenderTexturedSpriteQuad(
 {
     float vertices[4][12];
 
-    EffectSubWriteTextured2DVertex(vertices[0], u0, v0, x0, y0, 0.0f, r, g, b, a);
-    EffectSubWriteTextured2DVertex(vertices[1], u1, v0, x1, y0, 0.0f, r, g, b, a);
-    EffectSubWriteTextured2DVertex(vertices[2], u0, v1, x0, y1, 0.0f, r, g, b, a);
-    EffectSubWriteTextured2DVertex(vertices[3], u1, v1, x1, y1, 0.0f, r, g, b, a);
+    EffectSubWriteTextured2DVertex(vertices[0], u0, v0, x0, y0, z, r, g, b, a);
+    EffectSubWriteTextured2DVertex(vertices[1], u1, v0, x1, y0, z, r, g, b, a);
+    EffectSubWriteTextured2DVertex(vertices[2], u0, v1, x0, y1, z, r, g, b, a);
+    EffectSubWriteTextured2DVertex(vertices[3], u1, v1, x1, y1, z, r, g, b, a);
 
     EffectSubRenderTexturedSpriteVertices(tex, &vertices[0][0], 0);
 }
@@ -1654,6 +1660,7 @@ void _SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
             0.0f,
             (float)tw / (tex_w * 16.0f),
             (float)th / (tex_h * 16.0f),
+            EffectSubConvertSpriteDepthToNDC(mz),
             0x80,
             0x80,
             0x80,
@@ -1860,6 +1867,7 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
             0.0f,
             ((float)mtw * 16.0f) / (tex_w * 16.0f),
             (float)v / (tex_h * 16.0f),
+            EffectSubConvertSpriteDepthToNDC(mz),
             0x80,
             0x80,
             0x80,
@@ -1891,6 +1899,7 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
     u_long test;
     u_long clmp;
     u_long prim;
+    float gl_z;
     sceGsTex0 Load = {0};
     sceGsTex0 Change = {0};
     sceGsTex0* mikupan_texture_load;
@@ -1905,6 +1914,7 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
     div = g_bInterlace ? 2.0f : 1.0f;
 
     mz = sd->pos_z;
+    gl_z = EffectSubConvertSpriteDepthToNDC((int)mz);
     
     mscw = sd->scale_w;
     msch = sd->scale_h;
@@ -2079,7 +2089,7 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
         /// Position
         buffer[i][8] = ndc[0];
         buffer[i][9] = ndc[1];
-        buffer[i][10] = 0.0f;
+        buffer[i][10] = gl_z;
         buffer[i][11] = 1.0f;
     }
 
@@ -2134,6 +2144,7 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
 	u_long test;
 	u_long clmp;
 	u_long prim;
+	float gl_z;
 	sceGsTex0 Load;
 	sceGsTex0 Change;
 	float div;
@@ -2149,6 +2160,7 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
     div = g_bInterlace ? 2.0f : 1.0f;
 
     mz = sd->pos_z;
+    gl_z = EffectSubConvertSpriteDepthToNDC(mz);
     
     mscw = sd->scale_w;
     msch = sd->scale_h;
@@ -2322,7 +2334,7 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
         /// Position
         buffer[i][8] = ndc[0];
         buffer[i][9] = ndc[1];
-        buffer[i][10] = 0.0f;
+        buffer[i][10] = gl_z;
         buffer[i][11] = 1.0f;
     }
 
@@ -2379,6 +2391,7 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
 	u_int r;
 	u_int g;
 	u_int b;
+    float gl_z;
 	float px;
 	float py;
 	float pw;
@@ -2396,6 +2409,7 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
     mang = sd->angle;
     
     mz = sd->pos_z;
+    gl_z = EffectSubConvertSpriteDepthToNDC(mz);
     r = sd->r;
     g = sd->g;
     b = sd->b;
@@ -2611,10 +2625,10 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
 
     float vertices[4][12] = {
         /// UV,               COLOUR,                                                                                  POS
-        {u0, v0, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y0, 0.0f, 1.0f, }, // top-left
-        {u1, v0, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y0, 0.0f, 1.0f, }, // top-right
-        {u0, v1, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y1, 0.0f, 1.0f, }, // bottom-left
-        {u1, v1, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y1, 0.0f, 1.0f, }, // bottom-right
+        {u0, v0, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y0, gl_z, 1.0f, }, // top-left
+        {u1, v0, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y0, gl_z, 1.0f, }, // top-right
+        {u0, v1, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x0, y1, gl_z, 1.0f, }, // bottom-left
+        {u1, v1, 0.0f, 0.0f, (float)r/128.0f, (float)g/128.0f, (float)b/128.0f, MikuPan_ConvertScaleColor(128), x1, y1, gl_z, 1.0f, }, // bottom-right
     };
 
     for (i = 0; i < 4; i++)
@@ -3294,8 +3308,10 @@ void LocalCopyBtoL_Sub(int no, int type, int addr) {
 	int rline;
 	int oline;
     sceGsLoadImage gs_limage;
-    
+
     bbuf = (no != 0) ? buf2 : buf;
+
+    //MikuPan_ReadFramebufferRGBA8TopLeft(SCR_WIDTH, SCR_HEIGHT, (unsigned char *)bbuf);
 
     sceGsSetDefLoadImage(
         &gs_limage,
@@ -3415,6 +3431,69 @@ void ClearLocalCopyLtoLCache()
     old_ltol_addr1 = old_ltol_addr2 = -1;
 }
 
+static void EffectSubCopyGsPsmct32(int src_addr, int dst_addr)
+{
+    static u_long128 copy_buf[(SCR_WIDTH * SCR_HEIGHT * 4) / sizeof(u_long128)];
+    sceGsStoreImage store_image;
+    sceGsLoadImage load_image;
+
+    sceGsSetDefStoreImage(
+        &store_image,
+        src_addr,
+        SCR_WIDTH / 64,
+        SCE_GS_PSMCT32,
+        0,
+        0,
+        SCR_WIDTH,
+        SCR_HEIGHT);
+    sceGsExecStoreImage(&store_image, copy_buf);
+
+    sceGsSetDefLoadImage(
+        &load_image,
+        dst_addr,
+        SCR_WIDTH / 64,
+        SCE_GS_PSMCT32,
+        0,
+        0,
+        SCR_WIDTH,
+        SCR_HEIGHT);
+    sceGsExecLoadImage(&load_image, copy_buf);
+}
+
+static void EffectSubDrawGsPsmct32ToMainFramebuffer(int src_addr)
+{
+    sceGsTex0 tex = {
+        .TBP0 = src_addr,
+        .TBW = SCR_WIDTH / 64,
+        .PSM = SCE_GS_PSMCT32,
+        .TW = 10,
+        .TH = 8,
+        .TCC = 0,
+        .TFX = SCE_GS_MODULATE,
+        .CBP = 0,
+        .CPSM = SCE_GS_PSMCT32,
+        .CSM = 0,
+        .CSA = 0,
+        .CLD = 1,
+    };
+
+    EffectSubRenderTexturedSpriteQuad(
+        &tex,
+        -320.0f,
+        -224.0f,
+        320.0f,
+        224.0f,
+        0.0f,
+        0.0f,
+        (float)SCR_WIDTH / (float)(1 << tex.TW),
+        (float)SCR_HEIGHT / (float)(1 << tex.TH),
+        EffectSubConvertSpriteDepthToNDC(0x0fffffff),
+        0x80,
+        0x80,
+        0x80,
+        0x80);
+}
+
 int LocalCopyLtoLDraw(int addr1, int addr2)
 {
 	int i;
@@ -3517,6 +3596,16 @@ void LocalCopyLtoL(int addr1, int addr2)
         EffectSubUploadMainFramebufferToGs(addr2))
     {
         return;
+    }
+
+    if (!EffectSubIsMainFramebufferAddress(addr1))
+    {
+        EffectSubCopyGsPsmct32(addr1, addr2);
+
+        if (EffectSubIsMainFramebufferAddress(addr2))
+        {
+            EffectSubDrawGsPsmct32ToMainFramebuffer(addr1);
+        }
     }
     
     Reserve2DPacket(0x1000);

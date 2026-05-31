@@ -1852,6 +1852,7 @@ void DrawPhotoBuffer(u_int pri, int addr, int szfl, int x, int y, int szw,
     sd.pos_y = yy;
     sd.pos_z = 0xfffffff - pri;
 
+    DrawAll2D();
     SetTexDirectS2(pri, &sd, &de, 1);
 
     if (ftype == 1)
@@ -2035,7 +2036,9 @@ void DrawPhotoFromWorkArea(int pri, int ftype, int x, int y, int szw, int szh,
 void DrawPhotoFromCompress(int n, u_int pri, int ftype, int x, int y, int szw,
                            int szh, u_char alp)
 {
-    return;
+    UncompressPhoto(n);
+    DrawPhotoBuffer(pri, EVENT_ADDRESS, 1, x, y, szw, szh, 384, 128, ftype,
+                    alp, 1);
 }
 
 void UncompressPhoto(int n)

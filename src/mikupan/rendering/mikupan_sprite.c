@@ -240,6 +240,54 @@ void MikuPan_RenderSprite2D(sceGsTex0 *tex, float *buffer)
     glad_glDrawArrays(MikuPan_GetRenderMode(), 0, 4);
 }
 
+static float MikuPan_NormalizeSpriteDepthValue(float z)
+{
+    if (z >= -1.0f && z <= 1.0f)
+    {
+        return z;
+    }
+
+    return MikuPan_ConvertGsDepthToNDC(z);
+}
+
+static void MikuPan_CopyAndNormalizeSpriteDepth(float dst[4][12], const float *src)
+{
+    int i;
+    int j;
+
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 12; j++)
+        {
+            dst[i][j] = src[i * 12 + j];
+        }
+
+        dst[i][10] = MikuPan_NormalizeSpriteDepthValue(dst[i][10]);
+    }
+}
+
+static void MikuPan_NormalizeTexturedTriangleDepths(float *buffer, int vertex_count)
+{
+    int i;
+
+    for (i = 0; i < vertex_count; i++)
+    {
+        float *vertex = buffer + i * 12;
+        vertex[10] = MikuPan_NormalizeSpriteDepthValue(vertex[10]);
+    }
+}
+
+static void MikuPan_NormalizeUntexturedTriangleDepths(float *buffer, int vertex_count)
+{
+    int i;
+
+    for (i = 0; i < vertex_count; i++)
+    {
+        float *vertex = buffer + i * 8;
+        vertex[6] = MikuPan_NormalizeSpriteDepthValue(vertex[6]);
+    }
+}
+
 void MikuPan_RenderUntexturedSprite(float *buffer)
 {
     MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
@@ -260,20 +308,28 @@ void MikuPan_RenderUntexturedSprite(float *buffer)
 
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
 {
+    float upload_buffer[4][12];
+
     MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
     MikuPan_FlushTexturedSpriteBatch();
     MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
+    MikuPan_CopyAndNormalizeSpriteDepth(upload_buffer, buffer);
+
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_SetTexture(tex);
 
     MikuPan_SetRenderStateSprite3D();
+    glad_glDepthMask(GL_FALSE);
+    glad_glDepthFunc(GL_LEQUAL);
 
     MikuPan_BindBufferCached(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
-    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)sizeof(float[4][12]), buffer);
+    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)sizeof(upload_buffer), upload_buffer);
 
     glad_glDrawArrays(MikuPan_GetRenderMode(), 0, 4);
+    glad_glDepthMask(GL_TRUE);
+    MikuPan_ResetRenderStateCache();
 }
 
 void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count)
@@ -291,6 +347,9 @@ void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_SetTexture(tex);
     MikuPan_SetRenderStateSprite3D();
+    glad_glDepthMask(GL_FALSE);
+    glad_glDepthFunc(GL_LEQUAL);
+    MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
         GL_ARRAY_BUFFER,
@@ -300,24 +359,50 @@ void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex
 
     MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, vertex_count);
     MikuPan_PerfDrawCall();
+    glad_glDepthMask(GL_TRUE);
+    MikuPan_ResetRenderStateCache();
 }
 
-static void MikuPan_ApplyParticleTriangleState(int depth_always, int additive_blend)
+static GLenum MikuPan_GetDepthFuncForMode(int depth_mode)
+{
+    switch (depth_mode)
+    {
+    case MIKUPAN_DEPTH_ALWAYS:
+        return GL_ALWAYS;
+    case MIKUPAN_DEPTH_GEQUAL:
+        return GL_GEQUAL;
+    case MIKUPAN_DEPTH_LEQUAL:
+    default:
+        return GL_LEQUAL;
+    }
+}
+
+static void MikuPan_ApplyParticleTriangleState(int depth_mode, int additive_blend)
 {
     MikuPan_SetRenderStateSprite3D();
     glad_glDepthMask(GL_FALSE);
-    glad_glDepthFunc(depth_always ? GL_ALWAYS : GL_LEQUAL);
+    glad_glDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
     glad_glBlendEquation(GL_FUNC_ADD);
     glad_glBlendFunc(GL_SRC_ALPHA, additive_blend ? GL_ONE : GL_ONE_MINUS_SRC_ALPHA);
 }
 
-static void MikuPan_ApplyHeatHazeTriangleState(int depth_always)
+static void MikuPan_ApplyHeatHazeTriangleState(int depth_mode, int additive_blend)
 {
     MikuPan_SetRenderStateSprite3D();
     glad_glDepthMask(GL_FALSE);
-    glad_glDepthFunc(depth_always ? GL_ALWAYS : GL_LEQUAL);
+    glad_glDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
     glad_glBlendEquation(GL_FUNC_ADD);
-    glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    /* PS2 heat-haze / distortion particles use additive blending
+     * (CS*AS + CD), which makes the distortion area visibly brighter.
+     * Standard alpha blend produces only a near-invisible 1-2 px shift. */
+    if (additive_blend)
+    {
+        glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    }
+    else
+    {
+        glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
 }
 
 static void MikuPan_RestoreParticleTriangleState(void)
@@ -511,7 +596,7 @@ restore:
     return ok;
 }
 
-void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int depth_always, int additive_blend)
+void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int depth_mode, int additive_blend)
 {
     if (vertex_count <= 0)
     {
@@ -524,7 +609,8 @@ void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int de
     MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(COLOUR4_POSITION4);
 
     MikuPan_BindVAO(pipeline->vao);
-    MikuPan_ApplyParticleTriangleState(depth_always, additive_blend);
+    MikuPan_ApplyParticleTriangleState(depth_mode, additive_blend);
+    MikuPan_NormalizeUntexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
         GL_ARRAY_BUFFER,
@@ -537,11 +623,9 @@ void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int de
     MikuPan_RestoreParticleTriangleState();
 }
 
-void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_always, int additive_blend)
+void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode, int additive_blend)
 {
     int i;
-
-    (void)additive_blend;
 
     if (vertex_count <= 0)
     {
@@ -572,11 +656,12 @@ void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vert
 
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_BindTexture2DCached(g_screen_copy_texture);
-    MikuPan_ApplyHeatHazeTriangleState(depth_always);
+    MikuPan_ApplyHeatHazeTriangleState(depth_mode, additive_blend);
+    MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
 
     g_screen_copy_debug.vertex_count = vertex_count;
-    g_screen_copy_debug.depth_always = depth_always;
-    g_screen_copy_debug.additive_blend = 0;
+    g_screen_copy_debug.depth_mode = depth_mode;
+    g_screen_copy_debug.additive_blend = additive_blend;
     g_screen_copy_debug.uv_min[0] = buffer[0];
     g_screen_copy_debug.uv_max[0] = buffer[0];
     g_screen_copy_debug.uv_min[1] = buffer[1];
@@ -611,7 +696,7 @@ void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vert
     MikuPan_RestoreParticleTriangleState();
 }
 
-void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_always)
+void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode)
 {
     if (vertex_count <= 0)
     {
@@ -645,7 +730,8 @@ void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer,
 
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_BindTexture2DCached(g_screen_copy_texture);
-    MikuPan_ApplyHeatHazeTriangleState(depth_always);
+    MikuPan_ApplyHeatHazeTriangleState(depth_mode, 0); /* screen-pos path: standard blend */
+    MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
         GL_ARRAY_BUFFER,
@@ -686,7 +772,7 @@ const MikuPan_ScreenCopyDebugInfo *MikuPan_GetScreenCopyDebugInfo(void)
     return &g_screen_copy_debug;
 }
 
-void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_always, int additive_blend)
+void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode, int additive_blend)
 {
     if (vertex_count <= 0)
     {
@@ -700,7 +786,8 @@ void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex, float *buffer, i
 
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_SetTexture(tex);
-    MikuPan_ApplyParticleTriangleState(depth_always, additive_blend);
+    MikuPan_ApplyParticleTriangleState(depth_mode, additive_blend);
+    MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
         GL_ARRAY_BUFFER,

@@ -286,6 +286,22 @@ void MikuPan_GSToNDC(int Xgs, int Ygs, int Zgs, float* x, float* y, float* z, fl
     *z = z01 * 2.0f - 1.0f;
 }
 
+float MikuPan_ConvertGsDepthToNDC(float gs_z)
+{
+    const float gs_depth_max = 268435471.0f; /* 0x1000000f: highest common 2D effect Z base */
+
+    if (gs_z < 0.0f)
+    {
+        gs_z = 0.0f;
+    }
+    else if (gs_z > gs_depth_max)
+    {
+        gs_z = gs_depth_max;
+    }
+
+    return 0.999f - (gs_z / gs_depth_max) * 1.998f;
+}
+
 void MikuPan_ConvertPs2GSCoordToNDC(float *out,
                                     float window_width, float window_height,
                                     float gs_x, float gs_y)

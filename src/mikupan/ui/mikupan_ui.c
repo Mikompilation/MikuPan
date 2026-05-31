@@ -814,6 +814,15 @@ static int CompareResolutionDesc(const void *a, const void *b)
     return area_b - area_a;
 }
 
+/* Write a reduced aspect-ratio string (e.g. "16:9") into buf. */
+static void MikuPan_AspectRatioStr(int w, int h, char *buf, int buf_size)
+{
+    int a = w, b = h;
+    while (b) { int t = b; b = a % b; a = t; }
+    /* a is now the GCD */
+    snprintf(buf, buf_size, "%d:%d", w / a, h / a);
+}
+
 static void MikuPan_PopulateResolutionList(SDL_DisplayID display, const SDL_DisplayMode *current_mode)
 {
     resolution_count = 0;
@@ -888,8 +897,11 @@ static void MikuPan_PopulateResolutionList(SDL_DisplayID display, const SDL_Disp
 
     for (int i = 0; i < resolution_count; i++)
     {
+        char aspect[12];
+        MikuPan_AspectRatioStr(resolution_list[i].width, resolution_list[i].height,
+                               aspect, sizeof(aspect));
         snprintf(resolution_labels[i], sizeof(resolution_labels[i]),
-                 "%d x %d", resolution_list[i].width, resolution_list[i].height);
+                 "%d x %d (%s)", resolution_list[i].width, resolution_list[i].height, aspect);
 
         resolution_label_ptrs[i] = resolution_labels[i];
 
@@ -1484,9 +1496,14 @@ void MikuPan_ShowTextureList(void)
                    screen_copy->height);
             if (debug != NULL)
             {
+                const char *depth =
+                    debug->depth_mode == MIKUPAN_DEPTH_ALWAYS ? "always" :
+                    debug->depth_mode == MIKUPAN_DEPTH_GEQUAL ? "gequal" :
+                    "lequal";
+
                 igText("last draw: %d vertices, depth %s, blend %s",
                        debug->vertex_count,
-                       debug->depth_always ? "always" : "lequal",
+                       depth,
                        debug->additive_blend ? "add" : "alpha");
                 igText("uv:  %.3f %.3f  ->  %.3f %.3f",
                        debug->uv_min[0], debug->uv_min[1],

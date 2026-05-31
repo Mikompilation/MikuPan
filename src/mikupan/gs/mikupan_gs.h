@@ -12,7 +12,7 @@ enum PixelStorageFormat
     PSMCT32 = 0b000000,
     PSMCT24 = 0b000001,
     PSMCT16 = 0b000010,
-    PCMCT16S = 0b001010,
+    PSMCT16S = 0b001010,
     PSMT8 = 0b010011,
     PSMT4 = 0b010100,
     PSMT8H = 0b011011,
@@ -114,12 +114,18 @@ class GSHelper
     ~GSHelper() = default;
     void UploadPSMCT32(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh,
                        const uint8_t *inbuf);
+    void UploadPSMCT16(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh,
+                       const uint8_t *inbuf);
     void UploadPSMT8(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh,
                      const uint8_t *inbuf);
     void UploadPSMT4(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh,
                      const uint8_t *inbuf);
     void DownloadPSMCT32(unsigned char* outbuf, int dbp, int dbw, int dsax, int dsay,
                                          int rrw, int rrh);
+    void DownloadPSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax, int dsay,
+                                         int rrw, int rrh);
+    void StorePSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax, int dsay,
+                                      int rrw, int rrh);
     void DownloadImagePSMT8(unsigned char* outbuf, int dbp, int dbw, int dsax,
                                             int dsay, int rrw, int rrh, int cbp,
                                             int cbw, char alpha_reg);

@@ -226,7 +226,7 @@ void SetFire2(EFFECT_CONT *ec);
 void SetHalo(EFFECT_CONT *ec);
 void SubHalo(float *p, int type, int textp, u_int z, u_char r, u_char g, u_char b, u_char alp, float sc);
 void InitHeatHaze();
-int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_clip, int fr, int t_particles, void *particles, int size_of_particle, float psize, float distortion_amount, int type);
+int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_clip, sceVu0FMATRIX *gl_local_clip, int fr, int t_particles, void *particles, int size_of_particle, float psize, float distortion_amount, int type);
 void add_particle(int type, HEAT_HAZE *hh, float *pos, float *vel, float r, float g, float b, float a);
 void update_particles(PARTICLE *prt);
 void add_particle2(int type, HEAT_HAZE *hh, float *pos, float *vel, float r, float g, float b, float a);

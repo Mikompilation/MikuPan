@@ -781,7 +781,7 @@ void SetEffSQTex(int n, float *v, int tp, float w, float h, u_char r, u_char g, 
         MikuPan_ConvertPs2GSCoordToNDC(ndc, win_w, win_h, xx[i % 2], yy[i / 2]);
         pbuf[ndpkt].fl32[0] = ndc[0];
         pbuf[ndpkt].fl32[1] = ndc[1];
-        pbuf[ndpkt].fl32[2] = 0.0f;
+        pbuf[ndpkt].fl32[2] = v[2];
         pbuf[ndpkt++].fl32[3] = 1.0f;
     }
 
@@ -1420,7 +1420,7 @@ void InitHeatHaze()
     }
 }
 
-int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_clip, int fr, int t_particles, void *particles, int size_of_particle, float psize, float distortion_amount, int type)
+int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_clip, sceVu0FMATRIX *gl_local_clip, int fr, int t_particles, void *particles, int size_of_particle, float psize, float distortion_amount, int type)
 {
     int i;
     int n;
@@ -1443,7 +1443,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
     float window_w;
     float window_h;
     int render_vertices;
-    int depth_always;
+    int depth_mode;
     int additive_blend;
     int can_render_gl;
     static float textured_render_buffer[DISTORTION_PARTICLE_MAX_VERTICES][12];
@@ -1454,7 +1454,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
     window_w = (float)MikuPan_GetWindowWidth();
     window_h = (float)MikuPan_GetWindowHeight();
     render_vertices = 0;
-    depth_always = type == 9;
+    depth_mode = MIKUPAN_DEPTH_LEQUAL;
     additive_blend = type != 13;
     can_render_gl = window_w > 0.0f && window_h > 0.0f;
     distortion_tex0 = SCE_GS_SET_TEX0_1(0x1a40, 10, SCE_GS_PSMCT32, 10, 8, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 0);
@@ -1465,7 +1465,6 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
     case 10:
     case 11:
         dtex = 1;
-        depth_always = 1;
     break;
     case 8:
     case 12:
@@ -1493,6 +1492,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
     switch (type)
     {
     case 9:
+        depth_mode = MIKUPAN_DEPTH_ALWAYS;
         treg = SCE_GS_SET_TEST_1(1, SCE_GS_ALPHA_ALWAYS, 0, SCE_GS_AFAIL_KEEP, 0, 0, 1, SCE_GS_DEPTH_ALWAYS);
     break;
     case 8:
@@ -1585,7 +1585,20 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
             if ((clip_flags & 0x3f) == 0)
             {
                 sceVu0FVECTOR vf8, vf9, vf14, vf22, vf27;
-                float gl_z = tmp[3] != 0.0f ? tmp[2] / tmp[3] : 0.0f;
+                float gl_z = 0.0f;
+
+                if (can_render_gl)
+                {
+                    sceVu0FVECTOR gl_tmp;
+
+                    gl_tmp[0] = (gl_local_clip[0][0][0] * p[0][0]) + (gl_local_clip[0][1][0] * p[0][1]) + (gl_local_clip[0][2][0] * p[0][2]) + (gl_local_clip[0][3][0] * p[0][3]);
+                    gl_tmp[1] = (gl_local_clip[0][0][1] * p[0][0]) + (gl_local_clip[0][1][1] * p[0][1]) + (gl_local_clip[0][2][1] * p[0][2]) + (gl_local_clip[0][3][1] * p[0][3]);
+                    gl_tmp[2] = (gl_local_clip[0][0][2] * p[0][0]) + (gl_local_clip[0][1][2] * p[0][1]) + (gl_local_clip[0][2][2] * p[0][2]) + (gl_local_clip[0][3][2] * p[0][3]);
+                    gl_tmp[3] = (gl_local_clip[0][0][3] * p[0][0]) + (gl_local_clip[0][1][3] * p[0][1]) + (gl_local_clip[0][2][3] * p[0][2]) + (gl_local_clip[0][3][3] * p[0][3]);
+
+                    gl_z = gl_tmp[3] != 0.0f ? gl_tmp[2] / gl_tmp[3] : 0.0f;
+                }
+
                 tmp[0] = (local_screen[0][0][0] * p[0][0]) + (local_screen[0][1][0] * p[0][1]) + (local_screen[0][2][0] * p[0][2]) + (local_screen[0][3][0] * p[0][3]);
                 tmp[1] = (local_screen[0][0][1] * p[0][0]) + (local_screen[0][1][1] * p[0][1]) + (local_screen[0][2][1] * p[0][2]) + (local_screen[0][3][1] * p[0][3]);
                 tmp[2] = (local_screen[0][0][2] * p[0][0]) + (local_screen[0][1][2] * p[0][1]) + (local_screen[0][2][2] * p[0][2]) + (local_screen[0][3][2] * p[0][3]);
@@ -1806,7 +1819,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
                 (sceGsTex0 *)&distortion_tex0,
                 &textured_render_buffer[0][0],
                 render_vertices,
-                depth_always,
+                depth_mode,
                 additive_blend);
         }
         else
@@ -1814,7 +1827,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
             MikuPan_RenderUntexturedTriangles3D(
                 &untextured_render_buffer[0][0],
                 render_vertices,
-                depth_always,
+                depth_mode,
                 additive_blend);
         }
     }
@@ -1981,6 +1994,7 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
     sceVu0FVECTOR obj_trans = {0.0f, 0.0f, 0.0f, 0.0f};
     sceVu0FVECTOR obj_rot = {PI/16.0f, 0.0f, 0.0f, 0.0f};
     sceVu0FMATRIX local_clip;
+    sceVu0FMATRIX gl_local_clip;
     sceVu0FMATRIX view_clip;
     sceVu0FMATRIX local_world;
     sceVu0FMATRIX world_view;
@@ -2048,6 +2062,7 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
         sceVu0TransMatrix(local_world, work, pos);
         sceVu0MulMatrix(local_screen, SgWSMtx, local_world);
         sceVu0MulMatrix(local_clip, SgCMtx, local_world);
+        sceVu0MulMatrix(gl_local_clip, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), local_world);
     break;
     case 8:
     case 10:
@@ -2083,6 +2098,7 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
         sceVu0TransMatrix(local_world, work, pos);
         sceVu0MulMatrix(local_screen, SgWSMtx, local_world);
         sceVu0MulMatrix(local_clip, SgCMtx, local_world);
+        sceVu0MulMatrix(gl_local_clip, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), local_world);
     } break;
     }
 
@@ -2094,7 +2110,7 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
 
         SubHalo(wpos, 1, 0, 0, 0x28, 0x28, 0x6e, 0x6e, 0.6f);
 
-        hh->disp = draw_distortion_particles(&local_screen, &local_clip, sys_wrk.count % 2, 200, hh->particles, 0x40, (size * escl) / camera.fov, -1.0f, type);
+        hh->disp = draw_distortion_particles(&local_screen, &local_clip, &gl_local_clip, sys_wrk.count % 2, 200, hh->particles, 0x40, (size * escl) / camera.fov, -1.0f, type);
     break;
     case 9:
         Vu0CopyVector(wpos, pos);
@@ -2102,7 +2118,7 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
 
         SubHalo(wpos, 0, 0, 0, 0x30, 0x30, 0xff, (hh->disp * 80.0f) / hh->max, (hh->disp * 0.5f) / hh->max);
 
-        hh->disp = draw_distortion_particles(&local_screen, &local_clip, sys_wrk.count % 2, 200, hh->particles, 0x40, size / camera.fov, -1.0f, type);
+        hh->disp = draw_distortion_particles(&local_screen, &local_clip, &gl_local_clip, sys_wrk.count % 2, 200, hh->particles, 0x40, size / camera.fov, -1.0f, type);
     break;
     case 10: {
         float fx;
@@ -2126,7 +2142,7 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
         f = vu0Rand() * (PI / 360.0f);
         pcnt1 = pcnt1 + f > PI ? pcnt1 + f - PI2 : pcnt1 + f;
 
-        hh->disp = draw_distortion_particles(&local_screen, &local_clip, sys_wrk.count % 2, 200, hh->particles, 0x40, (size * escl) / camera.fov, fw1, type);
+        hh->disp = draw_distortion_particles(&local_screen, &local_clip, &gl_local_clip, sys_wrk.count % 2, 200, hh->particles, 0x40, (size * escl) / camera.fov, fw1, type);
     } break;
     case 11: {
         float fx;
@@ -2150,7 +2166,7 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
         f = vu0Rand() * (PI / 180.0f);
         pcnt1 = pcnt1 + f > PI ? pcnt1 + f - PI2 : pcnt1 + f;
 
-        hh->disp = draw_distortion_particles(&local_screen, &local_clip, sys_wrk.count % 2, 200, hh->particles, 0x40, (size * escl) / camera.fov, fw1, type);
+        hh->disp = draw_distortion_particles(&local_screen, &local_clip, &gl_local_clip, sys_wrk.count % 2, 200, hh->particles, 0x40, (size * escl) / camera.fov, fw1, type);
     } break;
     }
 
@@ -3235,6 +3251,7 @@ void* ContTorch(void *addr, int type, float *pos, float *pos2, int st, float r, 
     float wind;
     sceVu0FMATRIX work;
     sceVu0FMATRIX local_clip;
+    sceVu0FMATRIX gl_local_clip;
     sceVu0FMATRIX local_world;
     sceVu0FMATRIX local_screen;
     sceVu0FVECTOR ppos = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -3297,6 +3314,7 @@ void* ContTorch(void *addr, int type, float *pos, float *pos2, int st, float r, 
     sceVu0TransMatrix(local_world, work, pos);
     sceVu0MulMatrix(local_screen, SgWSMtx, local_world);
     sceVu0MulMatrix(local_clip, SgCMtx, local_world);
+    sceVu0MulMatrix(gl_local_clip, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), local_world);
     Vu0CopyVector(wpos, pos);
 
     switch(tp2)
@@ -3339,7 +3357,7 @@ void* ContTorch(void *addr, int type, float *pos, float *pos2, int st, float r, 
     break;
     }
 
-    hh->disp = draw_distortion_particles(&local_screen, &local_clip, sys_wrk.count & 1, 200, addr, 0x40, (size * escl * sr) / camera.fov, -1.0f, type);
+    hh->disp = draw_distortion_particles(&local_screen, &local_clip, &gl_local_clip, sys_wrk.count & 1, 200, addr, 0x40, (size * escl * sr) / camera.fov, -1.0f, type);
 
     wind = vu0Rand() * 0.02f - 0.01f;
 
@@ -3486,6 +3504,7 @@ void* ContSmoke(void *addr, int type, float *pos, float *pos2, int st, float r, 
     float wind;
     sceVu0FMATRIX work;
     sceVu0FMATRIX local_clip;
+    sceVu0FMATRIX gl_local_clip;
     sceVu0FMATRIX local_world;
     sceVu0FMATRIX local_screen;
     sceVu0FVECTOR ppos = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -3548,9 +3567,10 @@ void* ContSmoke(void *addr, int type, float *pos, float *pos2, int st, float r, 
         sceVu0TransMatrix(local_world, work, pos);
         sceVu0MulMatrix(local_screen, SgWSMtx, local_world);
         sceVu0MulMatrix(local_clip, SgCMtx, local_world);
+        sceVu0MulMatrix(gl_local_clip, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), local_world);
 
         hh->disp = draw_distortion_particles(
-            &local_screen, &local_clip, sys_wrk.count % 2,
+            &local_screen, &local_clip, &gl_local_clip, sys_wrk.count % 2,
             200, hh->particles, sizeof(PARTICLE),
             (psize * escl) / camera.fov, -1.0f, type);
 

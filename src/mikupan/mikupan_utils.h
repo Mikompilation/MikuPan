@@ -23,6 +23,7 @@ unsigned char* MikuPan_ConvertImageAlpha(unsigned char* img, int width, int heig
 unsigned char MikuPan_AdjustPS2Alpha(unsigned char alpha);
 int MikuPan_IsVisibleOnScreen(const sceVu0FVECTOR* vector);
 void MikuPan_GSToNDC(int Xgs, int Ygs, int Zgs, float* x, float* y, float* z, float window_width, float window_height);
+float MikuPan_ConvertGsDepthToNDC(float gs_z);
 void MikuPan_ConvertScreenToNDCCoord(int* out, float ref_width, float ref_height, float target_width, float target_height);
 void MikuPan_ConvertPs2GSCoordToNDC(float* out, float window_width, float window_height, float gs_x, float gs_y);
 void MikuPan_ConvertPs2GSSubPixelToNDC(float* out, float window_width, float window_height, int gs_sub_x, int gs_sub_y);

@@ -61,6 +61,44 @@ int __attribute__((optimize("O3"))) GetPixelAddressPSMCT32(int block, int width,
     return (addr << 2) & 0x003FFFFC;
 }
 
+int __attribute__((optimize("O3"))) GetBlockIdPSMCT16(int block, int x, int y)
+{
+    static constexpr int block_table[] = {
+        0,  2,  8,  10,
+        1,  3,  9,  11,
+        4,  6,  12, 14,
+        5,  7,  13, 15,
+        16, 18, 24, 26,
+        17, 19, 25, 27,
+        20, 22, 28, 30,
+        21, 23, 29, 31,
+    };
+    const int block_y = (y >> 3) & 0x07;
+    const int block_x = (x >> 4) & 0x03;
+    return block + block_table[(block_y << 2) | block_x];
+}
+
+int __attribute__((optimize("O3"))) GetPixelAddressPSMCT16(int block, int width, int x, int y)
+{
+    static constexpr int column_table[] = {
+        0,  2,  8,  10, 16, 18, 24, 26,
+        1,  3,  9,  11, 17, 19, 25, 27,
+        4,  6,  12, 14, 20, 22, 28, 30,
+        5,  7,  13, 15, 21, 23, 29, 31,
+    };
+    const int page = (block >> 5) + (y >> 6) * width + (x >> 6);
+    const int column_base = ((y >> 1) & 0x03) << 5;
+    const int column_y = y & 0x01;
+    const int column_x = x & 0x0F;
+    const int column =
+        column_base + column_table[(column_y << 4) | column_x];
+    const int addr =
+        (page << 13)
+        + (GetBlockIdPSMCT16(block & 0x1F, x & 0x3F, y & 0x3F) << 8)
+        + (column << 1);
+    return addr & 0x003FFFFE;
+}
+
 int __attribute__((optimize("O3"))) GetBlockIdPSMT8(int block, int x, int y)
 {
     const int block_y = (y >> 4) & 0x03;
@@ -125,6 +163,14 @@ static int MikuPan_GetRawTextureRegion(sceGsTex0 *tex0, int *out_addr, int *out_
             size = width * height * 4;
             break;
 
+        case PSMCT16:
+        case PSMCT16S:
+        case PSMZ16:
+        case PSMZ16S:
+            addr = GetPixelAddressPSMCT16(tex0->TBP0, tex0->TBW, 0, 0);
+            size = width * height * 2;
+            break;
+
         case PSMT8:
             addr = GetPixelAddressPSMT8(tex0->TBP0, tex0->TBW, 0, 0);
             size = width * height;
@@ -174,6 +220,18 @@ static int MikuPan_GetUploadRegion(sceGsLoadImage *image_load, int *out_addr, in
                 image_load->trxpos.DSAX,
                 image_load->trxpos.DSAY);
             size = width * height * 4;
+            break;
+
+        case PSMCT16:
+        case PSMCT16S:
+        case PSMZ16:
+        case PSMZ16S:
+            addr = GetPixelAddressPSMCT16(
+                image_load->bitbltbuf.DBP,
+                image_load->bitbltbuf.DBW,
+                image_load->trxpos.DSAX,
+                image_load->trxpos.DSAY);
+            size = width * height * 2;
             break;
 
         case PSMT8:
@@ -232,6 +290,23 @@ void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMCT32(int dbp, int db
     }
 }
 
+void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMCT16(int dbp, int dbw, int dsax, int dsay, int rrw,
+                                 int rrh, const uint8_t *inbuf)
+{
+    int src_addr = 0;
+
+    for (int y = dsay; y < dsay + rrh; ++y)
+    {
+        for (int x = dsax; x < dsax + rrw; ++x)
+        {
+            const int addr = GetPixelAddressPSMCT16(dbp, dbw, x, y);
+            mem_[addr + 0x00] = inbuf[src_addr + 0x00];
+            mem_[addr + 0x01] = inbuf[src_addr + 0x01];
+            src_addr += 0x02;
+        }
+    }
+}
+
 void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMT8(int dbp, int dbw, int dsax, int dsay, int rrw,
                                int rrh, const uint8_t *inbuf)
 {
@@ -279,6 +354,54 @@ void __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMCT32(unsigned char
             outbuf[dst_addr + 0x02] = mem_[addr + 0x02];
             outbuf[dst_addr + 0x03] = mem_[addr + 0x03];
             dst_addr += 0x04;
+        }
+    }
+}
+
+static inline void ExpandPSMCT16Pixel(uint16_t p, unsigned char *out)
+{
+    const unsigned char r5 = (unsigned char)(p & 0x1F);
+    const unsigned char g5 = (unsigned char)((p >> 5) & 0x1F);
+    const unsigned char b5 = (unsigned char)((p >> 10) & 0x1F);
+
+    out[0] = (unsigned char)((r5 << 3) | (r5 >> 2));
+    out[1] = (unsigned char)((g5 << 3) | (g5 >> 2));
+    out[2] = (unsigned char)((b5 << 3) | (b5 >> 2));
+    out[3] = (p & 0x8000) ? 0x80 : 0x00;
+}
+
+void __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax,
+                                                   int dsay, int rrw, int rrh)
+{
+    int dst_addr = 0;
+
+    for (int y = dsay; y < dsay + rrh; ++y)
+    {
+        for (int x = dsax; x < dsax + rrw; ++x)
+        {
+            const int addr = GetPixelAddressPSMCT16(dbp, dbw, x, y);
+            const uint16_t p =
+                (uint16_t)(unsigned char)mem_[addr + 0x00] |
+                ((uint16_t)(unsigned char)mem_[addr + 0x01] << 8);
+            ExpandPSMCT16Pixel(p, &outbuf[dst_addr]);
+            dst_addr += 0x04;
+        }
+    }
+}
+
+void __attribute__((optimize("O3"))) GS::GSHelper::StorePSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax,
+                                                int dsay, int rrw, int rrh)
+{
+    int dst_addr = 0;
+
+    for (int y = dsay; y < dsay + rrh; ++y)
+    {
+        for (int x = dsax; x < dsax + rrw; ++x)
+        {
+            const int addr = GetPixelAddressPSMCT16(dbp, dbw, x, y);
+            outbuf[dst_addr + 0x00] = mem_[addr + 0x00];
+            outbuf[dst_addr + 0x01] = mem_[addr + 0x01];
+            dst_addr += 0x02;
         }
     }
 }
@@ -414,6 +537,15 @@ void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image)
                 image_load->trxpos.DSAX, image_load->trxpos.DSAY,
                 image_load->trxreg.RRW, image_load->trxreg.RRH, image);
             break;
+        case PSMZ16:
+        case PSMZ16S:
+        case PSMCT16:
+        case PSMCT16S:
+            gsHelper.UploadPSMCT16(
+                image_load->bitbltbuf.DBP, image_load->bitbltbuf.DBW,
+                image_load->trxpos.DSAX, image_load->trxpos.DSAY,
+                image_load->trxreg.RRW, image_load->trxreg.RRH, image);
+            break;
         case PSMT4:
         {
             gsHelper.UploadPSMT4(
@@ -475,6 +607,14 @@ unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash)
     {
         case PSMCT32:
             gsHelper.DownloadPSMCT32(
+                texture_buffer.data(),
+                tex0->TBP0, tex0->TBW,
+                0, 0, width, height);
+            break;
+
+        case PSMCT16:
+        case PSMCT16S:
+            gsHelper.DownloadPSMCT16(
                 texture_buffer.data(),
                 tex0->TBP0, tex0->TBW,
                 0, 0, width, height);
@@ -600,6 +740,13 @@ void MikuPan_GsStore(sceGsStoreImage *sp, unsigned char *out)
         case PSMZ32:
         case PSMCT32:
             gsHelper.DownloadPSMCT32(out, sbp, sbw, x, y, w, h);
+            break;
+
+        case PSMZ16:
+        case PSMZ16S:
+        case PSMCT16:
+        case PSMCT16S:
+            gsHelper.StorePSMCT16(out, sbp, sbw, x, y, w, h);
             break;
 
         default:
