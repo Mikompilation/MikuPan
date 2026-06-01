@@ -32,8 +32,8 @@ u_char key_type[32] = {
 
 void SetDefaultKeyType()
 {
-    memcpy(key_now, default_key, 64 * sizeof(u_short));
-    memcpy(key_bak, default_key_bak, 64 * sizeof(u_short));
+    memcpy(key_now, default_key, sizeof(key_now));
+    memcpy(key_bak, default_key_bak, sizeof(key_bak));
 }
 
 void SetKeyType()
