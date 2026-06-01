@@ -635,21 +635,32 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
 
         int total = (pnumw + 1) * (pnumh + 1);
         static float gl_ndc[289][3];   /* NDC (x,y,z) after perspective div */
+        static int gl_clip[289];
 
         for (i = 0; i < total; i++)
         {
             sceVu0FVECTOR clip;
             sceVu0ApplyMatrix(clip, fslm, vt[i]);
 
-            if (clip[3] != 0.0f)
+            gl_clip[i] = 0;
+
+            if (clip[3] > 0.0f && stq[i][2] > 0.00000001f)
             {
-                float inv_w  = 1.0f / clip[3];
+                float w = clip[3];
+                float inv_w = 1.0f / w;
                 gl_ndc[i][0] = clip[0] * inv_w;
                 gl_ndc[i][1] = clip[1] * inv_w;
                 gl_ndc[i][2] = clip[2] * inv_w;
+
+                if (clip[0] < -w || clip[0] > w ||
+                    clip[1] < -w || clip[1] > w)
+                {
+                    gl_clip[i] = 1;
+                }
             }
             else
             {
+                gl_clip[i] = 1;
                 gl_ndc[i][0] = gl_ndc[i][1] = gl_ndc[i][2] = 0.0f;
             }
         }
@@ -682,8 +693,8 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
             if (i % (pnumw + 1) == 0)
                 continue;
 
-            k = clip[i - 1] + clip[i + pnumw] + clip[i]; /* TL + BL + TR */
-            l = clip[i + pnumw] + clip[i] + clip[j];     /* BL + TR + BR */
+            k = gl_clip[i - 1] + gl_clip[i + pnumw] + gl_clip[i]; /* TL + BL + TR */
+            l = gl_clip[i + pnumw] + gl_clip[i] + gl_clip[j];     /* BL + TR + BR */
 
             if (out + 6 > PARTS_DEFORM_MAX_TRI_VERTS)
                 break;
