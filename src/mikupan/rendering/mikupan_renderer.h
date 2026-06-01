@@ -71,6 +71,7 @@ void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int de
 void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode, int additive_blend);
 void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode, int additive_blend);
 void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode);
+void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode);
 const MikuPan_TextureInfo *MikuPan_GetScreenCopyTextureInfo(void);
 const MikuPan_ScreenCopyDebugInfo *MikuPan_GetScreenCopyDebugInfo(void);
 void MikuPan_SetupFntTexture();

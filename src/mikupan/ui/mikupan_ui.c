@@ -14,7 +14,6 @@
 #include "mikupan/rendering/mikupan_meshcache.h"
 #include "glad/gl.h"
 #include "graphics/graph2d/g2d_debug.h"
-#include "graphics/graph2d/message.h"
 #include "ingame/camera/camera.h"
 #include "main/glob.h"
 
@@ -920,7 +919,7 @@ static void MikuPan_ApplyFatalFrameStyle(int theme)
     ImFontAtlas_AddFontFromFileTTF(
         io->Fonts,
         "./resources/fonts/CenturyOldStyle.ttf",
-        12.0f,
+        14.0f,
         NULL,
         ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
 
@@ -1433,8 +1432,11 @@ void MikuPan_DrawUi(void)
 
     if (show_fps)
     {
-        SetString2(0x10, 0.0f, 420.0f, 1, 0x80, 0x80, 0x80, (char *) "FPS %d",
-                   (int) MikuPan_GetFrameRate());
+        igBegin("fps", (bool*)&show_fps, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysAutoResize);
+        igPushFont(igGetFont(), 18.0f);
+        igText("FPS %.2f", MikuPan_GetFrameRate());
+        igPopFont();
+        igEnd();
     }
 }
 
@@ -1587,6 +1589,24 @@ void MikuPan_UiMenuBar(void)
         igCheckbox("Shader Reload", (bool *) &show_shader_reload);
         igCheckbox("Draw Call Inspector", (bool *) &show_draw_inspector);
         igCheckbox("Camera World Info", (bool *) &show_camera_debug);
+        igSeparator();
+        igCheckbox("Third-Person Camera", (bool *) &camera_third_person_enabled);
+        if (camera_third_person_enabled)
+        {
+            igSliderFloat("TPS Distance", &camera_third_person_distance,
+                          100.0f, 2500.0f, "%.0f", 0);
+            igSliderFloat("TPS Height", &camera_third_person_height,
+                          0.0f, 1400.0f, "%.0f", 0);
+            igSliderFloat("TPS Side", &camera_third_person_side,
+                          -600.0f, 600.0f, "%.0f", 0);
+            igSliderFloat("TPS Look Ahead", &camera_third_person_look_ahead,
+                          100.0f, 2500.0f, "%.0f", 0);
+            igSliderFloat("TPS Interest Height",
+                          &camera_third_person_interest_height,
+                          -400.0f, 1200.0f, "%.0f", 0);
+            igSliderFloat("TPS FOV", &camera_third_person_fov_deg,
+                          20.0f, 90.0f, "%.0f", 0);
+        }
 
         igEndMenu();
     }

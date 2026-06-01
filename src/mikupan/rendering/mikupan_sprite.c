@@ -744,6 +744,54 @@ void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer,
     MikuPan_RestoreParticleTriangleState();
 }
 
+void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode)
+{
+    if (vertex_count <= 0)
+    {
+        return;
+    }
+
+    MikuPan_FlushTexturedSpriteBatch();
+
+    if (!MikuPan_UpdateScreenCopyTexture(tex))
+    {
+        return;
+    }
+
+    MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
+    MikuPan_SetCurrentShaderProgram(HEAT_HAZE_SHADER);
+    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
+    MikuPan_SetUniform2fToCurrentShader(g_screen_copy_uv_offset[0],
+                                        g_screen_copy_uv_offset[1],
+                                        "uFramebufferUvOffset");
+    MikuPan_SetUniform2fToCurrentShader(g_screen_copy_uv_scale[0],
+                                        g_screen_copy_uv_scale[1],
+                                        "uFramebufferUvScale");
+    MikuPan_SetUniform2fToCurrentShader(g_screen_copy_content_uv_max[0],
+                                        g_screen_copy_content_uv_max[1],
+                                        "uFramebufferContentUvMax");
+    MikuPan_SetUniform1iToCurrentShader(2, "uUseScreenPos");
+    MikuPan_SetUniform2fToCurrentShader((float)g_screen_copy_w,
+                                        (float)g_screen_copy_h,
+                                        "uRenderSize");
+    MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_BindTexture2DCached(g_screen_copy_texture);
+    MikuPan_ApplyHeatHazeTriangleState(depth_mode, 0);
+    MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
+
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER,
+        pipeline->buffers[0].id,
+        (GLsizeiptr)(vertex_count * 12 * (int)sizeof(float)),
+        buffer);
+
+    MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, vertex_count);
+    MikuPan_PerfDrawCall();
+    MikuPan_RestoreParticleTriangleState();
+}
+
 const MikuPan_TextureInfo *MikuPan_GetScreenCopyTextureInfo(void)
 {
     static MikuPan_TextureInfo info = {0};

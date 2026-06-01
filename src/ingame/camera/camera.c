@@ -49,7 +49,48 @@ u_char cam_info_disp = 1;
 #include "camera.h"
 
 sceVu0FVECTOR adj_cam_pos = {100.0f, -1400.0f, -1200.0f, 0.0f};
+int camera_third_person_enabled = 0;
+float camera_third_person_distance = 900.0f;
+float camera_third_person_height = 520.0f;
+float camera_third_person_side = 120.0f;
+float camera_third_person_look_ahead = 1100.0f;
+float camera_third_person_interest_height = 360.0f;
+float camera_third_person_fov_deg = 51.0f;
 static CAMERA_DEBUG_PATH camera_debug_path = {0};
+
+static void CameraThirdPersonFollowCtrl(void)
+{
+    MOVE_BOX *mb = &plyr_wrk.move_box;
+    sceVu0FVECTOR cam_offset = {
+        camera_third_person_side,
+        -camera_third_person_height,
+        -camera_third_person_distance,
+        0.0f
+    };
+    sceVu0FVECTOR interest_offset = {
+        camera_third_person_side * 0.35f,
+        -camera_third_person_interest_height,
+        camera_third_person_look_ahead,
+        0.0f
+    };
+    sceVu0FVECTOR yaw_rot = {
+        0.0f,
+        mb->rot[1],
+        0.0f,
+        0.0f
+    };
+
+    RotFvector(yaw_rot, cam_offset);
+    RotFvector(yaw_rot, interest_offset);
+
+    sceVu0AddVector(camera.p, mb->pos, cam_offset);
+    sceVu0AddVector(camera.i, mb->pos, interest_offset);
+
+    camera.p[3] = 1.0f;
+    camera.i[3] = 1.0f;
+    camera.roll = PI;
+    camera.fov = DEG2RAD(camera_third_person_fov_deg);
+}
 
 static void CameraDebugClear(void)
 {
@@ -1228,6 +1269,11 @@ void CameraMain()
     plyr_wrk.pr_info.camera_no_old = plyr_wrk.pr_info.camera_no;
     plyr_wrk.pr_info.camera_btl_old = plyr_wrk.pr_info.camera_btl;
     plyr_wrk.pr_info.camera_drm_old = plyr_wrk.pr_info.camera_drm;
+
+    if (camera_third_person_enabled)
+    {
+        CameraThirdPersonFollowCtrl();
+    }
 
     FinderInOverRapCtrl();
     QuakeCamera();

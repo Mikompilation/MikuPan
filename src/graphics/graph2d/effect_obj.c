@@ -616,12 +616,13 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
      * Triangle k : TL, BL, TR   (upper-left half)
      * Triangle l : BL, TR, BR   (lower-right half)
      *
-     * Screen-copy UV for each vertex: decode from stq[] that was filled by
-     * Vu0Func0000.  STQ is packed so U = stq.x/stq.z, V = stq.y/stq.z.
+     * Screen-copy deformation path.
      *
-     * GL clip-space position: project vt[i] through
-     *   fslm = MikuPan_GetWorldClipView() * wlm
-     * then perspective-divide.
+     * The source STQ was generated before the local grid was deformed, while
+     * the XYZ position is generated after deformation. Keep S/T/Q intact so
+     * the shader divides after interpolation like the GS packet path.
+     *
+     * Vertex format: [S, T, Q, unused, rgba, clip_pos].
      * ------------------------------------------------------------------- */
     {
         /* Max grid: 17×17 = 289 vertices; max triangles: 16×16×2 = 512. */
@@ -632,10 +633,8 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
         sceVu0FMATRIX fslm;
         sceVu0MulMatrix(fslm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
 
-        /* Pre-project all vertices to GL NDC and decode screen-copy UV. */
         int total = (pnumw + 1) * (pnumh + 1);
         static float gl_ndc[289][3];   /* NDC (x,y,z) after perspective div */
-        static float sc_uv[289][2];    /* screen-copy UV decoded from stq    */
 
         for (i = 0; i < total; i++)
         {
@@ -653,40 +652,26 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
             {
                 gl_ndc[i][0] = gl_ndc[i][1] = gl_ndc[i][2] = 0.0f;
             }
-
-            /* U = stq.x/stq.z,  V = stq.y/stq.z */
-            float q = stq[i][2];
-            if (q != 0.0f)
-            {
-                sc_uv[i][0] = stq[i][0] / q;
-                sc_uv[i][1] = stq[i][1] / q;
-            }
-            else
-            {
-                sc_uv[i][0] = stq[i][0];
-                sc_uv[i][1] = stq[i][1];
-            }
         }
 
-/* Write one vertex into the render_buffer. */
+/* Write one vertex into the render_buffer (UV4_COLOUR4_POSITION4). */
 #define WRITE_VERT(idx)                                                   \
     do {                                                                  \
         float *_v = render_buffer[out++];                                 \
-        float _u  = sc_uv[(idx)][0];                                      \
-        float _vv = sc_uv[(idx)][1];                                      \
-        float _a  = (float)((float)use_alpha[(idx)] * aprate) / 128.0f;  \
-        _v[0]  = _u;          /* src_u  */                                \
-        _v[1]  = _vv;         /* src_v  */                                \
-        _v[2]  = _u;          /* dst_u  */                                \
-        _v[3]  = _vv;         /* dst_v  */                                \
-        _v[4]  = 1.0f;        /* r      */                                \
-        _v[5]  = 1.0f;        /* g      */                                \
-        _v[6]  = 1.0f;        /* b      */                                \
-        _v[7]  = _a;          /* a      */                                \
-        _v[8]  = gl_ndc[(idx)][0]; /* x */                               \
-        _v[9]  = gl_ndc[(idx)][1]; /* y */                               \
-        _v[10] = gl_ndc[(idx)][2]; /* z */                               \
-        _v[11] = 1.0f;                                                    \
+        float _a  = (float)((float)use_alpha[(idx)] * aprate)             \
+                    / 128.0f;                                              \
+        _v[0]  = stq[(idx)][0];         /* source S */                    \
+        _v[1]  = stq[(idx)][1];         /* source T */                    \
+        _v[2]  = stq[(idx)][2];         /* source Q */                    \
+        _v[3]  = 0.0f;                                                       \
+        _v[4]  = 1.0f;                  /* 0x80 RGB -> full source copy */ \
+        _v[5]  = 1.0f;                                                       \
+        _v[6]  = 1.0f;                                                       \
+        _v[7]  = _a;                    /* alpha mask */                  \
+        _v[8]  = gl_ndc[(idx)][0];      /* x */                           \
+        _v[9]  = gl_ndc[(idx)][1];      /* y */                           \
+        _v[10] = gl_ndc[(idx)][2];      /* z */                           \
+        _v[11] = 1.0f;                  /* w */                           \
     } while(0)
 
         for (i = 0; i < m; i++)
@@ -724,12 +709,11 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
 
         if (out > 0)
         {
-            MikuPan_RenderScreenCopyTriangles3D(
+            MikuPan_RenderScreenCopyTriangles3DSTQ(
                 (sceGsTex0 *)&tex0,
                 &render_buffer[0][0],
                 out,
-                0,   /* depth_mode: LEQUAL */
-                0);  /* additive_blend: off — standard alpha blend */
+                MIKUPAN_DEPTH_LEQUAL);
         }
         #undef PARTS_DEFORM_MAX_TRI_VERTS
     }

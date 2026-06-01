@@ -79,7 +79,7 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
      "./resources/shaders/shadow_silhouette.frag"                                                 },
     {             "./resources/shaders/camera_debug.vert", NULL,
      "./resources/shaders/untextured_coloured_sprite.frag"                                        },
-    {                    "./resources/shaders/sprite.vert", NULL,
+    {                 "./resources/shaders/heat_haze.vert", NULL,
      "./resources/shaders/heat_haze.frag"                                                         },
 };
 

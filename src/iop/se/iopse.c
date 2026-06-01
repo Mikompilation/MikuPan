@@ -265,20 +265,22 @@ static int ISePlay(IOP_COMMAND *icp)
 
 static void ISeStop(IOP_COMMAND *icp)
 {
-    SE_WRK_SET *swsp;
     SE_VSTAT *svp;
     int vn;
     int candv;
 
-    swsp = GetSeWrkSetP(icp->data1);
-    svp = GetSeVstat(swsp->v_no);
+    SE_WRK_SET* swsp = GetSeWrkSetP(icp->data1);
+
     if (!swsp)
     {
         return;
     }
 
+    svp = GetSeVstat(swsp->v_no);
+
     vn = swsp->v_no + 24;
     candv = CidAndVnum(vn, 1);
+
     if (vn >= 0 && vn < 24)
     {
         svp->status = 0;
@@ -286,8 +288,6 @@ static void ISeStop(IOP_COMMAND *icp)
         swsp->param = 0;
         sceSdSetSwitch(SD_S_KOFF | 0, 1 << vn);
         GetSeVstat(swsp->v_no)->status = 0;
-
-        return;
     }
     else if (vn >= 24 && vn < 48)
     {
@@ -297,7 +297,6 @@ static void ISeStop(IOP_COMMAND *icp)
         se_stop_flg |= 1 << (vn - 24);
         GetSeVstat(swsp->v_no)->status = 0;
 
-        return;
     }
 }
 
@@ -308,6 +307,7 @@ static void ISeVol(IOP_COMMAND *icp)
     int candv;
 
     swsp = GetSeWrkSetP(icp->data1);
+
     if (!swsp)
     {
         return;

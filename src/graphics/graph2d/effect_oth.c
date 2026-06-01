@@ -4855,10 +4855,11 @@ void RunLeafSub(EFF_LEAF *lep)
     u_long tx0;
     float rot_x;
     float rot_y;
-    //sceVu0IVECTOR ivec[16][5];
-    sceVu0FVECTOR ivec[16][5];
+    sceVu0IVECTOR ivec[16][5];
+    sceVu0FVECTOR gl_pos[16][5];
     sceVu0FMATRIX wlm;
     sceVu0FMATRIX slm;
+    sceVu0FMATRIX gl_slm;
     sceVu0FVECTOR bpos;
     sceVu0FVECTOR wpos;
     sceVu0FVECTOR ppos[2][5] = {
@@ -4954,13 +4955,13 @@ void RunLeafSub(EFF_LEAF *lep)
         }
 
         sceVu0TransMatrix(wlm, wlm, wpos);
-        sceVu0MulMatrix(slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
-        //sceVu0MulMatrix(slm, SgWSMtx, wlm);
+        sceVu0MulMatrix(slm, SgWSMtx, wlm);
+        sceVu0MulMatrix(gl_slm, *(sceVu0FMATRIX *)MikuPan_GetWorldClipView(), wlm);
 
         for (j = 0, w = 0; j < 5; j++)
         {
-            //sceVu0RotTransPers(ivec[i][j], slm, ppos[lep->type][j], 0);
-            sceVu0RotTransPersF(ivec[i][j], slm, ppos[lep->type][j], 0);
+            sceVu0RotTransPers(ivec[i][j], slm, ppos[lep->type][j], 0);
+            sceVu0RotTransPersF(gl_pos[i][j], gl_slm, ppos[lep->type][j], 0);
 
             if (ivec[i][j][0] < 0x4000 || ivec[i][j][0] > 0xc000)
             {
@@ -4978,7 +4979,7 @@ void RunLeafSub(EFF_LEAF *lep)
             }
         }
 
-        disp[i] = !MikuPan_IsVisibleOnScreen(ivec[i]);
+        disp[i] = !w;
     }
 
     j = 0;
@@ -5059,6 +5060,12 @@ void RunLeafSub(EFF_LEAF *lep)
 
             if (disp[k] != 0)
             {
+                float render_buffer[4][12];
+                float cr;
+                float cg;
+                float cb;
+                float ca;
+
                 pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_TRUE, SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 1, 1, 0, 1, 0, 1, 0, 0), SCE_GIF_PACKED, 3);
                 pbuf[ndpkt++].ul64[1] = 0 \
                     | SCE_GS_RGBAQ << (4 * 0)
@@ -5078,44 +5085,36 @@ void RunLeafSub(EFF_LEAF *lep)
                     bb = elo[k].b;
                 }
 
-                float* buf = (float*)&pbuf[ndpkt];
+                cr = MikuPan_ConvertScaleColor(rr);
+                cg = MikuPan_ConvertScaleColor(gg);
+                cb = MikuPan_ConvertScaleColor(bb);
+                ca = MikuPan_ConvertScaleColor(elo[k].a);
+
                 for (i = 0; i < 4; i++)
                 {
-                    pbuf[ndpkt].fl32[0] = (float)(i & 1 ? tw - 8 : 8) / (float)tw;
-                    pbuf[ndpkt].fl32[1] = (float)(i / 2 ? th - 8 : 8) / (float)th;
-                    pbuf[ndpkt].fl32[2] = 0;
-                    pbuf[ndpkt++].fl32[3] = 1.0f;
+                    float u = (float)(i & 1 ? tw - 8 : 8) / (float)tw;
+                    float v = (float)(i / 2 ? th - 8 : 8) / (float)th;
 
-                    pbuf[ndpkt].fl32[0] = MikuPan_ConvertColorFloat(rr);
-                    pbuf[ndpkt].fl32[1] = MikuPan_ConvertColorFloat(bb);
-                    pbuf[ndpkt].fl32[2] = MikuPan_ConvertColorFloat(gg);
-                    pbuf[ndpkt++].fl32[3] = MikuPan_ConvertScaleColor(elo[k].a);
+                    pbuf[ndpkt].ui32[0] = rr;
+                    pbuf[ndpkt].ui32[1] = gg;
+                    pbuf[ndpkt].ui32[2] = bb;
+                    pbuf[ndpkt++].ui32[3] = elo[k].a;
 
-                    pbuf[ndpkt].fl32[0] = ivec[k][i][0];
-                    pbuf[ndpkt].fl32[1] = ivec[k][i][1];
-                    pbuf[ndpkt].fl32[2] = ivec[k][i][2];
-                    pbuf[ndpkt++].fl32[3] = 1.0f;
+                    pbuf[ndpkt].ui32[0] = i & 1 ? tw - 8 : 8;
+                    pbuf[ndpkt].ui32[1] = i / 2 ? th - 8 : 8;
+                    pbuf[ndpkt].ui32[2] = 0;
+                    pbuf[ndpkt++].ui32[3] = 0;
+
+                    pbuf[ndpkt].ui32[0] = ivec[k][i][0];
+                    pbuf[ndpkt].ui32[1] = ivec[k][i][1];
+                    pbuf[ndpkt].ui32[2] = ivec[k][i][2];
+                    pbuf[ndpkt++].ui32[3] = i > 1 ? 0 : 0x8000;
+
+                    EffectWriteTexturedVertex(&render_buffer[i][0],
+                        u, v, cr, cg, cb, ca, gl_pos[k][i]);
                 }
 
-                MikuPan_RenderSprite3D((sceGsTex0*)&tx0, buf);
-
-                //for (i = 0; i < 4; i++)
-                //{
-                //    pbuf[ndpkt].ui32[0] = rr;
-                //    pbuf[ndpkt].ui32[1] = gg;
-                //    pbuf[ndpkt].ui32[2] = bb;
-                //    pbuf[ndpkt++].ui32[3] = elo[k].a;
-                //
-                //    pbuf[ndpkt].ui32[0] = i & 1 ? tw - 8 : 8;
-                //    pbuf[ndpkt].ui32[1] = i / 2 ? th - 8 : 8;
-                //    pbuf[ndpkt].ui32[2] = 0;
-                //    pbuf[ndpkt++].ui32[3] = 0;
-                //
-                //    pbuf[ndpkt].ui32[0] = ivec[k][i][0];
-                //    pbuf[ndpkt].ui32[1] = ivec[k][i][1];
-                //    pbuf[ndpkt].ui32[2] = ivec[k][i][2];
-                //    pbuf[ndpkt++].ui32[3] = i > 1 ? 0 : 0x8000;
-                //}
+                MikuPan_RenderSprite3D((sceGsTex0 *)&tx0, &render_buffer[0][0]);
             }
         }
     }

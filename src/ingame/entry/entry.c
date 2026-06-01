@@ -18,11 +18,9 @@
 
 void EntryInit() 
 {
-    /* v0 2 */ int i;
-
     memset(&ap_wrk, 0, sizeof(AP_WRK));
     
-    for (i = 0; i < 5; i++)
+    for (int i = 0; i < 5; i++)
     {
         ap_wrk.pg_req[i] = 0xff;
     }

@@ -1,7 +1,6 @@
 #version 330 core
 
-in vec2 vUV;
-in vec2 vDstUV;
+in vec4 vUVData;
 in vec4 uColor;
 
 out vec4 FragColor;
@@ -25,7 +24,7 @@ void main()
     vec2 src_uv;
     vec2 dst_uv;
 
-    if (uUseScreenPos != 0)
+    if (uUseScreenPos == 1)
     {
         // gl_FragCoord origin is bottom-left; the screen copy blit flips Y, so invert Y.
         // The render buffer has the full 3D scene across its entire extent (no letterbox),
@@ -36,14 +35,28 @@ void main()
         src_uv = screen_uv;
         dst_uv = screen_uv;
     }
+    else if (uUseScreenPos == 2)
+    {
+        vec2 screen_uv = clamp(vec2(gl_FragCoord.x / uRenderSize.x,
+                                    1.0 - gl_FragCoord.y / uRenderSize.y),
+                               vec2(0.0), vec2(1.0));
+        float q = vUVData.z;
+        vec2 stq_uv = abs(q) > 0.00000001 ? vUVData.xy / q : vUVData.xy;
+
+        src_uv = clamp(
+            uFramebufferUvOffset + stq_uv * uFramebufferUvScale,
+            uFramebufferUvOffset,
+            uFramebufferContentUvMax);
+        dst_uv = screen_uv;
+    }
     else
     {
         src_uv = clamp(
-            uFramebufferUvOffset + vUV * uFramebufferUvScale,
+            uFramebufferUvOffset + vUVData.xy * uFramebufferUvScale,
             uFramebufferUvOffset,
             uFramebufferContentUvMax);
         dst_uv = clamp(
-            uFramebufferUvOffset + vDstUV * uFramebufferUvScale,
+            uFramebufferUvOffset + vUVData.zw * uFramebufferUvScale,
             uFramebufferUvOffset,
             uFramebufferContentUvMax);
     }
