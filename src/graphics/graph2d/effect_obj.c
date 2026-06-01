@@ -118,6 +118,38 @@ static inline void dummy2(sceVu0FVECTOR *v0)
     Vu0CopyVector(g_vu0_stq_params[2], v0[2]);
 }
 
+static void CalcPartsDeformSourceUV(float (*src_uv)[2], int total, sceVu0FVECTOR *vt, sceVu0FMATRIX wlm, float trate)
+{
+    int i;
+    sceVu0FMATRIX fslm;
+
+    sceVu0MulMatrix(fslm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
+
+    for (i = 0; i < total; i++)
+    {
+        sceVu0FVECTOR src;
+        sceVu0FVECTOR clip;
+
+        Vu0CopyVector(src, vt[i]);
+        src[0] *= trate;
+        src[1] *= trate;
+
+        sceVu0ApplyMatrix(clip, fslm, src);
+
+        if (clip[3] > 0.00000001f)
+        {
+            float inv_w = 1.0f / clip[3];
+            src_uv[i][0] = clip[0] * inv_w * 0.5f + 0.5f;
+            src_uv[i][1] = 0.5f - clip[1] * inv_w * 0.5f;
+        }
+        else
+        {
+            src_uv[i][0] = 0.0f;
+            src_uv[i][1] = 0.0f;
+        }
+    }
+}
+
 typedef struct {
     u_int type;
     u_char rgba[4];
@@ -446,7 +478,7 @@ int CalcPartsDeformXYZ(sceVu0IVECTOR vi, sceVu0FVECTOR vf)
     return ret;
 }
 
-void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRIX wlm, sceVu0FVECTOR *stq, u_char *use_alpha, float aprate, u_long tex0)
+void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRIX wlm, sceVu0FVECTOR *stq, float (*src_uv)[2], u_char *use_alpha, float aprate, u_long tex0)
 {
     int i;
     int j;
@@ -616,13 +648,12 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
      * Triangle k : TL, BL, TR   (upper-left half)
      * Triangle l : BL, TR, BR   (lower-right half)
      *
-     * Screen-copy deformation path.
+     * Screen-copy deformation path. The source UVs were generated from the
+     * undeformed grid using the GL camera, while the XYZ position is generated
+     * from the deformed grid. Keeping both in GL screen space avoids mixing
+     * PS2 GS coordinates with widescreen GL projection.
      *
-     * The source STQ was generated before the local grid was deformed, while
-     * the XYZ position is generated after deformation. Keep S/T/Q intact so
-     * the shader divides after interpolation like the GS packet path.
-     *
-     * Vertex format: [S, T, Q, unused, rgba, clip_pos].
+     * Vertex format: [src_u, src_v, unused, unused, rgba, clip_pos].
      * ------------------------------------------------------------------- */
     {
         /* Max grid: 17×17 = 289 vertices; max triangles: 16×16×2 = 512. */
@@ -671,9 +702,9 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
         float *_v = render_buffer[out++];                                 \
         float _a  = (float)((float)use_alpha[(idx)] * aprate)             \
                     / 128.0f;                                              \
-        _v[0]  = stq[(idx)][0];         /* source S */                    \
-        _v[1]  = stq[(idx)][1];         /* source T */                    \
-        _v[2]  = stq[(idx)][2];         /* source Q */                    \
+        _v[0]  = src_uv[(idx)][0];      /* source screen U */             \
+        _v[1]  = src_uv[(idx)][1];      /* source screen V */             \
+        _v[2]  = 0.0f;                                                       \
         _v[3]  = 0.0f;                                                       \
         _v[4]  = 1.0f;                  /* 0x80 RGB -> full source copy */ \
         _v[5]  = 1.0f;                                                       \
@@ -772,6 +803,7 @@ u_char SubPartsDeform1(EFFECT_CONT *ec, u_char num, int page, int sbj, float scl
     u_long tex0;
     sceVu0FVECTOR stq[289];
     sceVu0FVECTOR vt[289];
+    float src_uv[289][2];
     sceVu0IVECTOR ivec;
     sceVu0FVECTOR vpos;
     sceVu0FVECTOR pos = { 25000.0f, -800.0f, 6500.0f, 1.0f };
@@ -988,6 +1020,8 @@ u_char SubPartsDeform1(EFFECT_CONT *ec, u_char num, int page, int sbj, float scl
     {
         Vu0Func0000(stq[i], vt[i]);
     }
+
+    CalcPartsDeformSourceUV(src_uv, vnumh * vnumw, vt, wlm, trate);
 
     if (ec->dat.uc8[1] & 1)
     {
@@ -1277,11 +1311,11 @@ u_char SubPartsDeform1(EFFECT_CONT *ec, u_char num, int page, int sbj, float scl
 
     if (page != 0)
     {
-        MakePartsDeformPacket(pnumw, pnumh, vt, wlm, stq, alpha2, aprate, tex0);
+        MakePartsDeformPacket(pnumw, pnumh, vt, wlm, stq, src_uv, alpha2, aprate, tex0);
     }
     else
     {
-        MakePartsDeformPacket(pnumw, pnumh, vt, wlm, stq, alpha1, aprate, tex0);
+        MakePartsDeformPacket(pnumw, pnumh, vt, wlm, stq, src_uv, alpha1, aprate, tex0);
     }
 
     return ret_num;
@@ -1331,6 +1365,7 @@ u_char SubPartsDeform2(EFFECT_CONT *ec, u_char num, int page, int sbj, float scl
     sceVu0FVECTOR stqparam[3];
     sceVu0FVECTOR stq[289];
     sceVu0FVECTOR vt[289];
+    float src_uv[289][2];
     sceVu0IVECTOR ivec;
     sceVu0FVECTOR vpos;
     sceVu0FVECTOR pos = { 25000.0f, -800.0f, 6500.0f, 1.0f };
@@ -1630,6 +1665,8 @@ u_char SubPartsDeform2(EFFECT_CONT *ec, u_char num, int page, int sbj, float scl
         yy += scly2;
     }
 
+    CalcPartsDeformSourceUV(src_uv, vnumh * vnumw, vt, wlm, stqparam[0][2]);
+
     switch (sbj)
     {
     case 0:
@@ -1776,7 +1813,7 @@ u_char SubPartsDeform2(EFFECT_CONT *ec, u_char num, int page, int sbj, float scl
     }
 
     Reserve2DPacket(0x1000);
-    MakePartsDeformPacket(pnumw, pnumh, vt, wlm, stq, alpha, aprate, tex0);
+    MakePartsDeformPacket(pnumw, pnumh, vt, wlm, stq, src_uv, alpha, aprate, tex0);
 
     return retnum;
 }

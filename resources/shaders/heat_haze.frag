@@ -23,6 +23,7 @@ void main()
 
     vec2 src_uv;
     vec2 dst_uv;
+    bool resolve_deform = false;
 
     if (uUseScreenPos == 1)
     {
@@ -40,14 +41,9 @@ void main()
         vec2 screen_uv = clamp(vec2(gl_FragCoord.x / uRenderSize.x,
                                     1.0 - gl_FragCoord.y / uRenderSize.y),
                                vec2(0.0), vec2(1.0));
-        float q = vUVData.z;
-        vec2 stq_uv = abs(q) > 0.00000001 ? vUVData.xy / q : vUVData.xy;
-
-        src_uv = clamp(
-            uFramebufferUvOffset + stq_uv * uFramebufferUvScale,
-            uFramebufferUvOffset,
-            uFramebufferContentUvMax);
+        src_uv = clamp(vUVData.xy, vec2(0.0), vec2(1.0));
         dst_uv = screen_uv;
+        resolve_deform = true;
     }
     else
     {
@@ -72,6 +68,12 @@ void main()
     float color_strength = max(max(uColor.r, uColor.g), uColor.b);
     float refract_strength = clamp(color_strength, 0.0, 1.0);
     vec3 refracted = mix(dst, src, refract_strength);
+
+    if (resolve_deform)
+    {
+        FragColor = vec4(mix(dst, refracted, mask), 1.0);
+        return;
+    }
 
     FragColor = vec4(refracted, mask);
 }

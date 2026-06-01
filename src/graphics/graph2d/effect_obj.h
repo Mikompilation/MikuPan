@@ -48,7 +48,7 @@ void* CallPartsDeform5(int type, float sclx, float scly, void *pos, float *vol);
 void SetPartsDeform(EFFECT_CONT *ec);
 void SetVURand(float x);
 int CalcPartsDeformXYZ(sceVu0IVECTOR vi, sceVu0FVECTOR vf);
-void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRIX wlm, sceVu0FVECTOR *stq, u_char *use_alpha, float aprate, u_long tex0);
+void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRIX wlm, sceVu0FVECTOR *stq, float (*src_uv)[2], u_char *use_alpha, float aprate, u_long tex0);
 u_char SubPartsDeform1(EFFECT_CONT *ec, u_char num, int page, int sbj, float sclx, float scly, float vol, int fl, float spd, float rate, float trate);
 u_char SubPartsDeform2(EFFECT_CONT *ec, u_char num, int page, int sbj, float sclx, float scly, float vol, int fl, float spd, float rate, float trate);
 int GetCornHitCheck(float *bpos, float power);
