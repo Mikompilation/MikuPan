@@ -569,8 +569,12 @@ void MikuPan_EndFrame()
 
     MikuPan_SetCurrentShaderProgram(POSTPROCESS_SHADER);
     MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
-    MikuPan_SetUniform1iToCurrentShader(MikuPan_IsBlackWhiteModeActive(),
-                                        "uBlackWhiteMode");
+    /*
+     * Black/white mode is applied through the original model CLUT/light paths
+     * and to explicit framebuffer copies. Do not apply it here: the final
+     * postprocess pass contains already-composited 2D HUD/menu sprites too.
+     */
+    MikuPan_SetUniform1iToCurrentShader(0, "uBlackWhiteMode");
     MikuPan_SetUniform1fToCurrentShader(MikuPan_GetBrightness(), "uBrightness");
     MikuPan_SetUniform1fToCurrentShader(MikuPan_GetGamma(),      "uGamma");
     {
