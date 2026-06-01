@@ -7,6 +7,7 @@
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/mikupan_controller.h"
 #include "mikupan/mikupan_screenshot.h"
+#include "mikupan/mikupan_utils.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan/rendering/mikupan_profiler.h"
@@ -94,10 +95,11 @@ static int msaa_samples = 0;
 static int render_resolution_width  = 1920;
 static int render_resolution_height = 1080;
 
-#define MIKUPAN_MAX_RESOLUTIONS 64
+#define MIKUPAN_MAX_RESOLUTIONS 96
+#define MIKUPAN_MAX_PS2_RESOLUTION_SCALE 6
 
 static MikuPan_Resolution resolution_list[MIKUPAN_MAX_RESOLUTIONS];
-static char               resolution_labels[MIKUPAN_MAX_RESOLUTIONS][32];
+static char               resolution_labels[MIKUPAN_MAX_RESOLUTIONS][48];
 static const char        *resolution_label_ptrs[MIKUPAN_MAX_RESOLUTIONS];
 static int                resolution_count = 0;
 static int                resolution_selected = 0;
@@ -909,85 +911,107 @@ static void MikuPan_AspectRatioStr(int w, int h, char *buf, int buf_size)
     snprintf(buf, buf_size, "%d:%d", w / a, h / a);
 }
 
+static int MikuPan_GetPs2ResolutionScale(int w, int h)
+{
+    if (w <= 0 || h <= 0)
+    {
+        return 0;
+    }
+
+    if (w % PS2_RESOLUTION_X_INT != 0 || h % PS2_RESOLUTION_Y_INT != 0)
+    {
+        return 0;
+    }
+
+    int scale_x = w / PS2_RESOLUTION_X_INT;
+    int scale_y = h / PS2_RESOLUTION_Y_INT;
+
+    return scale_x == scale_y ? scale_x : 0;
+}
+
+static void MikuPan_AddResolution(int w, int h)
+{
+    if (w <= 0 || h <= 0 || resolution_count >= MIKUPAN_MAX_RESOLUTIONS)
+    {
+        return;
+    }
+
+    for (int i = 0; i < resolution_count; i++)
+    {
+        if (resolution_list[i].width == w && resolution_list[i].height == h)
+        {
+            return;
+        }
+    }
+
+    resolution_list[resolution_count].width = w;
+    resolution_list[resolution_count].height = h;
+    resolution_count++;
+}
+
+static void MikuPan_AddPs2ResolutionMultiples(void)
+{
+    for (int scale = 1; scale <= MIKUPAN_MAX_PS2_RESOLUTION_SCALE; scale++)
+    {
+        MikuPan_AddResolution(PS2_RESOLUTION_X_INT * scale,
+                              PS2_RESOLUTION_Y_INT * scale);
+    }
+}
+
 static void MikuPan_PopulateResolutionList(SDL_DisplayID display, const SDL_DisplayMode *current_mode)
 {
     resolution_count = 0;
+    resolution_selected = 0;
+
+    MikuPan_AddPs2ResolutionMultiples();
 
     int n = 0;
     SDL_DisplayMode **modes = SDL_GetFullscreenDisplayModes(display, &n);
 
     if (modes != NULL)
     {
-        for (int i = 0; i < n && resolution_count < MIKUPAN_MAX_RESOLUTIONS; i++)
+        for (int i = 0; i < n; i++)
         {
-            int w = modes[i]->w;
-            int h = modes[i]->h;
-
-            if (w <= 0 || h <= 0)
-            {
-                continue;
-            }
-
-            int dup = 0;
-
-            for (int j = 0; j < resolution_count; j++)
-            {
-                if (resolution_list[j].width == w && resolution_list[j].height == h)
-                {
-                    dup = 1;
-                    break;
-                }
-            }
-
-            if (dup)
-            {
-                continue;
-            }
-
-            resolution_list[resolution_count].width = w;
-            resolution_list[resolution_count].height = h;
-            resolution_count++;
+            MikuPan_AddResolution(modes[i]->w, modes[i]->h);
         }
-
-        /// Add the normal render resolution of the game
-        resolution_list[resolution_count].width = 640;
-        resolution_list[resolution_count].height = 448;
-        resolution_count++;
 
         SDL_free(modes);
     }
 
-    // Always include the current desktop mode — older SDL backends sometimes
+    // Always include the current desktop mode; older SDL backends sometimes
     // omit it from the fullscreen list.
     if (current_mode != NULL && current_mode->w > 0 && current_mode->h > 0)
     {
-        int present = 0;
-        for (int i = 0; i < resolution_count; i++)
-        {
-            if (resolution_list[i].width == current_mode->w &&
-                resolution_list[i].height == current_mode->h)
-            {
-                present = 1;
-                break;
-            }
-        }
-        if (!present && resolution_count < MIKUPAN_MAX_RESOLUTIONS)
-        {
-            resolution_list[resolution_count].width = current_mode->w;
-            resolution_list[resolution_count].height = current_mode->h;
-            resolution_count++;
-        }
+        MikuPan_AddResolution(current_mode->w, current_mode->h);
     }
 
-    qsort(resolution_list, resolution_count, sizeof(MikuPan_Resolution), CompareResolutionDesc);
+    qsort(resolution_list, resolution_count, sizeof(MikuPan_Resolution),
+          CompareResolutionDesc);
 
     for (int i = 0; i < resolution_count; i++)
     {
         char aspect[12];
-        MikuPan_AspectRatioStr(resolution_list[i].width, resolution_list[i].height,
+        int ps2_scale = MikuPan_GetPs2ResolutionScale(
+            resolution_list[i].width, resolution_list[i].height);
+
+        MikuPan_AspectRatioStr(resolution_list[i].width,
+                               resolution_list[i].height,
                                aspect, sizeof(aspect));
-        snprintf(resolution_labels[i], sizeof(resolution_labels[i]),
-                 "%d x %d (%s)", resolution_list[i].width, resolution_list[i].height, aspect);
+
+        if (ps2_scale > 0)
+        {
+            snprintf(resolution_labels[i], sizeof(resolution_labels[i]),
+                     "%d x %d (%s) [PS2 %dx]",
+                     resolution_list[i].width, resolution_list[i].height,
+                     aspect, ps2_scale);
+        }
+        else
+        {
+            snprintf(resolution_labels[i], sizeof(resolution_labels[i]),
+                     "%d x %d (%s)",
+                     resolution_list[i].width, resolution_list[i].height,
+                     aspect);
+        }
 
         resolution_label_ptrs[i] = resolution_labels[i];
 
