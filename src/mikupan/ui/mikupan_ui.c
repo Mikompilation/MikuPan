@@ -1768,16 +1768,12 @@ static void MikuPan_UiShadowDebugWindow(void)
     igText("Caster mesh types: 0x00=%d 0x02=%d 0x40=%d 0x42=%d 0x80=%d 0x82=%d other=%d",
            shadow_debug->caster_type_0,
            shadow_debug->caster_type_2,
-           shadow_debug->caster_type_40,
-           shadow_debug->caster_type_42,
            shadow_debug->caster_type_80,
            shadow_debug->caster_type_82,
            shadow_debug->caster_type_other);
     igText("Caster draw types: 0x00=%d 0x02=%d 0x40=%d 0x42=%d 0x80=%d 0x82=%d other=%d",
            shadow_debug->caster_draw_type_0,
            shadow_debug->caster_draw_type_2,
-           shadow_debug->caster_draw_type_40,
-           shadow_debug->caster_draw_type_42,
            shadow_debug->caster_draw_type_80,
            shadow_debug->caster_draw_type_82,
            shadow_debug->caster_draw_type_other);
@@ -1787,42 +1783,6 @@ static void MikuPan_UiShadowDebugWindow(void)
            shadow_debug->receiver_type_12,
            shadow_debug->receiver_type_32,
            shadow_debug->receiver_type_other);
-
-    if (shadow_debug->dbg_layout_valid)
-    {
-        igText("Caster layout (max mesh): mtype=0x%02x num_mesh=%d vnum=%d nnum=%d vif_size=%d vtype=%d sum_counts=%d",
-               shadow_debug->dbg_layout_mtype & 0xff,
-               shadow_debug->dbg_layout_num_mesh,
-               shadow_debug->dbg_layout_vnum,
-               shadow_debug->dbg_layout_nnum,
-               shadow_debug->dbg_layout_vif_size,
-               shadow_debug->dbg_layout_vtype,
-               shadow_debug->dbg_layout_sum_counts);
-        igText("  submesh counts: [%d %d %d %d %d %d %d %d]",
-               shadow_debug->dbg_layout_counts[0],
-               shadow_debug->dbg_layout_counts[1],
-               shadow_debug->dbg_layout_counts[2],
-               shadow_debug->dbg_layout_counts[3],
-               shadow_debug->dbg_layout_counts[4],
-               shadow_debug->dbg_layout_counts[5],
-               shadow_debug->dbg_layout_counts[6],
-               shadow_debug->dbg_layout_counts[7]);
-    }
-
-    if (shadow_debug->dbg_proj_valid)
-    {
-        igText("Proj center=(%.0f, %.0f, %.0f)  cast_dir=(%.2f, %.2f, %.2f)",
-               shadow_debug->dbg_proj_center[0],
-               shadow_debug->dbg_proj_center[1],
-               shadow_debug->dbg_proj_center[2],
-               shadow_debug->dbg_proj_dir[0],
-               shadow_debug->dbg_proj_dir[1],
-               shadow_debug->dbg_proj_dir[2]);
-        igText("  caster extent (view): %.0f x %.0f x %.0f",
-               shadow_debug->dbg_proj_extent[0],
-               shadow_debug->dbg_proj_extent[1],
-               shadow_debug->dbg_proj_extent[2]);
-    }
 
     if (!shadow_debug->fbo_complete && shadow_debug->fbo_initialized)
     {
@@ -1836,8 +1796,6 @@ static void MikuPan_UiShadowDebugWindow(void)
     }
     else if (shadow_debug->caster_draws == 0 &&
             (shadow_debug->caster_type_0 != 0 ||
-             shadow_debug->caster_type_40 != 0 ||
-             shadow_debug->caster_type_42 != 0 ||
              shadow_debug->caster_type_80 != 0 ||
              shadow_debug->caster_type_other != 0))
     {
