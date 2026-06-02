@@ -41,6 +41,7 @@
 #include "ingame/map/furn_dat.h"
 #include "main/glob.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/ui/mikupan_ui.h"
 #include "os/system.h"
 
 #define SCR_WIDTH 640
@@ -2328,6 +2329,224 @@ void CalcGirlCoord()
 u_int search_num = 0;
 u_int search_num2 = 0;
 
+static void WriteTofuVertex(float *dst, const sceVu0FVECTOR pos, const float *color)
+{
+    dst[0] = color[0];
+    dst[1] = color[1];
+    dst[2] = color[2];
+    dst[3] = color[3];
+    dst[4] = pos[0];
+    dst[5] = pos[1];
+    dst[6] = pos[2];
+    dst[7] = 1.0f;
+}
+
+static void AddTofuTriangle(float *buffer,
+                            int *vertex_count,
+                            const sceVu0FVECTOR *projected,
+                            int i0,
+                            int i1,
+                            int i2,
+                            const float *color)
+{
+    WriteTofuVertex(buffer + ((*vertex_count)++ * 8), projected[i0], color);
+    WriteTofuVertex(buffer + ((*vertex_count)++ * 8), projected[i1], color);
+    WriteTofuVertex(buffer + ((*vertex_count)++ * 8), projected[i2], color);
+}
+
+static void AddTofuQuad(float *buffer,
+                        int *vertex_count,
+                        const sceVu0FVECTOR *projected,
+                        int i0,
+                        int i1,
+                        int i2,
+                        int i3,
+                        const float *color)
+{
+    AddTofuTriangle(buffer, vertex_count, projected, i0, i1, i2, color);
+    AddTofuTriangle(buffer, vertex_count, projected, i2, i1, i3, color);
+}
+
+static float ClampTofuColor(float value)
+{
+    if (value < 0.0f)
+    {
+        return 0.0f;
+    }
+
+    if (value > 1.0f)
+    {
+        return 1.0f;
+    }
+
+    return value;
+}
+
+static void BuildTofuColor(float *dst, const float *base, float scale)
+{
+    dst[0] = ClampTofuColor(base[0] * scale);
+    dst[1] = ClampTofuColor(base[1] * scale);
+    dst[2] = ClampTofuColor(base[2] * scale);
+    dst[3] = 1.0f;
+}
+
+static void SetTofuLocalVertex(sceVu0FVECTOR dst, float x, float y, float z)
+{
+    dst[0] = x;
+    dst[1] = y;
+    dst[2] = z;
+    dst[3] = 1.0f;
+}
+
+static int AddTofuMouthSegment(sceVu0FVECTOR *vertices,
+                               int *vertex_count,
+                               float x0,
+                               float y0,
+                               float x1,
+                               float y1)
+{
+    const float z = -8.7f;
+    const float half_width = 0.45f;
+    float dx = x1 - x0;
+    float dy = y1 - y0;
+    float len = sqrtf(dx * dx + dy * dy);
+    float nx;
+    float ny;
+    int base = *vertex_count;
+
+    if (len <= 0.0001f)
+    {
+        nx = 0.0f;
+        ny = half_width;
+    }
+    else
+    {
+        nx = (-dy / len) * half_width;
+        ny = ( dx / len) * half_width;
+    }
+
+    SetTofuLocalVertex(vertices[base + 0], x0 + nx, y0 + ny, z);
+    SetTofuLocalVertex(vertices[base + 1], x0 - nx, y0 - ny, z);
+    SetTofuLocalVertex(vertices[base + 2], x1 + nx, y1 + ny, z);
+    SetTofuLocalVertex(vertices[base + 3], x1 - nx, y1 - ny, z);
+
+    *vertex_count += 4;
+    return base;
+}
+
+static int AddTofuMouthVertices(sceVu0FVECTOR *vertices,
+                                int *vertex_count,
+                                int *mouth_indices)
+{
+    if (plyr_wrk.hp >= 400)
+    {
+        mouth_indices[0] = AddTofuMouthSegment(vertices, vertex_count,
+                                               -4.2f, 36.7f, -1.4f, 35.4f);
+        mouth_indices[1] = AddTofuMouthSegment(vertices, vertex_count,
+                                               -1.4f, 35.4f,  1.4f, 35.4f);
+        mouth_indices[2] = AddTofuMouthSegment(vertices, vertex_count,
+                                                1.4f, 35.4f,  4.2f, 36.7f);
+        return 3;
+    }
+
+    if (plyr_wrk.hp >= 150)
+    {
+        mouth_indices[0] = AddTofuMouthSegment(vertices, vertex_count,
+                                               -4.0f, 36.0f, 4.0f, 36.0f);
+        return 1;
+    }
+
+    mouth_indices[0] = AddTofuMouthSegment(vertices, vertex_count,
+                                           -4.2f, 35.4f, -1.4f, 36.7f);
+    mouth_indices[1] = AddTofuMouthSegment(vertices, vertex_count,
+                                           -1.4f, 36.7f,  1.4f, 36.7f);
+    mouth_indices[2] = AddTofuMouthSegment(vertices, vertex_count,
+                                            1.4f, 36.7f,  4.2f, 35.4f);
+    return 3;
+}
+
+static void DrawPlayerTofu(SgCOORDUNIT *cp)
+{
+    static const sceVu0FVECTOR tofu_vertices[] =
+    {
+        {-11.5f,  0.0f, -8.5f, 1.0f},
+        { 11.5f,  0.0f, -8.5f, 1.0f},
+        {-11.5f, 62.0f, -8.5f, 1.0f},
+        { 11.5f, 62.0f, -8.5f, 1.0f},
+        {-11.5f,  0.0f,  8.5f, 1.0f},
+        { 11.5f,  0.0f,  8.5f, 1.0f},
+        {-11.5f, 62.0f,  8.5f, 1.0f},
+        { 11.5f, 62.0f,  8.5f, 1.0f},
+
+        {-4.7f,  44.5f, -8.7f, 1.0f},
+        {-2.7f,  44.5f, -8.7f, 1.0f},
+        {-4.7f,  48.0f, -8.7f, 1.0f},
+        {-2.7f,  48.0f, -8.7f, 1.0f},
+        { 2.7f,  44.5f, -8.7f, 1.0f},
+        { 4.7f,  44.5f, -8.7f, 1.0f},
+        { 2.7f,  48.0f, -8.7f, 1.0f},
+        { 4.7f,  48.0f, -8.7f, 1.0f},
+    };
+    static const float face_color[]  = {0.04f, 0.035f, 0.03f, 1.0f};
+
+    const float *base_color;
+    float front_color[4];
+    float back_color[4];
+    float side_color[4];
+    float top_color[4];
+    sceVu0FVECTOR local_vertices[32];
+    sceVu0FMATRIX local_clip;
+    sceVu0FVECTOR projected[32];
+    float buffer[80 * 8];
+    int local_count = (int)(sizeof(tofu_vertices) / sizeof(tofu_vertices[0]));
+    int mouth_indices[3];
+    int mouth_count;
+    int out = 0;
+    int i;
+
+    memcpy(local_vertices, tofu_vertices, sizeof(tofu_vertices));
+    mouth_count = AddTofuMouthVertices(local_vertices, &local_count, mouth_indices);
+
+    base_color = MikuPan_GetTofuColor();
+    BuildTofuColor(front_color, base_color, 1.0f);
+    BuildTofuColor(back_color,  base_color, 0.84f);
+    BuildTofuColor(side_color,  base_color, 0.91f);
+    BuildTofuColor(top_color,   base_color, 1.12f);
+
+    sceVu0MulMatrix(local_clip, *(sceVu0FMATRIX *)MikuPan_GetWorldClipView(), cp->matrix);
+    sceVu0RotTransPersNF(projected, local_clip, local_vertices, local_count, 0);
+
+    for (i = 0; i < local_count; i++)
+    {
+        if (projected[i][3] <= 0.0f)
+        {
+            return;
+        }
+
+        projected[i][3] = 1.0f;
+    }
+
+    AddTofuQuad(buffer, &out, projected, 0, 1, 2, 3, front_color);
+    AddTofuQuad(buffer, &out, projected, 5, 4, 7, 6, back_color);
+    AddTofuQuad(buffer, &out, projected, 4, 0, 6, 2, side_color);
+    AddTofuQuad(buffer, &out, projected, 1, 5, 3, 7, side_color);
+    AddTofuQuad(buffer, &out, projected, 2, 3, 6, 7, top_color);
+    AddTofuQuad(buffer, &out, projected, 4, 5, 0, 1, back_color);
+
+    AddTofuQuad(buffer, &out, projected, 8, 9, 10, 11, face_color);
+    AddTofuQuad(buffer, &out, projected, 12, 13, 14, 15, face_color);
+
+    for (i = 0; i < mouth_count; i++)
+    {
+        int index = mouth_indices[i];
+        AddTofuQuad(buffer, &out, projected,
+                    index + 0, index + 1, index + 2, index + 3,
+                    face_color);
+    }
+
+    MikuPan_RenderSolidUntexturedTriangles3D(buffer, out, MIKUPAN_DEPTH_LEQUAL);
+}
+
 void DrawGirl(int in_mirror)
 {
     HeaderSection *hs;
@@ -2379,8 +2598,15 @@ void DrawGirl(int in_mirror)
         }
 
         ManTexflush();
-        SgSortUnitKind(hs, -1);
-        DrawGirlSubObj(ani_mdl[0].mpk_p, 0x7f);
+        if (MikuPan_IsTofuModeEnabled())
+        {
+            DrawPlayerTofu(cp);
+        }
+        else
+        {
+            SgSortUnitKind(hs, -1);
+            DrawGirlSubObj(ani_mdl[0].mpk_p, 0x7f);
+        }
 
         if (in_mirror != 0 || plyr_wrk.mode != 1)
         {

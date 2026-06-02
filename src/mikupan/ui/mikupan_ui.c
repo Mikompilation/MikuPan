@@ -110,6 +110,8 @@ static int show_shader_reload = 0;
 static int show_draw_inspector = 0;
 static int show_camera_debug = 0;
 static int show_shadow_debug_window = 0;
+static int cheat_tofu_mode = 0;
+static float cheat_tofu_color[3] = {0.86f, 0.81f, 0.63f};
 static int shadow_debug_auto_probe = 0;
 static int shadow_debug_flip_y = 1;
 static float shadow_debug_preview_size = 384.0f;
@@ -2033,6 +2035,15 @@ void MikuPan_UiMenuBar(void)
         igCheckbox("Draw Call Inspector", (bool *) &show_draw_inspector);
         igCheckbox("Camera World Info", (bool *) &show_camera_debug);
         igCheckbox("Shadow Debug", (bool *) &show_shadow_debug_window);
+
+        igEndMenu();
+    }
+
+    if (igBeginMenu("Cheats", 1))
+    {
+        igCheckbox("Tofu Mode", (bool *) &cheat_tofu_mode);
+        igColorEdit3("Tofu Color", cheat_tofu_color, 0);
+
         igSeparator();
         igCheckbox("Third-Person Camera", (bool *) &camera_third_person_enabled);
         if (camera_third_person_enabled)
@@ -2294,6 +2305,16 @@ void MikuPan_UiMenuBar(void)
 int MikuPan_IsBoundingBoxRendering(void)
 {
     return show_bounding_boxes;
+}
+
+int MikuPan_IsTofuModeEnabled(void)
+{
+    return cheat_tofu_mode;
+}
+
+const float *MikuPan_GetTofuColor(void)
+{
+    return cheat_tofu_color;
 }
 
 int MikuPan_ShowCameraDebug(void)
