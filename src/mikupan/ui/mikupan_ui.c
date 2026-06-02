@@ -136,6 +136,8 @@ static int show_static_lighting = 0;
 static int mesh_lighting_mode = 1; // 0 = per-fragment, 1 = per-vertex
 static float normal_length = 10.0f;
 
+const int no_navigation_window = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoInputs;
+
 // Post-process tone controls — applied by the POSTPROCESS_SHADER on the
 // final scene-to-window blit. Defaults are no-ops (1.0 brightness, 1.0
 // gamma); the renderer reads them via the getters below each frame and
@@ -161,6 +163,9 @@ static const char *font_labels[MIKUPAN_UI_FONT_COUNT] = {
 };
 
 static ImFont *ui_fonts[MIKUPAN_UI_FONT_COUNT] = {0};
+static float ui_display_scale = 1.0f;
+static float ui_font_default_size = 13.0f;
+static float ui_font_regular_size = 14.0f;
 
 #define MIKUPAN_CRT_DEFAULTS \
     {                        \
@@ -221,6 +226,50 @@ static float MikuPan_ClampFloat(float value, float min_value, float max_value)
     }
 
     return value;
+}
+
+static float MikuPan_CalculateUiDisplayScale(SDL_Window *window)
+{
+    SDL_DisplayID display = 0;
+    const SDL_DisplayMode *mode = NULL;
+    float content_scale = 1.0f;
+    float resolution_scale = 1.0f;
+    float scale;
+
+    if (window != NULL)
+    {
+        display = SDL_GetDisplayForWindow(window);
+        content_scale = SDL_GetWindowDisplayScale(window);
+    }
+
+    if (display == 0)
+    {
+        display = SDL_GetPrimaryDisplay();
+    }
+
+    if (display != 0)
+    {
+        mode = SDL_GetCurrentDisplayMode(display);
+        if (content_scale <= 0.0f)
+        {
+            content_scale = SDL_GetDisplayContentScale(display);
+        }
+    }
+
+    if (mode != NULL && mode->w > 0 && mode->h > 0)
+    {
+        const float sx = (float) mode->w / 1920.0f;
+        const float sy = (float) mode->h / 1080.0f;
+        resolution_scale = sx < sy ? sx : sy;
+    }
+
+    if (content_scale <= 0.0f)
+    {
+        content_scale = 1.0f;
+    }
+
+    scale = content_scale > resolution_scale ? content_scale : resolution_scale;
+    return MikuPan_ClampFloat(scale, 0.85f, 2.25f);
 }
 
 static void MikuPan_ClampCrtSettings(MikuPan_ConfigCrt *crt)
@@ -364,7 +413,7 @@ static void FrameTimeGraph_Draw(FrameTimeGraph *g)
         return;
     }
 
-    igBegin("Frame Time Graph", NULL, 0);
+    igBegin("Frame Time Graph", NULL, no_navigation_window);
 
     float total_sum = 0.0f, total_max = g->times[0];
     float cpu_sum = 0.0f, cpu_max = g->cpu[0];
@@ -560,30 +609,6 @@ static void FrameTimeGraph_Draw(FrameTimeGraph *g)
 
     igText("Uploads:   %4d calls   %6.1f KB", ul_count, ul_bytes / 1024.0f);
     igText("Downloads: %4d calls   %6.1f KB", dl_count, dl_bytes / 1024.0f);
-
-    igSpacing();
-    igTextUnformatted("Frame-time histogram (ms)", NULL);
-
-#define HIST_BUCKETS 16
-    float histf[HIST_BUCKETS] = {0};
-    float step = scale / (float) HIST_BUCKETS;
-    int maxcount = 1;
-
-    for (int i = 0; i < g->count; i++)
-    {
-        int b = (int) floorf(g->times[i] / step);
-        if (b < 0)
-            b = 0;
-        if (b >= HIST_BUCKETS)
-            b = HIST_BUCKETS - 1;
-        histf[b] += 1.0f;
-        if ((int) histf[b] > maxcount)
-            maxcount = (int) histf[b];
-    }
-
-    igPlotHistogram_FloatPtr("##hist", histf, HIST_BUCKETS, 0, NULL, 0.0f,
-                             (float) maxcount, (ImVec2) {0.0f, 60.0f},
-                             (int) sizeof(float));
 
     igEnd();
 }
@@ -1044,12 +1069,27 @@ static void MikuPan_ApplyUiFont(int font)
 static void MikuPan_LoadUiFonts(void)
 {
     ImGuiIO* io = igGetIO_Nil();
+    ImFontConfig *default_font_config = ImFontConfig_ImFontConfig();
 
-    ui_fonts[0] = ImFontAtlas_AddFontDefault(io->Fonts, NULL);
+    ui_font_default_size = 13.0f * ui_display_scale;
+    ui_font_regular_size = 14.0f * ui_display_scale;
+
+    if (default_font_config != NULL)
+    {
+        default_font_config->SizePixels = ui_font_default_size;
+    }
+
+    ui_fonts[0] = ImFontAtlas_AddFontDefault(io->Fonts, default_font_config);
+
+    if (default_font_config != NULL)
+    {
+        ImFontConfig_destroy(default_font_config);
+    }
+
     ui_fonts[1] = ImFontAtlas_AddFontFromFileTTF(
         io->Fonts,
         "./resources/fonts/CenturyOldStyle.ttf",
-        14.0f,
+        ui_font_regular_size,
         NULL,
         ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
 
@@ -1593,6 +1633,11 @@ static void MikuPan_ApplyFatalFrameStyle(int theme)
             c[ImGuiCol_ModalWindowDimBg]      = (ImVec4){0.030f, 0.022f, 0.014f, 0.72f};
             break;
     }
+
+    if (ui_display_scale != 1.0f)
+    {
+        ImGuiStyle_ScaleAllSizes(s, ui_display_scale);
+    }
 }
 
 void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
@@ -1605,6 +1650,7 @@ void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
         MikuPan_ClampThemeIndex(mikupan_configuration.selected_theme);
     mikupan_configuration.selected_font =
         MikuPan_ClampFontIndex(mikupan_configuration.selected_font);
+    ui_display_scale = MikuPan_CalculateUiDisplayScale(window);
     MikuPan_LoadUiFonts();
     MikuPan_ApplyFatalFrameStyle(mikupan_configuration.selected_theme);
 
@@ -1719,15 +1765,19 @@ static void MikuPan_UiShadowDebugWindow(void)
            shadow_debug->caster_indices,
            shadow_debug->receiver_draws,
            shadow_debug->receiver_indices);
-    igText("Caster mesh types: 0x00=%d 0x02=%d 0x80=%d 0x82=%d other=%d",
+    igText("Caster mesh types: 0x00=%d 0x02=%d 0x40=%d 0x42=%d 0x80=%d 0x82=%d other=%d",
            shadow_debug->caster_type_0,
            shadow_debug->caster_type_2,
+           shadow_debug->caster_type_40,
+           shadow_debug->caster_type_42,
            shadow_debug->caster_type_80,
            shadow_debug->caster_type_82,
            shadow_debug->caster_type_other);
-    igText("Caster draw types: 0x00=%d 0x02=%d 0x80=%d 0x82=%d other=%d",
+    igText("Caster draw types: 0x00=%d 0x02=%d 0x40=%d 0x42=%d 0x80=%d 0x82=%d other=%d",
            shadow_debug->caster_draw_type_0,
            shadow_debug->caster_draw_type_2,
+           shadow_debug->caster_draw_type_40,
+           shadow_debug->caster_draw_type_42,
            shadow_debug->caster_draw_type_80,
            shadow_debug->caster_draw_type_82,
            shadow_debug->caster_draw_type_other);
@@ -1737,6 +1787,42 @@ static void MikuPan_UiShadowDebugWindow(void)
            shadow_debug->receiver_type_12,
            shadow_debug->receiver_type_32,
            shadow_debug->receiver_type_other);
+
+    if (shadow_debug->dbg_layout_valid)
+    {
+        igText("Caster layout (max mesh): mtype=0x%02x num_mesh=%d vnum=%d nnum=%d vif_size=%d vtype=%d sum_counts=%d",
+               shadow_debug->dbg_layout_mtype & 0xff,
+               shadow_debug->dbg_layout_num_mesh,
+               shadow_debug->dbg_layout_vnum,
+               shadow_debug->dbg_layout_nnum,
+               shadow_debug->dbg_layout_vif_size,
+               shadow_debug->dbg_layout_vtype,
+               shadow_debug->dbg_layout_sum_counts);
+        igText("  submesh counts: [%d %d %d %d %d %d %d %d]",
+               shadow_debug->dbg_layout_counts[0],
+               shadow_debug->dbg_layout_counts[1],
+               shadow_debug->dbg_layout_counts[2],
+               shadow_debug->dbg_layout_counts[3],
+               shadow_debug->dbg_layout_counts[4],
+               shadow_debug->dbg_layout_counts[5],
+               shadow_debug->dbg_layout_counts[6],
+               shadow_debug->dbg_layout_counts[7]);
+    }
+
+    if (shadow_debug->dbg_proj_valid)
+    {
+        igText("Proj center=(%.0f, %.0f, %.0f)  cast_dir=(%.2f, %.2f, %.2f)",
+               shadow_debug->dbg_proj_center[0],
+               shadow_debug->dbg_proj_center[1],
+               shadow_debug->dbg_proj_center[2],
+               shadow_debug->dbg_proj_dir[0],
+               shadow_debug->dbg_proj_dir[1],
+               shadow_debug->dbg_proj_dir[2]);
+        igText("  caster extent (view): %.0f x %.0f x %.0f",
+               shadow_debug->dbg_proj_extent[0],
+               shadow_debug->dbg_proj_extent[1],
+               shadow_debug->dbg_proj_extent[2]);
+    }
 
     if (!shadow_debug->fbo_complete && shadow_debug->fbo_initialized)
     {
@@ -1749,9 +1835,11 @@ static void MikuPan_UiShadowDebugWindow(void)
                       "No caster pass this frame.");
     }
     else if (shadow_debug->caster_draws == 0 &&
-             (shadow_debug->caster_type_0 != 0 ||
-              shadow_debug->caster_type_80 != 0 ||
-              shadow_debug->caster_type_other != 0))
+            (shadow_debug->caster_type_0 != 0 ||
+             shadow_debug->caster_type_40 != 0 ||
+             shadow_debug->caster_type_42 != 0 ||
+             shadow_debug->caster_type_80 != 0 ||
+             shadow_debug->caster_type_other != 0))
     {
         igTextColored((ImVec4) {1.0f, 0.7f, 0.2f, 1.0f},
                       "Caster meshes were found, but none reached a GL shadow draw.");
@@ -1835,7 +1923,7 @@ static void MikuPan_UiShadowDebugWindow(void)
             igGetColorU32_Vec4((ImVec4) {0.55f, 0.85f, 1.0f, 0.9f}),
             0.0f,
             0,
-            1.5f);
+            0);
     }
     else
     {
@@ -1877,8 +1965,8 @@ void MikuPan_DrawUi(void)
 
     if (show_fps)
     {
-        igBegin("fps", (bool*)&show_fps, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoInputs);
-        igPushFont(igGetFont(), 18.0f);
+        igBegin("fps", (bool*)&show_fps, no_navigation_window);
+        igPushFont(igGetFont(), 18.0f * ui_display_scale);
         igText("FPS %.2f", MikuPan_GetFrameRate());
         igPopFont();
         igEnd();

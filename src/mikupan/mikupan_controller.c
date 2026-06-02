@@ -647,7 +647,7 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
     ImVec2 b_min = (ImVec2){origin.x + 70.0f,        origin.y + 50.0f};
     ImVec2 b_max = (ImVec2){origin.x + W - 70.0f,    origin.y + H - 30.0f};
     ImDrawList_AddRectFilled(dl, b_min, b_max, body_col, 30.0f, 0);
-    ImDrawList_AddRect      (dl, b_min, b_max, body_outline, 30.0f, 0, 2.0f);
+    ImDrawList_AddRect      (dl, b_min, b_max, body_outline, 30.0f, 0, 0);
 
     ImDrawList_AddCircleFilled(dl, (ImVec2){origin.x + 80,     origin.y + H - 60}, 50, body_col,     24);
     ImDrawList_AddCircle      (dl, (ImVec2){origin.x + 80,     origin.y + H - 60}, 50, body_outline, 24, 2.0f);
