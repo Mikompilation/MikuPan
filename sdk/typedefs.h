@@ -1,17 +1,14 @@
 #ifndef TYPEDEFS_H 
 #define TYPEDEFS_H
 
+#define __u_char_defined
+#include <stdint.h>
+
 #ifdef _MSC_VER
 #define ATTRIBUTE_ALIGNED(x, decl) __declspec(align(x)) decl
 #else
 #define ATTRIBUTE_ALIGNED(x, decl) decl __attribute__((aligned(x)))
 #endif
-
-
-#define __u_char_defined
-
-#include <stdint.h>
-
 
 typedef long s_long;
 typedef short s_short;
@@ -21,8 +18,6 @@ typedef int s_int;
 /// TODO: CHECK FOR PROPER IMPLEMENTATION OF MODE TI
 //typedef int s_long128 __attribute__ ((mode (TI)));
 typedef int s_long128[4];
-
-/// TODO: CHECK FOR PROPER IMPLEMENTATION OF MODE TI
 typedef unsigned int u_long128 __attribute__ ((mode (TI)));
 
 typedef int (*sceSdTransIntrHandler)(int, void *);

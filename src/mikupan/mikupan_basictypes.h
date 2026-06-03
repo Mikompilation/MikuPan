@@ -149,6 +149,7 @@ typedef struct
     int selected_theme;
     int selected_font;
     float font_scale;
+    int show_fps;
     MikuPan_ConfigThirdPersonCamera third_person_camera;
     MikuPan_ConfigInput input;
 } MikuPan_Config;

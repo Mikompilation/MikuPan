@@ -1694,6 +1694,8 @@ void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
     brightness = mikupan_configuration.renderer.brightness;
     gamma_value = mikupan_configuration.renderer.gamma;
     window_mode = mikupan_configuration.renderer.window_mode;
+    show_fps = mikupan_configuration.show_fps;
+
     /* Migrate legacy is_fullscreen-only configs to the windowed/fullscreen mode. */
     if (window_mode == MIKUPAN_WINDOW_WINDOWED &&
         mikupan_configuration.renderer.is_fullscreen)
@@ -2453,7 +2455,11 @@ void MikuPan_UiMenuBar(void)
     /* ------------------------------------------------------------ Performance */
     if (igBeginMenu("Performance", 1))
     {
-        igCheckbox("FPS Counter", (bool *) &show_fps);
+        if (igCheckbox("FPS Counter", (bool *) &show_fps))
+        {
+            mikupan_configuration.show_fps = show_fps;
+        }
+
         igCheckbox("Frame Time Graph", (bool *) &show_frame_time_graph);
         igEndMenu();
     }

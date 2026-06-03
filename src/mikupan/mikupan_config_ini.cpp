@@ -118,6 +118,7 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "ui", "selected_theme", mikupan_configuration.selected_theme);
     ApplyValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     ApplyValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);
+    ApplyValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
     ApplyValue(ini, "third_person_camera", "enabled",
                mikupan_configuration.third_person_camera.enabled);
     ApplyValue(ini, "third_person_camera", "distance",
@@ -219,6 +220,7 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "ui", "selected_theme", mikupan_configuration.selected_theme);
     SetValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     SetValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);
+    SetValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
     SetValue(ini, "third_person_camera", "enabled",
              mikupan_configuration.third_person_camera.enabled);
     SetValue(ini, "third_person_camera", "distance",
@@ -296,7 +298,7 @@ extern "C" void MikuPan_LoadConfiguration(const char *filename)
         return;
     }
 
-    TryLoadConfigurationFile("resources/mikupan.ini");
+    TryLoadConfigurationFile("mikupan.ini");
 }
 
 extern "C" int MikuPan_SaveConfiguration(const char *filename)
