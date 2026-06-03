@@ -85,6 +85,12 @@ typedef struct
     float gamma;
 } MikuPan_ConfigRenderer;
 
+/* Apply a window display mode to the SDL window.
+ *   Windowed   - leave fullscreen, restore the window border.
+ *   Fullscreen - exclusive fullscreen using the display's desktop mode.
+ *   Borderless - a normal borderless WINDOW sized to fill the display (NOT SDL
+ *                fullscreen), so alt-tab stays instant and other windows can
+ *                overlap. */
 enum MikuPan_WindowMode
 {
     MIKUPAN_WINDOW_WINDOWED = 0,

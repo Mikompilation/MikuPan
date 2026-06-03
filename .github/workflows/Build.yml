@@ -11,14 +11,27 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }} 
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-    - uses: actions/checkout@v2
-    
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0   # full history + tags so the version header resolves
+
+    # The codebase uses GCC-only extensions (__attribute__((mode(TI))),
+    # ((optimize)), ((aligned))) plus the -static link flag, and links the
+    # prebuilt MinGW FFmpeg import libs in extern/ffmpeg. It cannot build with
+    # MSVC, so the Windows runner must use the MinGW toolchain.
+    - name: Set up MinGW (Windows)
+      if: ${{ matrix.os == 'windows-latest' }}
+      uses: egor-tensin/setup-mingw@v2
+      with:
+        platform: x64
+
     - name: Install Dependencies
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
@@ -27,7 +40,12 @@ jobs:
           sudo apt update
           sudo apt upgrade
 
-    - name: Configure CMake
+    - name: Configure CMake (Windows / MinGW)
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: cmake -B ${{github.workspace}}/build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Configure CMake (Unix)
+      if: ${{ matrix.os != 'windows-latest' }}
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build

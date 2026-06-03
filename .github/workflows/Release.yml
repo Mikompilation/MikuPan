@@ -26,9 +26,17 @@ jobs:
         shell: ${{ matrix.sys.shell }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+          fetch-depth: 0   # full history + tags so the version header resolves
+
+      # GCC-only codebase (see CMakeLists / sdk headers) — Windows must use MinGW.
+      - name: Set up MinGW (Windows)
+        if: ${{ matrix.sys.os == 'windows-latest' }}
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
 
       - name: Install Dependencies
         if: ${{ matrix.sys.os == 'ubuntu-latest' }}
@@ -38,7 +46,12 @@ jobs:
           sudo apt update
           sudo apt upgrade
 
-      - name: Configure CMake
+      - name: Configure CMake (Windows / MinGW)
+        if: ${{ matrix.sys.os == 'windows-latest' }}
+        run: cmake -B ${{github.workspace}}/build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=${{env.BUILD_STATIC}}
+
+      - name: Configure CMake (Unix)
+        if: ${{ matrix.sys.os != 'windows-latest' }}
         run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=${{env.BUILD_STATIC}}
 
       - name: Build
@@ -47,11 +60,10 @@ jobs:
 
       - name: Zip Windows App
         if: ${{ matrix.sys.os == 'windows-latest' }}
-        working-directory: build/Obscura/Release
+        working-directory: build
         shell: pwsh
         run: |
-          Copy-Item "../ZeroFileDictionary.json"
-          Compress-Archive * ../../MikuPan_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip
+          Compress-Archive -Path MikuPan/* -DestinationPath MikuPan_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip
 
       - name: Zip OSX App
         if: ${{ matrix.sys.os == 'macos-latest' }}

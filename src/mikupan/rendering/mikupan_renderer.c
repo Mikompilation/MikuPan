@@ -137,18 +137,16 @@ SDL_AppResult MikuPan_Init()
     {
         startup_window_mode = MIKUPAN_WINDOW_FULLSCREEN;
     }
+
     if (startup_window_mode < MIKUPAN_WINDOW_WINDOWED ||
         startup_window_mode > MIKUPAN_WINDOW_BORDERLESS)
     {
         startup_window_mode = MIKUPAN_WINDOW_WINDOWED;
     }
-    mikupan_configuration.renderer.window_mode = startup_window_mode;
-    mikupan_configuration.renderer.is_fullscreen =
-        (startup_window_mode != MIKUPAN_WINDOW_WINDOWED);
 
-    /* Create with the matching flag up front (avoids a windowed flash); the
-     * exact sub-mode is finalized with MikuPan_ApplyWindowMode() after creation.
-     * Borderless is a plain borderless window, NOT SDL fullscreen. */
+    mikupan_configuration.renderer.window_mode = startup_window_mode;
+    mikupan_configuration.renderer.is_fullscreen = (startup_window_mode != MIKUPAN_WINDOW_WINDOWED);
+
     if (startup_window_mode == MIKUPAN_WINDOW_FULLSCREEN)
     {
         config_window_flags |= SDL_WINDOW_FULLSCREEN;
@@ -214,11 +212,6 @@ SDL_AppResult MikuPan_Init()
         mikupan_configuration.renderer.msaa_index = desired_msaa;
     }
 
-    /*
-     * The internal render target is allowed to exceed the monitor size for
-     * supersampling/PS2 resolution multiples. Only reject invalid values here;
-     * window dimensions are the ones that must fit the display mode.
-     */
     if (desired_render_width <= 0)
     {
         desired_render_width = PS2_RESOLUTION_X_INT;
@@ -310,16 +303,10 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
         return 0;
     }
 
-    // Save caller's FBO bindings — we briefly rebind to do the resolve and
-    // readback, and the rest of the frame must see the same state on return.
     GLint prev_read_fbo = 0, prev_draw_fbo = 0;
     glad_glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prev_read_fbo);
     glad_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prev_draw_fbo);
 
-    // Source = the caller's draw FBO (the MSAA scene buffer mid-frame).
-    // Query the colour attachment's dimensions so we know what rectangle to
-    // blit — the internal render resolution is user-configurable so we
-    // can't just use a fixed value.
     GLint src_w = width, src_h = height;
     glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint)prev_draw_fbo);
     GLint attach_type = 0;
@@ -349,15 +336,10 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
     }
     else
     {
-        // No usable colour attachment — bail without touching out_rgba so
-        // the caller can detect the failure and skip its upload.
         glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint)prev_read_fbo);
         return 0;
     }
 
-    // Temp non-MSAA receive surface at the requested PS2 native size: GL
-    // resolves the multisamples and downsamples in one blit, then a single
-    // glReadPixels gives us linear RGBA8.
     GLuint tmp_tex = 0, tmp_fbo = 0;
     glad_glGenTextures(1, &tmp_tex);
     MikuPan_BindTexture2DCached(tmp_tex);
@@ -381,14 +363,8 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
     glad_glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glad_glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, out_rgba);
 
-    // GL framebuffer origin is bottom-left; PS2 GS framebuffer origin is
-    // top-left. Flip rows in place so the caller can hand the buffer
-    // straight to UploadPSMCT32 without doing the swap themselves.
     {
         const int row_bytes = width * 4;
-        // Stack scratch is fine — row_bytes for a 640-wide buffer is 2560,
-        // well within typical stack limits and avoids the malloc cost on a
-        // function that may run multiple times per second during a freeze.
         unsigned char swap_row[4096];
         unsigned char *swap_ptr = (row_bytes <= (int)sizeof(swap_row)) ? swap_row : NULL;
         unsigned char *heap_row = NULL;
@@ -416,7 +392,6 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
         MikuPan_ConvertRGBA8ToBlackWhite(out_rgba, width, height);
     }
 
-    // Restore caller's FBO state and clean up temp resources.
     glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint)prev_read_fbo);
     glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, (GLuint)prev_draw_fbo);
     glad_glDeleteFramebuffers(1, &tmp_fbo);
@@ -511,12 +486,6 @@ void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
     MikuPan_SetViewportCached(0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height);
 }
 
-/* Apply a window display mode to the SDL window.
- *   Windowed   - leave fullscreen, restore the window border.
- *   Fullscreen - exclusive fullscreen using the display's desktop mode.
- *   Borderless - a normal borderless WINDOW sized to fill the display (NOT SDL
- *                fullscreen), so alt-tab stays instant and other windows can
- *                overlap. */
 static int g_applied_window_mode = MIKUPAN_WINDOW_WINDOWED;
 static int g_saved_win_w = 0, g_saved_win_h = 0, g_saved_win_x = 0, g_saved_win_y = 0;
 
@@ -549,8 +518,6 @@ static void MikuPan_ApplyWindowMode(int mode)
         }
         case MIKUPAN_WINDOW_BORDERLESS:
         {
-            /* Plain borderless window covering the display — never SDL
-             * fullscreen, so it behaves like any other window for alt-tab. */
             SDL_SetWindowFullscreen(win, false);
             SDL_SetWindowBordered(win, false);
 
@@ -559,11 +526,6 @@ static void MikuPan_ApplyWindowMode(int mode)
             if (SDL_GetDisplayBounds(disp, &bounds))
             {
                 SDL_SetWindowPosition(win, bounds.x, bounds.y);
-                /* +1px height: an exact-screen-size borderless window at (0,0)
-                 * makes Windows promote it to exclusive "fullscreen
-                 * optimizations" (taskbar hidden, slow alt-tab). The extra row
-                 * sits just below the screen edge and is invisible, but keeps
-                 * this a true composited windowed surface with instant alt-tab. */
                 SDL_SetWindowSize(win, bounds.w, bounds.h + 1);
             }
             break;

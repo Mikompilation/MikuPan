@@ -1696,12 +1696,12 @@ void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
     window_mode = mikupan_configuration.renderer.window_mode;
     show_fps = mikupan_configuration.show_fps;
 
-    /* Migrate legacy is_fullscreen-only configs to the windowed/fullscreen mode. */
     if (window_mode == MIKUPAN_WINDOW_WINDOWED &&
         mikupan_configuration.renderer.is_fullscreen)
     {
         window_mode = MIKUPAN_WINDOW_FULLSCREEN;
     }
+
     if (window_mode < MIKUPAN_WINDOW_WINDOWED || window_mode > MIKUPAN_WINDOW_BORDERLESS)
     {
         window_mode = MIKUPAN_WINDOW_WINDOWED;
@@ -1786,8 +1786,6 @@ static void MikuPan_UiShadowDebugWindow(void)
         MikuPan_SetShadowReceiverDebugViewEnabled(receiver_debug_view);
     }
 
-    /* Caster-model inspector: orbit the shadow projector around the caster so
-     * its silhouette can be viewed from any angle in the preview below. */
     int inspect = MikuPan_IsShadowInspectEnabled();
     if (igCheckbox("Inspect Caster (orbit camera)", (bool *) &inspect))
     {
@@ -2174,7 +2172,6 @@ void MikuPan_UiMenuBar(void)
         return;
     }
 
-    /* ---------------------------------------------------------------- Display */
     if (igBeginMenu("Display", 1))
     {
         const char *window_modes[] =
@@ -2293,7 +2290,6 @@ void MikuPan_UiMenuBar(void)
         igEndMenu();
     }
 
-    /* -------------------------------------------------------------- Rendering */
     if (igBeginMenu("Rendering", 1))
     {
         /* Scene visualization overlays */
@@ -2367,7 +2363,6 @@ void MikuPan_UiMenuBar(void)
         igEndMenu();
     }
 
-    /* -------------------------------------------------------------------- CRT */
     if (igBeginMenu("CRT", 1))
     {
         igCheckbox("Enabled", (bool *) &crt_settings.enabled);
@@ -2427,7 +2422,6 @@ void MikuPan_UiMenuBar(void)
         igEndMenu();
     }
 
-    /* ----------------------------------------------------------------- Camera */
     if (igBeginMenu("Camera", 1))
     {
         igCheckbox("Third-Person Camera", (bool *) &camera_third_person_enabled);
@@ -2452,8 +2446,7 @@ void MikuPan_UiMenuBar(void)
         igEndMenu();
     }
 
-    /* ------------------------------------------------------------ Performance */
-    if (igBeginMenu("Performance", 1))
+    if (igBeginMenu("Profiler", 1))
     {
         if (igCheckbox("FPS Counter", (bool *) &show_fps))
         {
@@ -2464,7 +2457,6 @@ void MikuPan_UiMenuBar(void)
         igEndMenu();
     }
 
-    /* ------------------------------------------------------------------ Input */
     if (igBeginMenu("Input", 1))
     {
         MikuPan_ControllerDrawDeviceSelectorUi();
@@ -2480,7 +2472,6 @@ void MikuPan_UiMenuBar(void)
         igEndMenu();
     }
 
-    /* ------------------------------------------------------------------ Debug */
     if (igBeginMenu("Debug", 1))
     {
         igCheckbox("Ingame Debug Menu", (bool *) &dbg_wrk.mode_on);
@@ -2494,7 +2485,6 @@ void MikuPan_UiMenuBar(void)
         igEndMenu();
     }
 
-    /* ----------------------------------------------------------------- Cheats */
     if (igBeginMenu("Cheats", 1))
     {
         igCheckbox("Tofu Mode", (bool *) &cheat_tofu_mode);
@@ -2503,7 +2493,6 @@ void MikuPan_UiMenuBar(void)
         igEndMenu();
     }
 
-    /* ------------------------------------------------------------------- Info */
     if (igBeginMenu("Info", 1))
     {
         igText("MikuPan");
