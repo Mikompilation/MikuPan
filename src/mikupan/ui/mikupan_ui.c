@@ -20,6 +20,8 @@
 
 #include "mikupan/mikupan_config.h"
 
+#include "mikupan_version.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -373,6 +375,7 @@ static void MikuPan_UiStoreRuntimeConfiguration(void)
         &mikupan_configuration.third_person_camera);
     mikupan_configuration.input.selected_gamepad_index =
         MikuPan_ControllerGetPreferredGamepadIndex();
+    MikuPan_ControllerStoreBindingsToConfig();
 }
 
 // -- FrameTimeGraph ----------------------------------------------------------
@@ -1720,6 +1723,7 @@ void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
         mikupan_configuration.input.selected_gamepad_index);
     mikupan_configuration.input.selected_gamepad_index =
         MikuPan_ControllerGetPreferredGamepadIndex();
+    MikuPan_ControllerLoadBindingsFromConfig();
 
     if (mesh_lighting_mode > 1 || mesh_lighting_mode < 0)
     {
@@ -2489,6 +2493,29 @@ void MikuPan_UiMenuBar(void)
     {
         igCheckbox("Tofu Mode", (bool *) &cheat_tofu_mode);
         igColorEdit3("Tofu Color", cheat_tofu_color, 0);
+
+        igEndMenu();
+    }
+
+    /* ------------------------------------------------------------------- Info */
+    if (igBeginMenu("Info", 1))
+    {
+        igText("MikuPan");
+        igSeparator();
+        igText("Tag:      %s", MIKUPAN_GIT_TAG);
+        igText("Commit:   %s", MIKUPAN_GIT_COMMIT);
+        igText("Version:  %s", MIKUPAN_GIT_DESCRIBE);
+        igText("Branch:   %s", MIKUPAN_GIT_BRANCH);
+        igText("Built:    %s", MIKUPAN_BUILD_DATE);
+
+        igSeparator();
+        char version_line[256];
+        snprintf(version_line, sizeof(version_line), "%s (%s)",
+                 MIKUPAN_GIT_DESCRIBE, MIKUPAN_GIT_COMMIT);
+        if (igButton("Copy version to clipboard", (ImVec2) {0.0f, 0.0f}))
+        {
+            igSetClipboardText(version_line);
+        }
 
         igEndMenu();
     }

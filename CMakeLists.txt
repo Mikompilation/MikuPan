@@ -275,7 +275,34 @@ set(MIKUPAN_SOURCES
         src/mikupan/mikupan_rng.h
 )
 
+# --- Build version info (git tag + commit) -------------------------------------
+set(MIKUPAN_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated)
+set(MIKUPAN_VERSION_HEADER ${MIKUPAN_GENERATED_DIR}/mikupan_version.h)
+file(MAKE_DIRECTORY ${MIKUPAN_GENERATED_DIR})
+
+# Generate once at configure time so the header always exists for compilation.
+execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        -DSRC=${CMAKE_CURRENT_SOURCE_DIR}/cmake/mikupan_version.h.in
+        -DDST=${MIKUPAN_VERSION_HEADER}
+        -DGIT_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateVersion.cmake
+)
+
+# Regenerate before every build so it reflects the actual built commit even when
+# CMake isn't re-run. configure_file inside the script no-ops if nothing changed.
+add_custom_target(mikupan_version
+        COMMAND ${CMAKE_COMMAND}
+        -DSRC=${CMAKE_CURRENT_SOURCE_DIR}/cmake/mikupan_version.h.in
+        -DDST=${MIKUPAN_VERSION_HEADER}
+        -DGIT_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateVersion.cmake
+        BYPRODUCTS ${MIKUPAN_VERSION_HEADER}
+        COMMENT "Updating MikuPan build version info"
+)
+
 add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
+add_dependencies(MikuPan mikupan_version)
 if(TARGET ffmpeg_build)
     add_dependencies(MikuPan ffmpeg_build)
 endif()
@@ -285,6 +312,7 @@ target_include_directories(MikuPan PRIVATE
         "src"
         "extern/"
         "extern/glad/include/"
+        ${MIKUPAN_GENERATED_DIR}
         ${SDL3_INCLUDE_DIR}
         "${FFMPEG_ROOT}/include"
 )

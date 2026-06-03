@@ -1,0 +1,11 @@
+#ifndef MIKUPAN_VERSION_H
+#define MIKUPAN_VERSION_H
+
+/* Generated at build time by cmake/GenerateVersion.cmake — do not edit. */
+#define MIKUPAN_GIT_TAG      "@MIKUPAN_GIT_TAG@"
+#define MIKUPAN_GIT_COMMIT   "@MIKUPAN_GIT_COMMIT@"
+#define MIKUPAN_GIT_DESCRIBE "@MIKUPAN_GIT_DESCRIBE@"
+#define MIKUPAN_GIT_BRANCH   "@MIKUPAN_GIT_BRANCH@"
+#define MIKUPAN_BUILD_DATE   "@MIKUPAN_BUILD_DATE@"
+
+#endif /* MIKUPAN_VERSION_H */

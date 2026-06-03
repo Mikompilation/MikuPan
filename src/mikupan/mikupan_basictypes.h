@@ -116,6 +116,19 @@ typedef struct
 typedef struct
 {
     int selected_gamepad_index;
+
+    /* Saved controller / keyboard bindings. Sizes mirror
+     * MIKUPAN_CONTROLLER_LOGICAL_COUNT (16) and MIKUPAN_STICK_COUNT (4) from
+     * mikupan_controller.h. bindings_saved is 0 until the user saves, so a
+     * fresh config keeps the runtime defaults instead of these zeroed arrays. */
+    int bindings_saved;
+    int controller_kind[16];
+    int controller_code[16];
+    int keyboard_scancode[16];
+    int stick_axis[4];
+    int stick_invert[4];
+    int stick_kb_neg[4];
+    int stick_kb_pos[4];
 } MikuPan_ConfigInput;
 
 typedef struct

@@ -1,5 +1,6 @@
 #include "mikupan_controller.h"
 #include "SDL3/SDL_scancode.h"
+#include "mikupan_config.h"
 #include "mikupan_logging_c.h"
 #include "mikupan_utils.h"
 #include <SDL3/SDL_keyboard.h>
@@ -348,6 +349,53 @@ void MikuPan_ControllerResetBindings(void)
     {
         mikupan_stick_controller_map[i] = mikupan_stick_controller_map_defaults[i];
         mikupan_stick_keyboard_map[i] = mikupan_stick_keyboard_map_defaults[i];
+    }
+}
+
+void MikuPan_ControllerStoreBindingsToConfig(void)
+{
+    MikuPan_ConfigInput *cfg = &mikupan_configuration.input;
+
+    for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+    {
+        cfg->controller_kind[i]   = mikupan_controller_map[i].kind;
+        cfg->controller_code[i]   = mikupan_controller_map[i].code;
+        cfg->keyboard_scancode[i] = mikupan_keyboard_map[i];
+    }
+    for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+    {
+        cfg->stick_axis[i]   = mikupan_stick_controller_map[i].axis;
+        cfg->stick_invert[i] = mikupan_stick_controller_map[i].invert;
+        cfg->stick_kb_neg[i] = mikupan_stick_keyboard_map[i].neg_scancode;
+        cfg->stick_kb_pos[i] = mikupan_stick_keyboard_map[i].pos_scancode;
+    }
+
+    cfg->bindings_saved = 1;
+}
+
+void MikuPan_ControllerLoadBindingsFromConfig(void)
+{
+    const MikuPan_ConfigInput *cfg = &mikupan_configuration.input;
+
+    /* Only apply when the config actually holds saved bindings; otherwise keep
+     * the runtime defaults set up at init. */
+    if (!cfg->bindings_saved)
+    {
+        return;
+    }
+
+    for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+    {
+        mikupan_controller_map[i].kind = cfg->controller_kind[i];
+        mikupan_controller_map[i].code = cfg->controller_code[i];
+        mikupan_keyboard_map[i]        = cfg->keyboard_scancode[i];
+    }
+    for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+    {
+        mikupan_stick_controller_map[i].axis         = cfg->stick_axis[i];
+        mikupan_stick_controller_map[i].invert       = cfg->stick_invert[i];
+        mikupan_stick_keyboard_map[i].neg_scancode   = cfg->stick_kb_neg[i];
+        mikupan_stick_keyboard_map[i].pos_scancode   = cfg->stick_kb_pos[i];
     }
 }
 

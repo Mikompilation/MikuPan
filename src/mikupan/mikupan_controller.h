@@ -52,6 +52,12 @@ extern MikuPan_StickKeyboardBinding mikupan_stick_keyboard_map[MIKUPAN_STICK_COU
 int MikuPan_OpenController();
 int MikuPan_ReadController(unsigned char* rdata);
 void MikuPan_ControllerResetBindings(void);
+/// Copy the live controller/keyboard bindings into mikupan_configuration.input
+/// (and mark them saved) so MikuPan_SaveConfiguration persists them.
+void MikuPan_ControllerStoreBindingsToConfig(void);
+/// Apply saved bindings from mikupan_configuration.input over the runtime maps
+/// (no-op if the config has no saved bindings). Call after loading the config.
+void MikuPan_ControllerLoadBindingsFromConfig(void);
 const char *MikuPan_ControllerBindingLabel(MikuPan_ControllerBindings binding);
 const char *MikuPan_ControllerScanCodeLabel(int scancode);
 const char *MikuPan_ControllerStickAxisLabel(int sdl_axis);

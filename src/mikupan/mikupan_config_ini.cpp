@@ -134,6 +134,30 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.third_person_camera.fov_deg);
     ApplyValue(ini, "input", "selected_gamepad_index",
                mikupan_configuration.input.selected_gamepad_index);
+    ApplyValue(ini, "input", "bindings_saved",
+               mikupan_configuration.input.bindings_saved);
+    for (int i = 0; i < 16; i++)
+    {
+        const std::string base = "btn" + std::to_string(i) + "_";
+        ApplyValue(ini, "input", (base + "kind").c_str(),
+                   mikupan_configuration.input.controller_kind[i]);
+        ApplyValue(ini, "input", (base + "code").c_str(),
+                   mikupan_configuration.input.controller_code[i]);
+        ApplyValue(ini, "input", (base + "kb").c_str(),
+                   mikupan_configuration.input.keyboard_scancode[i]);
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        const std::string base = "stick" + std::to_string(i) + "_";
+        ApplyValue(ini, "input", (base + "axis").c_str(),
+                   mikupan_configuration.input.stick_axis[i]);
+        ApplyValue(ini, "input", (base + "invert").c_str(),
+                   mikupan_configuration.input.stick_invert[i]);
+        ApplyValue(ini, "input", (base + "kbneg").c_str(),
+                   mikupan_configuration.input.stick_kb_neg[i]);
+        ApplyValue(ini, "input", (base + "kbpos").c_str(),
+                   mikupan_configuration.input.stick_kb_pos[i]);
+    }
 
     info_log("Loaded configuration from %s", path.generic_string().c_str());
     return true;
@@ -211,6 +235,33 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
              mikupan_configuration.third_person_camera.fov_deg);
     SetValue(ini, "input", "selected_gamepad_index",
              mikupan_configuration.input.selected_gamepad_index);
+    SetValue(ini, "input", "bindings_saved",
+             mikupan_configuration.input.bindings_saved);
+    if (mikupan_configuration.input.bindings_saved)
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            const std::string base = "btn" + std::to_string(i) + "_";
+            SetValue(ini, "input", (base + "kind").c_str(),
+                     mikupan_configuration.input.controller_kind[i]);
+            SetValue(ini, "input", (base + "code").c_str(),
+                     mikupan_configuration.input.controller_code[i]);
+            SetValue(ini, "input", (base + "kb").c_str(),
+                     mikupan_configuration.input.keyboard_scancode[i]);
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            const std::string base = "stick" + std::to_string(i) + "_";
+            SetValue(ini, "input", (base + "axis").c_str(),
+                     mikupan_configuration.input.stick_axis[i]);
+            SetValue(ini, "input", (base + "invert").c_str(),
+                     mikupan_configuration.input.stick_invert[i]);
+            SetValue(ini, "input", (base + "kbneg").c_str(),
+                     mikupan_configuration.input.stick_kb_neg[i]);
+            SetValue(ini, "input", (base + "kbpos").c_str(),
+                     mikupan_configuration.input.stick_kb_pos[i]);
+        }
+    }
 
     ini.generate(stream);
     if (!stream.good())
