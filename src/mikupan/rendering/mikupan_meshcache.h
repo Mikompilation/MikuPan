@@ -7,8 +7,19 @@
 extern "C" {
 #endif
 
+/// Render-pass namespace for the cache key. The same pPUHead is drawn in
+/// multiple passes with different pipelines / topology (lit color pass, shadow
+/// caster silhouette pass, shadow receiver pass), so each pass keeps its own
+/// cache entry — they must not share GPU buffers.
+enum MikuPan_MeshCacheKind
+{
+    MIKUPAN_MESHCACHE_KIND_MAIN     = 0, ///< Lit / color main scene pass
+    MIKUPAN_MESHCACHE_KIND_CASTER   = 1, ///< Shadow caster silhouette pass
+    MIKUPAN_MESHCACHE_KIND_RECEIVER = 2, ///< Shadow receiver projection pass
+};
+
 /// Per-mesh GPU buffer cache keyed by the SGD procedure-unit header pointer
-/// (pPUHead). The pointer is stable for the lifetime of a loaded SGD, so once
+/// (pPUHead) plus the render-pass kind. The pointer is stable for the lifetime of a loaded SGD, so once
 /// a static mesh (furniture, room geometry) has had its vertex / UV / color /
 /// index streams uploaded, every subsequent draw can reuse the same VBOs.
 ///
@@ -19,6 +30,7 @@ extern "C" {
 typedef struct MikuPan_MeshCacheEntry
 {
     void *pPUHead;     ///< Hash key — the SGD procedure-unit header pointer
+    int   kind;        ///< Hash key — render-pass namespace (MikuPan_MeshCacheKind)
     void *sgd_top;     ///< Owning SGD top, used for region-level invalidation
     int   pipeline_type;
     int   index_count;
@@ -32,8 +44,9 @@ typedef struct MikuPan_MeshCacheEntry
 void MikuPan_MeshCache_Init(void);
 void MikuPan_MeshCache_Shutdown(void);
 
-/// Returns the cached entry for `pPUHead`, or NULL on miss. Does not allocate.
-MikuPan_MeshCacheEntry *MikuPan_MeshCache_Lookup(void *pPUHead);
+/// Returns the cached entry for (`pPUHead`, `kind`), or NULL on miss. Does not
+/// allocate. `kind` is a MikuPan_MeshCacheKind value.
+MikuPan_MeshCacheEntry *MikuPan_MeshCache_Lookup(void *pPUHead, int kind);
 
 /// Creates a fresh cache entry: a VAO with the named pipeline's attribute
 /// layout, one VBO per pipeline buffer (up to 4), and an IBO. The returned
@@ -41,7 +54,7 @@ MikuPan_MeshCacheEntry *MikuPan_MeshCache_Lookup(void *pPUHead);
 /// and IBO with glBufferData(GL_STATIC_DRAW) (helpers below) and then set
 /// `index_count` before drawing.
 MikuPan_MeshCacheEntry *MikuPan_MeshCache_Insert(
-    void *pPUHead, void *sgd_top, int pipeline_type);
+    void *pPUHead, void *sgd_top, int pipeline_type, int kind);
 
 /// One-shot static upload into one of the entry's VBOs. Allocates+copies.
 void MikuPan_MeshCache_UploadVbo(MikuPan_MeshCacheEntry *entry,

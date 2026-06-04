@@ -66,11 +66,22 @@ static void MikuPan_SetMeshRenderStateForCurrentPass(void)
     }
 }
 
+/// Which cache namespace the current pass writes to. The same pPUHead is drawn
+/// in the lit pass, the shadow caster pass and the shadow receiver pass with
+/// different pipelines, so each pass keeps a separate cache entry.
+static int MikuPan_CurrentPassCacheKind(void)
+{
+    if (MikuPan_IsShadowReceiverPassActive()) return MIKUPAN_MESHCACHE_KIND_RECEIVER;
+    if (MikuPan_IsShadowPassActive())         return MIKUPAN_MESHCACHE_KIND_CASTER;
+    return MIKUPAN_MESHCACHE_KIND_MAIN;
+}
+
+/// The mesh cache now keys on the render pass too (see MikuPan_CurrentPassCacheKind),
+/// so the shadow caster / receiver passes get their own cached buffers instead of
+/// re-uploading all of their geometry every frame.
 static int MikuPan_CanUseMeshCacheForCurrentPass(void)
 {
-    return MikuPan_MeshCache_IsEnabled() &&
-           !MikuPan_IsShadowPassActive() &&
-           !MikuPan_IsShadowReceiverPassActive();
+    return MikuPan_MeshCache_IsEnabled();
 }
 
 static int MikuPan_BuildPresetColorStream(SGDPROCUNITHEADER *pPUHead,
@@ -180,19 +191,26 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
     /// Static furniture / map geometry: positions, UVs, normals, and indices
     /// can be cached, but preset vertex colours are rewritten by lighting/BW
     /// paths. Refresh only that colour VBO on cache hits.
-    const int cache_on = MikuPan_CanUseMeshCacheForCurrentPass();
+    const int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
+    const int cache_kind = MikuPan_CurrentPassCacheKind();
     MikuPan_MeshCacheEntry *cache_entry = NULL;
 
     if (cache_on)
     {
-        cache_entry = MikuPan_MeshCache_Lookup(pPUHead);
+        cache_entry = MikuPan_MeshCache_Lookup(pPUHead, cache_kind);
         if (cache_entry != NULL && cache_entry->sgd_top == sgd_top_addr)
         {
-            int color_count = MikuPan_BuildPresetColorStream(pPUHead, pProcData,
-                                                             pipeline, color_buf_idx);
-            MikuPan_MeshCache_StreamVbo(cache_entry, color_buf_idx,
-                                        (long)(color_count * color_stride),
-                                        g_mesh_buffers_0x32.colors);
+            /// Preset vertex colours are only consumed by the lit main pass;
+            /// the shadow caster / receiver shaders ignore them, so skip the
+            /// per-frame colour rebuild + stream there.
+            if (cache_kind == MIKUPAN_MESHCACHE_KIND_MAIN)
+            {
+                int color_count = MikuPan_BuildPresetColorStream(pPUHead, pProcData,
+                                                                 pipeline, color_buf_idx);
+                MikuPan_MeshCache_StreamVbo(cache_entry, color_buf_idx,
+                                            (long)(color_count * color_stride),
+                                            g_mesh_buffers_0x32.colors);
+            }
 
             _t = MikuPan_PerfBegin();
             MikuPan_BindVAO(cache_entry->vao);
@@ -218,7 +236,7 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
         /// Miss — allocate a per-mesh entry now and target its static buffers
         /// instead of the shared streaming buffers during the upload phase.
         MikuPan_PerfMeshCacheMissNew();
-        cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, desired_pipeline);
+        cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, desired_pipeline, cache_kind);
     }
     else
     {
@@ -513,6 +531,44 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
         return;
     }
 
+    /// Per-draw state (shader + render state) is outside the geometry cache and
+    /// must run on every draw — set it before the cache fast path.
+    MikuPan_FlushTexturedSpriteBatch();
+    MikuPan_SetCurrentShaderProgram(SHADOW_SILHOUETTE_SHADER);
+    MikuPan_SetMeshRenderStateForCurrentPass();
+
+    /// ── Cache fast path ──
+    /// 0x80 casters are static map geometry (fences, stairs); their positions
+    /// (avt2) and strip topology never change for the life of the loaded SGD.
+    /// Cache the position VBO + IBO + VAO once, then steady-state draws collapse
+    /// to bind + glDrawElements — no index rebuild, no per-frame GPU upload.
+    const int cache_on = MikuPan_CanUseMeshCacheForCurrentPass();
+    MikuPan_MeshCacheEntry *cache_entry = NULL;
+
+    if (cache_on)
+    {
+        cache_entry = MikuPan_MeshCache_Lookup(pPUHead, MIKUPAN_MESHCACHE_KIND_CASTER);
+        if (cache_entry != NULL && cache_entry->sgd_top == sgd_top_addr)
+        {
+            MikuPan_BindVAO(cache_entry->vao);
+            MikuPan_ShadowDebugRecordCasterDraw(mesh_type, cache_entry->index_count);
+            MikuPan_PerfDrawCall();
+            MikuPan_TimedDrawElements(GL_TRIANGLE_STRIP,
+                                      cache_entry->index_count, GL_UNSIGNED_INT, (void *) 0);
+            MikuPan_PerfMeshCacheHit();
+            return;
+        }
+
+        MikuPan_PerfMeshCacheMissNew();
+        cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr,
+                                               POSITION3_NORMAL3_UV2,
+                                               MIKUPAN_MESHCACHE_KIND_CASTER);
+    }
+    else
+    {
+        MikuPan_BindVAO(pipeline->vao);
+    }
+
     int vertex_offset = 0;
     int index_write_offset = 0;
     for (int i = 0; i < num_mesh; i++)
@@ -545,16 +601,24 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
         return;
     }
 
-    MikuPan_FlushTexturedSpriteBatch();
-    MikuPan_SetCurrentShaderProgram(SHADOW_SILHOUETTE_SHADER);
-    MikuPan_SetMeshRenderStateForCurrentPass();
-    MikuPan_BindVAO(pipeline->vao);
-
-    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
-        (GLsizeiptr) ((long) vnum * pos_stride), pVUVNData->avt2);
-    MikuPan_StreamUploadFull(GL_ELEMENT_ARRAY_BUFFER, pipeline->ibo,
-        (GLsizeiptr) ((long) index_write_offset * (int) sizeof(unsigned int)),
-        g_mesh_buffers_0x82.indices);
+    if (cache_on)
+    {
+        MikuPan_MeshCache_UploadVbo(cache_entry, 0,
+            (long) ((long) vnum * pos_stride), pVUVNData->avt2);
+        MikuPan_MeshCache_UploadIbo(cache_entry,
+            (long) ((long) index_write_offset * (int) sizeof(unsigned int)),
+            g_mesh_buffers_0x82.indices);
+        cache_entry->index_count = index_write_offset;
+        MikuPan_BindVAO(cache_entry->vao);
+    }
+    else
+    {
+        MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+            (GLsizeiptr) ((long) vnum * pos_stride), pVUVNData->avt2);
+        MikuPan_StreamUploadFull(GL_ELEMENT_ARRAY_BUFFER, pipeline->ibo,
+            (GLsizeiptr) ((long) index_write_offset * (int) sizeof(unsigned int)),
+            g_mesh_buffers_0x82.indices);
+    }
 
     MikuPan_ShadowDebugRecordCasterDraw(mesh_type, index_write_offset);
 
@@ -604,12 +668,13 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
     MikuPan_PerfEnd(PERF_SECT_STATE_CHANGE, _sc_t0);
 
     /// ── Cache fast path ──
-    const int cache_on = MikuPan_CanUseMeshCacheForCurrentPass();
+    const int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
+    const int cache_kind = MikuPan_CurrentPassCacheKind();
     MikuPan_MeshCacheEntry *cache_entry = NULL;
 
     if (cache_on)
     {
-        cache_entry = MikuPan_MeshCache_Lookup(pPUHead);
+        cache_entry = MikuPan_MeshCache_Lookup(pPUHead, cache_kind);
         if (cache_entry != NULL && cache_entry->sgd_top == sgd_top_addr)
         {
             _t = MikuPan_PerfBegin();
@@ -634,7 +699,7 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
         }
 
         MikuPan_PerfMeshCacheMissNew();
-        cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, POSITION3_NORMAL3_UV2);
+        cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, POSITION3_NORMAL3_UV2, cache_kind);
     }
     else
     {
@@ -783,16 +848,17 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
     /// 0x2/0xA meshes are CPU-skinned: positions+normals change every frame,
     /// but the triangle topology and UVs are immutable. Cache the static
     /// streams (UV VBO + IBO) and the VAO; stream only pos+norm.
-    const int cache_on = MikuPan_CanUseMeshCacheForCurrentPass();
+    const int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
+    const int cache_kind = MikuPan_CurrentPassCacheKind();
     MikuPan_MeshCacheEntry *cache_entry = NULL;
     int need_static_upload = 0;
 
     if (cache_on)
     {
-        cache_entry = MikuPan_MeshCache_Lookup(pPUHead);
+        cache_entry = MikuPan_MeshCache_Lookup(pPUHead, cache_kind);
         if (cache_entry == NULL || cache_entry->sgd_top != sgd_top_addr)
         {
-            cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, POSITION4_NORMAL4_UV2);
+            cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, POSITION4_NORMAL4_UV2, cache_kind);
             need_static_upload = 1;
             MikuPan_PerfMeshCacheMissNew();
         }

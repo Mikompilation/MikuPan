@@ -700,6 +700,12 @@ void DrawShadowModel(void *sgd_top, int pnum)
 
     hs = (HeaderSection *) sgd_top;
 
+    /// Publish the owning SGD for the mesh cache. The shadow caster / receiver
+    /// passes key their cached GPU buffers on (pPUHead, sgd_top); without this
+    /// the global still holds the last main-pass SGD, so every shadow draw would
+    /// see a stale sgd_top, miss, and re-create its VAO/VBOs (GPU memory leak).
+    sgd_top_addr = sgd_top;
+
     lcp = GetCoordP(hs);
     blocksm = hs->blocks;
 
@@ -1142,6 +1148,10 @@ void AssignShadow(void *sgd_top, int except_num)
     {
         return;
     }
+
+    /// Publish the owning SGD so the receiver pass's mesh-cache entries key on
+    /// the correct sgd_top (see the matching note in DrawShadowModel).
+    sgd_top_addr = sgd_top;
 
     ccahe.cache_on = -1;
     lcp = GetCoordP(hs);

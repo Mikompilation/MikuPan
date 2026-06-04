@@ -46,19 +46,19 @@ void MikuPan_MeshCache_Shutdown(void)
     g_initialised = 0;
 }
 
-MikuPan_MeshCacheEntry *MikuPan_MeshCache_Lookup(void *pPUHead)
+MikuPan_MeshCacheEntry *MikuPan_MeshCache_Lookup(void *pPUHead, int kind)
 {
     if (!g_initialised || pPUHead == NULL) return NULL;
     unsigned int h = hash_ptr(pPUHead);
     for (MikuPan_MeshCacheEntry *e = g_buckets[h]; e != NULL; e = e->next)
     {
-        if (e->pPUHead == pPUHead) return e;
+        if (e->pPUHead == pPUHead && e->kind == kind) return e;
     }
     return NULL;
 }
 
 MikuPan_MeshCacheEntry *MikuPan_MeshCache_Insert(
-    void *pPUHead, void *sgd_top, int pipeline_type)
+    void *pPUHead, void *sgd_top, int pipeline_type, int kind)
 {
     if (!g_initialised) MikuPan_MeshCache_Init();
 
@@ -66,9 +66,30 @@ MikuPan_MeshCacheEntry *MikuPan_MeshCache_Insert(
         (enum MikuPan_PipelineType)pipeline_type);
     if (p == NULL) return NULL;
 
+    /// Evict any existing entry for this exact key first. Insert is only reached
+    /// on a miss (no entry, or the entry's sgd_top went stale), so a stale entry
+    /// must be destroyed here — otherwise re-inserting would orphan its VAO/VBOs
+    /// and leak GPU memory every frame the key keeps missing.
+    {
+        unsigned int hk = hash_ptr(pPUHead);
+        MikuPan_MeshCacheEntry **link = &g_buckets[hk];
+        while (*link != NULL)
+        {
+            MikuPan_MeshCacheEntry *cur = *link;
+            if (cur->pPUHead == pPUHead && cur->kind == kind)
+            {
+                *link = cur->next;
+                destroy_entry(cur);
+                break; /* keys are unique, so at most one match */
+            }
+            link = &cur->next;
+        }
+    }
+
     MikuPan_MeshCacheEntry *e = (MikuPan_MeshCacheEntry *)calloc(
         1, sizeof(MikuPan_MeshCacheEntry));
     e->pPUHead       = pPUHead;
+    e->kind          = kind;
     e->sgd_top       = sgd_top;
     e->pipeline_type = pipeline_type;
     e->num_vbos      = (p->num_buffers > 4) ? 4 : (int)p->num_buffers;

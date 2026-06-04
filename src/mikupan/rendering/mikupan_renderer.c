@@ -497,8 +497,6 @@ static void MikuPan_ApplyWindowMode(int mode)
         return;
     }
 
-    /* Remember the windowed size/position before leaving windowed mode so we
-     * can restore it instead of staying screen-sized after borderless/fullscreen. */
     if (g_applied_window_mode == MIKUPAN_WINDOW_WINDOWED &&
         mode != MIKUPAN_WINDOW_WINDOWED)
     {
