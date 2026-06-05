@@ -17,6 +17,7 @@
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph2d/g2d_main.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 
 int dither_alp = 0x40;
 int dither_col = 0x80;
@@ -721,7 +722,9 @@ void gra2dDrawDbgMenu()
         dbg_wrk.mode_on = 2;
     }
 
+    MikuPan_BeginLate2DOverlayQueue();
     gra2dDrawDbgMenuSub(nlp);
+    MikuPan_EndLate2DOverlayQueue();
 
     poss_item[1] = dbg_wrk.param_film14;
     poss_item[2] = dbg_wrk.param_film37;

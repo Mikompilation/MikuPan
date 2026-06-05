@@ -9,6 +9,8 @@
 #include <string.h>
 
 #define TEXTURED_SPRITE_BATCH_MAX 4096
+#define MESSAGE_SPRITE_QUEUE_MAX 32768
+#define LATE_2D_OVERLAY_QUEUE_MAX 8192
 
 typedef struct
 {
@@ -17,8 +19,46 @@ typedef struct
     GLuint texture_id;
 } MikuPan_TexturedSpriteBatch;
 
+typedef struct
+{
+    MikuPan_Rect src;
+    MikuPan_Rect dst;
+    u_char r;
+    u_char g;
+    u_char b;
+    u_char a;
+    MikuPan_TextureInfo *texture_info;
+} MikuPan_QueuedMessageSprite;
+
+typedef enum
+{
+    MIKUPAN_LATE_2D_TEXTURED,
+    MIKUPAN_LATE_2D_UNTEXTURED,
+    MIKUPAN_LATE_2D_MESSAGE,
+} MikuPan_Late2DOverlayKind;
+
+typedef struct
+{
+    MikuPan_Late2DOverlayKind kind;
+    sceGsTex0 tex;
+    union
+    {
+        float textured[4][12];
+        float untextured[4][8];
+        MikuPan_QueuedMessageSprite message;
+    } vertices;
+} MikuPan_Late2DOverlayPrimitive;
+
 static MikuPan_TexturedSpriteBatch g_textured_sprite_batch = {0};
 static float g_textured_sprite_cpu_buf[TEXTURED_SPRITE_BATCH_MAX * 6 * 12];
+static MikuPan_QueuedMessageSprite
+    g_message_sprite_queue[MESSAGE_SPRITE_QUEUE_MAX];
+static int g_message_sprite_queue_count = 0;
+static MikuPan_Late2DOverlayPrimitive
+    g_late_2d_overlay_queue[LATE_2D_OVERLAY_QUEUE_MAX];
+static int g_late_2d_overlay_queue_count = 0;
+static int g_late_2d_overlay_queue_depth = 0;
+static int g_late_2d_overlay_queue_flushing = 0;
 static GLuint g_screen_copy_texture = 0;
 static GLuint g_screen_copy_fbo = 0;
 static int g_screen_copy_w = 0;
@@ -27,6 +67,73 @@ static float g_screen_copy_uv_offset[2] = {0.0f, 0.0f};
 static float g_screen_copy_uv_scale[2] = {1.0f, 1.0f};
 static float g_screen_copy_content_uv_max[2] = {1.0f, 1.0f};
 static MikuPan_ScreenCopyDebugInfo g_screen_copy_debug = {0};
+
+static int MikuPan_IsLate2DOverlayQueueActive(void)
+{
+    return g_late_2d_overlay_queue_depth > 0 &&
+           !g_late_2d_overlay_queue_flushing;
+}
+
+static int MikuPan_QueueLate2DTexturedOverlay(sceGsTex0 *tex,
+                                              const float *buffer)
+{
+    if (tex == NULL || buffer == NULL ||
+        g_late_2d_overlay_queue_count >= LATE_2D_OVERLAY_QUEUE_MAX)
+    {
+        return 0;
+    }
+
+    MikuPan_Late2DOverlayPrimitive *queued =
+        &g_late_2d_overlay_queue[g_late_2d_overlay_queue_count++];
+    queued->kind = MIKUPAN_LATE_2D_TEXTURED;
+    queued->tex = *tex;
+    memcpy(queued->vertices.textured, buffer, sizeof(queued->vertices.textured));
+    return 1;
+}
+
+static int MikuPan_QueueLate2DUntexturedOverlay(const float *buffer)
+{
+    if (buffer == NULL ||
+        g_late_2d_overlay_queue_count >= LATE_2D_OVERLAY_QUEUE_MAX)
+    {
+        return 0;
+    }
+
+    MikuPan_Late2DOverlayPrimitive *queued =
+        &g_late_2d_overlay_queue[g_late_2d_overlay_queue_count++];
+    queued->kind = MIKUPAN_LATE_2D_UNTEXTURED;
+    memcpy(queued->vertices.untextured,
+           buffer,
+           sizeof(queued->vertices.untextured));
+    return 1;
+}
+
+static int MikuPan_QueueLate2DMessageOverlay(MikuPan_Rect src,
+                                             MikuPan_Rect dst,
+                                             u_char r,
+                                             u_char g,
+                                             u_char b,
+                                             u_char a,
+                                             MikuPan_TextureInfo *texture_info)
+{
+    if (texture_info == NULL ||
+        g_late_2d_overlay_queue_count >= LATE_2D_OVERLAY_QUEUE_MAX)
+    {
+        return 0;
+    }
+
+    MikuPan_Late2DOverlayPrimitive *queued =
+        &g_late_2d_overlay_queue[g_late_2d_overlay_queue_count++];
+    queued->kind = MIKUPAN_LATE_2D_MESSAGE;
+    queued->vertices.message.src = src;
+    queued->vertices.message.dst = dst;
+    queued->vertices.message.r = r;
+    queued->vertices.message.g = g;
+    queued->vertices.message.b = b;
+    queued->vertices.message.a = a;
+    queued->vertices.message.texture_info = texture_info;
+    return 1;
+}
 
 static void MikuPan_RenderBlackWhiteScreenCopy(int copy_w, int copy_h)
 {
@@ -67,6 +174,7 @@ void MikuPan_Render2DMessage(DISP_SPRT *sprite)
 {
     MikuPan_Rect dst_rect = {0};
     MikuPan_Rect src_rect = {0};
+    MikuPan_TextureInfo *texture_info = MikuPan_GetCurrentFontTexture();
 
     src_rect.x = (float) sprite->u;
     src_rect.y = (float) sprite->v;
@@ -80,7 +188,109 @@ void MikuPan_Render2DMessage(DISP_SPRT *sprite)
     dst_rect.w = (float) sprite->w;
     dst_rect.h = (float) sprite->h;
 
-    MikuPan_RenderSprite(src_rect, dst_rect, sprite->r, sprite->g, sprite->b, sprite->alpha, MikuPan_GetCurrentFontTexture());
+    if (texture_info == NULL)
+    {
+        return;
+    }
+
+    if (MikuPan_IsLate2DOverlayQueueActive())
+    {
+        if (!MikuPan_QueueLate2DMessageOverlay(
+                src_rect,
+                dst_rect,
+                sprite->r,
+                sprite->g,
+                sprite->b,
+                sprite->alpha,
+                texture_info))
+        {
+            info_log("Late 2D message overlay queue overflow");
+        }
+        return;
+    }
+
+    if (g_message_sprite_queue_count >= MESSAGE_SPRITE_QUEUE_MAX)
+    {
+        info_log("2D message queue overflow; drawing queued text early");
+        MikuPan_Flush2DMessageQueue();
+    }
+
+    if (g_message_sprite_queue_count < MESSAGE_SPRITE_QUEUE_MAX)
+    {
+        MikuPan_QueuedMessageSprite *queued =
+            &g_message_sprite_queue[g_message_sprite_queue_count++];
+        queued->src = src_rect;
+        queued->dst = dst_rect;
+        queued->r = sprite->r;
+        queued->g = sprite->g;
+        queued->b = sprite->b;
+        queued->a = sprite->alpha;
+        queued->texture_info = texture_info;
+    }
+}
+
+void MikuPan_Flush2DMessageQueue(void)
+{
+    for (int i = 0; i < g_message_sprite_queue_count; i++)
+    {
+        const MikuPan_QueuedMessageSprite *queued =
+            &g_message_sprite_queue[i];
+
+        MikuPan_RenderSprite(queued->src, queued->dst,
+                             queued->r, queued->g, queued->b, queued->a,
+                             queued->texture_info);
+    }
+
+    g_message_sprite_queue_count = 0;
+    MikuPan_FlushTexturedSpriteBatch();
+}
+
+void MikuPan_BeginLate2DOverlayQueue(void)
+{
+    g_late_2d_overlay_queue_depth++;
+}
+
+void MikuPan_EndLate2DOverlayQueue(void)
+{
+    if (g_late_2d_overlay_queue_depth > 0)
+    {
+        g_late_2d_overlay_queue_depth--;
+    }
+}
+
+void MikuPan_FlushLate2DOverlayQueue(void)
+{
+    g_late_2d_overlay_queue_flushing = 1;
+
+    for (int i = 0; i < g_late_2d_overlay_queue_count; i++)
+    {
+        MikuPan_Late2DOverlayPrimitive *queued =
+            &g_late_2d_overlay_queue[i];
+
+        if (queued->kind == MIKUPAN_LATE_2D_TEXTURED)
+        {
+            MikuPan_RenderSprite2D(&queued->tex,
+                                   &queued->vertices.textured[0][0]);
+        }
+        else if (queued->kind == MIKUPAN_LATE_2D_MESSAGE)
+        {
+            MikuPan_QueuedMessageSprite *message =
+                &queued->vertices.message;
+
+            MikuPan_RenderSprite(message->src, message->dst,
+                                 message->r, message->g, message->b,
+                                 message->a, message->texture_info);
+        }
+        else
+        {
+            MikuPan_RenderUntexturedSprite(
+                &queued->vertices.untextured[0][0]);
+        }
+    }
+
+    g_late_2d_overlay_queue_count = 0;
+    g_late_2d_overlay_queue_flushing = 0;
+    MikuPan_FlushTexturedSpriteBatch();
 }
 
 void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
@@ -259,6 +469,16 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
 void MikuPan_RenderSprite2D(sceGsTex0 *tex, float *buffer)
 {
     MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
+
+    if (MikuPan_IsLate2DOverlayQueueActive())
+    {
+        if (!MikuPan_QueueLate2DTexturedOverlay(tex, buffer))
+        {
+            info_log("Late 2D textured overlay queue overflow");
+        }
+        return;
+    }
+
     MikuPan_FlushTexturedSpriteBatch();
     MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
@@ -326,6 +546,16 @@ static void MikuPan_NormalizeUntexturedTriangleDepths(float *buffer, int vertex_
 void MikuPan_RenderUntexturedSprite(float *buffer)
 {
     MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
+
+    if (MikuPan_IsLate2DOverlayQueueActive())
+    {
+        if (!MikuPan_QueueLate2DUntexturedOverlay(buffer))
+        {
+            info_log("Late 2D untextured overlay queue overflow");
+        }
+        return;
+    }
+
     MikuPan_FlushTexturedSpriteBatch();
     MikuPan_SetCurrentShaderProgram(UNTEXTURED_COLOURED_SPRITE_SHADER);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(COLOUR4_POSITION4);

@@ -45,6 +45,58 @@ typedef struct
 
 typedef struct
 {
+    int texture_valid;
+    unsigned int texture_id;
+    int texture_width;
+    int texture_height;
+    int texture_update_count;
+    int negative_source_texture_valid;
+    unsigned int negative_source_texture_id;
+    int negative_source_texture_width;
+    int negative_source_texture_height;
+    int negative_source_texture_update_count;
+
+    int queued;
+    int queue_count;
+    int queue_x;
+    int queue_y;
+    int queue_w;
+    int queue_h;
+    int queue_alpha;
+
+    int last_draw_valid;
+    int draw_count;
+    int draw_x;
+    int draw_y;
+    int draw_w;
+    int draw_h;
+    int draw_alpha;
+
+    int effect_overlay_active;
+    int effect_overlay_count;
+    int effect_overlay_drawn_in_game;
+    int effect_overlay_in_game_count;
+    int negative_overlay_active;
+    int negative_overlay_count;
+    int negative_overlay_drawn_in_game;
+    int negative_overlay_in_game_count;
+    int negative_x;
+    int negative_y;
+    int negative_w;
+    int negative_h;
+    float negative_strength;
+    int force_opaque_preview_enabled;
+    int force_negative_preview_enabled;
+    float force_negative_preview_strength;
+    int target_rect_enabled;
+    int target_rect_drawn;
+    int negative_debug_layer_enabled;
+    int negative_debug_layer_drawn;
+    int negative_debug_layer_count;
+} MikuPan_PhotoDebugInfo;
+
+typedef struct
+{
     int enabled;
     int fbo_initialized;
     int fbo_complete;
@@ -101,10 +153,41 @@ void MikuPan_GetFullScreenHalfExtent(float *half_w, float *half_h);
 int MikuPan_GetRenderMode();
 void MikuPan_RenderSetDebugValues();
 void MikuPan_Render2DMessage(DISP_SPRT* sprite);
+void MikuPan_Flush2DMessageQueue(void);
+void MikuPan_BeginLate2DOverlayQueue(void);
+void MikuPan_EndLate2DOverlayQueue(void);
+void MikuPan_FlushLate2DOverlayQueue(void);
 void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r, u_char g, u_char b, u_char a);
 void MikuPan_RenderBoundingBox(sceVu0FVECTOR* vertices);
 void MikuPan_RenderCameraDebug(void);
 void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r, u_char g, u_char b, u_char a, MikuPan_TextureInfo* texture_info);
+void MikuPan_UpdatePhotoPreviewTextureRGBA(int width, int height,
+                                           const unsigned char *rgba);
+void MikuPan_UpdatePhotoNegativeSourceTextureRGBA(int width, int height,
+                                                  const unsigned char *rgba);
+void MikuPan_QueuePhotoPreviewTexture(int x, int y, int w, int h,
+                                      u_char alpha);
+void MikuPan_SetPhotoPreviewOverlayActiveForFrame(int x, int y, int w, int h,
+                                                  u_char alpha);
+void MikuPan_SetPhotoNegativeOverlayActiveForFrame(int x, int y, int w, int h,
+                                                   float strength);
+void MikuPan_ClearPhotoNegativeOverlay(void);
+void MikuPan_RenderPhotoPreviewTexture(int x, int y, int w, int h,
+                                       u_char alpha);
+int MikuPan_RenderPhotoPreviewOverlayForFrame(void);
+int MikuPan_RenderPhotoNegativePreviewOverlayForFrame(void);
+void MikuPan_RenderQueuedPhotoPreviewTexture(void);
+const MikuPan_PhotoDebugInfo *MikuPan_GetPhotoDebugInfo(void);
+void MikuPan_SetPhotoDebugForceOpaquePreviewEnabled(int enabled);
+int MikuPan_IsPhotoDebugForceOpaquePreviewEnabled(void);
+void MikuPan_SetPhotoDebugForceNegativePreviewEnabled(int enabled);
+int MikuPan_IsPhotoDebugForceNegativePreviewEnabled(void);
+void MikuPan_SetPhotoDebugForceNegativePreviewStrength(float strength);
+float MikuPan_GetPhotoDebugForceNegativePreviewStrength(void);
+void MikuPan_SetPhotoDebugTargetRectEnabled(int enabled);
+int MikuPan_IsPhotoDebugTargetRectEnabled(void);
+void MikuPan_SetPhotoDebugNegativeLayerEnabled(int enabled);
+int MikuPan_IsPhotoDebugNegativeLayerEnabled(void);
 void MikuPan_RenderSprite2D(sceGsTex0 *tex, float* buffer);
 void MikuPan_RenderUntexturedSprite(float* buffer);
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer);
@@ -166,14 +249,16 @@ void MikuPan_FlushTexturedSpriteBatch(void);
 
 u_long GSAlphaToOpenGL(int A, int B, int C, int D, int fix);
 
-/// Resolve+downsample the currently-bound DRAW framebuffer (the MSAA scene
-/// buffer when called mid-frame) into an RGBA8 buffer at PS2 native size,
-/// with a top-left origin so the GS-memory side can stuff the bytes
-/// straight into PSMCT32. Returns 1 on success, 0 if the source FBO has no
-/// usable colour attachment. Used by mikupan_gs.cpp's
-/// MikuPan_GsCaptureFramebuffer (the freeze-frame bridge); kept here
-/// because glad and the FBO struct live in this TU.
+/// Resolve+downsample the currently-bound DRAW framebuffer into an RGBA8 buffer
+/// at PS2 native size, with a top-left origin so the GS-memory side can stuff
+/// the bytes straight into PSMCT32. Returns 1 on success, 0 if the source FBO
+/// has no usable colour attachment.
 int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *out_rgba);
+/// Same format as MikuPan_ReadFramebufferRGBA8TopLeft, but reads the latest
+/// resolved scene framebuffer. Use this for GS freeze-frame copies requested
+/// before the current GL frame has been rendered.
+int MikuPan_ReadResolvedFramebufferRGBA8TopLeft(int width, int height,
+                                                unsigned char *out_rgba);
 int MikuPan_IsBlackWhiteModeActive(void);
 
 /// ----- Shadow pass --------------------------------------------------------

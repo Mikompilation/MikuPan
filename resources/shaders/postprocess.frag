@@ -6,6 +6,7 @@ in vec4 uColor;
 out vec4 FragColor;
 
 uniform sampler2D uTexture;
+uniform sampler2D uPhotoNegativeSourceTexture;
 uniform float uBrightness;
 uniform float uGamma;
 uniform int uBlackWhiteMode;
@@ -30,6 +31,11 @@ uniform float uCrtBlendRadius;
 uniform float uCrtNoiseStrength;
 uniform float uCrtFlickerStrength;
 uniform float uCrtGlowStrength;
+uniform int uPhotoNegativeEnabled;
+uniform int uPhotoNegativeSourceEnabled;
+uniform vec4 uPhotoNegativeContentRect;
+uniform vec4 uPhotoNegativeRect;
+uniform float uPhotoNegativeStrength;
 
 const float TAU = 6.28318530718;
 
@@ -159,6 +165,43 @@ void main()
     if (uBlackWhiteMode != 0)
     {
         color = ToBlackWhite(color);
+    }
+
+    if (uPhotoNegativeEnabled != 0)
+    {
+        bool in_content =
+            vUV.x >= uPhotoNegativeContentRect.x &&
+            vUV.y >= uPhotoNegativeContentRect.y &&
+            vUV.x <= uPhotoNegativeContentRect.z &&
+            vUV.y <= uPhotoNegativeContentRect.w;
+        bool in_photo =
+            vUV.x >= uPhotoNegativeRect.x &&
+            vUV.y >= uPhotoNegativeRect.y &&
+            vUV.x <= uPhotoNegativeRect.z &&
+            vUV.y <= uPhotoNegativeRect.w;
+
+        if (in_content && !in_photo)
+        {
+            float strength = clamp(uPhotoNegativeStrength, 0.0, 1.0);
+            vec3 negative_source = color;
+            if (uPhotoNegativeSourceEnabled != 0)
+            {
+                vec2 source_uv =
+                    (vUV - uPhotoNegativeContentRect.xy) /
+                    max(uPhotoNegativeContentRect.zw -
+                        uPhotoNegativeContentRect.xy,
+                        vec2(0.0001));
+                source_uv = clamp(source_uv, vec2(0.0), vec2(1.0));
+                source_uv.y = 1.0f - source_uv.y;
+                negative_source =
+                    texture(uPhotoNegativeSourceTexture, source_uv).rgb *
+                    uColor.rgb;
+            }
+
+            vec3 negative_color =
+                clamp(vec3(96.0 / 255.0) - negative_source, 0.0, 1.0);
+            color = mix(color, negative_color, strength);
+        }
     }
 
     FragColor = vec4(clamp(ToneMap(color), 0.0, 1.0), source.a);

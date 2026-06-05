@@ -2631,7 +2631,7 @@ void SubNega(/* s0 16 */ u_char r, /* s1 17 */ u_char g, /* s3 19 */ u_char b, /
     };
 
     LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x1a40);
-    
+
     {
         float eff_hw, eff_hh;
         MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);

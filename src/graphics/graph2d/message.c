@@ -1562,7 +1562,9 @@ int SetMessageV2_2(DISP_STR *s)
         }
         dq.pri = npri - 16;
         dq.z = 0x1000000f - npri;
+        MikuPan_BeginLate2DOverlayQueue();
         DispSqrD(&dq);
+        MikuPan_EndLate2DOverlayQueue();
     }
 
     s->brnch_num = selnum;
@@ -1895,7 +1897,9 @@ int SetMessageV2(DISP_STR *s)
         }
         dq.pri = npri - 16;
         dq.z = 0x1000000f - npri;
+        MikuPan_BeginLate2DOverlayQueue();
         DispSqrD(&dq);
+        MikuPan_EndLate2DOverlayQueue();
     }
 
     s->brnch_num = selnum;
@@ -2381,7 +2385,9 @@ int SubMessageV3(u_char *s, int pri, int delflg)
         dq.pri = npri - 16;
         dq.z = 0x1000000f - npri;
 
+        MikuPan_BeginLate2DOverlayQueue();
         DispSqrD(&dq);
+        MikuPan_EndLate2DOverlayQueue();
     }
 
     switch (msdat.mes_is_end)
@@ -2585,6 +2591,8 @@ void DrawMessageBox(u_int pri, float x, float y, float sizew, float sizeh, u_cha
 #endif
     alp2 = (alp * 4) / 128.0f;
 
+    MikuPan_BeginLate2DOverlayQueue();
+
     SetSquareSN(
         pri,
         px[4]       - SCR_WIDTH_HALF - msx,
@@ -2634,6 +2642,8 @@ void DrawMessageBox(u_int pri, float x, float y, float sizew, float sizeh, u_cha
         px[4] + ssw - SCR_WIDTH_HALF,
         py[5] + ssh - SCR_HEIGHT,
         0x0b, 0x08, 0x07, alp2);
+
+    MikuPan_EndLate2DOverlayQueue();
 }
 
 int GetStrLength(u_char *str)

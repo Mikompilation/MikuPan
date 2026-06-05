@@ -15,6 +15,8 @@
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sglib.h"
+#include "mikupan/gs/mikupan_texture_manager_c.h"
+#include "mikupan/mikupan_logging_c.h"
 #include "ingame/map/furn_spe/furn_spe.h"
 #include "ingame/menu/ig_album.h"
 #include "ingame/menu/ig_glst.h"
@@ -1685,7 +1687,8 @@ void InitPhotoMake()
     pht_finder_off = 0;
 }
 
-void CopyScreenToBuffer(int addr, int szfl, int mx, int my, int mw, int mh)
+static void CopyScreenSourceToBuffer(int addr, int szfl, int src_addr,
+                                     int mx, int my, int mw, int mh)
 {
     int *data_i;
     short int *data_o;
@@ -1717,8 +1720,29 @@ void CopyScreenToBuffer(int addr, int szfl, int mx, int my, int mw, int mh)
         data_o = (short *) MikuPan_GetHostAddress(addr);
     }
 
-    LocalCopyLtoB2(0, ((sys_wrk.count + 1) & 1)
-                          * 0x8c0);// select field (framebuffer)
+    LocalCopyLtoBD(src_addr, data_i);
+
+    /* [DIAG] The photo is built from this captured buffer. If avg_rgb is ~0 the
+     * framebuffer was black at capture time (the root cause of the black photo);
+     * compare with the "[DIAG] effect fb read" brightness logged elsewhere. */
+    {
+        const unsigned char *dbg_px = (const unsigned char *) data_i;
+        long dbg_sum = 0;
+        int dbg_n = 0;
+        for (int dy = 0; dy < mhh; dy += 8)
+        {
+            for (int dx = 0; dx < mw; dx += 8)
+            {
+                const unsigned char *p =
+                    dbg_px + ((long) ((mx + dx) + (myy + dy) * oneli)) * 4;
+                dbg_sum += p[0] + p[1] + p[2];
+                dbg_n++;
+            }
+        }
+        info_log("[DIAG] photo capture read: avg_rgb=%ld src=0x%x region=%d,%d %dx%d count=%d",
+                 dbg_n ? dbg_sum / ((long) dbg_n * 3) : -1,
+                 src_addr, mx, my, mw, mh, (int) sys_wrk.count);
+    }
 
     // reads a 32-bit pixel and writes a 16-bit pixel for a rectangle (mx,my) of size (mw,mh)
     for (y = 0; y < mhh; y++)
@@ -1739,6 +1763,12 @@ void CopyScreenToBuffer(int addr, int szfl, int mx, int my, int mw, int mh)
             // extracts a rectangular region from a 640-wide framebuffer and converts it from 32-bit color to 16-bit PSMCT16 (A RRRRR GGGGG BBBBB) format, aligned to 64-pixel rows
         }
     }
+}
+
+void CopyScreenToBuffer(int addr, int szfl, int mx, int my, int mw, int mh)
+{
+    CopyScreenSourceToBuffer(addr, szfl, ((sys_wrk.count + 1) & 1) * 0x8c0,
+                             mx, my, mw, mh);
 }
 
 void DrawPhotoBuffer(u_int pri, int addr, int szfl, int x, int y, int szw,
@@ -1838,6 +1868,7 @@ void DrawPhotoBuffer(u_int pri, int addr, int szfl, int x, int y, int szw,
     FlushCache(0);
     sceGsExecLoadImage(&gs_limage, data_i);
     sceGsSyncPath(0, 0);
+    MikuPan_InvalidateTex0Cache();
 
     sd.g_GsTex0.TBP0 = 0x2780;
     sd.g_GsTex0.TBW = dbw;
@@ -1956,15 +1987,320 @@ void TakePhotoFromScreen()
     CopyScreenToBuffer(EVENT_ADDRESS, 1, 128, 80, 384, 256);
 }
 
+static u_short PhotoPackRgb555(int r, int g, int b)
+{
+    return (u_short)(0x8000 | ((b & 0x1f) << 10) |
+                     ((g & 0x1f) << 5) | (r & 0x1f));
+}
+
+enum
+{
+    PHOTO_CAPTURE_SCREEN_W = 640,
+    PHOTO_CAPTURE_SCREEN_H = 224,
+    PHOTO_CAPTURE_X = 128,
+    PHOTO_CAPTURE_Y = 80,
+    PHOTO_CAPTURE_W = 384,
+    PHOTO_CAPTURE_H = 256,
+    PHOTO_CAPTURE_FIELD_H = PHOTO_CAPTURE_H / 2,
+    PHOTO_CAPTURE_PITCH = 384,
+    PHOTO_NEGATIVE_PROTECT_X = 122,
+    PHOTO_NEGATIVE_PROTECT_Y = 74,
+    PHOTO_NEGATIVE_PROTECT_W = 396,
+    PHOTO_NEGATIVE_PROTECT_H = 326,
+};
+
+static u_short g_photo_capture_555[PHOTO_CAPTURE_PITCH * PHOTO_CAPTURE_FIELD_H];
+static unsigned char g_photo_preview_rgba[PHOTO_CAPTURE_W * PHOTO_CAPTURE_H * 4];
+static int g_photo_capture_valid = 0;
+static int g_photo_preview_drawn_this_game_frame = 0;
+
+static void ActivateResolvedPhotoNegative(void);
+
+static int CaptureResolvedPhotoForLater(void)
+{
+    const int myy = PHOTO_CAPTURE_Y / 2;
+    unsigned char *rgba = (unsigned char *)GetEmptyBuffer(0);
+
+    g_photo_capture_valid = 0;
+
+    if (!MikuPan_ReadResolvedFramebufferRGBA8TopLeft(
+            PHOTO_CAPTURE_SCREEN_W,
+            PHOTO_CAPTURE_SCREEN_H,
+            rgba))
+    {
+        return 0;
+    }
+
+    MikuPan_UpdatePhotoNegativeSourceTextureRGBA(
+        PHOTO_CAPTURE_SCREEN_W,
+        PHOTO_CAPTURE_SCREEN_H,
+        rgba);
+
+    {
+        long dbg_sum = 0;
+        int dbg_n = 0;
+        int dbg_min = 255;
+        int dbg_max = 0;
+
+        for (int dy = 0; dy < PHOTO_CAPTURE_FIELD_H; dy += 8)
+        {
+            for (int dx = 0; dx < PHOTO_CAPTURE_W; dx += 8)
+            {
+                const unsigned char *p =
+                    rgba + ((long)((PHOTO_CAPTURE_X + dx) +
+                                   (myy + dy) * PHOTO_CAPTURE_SCREEN_W)) * 4;
+                const int lum = (p[0] + p[1] + p[2]) / 3;
+                dbg_sum += lum;
+                if (lum < dbg_min) dbg_min = lum;
+                if (lum > dbg_max) dbg_max = lum;
+                dbg_n++;
+            }
+        }
+
+        info_log("[DIAG] photo staged read: avg_rgb=%ld min=%d max=%d region=%d,%d %dx%d count=%d",
+                 dbg_n ? dbg_sum / dbg_n : -1,
+                 dbg_n ? dbg_min : -1,
+                 dbg_n ? dbg_max : -1,
+                 PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
+                 PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
+                 (int)sys_wrk.count);
+    }
+
+    for (int y = 0; y < PHOTO_CAPTURE_FIELD_H; y++)
+    {
+        for (int x = 0; x < PHOTO_CAPTURE_W; x++)
+        {
+            const unsigned char *p =
+                rgba + ((long)((PHOTO_CAPTURE_X + x) +
+                               (myy + y) * PHOTO_CAPTURE_SCREEN_W)) * 4;
+            g_photo_capture_555[x + y * PHOTO_CAPTURE_PITCH] =
+                PhotoPackRgb555(p[0] >> 3, p[1] >> 3, p[2] >> 3);
+
+            for (int yy = 0; yy < 2; yy++)
+            {
+                unsigned char *preview =
+                    g_photo_preview_rgba +
+                    ((long)(x + (y * 2 + yy) * PHOTO_CAPTURE_W)) * 4;
+                preview[0] = p[0];
+                preview[1] = p[1];
+                preview[2] = p[2];
+                preview[3] = 0xff;
+            }
+        }
+    }
+
+    g_photo_capture_valid = 1;
+    MikuPan_UpdatePhotoPreviewTextureRGBA(
+        PHOTO_CAPTURE_W,
+        PHOTO_CAPTURE_H,
+        g_photo_preview_rgba);
+    return 1;
+}
+
+void StagePhotoCaptureForSave(void)
+{
+    CaptureResolvedPhotoForLater();
+}
+
+static void TakePhotoFromResolvedScreen(void)
+{
+    if (!g_photo_capture_valid && !CaptureResolvedPhotoForLater())
+    {
+        TakePhotoFromScreen();
+        return;
+    }
+
+    *(int *)MikuPan_GetHostAddress(EVENT_ADDRESS) = 0x18000;
+    memcpy(MikuPan_GetHostAddress(EVENT_ADDRESS) + 16,
+           g_photo_capture_555,
+           sizeof(g_photo_capture_555));
+
+    MikuPan_UpdatePhotoPreviewTextureRGBA(
+        PHOTO_CAPTURE_W,
+        PHOTO_CAPTURE_H,
+        g_photo_preview_rgba);
+}
+
+static void QueueResolvedPhotoPreview(void)
+{
+    if (!g_photo_preview_drawn_this_game_frame)
+    {
+        MikuPan_SetPhotoPreviewOverlayActiveForFrame(
+            PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
+            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
+            0xff);
+        MikuPan_QueuePhotoPreviewTexture(
+            PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
+            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
+            0xff);
+        ActivateResolvedPhotoNegative();
+    }
+}
+
+static void ActivateResolvedPhotoPreview(void)
+{
+    if (g_photo_capture_valid)
+    {
+        MikuPan_SetPhotoPreviewOverlayActiveForFrame(
+            PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
+            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
+            0xff);
+    }
+}
+
+static void ActivateResolvedPhotoNegative(void)
+{
+    if (g_photo_capture_valid)
+    {
+        MikuPan_SetPhotoNegativeOverlayActiveForFrame(
+            PHOTO_NEGATIVE_PROTECT_X, PHOTO_NEGATIVE_PROTECT_Y,
+            PHOTO_NEGATIVE_PROTECT_W, PHOTO_NEGATIVE_PROTECT_H,
+            1.0f);
+    }
+}
+
+static void ActivatePhotoFrameModernOverlays(void)
+{
+    g_photo_preview_drawn_this_game_frame = 0;
+    ActivateResolvedPhotoPreview();
+    ActivateResolvedPhotoNegative();
+}
+
+static void RenderResolvedPhotoPreviewInFrame(void)
+{
+    DrawAll2D();
+
+    if (MikuPan_RenderPhotoPreviewOverlayForFrame())
+    {
+        g_photo_preview_drawn_this_game_frame = 1;
+    }
+}
+
+static void RenderResolvedPhotoNegativeInFrame(void)
+{
+    DrawAll2D();
+    MikuPan_RenderPhotoNegativePreviewOverlayForFrame();
+}
+
+static int UseResolvedPhotoFrameOverlay(void)
+{
+    return g_photo_capture_valid != 0;
+}
+
+static void ActivatePhotoNegativeFromSetNegaFilter(int type, float y12,
+                                                   float y22)
+{
+    float coverage;
+
+    if (type == 3)
+    {
+        MikuPan_SetPhotoNegativeOverlayActiveForFrame(
+            PHOTO_NEGATIVE_PROTECT_X, PHOTO_NEGATIVE_PROTECT_Y,
+            PHOTO_NEGATIVE_PROTECT_W, PHOTO_NEGATIVE_PROTECT_H,
+            1.0f);
+        return;
+    }
+
+    if (type != 1 && type != 2 && type != 4 && type != 5)
+    {
+        MikuPan_ClearPhotoNegativeOverlay();
+        return;
+    }
+
+    if (y12 < 0.0f)
+    {
+        y12 = -y12;
+    }
+
+    if (y22 < 0.0f)
+    {
+        y22 = -y22;
+    }
+
+    coverage = y12 > y22 ? y12 : y22;
+    coverage /= 128.0f;
+
+    if (coverage <= 0.0f)
+    {
+        MikuPan_ClearPhotoNegativeOverlay();
+        return;
+    }
+
+    if (coverage > 1.0f)
+    {
+        coverage = 1.0f;
+    }
+
+    MikuPan_SetPhotoNegativeOverlayActiveForFrame(
+        PHOTO_NEGATIVE_PROTECT_X, PHOTO_NEGATIVE_PROTECT_Y,
+        PHOTO_NEGATIVE_PROTECT_W, PHOTO_NEGATIVE_PROTECT_H,
+        coverage);
+}
+
+static void MakeSmallPhotoFromFullPhotoBuffer(int dst_addr, int src_addr,
+                                              int src_has_size_header)
+{
+    enum
+    {
+        FULL_PHOTO_W = 384,
+        FULL_PHOTO_H = 128,
+        SMALL_PHOTO_W = 64,
+        SMALL_PHOTO_H = 20,
+    };
+
+    const u_short *src =
+        (const u_short *)(MikuPan_GetHostAddress(src_addr) +
+                          (src_has_size_header ? 16 : 0));
+    u_short *dst = (u_short *)MikuPan_GetHostAddress(dst_addr);
+
+    for (int y = 0; y < SMALL_PHOTO_H; y++)
+    {
+        int sy0 = (y * FULL_PHOTO_H) / SMALL_PHOTO_H;
+        int sy1 = ((y + 1) * FULL_PHOTO_H) / SMALL_PHOTO_H;
+        if (sy1 <= sy0) sy1 = sy0 + 1;
+        if (sy1 > FULL_PHOTO_H) sy1 = FULL_PHOTO_H;
+
+        for (int x = 0; x < SMALL_PHOTO_W; x++)
+        {
+            int sx0 = (x * FULL_PHOTO_W) / SMALL_PHOTO_W;
+            int sx1 = ((x + 1) * FULL_PHOTO_W) / SMALL_PHOTO_W;
+            int r_sum = 0;
+            int g_sum = 0;
+            int b_sum = 0;
+            int count = 0;
+
+            if (sx1 <= sx0) sx1 = sx0 + 1;
+            if (sx1 > FULL_PHOTO_W) sx1 = FULL_PHOTO_W;
+
+            for (int sy = sy0; sy < sy1; sy++)
+            {
+                const u_short *row = src + sy * FULL_PHOTO_W;
+
+                for (int sx = sx0; sx < sx1; sx++)
+                {
+                    const u_short p = row[sx];
+                    r_sum += p & 0x1f;
+                    g_sum += (p >> 5) & 0x1f;
+                    b_sum += (p >> 10) & 0x1f;
+                    count++;
+                }
+            }
+
+            if (count <= 0) count = 1;
+
+            dst[x + y * SMALL_PHOTO_W] =
+                PhotoPackRgb555(r_sum / count, g_sum / count, b_sum / count);
+        }
+    }
+}
+
 void MakeSPhotoFromWorkArea(int n)
 {
     int addr;
 
     addr = 0x01a90000 + n * 0xa00;
 
-    DrawPhotoBuffer(0x440, EVENT_ADDRESS, 1, 0, 0, 66, 42, 384, 128, 0, 0x80, 0);
-
-    CopyScreenToBuffer(addr, 0, 1, 1, 64, 40);
+    MakeSmallPhotoFromFullPhotoBuffer(addr, EVENT_ADDRESS, 1);
 }
 
 void MakeSPhotoFromCompress(int ni, int no)
@@ -1975,9 +2311,7 @@ void MakeSPhotoFromCompress(int ni, int no)
 
     UncompressData(0x1aa5400, ni, EVENT_ADDRESS);
 
-    DrawPhotoBuffer(0x440, EVENT_ADDRESS, 1, 0, 0, 64, 40, 384, 128, 0, 0x80, 0);
-
-    CopyScreenToBuffer(addr, 0, 0, 0, 64, 40);
+    MakeSmallPhotoFromFullPhotoBuffer(addr, EVENT_ADDRESS, 1);
 }
 
 void DrawSPhotoFromSmallPhotoArea(int n, int pri, int ftype, int x, int y,
@@ -2931,6 +3265,7 @@ int DispPhotoFrame1(int fl)
 
     ret = alp1 >= 0x80 ? 2 : ret;
 
+    if (!UseResolvedPhotoFrameOverlay())
     {
         {
             DISP_SPRT ds;
@@ -3031,7 +3366,12 @@ int DispPhotoFrame1(int fl)
 
             dq.alpha = 0xc8;
 
-            DispSqrD(&dq);
+            if (!UseResolvedPhotoFrameOverlay())
+            {
+                DispSqrD(&dq);
+            }
+
+            RenderResolvedPhotoPreviewInFrame();
 
             SubFadeFrame(0x60, 0x400);
 
@@ -3119,61 +3459,66 @@ void DispPhotoFrame2()
 
     dq.alpha = 0x80;
 
-    dq.x[0] = 0;
-    dq.x[2] = 0;
+    if (!UseResolvedPhotoFrameOverlay())
+    {
+        dq.x[0] = 0;
+        dq.x[2] = 0;
 
-    dq.y[0] = 0;
-    dq.y[1] = 0;
+        dq.y[0] = 0;
+        dq.y[1] = 0;
 
-    dq.x[1] = 640;
-    dq.x[3] = 640;
+        dq.x[1] = 640;
+        dq.x[3] = 640;
 
-    dq.y[2] = dq.y[0] + y;
-    dq.y[3] = dq.y[0] + y;
+        dq.y[2] = dq.y[0] + y;
+        dq.y[3] = dq.y[0] + y;
 
-    DispSqrD(&dq);
+        DispSqrD(&dq);
 
-    dq.x[0] = 0;
-    dq.x[2] = 0;
+        dq.x[0] = 0;
+        dq.x[2] = 0;
 
-    dq.y[0] = y + 256;
-    dq.y[1] = y + 256;
+        dq.y[0] = y + 256;
+        dq.y[1] = y + 256;
 
-    dq.x[1] = 640;
-    dq.x[3] = 640;
+        dq.x[1] = 640;
+        dq.x[3] = 640;
 
-    dq.y[2] = dq.y[0] + (448 - (y + 256));
-    dq.y[3] = dq.y[0] + (448 - (y + 256));
+        dq.y[2] = dq.y[0] + (448 - (y + 256));
+        dq.y[3] = dq.y[0] + (448 - (y + 256));
 
-    DispSqrD(&dq);
+        DispSqrD(&dq);
 
-    dq.x[0] = 0;
-    dq.x[2] = 0;
+        dq.x[0] = 0;
+        dq.x[2] = 0;
 
-    dq.y[0] = y;
-    dq.y[1] = y;
+        dq.y[0] = y;
+        dq.y[1] = y;
 
-    dq.x[1] = dq.x[0] + x;
-    dq.x[3] = dq.x[0] + x;
+        dq.x[1] = dq.x[0] + x;
+        dq.x[3] = dq.x[0] + x;
 
-    dq.y[2] = dq.y[0] + 256;
-    dq.y[3] = dq.y[0] + 256;
+        dq.y[2] = dq.y[0] + 256;
+        dq.y[3] = dq.y[0] + 256;
 
-    DispSqrD(&dq);
+        DispSqrD(&dq);
 
-    dq.x[0] = x + 384;
-    dq.x[2] = x + 384;
+        dq.x[0] = x + 384;
+        dq.x[2] = x + 384;
 
-    dq.y[0] = y;
-    dq.y[1] = y;
+        dq.y[0] = y;
+        dq.y[1] = y;
 
-    dq.x[1] = dq.x[0] + (640 - (x + 384));
-    dq.x[3] = dq.x[0] + (640 - (x + 384));
+        dq.x[1] = dq.x[0] + (640 - (x + 384));
+        dq.x[3] = dq.x[0] + (640 - (x + 384));
 
-    dq.y[2] = dq.y[0] + 256;
-    dq.y[3] = dq.y[0] + 256;
+        dq.y[2] = dq.y[0] + 256;
+        dq.y[3] = dq.y[0] + 256;
 
-    DispSqrD(&dq);
+        DispSqrD(&dq);
+    }
+
+    RenderResolvedPhotoPreviewInFrame();
 
     SubFadeFrame(0x60, 0x400);
 
@@ -3234,61 +3579,66 @@ void DispPhotoFrame2_2(int type)
 
     dq.alpha = 0x80;
 
-    dq.x[0] = 0;
-    dq.x[2] = 0;
+    if (!UseResolvedPhotoFrameOverlay())
+    {
+        dq.x[0] = 0;
+        dq.x[2] = 0;
 
-    dq.y[0] = 0;
-    dq.y[1] = 0;
+        dq.y[0] = 0;
+        dq.y[1] = 0;
 
-    dq.x[1] = 640;
-    dq.x[3] = 640;
+        dq.x[1] = 640;
+        dq.x[3] = 640;
 
-    dq.y[2] = dq.x[0] + y;
-    dq.y[3] = dq.x[0] + y;
+        dq.y[2] = dq.x[0] + y;
+        dq.y[3] = dq.x[0] + y;
 
-    DispSqrD(&dq);
+        DispSqrD(&dq);
 
-    dq.x[0] = 0;
-    dq.x[2] = 0;
+        dq.x[0] = 0;
+        dq.x[2] = 0;
 
-    dq.y[0] = y + 256;
-    dq.y[1] = y + 256;
+        dq.y[0] = y + 256;
+        dq.y[1] = y + 256;
 
-    dq.x[1] = 640;
-    dq.x[3] = 640;
+        dq.x[1] = 640;
+        dq.x[3] = 640;
 
-    dq.y[2] = dq.y[0] + (448 - (y + 256));
-    dq.y[3] = dq.y[0] + (448 - (y + 256));
+        dq.y[2] = dq.y[0] + (448 - (y + 256));
+        dq.y[3] = dq.y[0] + (448 - (y + 256));
 
-    DispSqrD(&dq);
+        DispSqrD(&dq);
 
-    dq.x[0] = 0;
-    dq.x[2] = 0;
+        dq.x[0] = 0;
+        dq.x[2] = 0;
 
-    dq.y[0] = y;
-    dq.y[1] = y;
+        dq.y[0] = y;
+        dq.y[1] = y;
 
-    dq.x[1] = x + dq.x[0];
-    dq.x[3] = x + dq.x[0];
+        dq.x[1] = x + dq.x[0];
+        dq.x[3] = x + dq.x[0];
 
-    dq.y[2] = dq.y[0] + 256;
-    dq.y[3] = dq.y[0] + 256;
+        dq.y[2] = dq.y[0] + 256;
+        dq.y[3] = dq.y[0] + 256;
 
-    DispSqrD(&dq);
+        DispSqrD(&dq);
 
-    dq.x[0] = x + 384;
-    dq.x[2] = x + 384;
+        dq.x[0] = x + 384;
+        dq.x[2] = x + 384;
 
-    dq.y[0] = y;
-    dq.y[1] = y;
+        dq.y[0] = y;
+        dq.y[1] = y;
 
-    dq.x[1] = dq.x[0] + (640 - (x + 384));
-    dq.x[3] = dq.x[0] + (640 - (x + 384));
+        dq.x[1] = dq.x[0] + (640 - (x + 384));
+        dq.x[3] = dq.x[0] + (640 - (x + 384));
 
-    dq.y[2] = dq.y[0] + 256;
-    dq.y[3] = dq.y[0] + 256;
+        dq.y[2] = dq.y[0] + 256;
+        dq.y[3] = dq.y[0] + 256;
 
-    DispSqrD(&dq);
+        DispSqrD(&dq);
+    }
+
+    RenderResolvedPhotoPreviewInFrame();
 
     SetNegaFilter(type == 0 ? 0 : (type == 1 ? 3 : ers_type));
 
@@ -3325,6 +3675,7 @@ void DispPhotoFrame2_3(int type)
     x = 128.0f;
     y = 80.0f;
 
+    if (!UseResolvedPhotoFrameOverlay())
     {
         {
             DISP_SPRT ds;
@@ -3474,61 +3825,66 @@ void DispPhotoFrame2_3(int type)
 
             dq.alpha = 0x80;
 
-            dq.x[0] = 0;
-            dq.x[2] = 0;
+            if (!UseResolvedPhotoFrameOverlay())
+            {
+                dq.x[0] = 0;
+                dq.x[2] = 0;
 
-            dq.y[0] = 0;
-            dq.y[1] = 0;
+                dq.y[0] = 0;
+                dq.y[1] = 0;
 
-            dq.x[1] = 640;
-            dq.x[3] = 640;
+                dq.x[1] = 640;
+                dq.x[3] = 640;
 
-            dq.y[2] = dq.x[0] + y;
-            dq.y[3] = dq.x[0] + y;
+                dq.y[2] = dq.x[0] + y;
+                dq.y[3] = dq.x[0] + y;
 
-            DispSqrD(&dq);
+                DispSqrD(&dq);
 
-            dq.x[0] = 0;
-            dq.x[2] = 0;
+                dq.x[0] = 0;
+                dq.x[2] = 0;
 
-            dq.y[0] = y + 256;
-            dq.y[1] = y + 256;
+                dq.y[0] = y + 256;
+                dq.y[1] = y + 256;
 
-            dq.x[1] = 640;
-            dq.x[3] = 640;
+                dq.x[1] = 640;
+                dq.x[3] = 640;
 
-            dq.y[2] = dq.y[0] + (448 - (y + 256));
-            dq.y[3] = dq.y[0] + (448 - (y + 256));
+                dq.y[2] = dq.y[0] + (448 - (y + 256));
+                dq.y[3] = dq.y[0] + (448 - (y + 256));
 
-            DispSqrD(&dq);
+                DispSqrD(&dq);
 
-            dq.x[0] = 0;
-            dq.x[2] = 0;
+                dq.x[0] = 0;
+                dq.x[2] = 0;
 
-            dq.y[0] = y;
-            dq.y[1] = y;
+                dq.y[0] = y;
+                dq.y[1] = y;
 
-            dq.x[1] = x + dq.x[0];
-            dq.x[3] = x + dq.x[0];
+                dq.x[1] = x + dq.x[0];
+                dq.x[3] = x + dq.x[0];
 
-            dq.y[2] = dq.y[0] + 256;
-            dq.y[3] = dq.y[0] + 256;
+                dq.y[2] = dq.y[0] + 256;
+                dq.y[3] = dq.y[0] + 256;
 
-            DispSqrD(&dq);
+                DispSqrD(&dq);
 
-            dq.x[0] = x + 384;
-            dq.x[2] = x + 384;
+                dq.x[0] = x + 384;
+                dq.x[2] = x + 384;
 
-            dq.y[0] = y;
-            dq.y[1] = y;
+                dq.y[0] = y;
+                dq.y[1] = y;
 
-            dq.x[1] = dq.x[0] + (640 - (x + 384));
-            dq.x[3] = dq.x[0] + (640 - (x + 384));
+                dq.x[1] = dq.x[0] + (640 - (x + 384));
+                dq.x[3] = dq.x[0] + (640 - (x + 384));
 
-            dq.y[2] = dq.y[0] + 256;
-            dq.y[3] = dq.y[0] + 256;
+                dq.y[2] = dq.y[0] + 256;
+                dq.y[3] = dq.y[0] + 256;
 
-            DispSqrD(&dq);
+                DispSqrD(&dq);
+            }
+
+            RenderResolvedPhotoPreviewInFrame();
 
             SetNegaFilter(type == 0 ? 0 : (type == 1 ? 3 : ers_type));
 
@@ -3565,10 +3921,10 @@ void SetNegaFilter(int type)
     float CHANGE_TIME;
     float x;
     float y;
-    float y11;
-    float y12;
-    float y21;
-    float y22;
+    float y11 = 0.0f;
+    float y12 = 0.0f;
+    float y21 = 0.0f;
+    float y22 = 0.0f;
     float f;
     int endf;
 
@@ -3666,6 +4022,13 @@ void SetNegaFilter(int type)
     if (CHANGE_TIME)
     {
     }// HACK: fixes codegen
+
+    ActivatePhotoNegativeFromSetNegaFilter(type, y12, y22);
+
+    if (UseResolvedPhotoFrameOverlay())
+    {
+        return;
+    }
 
     switch (type)
     {
@@ -3802,6 +4165,8 @@ void SetNegaFilter(int type)
         }
         break;
     }
+
+    RenderResolvedPhotoNegativeInFrame();
 }
 
 void PhotoMake()
@@ -3810,7 +4175,18 @@ void PhotoMake()
 
     if (plyr_wrk.mode != 1)
     {
+        MikuPan_ClearPhotoNegativeOverlay();
         return;
+    }
+
+    if (photo_wrk.mode >= PHOTO_MODE_MAKE_DISP &&
+        photo_wrk.mode <= PHOTO_MODE_END)
+    {
+        ActivatePhotoFrameModernOverlays();
+    }
+    else
+    {
+        MikuPan_ClearPhotoNegativeOverlay();
     }
 
     switch (photo_wrk.mode)
@@ -3823,6 +4199,12 @@ void PhotoMake()
             {
                 if (pic_save_flag != 0)
                 {
+                    if (pic_save_flag == 1 && !g_photo_capture_valid)
+                    {
+                        CaptureResolvedPhotoForLater();
+                        ActivatePhotoFrameModernOverlays();
+                    }
+
                     DispPhotoFrame0();
 
                     if (pic_save_flag == 1)
@@ -3858,6 +4240,11 @@ void PhotoMake()
             {
                 if (pic_save_flag == 1)
                 {
+                    if (!g_photo_capture_valid)
+                    {
+                        CaptureResolvedPhotoForLater();
+                        ActivatePhotoFrameModernOverlays();
+                    }
                     DispPhotoFrame0();
                     LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x2d00);
                     DispPhotoFrame1(0);
@@ -4023,7 +4410,8 @@ void PhotoMake()
             break;
         case 8:
             LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x1a40);
-            TakePhotoFromScreen();
+            TakePhotoFromResolvedScreen();
+            ActivatePhotoFrameModernOverlays();
             CompPhotoFromWorkArea(photo_wrk.adr_no);
             WaitFrameTop(1);
             MakeSPhotoFromWorkArea(photo_wrk.adr_no);
@@ -4031,6 +4419,7 @@ void PhotoMake()
             LocalCopyLtoL(0x1a40, ((sys_wrk.count + 1) & 1) * 0x8c0);
             DrawAll2D();
             DispPhotoFrame1(2);
+            DrawAll2D();
             SetBlurOff();
 
             ingame_wrk.stts &= ~0x20;
@@ -4044,9 +4433,11 @@ void PhotoMake()
 
                 FurnActOffEve(hint_2d_num + 227);
             }
+            DrawAll2D();
+            QueueResolvedPhotoPreview();
             break;
         case 9:
-            // do nothing ...
+            MikuPan_ClearPhotoNegativeOverlay();
             break;
     }
 }
@@ -4067,7 +4458,18 @@ void PhotoMake_EneDead()
 
     if (plyr_wrk.mode != 1)
     {
+        MikuPan_ClearPhotoNegativeOverlay();
         return;
+    }
+
+    if (photo_wrk.mode >= PHOTO_MODE_MAKE_DISP &&
+        photo_wrk.mode <= PHOTO_MODE_END)
+    {
+        ActivatePhotoFrameModernOverlays();
+    }
+    else
+    {
+        MikuPan_ClearPhotoNegativeOverlay();
     }
 
     switch (photo_wrk.mode)
@@ -4082,6 +4484,12 @@ void PhotoMake_EneDead()
         case 5:
             if (pic_save_flag != 0)
             {
+                if (pic_save_flag == 1 && !g_photo_capture_valid)
+                {
+                    CaptureResolvedPhotoForLater();
+                    ActivatePhotoFrameModernOverlays();
+                }
+
                 LocalCopyLtoB2(0, ((sys_wrk.count + 1) & 1) * 0x8c0);
                 SetWhiteIn2(1);
 
@@ -4138,7 +4546,8 @@ void PhotoMake_EneDead()
         case 8:
             FModeScreenEffect();
             LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x1a40);
-            TakePhotoFromScreen();
+            TakePhotoFromResolvedScreen();
+            ActivatePhotoFrameModernOverlays();
             CompPhotoFromWorkArea(photo_wrk.adr_no);
             MakeSPhotoFromWorkArea(photo_wrk.adr_no);
             LocalCopyLtoL(0x1a40, ((sys_wrk.count + 1) & 1) * 0x8c0);
@@ -4159,9 +4568,13 @@ void PhotoMake_EneDead()
                     break;
             }
 
+            DrawAll2D();
+            QueueResolvedPhotoPreview();
+
             SetBlurOff();
             break;
         case 9:
+            MikuPan_ClearPhotoNegativeOverlay();
             stop_effects = 0;
             break;
     }
@@ -4209,8 +4622,10 @@ void PhotoMakeSave2()
                 asm("");// what the ???
                 break;
             case 9:
+                MikuPan_ClearPhotoNegativeOverlay();
                 FModeScreenEffect();
                 DispPhotoFrame00(0);
+                DrawAll2D();
                 asm("");// what the ???
                 break;
         }

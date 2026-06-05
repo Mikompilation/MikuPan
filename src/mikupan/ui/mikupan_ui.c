@@ -111,12 +111,14 @@ static int show_controller_remap = 0;
 static int show_shader_reload = 0;
 static int show_draw_inspector = 0;
 static int show_camera_debug = 0;
+static int show_photo_debug_window = 0;
 static int show_shadow_debug_window = 0;
 static int cheat_tofu_mode = 0;
 static float cheat_tofu_color[3] = {0.86f, 0.81f, 0.63f};
 static int shadow_debug_auto_probe = 0;
 static int shadow_debug_flip_y = 1;
 static float shadow_debug_preview_size = 384.0f;
+static float photo_debug_preview_size = 256.0f;
 static char config_save_status[128] = {0};
 
 // Last reload error (per-shader: index 0..MAX-1; index MAX = "reload all")
@@ -140,6 +142,13 @@ static int mesh_lighting_mode = 1; // 0 = per-fragment, 1 = per-vertex
 static float normal_length = 10.0f;
 
 const int no_navigation_window = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoInputs;
+
+// The perf panel has interactive controls (collapsible trees) so it can't use
+// no_navigation_window — NoInputs/NoNav would eat every click. But keep it fixed
+// and chrome-free like before: no move, no decoration/title bar, transparent
+// background, auto-sized. The only difference from no_navigation_window is that
+// inputs/nav stay enabled so the sub-sections can actually expand.
+const int perf_window_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize;
 
 // Post-process tone controls — applied by the POSTPROCESS_SHADER on the
 // final scene-to-window blit. Defaults are no-ops (1.0 brightness, 1.0
@@ -412,6 +421,41 @@ static void FrameTimeGraph_Update(FrameTimeGraph *g, float total_ms,
     g->count++;
 }
 
+/* ── Condensed perf-table helpers ───────────────────────────────────────────
+ * A "perf row" is label | milliseconds | share-of-total, laid out as a borderless
+ * 3-column table so each section lines up tightly instead of sprawling down a
+ * flat igText list. `total` is the denominator for the share column (CPU frame
+ * time for the top-level buckets, or a parent bucket for sub-rows). */
+static int PerfTableBegin(const char *id)
+{
+    if (!igBeginTable(id, 3,
+                      ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
+                          ImGuiTableFlags_SizingFixedFit |
+                          ImGuiTableFlags_NoHostExtendX,
+                      (ImVec2) {0.0f, 0.0f}, 0.0f))
+    {
+        return 0;
+    }
+    igTableSetupColumn("Section", ImGuiTableColumnFlags_WidthStretch, 0.0f, 0);
+    igTableSetupColumn("ms", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+    igTableSetupColumn("share", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+    return 1;
+}
+
+static void PerfRow(const char *label, float ms, float total)
+{
+    igTableNextRow(0, 0.0f);
+    igTableSetColumnIndex(0);
+    igTextUnformatted(label, NULL);
+    igTableSetColumnIndex(1);
+    igText("%6.2f", ms);
+    igTableSetColumnIndex(2);
+    if (total > 0.001f)
+        igText("%3.0f%%", 100.0f * ms / total);
+    else
+        igTextUnformatted("--", NULL);
+}
+
 static void FrameTimeGraph_Draw(FrameTimeGraph *g)
 {
     if (g->count == 0)
@@ -420,7 +464,7 @@ static void FrameTimeGraph_Draw(FrameTimeGraph *g)
         return;
     }
 
-    igBegin("Frame Time Graph", NULL, no_navigation_window);
+    igBegin("Frame Time Graph", NULL, perf_window_flags);
 
     float total_sum = 0.0f, total_max = g->times[0];
     float cpu_sum = 0.0f, cpu_max = g->cpu[0];
@@ -446,35 +490,49 @@ static void FrameTimeGraph_Draw(FrameTimeGraph *g)
     float cpu_latest = g->cpu[g->count - 1];
     float gpu_latest = g->gpu[g->count - 1];
 
-    igText("Frame:  %5.2f ms  (%4.1f FPS)  avg %5.2f  max %5.2f", total_latest,
-           total_latest > 0.0f ? 1000.0f / total_latest : 0.0f, total_avg,
-           total_max);
-    igText("CPU work:        %5.2f ms      avg %5.2f  max %5.2f", cpu_latest,
-           cpu_avg, cpu_max);
-    igText("GPU finish wait: %5.2f ms      avg %5.2f  max %5.2f", gpu_latest,
-           gpu_avg, gpu_max);
-    igTextDisabled(
-        "(measured via fence sync - GPU value is the time CPU spent waiting "
-        "after submitting)");
-
-    // Heuristic: tag the dominant cost. With the new fence-sync measurement,
-    // a low GPU value means the GPU drained the queue as fast as the CPU
-    // could feed it (= CPU-bound), and a high GPU value means CPU finished
-    // first and waited (= GPU-bound).
+    // One-line headline: current frame, FPS, and the CPU/GPU-bound tag. The tag
+    // heuristic: GPU≈0 means the GPU drained the queue as fast as the CPU fed it
+    // (CPU-bound); a high GPU fence-wait means the CPU finished first (GPU-bound).
+    igText("%.2f ms   %.0f FPS", total_latest,
+           total_latest > 0.0f ? 1000.0f / total_latest : 0.0f);
+    igSameLine(0.0f, -1.0f);
     if (gpu_latest < cpu_latest * 0.25f)
-    {
-        igTextColored((ImVec4) {1.0f, 0.6f, 0.3f, 1.0f},
-                      "CPU-bound (GPU drained queue fast)");
-    }
+        igTextColored((ImVec4) {1.0f, 0.6f, 0.3f, 1.0f}, "   • CPU-bound");
     else if (gpu_latest > cpu_latest)
-    {
-        igTextColored((ImVec4) {0.4f, 0.7f, 1.0f, 1.0f},
-                      "GPU-bound (CPU waited for GPU)");
-    }
+        igTextColored((ImVec4) {0.4f, 0.7f, 1.0f, 1.0f}, "   • GPU-bound");
     else
+        igTextColored((ImVec4) {0.6f, 0.9f, 0.6f, 1.0f}, "   • balanced");
+
+    // Frame / CPU / GPU now / avg / max in an aligned 4-column table.
+    if (igBeginTable("##perf_summary", 4,
+                     ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
+                         ImGuiTableFlags_SizingFixedFit |
+                         ImGuiTableFlags_NoHostExtendX,
+                     (ImVec2) {0.0f, 0.0f}, 0.0f))
     {
-        igTextColored((ImVec4) {0.6f, 0.9f, 0.6f, 1.0f}, "CPU/GPU balanced");
+        igTableSetupColumn("", ImGuiTableColumnFlags_WidthStretch, 0.0f, 0);
+        igTableSetupColumn("now", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+        igTableSetupColumn("avg", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+        igTableSetupColumn("max", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+
+#define MP_SUMMARY_ROW(name, now, avg, mx)                                     \
+    igTableNextRow(0, 0.0f);                                                   \
+    igTableSetColumnIndex(0);                                                  \
+    igTextUnformatted(name, NULL);                                            \
+    igTableSetColumnIndex(1);                                                  \
+    igText("%6.2f", now);                                                      \
+    igTableSetColumnIndex(2);                                                  \
+    igText("%6.2f", avg);                                                      \
+    igTableSetColumnIndex(3);                                                  \
+    igText("%6.2f", mx)
+
+        MP_SUMMARY_ROW("Frame", total_latest, total_avg, total_max);
+        MP_SUMMARY_ROW("CPU", cpu_latest, cpu_avg, cpu_max);
+        MP_SUMMARY_ROW("GPU", gpu_latest, gpu_avg, gpu_max);
+#undef MP_SUMMARY_ROW
+        igEndTable();
     }
+    igTextDisabled("CPU = submit; GPU = fence-sync wait after submit (ms)");
 
     igSpacing();
 
@@ -504,7 +562,7 @@ static void FrameTimeGraph_Draw(FrameTimeGraph *g)
                          scale, plot_size, (int) sizeof(float));
 
     igSpacing();
-    igTextUnformatted("CPU breakdown (last frame, ms)", NULL);
+    igSeparatorText("CPU breakdown (last frame)");
 
     float perf_mesh = MikuPan_PerfGetSectionMs(MP_PERF_MESH_RENDER);
     float perf_sprite = MikuPan_PerfGetSectionMs(MP_PERF_SPRITE_RENDER);
@@ -519,103 +577,91 @@ static void FrameTimeGraph_Draw(FrameTimeGraph *g)
     if (perf_other < 0.0f)
         perf_other = 0.0f;
 
-    igText("Mesh render:      %5.2f ms", perf_mesh);
-
-    // Per-mesh-type breakdown (sub-sections of MESH_RENDER). Sum ≈ perf_mesh
-    // minus the dispatch / early-return overhead at the top of each renderer.
+    if (PerfTableBegin("##cpu_breakdown"))
     {
-        float perf_mesh_0x2 = MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x2);
-        float perf_mesh_0xA = MikuPan_PerfGetSectionMs(MP_PERF_MESH_0xA);
-        float perf_mesh_0x10 = MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x10);
-        float perf_mesh_0x12 = MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x12);
-        float perf_mesh_0x32 = MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x32);
-        float perf_mesh_0x82 = MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x82);
-        igText("    0x2:          %5.2f ms", perf_mesh_0x2);
-        igText("    0xA:          %5.2f ms", perf_mesh_0xA);
-        igText("    0x10:         %5.2f ms", perf_mesh_0x10);
-        igText("    0x12:         %5.2f ms", perf_mesh_0x12);
-        igText("    0x32:         %5.2f ms", perf_mesh_0x32);
-        igText("    0x82:         %5.2f ms", perf_mesh_0x82);
+        PerfRow("Mesh render", perf_mesh, cpu_latest);
+        PerfRow("Sprite / UI render", perf_sprite, cpu_latest);
+        PerfRow("Batch flushes", perf_flush, cpu_latest);
+        PerfRow("DrawUi (game)", perf_drawui, cpu_latest);
+        PerfRow("RenderUi (ImGui)", perf_render, cpu_latest);
+        PerfRow("GS uploads", perf_gs_up, cpu_latest);
+        PerfRow("GS downloads", perf_gs_dl, cpu_latest);
+        PerfRow("Other / unknown", perf_other, cpu_latest);
+        igEndTable();
     }
 
-    igText("Sprite/UI render: %5.2f ms", perf_sprite);
-    igText("Batch flushes:    %5.2f ms", perf_flush);
-    igText("DrawUi (game):    %5.2f ms", perf_drawui);
-    igText("RenderUi (ImGui): %5.2f ms", perf_render);
-    igText("GS uploads:       %5.2f ms", perf_gs_up);
-    igText("GS downloads:     %5.2f ms", perf_gs_dl);
-    igText("Other / unknown:  %5.2f ms", perf_other);
-
-    igSpacing();
-    igTextUnformatted("Cross-cutting (sliced through everything above):", NULL);
-    float perf_draw = MikuPan_PerfGetSectionMs(MP_PERF_DRAW_SUBMIT);
-    float perf_upload = MikuPan_PerfGetSectionMs(MP_PERF_BUFFER_UPLOAD);
-    float perf_state = MikuPan_PerfGetSectionMs(MP_PERF_STATE_CHANGE);
-    igText("  glDraw* submit: %5.2f ms (driver overhead per draw call)",
-           perf_draw);
-    igText("  Buffer uploads: %5.2f ms (map+memcpy+unmap)", perf_upload);
-    igText(
-        "  State changes:  %5.2f ms (shader/texture/render-state in cached "
-        "path)",
-        perf_state);
-
-    // Per-call decomposition of "State changes" — tells you which of the four
-    // calls (shader / texture / render-state / VAO) is the actual hot one.
-    // Sum ≈ perf_state (a few hundred ns/frame of timer overhead aside).
-    float perf_sc_shader = MikuPan_PerfGetSectionMs(MP_PERF_SC_SHADER);
-    float perf_sc_texture = MikuPan_PerfGetSectionMs(MP_PERF_SC_TEXTURE);
-    float perf_sc_rs3d = MikuPan_PerfGetSectionMs(MP_PERF_SC_RS3D);
-    float perf_sc_vao = MikuPan_PerfGetSectionMs(MP_PERF_SC_VAO);
-    igText(
-        "      Shader:     %5.2f ms (glUseProgram / SetCurrentShaderProgram)",
-        perf_sc_shader);
-    igText("      Texture:    %5.2f ms (lookup + glBindTexture)",
-           perf_sc_texture);
+    // Per-mesh-type breakdown (sub-sections of MESH_RENDER) — collapsed by
+    // default. Sum ≈ Mesh render minus the per-renderer dispatch overhead; the
+    // share column here is relative to the Mesh render total.
+    if (igTreeNode_Str("Mesh types"))
     {
-        // L1 (tex0 → info) hit/miss. Misses fall through to MikuPan_GetTextureHash
-        // which XXH3-hashes GS memory — usually the heaviest part of SC_TEXTURE.
-        // L1 is wiped on every MikuPan_GsUpload, so post-upload frames re-hash.
-        int l1_hits = MikuPan_PerfGetTexL1Hits();
-        int l1_misses = MikuPan_PerfGetTexL1Misses();
-        igText("        L1 hits=%d misses=%d (misses → XXH3 over GS memory)",
-               l1_hits, l1_misses);
+        if (PerfTableBegin("##mesh_types"))
+        {
+            PerfRow("0x2", MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x2), perf_mesh);
+            PerfRow("0xA", MikuPan_PerfGetSectionMs(MP_PERF_MESH_0xA), perf_mesh);
+            PerfRow("0x10", MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x10), perf_mesh);
+            PerfRow("0x12", MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x12), perf_mesh);
+            PerfRow("0x32", MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x32), perf_mesh);
+            PerfRow("0x82", MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x82), perf_mesh);
+            igEndTable();
+        }
+        igTextDisabled("share is relative to Mesh render total");
+        igTreePop();
+    }
 
-        // Per-step decomposition of SC_TEXTURE — tells you exactly which step
-        // inside MikuPan_SetTexture is dominant. Sum ≈ perf_sc_texture minus a
-        // small amount of dispatch overhead between the inner timers.
+    // Cross-cutting slices — these overlap the buckets above (they are NOT
+    // additive frame time), so they live in a collapsed tree. Descriptions are
+    // folded into the row labels to keep each one to a single line. Indented
+    // labels show the State-changes → per-call → per-texture-step nesting.
+    if (igTreeNode_Str("Cross-cutting & state changes"))
+    {
+        float perf_draw = MikuPan_PerfGetSectionMs(MP_PERF_DRAW_SUBMIT);
+        float perf_upload = MikuPan_PerfGetSectionMs(MP_PERF_BUFFER_UPLOAD);
+        float perf_state = MikuPan_PerfGetSectionMs(MP_PERF_STATE_CHANGE);
+        float perf_sc_shader = MikuPan_PerfGetSectionMs(MP_PERF_SC_SHADER);
+        float perf_sc_texture = MikuPan_PerfGetSectionMs(MP_PERF_SC_TEXTURE);
+        float perf_sc_rs3d = MikuPan_PerfGetSectionMs(MP_PERF_SC_RS3D);
+        float perf_sc_vao = MikuPan_PerfGetSectionMs(MP_PERF_SC_VAO);
         float perf_tex_l1 = MikuPan_PerfGetSectionMs(MP_PERF_TEX_L1_LOOKUP);
         float perf_tex_hash = MikuPan_PerfGetSectionMs(MP_PERF_TEX_HASH);
         float perf_tex_l2 = MikuPan_PerfGetSectionMs(MP_PERF_TEX_L2_LOOKUP);
         float perf_tex_create = MikuPan_PerfGetSectionMs(MP_PERF_TEX_CREATE);
         float perf_tex_bind = MikuPan_PerfGetSectionMs(MP_PERF_TEX_BIND);
-        igText("        L1 lookup:  %5.2f ms (tex0 → info hash table probe)",
-               perf_tex_l1);
-        igText(
-            "        Hash:       %5.2f ms (XXH3 over GS memory — L1-miss only)",
-            perf_tex_hash);
-        igText("        L2 lookup:  %5.2f ms (hash → info)", perf_tex_l2);
-        igText("        Create:     %5.2f ms (glTexImage2D + glGenerateMipmap)",
-               perf_tex_create);
-        igText("        Bind:       %5.2f ms (glBindTexture under cache)",
-               perf_tex_bind);
-    }
-    igText("      RenderState:%5.2f ms (depth / cull / blend mode)",
-           perf_sc_rs3d);
-    igText("      VAO:        %5.2f ms (glBindVertexArray)", perf_sc_vao);
+        int l1_hits = MikuPan_PerfGetTexL1Hits();
+        int l1_misses = MikuPan_PerfGetTexL1Misses();
 
-    igTextDisabled(
-        "These are subsets of the buckets above, not additional time.");
+        if (PerfTableBegin("##cross_cutting"))
+        {
+            PerfRow("glDraw* submit (driver/call)", perf_draw, cpu_latest);
+            PerfRow("Buffer uploads (map+memcpy)", perf_upload, cpu_latest);
+            PerfRow("State changes (cached path)", perf_state, cpu_latest);
+            PerfRow("    Shader (glUseProgram)", perf_sc_shader, cpu_latest);
+            PerfRow("    Texture (lookup+bind)", perf_sc_texture, cpu_latest);
+            PerfRow("        L1 lookup (tex0->info)", perf_tex_l1, cpu_latest);
+            PerfRow("        Hash (XXH3/GS mem)", perf_tex_hash, cpu_latest);
+            PerfRow("        L2 lookup (hash->info)", perf_tex_l2, cpu_latest);
+            PerfRow("        Create (glTexImage+mip)", perf_tex_create, cpu_latest);
+            PerfRow("        Bind (glBindTexture)", perf_tex_bind, cpu_latest);
+            PerfRow("    RenderState (depth/cull/blend)", perf_sc_rs3d, cpu_latest);
+            PerfRow("    VAO (glBindVertexArray)", perf_sc_vao, cpu_latest);
+            igEndTable();
+        }
+        igText("Texture L1: %d hits / %d misses  (miss -> XXH3 over GS memory)",
+               l1_hits, l1_misses);
+        igTextDisabled("subsets of the buckets above — not additional time");
+        igTreePop();
+    }
 
     igSpacing();
-    igTextUnformatted("GS texture traffic (last frame)", NULL);
+    igSeparatorText("GS texture traffic (last frame)");
 
     int ul_count = MikuPan_GsGetUploadCount();
     int ul_bytes = MikuPan_GsGetUploadBytes();
     int dl_count = MikuPan_GsGetDownloadCount();
     int dl_bytes = MikuPan_GsGetDownloadBytes();
 
-    igText("Uploads:   %4d calls   %6.1f KB", ul_count, ul_bytes / 1024.0f);
-    igText("Downloads: %4d calls   %6.1f KB", dl_count, dl_bytes / 1024.0f);
+    igText("Up %d calls / %.1f KB     Down %d calls / %.1f KB", ul_count,
+           ul_bytes / 1024.0f, dl_count, dl_bytes / 1024.0f);
 
     igEnd();
 }
@@ -1967,6 +2013,165 @@ static void MikuPan_UiShadowDebugWindow(void)
     igEnd();
 }
 
+static void MikuPan_UiPhotoDebugWindow(void)
+{
+    if (!show_photo_debug_window)
+    {
+        return;
+    }
+
+    igSetNextWindowSize((ImVec2) {460.0f, 560.0f}, ImGuiCond_FirstUseEver);
+    if (!igBegin("Photo Debug", (bool *) &show_photo_debug_window, 0))
+    {
+        igEnd();
+        return;
+    }
+
+    int force_preview = MikuPan_IsPhotoDebugForceOpaquePreviewEnabled();
+    if (igCheckbox("Force Opaque Preview Overlay", (bool *) &force_preview))
+    {
+        MikuPan_SetPhotoDebugForceOpaquePreviewEnabled(force_preview);
+    }
+
+    int force_negative = MikuPan_IsPhotoDebugForceNegativePreviewEnabled();
+    if (igCheckbox("Force Negative Final Pass", (bool *) &force_negative))
+    {
+        MikuPan_SetPhotoDebugForceNegativePreviewEnabled(force_negative);
+    }
+
+    float force_negative_strength =
+        MikuPan_GetPhotoDebugForceNegativePreviewStrength();
+    if (igSliderFloat("Forced Negative Strength",
+                      &force_negative_strength,
+                      0.0f,
+                      1.0f,
+                      "%.2f",
+                      0))
+    {
+        MikuPan_SetPhotoDebugForceNegativePreviewStrength(
+            force_negative_strength);
+    }
+
+    int target_rect = MikuPan_IsPhotoDebugTargetRectEnabled();
+    if (igCheckbox("Show Target Rect", (bool *) &target_rect))
+    {
+        MikuPan_SetPhotoDebugTargetRectEnabled(target_rect);
+    }
+
+    int negative_layer = MikuPan_IsPhotoDebugNegativeLayerEnabled();
+    if (igCheckbox("Show Negative Debug Layer", (bool *) &negative_layer))
+    {
+        MikuPan_SetPhotoDebugNegativeLayerEnabled(negative_layer);
+    }
+
+    igSeparator();
+
+    const MikuPan_PhotoDebugInfo *photo_debug = MikuPan_GetPhotoDebugInfo();
+
+    igText("Texture: %s  id: %u  size: %dx%d",
+           photo_debug->texture_valid ? "valid" : "missing",
+           photo_debug->texture_id,
+           photo_debug->texture_width,
+           photo_debug->texture_height);
+    igText("Texture updates: %d", photo_debug->texture_update_count);
+    igText("Negative source: %s  id: %u  size: %dx%d",
+           photo_debug->negative_source_texture_valid ? "valid" : "missing",
+           photo_debug->negative_source_texture_id,
+           photo_debug->negative_source_texture_width,
+           photo_debug->negative_source_texture_height);
+    igText("Negative source updates: %d",
+           photo_debug->negative_source_texture_update_count);
+
+    igSeparator();
+    igText("Queued: %s  count: %d",
+           photo_debug->queued ? "yes" : "no",
+           photo_debug->queue_count);
+    igText("Effect overlay active: %s  count: %d",
+           photo_debug->effect_overlay_active ? "yes" : "no",
+           photo_debug->effect_overlay_count);
+    igText("Effect overlay drawn in game: %s  count: %d",
+           photo_debug->effect_overlay_drawn_in_game ? "yes" : "no",
+           photo_debug->effect_overlay_in_game_count);
+    igText("Negative final-pass active: %s  count: %d",
+           photo_debug->negative_overlay_active ? "yes" : "no",
+           photo_debug->negative_overlay_count);
+    igText("Legacy negative sprite drawn: %s  count: %d",
+           photo_debug->negative_overlay_drawn_in_game ? "yes" : "no",
+           photo_debug->negative_overlay_in_game_count);
+    igText("Force negative preview: %s  strength: %.2f",
+           photo_debug->force_negative_preview_enabled ? "yes" : "no",
+           photo_debug->force_negative_preview_strength);
+    igText("Negative rect: %d,%d %dx%d  strength: %.2f",
+           photo_debug->negative_x,
+           photo_debug->negative_y,
+           photo_debug->negative_w,
+           photo_debug->negative_h,
+           photo_debug->negative_strength);
+    igText("Queue rect: %d,%d %dx%d  alpha: %d",
+           photo_debug->queue_x,
+           photo_debug->queue_y,
+           photo_debug->queue_w,
+           photo_debug->queue_h,
+           photo_debug->queue_alpha);
+
+    igSeparator();
+    igText("Last draw: %s  count: %d",
+           photo_debug->last_draw_valid ? "yes" : "no",
+           photo_debug->draw_count);
+    igText("Draw rect: %d,%d %dx%d  alpha: %d",
+           photo_debug->draw_x,
+           photo_debug->draw_y,
+           photo_debug->draw_w,
+           photo_debug->draw_h,
+           photo_debug->draw_alpha);
+    igText("Target rect drawn this frame: %s",
+           photo_debug->target_rect_drawn ? "yes" : "no");
+    igText("Negative debug layer drawn this frame: %s  count: %d",
+           photo_debug->negative_debug_layer_drawn ? "yes" : "no",
+           photo_debug->negative_debug_layer_count);
+
+    igSeparator();
+    igTextDisabled("Expected photo rect is usually 128,80 384x256.");
+    igTextDisabled("Cyan negative debug layer marks the outside region.");
+    igTextDisabled("If this preview is correct but the overlay is wrong,");
+    igTextDisabled("the failure is compositing/order/state, not capture.");
+
+    igSeparator();
+    igText("Captured Photo Texture");
+    igSliderFloat("Preview Size", &photo_debug_preview_size,
+                  64.0f, 512.0f, "%.0f", 0);
+
+    if (photo_debug->texture_id != 0)
+    {
+        float aspect = 1.0f;
+        if (photo_debug->texture_width > 0 && photo_debug->texture_height > 0)
+        {
+            aspect = (float)photo_debug->texture_width /
+                     (float)photo_debug->texture_height;
+        }
+
+        ImVec2 img_size = (ImVec2) {
+            photo_debug_preview_size,
+            photo_debug_preview_size / aspect
+        };
+
+        igImageWithBg(
+            (ImTextureRef_c) {
+                ._TexID = (ImTextureID) (uintptr_t) photo_debug->texture_id},
+            img_size,
+            (ImVec2) {0.0f, 0.0f},
+            (ImVec2) {1.0f, 1.0f},
+            (ImVec4) {0.12f, 0.12f, 0.14f, 1.0f},
+            (ImVec4) {1.0f, 1.0f, 1.0f, 1.0f});
+    }
+    else
+    {
+        igTextDisabled("No photo preview texture has been uploaded yet.");
+    }
+
+    igEnd();
+}
+
 void MikuPan_DrawUi(void)
 {
     ImGuiIO *io = igGetIO_Nil();
@@ -1995,6 +2200,7 @@ void MikuPan_DrawUi(void)
     MikuPan_UiShaderReloadWindow();
     MikuPan_UiDrawCallInspector();
     MikuPan_UiCameraDebugWindow();
+    MikuPan_UiPhotoDebugWindow();
     MikuPan_UiShadowDebugWindow();
 
     if (show_fps)
@@ -2480,6 +2686,7 @@ void MikuPan_UiMenuBar(void)
         igCheckbox("Shader Reload", (bool *) &show_shader_reload);
         igCheckbox("Draw Call Inspector", (bool *) &show_draw_inspector);
         igCheckbox("Camera World Info", (bool *) &show_camera_debug);
+        igCheckbox("Photo Debug Window", (bool *) &show_photo_debug_window);
         igTextDisabled("(Shadow Debug: Rendering > Shadows)");
 
         igEndMenu();

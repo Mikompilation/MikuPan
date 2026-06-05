@@ -22,6 +22,8 @@
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
+#include <math.h>
+
 static int write_flg = 0;
 static sceVu0FMATRIX *LWSMtx = (sceVu0FMATRIX *) &SCRATCHPAD[0x90];
 static sceVu0FMATRIX *LCMtx = (sceVu0FMATRIX *) &SCRATCHPAD[0xd0];
@@ -50,6 +52,16 @@ extern void DPS_PROLOGUE()   ;
 
 #define SCREENX_TO_GSX_DR(x, swidth) (((2048 + (swidth >> 1)) + (x)) << 4)
 #define SCREENY_TO_GSY_DR(y, sheight) (((2048 + (sheight >> 1)) + (y)) << 4)
+
+#define VU0_CLIP_X_POS (1 << 0)
+#define VU0_CLIP_X_NEG (1 << 1)
+#define VU0_CLIP_Y_POS (1 << 2)
+#define VU0_CLIP_Y_NEG (1 << 3)
+#define VU0_CLIP_Z_POS (1 << 4)
+#define VU0_CLIP_Z_NEG (1 << 5)
+
+extern sceVu0FMATRIX __work_matrix_0; // in [vf4:vf7]
+extern sceVu0FMATRIX __work_matrix_1; // in [vf8:vf11]
 
 void ShadowDbgOn()
 {
@@ -155,8 +167,10 @@ void DispShadowSprite()
 
     base[0][0] =
         SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_TRUE, 6, SCE_GIF_PACKED, 3);
-    base[0][1] = 0 | SCE_GS_RGBAQ << (0 * 4) | SCE_GS_XYZF2 << (1 * 4)
-                 | SCE_GS_XYZF2 << (2 * 4);
+    base[0][1] = 0
+                    | SCE_GS_RGBAQ << (0 * 4)
+                    | SCE_GS_XYZF2 << (1 * 4)
+                    | SCE_GS_XYZF2 << (2 * 4);
 
     base++;
 
@@ -177,9 +191,9 @@ void DispShadowSprite()
 
     base += 3;
 
-    base[0][0] =
-        SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_TRUE, 86, SCE_GIF_PACKED, 7);
-    base[0][1] = 0 | SCE_GS_TEX0_1 << (0 * 4) | SCE_GS_ST << (1 * 4)
+    base[0][0] = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_TRUE, 86, SCE_GIF_PACKED, 7);
+    base[0][1] = 0
+                 | SCE_GS_TEX0_1 << (0 * 4) | SCE_GS_ST << (1 * 4)
                  | SCE_GS_RGBAQ << (2 * 4) | SCE_GS_XYZF2 << (3 * 4)
                  | SCE_GS_ST << (4 * 4) | SCE_GS_RGBAQ << (5 * 4)
                  | SCE_GS_XYZF2 << (6 * 4);
@@ -270,53 +284,54 @@ void SetVU1HeaderShadow()
     FlushModel(0);
 }
 
-static void _CalcWeightedVertexSM(sceVu0FVECTOR dp, sceVu0FVECTOR v)
+static void _CalcWeightedVertexSM(sceVu0FVECTOR dp, sceVu0FVECTOR *v)
 {
-    //asm volatile("                               \n\
-    //    lqc2            $vf12, 0(%0)             \n\
-    //    vmulax.xyzw     ACC,   $vf4,     $vf12x  \n\
-    //    vmadday.xyzw    ACC,   $vf5,     $vf12y  \n\
-    //    vmaddaz.xyzw    ACC,   $vf6,     $vf12z  \n\
-    //    vmaddw.xyz      $vf13, $vf7,     $vf0w   \n\
-    //    vsubw.w         $vf14, $vf0,     $vf12   \n\
-    //    vmove.w         $vf13, $vf12             \n\
-    //    lqc2            $vf12, 0x10(%0)          \n\
-    //    vmulax.xyzw     ACC,   $vf8,     $vf12x  \n\
-    //    vmadday.xyzw    ACC,   $vf9,     $vf12y  \n\
-    //    vmaddaz.xyzw    ACC,   $vf10,    $vf12z  \n\
-    //    vmaddw.xyz      $vf14, $vf11,    $vf0w   \n\
-    //    vmulaw.xyz      ACC,   $vf13,    $vf13w  \n\
-    //    vmaddw.xyz      $vf15, $vf14,    $vf14w  \n\
-    //    vmove.w         $vf15, $vf0              \n\
-    //    sqc2            $vf15, 0(%1)             \n\
-    //    ": :"r"(v), "r"(dp)
-    //);
+    sceVu0FVECTOR *wk0 = __work_matrix_0; // in [vf4:vf7]
+    sceVu0FVECTOR *wk1 = __work_matrix_1; // in [vf8:vf11]
+    sceVu0FVECTOR vf13, vf14;
+
+    vf13[0] = (wk0[0][0] * v[0][0]) + (wk0[1][0] * v[0][1]) + (wk0[2][0] * v[0][2]) + (wk0[3][0] * 1.0f);
+    vf13[1] = (wk0[0][1] * v[0][0]) + (wk0[1][1] * v[0][1]) + (wk0[2][1] * v[0][2]) + (wk0[3][1] * 1.0f);
+    vf13[2] = (wk0[0][2] * v[0][0]) + (wk0[1][2] * v[0][1]) + (wk0[2][2] * v[0][2]) + (wk0[3][2] * 1.0f);
+    vf13[3] = v[0][3];
+
+    vf14[0] = (wk1[0][0] * v[1][0]) + (wk1[1][0] * v[1][1]) + (wk1[2][0] * v[1][2]) + (wk1[3][0] * 1.0f);
+    vf14[1] = (wk1[0][1] * v[1][0]) + (wk1[1][1] * v[1][1]) + (wk1[2][1] * v[1][2]) + (wk1[3][1] * 1.0f);
+    vf14[2] = (wk1[0][2] * v[1][0]) + (wk1[1][2] * v[1][1]) + (wk1[2][2] * v[1][2]) + (wk1[3][2] * 1.0f);
+    vf14[3] = 1.0f - v[0][3];
+
+    dp[0] = vf13[0] * vf13[3] + vf14[0] * vf14[3];
+    dp[1] = vf13[1] * vf13[3] + vf14[1] * vf14[3];
+    dp[2] = vf13[2] * vf13[3] + vf14[2] * vf14[3];
+    dp[3] = 1.0f;
+
     calc_skinned_position(dp, (sceVu0FVECTOR *) v);
 }
 
-static void _CalcWeightedVertexBufferSM(sceVu0FVECTOR dp, sceVu0FVECTOR v)
+static void _CalcWeightedVertexBufferSM(sceVu0FVECTOR dp, sceVu0FVECTOR *v)
 {
-    //asm volatile("                               \n\
-    //    lqc2            $vf12, 0(%0)             \n\
-    //    vmulax.xyzw     ACC,   $vf4,     $vf12x  \n\
-    //    vmadday.xyzw    ACC,   $vf5,     $vf12y  \n\
-    //    vmaddaz.xyzw    ACC,   $vf6,     $vf12z  \n\
-    //    vmaddw.xyz      $vf13, $vf7,     $vf0w   \n\
-    //    vsubw.w         $vf14, $vf0,     $vf12   \n\
-    //    vmove.w         $vf13, $vf12             \n\
-    //    lqc2            $vf12, 0x10(%0)          \n\
-    //    vmulax.xyzw     ACC,   $vf8,     $vf12x  \n\
-    //    vmadday.xyzw    ACC,   $vf9,     $vf12y  \n\
-    //    vmaddaz.xyzw    ACC,   $vf10,    $vf12z  \n\
-    //    vmaddw.xyz      $vf14, $vf11,    $vf0w   \n\
-    //    vmulaw.xyz      ACC,   $vf13,    $vf13w  \n\
-    //    vmaddw.xyz      $vf15, $vf14,    $vf14w  \n\
-    //    vmove.w         $vf15, $vf0              \n\
-    //    sqc2            $vf15, 0(%1)             \n\
-    //    ": :"r"(v), "r"(dp)
-    //);
+    sceVu0FVECTOR *wk0 = __work_matrix_0; // in [vf4:vf7]
+    sceVu0FVECTOR *wk1 = __work_matrix_1; // in [vf8:vf11]
+    sceVu0FVECTOR vf13, vf14;
+
+    vf13[0] = (wk0[0][0] * v[0][0]) + (wk0[1][0] * v[0][1]) + (wk0[2][0] * v[0][2]) + (wk0[3][0] * 1.0f);
+    vf13[1] = (wk0[0][1] * v[0][0]) + (wk0[1][1] * v[0][1]) + (wk0[2][1] * v[0][2]) + (wk0[3][1] * 1.0f);
+    vf13[2] = (wk0[0][2] * v[0][0]) + (wk0[1][2] * v[0][1]) + (wk0[2][2] * v[0][2]) + (wk0[3][2] * 1.0f);
+    vf13[3] = v[0][3];
+
+    vf14[0] = (wk1[0][0] * v[1][0]) + (wk1[1][0] * v[1][1]) + (wk1[2][0] * v[1][2]) + (wk1[3][0] * 1.0f);
+    vf14[1] = (wk1[0][1] * v[1][0]) + (wk1[1][1] * v[1][1]) + (wk1[2][1] * v[1][2]) + (wk1[3][1] * 1.0f);
+    vf14[2] = (wk1[0][2] * v[1][0]) + (wk1[1][2] * v[1][1]) + (wk1[2][2] * v[1][2]) + (wk1[3][2] * 1.0f);
+    vf14[3] = 1.0f - v[0][3];
+
+    dp[0] = vf13[0] * vf13[3] + vf14[0] * vf14[3];
+    dp[1] = vf13[1] * vf13[3] + vf14[1] * vf14[3];
+    dp[2] = vf13[2] * vf13[3] + vf14[2] * vf14[3];
+    dp[3] = 1.0f;
+
     calc_skinned_position(dp, (sceVu0FVECTOR *) v);
 }
+
 
 static void *GetShadowVuvnHostPointer(u_int ps2_addr, int index, int vtype)
 {
@@ -340,15 +355,13 @@ static void *GetShadowVuvnHostPointer(u_int ps2_addr, int index, int vtype)
 
 static void _CalcVertexSM(sceVu0FVECTOR dp, sceVu0FVECTOR v)
 {
-    //asm volatile("\n\
-    //    lqc2            $vf13, 0(%0)          \n\
-    //    vmulax.xyzw     ACC,   $vf4,  $vf13x  \n\
-    //    vmadday.xyzw    ACC,   $vf5,  $vf13y  \n\
-    //    vmaddaz.xyzw    ACC,   $vf6,  $vf13z  \n\
-    //    vmaddw.xyzw     $vf12, $vf7,  $vf13w  \n\
-    //    sqc2            $vf12, 0(%1)          \n\
-    //    ": :"r"(v), "r"(dp)
-    //);
+    sceVu0FVECTOR *wk0 = __work_matrix_0; // in [vf4:vf7]
+
+    // regular matrix*vec multiply
+    dp[0] = (wk0[0][0] * v[0]) + (wk0[1][0] * v[1]) + (wk0[2][0] * v[2]) + (wk0[3][0] * v[3]);
+    dp[1] = (wk0[0][1] * v[0]) + (wk0[1][1] * v[1]) + (wk0[2][1] * v[2]) + (wk0[3][1] * v[3]);
+    dp[2] = (wk0[0][2] * v[0]) + (wk0[1][2] * v[1]) + (wk0[2][2] * v[2]) + (wk0[3][2] * v[3]);
+    dp[3] = (wk0[0][3] * v[0]) + (wk0[1][3] * v[1]) + (wk0[2][3] * v[2]) + (wk0[3][3] * v[3]);
 }
 
 void CalcVertexBufferShadow(u_int *prim)
@@ -383,7 +396,7 @@ void CalcVertexBufferShadow(u_int *prim)
 
         for (j = 0; j < vli->lists[i].vIdx; vpd++, vps += 2, j++)
         {
-            _CalcWeightedVertexSM(*vpd, *vps);
+            _CalcWeightedVertexSM(*vpd, vps);
         }
     }
 }
@@ -449,7 +462,7 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
                 {
                     sceVu0FVECTOR *src = GetShadowVuvnHostPointer(*prim, i, vh->vtype);
                     if (src == NULL) return NULL;
-                    _CalcWeightedVertexSM(*vp, *src);
+                    _CalcWeightedVertexSM(*vp, src);
                 }
             }
             break;
@@ -471,7 +484,7 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
                     if (cn == NULL) return NULL;
                     _SetLWMatrix0(lcp[cn[0x1c]].workm);
                     _SetLWMatrix1(lcp[cn[0x1d]].workm);
-                    _CalcWeightedVertexSM(*vp, *(sceVu0FVECTOR *) cn);
+                    _CalcWeightedVertexSM(*vp, (sceVu0FVECTOR *) cn);
                     vp++;
                     prim += 2;
                 }
@@ -786,50 +799,96 @@ void ShadowMeshDataVU(u_int *prim)
     }
 }
 
-int ClipCheckShadow(sceVu0FVECTOR *vec, float *cul)
+
+
+// Very similar to sgcam.c's ClipCheck
+int ClipCheckShadow(sceVu0FMATRIX vec, sceVu0FVECTOR cul)
 {
     int ret = 0;
 
-    //asm volatile("                      \n\
-    //    lqc2          $vf16, 0(%1)       \n\
-    //    lqc2          $vf12, 0(%2)       \n\
-    //    lqc2          $vf13, 0x10(%2)    \n\
-    //    lqc2          $vf14, 0x20(%2)    \n\
-    //    lqc2          $vf15, 0x30(%2)    \n\
-    //    vclipw.xyz    $vf12, $vf16w      \n\
-    //    vclipw.xyz    $vf13, $vf16w      \n\
-    //    vclipw.xyz    $vf14, $vf16w      \n\
-    //    vclipw.xyz    $vf15, $vf16w      \n\
-    //    vnop                             \n\
-    //    vnop                             \n\
-    //    vnop                             \n\
-    //    vnop                             \n\
-    //    vnop                             \n\
-    //    cfc2          %0,    $vi18       \n\
-    //    ":"=r"(ret):"r"(cul),"r"(vec)
-    //);
+    if (vec[0][0] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_X_POS;
+    if (vec[0][0] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_X_NEG;
+    if (vec[0][1] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_Y_POS;
+    if (vec[0][1] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_Y_NEG;
+    if (vec[0][2] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_Z_POS;
+    if (vec[0][2] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_Z_NEG;
+
+    ret <<= 6;
+
+    if (vec[1][0] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_X_POS;
+    if (vec[1][0] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_X_NEG;
+    if (vec[1][1] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_Y_POS;
+    if (vec[1][1] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_Y_NEG;
+    if (vec[1][2] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_Z_POS;
+    if (vec[1][2] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_Z_NEG;
+
+    ret <<= 6;
+
+    if (vec[2][0] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_X_POS;
+    if (vec[2][0] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_X_NEG;
+    if (vec[2][1] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_Y_POS;
+    if (vec[2][1] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_Y_NEG;
+    if (vec[2][2] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_Z_POS;
+    if (vec[2][2] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_Z_NEG;
+
+    ret <<= 6;
+
+    if (vec[3][0] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_X_POS;
+    if (vec[3][0] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_X_NEG;
+    if (vec[3][1] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_Y_POS;
+    if (vec[3][1] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_Y_NEG;
+    if (vec[3][2] > +fabsf(cul[3]))
+        ret |= VU0_CLIP_Z_POS;
+    if (vec[3][2] < -fabsf(cul[3]))
+        ret |= VU0_CLIP_Z_NEG;
 
     return ret;
 }
 
-int ShadowBoundClip(float *v0, float *v1)
+int ShadowBoundClip(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
+    sceVu0FVECTOR *wk0 = __work_matrix_0; // in [vf4:vf7]
     int ret = 0;
 
-    //asm volatile("                             \n\
-    //    lqc2            $vf12, 0(%1)           \n\
-    //    vmulax.xyzw     ACC,   $vf4,   $vf12x  \n\
-    //    vmadday.xyzw    ACC,   $vf5,   $vf12y  \n\
-    //    vmaddaz.xyzw    ACC,   $vf6,   $vf12z  \n\
-    //    vmaddw.xyzw     $vf12, $vf7,   $vf0w   \n\
-    //    vclipw.xyz      $vf12, $vf12w          \n\
-    //    sqc2            $vf12, 0(%2)           \n\
-    //    vnop                                   \n\
-    //    vnop                                   \n\
-    //    vnop                                   \n\
-    //    cfc2            %0,    $vi18           \n\
-    //    ":"=r"(ret):"r"(v1),"r"(v0)
-    //);
+    v0[0] = (wk0[0][0] * v1[0]) + (wk0[1][0] * v1[1]) + (wk0[2][0] * v1[2]) + (wk0[3][0] * 1.0f);
+    v0[1] = (wk0[0][1] * v1[0]) + (wk0[1][1] * v1[1]) + (wk0[2][1] * v1[2]) + (wk0[3][1] * 1.0f);
+    v0[2] = (wk0[0][2] * v1[0]) + (wk0[1][2] * v1[1]) + (wk0[2][2] * v1[2]) + (wk0[3][2] * 1.0f);
+    v0[3] = (wk0[0][3] * v1[0]) + (wk0[1][3] * v1[1]) + (wk0[2][3] * v1[2]) + (wk0[3][3] * 1.0f);
+
+    if (v0[0] > +fabsf(v0[3]))
+        ret |= VU0_CLIP_X_POS;
+    if (v0[0] < -fabsf(v0[3]))
+        ret |= VU0_CLIP_X_NEG;
+    if (v0[1] > +fabsf(v0[3]))
+        ret |= VU0_CLIP_Y_POS;
+    if (v0[1] < -fabsf(v0[3]))
+        ret |= VU0_CLIP_Y_NEG;
+    if (v0[2] > +fabsf(v0[3]))
+        ret |= VU0_CLIP_Z_POS;
+    if (v0[2] < -fabsf(v0[3]))
+        ret |= VU0_CLIP_Z_NEG;
 
     return ret;
 }

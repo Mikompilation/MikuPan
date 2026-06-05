@@ -18,6 +18,9 @@
 #include <string.h>
 
 static void MikuPan_ApplyWindowMode(int mode);
+static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
+                                                    float x, float y,
+                                                    float w, float h);
 
 #define GLAD_GL_IMPLEMENTATION
 #include "graphics/graph3d/sglib.h"
@@ -33,6 +36,10 @@ SDL_GLContext gl_context = NULL;
 MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_MsaaBufferObject render_back_msaa = {0};
 static int g_mirror_scissor_enabled = 0;
+static unsigned char *g_last_resolved_frame_rgba = NULL;
+static int g_last_resolved_frame_width = 0;
+static int g_last_resolved_frame_height = 0;
+static int g_last_resolved_frame_valid = 0;
 
 void MikuPan_StreamUploadFull(GLenum target, GLuint buffer,
                                             GLsizeiptr size, const void *data)
@@ -265,6 +272,12 @@ SDL_AppResult MikuPan_Init()
 
 void MikuPan_DestroyInternalBuffer()
 {
+    free(g_last_resolved_frame_rgba);
+    g_last_resolved_frame_rgba = NULL;
+    g_last_resolved_frame_width = 0;
+    g_last_resolved_frame_height = 0;
+    g_last_resolved_frame_valid = 0;
+
     if (render_back_msaa.colour.id)
     {
         glad_glDeleteRenderbuffers(1, &render_back_msaa.colour.id);
@@ -296,7 +309,10 @@ void MikuPan_DestroyInternalBuffer()
     }
 }
 
-int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *out_rgba)
+static int MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(GLuint src_fbo,
+                                                      int width,
+                                                      int height,
+                                                      unsigned char *out_rgba)
 {
     if (width <= 0 || height <= 0 || out_rgba == NULL)
     {
@@ -308,7 +324,7 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
     glad_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prev_draw_fbo);
 
     GLint src_w = width, src_h = height;
-    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint)prev_draw_fbo);
+    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, src_fbo);
     GLint attach_type = 0;
     glad_glGetFramebufferAttachmentParameteriv(
         GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
@@ -353,8 +369,8 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
     glad_glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                 GL_TEXTURE_2D, tmp_tex, 0);
 
-    // Linear filter — the captured freeze frame would look aliased
-    // otherwise when the internal buffer is much larger than 640×224.
+    // Linear filter keeps freeze-frame captures from aliasing when the
+    // internal buffer is much larger than 640x224.
     glad_glBlitFramebuffer(0, 0, src_w, src_h,
                            0, 0, width, height,
                            GL_COLOR_BUFFER_BIT, GL_LINEAR);
@@ -397,6 +413,98 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
     glad_glDeleteFramebuffers(1, &tmp_fbo);
     glad_glDeleteTextures(1, &tmp_tex);
     return 1;
+}
+
+static int MikuPan_EnsureLastResolvedFrameCache(int width, int height)
+{
+    const size_t bytes = (size_t)width * (size_t)height * 4u;
+
+    if (width <= 0 || height <= 0)
+    {
+        return 0;
+    }
+
+    if (g_last_resolved_frame_rgba != NULL &&
+        g_last_resolved_frame_width == width &&
+        g_last_resolved_frame_height == height)
+    {
+        return 1;
+    }
+
+    free(g_last_resolved_frame_rgba);
+    g_last_resolved_frame_rgba = (unsigned char *)malloc(bytes);
+    g_last_resolved_frame_width = width;
+    g_last_resolved_frame_height = height;
+    g_last_resolved_frame_valid = 0;
+
+    return g_last_resolved_frame_rgba != NULL;
+}
+
+static void MikuPan_UpdateLastResolvedFrameCache(void)
+{
+    if (render_back_msaa.framebuffer.id == 0 || render_back_msaa.texture.id == 0)
+    {
+        g_last_resolved_frame_valid = 0;
+        return;
+    }
+
+    if (!MikuPan_EnsureLastResolvedFrameCache(SCR_WIDTH, SCR_HEIGHT))
+    {
+        return;
+    }
+
+    g_last_resolved_frame_valid =
+        MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(
+            render_back_msaa.framebuffer.id,
+            SCR_WIDTH,
+            SCR_HEIGHT,
+            g_last_resolved_frame_rgba);
+}
+
+int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *out_rgba)
+{
+    GLint prev_draw_fbo = 0;
+    glad_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prev_draw_fbo);
+
+    return MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(
+        (GLuint)prev_draw_fbo,
+        width,
+        height,
+        out_rgba);
+}
+
+int MikuPan_ReadResolvedFramebufferRGBA8TopLeft(int width, int height,
+                                               unsigned char *out_rgba)
+{
+    if (out_rgba != NULL &&
+        g_last_resolved_frame_valid &&
+        width == g_last_resolved_frame_width &&
+        height == g_last_resolved_frame_height)
+    {
+        memcpy(out_rgba,
+               g_last_resolved_frame_rgba,
+               (size_t)width * (size_t)height * 4u);
+        return 1;
+    }
+
+    if (render_back_msaa.framebuffer.id == 0 || render_back_msaa.texture.id == 0)
+    {
+        return MikuPan_ReadFramebufferRGBA8TopLeft(width, height, out_rgba);
+    }
+
+    /*
+     * GS local-framebuffer freezes are often requested from game/effect logic
+     * before the current GL frame has been drawn. In that state the bound draw
+     * FBO is just the cleared scene target, so freezing it captures black.
+     * Use the resolved scene texture from the previous completed frame instead:
+     * it is the closest equivalent to the PS2 local framebuffer contents that
+     * effects such as pause/menu/photo expect to copy.
+     */
+    return MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(
+        render_back_msaa.framebuffer.id,
+        width,
+        height,
+        out_rgba);
 }
 
 void MikuPan_SetupOpenGLContext()
@@ -592,8 +700,41 @@ void MikuPan_Clear()
     }
 }
 
+static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
+                                                    float x, float y,
+                                                    float w, float h)
+{
+    float tl[2] = {0};
+    float br[2] = {0};
+
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(
+        tl,
+        (float)render_back_msaa.texture.width,
+        (float)render_back_msaa.texture.height,
+        x,
+        y);
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(
+        br,
+        (float)render_back_msaa.texture.width,
+        (float)render_back_msaa.texture.height,
+        x + w,
+        y + h);
+
+    out[0] = (tl[0] + 1.0f) * 0.5f;
+    out[1] = (1.0f - tl[1]) * 0.5f;
+    out[2] = (br[0] + 1.0f) * 0.5f;
+    out[3] = (1.0f - br[1]) * 0.5f;
+}
+
 void MikuPan_EndFrame()
 {
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, render_back_msaa.framebuffer_readback.id);
+    MikuPan_SetViewportCached(
+        0,
+        0,
+        render_back_msaa.texture.width,
+        render_back_msaa.texture.height);
+
     glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, render_back_msaa.framebuffer_readback.id);
     glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, render_back_msaa.framebuffer.id);
 
@@ -603,6 +744,8 @@ void MikuPan_EndFrame()
         GL_COLOR_BUFFER_BIT,
         GL_LINEAR
     );
+
+    MikuPan_UpdateLastResolvedFrameCache();
 
     glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
     SDL_GetWindowSize(mikupan_render.window, &mikupan_render.width, &mikupan_render.height);
@@ -634,6 +777,7 @@ void MikuPan_EndFrame()
 
     MikuPan_SetCurrentShaderProgram(POSTPROCESS_SHADER);
     MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
+    MikuPan_SetUniform1iToCurrentShader(1, "uPhotoNegativeSourceTexture");
     /*
      * Black/white mode is applied through the original model CLUT/light paths
      * and to explicit framebuffer copies. Do not apply it here: the final
@@ -670,6 +814,59 @@ void MikuPan_EndFrame()
         MikuPan_SetUniform1fToCurrentShader((float) ((double) SDL_GetTicks() / 1000.0),
                                             "uTime");
     }
+    {
+        const MikuPan_PhotoDebugInfo *photo_debug = MikuPan_GetPhotoDebugInfo();
+        float photo_negative_content_rect[4] = {0.0f, 0.0f, 1.0f, 1.0f};
+        float photo_negative_rect[4] = {0.0f, 0.0f, 1.0f, 1.0f};
+        const int negative_w =
+            photo_debug->negative_w > 0 ? photo_debug->negative_w : 384;
+        const int negative_h =
+            photo_debug->negative_h > 0 ? photo_debug->negative_h : 256;
+        const int negative_x =
+            photo_debug->negative_w > 0 ? photo_debug->negative_x : 128;
+        const int negative_y =
+            photo_debug->negative_h > 0 ? photo_debug->negative_y : 80;
+        const int photo_negative_enabled =
+            photo_debug->negative_overlay_active ||
+            photo_debug->force_negative_preview_enabled;
+        const float photo_negative_strength =
+            photo_debug->force_negative_preview_enabled ?
+                photo_debug->force_negative_preview_strength :
+                photo_debug->negative_strength;
+        const int photo_negative_source_enabled =
+            photo_debug->negative_source_texture_id != 0;
+
+        MikuPan_ConvertPs2RectToRenderTextureUv(photo_negative_content_rect,
+                                                0.0f, 0.0f,
+                                                640.0f, 448.0f);
+        MikuPan_ConvertPs2RectToRenderTextureUv(
+            photo_negative_rect,
+            (float)negative_x,
+            (float)negative_y,
+            (float)negative_w,
+            (float)negative_h);
+
+        MikuPan_SetUniform1iToCurrentShader(
+            photo_negative_enabled && photo_negative_strength > 0.0f,
+            "uPhotoNegativeEnabled");
+        MikuPan_SetUniform1iToCurrentShader(
+            photo_negative_source_enabled,
+            "uPhotoNegativeSourceEnabled");
+        MikuPan_SetUniform4fvToCurrentShader(photo_negative_content_rect,
+                                             "uPhotoNegativeContentRect");
+        MikuPan_SetUniform4fvToCurrentShader(photo_negative_rect,
+                                             "uPhotoNegativeRect");
+        MikuPan_SetUniform1fToCurrentShader(photo_negative_strength,
+                                            "uPhotoNegativeStrength");
+
+        if (photo_negative_source_enabled)
+        {
+            MikuPan_ActiveTextureCached(GL_TEXTURE1);
+            glad_glBindTexture(GL_TEXTURE_2D,
+                               photo_debug->negative_source_texture_id);
+            MikuPan_ActiveTextureCached(GL_TEXTURE0);
+        }
+    }
 
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
     MikuPan_BindVAO(pipeline->vao);
@@ -678,6 +875,16 @@ void MikuPan_EndFrame()
                              (GLsizeiptr)sizeof(quad), quad);
 
     glad_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    /*
+     * The camera photo preview is a modern replacement for a GS-resident
+     * texture. Draw it after the final scene pass so the original photo frame
+     * and negative overlays cannot cover it.
+    */
+    MikuPan_SetViewportCached(0, 0, mikupan_render.width, mikupan_render.height);
+    MikuPan_RenderQueuedPhotoPreviewTexture();
+    MikuPan_FlushLate2DOverlayQueue();
+    MikuPan_Flush2DMessageQueue();
 
     int screenshot_width = 0, screenshot_height = 0;
     SDL_GetWindowSizeInPixels(mikupan_render.window, &screenshot_width, &screenshot_height);

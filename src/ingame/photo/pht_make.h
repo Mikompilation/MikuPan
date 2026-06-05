@@ -50,6 +50,7 @@ void DrawPhotoHinttex(u_int pri, int num);
 void DrawPhotoHinttex2(u_int sw, u_int pri, int num);
 void DrawPhotoEffect(u_int pri, int type);
 void DrawPhotoFilter(u_int pri, int type, u_char alp);
+void StagePhotoCaptureForSave(void);
 void DispPhotoFrame0();
 void DispPhotoFrame00(int flag);
 int DispPhotoFrame1(int fl);

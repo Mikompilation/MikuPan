@@ -21,9 +21,34 @@
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "os/pad.h"
 #include "os/system.h"
+
+/* [DIAG] Average R+G+B brightness over an RGBA8 buffer, for confirming whether a
+ * framebuffer read returned the live scene or black. Sparse sampling so it's
+ * cheap. Remove once the photo capture is diagnosed. */
+static long EffectSubDebugAvgBrightness(const unsigned char *rgba,
+                                        int width, int height, int stride_px)
+{
+    long sum = 0;
+    int n = 0;
+    if (rgba == NULL || width <= 0 || height <= 0)
+    {
+        return -1;
+    }
+    for (int y = 0; y < height; y += 8)
+    {
+        for (int x = 0; x < width; x += 8)
+        {
+            const unsigned char *p = rgba + ((long) (y * stride_px + x)) * 4;
+            sum += p[0] + p[1] + p[2];
+            n++;
+        }
+    }
+    return n ? sum / ((long) n * 3) : -1;
+}
 
 typedef struct {
 	int screen_flag;
@@ -180,15 +205,35 @@ static int EffectSubReadMainFramebuffer(u_long128 *outbuf)
         (unsigned char *)outbuf);
 }
 
+static int EffectSubReadResolvedMainFramebuffer(u_long128 *outbuf)
+{
+    if (outbuf == NULL)
+    {
+        return 0;
+    }
+
+    return MikuPan_ReadResolvedFramebufferRGBA8TopLeft(
+        SCR_WIDTH,
+        SCR_HEIGHT,
+        (unsigned char *)outbuf);
+}
+
 static int EffectSubUploadMainFramebufferToGs(int addr)
 {
     static u_long128 framebuffer_copy[(SCR_WIDTH * SCR_HEIGHT * 4) / sizeof(u_long128)];
     sceGsLoadImage gs_limage;
 
-    if (!EffectSubReadMainFramebuffer(framebuffer_copy))
+    if (!EffectSubReadResolvedMainFramebuffer(framebuffer_copy))
     {
         return 0;
     }
+
+    /* [DIAG] Working effects use this read; expect a non-zero brightness when a
+     * scene is on screen. Compare against the "photo capture" log. */
+    info_log("[DIAG] effect fb read: avg_rgb=%ld addr=0x%x",
+             EffectSubDebugAvgBrightness((const unsigned char *) framebuffer_copy,
+                                         SCR_WIDTH, SCR_HEIGHT, SCR_WIDTH),
+             addr);
 
     sceGsSetDefLoadImage(
         &gs_limage,
@@ -3287,7 +3332,7 @@ void LocalCopyLtoB_Sub(int no, int type, int addr) {
         sceGsExecStoreImage(&gs_simage1, pbuf);
         sceGsExecStoreImage(&gs_simage2, &pbuf[32000]);
     }
-    
+
     if (type == 0)
     {
         return;

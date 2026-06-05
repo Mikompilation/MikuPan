@@ -2,17 +2,95 @@
 #include "graphics/graph2d/message.h"
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
+#include "mikupan/mikupan_utils.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_profiler.h"
+#include "mikupan_shader.h"
 #include <stdlib.h>
 
 static GLfloat g_max_aniso = -1.0f;
 static MikuPan_TextureInfo *fnt_texture[6] = {0};
 static MikuPan_TextureInfo *curr_fnt_texture = NULL;
+static MikuPan_TextureInfo g_photo_preview_texture = {0};
+static MikuPan_TextureInfo g_photo_negative_source_texture = {0};
+static int g_photo_preview_queued = 0;
+static int g_photo_preview_x = 0;
+static int g_photo_preview_y = 0;
+static int g_photo_preview_w = 0;
+static int g_photo_preview_h = 0;
+static u_char g_photo_preview_alpha = 0x80;
+static float g_photo_preview_negative_strength = 0.0f;
+static MikuPan_PhotoDebugInfo g_photo_debug = {
+    .force_negative_preview_strength = 1.0f,
+};
 
 MikuPan_TextureInfo *MikuPan_GetCurrentFontTexture(void)
 {
     return curr_fnt_texture;
+}
+
+const MikuPan_PhotoDebugInfo *MikuPan_GetPhotoDebugInfo(void)
+{
+    return &g_photo_debug;
+}
+
+void MikuPan_SetPhotoDebugForceOpaquePreviewEnabled(int enabled)
+{
+    g_photo_debug.force_opaque_preview_enabled = enabled != 0;
+}
+
+int MikuPan_IsPhotoDebugForceOpaquePreviewEnabled(void)
+{
+    return g_photo_debug.force_opaque_preview_enabled;
+}
+
+void MikuPan_SetPhotoDebugForceNegativePreviewEnabled(int enabled)
+{
+    g_photo_debug.force_negative_preview_enabled = enabled != 0;
+}
+
+int MikuPan_IsPhotoDebugForceNegativePreviewEnabled(void)
+{
+    return g_photo_debug.force_negative_preview_enabled;
+}
+
+void MikuPan_SetPhotoDebugForceNegativePreviewStrength(float strength)
+{
+    if (strength < 0.0f)
+    {
+        strength = 0.0f;
+    }
+    else if (strength > 1.0f)
+    {
+        strength = 1.0f;
+    }
+
+    g_photo_debug.force_negative_preview_strength = strength;
+}
+
+float MikuPan_GetPhotoDebugForceNegativePreviewStrength(void)
+{
+    return g_photo_debug.force_negative_preview_strength;
+}
+
+void MikuPan_SetPhotoDebugTargetRectEnabled(int enabled)
+{
+    g_photo_debug.target_rect_enabled = enabled != 0;
+}
+
+int MikuPan_IsPhotoDebugTargetRectEnabled(void)
+{
+    return g_photo_debug.target_rect_enabled;
+}
+
+void MikuPan_SetPhotoDebugNegativeLayerEnabled(int enabled)
+{
+    g_photo_debug.negative_debug_layer_enabled = enabled != 0;
+}
+
+int MikuPan_IsPhotoDebugNegativeLayerEnabled(void)
+{
+    return g_photo_debug.negative_debug_layer_enabled;
 }
 
 void MikuPan_TextureShutdown(void)
@@ -28,6 +106,24 @@ void MikuPan_TextureShutdown(void)
     }
 
     curr_fnt_texture = NULL;
+
+    if (g_photo_preview_texture.id != 0)
+    {
+        glad_glDeleteTextures(1, (const GLuint *)&g_photo_preview_texture.id);
+        g_photo_preview_texture.id = 0;
+    }
+
+    if (g_photo_negative_source_texture.id != 0)
+    {
+        glad_glDeleteTextures(1,
+                              (const GLuint *)&g_photo_negative_source_texture.id);
+        g_photo_negative_source_texture.id = 0;
+    }
+
+    g_photo_debug.texture_valid = 0;
+    g_photo_debug.texture_id = 0;
+    g_photo_debug.negative_source_texture_valid = 0;
+    g_photo_debug.negative_source_texture_id = 0;
 }
 
 static GLfloat MikuPan_GetMaxAniso(void)
@@ -151,6 +247,460 @@ void MikuPan_SetupFntTexture()
 void MikuPan_SetFontTexture(int fnt)
 {
     curr_fnt_texture = fnt_texture[fnt];
+}
+
+void MikuPan_UpdatePhotoPreviewTextureRGBA(int width, int height,
+                                           const unsigned char *rgba)
+{
+    if (width <= 0 || height <= 0 || rgba == NULL)
+    {
+        return;
+    }
+
+    if (g_photo_preview_texture.id == 0 ||
+        g_photo_preview_texture.width != width ||
+        g_photo_preview_texture.height != height)
+    {
+        if (g_photo_preview_texture.id != 0)
+        {
+            glad_glDeleteTextures(1, (const GLuint *)&g_photo_preview_texture.id);
+        }
+
+        glad_glGenTextures(1, (GLuint *)&g_photo_preview_texture.id);
+        g_photo_preview_texture.width = width;
+        g_photo_preview_texture.height = height;
+        g_photo_preview_texture.tex0 = 0;
+        g_photo_preview_texture.hash = 0;
+
+        MikuPan_BindTexture2DCached(g_photo_preview_texture.id);
+        glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
+                          width, height, 0, GL_RGBA,
+                          GL_UNSIGNED_BYTE, rgba);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        g_photo_debug.texture_valid = 1;
+        g_photo_debug.texture_id = g_photo_preview_texture.id;
+        g_photo_debug.texture_width = width;
+        g_photo_debug.texture_height = height;
+        g_photo_debug.texture_update_count++;
+        return;
+    }
+
+    MikuPan_BindTexture2DCached(g_photo_preview_texture.id);
+    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glad_glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,
+                         GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+
+    g_photo_debug.texture_valid = 1;
+    g_photo_debug.texture_id = g_photo_preview_texture.id;
+    g_photo_debug.texture_width = width;
+    g_photo_debug.texture_height = height;
+    g_photo_debug.texture_update_count++;
+}
+
+void MikuPan_UpdatePhotoNegativeSourceTextureRGBA(int width, int height,
+                                                  const unsigned char *rgba)
+{
+    if (width <= 0 || height <= 0 || rgba == NULL)
+    {
+        return;
+    }
+
+    if (g_photo_negative_source_texture.id == 0 ||
+        g_photo_negative_source_texture.width != width ||
+        g_photo_negative_source_texture.height != height)
+    {
+        if (g_photo_negative_source_texture.id != 0)
+        {
+            glad_glDeleteTextures(
+                1, (const GLuint *)&g_photo_negative_source_texture.id);
+        }
+
+        glad_glGenTextures(1, (GLuint *)&g_photo_negative_source_texture.id);
+        g_photo_negative_source_texture.width = width;
+        g_photo_negative_source_texture.height = height;
+        g_photo_negative_source_texture.tex0 = 0;
+        g_photo_negative_source_texture.hash = 0;
+
+        MikuPan_BindTexture2DCached(g_photo_negative_source_texture.id);
+        glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
+                          width, height, 0, GL_RGBA,
+                          GL_UNSIGNED_BYTE, rgba);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                             GL_CLAMP_TO_EDGE);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                             GL_CLAMP_TO_EDGE);
+
+        g_photo_debug.negative_source_texture_valid = 1;
+        g_photo_debug.negative_source_texture_id =
+            g_photo_negative_source_texture.id;
+        g_photo_debug.negative_source_texture_width = width;
+        g_photo_debug.negative_source_texture_height = height;
+        g_photo_debug.negative_source_texture_update_count++;
+        return;
+    }
+
+    MikuPan_BindTexture2DCached(g_photo_negative_source_texture.id);
+    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glad_glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,
+                         GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+
+    g_photo_debug.negative_source_texture_valid = 1;
+    g_photo_debug.negative_source_texture_id = g_photo_negative_source_texture.id;
+    g_photo_debug.negative_source_texture_width = width;
+    g_photo_debug.negative_source_texture_height = height;
+    g_photo_debug.negative_source_texture_update_count++;
+}
+
+void MikuPan_QueuePhotoPreviewTexture(int x, int y, int w, int h,
+                                      u_char alpha)
+{
+    if (g_photo_preview_texture.id == 0 || w <= 0 || h <= 0)
+    {
+        return;
+    }
+
+    g_photo_preview_x = x;
+    g_photo_preview_y = y;
+    g_photo_preview_w = w;
+    g_photo_preview_h = h;
+    g_photo_preview_alpha = alpha;
+    g_photo_preview_queued = 1;
+
+    g_photo_debug.queued = 1;
+    g_photo_debug.queue_count++;
+    g_photo_debug.queue_x = x;
+    g_photo_debug.queue_y = y;
+    g_photo_debug.queue_w = w;
+    g_photo_debug.queue_h = h;
+    g_photo_debug.queue_alpha = alpha;
+}
+
+void MikuPan_SetPhotoPreviewOverlayActiveForFrame(int x, int y, int w, int h,
+                                                  u_char alpha)
+{
+    if (w <= 0 || h <= 0)
+    {
+        return;
+    }
+
+    g_photo_preview_x = x;
+    g_photo_preview_y = y;
+    g_photo_preview_w = w;
+    g_photo_preview_h = h;
+    g_photo_preview_alpha = alpha;
+
+    g_photo_debug.effect_overlay_active = 1;
+    g_photo_debug.effect_overlay_count++;
+    g_photo_debug.queue_x = x;
+    g_photo_debug.queue_y = y;
+    g_photo_debug.queue_w = w;
+    g_photo_debug.queue_h = h;
+    g_photo_debug.queue_alpha = alpha;
+}
+
+void MikuPan_SetPhotoNegativeOverlayActiveForFrame(int x, int y, int w, int h,
+                                                   float strength)
+{
+    if (w <= 0 || h <= 0)
+    {
+        return;
+    }
+
+    g_photo_debug.negative_overlay_active = 1;
+    g_photo_debug.negative_overlay_count++;
+    g_photo_debug.negative_x = x;
+    g_photo_debug.negative_y = y;
+    g_photo_debug.negative_w = w;
+    g_photo_debug.negative_h = h;
+    g_photo_debug.negative_strength = strength;
+}
+
+void MikuPan_ClearPhotoNegativeOverlay(void)
+{
+    g_photo_debug.negative_overlay_active = 0;
+    g_photo_debug.negative_strength = 0.0f;
+}
+
+void MikuPan_RenderPhotoPreviewTexture(int x, int y, int w, int h,
+                                       u_char alpha)
+{
+    if (g_photo_preview_texture.id == 0 || w <= 0 || h <= 0)
+    {
+        return;
+    }
+
+    MikuPan_FlushTexturedSpriteBatch();
+
+    float tl[4] = {0};
+    float br[4] = {0};
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(
+        tl,
+        (float)MikuPan_GetWindowWidth(),
+        (float)MikuPan_GetWindowHeight(),
+        (float)x,
+        (float)y);
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(
+        br,
+        (float)MikuPan_GetWindowWidth(),
+        (float)MikuPan_GetWindowHeight(),
+        (float)(x + w),
+        (float)(y + h));
+
+    const float a = MikuPan_ConvertScaleColor(alpha);
+    const float verts[6][12] = {
+        {0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, a, tl[0], tl[1], 0.0f, 1.0f},
+        {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, a, tl[0], br[1], 0.0f, 1.0f},
+        {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, a, br[0], tl[1], 0.0f, 1.0f},
+        {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, a, br[0], tl[1], 0.0f, 1.0f},
+        {0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, a, tl[0], br[1], 0.0f, 1.0f},
+        {1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, a, br[0], br[1], 0.0f, 1.0f},
+    };
+
+    MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
+    MikuPan_SetUniform1fToCurrentShader(g_photo_preview_negative_strength,
+                                        "uPhotoNegativeStrength");
+    MikuPan_SetRenderState2D();
+
+    MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_BindTexture2DCached(g_photo_preview_texture.id);
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr)sizeof(verts), verts);
+
+    MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, 6);
+    MikuPan_PerfDrawCall();
+
+    g_photo_preview_negative_strength = 0.0f;
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uPhotoNegativeStrength");
+
+    g_photo_debug.last_draw_valid = 1;
+    g_photo_debug.draw_count++;
+    g_photo_debug.draw_x = x;
+    g_photo_debug.draw_y = y;
+    g_photo_debug.draw_w = w;
+    g_photo_debug.draw_h = h;
+    g_photo_debug.draw_alpha = alpha;
+}
+
+int MikuPan_RenderPhotoPreviewOverlayForFrame(void)
+{
+    if (!g_photo_debug.effect_overlay_active ||
+        g_photo_preview_texture.id == 0 ||
+        g_photo_preview_w <= 0 ||
+        g_photo_preview_h <= 0)
+    {
+        return 0;
+    }
+
+    MikuPan_RenderPhotoPreviewTexture(
+        g_photo_preview_x,
+        g_photo_preview_y,
+        g_photo_preview_w,
+        g_photo_preview_h,
+        0xff);
+
+    g_photo_debug.effect_overlay_drawn_in_game = 1;
+    g_photo_debug.effect_overlay_in_game_count++;
+    return 1;
+}
+
+int MikuPan_RenderPhotoNegativePreviewOverlayForFrame(void)
+{
+    /*
+     * The photo negative is an outside-the-photo full-frame effect. It cannot
+     * be represented by drawing the captured photo texture again, because that
+     * targets the exclusion rect. The final postprocess pass consumes
+     * negative_overlay_active/negative_strength and applies the effect to the
+     * composed framebuffer outside negative_x/y/w/h.
+     */
+    return 0;
+}
+
+static void MikuPan_RenderPhotoDebugRect(int x, int y, int w, int h,
+                                         float r, float g, float b, float a)
+{
+    float tl[4] = {0};
+    float br[4] = {0};
+
+    if (w <= 0 || h <= 0)
+    {
+        return;
+    }
+
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(
+        tl,
+        (float)MikuPan_GetWindowWidth(),
+        (float)MikuPan_GetWindowHeight(),
+        (float)x,
+        (float)y);
+    MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(
+        br,
+        (float)MikuPan_GetWindowWidth(),
+        (float)MikuPan_GetWindowHeight(),
+        (float)(x + w),
+        (float)(y + h));
+
+    const float verts[4][8] = {
+        {r, g, b, a, tl[0], tl[1], 0.0f, 1.0f},
+        {r, g, b, a, tl[0], br[1], 0.0f, 1.0f},
+        {r, g, b, a, br[0], tl[1], 0.0f, 1.0f},
+        {r, g, b, a, br[0], br[1], 0.0f, 1.0f},
+    };
+
+    MikuPan_FlushTexturedSpriteBatch();
+    MikuPan_SetCurrentShaderProgram(UNTEXTURED_COLOURED_SPRITE_SHADER);
+    MikuPan_SetRenderState2D();
+
+    MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(COLOUR4_POSITION4);
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr)sizeof(verts), verts);
+
+    MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    MikuPan_PerfDrawCall();
+}
+
+static int MikuPan_GetPhotoPreviewDebugRect(int *x, int *y, int *w, int *h)
+{
+    if (g_photo_preview_w > 0 && g_photo_preview_h > 0)
+    {
+        *x = g_photo_preview_x;
+        *y = g_photo_preview_y;
+        *w = g_photo_preview_w;
+        *h = g_photo_preview_h;
+        return 1;
+    }
+
+    if (g_photo_debug.last_draw_valid &&
+        g_photo_debug.draw_w > 0 &&
+        g_photo_debug.draw_h > 0)
+    {
+        *x = g_photo_debug.draw_x;
+        *y = g_photo_debug.draw_y;
+        *w = g_photo_debug.draw_w;
+        *h = g_photo_debug.draw_h;
+        return 1;
+    }
+
+    return 0;
+}
+
+static int MikuPan_GetPhotoNegativeDebugRect(int *x, int *y, int *w, int *h)
+{
+    if (g_photo_debug.negative_w > 0 && g_photo_debug.negative_h > 0)
+    {
+        *x = g_photo_debug.negative_x;
+        *y = g_photo_debug.negative_y;
+        *w = g_photo_debug.negative_w;
+        *h = g_photo_debug.negative_h;
+        return 1;
+    }
+
+    return MikuPan_GetPhotoPreviewDebugRect(x, y, w, h);
+}
+
+static void MikuPan_RenderPhotoDebugTargetRect(void)
+{
+    int x = 0;
+    int y = 0;
+    int w = 0;
+    int h = 0;
+
+    g_photo_debug.target_rect_drawn = 0;
+
+    if (!g_photo_debug.target_rect_enabled ||
+        !MikuPan_GetPhotoPreviewDebugRect(&x, &y, &w, &h))
+    {
+        return;
+    }
+
+    MikuPan_RenderPhotoDebugRect(x, y, w, h, 1.0f, 0.0f, 1.0f, 0.22f);
+    g_photo_debug.target_rect_drawn = 1;
+}
+
+static void MikuPan_RenderPhotoNegativeDebugLayer(void)
+{
+    int x = 0;
+    int y = 0;
+    int w = 0;
+    int h = 0;
+
+    g_photo_debug.negative_debug_layer_drawn = 0;
+
+    if (!g_photo_debug.negative_debug_layer_enabled ||
+        !MikuPan_GetPhotoNegativeDebugRect(&x, &y, &w, &h))
+    {
+        return;
+    }
+
+    MikuPan_RenderPhotoDebugRect(0, 0, 640, y, 0.0f, 0.85f, 1.0f, 0.22f);
+    MikuPan_RenderPhotoDebugRect(0, y + h, 640, 448 - (y + h),
+                                 0.0f, 0.85f, 1.0f, 0.22f);
+    MikuPan_RenderPhotoDebugRect(0, y, x, h, 0.0f, 0.85f, 1.0f, 0.22f);
+    MikuPan_RenderPhotoDebugRect(x + w, y, 640 - (x + w), h,
+                                 0.0f, 0.85f, 1.0f, 0.22f);
+    g_photo_debug.negative_debug_layer_drawn = 1;
+    g_photo_debug.negative_debug_layer_count++;
+}
+
+void MikuPan_RenderQueuedPhotoPreviewTexture(void)
+{
+    int rendered_preview = 0;
+    int preview_context =
+        g_photo_preview_queued || g_photo_debug.effect_overlay_active ||
+        g_photo_debug.effect_overlay_drawn_in_game;
+
+    if (g_photo_preview_queued &&
+        !g_photo_debug.effect_overlay_drawn_in_game)
+    {
+        g_photo_preview_queued = 0;
+        g_photo_debug.queued = 0;
+        MikuPan_RenderPhotoPreviewTexture(
+            g_photo_preview_x,
+            g_photo_preview_y,
+            g_photo_preview_w,
+            g_photo_preview_h,
+            g_photo_preview_alpha);
+        rendered_preview = 1;
+    }
+    else if (g_photo_preview_queued)
+    {
+        g_photo_preview_queued = 0;
+        g_photo_debug.queued = 0;
+    }
+
+    if (!rendered_preview &&
+        !g_photo_debug.force_negative_preview_enabled &&
+        !g_photo_debug.negative_overlay_drawn_in_game &&
+        ((g_photo_debug.force_opaque_preview_enabled && preview_context) ||
+         (g_photo_debug.effect_overlay_active &&
+          !g_photo_debug.effect_overlay_drawn_in_game)) &&
+        g_photo_preview_texture.id != 0 &&
+        g_photo_preview_w > 0 &&
+        g_photo_preview_h > 0)
+    {
+        MikuPan_RenderPhotoPreviewTexture(
+            g_photo_preview_x,
+            g_photo_preview_y,
+            g_photo_preview_w,
+            g_photo_preview_h,
+            0xff);
+    }
+
+    MikuPan_RenderPhotoNegativeDebugLayer();
+    MikuPan_RenderPhotoDebugTargetRect();
+    g_photo_debug.effect_overlay_active = 0;
+    g_photo_debug.effect_overlay_drawn_in_game = 0;
+    g_photo_debug.negative_overlay_drawn_in_game = 0;
 }
 
 void MikuPan_DeleteTexture(MikuPan_TextureInfo *texture_info)

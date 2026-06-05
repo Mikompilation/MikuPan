@@ -58,6 +58,8 @@ void PhotoCtrl()
             photo_wrk.mode = PHOTO_MODE_SCORE;
         /* case fall-through */
         case PHOTO_MODE_SCORE:
+            StagePhotoCaptureForSave();
+
             load_id1 = SpecialPhotoMakeJudge();
 
             hint_2d = 0;
