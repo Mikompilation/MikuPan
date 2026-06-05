@@ -1,4 +1,5 @@
 #include "iopadpcm.h"
+#include "SDL3/SDL_audio.h"
 #include "SDL3/SDL_timer.h"
 #include "common.h"
 #include "enums.h"
@@ -15,14 +16,14 @@
 IOP_ADPCM iop_adpcm[2];
 ADPCM_CMD now_cmd;
 ADPCM_CMD cmd_buf[8];
-s16 *AdpcmSpuBuf[2];
-s16 *AdpcmIopBuf[2];
+s16* AdpcmSpuBuf[2];
+s16* AdpcmIopBuf[2];
 
 u_short volL, volR;
 u_short adsr1L, adsr2L;
 u_short adsr1R, adsr2R;
 
-SDL_Mutex *cmd_lock;
+SDL_Mutex* cmd_lock;
 
 /* ADPCM Notes
  *
@@ -43,7 +44,7 @@ enum
     IA_RESTART = 5,
 };
 
-void IAdpcmPreLoad(ADPCM_CMD *acp)
+void IAdpcmPreLoad(ADPCM_CMD* acp)
 {
     int channel;
     u_char endld_flg;
@@ -93,9 +94,9 @@ void IAdpcmPreLoad(ADPCM_CMD *acp)
                       channel, 1u, endld_flg);
 }
 
-static s16 *MixSamples(int sampleCount, s16 *samples, s32 vol)
+static s16* MixSamples(int sampleCount, s16* samples, s32 vol)
 {
-    s16 *buffer = samples;
+    s16* buffer = samples;
 
     for (int i = 0; i < sampleCount; i++)
     {
@@ -106,15 +107,15 @@ static s16 *MixSamples(int sampleCount, s16 *samples, s32 vol)
     return buffer;
 }
 
-static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
-                       SDL_AudioStream *stream)
+static void FillStereo(int size, u_char channel, s16** src_buf, s16** dec_buf,
+                       SDL_AudioStream* stream)
 {
-    void *dec[2] = {dec_buf[0], dec_buf[1]};
+    void* dec[2] = {dec_buf[0], dec_buf[1]};
 
     s32 histL[2] = {}, histR[2] = {};
 
-    s16 *src = src_buf[channel];
-    s16 *dst;
+    s16* src = src_buf[channel];
+    s16* dst;
 
     int chunks = size / 0x800 / 2;
 
@@ -151,7 +152,7 @@ static void FillStereo(int size, u_char channel, s16 **src_buf, s16 **dec_buf,
         s16 volumeR = mVolR * volR / INT16_MAX;
         dec[1] = MixSamples(3584, dec_buf[1], volumeR);
 
-        SDL_PutAudioStreamPlanarData(stream, (void *) dec, CHANNELS, 3584);
+        SDL_PutAudioStreamPlanarData(stream, (void*) dec, CHANNELS, 3584);
     }
 }
 
@@ -171,7 +172,9 @@ void IAdpcmPreLoadEnd(int channel)
     }
 
     if (iop_adpcm[channel].use)
+    {
         iop_adpcm[channel].stat = ADPCM_STAT_PRELOAD_END;
+    }
 }
 
 static void AdpcmTransCB()
@@ -181,7 +184,7 @@ static void AdpcmTransCB()
     iop_adpcm[0].str_tpos += 1302;
 }
 
-void IAdpcmPlay(ADPCM_CMD *acp)
+void IAdpcmPlay(ADPCM_CMD* acp)
 {
     u_char channel = acp->channel;
 
@@ -202,11 +205,13 @@ void IAdpcmPlay(ADPCM_CMD *acp)
     return;
 }
 
-void IAdpcmStop(ADPCM_CMD *acp)
+void IAdpcmStop(ADPCM_CMD* acp)
 {
     u_char channel;
 
-    SDL_PauseAudioDevice(audio_dev);
+    info_log("STOP");
+
+    SDL_PauseAudioStreamDevice(iop_adpcm[0].stream);
     SDL_ClearAudioStream(iop_adpcm[0].stream);
 
     channel = acp->channel;
@@ -233,7 +238,9 @@ void IAdpcmStop(ADPCM_CMD *acp)
         else
         {
             if (cdvd_stat.stat == ADPCM_STAT_LOOPEND_STOP)
+            {
                 ICdvdBreak();
+            }
             IaSetRegKoff(channel);
             iop_adpcm[channel].use = 0;
         }
@@ -251,12 +258,12 @@ void IAdpcmStop(ADPCM_CMD *acp)
     iop_adpcm[channel].tune_no = 0;
 }
 
-static void IAdpcmFadeVol(IOP_COMMAND *iop)
+static void IAdpcmFadeVol(IOP_COMMAND* iop)
 {
     // Unused in original code
 }
 
-static void IAdpcmPos(IOP_COMMAND *icp)
+static void IAdpcmPos(IOP_COMMAND* icp)
 {
     int channel;
 
@@ -267,7 +274,7 @@ static void IAdpcmPos(IOP_COMMAND *icp)
     IaSetRegPitch(channel);
 }
 
-static void IAdpcmMvol(IOP_COMMAND *icp)
+static void IAdpcmMvol(IOP_COMMAND* icp)
 {
     u_short mvol = icp->data1 & 0xffff;
     IaSetMasterVol(mvol);
@@ -275,7 +282,7 @@ static void IAdpcmMvol(IOP_COMMAND *icp)
 
 void IAdpcmMain(void)
 {
-    IOP_ADPCM *iap = iop_adpcm;
+    IOP_ADPCM* iap = iop_adpcm;
 
     while (1)
     {
@@ -305,7 +312,7 @@ void IAdpcmMain(void)
 
 void IAdpcmMain2()
 {
-    IOP_ADPCM *iap;
+    IOP_ADPCM* iap;
     ADPCM_CMD ac;
 
     iap = &iop_adpcm[0];
@@ -408,7 +415,9 @@ void IAdpcmInit(int dev_init)
     sceSdSetParam(SD_P_MVOLR | 0, 0);
 
     if (!dev_init)
+    {
         IaInitDev(0);
+    }
 
     spec.channels = CHANNELS;
     spec.format = SDL_AUDIO_S16;
@@ -425,7 +434,7 @@ void IAdpcmInit(int dev_init)
     iop_stat.adpcm.status = 0;
 }
 
-void IAdpcmCmd(IOP_COMMAND *icp)
+void IAdpcmCmd(IOP_COMMAND* icp)
 {
     switch (icp->cmd_no)
     {
@@ -457,11 +466,11 @@ void IAdpcmCmd(IOP_COMMAND *icp)
     }
 }
 
-void IAdpcmAddCmd(IOP_COMMAND *icp)
+void IAdpcmAddCmd(IOP_COMMAND* icp)
 {
     ADPCM_CMD cmd;
-    ADPCM_CMD *nc;
-    ADPCM_CMD *ac;
+    ADPCM_CMD* nc;
+    ADPCM_CMD* ac;
     int i;
     int j;
     int k;
@@ -567,7 +576,7 @@ void IAdpcmAddCmd(IOP_COMMAND *icp)
     }
 }
 
-SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream,
+SDLCALL void IAdpcmReadCh0(void* userdata, SDL_AudioStream* stream,
                            int additional_amount, int total_amount)
 {
     int count = 0;
@@ -596,20 +605,22 @@ SDLCALL void IAdpcmReadCh0(void *userdata, SDL_AudioStream *stream,
                     iop_adpcm[0].lreq_size = 0x20000;
                     ICdvdLoadReqAdpcm(
                         start, total_amount,
-                        (s16 *) &AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi],
-                        0, 2u, 0);
+                        (s16*) &AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi], 0,
+                        2u, 0);
                 }
                 else if (remain_l)
                 {
                     iop_adpcm[0].lreq_size = remain_l;
                     ICdvdLoadReqAdpcm(
                         start, total_amount,
-                        (s16 *) &AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi],
-                        0, 2u, 1u);
+                        (s16*) &AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi], 0,
+                        2u, 1u);
                 }
 
                 if (iop_adpcm[0].dbidi)
+                {
                     iop_adpcm[0].pos = 0;
+                }
 
                 iop_adpcm[0].dbidi ^= 1;
             }
@@ -734,7 +745,7 @@ void IAdpcmTuneEndLoop(u_char channel, u_char fade, u_short tune_no)
     now_cmd = cmd;
 }
 
-SDLCALL int IAdpcmReadCh1(void *data)
+SDLCALL int IAdpcmReadCh1(void* data)
 {
     int count = 0;
     int start;
@@ -764,8 +775,8 @@ SDLCALL int IAdpcmReadCh1(void *data)
                         iop_adpcm[1].lreq_size = 0x20000;
                         ICdvdLoadReqAdpcm(
                             start, iop_adpcm[1].lreq_size,
-                            (u_int *) &AdpcmIopBuf[1][0x20000
-                                                      * iop_adpcm[1].dbidi],
+                            (u_int*) &AdpcmIopBuf[1]
+                                                 [0x20000 * iop_adpcm[1].dbidi],
                             1, 2u, 0);
                     }
                     else if (remain_l)
@@ -773,13 +784,15 @@ SDLCALL int IAdpcmReadCh1(void *data)
                         iop_adpcm[1].lreq_size = remain_l;
                         ICdvdLoadReqAdpcm(
                             start, iop_adpcm[1].lreq_size,
-                            (u_int *) &AdpcmIopBuf[1][0x20000
-                                                      * iop_adpcm[1].dbidi],
+                            (u_int*) &AdpcmIopBuf[1]
+                                                 [0x20000 * iop_adpcm[1].dbidi],
                             1, 2u, 1u);
                     }
 
                     if (iop_adpcm[1].dbidi)
+                    {
                         iop_adpcm[1].pos = 0;
+                    }
 
                     iop_adpcm[1].dbidi ^= 1;
                 }
@@ -854,10 +867,10 @@ SDLCALL int IAdpcmReadCh1(void *data)
     return 0;
 }
 
-static void SetLoopFlag(s16 *st_addr, u_int szvag, u_char st_end)
+static void SetLoopFlag(s16* st_addr, u_int szvag, u_char st_end)
 {
     int i;
-    u_char *lpflgp = (u_char *) st_addr;
+    u_char* lpflgp = (u_char*) st_addr;
 
     lpflgp++;
     for (i = 0; i < szvag >> 4; ++i)
@@ -874,7 +887,7 @@ static void SetLoopFlag(s16 *st_addr, u_int szvag, u_char st_end)
 
     if ((st_end & 1) != 0)
     {
-        lpflgp = (u_char *) st_addr;
+        lpflgp = (u_char*) st_addr;
         lpflgp++;
         *lpflgp |= 4;
     }
@@ -882,7 +895,7 @@ static void SetLoopFlag(s16 *st_addr, u_int szvag, u_char st_end)
 
 static void SetLoopFlgAll(u_short core)
 {
-    u_char *pos;
+    u_char* pos;
     int i;
     int times;
 
@@ -899,7 +912,7 @@ static void SetLoopFlgAll(u_short core)
 
 static void SetLoopFlgAll2(u_short core)
 {
-    u_char *pos;
+    u_char* pos;
     int i;
     int times;
 
@@ -914,16 +927,16 @@ static void SetLoopFlgAll2(u_short core)
     }
 }
 
-void SetLoopFlgSize(u_int size_byte, u_int *start, u_short core)
+void SetLoopFlgSize(u_int size_byte, u_int* start, u_short core)
 {
     int i;
     int j;
     int k;
     int lt0;
     int lt1;
-    u_char *lpflgp;
+    u_char* lpflgp;
 
-    lpflgp = (u_char *) start;
+    lpflgp = (u_char*) start;
     lt0 = size_byte / 0x2000;
     lt1 = 0x80;
     lpflgp++;
@@ -935,9 +948,13 @@ void SetLoopFlgSize(u_int size_byte, u_int *start, u_short core)
             for (k = 0; k < lt1; k++)
             {
                 if (!k)
+                {
                     *lpflgp = 6;
+                }
                 else
+                {
                     *lpflgp = 2;
+                }
 
                 lpflgp += 16;
             }
@@ -947,9 +964,13 @@ void SetLoopFlgSize(u_int size_byte, u_int *start, u_short core)
             for (k = 0; k < lt1; k++)
             {
                 if (k == lt1 - 1)
+                {
                     *lpflgp = 3;
+                }
                 else
+                {
                     *lpflgp = 2;
+                }
 
                 lpflgp += 16;
             }

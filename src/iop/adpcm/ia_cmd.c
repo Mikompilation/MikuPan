@@ -9,8 +9,8 @@ void InitAdpcmCmdBuf()
 
 void IAdpcmCmdSlide()
 {
-    ADPCM_CMD *ac0;
-    ADPCM_CMD *ac1;
+    ADPCM_CMD* ac0;
+    ADPCM_CMD* ac1;
     int i;
 
     SDL_LockMutex(cmd_lock);
@@ -52,7 +52,8 @@ void IAdpcmCmdPlay()
                 DbgDispAdpcmCmdWrk(&now_cmd);
                 if (now_cmd.fade_flm)
                 {
-                    IaSetWrkFadeMode(now_cmd.channel, now_cmd.fade_mode, now_cmd.target_vol, 4 * now_cmd.fade_flm);
+                    IaSetWrkFadeMode(now_cmd.channel, now_cmd.fade_mode,
+                                     now_cmd.target_vol, 4 * now_cmd.fade_flm);
                 }
                 IAdpcmPlay(&now_cmd);
                 now_cmd.cmd_type = AC_NONE;
@@ -93,8 +94,8 @@ void IAdpcmCmdPlay()
 void IAdpcmCmdStop()
 {
 
-    SDL_ClearAudioStream(iop_adpcm[0].stream);
-    SDL_PauseAudioStreamDevice(iop_adpcm[0].stream);
+    //SDL_ClearAudioStream(iop_adpcm[0].stream);
+    //SDL_PauseAudioStreamDevice(iop_adpcm[0].stream);
 
     switch (iop_adpcm[0].stat)
     {
@@ -123,8 +124,8 @@ void IAdpcmCmdStop()
                     iop_adpcm[0].fade_mode = ADPCM_FADE_OUT_STOP;
                     iop_adpcm[0].fade_count = 0;
                 }
-            }*/               
-            //else    
+            }*/
+            //else
             {
                 IAdpcmStop(&now_cmd);
             }
@@ -205,6 +206,6 @@ void IAdpcmCmdRestart()
     }
 }
 
-void DbgDispAdpcmCmdWrk(ADPCM_CMD *acp)
+void DbgDispAdpcmCmdWrk(ADPCM_CMD* acp)
 {
 }
