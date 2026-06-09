@@ -1,5 +1,6 @@
 #include "mikupan_renderer_internal.h"
 #include "mikupan_pipeline.h"
+#include "mikupan_gpu.h"
 #include "mikupan/mikupan_types.h"
 #include <string.h>
 
@@ -149,9 +150,8 @@ static void MikuPan_CopySpotIntens(float dst[MIKUPAN_MAX_LIGHTS][4],
 static void MikuPan_UploadLightData(void)
 {
     MikuPan_PipelineInfo *p = MikuPan_GetPipelineInfo(LIGHTING_DATA);
-    glad_glBindBuffer(GL_UNIFORM_BUFFER, p->buffers[0].id);
-    glad_glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(MikuPan_LightData),
-                         &mikupan_light_data);
+    MikuPan_GPUUpdateUniformCPUBuffer(
+        p->buffers[0].id, sizeof(MikuPan_LightData), &mikupan_light_data);
 }
 
 void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
@@ -412,8 +412,7 @@ void MikuPan_SetMaterial(const sceVu0FVECTOR *ambient,
     memcpy(mikupan_material_data.uMatSpecular, *specular, sizeof(float[4]));
     memcpy(mikupan_material_data.uMatEmission, *emission, sizeof(float[4]));
     MikuPan_PipelineInfo *p = MikuPan_GetPipelineInfo(MATERIAL_DATA);
-    glad_glBindBuffer(GL_UNIFORM_BUFFER, p->buffers[0].id);
-    glad_glBufferSubData(GL_UNIFORM_BUFFER, 0,
-                         sizeof(MikuPan_MaterialData),
-                         &mikupan_material_data);
+    MikuPan_GPUUpdateUniformCPUBuffer(
+        p->buffers[0].id, sizeof(MikuPan_MaterialData),
+        &mikupan_material_data);
 }

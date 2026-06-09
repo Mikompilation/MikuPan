@@ -3,6 +3,7 @@
 #include "main/glob.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_pipeline.h"
+#include "mikupan_gpu.h"
 #include "mikupan_shader.h"
 #include <math.h>
 
@@ -30,12 +31,11 @@ static void CameraDebugFlushLines(const float color[4])
 
     MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(POSITION4);
     MikuPan_BindVAO(pipeline->vao);
-    MikuPan_BindBufferCached(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
-    glad_glBufferSubData(GL_ARRAY_BUFFER,
-                         pipeline->buffers[0].attributes[0].offset,
-                         (GLsizeiptr)(debug_line_vertex_count * sizeof(debug_line_vertices[0])),
-                         debug_line_vertices);
-    glad_glDrawArrays(GL_LINES, 0, debug_line_vertex_count);
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+        (GLsizeiptr)(debug_line_vertex_count * sizeof(debug_line_vertices[0])),
+        debug_line_vertices);
+    MikuPan_TimedDrawArrays(GL_LINES, 0, debug_line_vertex_count);
 
     debug_line_vertex_count = 0;
 }
@@ -179,10 +179,9 @@ void MikuPan_RenderCameraDebug(void)
     MikuPan_SetCurrentShaderProgram(CAMERA_DEBUG_SHADER);
     MikuPan_SetUniformMatrix4fvToCurrentShader((float *)camera.wcv, "uWorldClipView");
     MikuPan_SetRenderState3D();
-    glad_glDisable(GL_CULL_FACE);
-    glad_glDisable(GL_DEPTH_TEST);
-    glad_glDepthMask(GL_FALSE);
-    glad_glLineWidth(2.0f);
+    MikuPan_GPUSetCullNone();
+    MikuPan_GPUSetDepthFunc(GL_ALWAYS);
+    MikuPan_GPUSetDepthWrite(0);
 
     CameraDebugDrawLine(camera.p, camera.i, view_line_color);
     CameraDebugDrawCross(camera.p, 42.0f, camera_marker_color);
@@ -222,7 +221,6 @@ void MikuPan_RenderCameraDebug(void)
         }
     }
 
-    glad_glLineWidth(1.0f);
-    glad_glDepthMask(GL_TRUE);
+    MikuPan_GPUSetDepthWrite(1);
     MikuPan_ResetRenderStateCache();
 }

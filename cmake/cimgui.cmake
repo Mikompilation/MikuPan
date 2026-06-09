@@ -22,7 +22,7 @@ add_library(cimgui STATIC
         ${cimgui_src_SOURCE_DIR}/imgui/imgui_tables.cpp
         ${cimgui_src_SOURCE_DIR}/imgui/imgui_widgets.cpp
         ${cimgui_src_SOURCE_DIR}/imgui/backends/imgui_impl_sdl3.cpp
-        ${cimgui_src_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
+        ${cimgui_src_SOURCE_DIR}/imgui/backends/imgui_impl_sdlgpu3.cpp
 )
 
 target_include_directories(cimgui PUBLIC

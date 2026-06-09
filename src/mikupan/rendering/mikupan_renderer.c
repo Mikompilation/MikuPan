@@ -11,6 +11,7 @@
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_screenshot.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include "SDL3/SDL_timer.h"
@@ -22,7 +23,6 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
                                                     float x, float y,
                                                     float w, float h);
 
-#define GLAD_GL_IMPLEMENTATION
 #include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_config.h"
@@ -32,18 +32,23 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
 
 #include <glad/gl.h>
 
-SDL_GLContext gl_context = NULL;
 MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_MsaaBufferObject render_back_msaa = {0};
 static int g_mirror_scissor_enabled = 0;
-static unsigned char *g_last_resolved_frame_rgba = NULL;
-static int g_last_resolved_frame_width = 0;
-static int g_last_resolved_frame_height = 0;
-static int g_last_resolved_frame_valid = 0;
+/*
+ * Snapshot of the previous fully-composited scene texture. Game/effect logic
+ * (mirror framebuffer-to-GS uploads, photo capture) needs the previous frame's
+ * framebuffer contents, but downloading it to the CPU every frame forces a full
+ * GPU sync (submit + fence wait) and tanks the frame rate. Instead keep a cheap
+ * GPU-side copy each frame and only read it back on demand when a consumer asks.
+ */
+static unsigned int g_scene_snapshot_id = 0;
+static int g_scene_snapshot_valid = 0;
 
 void MikuPan_StreamUploadFull(GLenum target, GLuint buffer,
                                             GLsizeiptr size, const void *data)
 {
+    (void)target;
     if (size <= 0)
     {
         return;
@@ -51,19 +56,7 @@ void MikuPan_StreamUploadFull(GLenum target, GLuint buffer,
 
     Uint64 t0 = MikuPan_PerfBegin();
 
-    MikuPan_BindBufferCached(target, buffer);
-
-    void *ptr = glad_glMapBufferRange(target, 0, size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-
-    if (ptr != NULL)
-    {
-        memcpy(ptr, data, (size_t)size);
-        glad_glUnmapBuffer(target);
-    }
-    else
-    {
-        glad_glBufferSubData(target, 0, size, data);
-    }
+    MikuPan_GPUUploadBuffer(buffer, (unsigned int)size, data);
 
     MikuPan_PerfEnd(PERF_SECT_BUFFER_UPLOAD, t0);
 }
@@ -93,7 +86,6 @@ static void MikuPan_ConvertRGBA8ToBlackWhite(unsigned char *rgba,
 SDL_AppResult MikuPan_Init()
 {
     MikuPan_LoadConfiguration(NULL);
-    MikuPan_SetupOpenGLContext();
     SDL_SetAppMetadata("MikuPan", "1.0", "MikuPan");
 
     info_log("Initializing SDL");
@@ -105,8 +97,6 @@ SDL_AppResult MikuPan_Init()
     }
 
     SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
-
-    MikuPan_SetupOpenGLContext();
 
     info_log("Loading SDL_GameControllerDB");
 
@@ -135,7 +125,7 @@ SDL_AppResult MikuPan_Init()
         mikupan_configuration.renderer.window.height = desired_window_height;
     }
 
-    int config_window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL;
+    int config_window_flags = SDL_WINDOW_RESIZABLE;
 
     /* Resolve the saved display mode (migrating the legacy is_fullscreen flag). */
     int startup_window_mode = mikupan_configuration.renderer.window_mode;
@@ -193,19 +183,6 @@ SDL_AppResult MikuPan_Init()
         SDL_DestroySurface(iconSurface);
     }
 
-    info_log("Creating OpenGL Context");
-
-    gl_context = SDL_GL_CreateContext(mikupan_render.window);
-
-    if (gl_context == NULL)
-    {
-        info_log("Error creating the OpenGL context %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-
-    SDL_GL_MakeCurrent(mikupan_render.window, gl_context);
-    info_log("GLad version loaded %d", gladLoadGLLoader((void*)SDL_GL_GetProcAddress));
-
     int desired_render_width = mikupan_configuration.renderer.render.width;
     int desired_render_height = mikupan_configuration.renderer.render.height;
     int desired_msaa = mikupan_configuration.renderer.msaa_index;
@@ -237,33 +214,16 @@ SDL_AppResult MikuPan_Init()
         mikupan_configuration.renderer.vsync = desired_vsync;
     }
 
-    if (!SDL_GL_SetSwapInterval(desired_vsync))
+    if (!MikuPan_GPUInit(mikupan_render.window, desired_vsync))
     {
-        info_log("Failed to disable GL vsync: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
     }
 
-    MikuPan_InitUi(mikupan_render.window, gl_context);
+    MikuPan_InitUi(mikupan_render.window);
     MikuPan_CreateInternalBuffer(desired_render_width, desired_render_height, msaa_list[desired_msaa]);
     MikuPan_InitShaders();
     MikuPan_InitPipeline();
     MikuPan_MeshCache_Init();
-
-    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
-    {
-        u_int program = MikuPan_SetCurrentShaderProgram(i);
-
-        u_int lightIdx = glad_glGetUniformBlockIndex(program, "LightBlock");
-        if (lightIdx != GL_INVALID_INDEX)
-        {
-            glad_glUniformBlockBinding(program, lightIdx, LightBlock);
-        }
-
-        u_int materialIdx = glad_glGetUniformBlockIndex(program, "MaterialBlock");
-        if (materialIdx != GL_INVALID_INDEX)
-        {
-            glad_glUniformBlockBinding(program, materialIdx, MaterialBlock);
-        }
-    }
 
     MikuPan_Setup3D();
 
@@ -272,135 +232,67 @@ SDL_AppResult MikuPan_Init()
 
 void MikuPan_DestroyInternalBuffer()
 {
-    free(g_last_resolved_frame_rgba);
-    g_last_resolved_frame_rgba = NULL;
-    g_last_resolved_frame_width = 0;
-    g_last_resolved_frame_height = 0;
-    g_last_resolved_frame_valid = 0;
-
-    if (render_back_msaa.colour.id)
+    if (g_scene_snapshot_id != 0)
     {
-        glad_glDeleteRenderbuffers(1, &render_back_msaa.colour.id);
-        render_back_msaa.colour.id = 0;
+        MikuPan_GPUReleaseTexture(g_scene_snapshot_id);
+        g_scene_snapshot_id = 0;
     }
+    g_scene_snapshot_valid = 0;
 
-    if (render_back_msaa.depth.id)
-    {
-        glad_glDeleteRenderbuffers(1, &render_back_msaa.depth.id);
-        render_back_msaa.depth.id = 0;
-    }
-
-    if (render_back_msaa.framebuffer_readback.id)
-    {
-        glad_glDeleteFramebuffers(1, &render_back_msaa.framebuffer_readback.id);
-        render_back_msaa.framebuffer_readback.id = 0;
-    }
-
-    if (render_back_msaa.texture.id)
-    {
-        glad_glDeleteTextures(1, &render_back_msaa.texture.id);
-        render_back_msaa.texture.id = 0;
-    }
-
-    if (render_back_msaa.framebuffer.id)
-    {
-        glad_glDeleteFramebuffers(1, &render_back_msaa.framebuffer.id);
-        render_back_msaa.framebuffer.id = 0;
-    }
+    MikuPan_GPUDestroyInternalBuffer();
+    memset(&render_back_msaa, 0, sizeof(render_back_msaa));
 }
 
-static int MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(GLuint src_fbo,
-                                                      int width,
-                                                      int height,
-                                                      unsigned char *out_rgba)
+static int MikuPan_ReadTextureRGBA8TopLeft(unsigned int texture_id,
+                                           int src_w,
+                                           int src_h,
+                                           int width,
+                                           int height,
+                                           unsigned char *out_rgba)
 {
     if (width <= 0 || height <= 0 || out_rgba == NULL)
     {
         return 0;
     }
 
-    GLint prev_read_fbo = 0, prev_draw_fbo = 0;
-    glad_glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prev_read_fbo);
-    glad_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prev_draw_fbo);
-
-    GLint src_w = width, src_h = height;
-    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, src_fbo);
-    GLint attach_type = 0;
-    glad_glGetFramebufferAttachmentParameteriv(
-        GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-        GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &attach_type);
-    if (attach_type == GL_RENDERBUFFER)
+    if (texture_id == 0 || src_w <= 0 || src_h <= 0)
     {
-        GLint rb = 0;
-        glad_glGetFramebufferAttachmentParameteriv(
-            GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-            GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &rb);
-        glad_glBindRenderbuffer(GL_RENDERBUFFER, (GLuint)rb);
-        glad_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,  &src_w);
-        glad_glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &src_h);
-        glad_glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    }
-    else if (attach_type == GL_TEXTURE)
-    {
-        GLint tex = 0;
-        glad_glGetFramebufferAttachmentParameteriv(
-            GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-            GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &tex);
-        MikuPan_BindTexture2DCached((GLuint)tex);
-        glad_glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &src_w);
-        glad_glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &src_h);
-    }
-    else
-    {
-        glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint)prev_read_fbo);
         return 0;
     }
 
-    GLuint tmp_tex = 0, tmp_fbo = 0;
-    glad_glGenTextures(1, &tmp_tex);
-    MikuPan_BindTexture2DCached(tmp_tex);
-    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
-                      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glad_glGenFramebuffers(1, &tmp_fbo);
-    glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, tmp_fbo);
-    glad_glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                GL_TEXTURE_2D, tmp_tex, 0);
-
-    // Linear filter keeps freeze-frame captures from aliasing when the
-    // internal buffer is much larger than 640x224.
-    glad_glBlitFramebuffer(0, 0, src_w, src_h,
-                           0, 0, width, height,
-                           GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, tmp_fbo);
-    glad_glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glad_glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, out_rgba);
-
+    if (width == src_w && height == src_h)
     {
-        const int row_bytes = width * 4;
-        unsigned char swap_row[4096];
-        unsigned char *swap_ptr = (row_bytes <= (int)sizeof(swap_row)) ? swap_row : NULL;
-        unsigned char *heap_row = NULL;
-        if (swap_ptr == NULL)
+        if (!MikuPan_GPUReadTextureRGBA8(texture_id, width, height, out_rgba))
         {
-            heap_row = (unsigned char *)malloc((size_t)row_bytes);
-            swap_ptr = heap_row;
+            return 0;
         }
-        if (swap_ptr != NULL)
+    }
+    else
+    {
+        const size_t src_bytes = (size_t)src_w * (size_t)src_h * 4u;
+        unsigned char *src_rgba = (unsigned char *)malloc(src_bytes);
+        if (src_rgba == NULL)
         {
-            for (int y = 0; y < height / 2; ++y)
+            return 0;
+        }
+        if (!MikuPan_GPUReadTextureRGBA8(texture_id, src_w, src_h, src_rgba))
+        {
+            free(src_rgba);
+            return 0;
+        }
+
+        for (int y = 0; y < height; y++)
+        {
+            const int sy = (int)(((long long)y * src_h) / height);
+            for (int x = 0; x < width; x++)
             {
-                unsigned char *a = out_rgba + (size_t)y * (size_t)row_bytes;
-                unsigned char *b = out_rgba + (size_t)(height - 1 - y) * (size_t)row_bytes;
-                memcpy(swap_ptr, a, (size_t)row_bytes);
-                memcpy(a, b, (size_t)row_bytes);
-                memcpy(b, swap_ptr, (size_t)row_bytes);
+                const int sx = (int)(((long long)x * src_w) / width);
+                memcpy(out_rgba + ((size_t)y * width + x) * 4u,
+                       src_rgba + ((size_t)sy * src_w + sx) * 4u,
+                       4);
             }
         }
-        if (heap_row != NULL) free(heap_row);
+        free(src_rgba);
     }
 
     if (MikuPan_IsBlackWhiteModeActive())
@@ -408,189 +300,99 @@ static int MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(GLuint src_fbo,
         MikuPan_ConvertRGBA8ToBlackWhite(out_rgba, width, height);
     }
 
-    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint)prev_read_fbo);
-    glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, (GLuint)prev_draw_fbo);
-    glad_glDeleteFramebuffers(1, &tmp_fbo);
-    glad_glDeleteTextures(1, &tmp_tex);
     return 1;
 }
 
-static int MikuPan_EnsureLastResolvedFrameCache(int width, int height)
+static int MikuPan_ReadSceneTextureRGBA8TopLeft(int width,
+                                                int height,
+                                                unsigned char *out_rgba)
 {
-    const size_t bytes = (size_t)width * (size_t)height * 4u;
+    return MikuPan_ReadTextureRGBA8TopLeft(render_back_msaa.texture.id,
+                                           render_back_msaa.texture.width,
+                                           render_back_msaa.texture.height,
+                                           width, height, out_rgba);
+}
 
-    if (width <= 0 || height <= 0)
-    {
-        return 0;
-    }
-
-    if (g_last_resolved_frame_rgba != NULL &&
-        g_last_resolved_frame_width == width &&
-        g_last_resolved_frame_height == height)
-    {
-        return 1;
-    }
-
-    free(g_last_resolved_frame_rgba);
-    g_last_resolved_frame_rgba = (unsigned char *)malloc(bytes);
-    g_last_resolved_frame_width = width;
-    g_last_resolved_frame_height = height;
-    g_last_resolved_frame_valid = 0;
-
-    return g_last_resolved_frame_rgba != NULL;
+static int MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(GLuint src_fbo,
+                                                      int width,
+                                                      int height,
+                                                      unsigned char *out_rgba)
+{
+    (void)src_fbo;
+    return MikuPan_ReadSceneTextureRGBA8TopLeft(width, height, out_rgba);
 }
 
 static void MikuPan_UpdateLastResolvedFrameCache(void)
 {
-    if (render_back_msaa.framebuffer.id == 0 || render_back_msaa.texture.id == 0)
-    {
-        g_last_resolved_frame_valid = 0;
-        return;
-    }
+    g_scene_snapshot_valid = 0;
 
-    if (!MikuPan_EnsureLastResolvedFrameCache(SCR_WIDTH, SCR_HEIGHT))
+    if (render_back_msaa.texture.id == 0 || g_scene_snapshot_id == 0)
     {
         return;
     }
 
-    g_last_resolved_frame_valid =
-        MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(
-            render_back_msaa.framebuffer.id,
-            SCR_WIDTH,
-            SCR_HEIGHT,
-            g_last_resolved_frame_rgba);
+    /*
+     * Cheap GPU-to-GPU copy of the just-composited scene texture. No CPU
+     * readback or GPU sync happens here; the snapshot is only downloaded if a
+     * consumer later calls MikuPan_ReadResolvedFramebufferRGBA8TopLeft.
+     */
+    MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
+                           g_scene_snapshot_id,
+                           render_back_msaa.texture.width,
+                           render_back_msaa.texture.height);
+    g_scene_snapshot_valid = 1;
 }
 
 int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *out_rgba)
 {
-    GLint prev_draw_fbo = 0;
-    glad_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prev_draw_fbo);
-
-    return MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(
-        (GLuint)prev_draw_fbo,
-        width,
-        height,
-        out_rgba);
+    return MikuPan_ReadSceneTextureRGBA8TopLeft(width, height, out_rgba);
 }
 
 int MikuPan_ReadResolvedFramebufferRGBA8TopLeft(int width, int height,
                                                unsigned char *out_rgba)
 {
-    if (out_rgba != NULL &&
-        g_last_resolved_frame_valid &&
-        width == g_last_resolved_frame_width &&
-        height == g_last_resolved_frame_height)
-    {
-        memcpy(out_rgba,
-               g_last_resolved_frame_rgba,
-               (size_t)width * (size_t)height * 4u);
-        return 1;
-    }
-
-    if (render_back_msaa.framebuffer.id == 0 || render_back_msaa.texture.id == 0)
-    {
-        return MikuPan_ReadFramebufferRGBA8TopLeft(width, height, out_rgba);
-    }
-
     /*
      * GS local-framebuffer freezes are often requested from game/effect logic
-     * before the current GL frame has been drawn. In that state the bound draw
-     * FBO is just the cleared scene target, so freezing it captures black.
-     * Use the resolved scene texture from the previous completed frame instead:
-     * it is the closest equivalent to the PS2 local framebuffer contents that
-     * effects such as pause/menu/photo expect to copy.
+     * before the current frame has finished drawing. In that state the live
+     * scene target is the cleared/half-drawn current frame, so reading it back
+     * captures black. Download the snapshot of the previous completed frame
+     * instead: it is the closest equivalent to the PS2 local framebuffer
+     * contents that effects such as pause/menu/photo expect to copy. The
+     * download (and its GPU sync) only happens here, on demand, not every frame.
      */
-    return MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(
-        render_back_msaa.framebuffer.id,
-        width,
-        height,
-        out_rgba);
+    if (out_rgba != NULL && g_scene_snapshot_valid && g_scene_snapshot_id != 0)
+    {
+        if (MikuPan_ReadTextureRGBA8TopLeft(g_scene_snapshot_id,
+                                            render_back_msaa.texture.width,
+                                            render_back_msaa.texture.height,
+                                            width, height, out_rgba))
+        {
+            return 1;
+        }
+    }
+
+    return MikuPan_ReadFramebufferRGBA8TopLeft(width, height, out_rgba);
 }
 
 void MikuPan_SetupOpenGLContext()
 {
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, -1);
 }
 
 void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
 {
+    MikuPan_GPUCreateInternalBuffer(w, h, msaa);
+    render_back_msaa.texture.id = MikuPan_GPUGetSceneTextureId();
     render_back_msaa.texture.width = w;
     render_back_msaa.texture.height = h;
     render_back_msaa.msaa = msaa;
 
-    glad_glGenFramebuffers(1, &render_back_msaa.framebuffer.id);
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, render_back_msaa.framebuffer.id);
-
-    glad_glGenTextures(1, &render_back_msaa.texture.id);
-    MikuPan_BindTexture2DCached(render_back_msaa.texture.id);
-
-    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
-                      render_back_msaa.texture.width, render_back_msaa.texture.height, 0,
-                      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glad_glFramebufferTexture2D(GL_FRAMEBUFFER,
-                                GL_COLOR_ATTACHMENT0,
-                                GL_TEXTURE_2D,
-                                render_back_msaa.texture.id, 0);
-
-    if (glad_glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    if (g_scene_snapshot_id != 0)
     {
-        info_log("Resolve FBO failed!");
+        MikuPan_GPUReleaseTexture(g_scene_snapshot_id);
     }
+    g_scene_snapshot_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
+    g_scene_snapshot_valid = 0;
 
-    glad_glGenFramebuffers(1, &render_back_msaa.framebuffer_readback.id);
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, render_back_msaa.framebuffer_readback.id);
-
-    glad_glGenRenderbuffers(1, &render_back_msaa.colour.id);
-    glad_glBindRenderbuffer(GL_RENDERBUFFER, render_back_msaa.colour.id);
-
-    glad_glRenderbufferStorageMultisample(
-        GL_RENDERBUFFER,
-       render_back_msaa.msaa,
-        GL_RGBA8,
-        render_back_msaa.texture.width, render_back_msaa.texture.height
-    );
-
-    glad_glFramebufferRenderbuffer(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0,
-        GL_RENDERBUFFER,
-        render_back_msaa.colour.id
-    );
-
-    glad_glGenRenderbuffers(1, &render_back_msaa.depth.id);
-    glad_glBindRenderbuffer(GL_RENDERBUFFER, render_back_msaa.depth.id);
-
-    glad_glRenderbufferStorageMultisample(
-        GL_RENDERBUFFER,
-        render_back_msaa.msaa,
-        GL_DEPTH24_STENCIL8,
-        render_back_msaa.texture.width, render_back_msaa.texture.height
-    );
-
-    glad_glFramebufferRenderbuffer(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_STENCIL_ATTACHMENT,
-        GL_RENDERBUFFER,
-        render_back_msaa.depth.id
-    );
-
-    if (glad_glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        info_log("MSAA FBO failed!");
-    }
-
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
     MikuPan_SetViewportCached(0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height);
 }
 
@@ -654,6 +456,7 @@ static void MikuPan_ApplyWindowMode(int mode)
 
 void MikuPan_Clear()
 {
+    MikuPan_GPUBeginFrame();
     MikuPan_PerfBeginFrame();
     MikuPan_ShadowDebugBeginFrame();
 
@@ -676,11 +479,8 @@ void MikuPan_Clear()
         MikuPan_CreateInternalBuffer(curr_render_width, curr_render_height, curr_msaa);
     }
 
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, render_back_msaa.framebuffer_readback.id);
-
     MikuPan_SetViewportCached(0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height);
-
-    glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    MikuPan_GPUSetTarget(MIKUPAN_GPU_TARGET_SCENE, 1);
 
     if (mikupan_configuration.renderer.window_mode != MikuPan_GetWindowMode())
     {
@@ -693,10 +493,7 @@ void MikuPan_Clear()
     if (mikupan_configuration.renderer.vsync != MikuPan_IsVsync())
     {
         mikupan_configuration.renderer.vsync = MikuPan_IsVsync();
-        if (!SDL_GL_SetSwapInterval(mikupan_configuration.renderer.vsync))
-        {
-            info_log("Failed to disable GL vsync: %s", SDL_GetError());
-        }
+        MikuPan_GPUSetVsync(mikupan_configuration.renderer.vsync);
     }
 }
 
@@ -728,33 +525,28 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
 
 void MikuPan_EndFrame()
 {
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, render_back_msaa.framebuffer_readback.id);
+    MikuPan_GPUFlushRenderPass();
     MikuPan_SetViewportCached(
         0,
         0,
         render_back_msaa.texture.width,
         render_back_msaa.texture.height);
 
-    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, render_back_msaa.framebuffer_readback.id);
-    glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, render_back_msaa.framebuffer.id);
-
-    glad_glBlitFramebuffer(
-        0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height,
-        0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height,
-        GL_COLOR_BUFFER_BIT,
-        GL_LINEAR
-    );
-
     MikuPan_UpdateLastResolvedFrameCache();
 
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
     SDL_GetWindowSize(mikupan_render.window, &mikupan_render.width, &mikupan_render.height);
 
+    /*
+     * SDL_GPU render-target textures are stored top-down (V=0 == top row),
+     * unlike GL's bottom-up FBO textures. Map the scene texture's top row to
+     * the top of the window so the composited frame is not displayed upside
+     * down. (V coordinates flipped relative to the old GL blit.)
+     */
     float quad[] = {
-        0,0,0,0,   1,1,1,1,   -1,-1,0,1,
-        1,0,0,0,   1,1,1,1,    1,-1,0,1,
-        0,1,0,0,   1,1,1,1,   -1, 1,0,1,
-        1,1,0,0,   1,1,1,1,    1, 1,0,1
+        0,1,0,0,   1,1,1,1,   -1,-1,0,1,
+        1,1,0,0,   1,1,1,1,    1,-1,0,1,
+        0,0,0,0,   1,1,1,1,   -1, 1,0,1,
+        1,0,0,0,   1,1,1,1,    1, 1,0,1
     };
 
     int offset_output[4];
@@ -769,7 +561,7 @@ void MikuPan_EndFrame()
         offset_output[0], offset_output[1],
         offset_output[2], offset_output[3]
         );
-    glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    MikuPan_GPUSetTarget(MIKUPAN_GPU_TARGET_WINDOW, 1);
 
     MikuPan_BindTexture2DCached(render_back_msaa.texture.id);
 
@@ -862,8 +654,7 @@ void MikuPan_EndFrame()
         if (photo_negative_source_enabled)
         {
             MikuPan_ActiveTextureCached(GL_TEXTURE1);
-            glad_glBindTexture(GL_TEXTURE_2D,
-                               photo_debug->negative_source_texture_id);
+            MikuPan_BindTexture2DCached(photo_debug->negative_source_texture_id);
             MikuPan_ActiveTextureCached(GL_TEXTURE0);
         }
     }
@@ -874,7 +665,7 @@ void MikuPan_EndFrame()
     MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
                              (GLsizeiptr)sizeof(quad), quad);
 
-    glad_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     /*
      * The camera photo preview is a modern replacement for a GS-resident
@@ -923,9 +714,9 @@ void MikuPan_EndFrame()
         MikuPan_PerfEnd(PERF_SECT_RENDERUI, _t0);
     }
 
-    MikuPan_PerfEndFrame();
+    MikuPan_GPUEndFrame();
 
-    SDL_GL_SwapWindow(mikupan_render.window);
+    MikuPan_PerfEndFrame();
 }
 
 void MikuPan_UpdateWindowSize(int width, int height)
@@ -975,7 +766,7 @@ void MikuPan_EnableMirrorScissorFromGsBounds(int xmin, int ymin, int xmax, int y
 
     if (render_w <= 0 || render_h <= 0)
     {
-        glad_glDisable(GL_SCISSOR_TEST);
+        MikuPan_GPUDisableScissor();
         g_mirror_scissor_enabled = 0;
         return;
     }
@@ -1001,7 +792,7 @@ void MikuPan_EnableMirrorScissorFromGsBounds(int xmin, int ymin, int xmax, int y
 
     if (scale <= 0.0f)
     {
-        glad_glDisable(GL_SCISSOR_TEST);
+        MikuPan_GPUDisableScissor();
         g_mirror_scissor_enabled = 0;
         return;
     }
@@ -1026,13 +817,12 @@ void MikuPan_EnableMirrorScissorFromGsBounds(int xmin, int ymin, int xmax, int y
 
     if (width <= 0 || height <= 0)
     {
-        glad_glDisable(GL_SCISSOR_TEST);
+        MikuPan_GPUDisableScissor();
         g_mirror_scissor_enabled = 0;
         return;
     }
 
-    glad_glEnable(GL_SCISSOR_TEST);
-    glad_glScissor(sx0, render_h - sy1, width, height);
+    MikuPan_GPUSetScissor(sx0, sy0, width, height);
     g_mirror_scissor_enabled = 1;
 }
 
@@ -1043,7 +833,7 @@ void MikuPan_EnableMirrorScissorFromNdcBounds(float minx, float miny, float maxx
 
     if (render_w <= 0 || render_h <= 0)
     {
-        glad_glDisable(GL_SCISSOR_TEST);
+        MikuPan_GPUDisableScissor();
         g_mirror_scissor_enabled = 0;
         return;
     }
@@ -1082,13 +872,12 @@ void MikuPan_EnableMirrorScissorFromNdcBounds(float minx, float miny, float maxx
 
     if (width <= 0 || height <= 0)
     {
-        glad_glDisable(GL_SCISSOR_TEST);
+        MikuPan_GPUDisableScissor();
         g_mirror_scissor_enabled = 0;
         return;
     }
 
-    glad_glEnable(GL_SCISSOR_TEST);
-    glad_glScissor(sx0, sy0, width, height);
+    MikuPan_GPUSetScissor(sx0, sy0, width, height);
     g_mirror_scissor_enabled = 1;
 }
 
@@ -1099,15 +888,14 @@ void MikuPan_ClearMirrorScissorDepth(void)
         return;
     }
 
-    glad_glDepthMask(GL_TRUE);
-    glad_glClearDepth(1.0);
-    glad_glClear(GL_DEPTH_BUFFER_BIT);
+    MikuPan_GPUSetDepthWrite(1);
+    MikuPan_GPUClearDepth();
     MikuPan_ResetRenderStateCache();
 }
 
 void MikuPan_DisableMirrorScissor(void)
 {
-    glad_glDisable(GL_SCISSOR_TEST);
+    MikuPan_GPUDisableScissor();
     g_mirror_scissor_enabled = 0;
 }
 
@@ -1191,5 +979,6 @@ void MikuPan_RenderSetDebugValues()
 void MikuPan_Shutdown()
 {
     MikuPan_TextureShutdown();
+    MikuPan_GPUShutdown();
     SDL_DestroyWindow(mikupan_render.window);
 }

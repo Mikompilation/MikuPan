@@ -245,6 +245,7 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui.c
         src/mikupan/rendering/mikupan_profiler.c
+        src/mikupan/rendering/mikupan_gpu.c
         src/mikupan/rendering/mikupan_camera.c
         src/mikupan/rendering/mikupan_debug_draw.c
         src/mikupan/rendering/mikupan_lighting.c
@@ -258,7 +259,6 @@ set(MIKUPAN_SOURCES
         src/mikupan/gs/mikupan_texture_manager.cpp
         src/mikupan/mikupan_logging.cpp
         src/graphics/graph3d/libsg.c
-        extern/glad/src/gl.c
         src/ingame/map/find_dat.c
         src/mikupan/rendering/mikupan_pipeline.c
         src/mikupan/rendering/mikupan_meshcache.c

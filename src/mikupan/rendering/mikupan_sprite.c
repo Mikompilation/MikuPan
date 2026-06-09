@@ -4,6 +4,7 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_pipeline.h"
+#include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include <string.h>
@@ -60,7 +61,6 @@ static int g_late_2d_overlay_queue_count = 0;
 static int g_late_2d_overlay_queue_depth = 0;
 static int g_late_2d_overlay_queue_flushing = 0;
 static GLuint g_screen_copy_texture = 0;
-static GLuint g_screen_copy_fbo = 0;
 static int g_screen_copy_w = 0;
 static int g_screen_copy_h = 0;
 static float g_screen_copy_uv_offset[2] = {0.0f, 0.0f};
@@ -133,41 +133,6 @@ static int MikuPan_QueueLate2DMessageOverlay(MikuPan_Rect src,
     queued->vertices.message.a = a;
     queued->vertices.message.texture_info = texture_info;
     return 1;
-}
-
-static void MikuPan_RenderBlackWhiteScreenCopy(int copy_w, int copy_h)
-{
-    float quad[] = {
-        0,1,0,0,   1,1,1,1,   -1,-1,0,1,
-        1,1,0,0,   1,1,1,1,    1,-1,0,1,
-        0,0,0,0,   1,1,1,1,   -1, 1,0,1,
-        1,0,0,0,   1,1,1,1,    1, 1,0,1
-    };
-
-    MikuPan_SetRenderState2D();
-    glad_glDisable(GL_BLEND);
-    MikuPan_SetCurrentShaderProgram(POSTPROCESS_SHADER);
-    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
-    MikuPan_SetUniform1iToCurrentShader(1, "uBlackWhiteMode");
-    MikuPan_SetUniform1fToCurrentShader(1.0f, "uBrightness");
-    MikuPan_SetUniform1fToCurrentShader(1.0f, "uGamma");
-    MikuPan_SetUniform1iToCurrentShader(0, "uCrtEnabled");
-    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtStrength");
-    MikuPan_SetUniform2fToCurrentShader((float)copy_w,
-                                        (float)copy_h,
-                                        "uTextureSize");
-    MikuPan_SetUniform2fToCurrentShader((float)copy_w,
-                                        (float)copy_h,
-                                        "uOutputSize");
-    MikuPan_SetUniform1fToCurrentShader(0.0f, "uTime");
-
-    MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
-    MikuPan_BindVAO(pipeline->vao);
-    MikuPan_BindTexture2DCached(render_back_msaa.texture.id);
-    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
-                             (GLsizeiptr)sizeof(quad), quad);
-    glad_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    MikuPan_ResetRenderStateCache();
 }
 
 void MikuPan_Render2DMessage(DISP_SPRT *sprite)
@@ -324,15 +289,13 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(COLOUR4_POSITION4);
 
     MikuPan_BindVAO(pipeline->vao);
-    MikuPan_BindBufferCached(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
-
-    glad_glBufferSubData(
-        GL_ARRAY_BUFFER, pipeline->buffers[0].attributes[0].offset,
-        sizeof(vertices), vertices);
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+        (GLsizeiptr)sizeof(vertices), vertices);
 
     MikuPan_SetRenderState2D();
 
-    glad_glDrawArrays(GL_LINES, 0, 2);
+    MikuPan_TimedDrawArrays(GL_LINES, 0, 2);
 }
 
 void MikuPan_RenderBoundingBox(sceVu0FVECTOR *vertices)
@@ -353,16 +316,14 @@ void MikuPan_RenderBoundingBox(sceVu0FVECTOR *vertices)
     MikuPan_SetUniform4fvToCurrentShader(bounding_box_color, "uColor");
 
     MikuPan_BindVAO(pipeline->vao);
-    MikuPan_BindBufferCached(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
-    glad_glBufferSubData(
-        GL_ARRAY_BUFFER,
-        pipeline->buffers[0].attributes[0].offset,
-        pipeline->buffers[0].buffer_length,
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+        (GLsizeiptr)pipeline->buffers[0].buffer_length,
         vertices);
 
     for (int i = 0; i < 6; i++)
     {
-        glad_glDrawArrays(GL_LINE_LOOP, i * 4, 4);
+        MikuPan_TimedDrawArrays(GL_LINE_LOOP, i * 4, 4);
     }
 }
 
@@ -489,10 +450,11 @@ void MikuPan_RenderSprite2D(sceGsTex0 *tex, float *buffer)
     MikuPan_SetRenderState2D();
 
     // Caller passes a 4-vert quad worth of data (UV4_COLOUR4_POSITION4 layout).
-    MikuPan_BindBufferCached(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
-    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)sizeof(float[4][12]), buffer);
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+        (GLsizeiptr)sizeof(float[4][12]), buffer);
 
-    glad_glDrawArrays(MikuPan_GetRenderMode(), 0, 4);
+    MikuPan_TimedDrawArrays(MikuPan_GetRenderMode(), 0, 4);
 }
 
 static float MikuPan_NormalizeSpriteDepthValue(float z)
@@ -565,10 +527,11 @@ void MikuPan_RenderUntexturedSprite(float *buffer)
     MikuPan_SetRenderState2D();
 
     // Caller passes a 4-vert quad worth of data (COLOUR4_POSITION4 layout: 8 floats / vert).
-    MikuPan_BindBufferCached(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
-    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)sizeof(float[4][8]), buffer);
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+        (GLsizeiptr)sizeof(float[4][8]), buffer);
 
-    glad_glDrawArrays(MikuPan_GetRenderMode(), 0, 4);
+    MikuPan_TimedDrawArrays(MikuPan_GetRenderMode(), 0, 4);
 }
 
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
@@ -586,14 +549,15 @@ void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
     MikuPan_SetTexture(tex);
 
     MikuPan_SetRenderStateSprite3D();
-    glad_glDepthMask(GL_FALSE);
-    glad_glDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetDepthWrite(0);
+    MikuPan_GPUSetDepthFunc(GL_LEQUAL);
 
-    MikuPan_BindBufferCached(GL_ARRAY_BUFFER, pipeline->buffers[0].id);
-    glad_glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)sizeof(upload_buffer), upload_buffer);
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+        (GLsizeiptr)sizeof(upload_buffer), upload_buffer);
 
-    glad_glDrawArrays(MikuPan_GetRenderMode(), 0, 4);
-    glad_glDepthMask(GL_TRUE);
+    MikuPan_TimedDrawArrays(MikuPan_GetRenderMode(), 0, 4);
+    MikuPan_GPUSetDepthWrite(1);
     MikuPan_ResetRenderStateCache();
 }
 
@@ -612,8 +576,8 @@ void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_SetTexture(tex);
     MikuPan_SetRenderStateSprite3D();
-    glad_glDepthMask(GL_FALSE);
-    glad_glDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetDepthWrite(0);
+    MikuPan_GPUSetDepthFunc(GL_LEQUAL);
     MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
@@ -624,7 +588,7 @@ void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex
 
     MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, vertex_count);
     MikuPan_PerfDrawCall();
-    glad_glDepthMask(GL_TRUE);
+    MikuPan_GPUSetDepthWrite(1);
     MikuPan_ResetRenderStateCache();
 }
 
@@ -645,37 +609,34 @@ static GLenum MikuPan_GetDepthFuncForMode(int depth_mode)
 static void MikuPan_ApplyParticleTriangleState(int depth_mode, int additive_blend)
 {
     MikuPan_SetRenderStateSprite3D();
-    glad_glDepthMask(GL_FALSE);
-    glad_glDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
-    glad_glBlendEquation(GL_FUNC_ADD);
-    glad_glBlendFunc(GL_SRC_ALPHA, additive_blend ? GL_ONE : GL_ONE_MINUS_SRC_ALPHA);
+    MikuPan_GPUSetDepthWrite(0);
+    MikuPan_GPUSetDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
+    MikuPan_GPUSetBlend(1, additive_blend);
 }
 
 static void MikuPan_ApplyHeatHazeTriangleState(int depth_mode, int additive_blend)
 {
     MikuPan_SetRenderStateSprite3D();
-    glad_glDepthMask(GL_FALSE);
-    glad_glDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
-    glad_glBlendEquation(GL_FUNC_ADD);
+    MikuPan_GPUSetDepthWrite(0);
+    MikuPan_GPUSetDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
     /* PS2 heat-haze / distortion particles use additive blending
      * (CS*AS + CD), which makes the distortion area visibly brighter.
      * Standard alpha blend produces only a near-invisible 1-2 px shift. */
     if (additive_blend)
     {
-        glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        MikuPan_GPUSetBlend(1, 1);
     }
     else
     {
-        glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        MikuPan_GPUSetBlend(1, 0);
     }
 }
 
 static void MikuPan_RestoreParticleTriangleState(void)
 {
-    glad_glBlendEquation(GL_FUNC_ADD);
-    glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glad_glDepthFunc(GL_LEQUAL);
-    glad_glDepthMask(GL_TRUE);
+    MikuPan_GPUSetBlend(1, 0);
+    MikuPan_GPUSetDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetDepthWrite(1);
     MikuPan_ResetRenderStateCache();
 }
 
@@ -687,7 +648,6 @@ static int MikuPan_EnsureScreenCopyTexture(int width, int height)
     }
 
     if (g_screen_copy_texture != 0 &&
-        g_screen_copy_fbo != 0 &&
         g_screen_copy_w == width &&
         g_screen_copy_h == height)
     {
@@ -696,43 +656,17 @@ static int MikuPan_EnsureScreenCopyTexture(int width, int height)
 
     if (g_screen_copy_texture != 0)
     {
-        glad_glDeleteTextures(1, &g_screen_copy_texture);
+        MikuPan_GPUReleaseTexture(g_screen_copy_texture);
         g_screen_copy_texture = 0;
         MikuPan_ResetGLBindCache();
-    }
-
-    if (g_screen_copy_fbo != 0)
-    {
-        glad_glDeleteFramebuffers(1, &g_screen_copy_fbo);
-        g_screen_copy_fbo = 0;
     }
 
     g_screen_copy_w = 0;
     g_screen_copy_h = 0;
 
-    glad_glGenTextures(1, &g_screen_copy_texture);
-    MikuPan_BindTexture2DCached(g_screen_copy_texture);
-    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
-                      width, height, 0,
-                      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glad_glGenFramebuffers(1, &g_screen_copy_fbo);
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, g_screen_copy_fbo);
-    glad_glFramebufferTexture2D(GL_FRAMEBUFFER,
-                                GL_COLOR_ATTACHMENT0,
-                                GL_TEXTURE_2D,
-                                g_screen_copy_texture, 0);
-
-    if (glad_glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    g_screen_copy_texture = MikuPan_GPUCreateRenderTextureRGBA8(width, height);
+    if (g_screen_copy_texture == 0)
     {
-        glad_glDeleteFramebuffers(1, &g_screen_copy_fbo);
-        glad_glDeleteTextures(1, &g_screen_copy_texture);
-        g_screen_copy_texture = 0;
-        g_screen_copy_fbo = 0;
         MikuPan_ResetGLBindCache();
         return 0;
     }
@@ -750,25 +684,13 @@ static int MikuPan_UpdateScreenCopyTexture(sceGsTex0 *tex)
     int render_h;
     int copy_w;
     int copy_h;
-    int src_x0;
-    int src_x1;
-    int src_y0;
-    int src_y1;
     float viewport_x;
     float viewport_y;
     float viewport_w;
     float viewport_h;
     float viewport_scale;
-    GLint prev_read_fbo = 0;
-    GLint prev_draw_fbo = 0;
-    GLint prev_viewport[4] = {0};
-    GLfloat prev_clear_color[4] = {0.0f};
-    GLboolean prev_color_mask[4] = {GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE};
-    int ok = 0;
 
-    if (tex == NULL ||
-        render_back_msaa.framebuffer_readback.id == 0 ||
-        render_back_msaa.framebuffer.id == 0)
+    if (tex == NULL || render_back_msaa.texture.id == 0)
     {
         return 0;
     }
@@ -783,19 +705,6 @@ static int MikuPan_UpdateScreenCopyTexture(sceGsTex0 *tex)
         return 0;
     }
 
-    glad_glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prev_read_fbo);
-    glad_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prev_draw_fbo);
-    glad_glGetIntegerv(GL_VIEWPORT, prev_viewport);
-    glad_glGetFloatv(GL_COLOR_CLEAR_VALUE, prev_clear_color);
-    glad_glGetBooleanv(GL_COLOR_WRITEMASK, prev_color_mask);
-
-    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, render_back_msaa.framebuffer_readback.id);
-    glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, render_back_msaa.framebuffer.id);
-    glad_glBlitFramebuffer(0, 0, render_w, render_h,
-                           0, 0, render_w, render_h,
-                           GL_COLOR_BUFFER_BIT,
-                           GL_NEAREST);
-
     MikuPan_GetPS2Viewport(render_w, render_h,
                            &viewport_x, &viewport_y,
                            &viewport_w, &viewport_h,
@@ -806,7 +715,7 @@ static int MikuPan_UpdateScreenCopyTexture(sceGsTex0 *tex)
 
     if (!MikuPan_EnsureScreenCopyTexture(copy_w, copy_h))
     {
-        goto restore;
+        return 0;
     }
 
     g_screen_copy_uv_offset[0] = viewport_x / (float)render_w;
@@ -825,47 +734,11 @@ static int MikuPan_UpdateScreenCopyTexture(sceGsTex0 *tex)
         g_screen_copy_uv_offset[1] +
         (PS2_CENTER_Y / (float)texture_h) * g_screen_copy_uv_scale[1];
 
-    src_x0 = 0;
-    src_x1 = render_w;
-    src_y0 = render_h;
-    src_y1 = 0;
-
-    glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, g_screen_copy_fbo);
-    MikuPan_SetViewportCached(0, 0, copy_w, copy_h);
-
-    glad_glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glad_glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glad_glClear(GL_COLOR_BUFFER_BIT);
-
-    if (MikuPan_IsBlackWhiteModeActive())
-    {
-        MikuPan_RenderBlackWhiteScreenCopy(copy_w, copy_h);
-    }
-    else
-    {
-        glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, render_back_msaa.framebuffer.id);
-        glad_glBlitFramebuffer(src_x0, src_y0, src_x1, src_y1,
-                               0, 0, copy_w, copy_h,
-                               GL_COLOR_BUFFER_BIT,
-                               GL_LINEAR);
-    }
-
-    glad_glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
-    glad_glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glad_glClear(GL_COLOR_BUFFER_BIT);
-
-    ok = 1;
-
-restore:
-    glad_glColorMask(prev_color_mask[0], prev_color_mask[1],
-                     prev_color_mask[2], prev_color_mask[3]);
-    glad_glClearColor(prev_clear_color[0], prev_clear_color[1],
-                      prev_clear_color[2], prev_clear_color[3]);
-    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint)prev_read_fbo);
-    glad_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, (GLuint)prev_draw_fbo);
-    MikuPan_SetViewportCached(prev_viewport[0], prev_viewport[1],
-                              prev_viewport[2], prev_viewport[3]);
-    return ok;
+    MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
+                           g_screen_copy_texture,
+                           copy_w,
+                           copy_h);
+    return 1;
 }
 
 void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int depth_mode, int additive_blend)
@@ -909,11 +782,10 @@ void MikuPan_RenderSolidUntexturedTriangles3D(float *buffer, int vertex_count, i
 
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_SetRenderState3D();
-    glad_glDisable(GL_CULL_FACE);
-    glad_glDepthMask(GL_TRUE);
-    glad_glDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
-    glad_glBlendEquation(GL_FUNC_ADD);
-    glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    MikuPan_GPUSetCullNone();
+    MikuPan_GPUSetDepthWrite(1);
+    MikuPan_GPUSetDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
+    MikuPan_GPUSetBlend(1, 0);
     MikuPan_NormalizeUntexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
@@ -925,9 +797,9 @@ void MikuPan_RenderSolidUntexturedTriangles3D(float *buffer, int vertex_count, i
     MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, vertex_count);
     MikuPan_PerfDrawCall();
 
-    glad_glDepthFunc(GL_LEQUAL);
-    glad_glDepthMask(GL_TRUE);
-    glad_glEnable(GL_CULL_FACE);
+    MikuPan_GPUSetDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetDepthWrite(1);
+    MikuPan_GPUSetCullBack();
     MikuPan_ResetRenderStateCache();
 }
 

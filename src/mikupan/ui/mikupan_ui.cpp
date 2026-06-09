@@ -4,7 +4,8 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_impl_sdl3.h"
-#include "imgui_impl_opengl3.h"
+#include "imgui_impl_sdlgpu3.h"
+#include "mikupan/rendering/mikupan_gpu.h"
 
 // Remap Dear ImGui's gamepad "window menu" trigger (the button that lets you
 // move/cycle windows) away from its hardcoded default of Square / Xbox-X
@@ -119,21 +120,27 @@ static void MikuPan_RemapGamepadWindowingTrigger(void)
 extern "C"
 {
 
-void MikuPan_ImGui_ImplInit(SDL_Window *window, void *gl_context)
+void MikuPan_ImGui_ImplInit(SDL_Window *window)
 {
-    ImGui_ImplSDL3_InitForOpenGL(window, gl_context);
-    ImGui_ImplOpenGL3_Init("#version 330");
+    ImGui_ImplSDL3_InitForSDLGPU(window);
+    ImGui_ImplSDLGPU3_InitInfo init_info = {};
+    init_info.Device = MikuPan_GPUGetDevice();
+    init_info.ColorTargetFormat = MikuPan_GPUGetSwapchainFormat();
+    init_info.MSAASamples = SDL_GPU_SAMPLECOUNT_1;
+    init_info.SwapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR;
+    init_info.PresentMode = SDL_GPU_PRESENTMODE_VSYNC;
+    ImGui_ImplSDLGPU3_Init(&init_info);
 }
 
 void MikuPan_ImGui_ImplShutdown(void)
 {
-    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDLGPU3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
 }
 
 void MikuPan_ImGui_ImplNewFrame(void)
 {
-    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDLGPU3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     MikuPan_RemapGamepadWindowingTrigger();
 }
@@ -145,7 +152,20 @@ void MikuPan_ImGui_ImplProcessEvent(SDL_Event *event)
 
 void MikuPan_ImGui_ImplRenderDrawData(void)
 {
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImDrawData *draw_data = ImGui::GetDrawData();
+    SDL_GPUCommandBuffer *cmd = MikuPan_GPUGetCommandBuffer();
+    if (draw_data == nullptr || cmd == nullptr)
+        return;
+
+    MikuPan_GPUFlushRenderPass();
+    ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, cmd);
+    MikuPan_GPUSetTarget(MIKUPAN_GPU_TARGET_WINDOW, 0);
+    MikuPan_GPUBeginRenderPass();
+    SDL_GPURenderPass *pass = MikuPan_GPUGetRenderPass();
+    if (pass == nullptr)
+        return;
+
+    ImGui_ImplSDLGPU3_RenderDrawData(draw_data, cmd, pass);
 }
 
 }

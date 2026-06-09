@@ -48,6 +48,7 @@
 #include <glad/gl.h>
 #include <mikupan/av/mikupan_audio_decoder_c.h>
 #include <mikupan/av/mikupan_video_decoder_c.h>
+#include <mikupan/rendering/mikupan_gpu.h>
 #include <mikupan/rendering/mikupan_renderer.h>
 #include <stdlib.h>
 
@@ -830,15 +831,7 @@ static int readMpeg(VideoDecoder *vd, ReadBuffer *rb)
     rb->strideBytes = strideBytes;
     rb->ptsSec = pts;
 
-    glad_glBindTexture(GL_TEXTURE_2D, vd->tex);
-    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glad_glPixelStorei(GL_UNPACK_ROW_LENGTH, strideBytes / 4);
-
-    glad_glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, vd->w, vd->h, GL_RGBA,
-                         GL_UNSIGNED_BYTE, rgba);
-
-    glad_glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glad_glBindTexture(GL_TEXTURE_2D, 0);
+    MikuPan_GPUUploadTextureRGBA8(vd->tex, vd->w, vd->h, rgba, strideBytes);
 
     return 1;
 }
@@ -1054,19 +1047,8 @@ void initMov(char *bsfilename)
         }
     }
 
-    glad_glGenTextures(1, &g_vd.tex);
-    glad_glBindTexture(GL_TEXTURE_2D, g_vd.tex);
-
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, g_vd.w, g_vd.h, 0, GL_RGBA,
-                      GL_UNSIGNED_BYTE, NULL);
-
-    glad_glBindTexture(GL_TEXTURE_2D, 0);
+    g_vd.tex = MikuPan_GPUCreateTextureRGBA8(
+        g_vd.w, g_vd.h, NULL, g_vd.w * 4, 0, 0);
 
     g_vd.ti = (MikuPan_TextureInfo *) malloc(sizeof(MikuPan_TextureInfo));
     g_vd.ti->id = g_vd.tex;
@@ -1081,7 +1063,7 @@ static void termMov()
 {
     if (g_vd.tex)
     {
-        glad_glDeleteTextures(1, &g_vd.tex);
+        MikuPan_GPUReleaseTexture(g_vd.tex);
         g_vd.tex = 0;
     }
     if (g_vd.ti)

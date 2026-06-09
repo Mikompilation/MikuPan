@@ -41,7 +41,7 @@ typedef struct
 
 typedef struct
 {
-    /// Size in glad_glVertexAttribPointer
+    /// Number of components in the vertex attribute.
     int size;
     u_int index;
     int stride;
@@ -51,7 +51,7 @@ typedef struct
 typedef struct
 {
     u_int id;
-    /// Size in glad_glBufferData
+    /// Size of the buffer allocation in bytes.
     int buffer_length;
     u_int num_attributes;
     MikuPan_AttributeInfo* attributes;

@@ -5,11 +5,11 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_pipeline.h"
+#include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include <stdlib.h>
 
-static GLfloat g_max_aniso = -1.0f;
 static MikuPan_TextureInfo *fnt_texture[6] = {0};
 static MikuPan_TextureInfo *curr_fnt_texture = NULL;
 static MikuPan_TextureInfo g_photo_preview_texture = {0};
@@ -100,7 +100,7 @@ void MikuPan_TextureShutdown(void)
     {
         if (fnt_texture[i] != NULL)
         {
-            glad_glDeleteTextures(1, (const GLuint *)&fnt_texture[i]->id);
+            MikuPan_GPUReleaseTexture(fnt_texture[i]->id);
             free(fnt_texture[i]);
             fnt_texture[i] = NULL;
         }
@@ -110,14 +110,13 @@ void MikuPan_TextureShutdown(void)
 
     if (g_photo_preview_texture.id != 0)
     {
-        glad_glDeleteTextures(1, (const GLuint *)&g_photo_preview_texture.id);
+        MikuPan_GPUReleaseTexture(g_photo_preview_texture.id);
         g_photo_preview_texture.id = 0;
     }
 
     if (g_photo_negative_source_texture.id != 0)
     {
-        glad_glDeleteTextures(1,
-                              (const GLuint *)&g_photo_negative_source_texture.id);
+        MikuPan_GPUReleaseTexture(g_photo_negative_source_texture.id);
         g_photo_negative_source_texture.id = 0;
     }
 
@@ -127,20 +126,8 @@ void MikuPan_TextureShutdown(void)
     g_photo_debug.negative_source_texture_id = 0;
 }
 
-static GLfloat MikuPan_GetMaxAniso(void)
-{
-    if (g_max_aniso < 0.0f)
-    {
-        glad_glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &g_max_aniso);
-    }
-
-    return g_max_aniso;
-}
-
 MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
 {
-    GLuint tex = 0;
-
     int width = 1 << tex0->TW;
     int height = 1 << tex0->TH;
 
@@ -152,19 +139,8 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
         return NULL;
     }
 
-    glad_glGenTextures(1, &tex);
-    MikuPan_BindTexture2DCached(tex);
-    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
-                      width, height, 0, GL_RGBA,
-                      GL_UNSIGNED_BYTE, pixels);
-    glad_glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, MikuPan_GetMaxAniso());
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glad_glGenerateMipmap(GL_TEXTURE_2D);
-    MikuPan_BindTexture2DCached(0);
+    unsigned int tex = MikuPan_GPUCreateTextureRGBA8(
+        width, height, pixels, width * 4, 1, 0);
 
     MikuPan_TextureInfo *texture_info = malloc(sizeof(MikuPan_TextureInfo));
     texture_info->height = height;
@@ -264,24 +240,15 @@ void MikuPan_UpdatePhotoPreviewTextureRGBA(int width, int height,
     {
         if (g_photo_preview_texture.id != 0)
         {
-            glad_glDeleteTextures(1, (const GLuint *)&g_photo_preview_texture.id);
+            MikuPan_GPUReleaseTexture(g_photo_preview_texture.id);
         }
 
-        glad_glGenTextures(1, (GLuint *)&g_photo_preview_texture.id);
+        g_photo_preview_texture.id = MikuPan_GPUCreateTextureRGBA8(
+            width, height, rgba, width * 4, 0, 0);
         g_photo_preview_texture.width = width;
         g_photo_preview_texture.height = height;
         g_photo_preview_texture.tex0 = 0;
         g_photo_preview_texture.hash = 0;
-
-        MikuPan_BindTexture2DCached(g_photo_preview_texture.id);
-        glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
-                          width, height, 0, GL_RGBA,
-                          GL_UNSIGNED_BYTE, rgba);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         g_photo_debug.texture_valid = 1;
         g_photo_debug.texture_id = g_photo_preview_texture.id;
@@ -291,10 +258,8 @@ void MikuPan_UpdatePhotoPreviewTextureRGBA(int width, int height,
         return;
     }
 
-    MikuPan_BindTexture2DCached(g_photo_preview_texture.id);
-    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glad_glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,
-                         GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+    MikuPan_GPUUploadTextureRGBA8(
+        g_photo_preview_texture.id, width, height, rgba, width * 4);
 
     g_photo_debug.texture_valid = 1;
     g_photo_debug.texture_id = g_photo_preview_texture.id;
@@ -317,27 +282,15 @@ void MikuPan_UpdatePhotoNegativeSourceTextureRGBA(int width, int height,
     {
         if (g_photo_negative_source_texture.id != 0)
         {
-            glad_glDeleteTextures(
-                1, (const GLuint *)&g_photo_negative_source_texture.id);
+            MikuPan_GPUReleaseTexture(g_photo_negative_source_texture.id);
         }
 
-        glad_glGenTextures(1, (GLuint *)&g_photo_negative_source_texture.id);
+        g_photo_negative_source_texture.id = MikuPan_GPUCreateTextureRGBA8(
+            width, height, rgba, width * 4, 0, 0);
         g_photo_negative_source_texture.width = width;
         g_photo_negative_source_texture.height = height;
         g_photo_negative_source_texture.tex0 = 0;
         g_photo_negative_source_texture.hash = 0;
-
-        MikuPan_BindTexture2DCached(g_photo_negative_source_texture.id);
-        glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
-                          width, height, 0, GL_RGBA,
-                          GL_UNSIGNED_BYTE, rgba);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                             GL_CLAMP_TO_EDGE);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                             GL_CLAMP_TO_EDGE);
 
         g_photo_debug.negative_source_texture_valid = 1;
         g_photo_debug.negative_source_texture_id =
@@ -348,10 +301,8 @@ void MikuPan_UpdatePhotoNegativeSourceTextureRGBA(int width, int height,
         return;
     }
 
-    MikuPan_BindTexture2DCached(g_photo_negative_source_texture.id);
-    glad_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glad_glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,
-                         GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+    MikuPan_GPUUploadTextureRGBA8(
+        g_photo_negative_source_texture.id, width, height, rgba, width * 4);
 
     g_photo_debug.negative_source_texture_valid = 1;
     g_photo_debug.negative_source_texture_id = g_photo_negative_source_texture.id;
@@ -768,6 +719,6 @@ void MikuPan_DeleteTexture(MikuPan_TextureInfo *texture_info)
         }
     }
 
-    glad_glDeleteTextures(1, (const GLuint *) &texture_info->id);
+    MikuPan_GPUReleaseTexture(texture_info->id);
     free(texture_info);
 }

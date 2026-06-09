@@ -1,6 +1,7 @@
 #include "mikupan_meshcache.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_profiler.h"
+#include "mikupan_gpu.h"
 
 #include <glad/gl.h>
 #include <stdint.h>
@@ -31,11 +32,10 @@ void MikuPan_MeshCache_Init(void)
 
 static void destroy_entry(MikuPan_MeshCacheEntry *e)
 {
-    if (e->vao) glad_glDeleteVertexArrays(1, &e->vao);
-    if (e->ibo) glad_glDeleteBuffers(1, &e->ibo);
+    if (e->ibo) MikuPan_GPUReleaseBuffer(e->ibo);
     for (int i = 0; i < e->num_vbos; i++)
     {
-        if (e->vbo[i]) glad_glDeleteBuffers(1, &e->vbo[i]);
+        if (e->vbo[i]) MikuPan_GPUReleaseBuffer(e->vbo[i]);
     }
     free(e);
 }
@@ -94,33 +94,20 @@ MikuPan_MeshCacheEntry *MikuPan_MeshCache_Insert(
     e->pipeline_type = pipeline_type;
     e->num_vbos      = (p->num_buffers > 4) ? 4 : (int)p->num_buffers;
 
-    glad_glGenVertexArrays(1, &e->vao);
-    glad_glBindVertexArray(e->vao);
-
-    /// Mirror the template pipeline's attribute layout, but redirect every
-    /// glVertexAttribPointer call at our private VBOs instead of the shared
-    /// streaming buffers. Whatever VBO is bound at glVertexAttribPointer time
-    /// is what gets baked into the VAO.
+    /// Mirror the template pipeline's vertex-buffer layout with private GPU
+    /// buffers. Attribute metadata lives on the template pipeline and is read
+    /// by the SDL_GPU pipeline creator.
     for (int b = 0; b < e->num_vbos; b++)
     {
-        glad_glGenBuffers(1, &e->vbo[b]);
-        glad_glBindBuffer(GL_ARRAY_BUFFER, e->vbo[b]);
-
-        MikuPan_BufferObjectInfo *bi = &p->buffers[b];
-        for (unsigned int a = 0; a < bi->num_attributes; a++)
-        {
-            MikuPan_AttributeInfo *ai = &bi->attributes[a];
-            glad_glEnableVertexAttribArray(ai->index);
-            glad_glVertexAttribPointer(
-                ai->index, ai->size, GL_FLOAT, GL_FALSE,
-                ai->stride, (void *)(uintptr_t)ai->offset);
-        }
+        e->vbo[b] = MikuPan_GPUCreateBuffer(
+            (unsigned int)p->buffers[b].buffer_length,
+            MIKUPAN_GPU_BUFFER_VERTEX);
     }
 
-    glad_glGenBuffers(1, &e->ibo);
-    glad_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, e->ibo);
-
-    glad_glBindVertexArray(0);
+    e->ibo = MikuPan_GPUCreateBuffer(
+        sizeof(u_int) * 1024 * 1024, MIKUPAN_GPU_BUFFER_INDEX);
+    e->vao = MikuPan_GPURegisterVertexArray(
+        pipeline_type, (unsigned int)e->num_vbos, e->vbo, e->ibo);
 
     /// The cached bind shadows in mikupan_pipeline.c are now stale — anything
     /// the caller does next will go through MikuPan_BindVAO / BindBufferCached
@@ -138,8 +125,7 @@ void MikuPan_MeshCache_UploadVbo(MikuPan_MeshCacheEntry *entry,
                                  int idx, long size, const void *data)
 {
     if (entry == NULL || idx < 0 || idx >= entry->num_vbos || size <= 0) return;
-    glad_glBindBuffer(GL_ARRAY_BUFFER, entry->vbo[idx]);
-    glad_glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)size, data, GL_STATIC_DRAW);
+    MikuPan_GPUUploadBuffer(entry->vbo[idx], (unsigned int)size, data);
     MikuPan_ResetGLBindCache();
 }
 
@@ -147,9 +133,7 @@ void MikuPan_MeshCache_UploadIbo(MikuPan_MeshCacheEntry *entry,
                                  long size, const void *data)
 {
     if (entry == NULL || size <= 0) return;
-    glad_glBindVertexArray(entry->vao);
-    glad_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entry->ibo);
-    glad_glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)size, data, GL_STATIC_DRAW);
+    MikuPan_GPUUploadBuffer(entry->ibo, (unsigned int)size, data);
     MikuPan_ResetGLBindCache();
 }
 
@@ -157,25 +141,7 @@ void MikuPan_MeshCache_StreamVbo(MikuPan_MeshCacheEntry *entry,
                                  int idx, long size, const void *data)
 {
     if (entry == NULL || idx < 0 || idx >= entry->num_vbos || size <= 0) return;
-
-    glad_glBindBuffer(GL_ARRAY_BUFFER, entry->vbo[idx]);
-
-    void *ptr = glad_glMapBufferRange(GL_ARRAY_BUFFER, 0, (GLsizeiptr)size,
-        GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-
-    if (ptr != NULL)
-    {
-        memcpy(ptr, data, (size_t)size);
-        glad_glUnmapBuffer(GL_ARRAY_BUFFER);
-    }
-    else
-    {
-        /// First-call path: the VBO was created with no data store, so
-        /// glMapBufferRange has nothing to map. glBufferData allocates AND
-        /// uploads, then future frames hit the map path.
-        glad_glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)size, data, GL_DYNAMIC_DRAW);
-    }
-
+    MikuPan_GPUUploadBuffer(entry->vbo[idx], (unsigned int)size, data);
     MikuPan_ResetGLBindCache();
 }
 

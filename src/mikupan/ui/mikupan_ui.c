@@ -10,6 +10,7 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/rendering/mikupan_shader.h"
+#include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_profiler.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_meshcache.h"
@@ -30,7 +31,7 @@
 #include <string.h>
 
 // -- Backend wrappers (defined in mikupan_ui.cpp) ----------------------------
-void MikuPan_ImGui_ImplInit(SDL_Window *window, void *gl_context);
+void MikuPan_ImGui_ImplInit(SDL_Window *window);
 void MikuPan_ImGui_ImplShutdown(void);
 void MikuPan_ImGui_ImplNewFrame(void);
 void MikuPan_ImGui_ImplProcessEvent(SDL_Event *event);
@@ -1714,7 +1715,7 @@ static void MikuPan_ApplyFatalFrameStyle(int theme)
     }
 }
 
-void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
+void MikuPan_InitUi(SDL_Window *window)
 {
     ui_window = window;
     igCreateContext(NULL);
@@ -1793,14 +1794,14 @@ void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer)
         brightness = 1.0f;
     }
 
-    MikuPan_ImGui_ImplInit(window, renderer);
+    MikuPan_ImGui_ImplInit(window);
 }
 
 void MikuPan_RenderUi(void)
 {
     igRender();
     ImGuiIO *io = igGetIO_Nil();
-    glad_glViewport(0, 0, (int) io->DisplaySize.x, (int) io->DisplaySize.y);
+    MikuPan_GPUSetViewport(0, 0, (int) io->DisplaySize.x, (int) io->DisplaySize.y);
     MikuPan_ImGui_ImplRenderDrawData();
 }
 
