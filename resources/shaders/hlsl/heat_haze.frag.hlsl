@@ -21,16 +21,24 @@ float4 main(PSInput input) : SV_Target0
 
     if (uFlags2.w == 1)
     {
+        // The screen-copy is stored top-down, and SV_Position.y is already
+        // top-down, so sample with position.y directly. Using 1.0 - position.y
+        // mirrors it vertically and composites a flipped full-screen copy of
+        // the scene (the "double flipped screen effect").
         float2 screen_uv = clamp(float2(input.position.x / uRenderSize.x,
-                                        1.0 - input.position.y / uRenderSize.y),
+                                        input.position.y / uRenderSize.y),
                                  0.0.xx, 1.0.xx);
         src_uv = screen_uv;
         dst_uv = screen_uv;
     }
     else if (uFlags2.w == 2)
     {
+        // The screen-copy is stored top-down, and SV_Position.y is already
+        // top-down, so sample with position.y directly. Using 1.0 - position.y
+        // mirrors it vertically and composites a flipped full-screen copy of
+        // the scene (the "double flipped screen effect").
         float2 screen_uv = clamp(float2(input.position.x / uRenderSize.x,
-                                        1.0 - input.position.y / uRenderSize.y),
+                                        input.position.y / uRenderSize.y),
                                  0.0.xx, 1.0.xx);
         src_uv = clamp(input.vUVData.xy, 0.0.xx, 1.0.xx);
         dst_uv = screen_uv;
