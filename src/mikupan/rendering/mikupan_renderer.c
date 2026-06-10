@@ -35,6 +35,13 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
 MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_MsaaBufferObject render_back_msaa = {0};
 static int g_mirror_scissor_enabled = 0;
+/* Set only while the reflected scene geometry is being re-rendered for a mirror
+ * (between MirrorRender's setup and restore). The reflection view matrix is a
+ * reflection (negative determinant) so triangle winding flips on screen — the
+ * mesh render-state setup checks this to cull the front faces instead of the
+ * back, otherwise reflected single-sided meshes vanish and closed meshes show
+ * inside-out. */
+static int g_mirror_reflection_pass = 0;
 /*
  * Snapshot of the previous fully-composited scene texture. Game/effect logic
  * (mirror framebuffer-to-GS uploads, photo capture) needs the previous frame's
@@ -127,7 +134,6 @@ SDL_AppResult MikuPan_Init()
 
     int config_window_flags = SDL_WINDOW_RESIZABLE;
 
-    /* Resolve the saved display mode (migrating the legacy is_fullscreen flag). */
     int startup_window_mode = mikupan_configuration.renderer.window_mode;
     if (startup_window_mode == MIKUPAN_WINDOW_WINDOWED &&
         mikupan_configuration.renderer.is_fullscreen)
@@ -226,6 +232,8 @@ SDL_AppResult MikuPan_Init()
     MikuPan_MeshCache_Init();
 
     MikuPan_Setup3D();
+
+    info_log("Loaded video device: %s", SDL_GetGPUDeviceDriver(MikuPan_GPUGetDevice()));
 
     return SDL_APP_CONTINUE;
 }
@@ -897,6 +905,16 @@ void MikuPan_DisableMirrorScissor(void)
 {
     MikuPan_GPUDisableScissor();
     g_mirror_scissor_enabled = 0;
+}
+
+void MikuPan_SetMirrorReflectionPass(int active)
+{
+    g_mirror_reflection_pass = active ? 1 : 0;
+}
+
+int MikuPan_IsMirrorReflectionPass(void)
+{
+    return g_mirror_reflection_pass;
 }
 
 void MikuPan_GetFullScreenHalfExtent(float *half_w, float *half_h)

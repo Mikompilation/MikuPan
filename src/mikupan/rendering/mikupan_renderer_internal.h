@@ -30,6 +30,7 @@ void MikuPan_TextureShutdown(void);
 
 int MikuPan_IsShadowPassActive(void);
 int MikuPan_IsShadowReceiverPassActive(void);
+int MikuPan_IsMirrorReflectionPass(void);
 void MikuPan_SetViewProjectionMatrices(float *view_matrix,
                                        float *projection_matrix);
 void MikuPan_InvalidateModelTransformCache(void);

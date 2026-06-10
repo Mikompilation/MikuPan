@@ -1096,7 +1096,9 @@ void MirrorRender(SgCAMERA *camera,
 
     SetVF2Register(rreg);
 
+    MikuPan_SetMirrorReflectionPass(1);
     render_func();
+    MikuPan_SetMirrorReflectionPass(0);
 
     rreg[0] = 1.0f;
     rreg[1] = 0.0f;

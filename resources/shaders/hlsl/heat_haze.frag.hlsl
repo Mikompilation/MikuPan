@@ -48,15 +48,6 @@ float4 main(PSInput input) : SV_Target0
             uFramebufferContentUvMax.xy);
     }
 
-    // The screen-copy bound here is a straight copy of the scene render target,
-    // which SDL_GPU stores top-down (V=0 == top row). The framebuffer UVs above
-    // (and the 1.0 - position.y screen_uv branches) were authored for the PS2/GL
-    // bottom-up framebuffer, so flip V to land on the matching texel. Letterbox
-    // bars are symmetric, so mirroring across the full V range keeps the sample
-    // inside the scene content region.
-    src_uv.y = 1.0 - src_uv.y;
-    dst_uv.y = 1.0 - dst_uv.y;
-
     float3 src = uTexture.Sample(uTextureSampler, src_uv).rgb;
     float3 dst = uTexture.Sample(uTextureSampler, dst_uv).rgb;
 

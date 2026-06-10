@@ -137,11 +137,42 @@ void MikuPan_MeshCache_UploadIbo(MikuPan_MeshCacheEntry *entry,
     MikuPan_ResetGLBindCache();
 }
 
+static unsigned long long meshcache_hash(const void *data, long size)
+{
+    /// FNV-1a over the raw bytes. Cheap (memory-bandwidth bound) relative to the
+    /// GPU upload + render-pass teardown it lets us skip.
+    const unsigned char *p = (const unsigned char *)data;
+    unsigned long long h = 1469598103934665603ULL;
+    for (long i = 0; i < size; i++)
+    {
+        h ^= (unsigned long long)p[i];
+        h *= 1099511628211ULL;
+    }
+    return h;
+}
+
 void MikuPan_MeshCache_StreamVbo(MikuPan_MeshCacheEntry *entry,
                                  int idx, long size, const void *data)
 {
     if (entry == NULL || idx < 0 || idx >= entry->num_vbos || size <= 0) return;
+
+    /// Skip the upload when this VBO already holds identical bytes. Under the
+    /// SDL_GPU backend MikuPan_GPUUploadBuffer ends the active render pass (copy
+    /// passes cannot run inside one), so an unconditional per-mesh stream tore
+    /// the scene pass down and rebuilt it for every cached mesh. Skipping the
+    /// no-op uploads keeps all unchanged geometry inside a single render pass.
+    unsigned long long h = meshcache_hash(data, size);
+    if (entry->stream_valid[idx] &&
+        entry->stream_size[idx] == size &&
+        entry->stream_hash[idx] == h)
+    {
+        return;
+    }
+
     MikuPan_GPUUploadBuffer(entry->vbo[idx], (unsigned int)size, data);
+    entry->stream_hash[idx]  = h;
+    entry->stream_size[idx]  = size;
+    entry->stream_valid[idx] = 1;
     MikuPan_ResetGLBindCache();
 }
 

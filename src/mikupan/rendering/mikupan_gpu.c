@@ -97,6 +97,7 @@ static SDL_GPUTextureFormat g_target_depth_format = SDL_GPU_TEXTUREFORMAT_D24_UN
 static int g_target_width = 0;
 static int g_target_height = 0;
 static int g_target_clear = 0;
+static int g_target_clear_depth = 0;
 static int g_target_has_depth = 1;
 static int g_target_initialized = 0;
 
@@ -107,6 +108,20 @@ static int g_current_shader = -1;
 static int g_viewport[4] = {0, 0, 1, 1};
 static int g_scissor_enabled = 0;
 static SDL_Rect g_scissor = {0, 0, 1, 1};
+
+/*
+ * Per-draw state caching. The light (slot 1) and material (slot 2) uniform
+ * blocks change far less often than once per draw, but pushing the full blocks
+ * for every draw call is a large chunk of the mesh-render CPU cost. Pushed
+ * uniform data persists for the lifetime of the command buffer, so we only
+ * re-push these when their data actually changes — plus once whenever a new
+ * render pass begins, which both re-arms them safely and matches SDL_GPU's
+ * per-pass binding reset for the pipeline below. (Slot 0 holds per-object
+ * matrices and still must be pushed every draw.)
+ */
+static int g_light_uniform_dirty = 1;
+static int g_material_uniform_dirty = 1;
+static SDL_GPUGraphicsPipeline *g_last_bound_pipeline = NULL;
 
 static MikuPan_GPUUniformBlock g_uniforms;
 static MikuPan_LightData g_light_data;
@@ -718,10 +733,12 @@ void MikuPan_GPUUpdateUniformCPUBuffer(unsigned int id, unsigned int size,
     if (size == sizeof(MikuPan_LightData))
     {
         memcpy(&g_light_data, data, size);
+        g_light_uniform_dirty = 1;
     }
     else if (size == sizeof(MikuPan_MaterialData))
     {
         memcpy(&g_material_data, data, size);
+        g_material_uniform_dirty = 1;
     }
 }
 
@@ -1072,6 +1089,7 @@ void MikuPan_GPUInvalidatePipelines(void)
         }
         memset(&g_pipeline_cache[i], 0, sizeof(g_pipeline_cache[i]));
     }
+    g_last_bound_pipeline = NULL;
 }
 
 static SDL_GPUGraphicsPipeline *GetPipeline(unsigned int primitive)
@@ -1217,15 +1235,18 @@ static void BeginTargetPassIfNeeded(void)
     color.store_op = SDL_GPU_STOREOP_STORE;
     color.cycle = false;
 
+    /* A depth-only clear (mirror reflection prep) must NOT wipe colour. */
+    const int clear_depth = g_target_clear || g_target_clear_depth;
+
     SDL_GPUDepthStencilTargetInfo depth = {0};
     SDL_GPUDepthStencilTargetInfo *depth_ptr = NULL;
     if (g_target_has_depth && g_target_depth != NULL)
     {
         depth.texture = g_target_depth;
         depth.clear_depth = 1.0f;
-        depth.load_op = g_target_clear ? SDL_GPU_LOADOP_CLEAR : SDL_GPU_LOADOP_LOAD;
+        depth.load_op = clear_depth ? SDL_GPU_LOADOP_CLEAR : SDL_GPU_LOADOP_LOAD;
         depth.store_op = SDL_GPU_STOREOP_STORE;
-        depth.stencil_load_op = g_target_clear ? SDL_GPU_LOADOP_CLEAR : SDL_GPU_LOADOP_LOAD;
+        depth.stencil_load_op = clear_depth ? SDL_GPU_LOADOP_CLEAR : SDL_GPU_LOADOP_LOAD;
         depth.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
         depth.clear_stencil = 0;
         depth_ptr = &depth;
@@ -1233,6 +1254,14 @@ static void BeginTargetPassIfNeeded(void)
 
     g_pass = SDL_BeginGPURenderPass(g_cmd, &color, 1, depth_ptr);
     g_target_clear = 0;
+    g_target_clear_depth = 0;
+
+    /* New pass: pipeline binding is reset by SDL_GPU, and re-pushing the
+     * shared uniform blocks here keeps them valid regardless of command-buffer
+     * boundaries. */
+    g_last_bound_pipeline = NULL;
+    g_light_uniform_dirty = 1;
+    g_material_uniform_dirty = 1;
 
     SDL_GPUViewport vp = {
         (float)g_viewport[0], (float)g_viewport[1],
@@ -1388,7 +1417,9 @@ void MikuPan_GPUDisableScissor(void)
 void MikuPan_GPUClearDepth(void)
 {
     MikuPan_GPUFlushRenderPass();
-    g_target_clear = 1;
+    /* Depth/stencil only — leave the colour buffer (and the mirror reflection
+     * already rendered into it) intact. */
+    g_target_clear_depth = 1;
 }
 
 void MikuPan_GPUSetTarget(MikuPan_GPUTarget target, int clear)
@@ -1482,14 +1513,30 @@ static void BindDrawState(unsigned int primitive)
     {
         return;
     }
-    SDL_BindGPUGraphicsPipeline(g_pass, pipeline);
+    if (pipeline != g_last_bound_pipeline)
+    {
+        SDL_BindGPUGraphicsPipeline(g_pass, pipeline);
+        g_last_bound_pipeline = pipeline;
+    }
 
+    /* Slot 0 holds per-object matrices/colours/flags and changes every draw. */
     SDL_PushGPUVertexUniformData(g_cmd, 0, &g_uniforms, sizeof(g_uniforms));
-    SDL_PushGPUVertexUniformData(g_cmd, 1, &g_light_data, sizeof(g_light_data));
-    SDL_PushGPUVertexUniformData(g_cmd, 2, &g_material_data, sizeof(g_material_data));
     SDL_PushGPUFragmentUniformData(g_cmd, 0, &g_uniforms, sizeof(g_uniforms));
-    SDL_PushGPUFragmentUniformData(g_cmd, 1, &g_light_data, sizeof(g_light_data));
-    SDL_PushGPUFragmentUniformData(g_cmd, 2, &g_material_data, sizeof(g_material_data));
+
+    /* Slots 1 (lights) and 2 (material) persist across draws; only re-push
+     * when their contents changed or a new pass re-armed them. */
+    if (g_light_uniform_dirty)
+    {
+        SDL_PushGPUVertexUniformData(g_cmd, 1, &g_light_data, sizeof(g_light_data));
+        SDL_PushGPUFragmentUniformData(g_cmd, 1, &g_light_data, sizeof(g_light_data));
+        g_light_uniform_dirty = 0;
+    }
+    if (g_material_uniform_dirty)
+    {
+        SDL_PushGPUVertexUniformData(g_cmd, 2, &g_material_data, sizeof(g_material_data));
+        SDL_PushGPUFragmentUniformData(g_cmd, 2, &g_material_data, sizeof(g_material_data));
+        g_material_uniform_dirty = 0;
+    }
 
     GPUVaoEntry *vao = &g_vaos[g_bound_vao];
     SDL_GPUBufferBinding bindings[4] = {0};

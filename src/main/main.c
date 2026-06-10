@@ -29,26 +29,8 @@
 #include <mikupan/mikupan_memory.h>
 #include <sce/libpad.h>
 
-//#include <fenv.h>
-//#include <xmmintrin.h>
-
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
-#ifdef DEBUG
-    fenv_t env;
-    fegetenv(&env);
-    env.__control_word &= ~(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
-    fesetenv(&env);
-    /* Enable SSE exceptions */
-    unsigned int mxcsr = _mm_getcsr();
-    mxcsr &= ~(
-        _MM_MASK_DIV_ZERO |
-        _MM_MASK_INVALID |
-        _MM_MASK_OVERFLOW
-    );
-    _mm_setcsr(mxcsr);
-#endif
-
     SDL_AppResult result = MikuPan_Init();
     MikuPan_InitPs2Memory();
 
@@ -196,7 +178,6 @@ int SoftResetChk()
         R2_PRESSED() && START_PRESSED() && SELECT_PRESSED()
     )
     {
-        // Re-enabled for debug purposes
         sys_wrk.sreset_count += 1;
     }
     else

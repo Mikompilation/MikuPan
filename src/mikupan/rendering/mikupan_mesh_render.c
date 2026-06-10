@@ -60,6 +60,12 @@ static void MikuPan_SetMeshRenderStateForCurrentPass(void)
     {
         MikuPan_SetRenderStateShadow();
     }
+    else if (MikuPan_IsMirrorReflectionPass())
+    {
+        /* The reflection flips winding, so cull the front faces instead of the
+         * back — otherwise reflected single-sided geometry is culled away. */
+        MikuPan_SetRenderState3DMirror();
+    }
     else
     {
         MikuPan_SetRenderState3D();

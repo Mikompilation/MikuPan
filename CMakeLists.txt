@@ -25,6 +25,7 @@ include(cglm)
 include(ffmpeg)
 include(xxhash)
 include(inipp)
+include(shadercross)
 
 set(MIKUPAN_SOURCES
         resources/shaders/textured_mesh_lighted.frag
@@ -303,6 +304,7 @@ add_custom_target(mikupan_version
 
 add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
 add_dependencies(MikuPan mikupan_version)
+add_dependencies(MikuPan compile_shaders)
 if(TARGET ffmpeg_build)
     add_dependencies(MikuPan ffmpeg_build)
 endif()

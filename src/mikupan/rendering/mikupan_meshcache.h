@@ -38,6 +38,13 @@ typedef struct MikuPan_MeshCacheEntry
     u_int vbo[4];
     int   num_vbos;
     u_int ibo;
+    /// Content fingerprint of the last data streamed into each VBO via
+    /// MikuPan_MeshCache_StreamVbo. Lets the per-frame stream skip the upload
+    /// (and the render-pass break it forces under SDL_GPU) when the bytes are
+    /// unchanged — the common case for static furniture/room colour streams.
+    unsigned long long stream_hash[4];
+    long  stream_size[4];
+    int   stream_valid[4];
     struct MikuPan_MeshCacheEntry *next; ///< chaining within hash bucket
 } MikuPan_MeshCacheEntry;
 
