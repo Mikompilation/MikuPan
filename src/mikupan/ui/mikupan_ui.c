@@ -1991,7 +1991,8 @@ static void MikuPan_UiShadowDebugWindow(void)
 
         igImageWithBg(
             (ImTextureRef_c) {
-                ._TexID = (ImTextureID) (uintptr_t) shadow_debug->texture_id},
+                ._TexID = (ImTextureID) (uintptr_t)
+                    MikuPan_GPUGetTextureHandle(shadow_debug->texture_id)},
             img_size,
             uv0,
             uv1,
@@ -2162,7 +2163,8 @@ static void MikuPan_UiPhotoDebugWindow(void)
 
         igImageWithBg(
             (ImTextureRef_c) {
-                ._TexID = (ImTextureID) (uintptr_t) photo_debug->texture_id},
+                ._TexID = (ImTextureID) (uintptr_t)
+                    MikuPan_GPUGetTextureHandle(photo_debug->texture_id)},
             img_size,
             (ImVec2) {0.0f, 0.0f},
             (ImVec2) {1.0f, 1.0f},
@@ -2294,7 +2296,8 @@ void MikuPan_ShowTextureList(void)
             }
             igImage(
                 (ImTextureRef_c) {
-                    ._TexID = (ImTextureID) (uintptr_t) screen_copy->id},
+                    ._TexID = (ImTextureID) (uintptr_t)
+                        MikuPan_GPUGetTextureHandle(screen_copy->id)},
                 (ImVec2) {preview_w, preview_h},
                 (ImVec2) {0.0f, 0.0f}, (ImVec2) {1.0f, 1.0f});
         }
@@ -2315,7 +2318,8 @@ void MikuPan_ShowTextureList(void)
                    tex_list[i]->height);
             igImage(
                 (ImTextureRef_c) {
-                    ._TexID = (ImTextureID) (uintptr_t) tex_list[i]->id},
+                    ._TexID = (ImTextureID) (uintptr_t)
+                        MikuPan_GPUGetTextureHandle(tex_list[i]->id)},
                 (ImVec2) {(float) tex_list[i]->width,
                           (float) tex_list[i]->height},
                 (ImVec2) {0.0f, 0.0f}, (ImVec2) {1.0f, 1.0f});
@@ -2520,14 +2524,6 @@ void MikuPan_UiMenuBar(void)
         {
             MikuPan_ScreenshotRequest();
         }
-        if (igMenuItem_Bool("Save Configuration", NULL, false, true))
-        {
-            MikuPan_UiSaveConfiguration();
-        }
-        if (config_save_status[0] != '\0')
-        {
-            igTextDisabled("%s", config_save_status);
-        }
 
         igEndMenu();
         }
@@ -2578,16 +2574,6 @@ void MikuPan_UiMenuBar(void)
             crt_settings = crt_defaults;
         }
 
-        if (igMenuItem_Bool("Save Configuration", NULL, false, true))
-        {
-            MikuPan_UiSaveConfiguration();
-        }
-
-        if (config_save_status[0] != '\0')
-        {
-            igTextDisabled("%s", config_save_status);
-        }
-
         igEndMenu();
         }
 
@@ -2604,6 +2590,16 @@ void MikuPan_UiMenuBar(void)
         }
 
         igEndMenu();
+        }
+
+        igSeparator();
+        if (igMenuItem_Bool("Save Configuration", NULL, false, true))
+        {
+            MikuPan_UiSaveConfiguration();
+        }
+        if (config_save_status[0] != '\0')
+        {
+            igTextDisabled("%s", config_save_status);
         }
 
         igEndMenu();

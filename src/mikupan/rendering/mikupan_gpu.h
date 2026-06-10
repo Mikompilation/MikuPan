@@ -104,6 +104,9 @@ unsigned int MikuPan_GPUCreateTextureRGBA8(int width, int height,
 unsigned int MikuPan_GPUCreateTextureR8Target(int width, int height);
 unsigned int MikuPan_GPUCreateRenderTextureRGBA8(int width, int height);
 void MikuPan_GPUReleaseTexture(unsigned int id);
+/// Raw SDL_GPUTexture handle for a texture id, or NULL. Used as an ImGui
+/// ImTextureID (the SDL_GPU3 backend expects an SDL_GPUTexture*, not the id).
+SDL_GPUTexture *MikuPan_GPUGetTextureHandle(unsigned int id);
 void MikuPan_GPUUploadTextureRGBA8(unsigned int id, int width, int height,
                                    const void *pixels, int pitch);
 int MikuPan_GPUReadTextureRGBA8(unsigned int texture_id, int width, int height,
