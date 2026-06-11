@@ -42,7 +42,12 @@ typedef struct
 {
     int used;
     int shader_index;
-    unsigned int vao;
+    /* The pipeline's vertex layout depends only on the vertex-format type, not
+     * on which VAO instance is bound — so the cache keys on pipeline_type. Keying
+     * on the VAO id (as it did before) created a duplicate pipeline for every
+     * mesh-cache entry and leaked them when entries were destroyed (e.g. each
+     * time an enemy model spawned/despawned). */
+    int pipeline_type;
     unsigned int primitive;
     unsigned int state_hash;
     SDL_GPUTextureFormat color_format;
@@ -75,12 +80,106 @@ static SDL_GPUTextureFormat g_swapchain_format = SDL_GPU_TEXTUREFORMAT_INVALID;
 static SDL_GPUTexture *g_fallback_texture = NULL;
 static SDL_GPUSampler *g_fallback_sampler = NULL;
 
-/// Persistent upload transfer buffer, reused across every buffer/texture upload
-/// so we don't SDL_CreateGPUTransferBuffer + release (GPU-memory alloc/free) on
-/// each one. Grown to the largest upload seen; mapped with cycle=true so SDL
-/// rotates internal storage when a previous upload is still in flight.
-static SDL_GPUTransferBuffer *g_upload_transfer = NULL;
-static unsigned int g_upload_transfer_size = 0;
+/// Pooled upload transfer buffers, recycled across frames so we don't
+/// SDL_CreateGPUTransferBuffer + release on every upload (the per-upload churn
+/// was a real bottleneck). Each buffer is sized to its first upload and reused
+/// for any later upload that fits, but only once its last use is old enough to
+/// have finished on the GPU (the engine submits exactly one command buffer per
+/// frame). Mapping with cycle=true is a safety net: if a reuse ever races an
+/// in-flight copy, SDL hands out a fresh slice instead of corrupting data.
+/// Unlike the earlier single cycled buffer, each pool buffer matches its upload
+/// size and reuse is clean, so cycle almost never fires and memory stays bounded
+/// to the working set. Long-idle buffers are trimmed each frame.
+#define MIKUPAN_XFER_FRAMES_IN_FLIGHT 3
+#define MIKUPAN_XFER_POOL_MAX 1024
+#define MIKUPAN_XFER_TRIM_FRAMES 600 /* ~10s at 60fps before an idle buffer is freed */
+
+typedef struct
+{
+    SDL_GPUTransferBuffer *buffer;
+    unsigned int size;
+    Uint64 last_frame;
+} GPUTransferPoolEntry;
+
+static GPUTransferPoolEntry g_xfer_pool[MIKUPAN_XFER_POOL_MAX];
+static int    g_xfer_pool_count = 0;
+static Uint64 g_gpu_frame = 0;
+
+/// Acquire a pooled transfer buffer of at least `size`. The pool owns it — the
+/// caller maps (cycle=true) and records the copy, but must NOT release it.
+static SDL_GPUTransferBuffer *AcquireUploadTransfer(unsigned int size)
+{
+    int best = -1;
+    for (int i = 0; i < g_xfer_pool_count; i++)
+    {
+        GPUTransferPoolEntry *e = &g_xfer_pool[i];
+        if (e->buffer == NULL || e->size < size)
+        {
+            continue;
+        }
+        if ((g_gpu_frame - e->last_frame) >= MIKUPAN_XFER_FRAMES_IN_FLIGHT &&
+            (best < 0 || e->size < g_xfer_pool[best].size))
+        {
+            best = i;
+        }
+    }
+    if (best >= 0)
+    {
+        g_xfer_pool[best].last_frame = g_gpu_frame;
+        return g_xfer_pool[best].buffer;
+    }
+
+    SDL_GPUTransferBufferCreateInfo info = {0};
+    info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
+    info.size = size;
+    SDL_GPUTransferBuffer *buf = SDL_CreateGPUTransferBuffer(g_device, &info);
+    if (buf == NULL)
+    {
+        return NULL;
+    }
+
+    int slot = g_xfer_pool_count;
+    if (slot >= MIKUPAN_XFER_POOL_MAX)
+    {
+        /* Pool full (pathological). Evict the least-recently-used entry; the
+         * release is deferred by SDL until the GPU is done, so it's safe. */
+        slot = 0;
+        for (int i = 1; i < g_xfer_pool_count; i++)
+        {
+            if (g_xfer_pool[i].last_frame < g_xfer_pool[slot].last_frame)
+            {
+                slot = i;
+            }
+        }
+        SDL_ReleaseGPUTransferBuffer(g_device, g_xfer_pool[slot].buffer);
+    }
+    else
+    {
+        g_xfer_pool_count++;
+    }
+    g_xfer_pool[slot].buffer = buf;
+    g_xfer_pool[slot].size = size;
+    g_xfer_pool[slot].last_frame = g_gpu_frame;
+    return buf;
+}
+
+/// Free pool buffers idle for a long time so a one-off heavy area doesn't pin
+/// transfer memory forever. Called once per frame.
+static void TrimUploadTransferPool(void)
+{
+    for (int i = 0; i < g_xfer_pool_count; i++)
+    {
+        GPUTransferPoolEntry *e = &g_xfer_pool[i];
+        if (e->buffer != NULL &&
+            (g_gpu_frame - e->last_frame) >= MIKUPAN_XFER_TRIM_FRAMES)
+        {
+            SDL_ReleaseGPUTransferBuffer(g_device, e->buffer);
+            *e = g_xfer_pool[g_xfer_pool_count - 1];
+            g_xfer_pool_count--;
+            i--;
+        }
+    }
+}
 
 static GPUBufferEntry g_buffers[MIKUPAN_GPU_MAX_BUFFERS];
 static GPUTextureEntry g_textures[MIKUPAN_GPU_MAX_TEXTURES];
@@ -502,12 +601,14 @@ void MikuPan_GPUShutdown(void)
             SDL_ReleaseGPUTexture(g_device, g_fallback_texture);
             g_fallback_texture = NULL;
         }
-        if (g_upload_transfer != NULL)
+        for (int i = 0; i < g_xfer_pool_count; i++)
         {
-            SDL_ReleaseGPUTransferBuffer(g_device, g_upload_transfer);
-            g_upload_transfer = NULL;
-            g_upload_transfer_size = 0;
+            if (g_xfer_pool[i].buffer != NULL)
+            {
+                SDL_ReleaseGPUTransferBuffer(g_device, g_xfer_pool[i].buffer);
+            }
         }
+        g_xfer_pool_count = 0;
         SDL_ReleaseWindowFromGPUDevice(g_device, g_window);
         SDL_DestroyGPUDevice(g_device);
     }
@@ -547,6 +648,11 @@ void MikuPan_GPUBeginFrame(void)
     g_pass = NULL;
     g_swapchain = NULL;
     g_target_initialized = 0;
+
+    /* Advance the frame clock that the transfer-buffer pool uses to decide when
+     * a buffer's last upload is GPU-complete, and free long-idle buffers. */
+    g_gpu_frame++;
+    TrimUploadTransferPool();
 }
 
 void MikuPan_GPUFlushRenderPass(void)
@@ -803,59 +909,6 @@ void MikuPan_GPUReleaseBuffer(unsigned int id)
     memset(&g_buffers[id], 0, sizeof(g_buffers[id]));
 }
 
-/// Largest upload served by the shared transfer buffer. Above this we fall back
-/// to a temporary buffer: cycling the shared buffer allocates one internal
-/// slice per in-flight upload within a frame, so we must keep its size bounded
-/// or a rare large upload would inflate every slice. Textures and bone palettes
-/// (the frequent uploads) sit comfortably under this; only the occasional
-/// mesh-cache VBO fill exceeds it.
-#define MIKUPAN_UPLOAD_TRANSFER_MAX (1u << 20) /* 1 MiB */
-
-/// Return a transfer buffer of at least `size`. Frequent small uploads reuse the
-/// shared buffer (no per-upload alloc/free); rare large uploads get a temporary
-/// buffer the caller must release. `*out_temporary` says which.
-static SDL_GPUTransferBuffer *AcquireUploadTransfer(unsigned int size,
-                                                    bool *out_temporary)
-{
-    if (size > MIKUPAN_UPLOAD_TRANSFER_MAX)
-    {
-        *out_temporary = true;
-        SDL_GPUTransferBufferCreateInfo info = {0};
-        info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-        info.size = size;
-        return SDL_CreateGPUTransferBuffer(g_device, &info);
-    }
-
-    *out_temporary = false;
-    if (g_upload_transfer != NULL && g_upload_transfer_size >= size)
-    {
-        return g_upload_transfer;
-    }
-    if (g_upload_transfer != NULL)
-    {
-        SDL_ReleaseGPUTransferBuffer(g_device, g_upload_transfer);
-        g_upload_transfer = NULL;
-        g_upload_transfer_size = 0;
-    }
-    SDL_GPUTransferBufferCreateInfo info = {0};
-    info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-    info.size = size;
-    g_upload_transfer = SDL_CreateGPUTransferBuffer(g_device, &info);
-    if (g_upload_transfer != NULL)
-    {
-        g_upload_transfer_size = size;
-    }
-    return g_upload_transfer;
-}
-
-static void ReleaseUploadTransfer(SDL_GPUTransferBuffer *transfer, bool temporary)
-{
-    if (temporary && transfer != NULL)
-    {
-        SDL_ReleaseGPUTransferBuffer(g_device, transfer);
-    }
-}
-
 void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
                              const void *data)
 {
@@ -877,8 +930,7 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
 
     MikuPan_GPUFlushRenderPass();
 
-    bool transfer_temp = false;
-    SDL_GPUTransferBuffer *transfer = AcquireUploadTransfer(size, &transfer_temp);
+    SDL_GPUTransferBuffer *transfer = AcquireUploadTransfer(size);
     if (transfer == NULL)
     {
         info_log("AcquireUploadTransfer failed: %s", SDL_GetError());
@@ -903,7 +955,6 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
     SDL_GPUCopyPass *copy = SDL_BeginGPUCopyPass(g_cmd);
     SDL_UploadToGPUBuffer(copy, &src, &dst, true);
     SDL_EndGPUCopyPass(copy);
-    ReleaseUploadTransfer(transfer, transfer_temp);
 }
 
 void MikuPan_GPUUpdateUniformCPUBuffer(unsigned int id, unsigned int size,
@@ -1066,9 +1117,7 @@ void MikuPan_GPUUploadTextureRGBA8(unsigned int id, int width, int height,
     MikuPan_GPUFlushRenderPass();
 
     unsigned int upload_size = (unsigned int)(pitch * height);
-    bool transfer_temp = false;
-    SDL_GPUTransferBuffer *transfer =
-        AcquireUploadTransfer(upload_size, &transfer_temp);
+    SDL_GPUTransferBuffer *transfer = AcquireUploadTransfer(upload_size);
     if (transfer == NULL)
     {
         return;
@@ -1096,7 +1145,6 @@ void MikuPan_GPUUploadTextureRGBA8(unsigned int id, int width, int height,
     SDL_GPUCopyPass *copy = SDL_BeginGPUCopyPass(g_cmd);
     SDL_UploadToGPUTexture(copy, &src, &dst, true);
     SDL_EndGPUCopyPass(copy);
-    ReleaseUploadTransfer(transfer, transfer_temp);
 }
 
 int MikuPan_GPUReadTextureRGBA8(unsigned int texture_id, int width, int height,
@@ -1267,6 +1315,24 @@ void MikuPan_GPUBindVertexArray(unsigned int vao)
     g_bound_vao = vao;
 }
 
+void MikuPan_GPUReleaseVertexArray(unsigned int vao)
+{
+    if (vao == 0 || vao >= MIKUPAN_GPU_MAX_VAOS)
+    {
+        return;
+    }
+    /* pipeline_type == 0 marks the slot free for AllocVaoId to reclaim. */
+    memset(&g_vaos[vao], 0, sizeof(g_vaos[vao]));
+    if (vao < g_next_vao_id)
+    {
+        g_next_vao_id = vao;
+    }
+    if (g_bound_vao == vao)
+    {
+        g_bound_vao = 0;
+    }
+}
+
 unsigned int MikuPan_GPUGetBoundVertexArray(void) { return g_bound_vao; }
 
 void MikuPan_GPUSetCurrentShader(int shader_index)
@@ -1298,13 +1364,17 @@ static SDL_GPUGraphicsPipeline *GetPipeline(unsigned int primitive)
         return NULL;
     }
 
+    /* Key on the vertex-format type (shared by all VAOs of that type), not the
+     * VAO instance — otherwise every mesh-cache entry spawns its own pipeline. */
+    int pipeline_type = g_vaos[g_bound_vao].pipeline_type - 1;
+
     unsigned int state_hash = RenderStateHash();
     for (int i = 0; i < MIKUPAN_GPU_MAX_PIPELINES; i++)
     {
         GPUPipelineEntry *entry = &g_pipeline_cache[i];
         if (entry->used &&
             entry->shader_index == g_current_shader &&
-            entry->vao == g_bound_vao &&
+            entry->pipeline_type == pipeline_type &&
             entry->primitive == primitive &&
             entry->state_hash == state_hash &&
             entry->color_format == g_target_color_format &&
@@ -1315,8 +1385,6 @@ static SDL_GPUGraphicsPipeline *GetPipeline(unsigned int primitive)
         }
     }
 
-    GPUVaoEntry *vao = &g_vaos[g_bound_vao];
-    int pipeline_type = vao->pipeline_type - 1;
     MikuPan_PipelineInfo *pipeline_info =
         MikuPan_GetPipelineInfo((enum MikuPan_PipelineType)pipeline_type);
     if (pipeline_info == NULL)
@@ -1403,7 +1471,7 @@ static SDL_GPUGraphicsPipeline *GetPipeline(unsigned int primitive)
         {
             g_pipeline_cache[i].used = 1;
             g_pipeline_cache[i].shader_index = g_current_shader;
-            g_pipeline_cache[i].vao = g_bound_vao;
+            g_pipeline_cache[i].pipeline_type = pipeline_type;
             g_pipeline_cache[i].primitive = primitive;
             g_pipeline_cache[i].state_hash = state_hash;
             g_pipeline_cache[i].color_format = g_target_color_format;

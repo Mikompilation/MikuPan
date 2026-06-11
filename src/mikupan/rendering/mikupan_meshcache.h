@@ -45,6 +45,15 @@ typedef struct MikuPan_MeshCacheEntry
     unsigned long long stream_hash[4];
     long  stream_size[4];
     int   stream_valid[4];
+    /// LRU / memory-budget bookkeeping. `last_used` is a monotonic access tick
+    /// bumped on every lookup hit and insert; the eviction pass drops the
+    /// smallest-tick entries when the cache exceeds its GPU-memory budget. This
+    /// reclaims entries whose PS2-memory source was overwritten/freed without a
+    /// clean SgMapUnit invalidation (they're simply never looked up again).
+    /// `buf_bytes` tracks each owned GPU buffer's allocated size (vbo[0..3],
+    /// ibo at index 4) so the budget reflects real usage.
+    unsigned long long last_used;
+    long  buf_bytes[5];
     struct MikuPan_MeshCacheEntry *next; ///< chaining within hash bucket
 } MikuPan_MeshCacheEntry;
 

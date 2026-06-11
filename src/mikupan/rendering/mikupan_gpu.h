@@ -131,6 +131,9 @@ void MikuPan_GPUUpdateVertexArrayBuffers(unsigned int vao,
                                          unsigned int ibo);
 void MikuPan_GPUBindVertexArray(unsigned int vao);
 unsigned int MikuPan_GPUGetBoundVertexArray(void);
+/// Free a VAO id registered with MikuPan_GPURegisterVertexArray so the slot can
+/// be reused. Call when a mesh-cache entry that owns the VAO is destroyed.
+void MikuPan_GPUReleaseVertexArray(unsigned int vao);
 
 void MikuPan_GPUSetCurrentShader(int shader_index);
 int  MikuPan_GPUGetCurrentShader(void);
