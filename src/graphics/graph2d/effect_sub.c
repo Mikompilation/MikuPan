@@ -182,6 +182,26 @@ static int EffectSubIsMainFramebufferAddress(int addr)
     return addr == 0 || addr == SCR_HEIGHT * (SCR_WIDTH / 64);
 }
 
+static int g_effect_sub_live_framebuffer_copy_addr = -1;
+
+static void EffectSubRememberLiveFramebufferCopy(int addr)
+{
+    g_effect_sub_live_framebuffer_copy_addr = addr;
+}
+
+static void EffectSubForgetLiveFramebufferCopy(int addr)
+{
+    if (g_effect_sub_live_framebuffer_copy_addr == addr)
+    {
+        g_effect_sub_live_framebuffer_copy_addr = -1;
+    }
+}
+
+static int EffectSubIsLiveFramebufferCopyAddress(int addr)
+{
+    return addr == g_effect_sub_live_framebuffer_copy_addr;
+}
+
 static int EffectSubIsLiveFramebufferTexture(const sceGsTex0 *tex)
 {
     return tex != NULL &&
@@ -189,7 +209,8 @@ static int EffectSubIsLiveFramebufferTexture(const sceGsTex0 *tex)
         tex->TBW == SCR_WIDTH / 64 &&
         tex->TW == 10 &&
         tex->TH == 8 &&
-        EffectSubIsMainFramebufferAddress(tex->TBP0);
+        (EffectSubIsMainFramebufferAddress(tex->TBP0) ||
+         EffectSubIsLiveFramebufferCopyAddress(tex->TBP0));
 }
 
 static int EffectSubReadMainFramebuffer(u_long128 *outbuf)
@@ -246,6 +267,7 @@ static int EffectSubUploadMainFramebufferToGs(int addr)
         SCR_HEIGHT);
     sceGsExecLoadImage(&gs_limage, framebuffer_copy);
     sceGsSyncPath(0, 0);
+    EffectSubRememberLiveFramebufferCopy(addr);
 
     return 1;
 }
@@ -3367,6 +3389,7 @@ void LocalCopyBtoL_Sub(int no, int type, int addr) {
         0,
         SCR_WIDTH,
         SCR_HEIGHT);
+    EffectSubForgetLiveFramebufferCopy(addr);
     sceGsExecLoadImage(&gs_limage, bbuf);
 
     if (type != 0)
@@ -3502,6 +3525,7 @@ static void EffectSubCopyGsPsmct32(int src_addr, int dst_addr)
         0,
         SCR_WIDTH,
         SCR_HEIGHT);
+    EffectSubForgetLiveFramebufferCopy(dst_addr);
     sceGsExecLoadImage(&load_image, copy_buf);
 }
 

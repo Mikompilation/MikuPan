@@ -203,6 +203,7 @@ void MikuPan_SetTexture(sceGsTex0 *tex0)
     if (texture_info != NULL)
     {
         _t = MikuPan_PerfBegin();
+        MikuPan_ActiveTextureCached(GL_TEXTURE0);
         MikuPan_BindTexture2DCached(texture_info->id);
         MikuPan_PerfEnd(PERF_SECT_TEX_BIND, _t);
     }

@@ -343,6 +343,7 @@ void MikuPan_FlushTexturedSpriteBatch(void)
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_SetRenderState2D();
 
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_BindTexture2DCached(g_textured_sprite_batch.texture_id);
 
     int n_verts = g_textured_sprite_batch.sprite_count * 6;
@@ -837,6 +838,7 @@ void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vert
     MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     MikuPan_BindVAO(pipeline->vao);
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_BindTexture2DCached(g_screen_copy_texture);
     MikuPan_ApplyHeatHazeTriangleState(depth_mode, additive_blend);
     MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
@@ -913,6 +915,7 @@ void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer,
     MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     MikuPan_BindVAO(pipeline->vao);
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_BindTexture2DCached(g_screen_copy_texture);
     MikuPan_ApplyHeatHazeTriangleState(depth_mode, 0); /* screen-pos path: standard blend */
     MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
@@ -963,6 +966,7 @@ void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int v
     MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     MikuPan_BindVAO(pipeline->vao);
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_BindTexture2DCached(g_screen_copy_texture);
     MikuPan_ApplyHeatHazeTriangleState(depth_mode, 0);
     MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
