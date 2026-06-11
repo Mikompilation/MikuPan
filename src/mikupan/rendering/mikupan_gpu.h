@@ -23,7 +23,10 @@ typedef enum MikuPan_GPUBufferKind
 {
     MIKUPAN_GPU_BUFFER_VERTEX = 0,
     MIKUPAN_GPU_BUFFER_INDEX,
-    MIKUPAN_GPU_BUFFER_UNIFORM_CPU
+    MIKUPAN_GPU_BUFFER_UNIFORM_CPU,
+    /// Read-only graphics storage buffer, bound to the vertex stage. Used by the
+    /// GPU mesh-skinning path to hold the per-frame bone-matrix palette.
+    MIKUPAN_GPU_BUFFER_STORAGE
 } MikuPan_GPUBufferKind;
 
 typedef struct MikuPan_GPUUniformBlock
@@ -161,6 +164,11 @@ void MikuPan_GPUSetScreenCopyTarget(unsigned int texture_id, int width,
 
 void MikuPan_GPUBindTextureSlot(int slot, unsigned int texture_id);
 unsigned int MikuPan_GPUGetBoundTexture0(void);
+
+/// Bind a storage buffer (created with MIKUPAN_GPU_BUFFER_STORAGE) to vertex
+/// storage slot 0 for the next draw(s) in the active pass. Pass 0 to unbind.
+/// Used by the GPU skinning path to supply the bone-matrix palette.
+void MikuPan_GPUSetVertexStorageBuffer(unsigned int buffer_id);
 
 void MikuPan_GPUDrawArrays(unsigned int gl_mode, int first, int count);
 void MikuPan_GPUDrawElements(unsigned int gl_mode, int count,

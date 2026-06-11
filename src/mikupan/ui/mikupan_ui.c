@@ -76,6 +76,11 @@ int MikuPan_PerfGetTexL1Misses(void);
 #define MP_PERF_TEX_CREATE 21
 #define MP_PERF_TEX_BIND 22
 
+/// "Other / unknown" breakdown — uninstrumented PS2/SG scene-graph emulation.
+#define MP_PERF_SKIN_PREP 23
+#define MP_PERF_COORD_CALC 24
+#define MP_PERF_LIGHT_SETUP 25
+
 // -- GS instrumentation (defined in mikupan_gs.cpp) --------------------------
 int MikuPan_GsGetUploadCount(void);
 int MikuPan_GsGetUploadBytes(void);
@@ -575,8 +580,17 @@ static void FrameTimeGraph_Draw(FrameTimeGraph *g)
     float perf_render = MikuPan_PerfGetSectionMs(MP_PERF_RENDERUI);
     float perf_gs_up = MikuPan_GsGetUploadMs();
     float perf_gs_dl = MikuPan_GsGetDownloadMs();
+
+    /// "Other" breakdown — uninstrumented PS2/SG scene-graph emulation, now
+    /// partially attributed to leaf timers (these are also subtracted from the
+    /// residual "Other / unknown" so the columns still sum to the CPU total).
+    float perf_skin   = MikuPan_PerfGetSectionMs(MP_PERF_SKIN_PREP);
+    float perf_coord  = MikuPan_PerfGetSectionMs(MP_PERF_COORD_CALC);
+    float perf_light  = MikuPan_PerfGetSectionMs(MP_PERF_LIGHT_SETUP);
+
     float perf_known = perf_mesh + perf_sprite + perf_flush + perf_drawui
-                       + perf_render + perf_gs_up + perf_gs_dl;
+                       + perf_render + perf_gs_up + perf_gs_dl
+                       + perf_skin + perf_coord + perf_light;
     float perf_other = cpu_latest - perf_known;
     if (perf_other < 0.0f)
         perf_other = 0.0f;
@@ -590,6 +604,9 @@ static void FrameTimeGraph_Draw(FrameTimeGraph *g)
         PerfRow("RenderUi (ImGui)", perf_render, cpu_latest);
         PerfRow("GS uploads", perf_gs_up, cpu_latest);
         PerfRow("GS downloads", perf_gs_dl, cpu_latest);
+        PerfRow("Skin prep (SetVUVN)", perf_skin, cpu_latest);
+        PerfRow("Coord calc (SetLWS)", perf_coord, cpu_latest);
+        PerfRow("Light setup", perf_light, cpu_latest);
         PerfRow("Other / unknown", perf_other, cpu_latest);
         igEndTable();
     }
@@ -2671,6 +2688,16 @@ void MikuPan_UiMenuBar(void)
             if (igButton("Clear Mesh Cache", (ImVec2) {0.0f, 0.0f}))
             {
                 MikuPan_MeshCache_Flush();
+            }
+
+            /* GPU skinning for 0x2/0xA meshes (2-bone blend in the vertex
+             * shader). Off falls back to the CPU-skinned + per-frame stream. */
+            extern int  MikuPan_GpuSkinningEnabled(void);
+            extern void MikuPan_SetGpuSkinningEnabled(int);
+            int gpu_skin_on = MikuPan_GpuSkinningEnabled();
+            if (igCheckbox("GPU Skinning (0x2/0xA)", (bool *) &gpu_skin_on))
+            {
+                MikuPan_SetGpuSkinningEnabled(gpu_skin_on);
             }
             igEndMenu();
         }

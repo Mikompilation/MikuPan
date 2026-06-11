@@ -118,6 +118,36 @@ void MikuPan_InitPipeline()
         sizeof(u_int) * 1024 * 1024, MIKUPAN_GPU_BUFFER_INDEX);
     MikuPan_FinalizePipeline(POSITION4_NORMAL4_UV2);
 
+    ///////// GPU-SKINNED MESH 0x2 / 0xA /////////
+    curr_pipeline = &pipelines[SKIN_POSITION4X2_NORMAL4X2_UV2];
+    MikuPan_CreateBufferObjectsInfo(curr_pipeline, 2);
+
+    /// buffer0: four float4 per vertex (bone-0 pos+weight, bone-1 pos+indices,
+    /// bone-0 normal+normal-weight, bone-1 normal). Stride = sizeof(float[4][4]).
+    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 4 * 1024 * 1024, 4);
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[0].attributes[0], 4, 0,
+        sizeof(float[4][4]), sizeof(float[0][4]));
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[0].attributes[1], 4, 1,
+        sizeof(float[4][4]), sizeof(float[1][4]));
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[0].attributes[2], 4, 2,
+        sizeof(float[4][4]), sizeof(float[2][4]));
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[0].attributes[3], 4, 3,
+        sizeof(float[4][4]), sizeof(float[3][4]));
+
+    /// buffer1: float2 UV (attribute location 4).
+    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[1], 4 * 1024 * 1024, 1);
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[1].attributes[0], 2, 4,
+        sizeof(float[2]), 0);
+
+    curr_pipeline->ibo = MikuPan_GPUCreateBuffer(
+        sizeof(u_int) * 1024 * 1024, MIKUPAN_GPU_BUFFER_INDEX);
+    MikuPan_FinalizePipeline(SKIN_POSITION4X2_NORMAL4X2_UV2);
+
     ///////// UNTEXTURED_COLOURED_SPRITE_SHADER /////////
     curr_pipeline = &pipelines[COLOUR4_POSITION4];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 1);

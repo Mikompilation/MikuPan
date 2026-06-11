@@ -4,6 +4,7 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan_gpu.h"
 #include "mikupan_meshcache.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_profiler.h"
@@ -38,6 +39,46 @@ typedef struct
 static MikuPan_MeshBuffers0x32 g_mesh_buffers_0x32 = {0};
 static MikuPan_MeshBuffers0x82 g_mesh_buffers_0x82 = {0};
 static MikuPan_MeshBuffers0x2  g_mesh_buffers_0x2  = {0};
+
+/// GPU-skinning bone-matrix palette. One storage buffer, re-uploaded only when
+/// the palette content hash changes. The hash is computed once per model per
+/// pass in sgsu.c (MikuPan_SkinPaletteHash), so this avoids re-hashing per mesh
+/// and dedupes the upload across all meshes of a model AND across the scene +
+/// mirror-reflection passes (identical content) — only the actual render-pass
+/// flush on a genuine change remains.
+static unsigned int        g_skin_palette_buffer = 0;
+static unsigned long long  g_skin_palette_uploaded_hash = 0;
+static int                 g_skin_palette_valid = 0;
+
+/// Upload the current skinned mesh's bone palette (hash-guarded) and bind it to
+/// the vertex storage slot for the upcoming draw.
+static void MikuPan_BindSkinPalette(void)
+{
+    int bones = 0;
+    const void *pal = MikuPan_SkinPalette(&bones);
+    if (pal == NULL || bones <= 0)
+    {
+        return;
+    }
+
+    if (g_skin_palette_buffer == 0)
+    {
+        /* Generous initial allocation; MikuPan_GPUUploadBuffer grows as needed. */
+        g_skin_palette_buffer = MikuPan_GPUCreateBuffer(
+            (unsigned int)(256 * 64), MIKUPAN_GPU_BUFFER_STORAGE);
+    }
+
+    unsigned long long h = MikuPan_SkinPaletteHash();
+    if (!g_skin_palette_valid || g_skin_palette_uploaded_hash != h)
+    {
+        long size = (long)bones * 64; /* sceVu0FMATRIX = 4x float4 */
+        MikuPan_GPUUploadBuffer(g_skin_palette_buffer, (unsigned int)size, pal);
+        g_skin_palette_uploaded_hash = h;
+        g_skin_palette_valid = 1;
+    }
+
+    MikuPan_GPUSetVertexStorageBuffer(g_skin_palette_buffer);
+}
 static float g_zero_floats[MIKUPAN_MESH_BUFFER_CAPACITY] = {0};
 
 static int MikuPan_GetMeshRenderMode()
@@ -88,38 +129,6 @@ static int MikuPan_CurrentPassCacheKind(void)
 static int MikuPan_CanUseMeshCacheForCurrentPass(void)
 {
     return MikuPan_MeshCache_IsEnabled();
-}
-
-static int MikuPan_BuildPresetColorStream(SGDPROCUNITHEADER *pPUHead,
-                                          SGDPROCUNITDATA *pProcData,
-                                          MikuPan_PipelineInfo *pipeline,
-                                          int color_buf_idx)
-{
-    _SGDVUMESHCOLORDATA *pVMCD =
-        (_SGDVUMESHCOLORDATA *)(&pPUHead->pNext +
-                                pProcData->VUMeshData_Preset.sOffsetToPrim);
-    const int color_stride = pipeline->buffers[color_buf_idx].attributes[0].stride;
-    int vertex_offset = 0;
-
-    for (int i = 0; i < GET_NUM_MESH(pPUHead); i++)
-    {
-        pVMCD = (_SGDVUMESHCOLORDATA *)MikuPan_GetNextUnpackAddr((u_int *)pVMCD);
-        int vertex_count = pVMCD->VifUnpack.NUM;
-
-        if (pPUHead->VUMeshDesc.MeshType.PRE == 1)
-        {
-            MikuPan_FixColors((float *)&pVMCD->avColor, vertex_count);
-        }
-
-        memcpy((char *)g_mesh_buffers_0x32.colors + vertex_offset * color_stride,
-               pVMCD->avColor,
-               (size_t)vertex_count * color_stride);
-
-        vertex_offset += vertex_count;
-        pVMCD = (_SGDVUMESHCOLORDATA *)&pVMCD->avColor[vertex_count];
-    }
-
-    return vertex_offset;
 }
 
 void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUHead)
@@ -194,9 +203,10 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
     MikuPan_PerfEnd(PERF_SECT_STATE_CHANGE, _sc_t0);
 
     /// ── Cache fast path ──
-    /// Static furniture / map geometry: positions, UVs, normals, and indices
-    /// can be cached, but preset vertex colours are rewritten by lighting/BW
-    /// paths. Refresh only that colour VBO on cache hits.
+    /// Static furniture / map geometry: positions, UVs, normals, indices AND
+    /// the baked preset vertex colours are all immutable, so a cache hit binds
+    /// the VAO and draws with zero per-frame buffer work. Lighting and BW run in
+    /// the shader, so they need no CPU colour rebuild.
     const int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
     const int cache_kind = MikuPan_CurrentPassCacheKind();
     MikuPan_MeshCacheEntry *cache_entry = NULL;
@@ -206,17 +216,13 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
         cache_entry = MikuPan_MeshCache_Lookup(pPUHead, cache_kind);
         if (cache_entry != NULL && cache_entry->sgd_top == sgd_top_addr)
         {
-            /// Preset vertex colours are only consumed by the lit main pass;
-            /// the shadow caster / receiver shaders ignore them, so skip the
-            /// per-frame colour rebuild + stream there.
-            if (cache_kind == MIKUPAN_MESHCACHE_KIND_MAIN)
-            {
-                int color_count = MikuPan_BuildPresetColorStream(pPUHead, pProcData,
-                                                                 pipeline, color_buf_idx);
-                MikuPan_MeshCache_StreamVbo(cache_entry, color_buf_idx,
-                                            (long)(color_count * color_stride),
-                                            g_mesh_buffers_0x32.colors);
-            }
+            /// Preset vertex colours are baked, static map/furniture data: the
+            /// PS2 lighting and black-and-white passes run in the shader (see
+            /// CalcPS2LitColor / ToBlackWhite), and MikuPan_FixColors is an
+            /// idempotent static fixup. So the colour VBO uploaded on the cache
+            /// miss is already correct — no per-frame rebuild or re-stream is
+            /// needed on a hit. (If a mesh ever animates its base colours on the
+            /// CPU, it would freeze at its first-frame colours; none do today.)
 
             _t = MikuPan_PerfBegin();
             MikuPan_BindVAO(cache_entry->vao);
@@ -818,6 +824,19 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
     else if (mesh_type == 0xA) shader = MESH_0xA_SHADER;
     else return;
 
+    /// GPU skinning: when SetVUVNDataPost handed this mesh's skin off to the
+    /// GPU (non-shadow pass, vtype 2/3), the bone-blend runs in the vertex
+    /// shader. We then upload the static bind-pose data once (instead of the
+    /// per-frame transformed stream) and the bone palette per frame.
+    const int is_skin = (MikuPan_SkinMode() != 0);
+    if (is_skin)
+    {
+        shader = (mesh_type == 0x2) ? MESH_0x2_SKINNED_SHADER
+                                    : MESH_0xA_SKINNED_SHADER;
+    }
+    const int pipeline_type = is_skin ? SKIN_POSITION4X2_NORMAL4X2_UV2
+                                      : POSITION4_NORMAL4_UV2;
+
     int per_type_sect = (mesh_type == 0x2) ? PERF_SECT_MESH_0x2
                                            : PERF_SECT_MESH_0xA;
     MIKUPAN_PERF_SCOPE(per_type_sect);
@@ -829,7 +848,8 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
     SGDPROCUNITDATA *pProcData = (SGDPROCUNITDATA *) &pPUHead[1];
     sceGsTex0 *mesh_tex_reg = (sceGsTex0 *) ((int64_t) pProcData + 0x18);
 
-    MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(POSITION4_NORMAL4_UV2);
+    MikuPan_PipelineInfo *pipeline =
+        MikuPan_GetPipelineInfo((enum MikuPan_PipelineType)pipeline_type);
 
     // ── State setup (per-frame, always) ──
     MikuPan_FlushTexturedSpriteBatch();
@@ -862,9 +882,10 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
     if (cache_on)
     {
         cache_entry = MikuPan_MeshCache_Lookup(pPUHead, cache_kind);
-        if (cache_entry == NULL || cache_entry->sgd_top != sgd_top_addr)
+        if (cache_entry == NULL || cache_entry->sgd_top != sgd_top_addr ||
+            cache_entry->pipeline_type != pipeline_type)
         {
-            cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, POSITION4_NORMAL4_UV2, cache_kind);
+            cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, pipeline_type, cache_kind);
             need_static_upload = 1;
             MikuPan_PerfMeshCacheMissNew();
         }
@@ -884,18 +905,44 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
         MikuPan_PerfEnd(PERF_SECT_SC_VAO, _t);
     }
 
-    // ── Pos+norm AoS streamed every frame (CPU-skinned) ──
-    if (cache_on)
+    if (is_skin)
     {
-        MikuPan_MeshCache_StreamVbo(cache_entry, 0,
-            (long)(v->vnum * pipeline->buffers[0].attributes[0].stride),
-            vertices);
+        // ── Static bind-pose data (GPU-skinned) ──
+        // Buffer 0 holds the immutable per-vertex bind data (m0/m1/n0/n1); the
+        // VS blends it with the bone palette. Uploaded once on a cache miss, so
+        // the steady state streams nothing per frame.
+        const long bind_bytes =
+            (long)MikuPan_SkinVertexCount() *
+            pipeline->buffers[0].attributes[0].stride;
+        if (cache_on)
+        {
+            if (need_static_upload)
+            {
+                MikuPan_MeshCache_UploadVbo(cache_entry, 0, bind_bytes,
+                                            MikuPan_SkinBindData());
+            }
+        }
+        else
+        {
+            MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                (GLsizeiptr)bind_bytes, MikuPan_SkinBindData());
+        }
     }
     else
     {
-        MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
-            (GLsizeiptr)(v->vnum * pipeline->buffers[0].attributes[0].stride),
-            vertices);
+        // ── Pos+norm AoS streamed every frame (CPU-skinned) ──
+        if (cache_on)
+        {
+            MikuPan_MeshCache_StreamVbo(cache_entry, 0,
+                (long)(v->vnum * pipeline->buffers[0].attributes[0].stride),
+                vertices);
+        }
+        else
+        {
+            MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                (GLsizeiptr)(v->vnum * pipeline->buffers[0].attributes[0].stride),
+                vertices);
+        }
     }
 
     /// ── Static streams (UV + indices) — only built on cache miss, OR every
@@ -970,11 +1017,28 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
         MikuPan_ShadowDebugRecordReceiverDraw(mesh_type, index_count);
     }
 
+    if (is_skin)
+    {
+        /* Hash-guarded palette upload + bind into the vertex storage slot for
+         * this draw (the bind is consumed inside BindDrawState). */
+        MikuPan_BindSkinPalette();
+    }
+
     MikuPan_PerfDrawCall();
     MikuPan_TimedDrawElements(MikuPan_GetMeshRenderMode(),
                               index_count, GL_UNSIGNED_INT, (void *)0);
 
-    if (!MikuPan_IsShadowPassActive() &&
+    if (is_skin)
+    {
+        /* Clear the binding so the next non-skinned draw (which uses a pipeline
+         * declaring zero storage buffers) never carries the palette. */
+        MikuPan_GPUSetVertexStorageBuffer(0);
+    }
+
+    /* The normals overlay shader reads the legacy non-skinned vertex format, so
+     * it is only valid on the CPU-skinned path. */
+    if (!is_skin &&
+        !MikuPan_IsShadowPassActive() &&
         !MikuPan_IsShadowReceiverPassActive() &&
         MikuPan_IsNormalsRendering())
     {

@@ -181,6 +181,13 @@ enum MikuPan_PipelineType
     /// MESH 0x2 SHADER
     POSITION4_NORMAL4_UV2,
 
+    /// GPU-SKINNED MESH 0x2 / 0xA. Static bind-pose data uploaded once:
+    /// buffer0 holds four float4 per vertex (bone-0 pos+weight, bone-1
+    /// pos+packed bone indices, bone-0 normal+normal-weight, bone-1 normal);
+    /// buffer1 holds the float2 UV. The bone-matrix palette arrives separately
+    /// in a vertex storage buffer.
+    SKIN_POSITION4X2_NORMAL4X2_UV2,
+
     /// SPRITE
     UV4_COLOUR4_POSITION4,
 

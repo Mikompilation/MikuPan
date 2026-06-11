@@ -475,6 +475,11 @@ void MikuPan_Clear()
     MikuPan_ResetRenderStateCache();
     MikuPan_ResetGLBindCache();
 
+    /* Reset the per-frame GPU-skinning palette dedupe so each model's first
+     * skinned mesh re-reads its animated bone pose this frame. */
+    extern void MikuPan_SkinFrameReset(void);
+    MikuPan_SkinFrameReset();
+
     MikuPan_RenderSetDebugValues();
 
     int curr_render_width = MikuPan_GetRenderResolutionWidth();

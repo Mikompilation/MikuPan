@@ -42,6 +42,12 @@ typedef enum
     PERF_SECT_TEX_L2_LOOKUP,      ///< sub: MikuPan_GetTextureInfo (by GS-memory hash)
     PERF_SECT_TEX_CREATE,         ///< sub: MikuPan_CreateGLTexture (glTexImage2D + glGenerateMipmap)
     PERF_SECT_TEX_BIND,           ///< sub: MikuPan_BindTexture2DCached (glBindTexture under the cache)
+    /// "Other / unknown" breakdown — uninstrumented PS2/SG scene-graph emulation
+    /// that runs between frame-start and the timed render calls. These are
+    /// mutually-exclusive leaf timers, subtracted from "Other" in the UI.
+    PERF_SECT_SKIN_PREP,          ///< SetVUVNData/Post: GPU-skin gather + palette / CPU skin
+    PERF_SECT_COORD_CALC,         ///< CalcCoordinate → SetLWS (per-bone world matrices)
+    PERF_SECT_LIGHT_SETUP,        ///< SetLightData (per-coord light transform)
     PERF_SECT_COUNT
 } MikuPan_PerfSection;
 

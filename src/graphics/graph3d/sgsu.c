@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "ee/eestruct.h"
 #include "sgsup.h"
@@ -14,6 +16,7 @@
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sglight.h"
 #include "mikupan/mikupan_logging_c.h"
+#include "mikupan/rendering/mikupan_profiler.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #define min(x, y) (((x) > (y))? (y): (x))
@@ -276,12 +279,230 @@ void CalcVertexBuffer(u_int *prim)
     }
 }
 
+/// ─────────────────────────── GPU skinning bridge ───────────────────────────
+
+/// Shadow caster / receiver passes re-render these meshes with a different
+/// vertex format (silhouette / receiver shaders) and need the CPU-skinned
+/// vertex stream, so GPU skinning is suppressed while either is active.
+extern int MikuPan_IsShadowPassActive(void);
+extern int MikuPan_IsShadowReceiverPassActive(void);
+
+static int    g_gpu_skin_enabled = 1;
+static int    g_skin_mode = 0;          /* 0 = none, 2 = vtype2, 3 = vtype3 */
+static int    g_skin_vcount = 0;
+static unsigned char *g_skin_staging = NULL;
+static long   g_skin_staging_cap = 0;
+static unsigned char *g_skin_palette = NULL;
+static long   g_skin_palette_cap = 0;
+static int    g_skin_palette_bones = 0;
+
+/// The palette is identical for every mesh of a model within a frame (and the
+/// same content in the scene + mirror-reflection passes, since the reflection
+/// is applied via the view matrix, not the bone matrices). Dedupe the gather +
+/// hash to once per model per pass by remembering the last model's coord array;
+/// MikuPan_SkinFrameReset clears it each frame so animation is re-read.
+static SgCOORDUNIT       *g_skin_palette_last_lcp = NULL;
+static unsigned long long g_skin_palette_hash = 0;
+
+/// Per-vertex bind data is static, so its (expensive) gather is deferred until
+/// the renderer actually needs to upload it — i.e. only on a mesh-cache miss.
+/// SetVUVNDataPost records just the walk context here every frame; the gather
+/// (MikuPan_SkinBindData) runs lazily and at most once per mesh.
+static u_int *g_skin_loop_prim = NULL;
+static int    g_skin_vtype = 0;
+static int    g_skin_mesh_b0 = 0;
+static int    g_skin_mesh_b1 = 0;
+static int    g_skin_bind_valid = 0;
+
+#define MIKUPAN_SKIN_VERTEX_STRIDE 64   /* four float4: m0, m1, n0, n1 */
+#define MIKUPAN_SKIN_MATRIX_BYTES  64   /* sceVu0FMATRIX = 4x float4 */
+
+static unsigned char *SkinEnsure(unsigned char **buf, long *cap, long need)
+{
+    if (need > *cap)
+    {
+        unsigned char *grown = (unsigned char *) realloc(*buf, (size_t) need);
+        if (grown == NULL)
+        {
+            return NULL;
+        }
+        *buf = grown;
+        *cap = need;
+    }
+    return *buf;
+}
+
+static unsigned long long SkinFnv1a(const void *data, long size)
+{
+    const unsigned char *p = (const unsigned char *) data;
+    unsigned long long h = 1469598103934665603ULL;
+    for (long i = 0; i < size; i++)
+    {
+        h ^= (unsigned long long) p[i];
+        h *= 1099511628211ULL;
+    }
+    return h;
+}
+
+/// Build the bone-matrix palette from the active model's coord units, plus a
+/// content hash for the renderer's upload guard. Deduped to once per model per
+/// pass: every later mesh of the same model (same `lcp`) reuses the gather.
+static void SkinGatherPalette(void)
+{
+    if (lcp == g_skin_palette_last_lcp)
+    {
+        return; /* same model as the previous skinned mesh — already gathered */
+    }
+
+    int bones = blocksm;
+    if (bones <= 0)
+    {
+        bones = 1;
+    }
+
+    if (SkinEnsure(&g_skin_palette, &g_skin_palette_cap,
+                   (long) bones * MIKUPAN_SKIN_MATRIX_BYTES) == NULL)
+    {
+        g_skin_palette_bones = 0;
+        g_skin_palette_last_lcp = NULL;
+        return;
+    }
+
+    for (int b = 0; b < bones; b++)
+    {
+        memcpy(g_skin_palette + (long) b * MIKUPAN_SKIN_MATRIX_BYTES,
+               lcp[b].lwmtx, MIKUPAN_SKIN_MATRIX_BYTES);
+    }
+    g_skin_palette_bones = bones;
+    g_skin_palette_hash =
+        SkinFnv1a(g_skin_palette, (long) bones * MIKUPAN_SKIN_MATRIX_BYTES);
+    g_skin_palette_last_lcp = lcp;
+}
+
+void MikuPan_SkinFrameReset(void)
+{
+    /* Force the first skinned mesh of each model to re-read this frame's
+     * animated pose. */
+    g_skin_palette_last_lcp = NULL;
+}
+
+unsigned long long MikuPan_SkinPaletteHash(void) { return g_skin_palette_hash; }
+
+/// Record the walk context for a calc-skinned mesh and gather the (small) bone
+/// palette. The per-vertex bind data is NOT gathered here — that is deferred to
+/// MikuPan_SkinBindData so it only runs when the renderer actually uploads it
+/// (cache miss), not every frame and not for meshes that get culled.
+static void SkinPrepare(u_int *loop_prim, int vnum, int vtype)
+{
+    g_skin_mode = 0;
+    g_skin_bind_valid = 0;
+    if (vnum <= 0)
+    {
+        return;
+    }
+
+    g_skin_loop_prim = loop_prim;
+    g_skin_vtype     = vtype;
+    g_skin_vcount    = vnum;
+
+    /* For vtype 2 a single bone pair (from the first vertex) drives the whole
+     * mesh; for vtype 3 each vertex carries its own pair in source bytes
+     * 0x1c/0x1d (i.e. m1.w). */
+    if (vtype == 2)
+    {
+        unsigned char *cn = (unsigned char *) MikuPan_GetHostPointer(loop_prim[0]);
+        g_skin_mesh_b0 = cn[0x1c];
+        g_skin_mesh_b1 = cn[0x1d];
+    }
+
+    SkinGatherPalette();
+    g_skin_mode = vtype;
+}
+
+static int SkinAllowed(void)
+{
+    return g_gpu_skin_enabled
+        && !MikuPan_IsShadowPassActive()
+        && !MikuPan_IsShadowReceiverPassActive();
+}
+
+int  MikuPan_GpuSkinningEnabled(void) { return g_gpu_skin_enabled; }
+void MikuPan_SetGpuSkinningEnabled(int enabled) { g_gpu_skin_enabled = enabled ? 1 : 0; }
+int  MikuPan_SkinMode(void) { return g_skin_mode; }
+int  MikuPan_SkinVertexCount(void) { return g_skin_vcount; }
+
+/// Lazily gather the static per-vertex bind data for the current skinned mesh.
+/// Called by the renderer only when it needs to upload it (cache miss), so the
+/// per-vertex walk + memcpy is paid once per mesh instead of every frame. The
+/// raw 32-byte position block (m0,m1) and 32-byte normal block (n0,n1) are
+/// copied verbatim; for vtype 3 the bone indices already live in m1.w, for
+/// vtype 2 the single per-mesh pair is stamped in. The index pair is re-encoded
+/// as a normal float (b0 + b1*256) so the GPU's FLOAT attribute fetch can't
+/// flush it as a denormal; the VS recovers it with round()+bit masks.
+const void *MikuPan_SkinBindData(void)
+{
+    int vnum = g_skin_vcount;
+    if (g_skin_mode == 0 || vnum <= 0 || g_skin_loop_prim == NULL)
+    {
+        return NULL;
+    }
+    if (g_skin_bind_valid)
+    {
+        return g_skin_staging;
+    }
+
+    if (SkinEnsure(&g_skin_staging, &g_skin_staging_cap,
+                   (long) vnum * MIKUPAN_SKIN_VERTEX_STRIDE) == NULL)
+    {
+        return NULL;
+    }
+
+    u_int *p = g_skin_loop_prim;
+    for (int i = 0; i < vnum; i++, p += 2)
+    {
+        unsigned char *dst = g_skin_staging + (long) i * MIKUPAN_SKIN_VERTEX_STRIDE;
+        memcpy(dst,      MikuPan_GetHostPointer(p[0]), 32); /* m0, m1 */
+        memcpy(dst + 32, MikuPan_GetHostPointer(p[1]), 32); /* n0, n1 */
+
+        int b0, b1;
+        if (g_skin_vtype == 2)
+        {
+            b0 = g_skin_mesh_b0;
+            b1 = g_skin_mesh_b1;
+        }
+        else
+        {
+            b0 = dst[28];
+            b1 = dst[29];
+        }
+
+        float packed = (float) ((b0 & 0xFF) | ((b1 & 0xFF) << 8));
+        memcpy(dst + 28, &packed, sizeof(packed));
+    }
+
+    g_skin_bind_valid = 1;
+    return g_skin_staging;
+}
+
+const void *MikuPan_SkinPalette(int *out_bones)
+{
+    if (out_bones != NULL)
+    {
+        *out_bones = g_skin_palette_bones;
+    }
+    return g_skin_palette;
+}
+
 u_int *SetVUVNData(u_int *prim)
 {
+    MIKUPAN_PERF_SCOPE(PERF_SECT_SKIN_PREP);
     int i;
     VUVN_PRIM *vh;
     sceVu0FVECTOR *vp;
     sceVu0FVECTOR tmpvec;// unused
+
+    /* This path only ever copies pre-skinned data — never GPU-skinned. */
+    g_skin_mode = 0;
 
     vh = (VUVN_PRIM *) &prim[2];
     vp = (sceVu0FVECTOR *) getObjWrk();
@@ -303,6 +524,7 @@ u_int *SetVUVNData(u_int *prim)
 
 u_int *SetVUVNDataPost(u_int *prim)
 {
+    MIKUPAN_PERF_SCOPE(PERF_SECT_SKIN_PREP);
     int i;
     VUVN_PRIM *vh;
     sceVu0FVECTOR *vp;
@@ -319,6 +541,10 @@ u_int *SetVUVNDataPost(u_int *prim)
 
     void* bak = vp;
 
+    /* Default: this mesh is not GPU-skinned. The calc branches below flip this
+     * to the vtype when they hand the skin off to the GPU instead. */
+    g_skin_mode = 0;
+
     switch (vh->vtype)
     {
         case 2:
@@ -328,6 +554,14 @@ u_int *SetVUVNDataPost(u_int *prim)
                 {
                     copy_skinned_data(vp, (float *) MikuPan_GetHostPointer(prim[0]), (float *) MikuPan_GetHostPointer(prim[1]));
                 }
+            }
+            else if (SkinAllowed())
+            {
+                /* GPU skin: record the walk context + gather the bone palette
+                 * and skip the per-vertex CPU transform entirely. The renderer
+                 * blends in the vertex shader and pulls the static bind data
+                 * lazily on a cache miss; `bak` stays valid for the DMA tags. */
+                SkinPrepare(prim, vh->vnum, 2);
             }
             else
             {
@@ -351,6 +585,10 @@ u_int *SetVUVNDataPost(u_int *prim)
                 {
                     copy_skinned_data(vp, (float *) MikuPan_GetHostPointer(prim[0]), (float *) MikuPan_GetHostPointer(prim[1]));
                 }
+            }
+            else if (SkinAllowed())
+            {
+                SkinPrepare(prim, vh->vnum, 3);
             }
             else
             {

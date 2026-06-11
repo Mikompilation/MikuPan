@@ -75,6 +75,13 @@ static SDL_GPUTextureFormat g_swapchain_format = SDL_GPU_TEXTUREFORMAT_INVALID;
 static SDL_GPUTexture *g_fallback_texture = NULL;
 static SDL_GPUSampler *g_fallback_sampler = NULL;
 
+/// Persistent upload transfer buffer, reused across every buffer/texture upload
+/// so we don't SDL_CreateGPUTransferBuffer + release (GPU-memory alloc/free) on
+/// each one. Grown to the largest upload seen; mapped with cycle=true so SDL
+/// rotates internal storage when a previous upload is still in flight.
+static SDL_GPUTransferBuffer *g_upload_transfer = NULL;
+static unsigned int g_upload_transfer_size = 0;
+
 static GPUBufferEntry g_buffers[MIKUPAN_GPU_MAX_BUFFERS];
 static GPUTextureEntry g_textures[MIKUPAN_GPU_MAX_TEXTURES];
 static GPUVaoEntry g_vaos[MIKUPAN_GPU_MAX_VAOS];
@@ -129,7 +136,31 @@ static SDL_Rect g_scissor = {0, 0, 1, 1};
  */
 static int g_light_uniform_dirty = 1;
 static int g_material_uniform_dirty = 1;
+/* Slot-0 (g_uniforms) push tracking. The vertex stage reads the per-object
+ * matrices, which change every mesh; the fragment stage reads only colours,
+ * flags, fog and uShadowMatrix. Tracking the two stages separately lets the
+ * common mesh path (matrices only) skip the fragment push entirely. */
+static int g_vertex_uniform_dirty = 1;
+static int g_fragment_uniform_dirty = 1;
 static SDL_GPUGraphicsPipeline *g_last_bound_pipeline = NULL;
+/// Vertex storage buffer (bone-matrix palette) bound for the next skinned draw.
+/// NULL when the current draw is not skinned; the render path sets it before a
+/// skinned draw and clears it afterwards.
+static SDL_GPUBuffer *g_vertex_storage_buffer = NULL;
+
+/// Per-draw binding cache. SDL_GPU vertex-buffer and fragment-sampler bindings
+/// persist across draws within a pass, so re-issuing identical bindings every
+/// draw is pure overhead. Track the last bound set and skip the call when it is
+/// unchanged. Both are invalidated at pass begin (a new pass clears bindings).
+static SDL_GPUBuffer  *g_last_vertex_buffers[4] = {0};
+static unsigned int    g_last_vertex_buffer_count = 0;
+static int             g_vertex_binding_valid = 0;
+static SDL_GPUTexture *g_last_sampler_textures[2] = {0};
+static SDL_GPUSampler *g_last_sampler_samplers[2] = {0};
+static int             g_sampler_binding_valid = 0;
+static SDL_GPUBuffer      *g_last_index_buffer = NULL;
+static SDL_GPUIndexElementSize g_last_index_size = SDL_GPU_INDEXELEMENTSIZE_32BIT;
+static int             g_index_binding_valid = 0;
 
 static MikuPan_GPUUniformBlock g_uniforms;
 static MikuPan_LightData g_light_data;
@@ -224,6 +255,8 @@ static SDL_GPUBufferUsageFlags BufferUsageFromKind(MikuPan_GPUBufferKind kind)
     {
         case MIKUPAN_GPU_BUFFER_INDEX:
             return SDL_GPU_BUFFERUSAGE_INDEX;
+        case MIKUPAN_GPU_BUFFER_STORAGE:
+            return SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ;
         case MIKUPAN_GPU_BUFFER_VERTEX:
         default:
             return SDL_GPU_BUFFERUSAGE_VERTEX;
@@ -469,6 +502,12 @@ void MikuPan_GPUShutdown(void)
             SDL_ReleaseGPUTexture(g_device, g_fallback_texture);
             g_fallback_texture = NULL;
         }
+        if (g_upload_transfer != NULL)
+        {
+            SDL_ReleaseGPUTransferBuffer(g_device, g_upload_transfer);
+            g_upload_transfer = NULL;
+            g_upload_transfer_size = 0;
+        }
         SDL_ReleaseWindowFromGPUDevice(g_device, g_window);
         SDL_DestroyGPUDevice(g_device);
     }
@@ -563,6 +602,7 @@ static SDL_GPUTextureFormat PickSupportedDepthFormat(void)
         SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
         SDL_GPU_TEXTUREFORMAT_D16_UNORM,
     };
+    
     for (unsigned int i = 0; i < sizeof(candidates) / sizeof(candidates[0]); i++)
     {
         if (SDL_GPUTextureSupportsFormat(g_device, candidates[i],
@@ -572,6 +612,7 @@ static SDL_GPUTextureFormat PickSupportedDepthFormat(void)
             return candidates[i];
         }
     }
+
     /* D16_UNORM is guaranteed to be supported by SDL_GPU. */
     return SDL_GPU_TEXTUREFORMAT_D16_UNORM;
 }
@@ -762,6 +803,59 @@ void MikuPan_GPUReleaseBuffer(unsigned int id)
     memset(&g_buffers[id], 0, sizeof(g_buffers[id]));
 }
 
+/// Largest upload served by the shared transfer buffer. Above this we fall back
+/// to a temporary buffer: cycling the shared buffer allocates one internal
+/// slice per in-flight upload within a frame, so we must keep its size bounded
+/// or a rare large upload would inflate every slice. Textures and bone palettes
+/// (the frequent uploads) sit comfortably under this; only the occasional
+/// mesh-cache VBO fill exceeds it.
+#define MIKUPAN_UPLOAD_TRANSFER_MAX (1u << 20) /* 1 MiB */
+
+/// Return a transfer buffer of at least `size`. Frequent small uploads reuse the
+/// shared buffer (no per-upload alloc/free); rare large uploads get a temporary
+/// buffer the caller must release. `*out_temporary` says which.
+static SDL_GPUTransferBuffer *AcquireUploadTransfer(unsigned int size,
+                                                    bool *out_temporary)
+{
+    if (size > MIKUPAN_UPLOAD_TRANSFER_MAX)
+    {
+        *out_temporary = true;
+        SDL_GPUTransferBufferCreateInfo info = {0};
+        info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
+        info.size = size;
+        return SDL_CreateGPUTransferBuffer(g_device, &info);
+    }
+
+    *out_temporary = false;
+    if (g_upload_transfer != NULL && g_upload_transfer_size >= size)
+    {
+        return g_upload_transfer;
+    }
+    if (g_upload_transfer != NULL)
+    {
+        SDL_ReleaseGPUTransferBuffer(g_device, g_upload_transfer);
+        g_upload_transfer = NULL;
+        g_upload_transfer_size = 0;
+    }
+    SDL_GPUTransferBufferCreateInfo info = {0};
+    info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
+    info.size = size;
+    g_upload_transfer = SDL_CreateGPUTransferBuffer(g_device, &info);
+    if (g_upload_transfer != NULL)
+    {
+        g_upload_transfer_size = size;
+    }
+    return g_upload_transfer;
+}
+
+static void ReleaseUploadTransfer(SDL_GPUTransferBuffer *transfer, bool temporary)
+{
+    if (temporary && transfer != NULL)
+    {
+        SDL_ReleaseGPUTransferBuffer(g_device, transfer);
+    }
+}
+
 void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
                              const void *data)
 {
@@ -783,14 +877,11 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
 
     MikuPan_GPUFlushRenderPass();
 
-    SDL_GPUTransferBufferCreateInfo transfer_info = {0};
-    transfer_info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-    transfer_info.size = size;
-    SDL_GPUTransferBuffer *transfer =
-        SDL_CreateGPUTransferBuffer(g_device, &transfer_info);
+    bool transfer_temp = false;
+    SDL_GPUTransferBuffer *transfer = AcquireUploadTransfer(size, &transfer_temp);
     if (transfer == NULL)
     {
-        info_log("SDL_CreateGPUTransferBuffer failed: %s", SDL_GetError());
+        info_log("AcquireUploadTransfer failed: %s", SDL_GetError());
         return;
     }
 
@@ -812,7 +903,7 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
     SDL_GPUCopyPass *copy = SDL_BeginGPUCopyPass(g_cmd);
     SDL_UploadToGPUBuffer(copy, &src, &dst, true);
     SDL_EndGPUCopyPass(copy);
-    SDL_ReleaseGPUTransferBuffer(g_device, transfer);
+    ReleaseUploadTransfer(transfer, transfer_temp);
 }
 
 void MikuPan_GPUUpdateUniformCPUBuffer(unsigned int id, unsigned int size,
@@ -838,6 +929,17 @@ void MikuPan_GPUUpdateUniformCPUBuffer(unsigned int id, unsigned int size,
         memcpy(&g_material_data, data, size);
         g_material_uniform_dirty = 1;
     }
+}
+
+void MikuPan_GPUSetVertexStorageBuffer(unsigned int buffer_id)
+{
+    if (buffer_id == 0)
+    {
+        g_vertex_storage_buffer = NULL;
+        return;
+    }
+    GPUBufferEntry *entry = BufferEntry(buffer_id);
+    g_vertex_storage_buffer = (entry != NULL) ? entry->buffer : NULL;
 }
 
 static SDL_GPUSampler *CreateSampler(int repeat, int mipmaps)
@@ -964,11 +1066,9 @@ void MikuPan_GPUUploadTextureRGBA8(unsigned int id, int width, int height,
     MikuPan_GPUFlushRenderPass();
 
     unsigned int upload_size = (unsigned int)(pitch * height);
-    SDL_GPUTransferBufferCreateInfo transfer_info = {0};
-    transfer_info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-    transfer_info.size = upload_size;
+    bool transfer_temp = false;
     SDL_GPUTransferBuffer *transfer =
-        SDL_CreateGPUTransferBuffer(g_device, &transfer_info);
+        AcquireUploadTransfer(upload_size, &transfer_temp);
     if (transfer == NULL)
     {
         return;
@@ -996,7 +1096,7 @@ void MikuPan_GPUUploadTextureRGBA8(unsigned int id, int width, int height,
     SDL_GPUCopyPass *copy = SDL_BeginGPUCopyPass(g_cmd);
     SDL_UploadToGPUTexture(copy, &src, &dst, true);
     SDL_EndGPUCopyPass(copy);
-    SDL_ReleaseGPUTransferBuffer(g_device, transfer);
+    ReleaseUploadTransfer(transfer, transfer_temp);
 }
 
 int MikuPan_GPUReadTextureRGBA8(unsigned int texture_id, int width, int height,
@@ -1372,6 +1472,11 @@ static void BeginTargetPassIfNeeded(void)
     g_last_bound_pipeline = NULL;
     g_light_uniform_dirty = 1;
     g_material_uniform_dirty = 1;
+    g_vertex_uniform_dirty = 1;
+    g_fragment_uniform_dirty = 1;
+    g_vertex_binding_valid = 0;
+    g_sampler_binding_valid = 0;
+    g_index_binding_valid = 0;
 
     SDL_GPUViewport vp = {
         (float)g_viewport[0], (float)g_viewport[1],
@@ -1657,9 +1762,28 @@ static void BindDrawState(unsigned int primitive)
         g_last_bound_pipeline = pipeline;
     }
 
-    /* Slot 0 holds per-object matrices/colours/flags and changes every draw. */
-    SDL_PushGPUVertexUniformData(g_cmd, 0, &g_uniforms, sizeof(g_uniforms));
-    SDL_PushGPUFragmentUniformData(g_cmd, 0, &g_uniforms, sizeof(g_uniforms));
+    /* Skinned draws supply a bone-matrix palette in vertex storage slot 0. The
+     * render path sets this only for skinned meshes and clears it afterwards,
+     * so non-skinned pipelines (which declare zero storage buffers) never have
+     * one bound. */
+    if (g_vertex_storage_buffer != NULL)
+    {
+        SDL_BindGPUVertexStorageBuffers(g_pass, 0, &g_vertex_storage_buffer, 1);
+    }
+
+    /* Slot 0 holds per-object matrices (vertex) plus colours/flags/fog
+     * (fragment). The vertex matrices change every mesh, but the fragment-read
+     * fields usually do not, so push each stage only when its data changed. */
+    if (g_vertex_uniform_dirty)
+    {
+        SDL_PushGPUVertexUniformData(g_cmd, 0, &g_uniforms, sizeof(g_uniforms));
+        g_vertex_uniform_dirty = 0;
+    }
+    if (g_fragment_uniform_dirty)
+    {
+        SDL_PushGPUFragmentUniformData(g_cmd, 0, &g_uniforms, sizeof(g_uniforms));
+        g_fragment_uniform_dirty = 0;
+    }
 
     /* Slots 1 (lights) and 2 (material) persist across draws; only re-push
      * when their contents changed or a new pass re-armed them. */
@@ -1689,9 +1813,30 @@ static void BindDrawState(unsigned int primitive)
             binding_count++;
         }
     }
+    /* Skip the re-bind when the buffer set is identical to the last draw's.
+     * Compare handles (not just the VAO id) so a buffer that grew — and was
+     * recreated with a new handle — is correctly re-bound. */
     if (binding_count > 0)
     {
-        SDL_BindGPUVertexBuffers(g_pass, 0, bindings, binding_count);
+        int changed = !g_vertex_binding_valid ||
+                      binding_count != g_last_vertex_buffer_count;
+        for (unsigned int i = 0; !changed && i < binding_count; i++)
+        {
+            if (bindings[i].buffer != g_last_vertex_buffers[i])
+            {
+                changed = 1;
+            }
+        }
+        if (changed)
+        {
+            SDL_BindGPUVertexBuffers(g_pass, 0, bindings, binding_count);
+            for (unsigned int i = 0; i < binding_count; i++)
+            {
+                g_last_vertex_buffers[i] = bindings[i].buffer;
+            }
+            g_last_vertex_buffer_count = binding_count;
+            g_vertex_binding_valid = 1;
+        }
     }
 
     // Every fragment shader is created with num_samplers = 2 (uTexture +
@@ -1713,7 +1858,28 @@ static void BindDrawState(unsigned int primitive)
             samplers[i].sampler = g_fallback_sampler;
         }
     }
-    SDL_BindGPUFragmentSamplers(g_pass, 0, samplers, 2);
+    /* Skip the re-bind when both sampler slots are unchanged from the last draw. */
+    {
+        int changed = !g_sampler_binding_valid;
+        for (int i = 0; !changed && i < 2; i++)
+        {
+            if (samplers[i].texture != g_last_sampler_textures[i] ||
+                samplers[i].sampler != g_last_sampler_samplers[i])
+            {
+                changed = 1;
+            }
+        }
+        if (changed)
+        {
+            SDL_BindGPUFragmentSamplers(g_pass, 0, samplers, 2);
+            for (int i = 0; i < 2; i++)
+            {
+                g_last_sampler_textures[i] = samplers[i].texture;
+                g_last_sampler_samplers[i] = samplers[i].sampler;
+            }
+            g_sampler_binding_valid = 1;
+        }
+    }
 }
 
 void MikuPan_GPUDrawArrays(unsigned int gl_mode, int first, int count)
@@ -1744,15 +1910,24 @@ void MikuPan_GPUDrawElements(unsigned int gl_mode, int count,
     GPUBufferEntry *ibo = BufferEntry(vao->ibo);
     if (g_pass != NULL && ibo != NULL && ibo->buffer != NULL)
     {
-        SDL_GPUBufferBinding binding = {0};
-        binding.buffer = ibo->buffer;
-        binding.offset = 0;
-        SDL_BindGPUIndexBuffer(
-            g_pass,
-            &binding,
+        SDL_GPUIndexElementSize index_size =
             gl_index_type == GL_UNSIGNED_SHORT ?
                 SDL_GPU_INDEXELEMENTSIZE_16BIT :
-                SDL_GPU_INDEXELEMENTSIZE_32BIT);
+                SDL_GPU_INDEXELEMENTSIZE_32BIT;
+        /* Index binding persists across draws in a pass; skip the re-bind when
+         * the same index buffer + element size is already bound. */
+        if (!g_index_binding_valid ||
+            ibo->buffer != g_last_index_buffer ||
+            index_size != g_last_index_size)
+        {
+            SDL_GPUBufferBinding binding = {0};
+            binding.buffer = ibo->buffer;
+            binding.offset = 0;
+            SDL_BindGPUIndexBuffer(g_pass, &binding, index_size);
+            g_last_index_buffer = ibo->buffer;
+            g_last_index_size = index_size;
+            g_index_binding_valid = 1;
+        }
         SDL_DrawGPUIndexedPrimitives(g_pass, (Uint32)count, 1, 0, 0, 0);
     }
 }
@@ -1776,14 +1951,18 @@ void MikuPan_GPUSetMatrix4(const char *name, const float *mat)
     else if (strcmp(name, "mvp") == 0) memcpy(g_uniforms.mvp, mat, sizeof(g_uniforms.mvp));
     else if (strcmp(name, "modelView") == 0) memcpy(g_uniforms.modelView, mat, sizeof(g_uniforms.modelView));
     else if (strcmp(name, "viewProj") == 0) memcpy(g_uniforms.viewProj, mat, sizeof(g_uniforms.viewProj));
-    else if (strcmp(name, "uShadowMatrix") == 0) memcpy(g_uniforms.uShadowMatrix, mat, sizeof(g_uniforms.uShadowMatrix));
+    else if (strcmp(name, "uShadowMatrix") == 0) { memcpy(g_uniforms.uShadowMatrix, mat, sizeof(g_uniforms.uShadowMatrix)); g_fragment_uniform_dirty = 1; }
     else if (strcmp(name, "uWorldClipView") == 0) memcpy(g_uniforms.uWorldClipView, mat, sizeof(g_uniforms.uWorldClipView));
+    /* All matrices feed the vertex stage; uShadowMatrix additionally feeds the
+     * lighting fragment shader (handled above). */
+    g_vertex_uniform_dirty = 1;
 }
 
 void MikuPan_GPUSetMatrix3(const char *name, const float *mat)
 {
     if (strcmp(name, "normalMatrix") == 0) CopyMatrix3Std140(g_uniforms.normalMatrix, mat);
     else if (strcmp(name, "viewNormalMatrix") == 0) CopyMatrix3Std140(g_uniforms.viewNormalMatrix, mat);
+    g_vertex_uniform_dirty = 1;
 }
 
 void MikuPan_GPUSetVec4(const char *name, const float *vec)
@@ -1793,6 +1972,8 @@ void MikuPan_GPUSetVec4(const char *name, const float *vec)
     else if (strcmp(name, "uFogColor") == 0) memcpy(g_uniforms.uFogColor, vec, sizeof(g_uniforms.uFogColor));
     else if (strcmp(name, "uPhotoNegativeContentRect") == 0) memcpy(g_uniforms.uPhotoNegativeContentRect, vec, sizeof(g_uniforms.uPhotoNegativeContentRect));
     else if (strcmp(name, "uPhotoNegativeRect") == 0) memcpy(g_uniforms.uPhotoNegativeRect, vec, sizeof(g_uniforms.uPhotoNegativeRect));
+    g_vertex_uniform_dirty = 1;
+    g_fragment_uniform_dirty = 1;
 }
 
 void MikuPan_GPUSetInt(const char *name, int value)
@@ -1810,6 +1991,8 @@ void MikuPan_GPUSetInt(const char *name, int value)
     else if (strcmp(name, "uPhotoNegativeSourceEnabled") == 0) g_uniforms.uFlags2[2] = value;
     else if (strcmp(name, "uUseScreenPos") == 0) g_uniforms.uFlags2[3] = value;
     (void)name;
+    g_vertex_uniform_dirty = 1;
+    g_fragment_uniform_dirty = 1;
 }
 
 void MikuPan_GPUSetFloat(const char *name, float value)
@@ -1836,6 +2019,8 @@ void MikuPan_GPUSetFloat(const char *name, float value)
     else if (strcmp(name, "uCrtGlowStrength") == 0) g_uniforms.uCrt3[3] = value;
     else if (strcmp(name, "uTime") == 0) g_uniforms.uParams1[0] = value;
     else if (strcmp(name, "uPhotoNegativeStrength") == 0) g_uniforms.uParams1[1] = value;
+    g_vertex_uniform_dirty = 1;
+    g_fragment_uniform_dirty = 1;
 }
 
 void MikuPan_GPUSetVec2(const char *name, float x, float y)
@@ -1868,4 +2053,6 @@ void MikuPan_GPUSetVec2(const char *name, float x, float y)
     {
         g_uniforms.uRenderSize[0] = x; g_uniforms.uRenderSize[1] = y;
     }
+    g_vertex_uniform_dirty = 1;
+    g_fragment_uniform_dirty = 1;
 }
