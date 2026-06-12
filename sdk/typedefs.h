@@ -26,7 +26,7 @@ typedef int (*sceSdSpu2IntrHandler)(int, void *);
 #ifdef __APPLE__
 #include <sys/types.h>
 #else
-typedef unsigned long long u_long;
+typedef unsigned long u_long;
 typedef unsigned short u_short;
 typedef unsigned char u_char;
 typedef unsigned int u_int;
