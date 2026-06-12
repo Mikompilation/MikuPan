@@ -83,6 +83,10 @@ typedef struct
     int shadow_resolution;
     float brightness;
     float gamma;
+    /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
+     * Empty = let SDL pick. The device is created once, so a change only
+     * applies on the next launch. */
+    char gpu_driver[32];
 } MikuPan_ConfigRenderer;
 
 /* Apply a window display mode to the SDL window.

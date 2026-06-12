@@ -69,7 +69,10 @@ typedef struct MikuPan_GPUUniformBlock
     int uPadFlags[4];
 } MikuPan_GPUUniformBlock;
 
-int  MikuPan_GPUInit(SDL_Window *window, int vsync);
+/// Create the SDL_GPU device and claim the window. gpu_driver requests an
+/// SDL_GPU backend by name ("vulkan", "direct3d12", ...); NULL or "" lets SDL
+/// pick. Falls back to automatic selection when the named driver fails.
+int  MikuPan_GPUInit(SDL_Window *window, int vsync, const char *gpu_driver);
 void MikuPan_GPUShutdown(void);
 void MikuPan_GPUWaitIdle(void);
 void MikuPan_GPUSetVsync(int vsync);

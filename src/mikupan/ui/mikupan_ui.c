@@ -114,6 +114,17 @@ static const char* resolution_label_ptrs[MIKUPAN_MAX_RESOLUTIONS];
 static int resolution_count = 0;
 static int resolution_selected = 0;
 
+/* SDL_GPU backend selector. Index 0 is always "Auto" (empty driver name); the
+ * rest mirror SDL_GetGPUDriver. Populated once in MikuPan_InitUi. Drivers that
+ * cannot consume the game's SPIR-V shaders stay listed but disabled. The
+ * device is created once at startup, so a change applies on the next launch. */
+#define MIKUPAN_MAX_GPU_DRIVERS 8
+static char gpu_driver_names[MIKUPAN_MAX_GPU_DRIVERS + 1][32];
+static char gpu_driver_labels[MIKUPAN_MAX_GPU_DRIVERS + 1][64];
+static int gpu_driver_supported[MIKUPAN_MAX_GPU_DRIVERS + 1];
+static int gpu_driver_count = 0;
+static int gpu_driver_selected = 0;
+
 static int show_texture_list = 0;
 static int show_controller_remap = 0;
 static int show_shader_reload = 0;
@@ -1170,6 +1181,116 @@ static void MikuPan_PopulateResolutionList(SDL_DisplayID display,
     }
 }
 
+static const char* MikuPan_GpuDriverDisplayName(const char* name)
+{
+    if (SDL_strcasecmp(name, "vulkan") == 0)
+    {
+        return "Vulkan";
+    }
+    if (SDL_strcasecmp(name, "direct3d12") == 0)
+    {
+        return "Direct3D 12";
+    }
+    if (SDL_strcasecmp(name, "metal") == 0)
+    {
+        return "Metal";
+    }
+    return name;
+}
+
+static void MikuPan_PopulateGpuDriverList(void)
+{
+    gpu_driver_names[0][0] = '\0';
+    snprintf(gpu_driver_labels[0], sizeof(gpu_driver_labels[0]), "Auto");
+    gpu_driver_supported[0] = 1;
+    gpu_driver_count = 1;
+    gpu_driver_selected = 0;
+
+    const int n = SDL_GetNumGPUDrivers();
+    for (int i = 0; i < n && gpu_driver_count <= MIKUPAN_MAX_GPU_DRIVERS; i++)
+    {
+        const char* name = SDL_GetGPUDriver(i);
+        if (name == NULL)
+        {
+            continue;
+        }
+
+        const int idx = gpu_driver_count;
+        snprintf(gpu_driver_names[idx], sizeof(gpu_driver_names[idx]), "%s",
+                 name);
+        gpu_driver_supported[idx] =
+            SDL_GPUSupportsShaderFormats(SDL_GPU_SHADERFORMAT_SPIRV, name) ? 1
+                                                                           : 0;
+        snprintf(gpu_driver_labels[idx], sizeof(gpu_driver_labels[idx]),
+                 "%s%s", MikuPan_GpuDriverDisplayName(name),
+                 gpu_driver_supported[idx] ? "" : " (no SPIR-V support)");
+
+        if (SDL_strcasecmp(name, mikupan_configuration.renderer.gpu_driver)
+            == 0)
+        {
+            gpu_driver_selected = idx;
+        }
+
+        gpu_driver_count++;
+    }
+}
+
+/* GPU backend dropdown (Settings > Display > Graphics). Writes the choice
+ * straight into the configuration so Save Configuration persists it; the
+ * device cannot be swapped while running, so the new backend is only used on
+ * the next launch. */
+static void MikuPan_UiGpuBackendCombo(void)
+{
+    if (igBeginCombo("GPU Backend", gpu_driver_labels[gpu_driver_selected], 0))
+    {
+        for (int i = 0; i < gpu_driver_count; i++)
+        {
+            bool is_selected = (gpu_driver_selected == i);
+
+            if (!gpu_driver_supported[i])
+            {
+                igBeginDisabled(true);
+            }
+
+            if (igSelectable_Bool(gpu_driver_labels[i], is_selected, 0,
+                                  (ImVec2) {0, 0}))
+            {
+                gpu_driver_selected = i;
+                snprintf(mikupan_configuration.renderer.gpu_driver,
+                         sizeof(mikupan_configuration.renderer.gpu_driver),
+                         "%s", gpu_driver_names[i]);
+            }
+
+            if (!gpu_driver_supported[i])
+            {
+                igEndDisabled();
+            }
+
+            if (is_selected)
+            {
+                igSetItemDefaultFocus();
+            }
+        }
+
+        igEndCombo();
+    }
+
+    SDL_GPUDevice* device = MikuPan_GPUGetDevice();
+    const char* active =
+        (device != NULL) ? SDL_GetGPUDeviceDriver(device) : NULL;
+    igTextDisabled("Active: %s", (active != NULL)
+                                     ? MikuPan_GpuDriverDisplayName(active)
+                                     : "none");
+
+    if (gpu_driver_names[gpu_driver_selected][0] != '\0'
+        && (active == NULL
+            || SDL_strcasecmp(gpu_driver_names[gpu_driver_selected], active)
+                   != 0))
+    {
+        igTextDisabled("Save Configuration and restart to apply");
+    }
+}
+
 static void MikuPan_ApplyUiFont(int font)
 {
     ImGuiIO* io = igGetIO_Nil();
@@ -1929,6 +2050,7 @@ void MikuPan_InitUi(SDL_Window* window)
     mikupan_configuration.renderer.is_fullscreen = is_fullscreen;
     mesh_lighting_mode = mikupan_configuration.renderer.lighting_mode;
     is_vsync = mikupan_configuration.renderer.vsync;
+    MikuPan_PopulateGpuDriverList();
 
     if (mikupan_configuration.renderer.shadow_resolution <= 0)
     {
@@ -2588,6 +2710,8 @@ void MikuPan_UiMenuBar(void)
             igCheckbox("VSync", (bool*) &is_vsync);
 
             igSeparatorText("Graphics");
+
+            MikuPan_UiGpuBackendCombo();
 
             char msaa_dropdown_list[32];
             snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%d",

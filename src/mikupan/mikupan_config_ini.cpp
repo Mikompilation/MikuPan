@@ -120,6 +120,9 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
     ApplyValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     ApplyValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    ApplyString(ini, "renderer", "gpu_driver",
+                mikupan_configuration.renderer.gpu_driver,
+                sizeof(mikupan_configuration.renderer.gpu_driver));
     ApplyValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     ApplyValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     ApplyValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
@@ -225,6 +228,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
     SetValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     SetValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    ini.sections["renderer"]["gpu_driver"] =
+        mikupan_configuration.renderer.gpu_driver;
     SetValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     SetValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     SetValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
