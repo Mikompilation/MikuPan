@@ -83,6 +83,7 @@ if(NOT SHADERCROSS_EXECUTABLE)
             "  Expected a prebuilt CLI under ${MIKUPAN_SHADERCROSS_DIR}\n"
             "  or pass -DSHADERCROSS_EXECUTABLE=<path>. The build will use the\n"
             "  existing resources/shaders/{spirv,dxil,msl}/ files as-is.")
+    add_custom_target(compile_shaders)
     return()
 
     include(ExternalProject)
