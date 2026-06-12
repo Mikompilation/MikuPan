@@ -78,6 +78,13 @@ if(NOT SHADERCROSS_EXECUTABLE)
         return()
     endif()
 
+    message(WARNING
+            "shadercross not found: HLSL shaders will NOT be recompiled automatically.\n"
+            "  Expected a prebuilt CLI under ${MIKUPAN_SHADERCROSS_DIR}\n"
+            "  or pass -DSHADERCROSS_EXECUTABLE=<path>. The build will use the\n"
+            "  existing resources/shaders/{spirv,dxil,msl}/ files as-is.")
+    return()
+
     include(ExternalProject)
 
     set(MIKUPAN_SHADERCROSS_PREFIX ${CMAKE_BINARY_DIR}/tools/shadercross)
