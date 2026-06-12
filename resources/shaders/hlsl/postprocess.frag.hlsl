@@ -157,7 +157,6 @@ float4 main(PSInput input) : SV_Target0
                         uPhotoNegativeContentRect.xy,
                         0.0001.xx);
                 source_uv = clamp(source_uv, 0.0.xx, 1.0.xx);
-                source_uv.y = 1.0 - source_uv.y;
                 negative_source =
                     uAuxTexture.Sample(uAuxTextureSampler, source_uv).rgb *
                     input.uColor.rgb;

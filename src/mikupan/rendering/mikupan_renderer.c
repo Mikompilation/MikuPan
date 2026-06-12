@@ -804,27 +804,24 @@ void MikuPan_EnableMirrorScissorFromGsBounds(int xmin, int ymin, int xmax, int y
         ymax = tmp;
     }
 
-    float viewport_x, viewport_y, viewport_w, viewport_h, scale;
-    MikuPan_GetPS2Viewport(render_w, render_h,
-                           &viewport_x, &viewport_y,
-                           &viewport_w, &viewport_h, &scale);
-
-    if (scale <= 0.0f)
-    {
-        MikuPan_GPUDisableScissor();
-        g_mirror_scissor_enabled = 0;
-        return;
-    }
+    /*
+     * The 3D scene fills the whole render target (the projection is built
+     * from the render resolution), so the 640x448 PS2 screen maps onto the
+     * full target with independent x/y scales — not the letterboxed uniform
+     * scale of MikuPan_GetPS2Viewport, which only matches at 640:448 aspect.
+     */
+    const float scale_x = (float)render_w / PS2_RESOLUTION_X_FLOAT;
+    const float scale_y = (float)render_h / PS2_RESOLUTION_Y_FLOAT;
 
     const float x0 = ((float)xmin / 16.0f) - 1728.0f;
     const float x1 = ((float)xmax / 16.0f) - 1728.0f;
     const float y0 = (((float)ymin / 16.0f) - 1936.0f) * 2.0f;
     const float y1 = (((float)ymax / 16.0f) - 1936.0f) * 2.0f;
 
-    int sx0 = (int)(viewport_x + x0 * scale);
-    int sx1 = (int)(viewport_x + x1 * scale + 0.999f);
-    int sy0 = (int)(viewport_y + y0 * scale);
-    int sy1 = (int)(viewport_y + y1 * scale + 0.999f);
+    int sx0 = (int)(x0 * scale_x);
+    int sx1 = (int)(x1 * scale_x + 0.999f);
+    int sy0 = (int)(y0 * scale_y);
+    int sy1 = (int)(y1 * scale_y + 0.999f);
 
     sx0 = MikuPan_ClampInt(sx0, 0, render_w);
     sx1 = MikuPan_ClampInt(sx1, 0, render_w);
