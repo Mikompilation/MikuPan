@@ -497,6 +497,7 @@ void MikuPan_Clear()
 
     MikuPan_SetViewportCached(0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height);
     MikuPan_GPUSetTarget(MIKUPAN_GPU_TARGET_SCENE, 1);
+    MikuPan_GPUBeginRenderPass();
 
     if (mikupan_configuration.renderer.window_mode != MikuPan_GetWindowMode())
     {
