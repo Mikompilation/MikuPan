@@ -1624,6 +1624,11 @@ int SetMessageV2(DISP_STR *s)
     nx = s->pos_x;
     ny = s->pos_y;
 
+    if (c == 0 || c == (void*)0)
+    {
+        return 0;
+    }
+
     selnum = 0;
 
     draw_mpri[nmdpri][0] = npri;
