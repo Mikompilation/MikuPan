@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/rendering/mikupan_profiler.h"
 #include "sce/libvu0.h"
 #include "sce/libdma.h"
 #include "sce/sifdev.h"
@@ -757,6 +758,7 @@ void SetLWS(SgCOORDUNIT *cp, SgCAMERA *camera)
 
 void CalcCoordinate(SgCOORDUNIT *cp, int blocks)
 {
+    MIKUPAN_PERF_SCOPE(PERF_SECT_COORD_CALC);
     int i;
 
     for (i = 0; i < blocks; i++)

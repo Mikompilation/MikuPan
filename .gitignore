@@ -28,3 +28,6 @@ cmake-build-mingw/
 .DS_Store
 /cmake-build-mingw
 /cmake-build-mingw/.cmake
+/resources/shaders/spirv
+/resources/shaders/msl
+/resources/shaders/dxil

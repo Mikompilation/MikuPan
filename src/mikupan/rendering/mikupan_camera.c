@@ -1,6 +1,7 @@
 #include "mikupan_renderer_internal.h"
 #include "graphics/graph3d/sglib.h"
 #include "mikupan_pipeline.h"
+#include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include <math.h>
@@ -175,7 +176,7 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
 void MikuPan_Setup3D()
 {
     MikuPan_SetRenderState3D();
-    glad_glCullFace(GL_BACK);
+    MikuPan_GPUSetCullBack();
 }
 
 void MikuPan_SetupMirrorMtx(float* mtx)

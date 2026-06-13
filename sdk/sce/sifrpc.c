@@ -45,11 +45,51 @@ int sceSifCheckStatRpc(sceSifRpcData* cd)
 int sceSifCallRpc(sceSifClientData* client, unsigned int rpc_number, unsigned int mode, void* send, int ssize,
                   void* receive, int rsize, sceSifEndFunc end_function, void* end_param)
 {
+    (void)mode;
+    (void)end_function;
+    (void)end_param;
+
     if (client == &ei_sys.gcd)
     {
         void *ret = IopDrvFunc(rpc_number, send, ssize);
-        memcpy(receive, ret, rsize);
+        if (receive != NULL && ret != NULL && rsize > 0)
+        {
+            memcpy(receive, ret, rsize);
+        }
     }
 
     return 1;
+}
+
+int sceSifSetRpcQueue(sceSifQueueData* qd, int thread_id)
+{
+    if (qd != NULL)
+    {
+        memset(qd, 0, sizeof(*qd));
+        qd->key = thread_id;
+        qd->active = 1;
+    }
+
+    return 0;
+}
+
+int sceSifRegisterRpc(sceSifServeData* sd, unsigned int command, sceSifRpcFunc func, void* buff, sceSifRpcFunc cfunc, void* cbuff, sceSifQueueData* qd)
+{
+    if (sd != NULL)
+    {
+        memset(sd, 0, sizeof(*sd));
+        sd->command = command;
+        sd->func = func;
+        sd->buff = buff;
+        sd->cfunc = cfunc;
+        sd->cbuff = cbuff;
+        sd->base = qd;
+    }
+
+    return 0;
+}
+
+void sceSifRpcLoop(sceSifQueueData* qd)
+{
+    (void)qd;
 }

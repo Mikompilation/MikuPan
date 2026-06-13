@@ -13,7 +13,48 @@ env:
   BUILD_STATIC: true
 
 jobs:
+  shaders:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0   # full history + tags so the version header resolves
+
+      - name: Set up MSYS2 (Windows)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+
+      - name: Build shaders (Windows / MinGW)
+        shell: msys2 {0}
+        run: |
+          git config --global --add safe.directory '*'
+          cmake -E remove_directory resources/shaders/dxil
+          cmake -E remove_directory resources/shaders/msl
+          cmake -E remove_directory resources/shaders/spirv
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_STATIC=${{ env.BUILD_STATIC }} -DMIKUPAN_COMPILE_SHADERS=ON
+          cmake --build build --target compile_shaders
+
+      - name: Upload compiled shaders
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-shaders
+          if-no-files-found: error
+          path: |
+            resources/shaders/dxil
+            resources/shaders/msl
+            resources/shaders/spirv
+
   build:
+    needs: shaders
     runs-on: ${{ matrix.sys.os }}
     strategy:
       matrix:
@@ -30,6 +71,12 @@ jobs:
         with:
           submodules: 'recursive'
           fetch-depth: 0   # full history + tags so the version header resolves
+
+      - name: Download compiled shaders
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-shaders
+          path: resources/shaders
 
       # GCC-only codebase (see CMakeLists / sdk headers) — Windows builds with
       # MinGW via MSYS2, not MSVC.
@@ -58,13 +105,13 @@ jobs:
         shell: msys2 {0}
         run: |
           git config --global --add safe.directory '*'
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_STATIC=${{ env.BUILD_STATIC }}
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_STATIC=${{ env.BUILD_STATIC }} -DMIKUPAN_COMPILE_SHADERS=OFF
           cmake --build build -j 12 --target MikuPan
 
       - name: Build (Unix)
         if: ${{ matrix.sys.os != 'windows-latest' }}
         run: |
-          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=${{env.BUILD_STATIC}}
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=${{env.BUILD_STATIC}} -DMIKUPAN_COMPILE_SHADERS=OFF
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 12 --target MikuPan
 
       - name: Zip Windows App

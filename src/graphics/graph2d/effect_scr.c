@@ -1018,6 +1018,8 @@ void MakeScrDeformPacket(/* s1 17 */ int pnumw, /* 0x0(sp) */ int pnumh, /* s2 1
     
     Set2DPacketBufferAddress(ppbuf);
 
+    float screen_copy_yoff = GetYOffsetf();
+
     for (j = 0; j < pnumh; j++)
     {
         for (i = 0; i < pnumw; i++)
@@ -1027,7 +1029,12 @@ void MakeScrDeformPacket(/* s1 17 */ int pnumw, /* 0x0(sp) */ int pnumh, /* s2 1
             SCRDEF *tr = &scrdef[j][i + 1];
             SCRDEF *br = &scrdef[j + 1][i + 1];
             float src_x[4] = {tl->stq[0], bl->stq[0], tr->stq[0], br->stq[0]};
-            float src_y[4] = {tl->stq[1], bl->stq[1], tr->stq[1], br->stq[1]};
+            float src_y[4] = {
+                tl->stq[1] - screen_copy_yoff,
+                bl->stq[1] - screen_copy_yoff,
+                tr->stq[1] - screen_copy_yoff,
+                br->stq[1] - screen_copy_yoff,
+            };
             float dst_x[4] = {tl->vtw[0], bl->vtw[0], tr->vtw[0], br->vtw[0]};
             float dst_y[4] = {tl->vtw[1], bl->vtw[1], tr->vtw[1], br->vtw[1]};
             int rgba[4][4] = {
@@ -1819,7 +1826,7 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
             
                 lm = dw[0][0].lll;
             
-                if ((wix != (pnumw/2) % vnumw) || (wiy != (pnumh/2) % vnumw))
+                if (i != (pnumw / 2) || j != (pnumh / 2))
                 {
                     pdef->rrr = SgAtan2f(wfw, wfh);
                 }
@@ -2021,9 +2028,9 @@ void SetDeform4(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
 	// /* f21 59 */ float r;
     u_long tex0 = SCE_GS_SET_TEX0(0x1a40, 10, SCE_GS_PSMCT32, 10, 8, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 1);
 
-    // pnumw = 32;
+    pnumw = 32;
     vnumw = 33;
-    // pnumh = 24;
+    pnumh = 24;
     vnumh = 25;
     
     LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
@@ -2072,7 +2079,7 @@ void SetDeform4(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
                 
                 pdef->lll = SgSqrtf(wfw * wfw + wfh * wfh);
                 
-                if ((wix != (pnumw / 2) % vnumw) || (wiy != (pnumh / 2) % vnumw))
+                if (i != (pnumw / 2) || j != (pnumh / 2))
                 {
                     pdef->rrr = SgAtan2f(wfw, wfh);
                 }
@@ -2163,9 +2170,9 @@ void SetDeform5(/* 0x6720(sp) */ int type, /* f21 59 */ float rate, /* 0x6724(sp
 	// /* f21 59 */ float r;
     u_long tex0 = SCE_GS_SET_TEX0(0x1a40, 10, SCE_GS_PSMCT32, 10, 8, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 1);
 
-    // pnumw = 32;
+    pnumw = 32;
     vnumw = 33;
-    // pnumh = 24;
+    pnumh = 24;
     vnumh = 25;
     
     LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
@@ -2177,8 +2184,6 @@ void SetDeform5(/* 0x6720(sp) */ int type, /* f21 59 */ float rate, /* 0x6724(sp
     
     for (j = 0; j < vnumh; j++)
     {
-        pdef = &dw[j][i];
-        
         for (i = 0, xx = 0.0f; i < vnumw; i++)
         {
             pscr = &scrdef[j][i];
@@ -2218,7 +2223,7 @@ void SetDeform5(/* 0x6720(sp) */ int type, /* f21 59 */ float rate, /* 0x6724(sp
                 
                 pdef->lll = SgSqrtf(wfw * wfw + wfh * wfh);
                 
-                if ((wix != (pnumw / 2) % vnumw) || (wiy != (pnumh / 2) % vnumw))
+                if (i != (pnumw / 2) || j != (pnumh / 2))
                 {
                     pdef->rrr = SgAtan2f(wfw, wfh);
                 }
@@ -2309,9 +2314,9 @@ void SetDeform6(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
 	// /* f21 59 */ float r;
     u_long tex0 = SCE_GS_SET_TEX0(0x1a40, 10, SCE_GS_PSMCT32, 10, 8, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 1);
 
-    // pnumw = 32;
+    pnumw = 32;
     vnumw = 33;
-    // pnumh = 24;
+    pnumh = 24;
     vnumh = 25;
     
     LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
@@ -2325,8 +2330,6 @@ void SetDeform6(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
         float deform_tx_start = 320.0f - eff_hw;
         for (j = 0; j < vnumh; j++)
         {
-            pdef = &dw[j][i];
-
             for (i = 0; i < vnumw; i++)
             {
                 pscr = &scrdef[j][i];
@@ -2362,7 +2365,7 @@ void SetDeform6(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
                 
                 pdef->lll = SgSqrtf(wfw * wfw + wfh * wfh);
                 
-                if ((wix != (33/2) % vnumw) || (wiy != (25/2) % vnumw))
+                if (i != (pnumw / 2) || j != (pnumh / 2))
                 {
                     pdef->rrr = SgAtan2f(wfw, wfh);
                 }

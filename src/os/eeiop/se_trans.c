@@ -10,6 +10,7 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "ingame/entry/entry.h"
 #include "ingame/enemy/ene_ctl.h"
+#include "mikupan/mikupan_memory.h"
 
 #include "data/fgf_tbl.h" // FG_FILE_TBL fgf_tbl[/*4*/] = { ... };
 SE_TRANS_CTRL st_ctrl = {0};
@@ -28,7 +29,7 @@ static void UseOkFGhost();
 
 void FGTransInit()
 {  
-    if (ingame_wrk.msn_no != PMODE_NORMAL && ingame_wrk.msn_no != PMODE_MSG_DISP) 
+    if (ingame_wrk.msn_no != 0 && ingame_wrk.msn_no != 4)
     {
         if (ChkFGhostAlreadySet()) 
         {
@@ -49,7 +50,6 @@ void FGTransInit()
 
 u_char IsEndFgTrans()
 {
-    return 1;
     return st_ctrl.mode == STMODE_USEOK;
 }
 
@@ -122,14 +122,7 @@ static void GetSeTransSize()
 
 static void DmaTransReq()
 {
-    sceSifDmaData dma;
-  
-    dma.data = 0x1460000;
-    dma.addr = rcv_stat.cdvd.ld_addr;
-    dma.size = st_ctrl.size;
-    dma.mode = 0;
-
-    sceSifSetDma(&dma, 1);
+    st_ctrl.dma_id = 0;
 }
 
 static u_char ChkDmaTransEndSe()
@@ -144,7 +137,16 @@ static u_char ChkDmaTransEndSe()
 
 static void TransReqIopCmd()
 {
-    SetIopCmdSm(IC_CDVD_SE_TRANS, st_ctrl.size, st_ctrl.trans_pos + 0x10, st_ctrl.file_no);
+    rcv_stat.cdvd.se_trans = CDVD_SE_WAIT;
+    SetIopCmdLg(
+        IC_CDVD_SE_TRANS,
+        st_ctrl.size,
+        st_ctrl.trans_pos + 0x10,
+        st_ctrl.file_no,
+        MikuPan_GetHostAddress(FLOAT_GHOST_SE_LOAD_ADDR),
+        0,
+        0,
+        0);
 }
 
 static u_char TransWaitIopCmd()

@@ -29,6 +29,7 @@ typedef struct
 
 extern "C" {
 void MikuPan_LoadImgHdFile();
+void MikuPan_NotifyPs2MemoryLoad(int ps2_address);
 void MikuPan_ReadFullFile(const char *filename, char *buffer);
 void MikuPan_ReadFileInArchive(int sector, int size, u_int *address);
 void MikuPan_BufferFile(int sector, int size, int64_t address);
@@ -37,7 +38,7 @@ u_char MikuPan_OpenFile(const char *filename, void *buffer, int size);
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size);
 bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size);
 u_char MikuPan_ReadFile(const char *filename, void *buffer, int size);
-u_char MikuPan_WriteFile(const char *filename, void *buffer, int size);
+u_char MikuPan_WriteFile(const char *filename, const void *buffer, int size);
 u_char MikuPan_CreateFolder(const char *folder);
 u_char MikuPan_FolderExists(const char *folder);
 int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table);

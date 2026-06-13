@@ -597,6 +597,7 @@ void SceneDraw(int scene_no)
         }
 
         FallenObjects();
+        FallenObjectsDraw();
     }
 
 #ifdef BUILD_EU_VERSION

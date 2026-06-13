@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 typedef struct {
-	unsigned int	data;
+	int64_t	data;
 	int64_t	addr;
 	unsigned int	size;
 	unsigned int	mode;

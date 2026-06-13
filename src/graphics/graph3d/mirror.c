@@ -210,6 +210,24 @@ static void SetMirrorBoundsFromClipValue(sceVu0FVECTOR clip)
     ConvertMirrorClipToGsBounds(clip, &mxmin, &mymin, &mxmax, &mymax);
 }
 
+static void UnionMirrorClipBounds(sceVu0FVECTOR dst, const sceVu0FVECTOR src)
+{
+    if (src[0] < dst[0]) dst[0] = src[0];
+    if (src[1] > dst[1]) dst[1] = src[1];
+    if (src[2] < dst[2]) dst[2] = src[2];
+    if (src[3] > dst[3]) dst[3] = src[3];
+}
+
+static void UnionMirrorGsBounds(int *xmin, int *ymin, int *xmax, int *ymax,
+                                int other_xmin, int other_ymin,
+                                int other_xmax, int other_ymax)
+{
+    if (other_xmin < *xmin) *xmin = other_xmin;
+    if (other_ymin < *ymin) *ymin = other_ymin;
+    if (other_xmax > *xmax) *xmax = other_xmax;
+    if (other_ymax > *ymax) *ymax = other_ymax;
+}
+
 static int GetMirrorClipFromCurrentGlCamera(sceVu0FVECTOR out_clip)
 {
     mat4 model;
@@ -930,10 +948,15 @@ void MirrorDraw(SgCAMERA *camera, void *sgd_top,
     u_int *pk;
     sceVu0FVECTOR clip_value;
     sceVu0FVECTOR gl_clip_value;
+    sceVu0FVECTOR draw_clip_value;
     sceGsScissor bak_scissor;
     sceVu0FVECTOR tmpv;
     HeaderSection *hs;
     int has_gl_clip;
+    int draw_xmin;
+    int draw_ymin;
+    int draw_xmax;
+    int draw_ymax;
 
     hs = (HeaderSection *) sgd_top;
 
@@ -1016,37 +1039,50 @@ void MirrorDraw(SgCAMERA *camera, void *sgd_top,
 
     has_gl_clip = GetMirrorClipFromCurrentGlCamera(gl_clip_value);
 
+    draw_clip_value[0] = clip_value[0];
+    draw_clip_value[1] = clip_value[1];
+    draw_clip_value[2] = clip_value[2];
+    draw_clip_value[3] = clip_value[3];
+
+    draw_xmin = mxmin;
+    draw_ymin = mymin;
+    draw_xmax = mxmax;
+    draw_ymax = mymax;
+
     if (has_gl_clip)
     {
-        SetClipValue(ClampMirrorNdc(gl_clip_value[0]),
-                     ClampMirrorNdc(gl_clip_value[1]),
-                     ClampMirrorNdc(gl_clip_value[2]),
-                     ClampMirrorNdc(gl_clip_value[3]));
+        int gl_xmin;
+        int gl_ymin;
+        int gl_xmax;
+        int gl_ymax;
+
+        gl_clip_value[0] = ClampMirrorNdc(gl_clip_value[0]);
+        gl_clip_value[1] = ClampMirrorNdc(gl_clip_value[1]);
+        gl_clip_value[2] = ClampMirrorNdc(gl_clip_value[2]);
+        gl_clip_value[3] = ClampMirrorNdc(gl_clip_value[3]);
+
+        UnionMirrorClipBounds(draw_clip_value, gl_clip_value);
+
+        ConvertMirrorClipToGsBounds(gl_clip_value,
+                                    &gl_xmin, &gl_ymin,
+                                    &gl_xmax, &gl_ymax);
+        UnionMirrorGsBounds(&draw_xmin, &draw_ymin, &draw_xmax, &draw_ymax,
+                            gl_xmin, gl_ymin, gl_xmax, gl_ymax);
     }
-    else
-    {
-        SetClipValue(clip_value[0], clip_value[1], clip_value[2], clip_value[3]);
-    }
+
+    SetClipValue(draw_clip_value[0], draw_clip_value[1],
+                 draw_clip_value[2], draw_clip_value[3]);
 
     bak_scissor = pdrawenv->scissor1;
 
-    pdrawenv->scissor1.SCAX0 = (mxmin / 16) + -0x6c0;
-    pdrawenv->scissor1.SCAX1 = (mxmax / 16) + -0x6c0;
-    pdrawenv->scissor1.SCAY0 = (mymin / 16) + -0x790;
-    pdrawenv->scissor1.SCAY1 = (mymax / 16) + -0x790;
+    pdrawenv->scissor1.SCAX0 = (draw_xmin / 16) + -0x6c0;
+    pdrawenv->scissor1.SCAX1 = (draw_xmax / 16) + -0x6c0;
+    pdrawenv->scissor1.SCAY0 = (draw_ymin / 16) + -0x790;
+    pdrawenv->scissor1.SCAY1 = (draw_ymax / 16) + -0x790;
 
     SetEnvironment();
-    if (has_gl_clip)
-    {
-        MikuPan_EnableMirrorScissorFromNdcBounds(gl_clip_value[0],
-                                                gl_clip_value[2],
-                                                gl_clip_value[1],
-                                                gl_clip_value[3]);
-    }
-    else
-    {
-        MikuPan_EnableMirrorScissorFromGsBounds(mxmin, mymin, mxmax, mymax);
-    }
+    MikuPan_EnableMirrorScissorFromGsBounds(draw_xmin, draw_ymin,
+                                            draw_xmax, draw_ymax);
     MirrorRender(camera, render_func);
     MikuPan_ClearMirrorScissorDepth();
     MikuPan_DisableMirrorScissor();
@@ -1096,7 +1132,9 @@ void MirrorRender(SgCAMERA *camera,
 
     SetVF2Register(rreg);
 
+    MikuPan_SetMirrorReflectionPass(1);
     render_func();
+    MikuPan_SetMirrorReflectionPass(0);
 
     rreg[0] = 1.0f;
     rreg[1] = 0.0f;

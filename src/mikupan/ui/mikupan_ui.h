@@ -8,7 +8,7 @@
 extern int show_fps;
 extern int show_menu_bar;
 
-void MikuPan_InitUi(SDL_Window *window, SDL_GLContext renderer);
+void MikuPan_InitUi(SDL_Window *window);
 void MikuPan_RenderUi(void);
 void MikuPan_StartFrameUi(void);
 void MikuPan_DrawUi(void);

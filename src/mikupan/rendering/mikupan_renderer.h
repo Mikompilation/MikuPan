@@ -236,6 +236,9 @@ void MikuPan_EnableMirrorScissorFromGsBounds(int xmin, int ymin, int xmax, int y
 void MikuPan_EnableMirrorScissorFromNdcBounds(float minx, float miny, float maxx, float maxy);
 void MikuPan_ClearMirrorScissorDepth(void);
 void MikuPan_DisableMirrorScissor(void);
+/// Brackets the reflected-geometry render in MirrorRender so the mesh
+/// render-state setup knows to cull front faces (the reflection flips winding).
+void MikuPan_SetMirrorReflectionPass(int active);
 void MikuPan_Setup3D();
 void MikuPan_Shutdown();
 void MikuPan_EndFrame();

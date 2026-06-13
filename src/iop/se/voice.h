@@ -1,25 +1,13 @@
 #ifndef VOICE_H
 #define VOICE_H
 #include "common.h"
+#include "iopse.h"
 #include "typedefs.h"
 #include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_thread.h>
 
- #define max(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
+#define VOICE_NUM 48
 
-
-#define VOICE_NUM 24
-
-enum SE_VOICE_STAT
-{
-    VOICE_FREE = 0,
-    VOICE_USE = 1,
-    VOICE_LOOP = 2,
-    VOICE_RESERVED = 3
-};
 typedef struct
 {
     u8 shift_filter;
@@ -53,10 +41,12 @@ typedef struct
     u_short pitch;
     u_short adsr1;
     u_short adsr2;
+    float frequency_ratio;
     SDL_AudioStream *stream;
 } VOICE;
 
-extern VOICE voices[24];
+extern VOICE voices[VOICE_NUM];
+extern SDL_AudioDeviceID audio_dev;
 
 extern bool loopEnd;
 extern bool loopRepeat;

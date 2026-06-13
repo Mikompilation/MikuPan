@@ -2,6 +2,8 @@
 
 #include "mikupan_logging.h"
 
+#include <SDL3/SDL_filesystem.h>
+
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -118,6 +120,10 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
     ApplyValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     ApplyValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    ApplyString(ini, "renderer", "gpu_driver",
+                mikupan_configuration.renderer.gpu_driver,
+                sizeof(mikupan_configuration.renderer.gpu_driver));
+    ApplyValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);
     ApplyValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     ApplyValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     ApplyValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
@@ -223,6 +229,9 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
     SetValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     SetValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    ini.sections["renderer"]["gpu_driver"] =
+        mikupan_configuration.renderer.gpu_driver;
+    SetValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);
     SetValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     SetValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     SetValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
@@ -315,15 +324,27 @@ extern "C" void MikuPan_LoadConfiguration(const char *filename)
     if (filename != nullptr && filename[0] != '\0')
     {
         TryLoadConfigurationFile(filename);
-        return;
     }
-
-    if (TryLoadConfigurationFile("mikupan.ini"))
+    else
     {
-        return;
+        TryLoadConfigurationFile("mikupan.ini");
     }
 
-    TryLoadConfigurationFile("mikupan.ini");
+    // Default the data folder to the executable's resource directory (SDL's
+    // base path) when nothing configured one, so the game finds its assets
+    // out-of-the-box and the resolved path is shown/editable in the UI. An
+    // explicit [paths]/data_folder in the config still takes precedence.
+    if (mikupan_configuration.data_folder[0] == '\0')
+    {
+        const char *base = SDL_GetBasePath();
+        if (base != nullptr)
+        {
+            std::strncpy(mikupan_configuration.data_folder, base,
+                         sizeof(mikupan_configuration.data_folder) - 1);
+            mikupan_configuration.data_folder
+                [sizeof(mikupan_configuration.data_folder) - 1] = '\0';
+        }
+    }
 }
 
 extern "C" int MikuPan_SaveConfiguration(const char *filename)

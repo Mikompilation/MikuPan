@@ -1,5 +1,6 @@
 #include "mikupan_renderer_internal.h"
 #include "mikupan_pipeline.h"
+#include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include "mikupan/mikupan_logging_c.h"
@@ -161,54 +162,27 @@ static void MikuPan_EnsureShadowFbo(void)
     /* Resolution changed: tear down the old objects so they're rebuilt below. */
     if (g_shadow_init)
     {
-        glad_glDeleteFramebuffers(1, &g_shadow_fbo);
-        glad_glDeleteTextures(1, &g_shadow_tex);
-        glad_glDeleteRenderbuffers(1, &g_shadow_depth);
+        MikuPan_GPUReleaseTexture(g_shadow_tex);
+        g_shadow_fbo = 0;
+        g_shadow_tex = 0;
+        g_shadow_depth = 0;
         g_shadow_init = 0;
     }
     g_shadow_resize_pending = 0;
 
     const int size = g_shadow_fbo_size;
 
-    glad_glGenTextures(1, &g_shadow_tex);
-    MikuPan_BindTexture2DCached(g_shadow_tex);
-    glad_glTexImage2D(GL_TEXTURE_2D, 0, GL_R8,
-                      size, size, 0,
-                      GL_RED, GL_UNSIGNED_BYTE, NULL);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float border[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-    glad_glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-
-    // Broadcast the single R8 channel to G and B so that any plain sampler
-    // (e.g. the ImGui debug-preview image) reads the occlusion value as a
-    // visible grayscale instead of dark-red-on-black. The receiver and
-    // silhouette shaders only ever read/write .r, which the swizzle leaves
-    // untouched, so this is purely a presentation aid.
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
-    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
-
-    glad_glGenFramebuffers(1, &g_shadow_fbo);
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, g_shadow_fbo);
-    glad_glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                GL_TEXTURE_2D, g_shadow_tex, 0);
-
-    glad_glGenRenderbuffers(1, &g_shadow_depth);
-    glad_glBindRenderbuffer(GL_RENDERBUFFER, g_shadow_depth);
-    glad_glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24,
-                               size, size);
-    glad_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                   GL_RENDERBUFFER, g_shadow_depth);
-
-    g_shadow_fbo_status = glad_glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (g_shadow_fbo_status != GL_FRAMEBUFFER_COMPLETE)
+    g_shadow_tex = MikuPan_GPUCreateTextureR8Target(size, size);
+    if (g_shadow_tex == 0)
     {
-        info_log("Shadow FBO incomplete! status=0x%x", g_shadow_fbo_status);
+        g_shadow_fbo_status = 0;
+        info_log("Shadow texture creation failed");
+        return;
     }
 
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    g_shadow_fbo = 1;
+    g_shadow_depth = 0;
+    g_shadow_fbo_status = GL_FRAMEBUFFER_COMPLETE;
     g_shadow_init = 1;
 }
 
@@ -327,14 +301,16 @@ void MikuPan_BeginShadowPass(float *world_clip_view)
     MikuPan_EnsureShadowFbo();
     g_shadow_debug.caster_passes++;
 
-    // Snapshot the previous render target + viewport so EndShadowPass can
-    // hand the renderer back to the main scene pass without it noticing.
-    glad_glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &g_shadow_saved_fbo);
-    glad_glGetIntegerv(GL_VIEWPORT, g_shadow_saved_viewport);
+    // Snapshot viewport so EndShadowPass can hand the renderer back to the
+    // main scene pass without it noticing.
+    g_shadow_saved_viewport[0] = 0;
+    g_shadow_saved_viewport[1] = 0;
+    g_shadow_saved_viewport[2] = render_back_msaa.texture.width;
+    g_shadow_saved_viewport[3] = render_back_msaa.texture.height;
     memcpy(g_shadow_saved_world_view, WorldView, sizeof(g_shadow_saved_world_view));
     memcpy(g_shadow_saved_projection, projection, sizeof(g_shadow_saved_projection));
 
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, g_shadow_fbo);
+    MikuPan_GPUSetShadowTarget(g_shadow_tex, g_shadow_fbo_size, 1);
     MikuPan_SetViewportCached(0, 0, g_shadow_fbo_size, g_shadow_fbo_size);
     MikuPan_SetRenderStateShadow();
 
@@ -342,11 +318,8 @@ void MikuPan_BeginShadowPass(float *world_clip_view)
      * topology (spikes, bridging, winding) is visible in the preview. */
     if (g_shadow_inspect && g_shadow_inspect_wireframe)
     {
-        glad_glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        MikuPan_GPUSetFillLine(1);
     }
-
-    glad_glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (world_clip_view != NULL)
     {
@@ -379,30 +352,22 @@ void MikuPan_DrawShadowSilhouetteEllipse(void)
     MikuPan_BindVAO(pi->vao);
     MikuPan_SetCurrentShaderProgram(SHADOW_BLOB_SHADER);
 
-    GLuint prog = MikuPan_GetCurrentShaderProgram();
-    GLint sz_loc = glad_glGetUniformLocation(prog, "uShadowSize");
-    GLint dk_loc = glad_glGetUniformLocation(prog, "uShadowDarkness");
-    if (sz_loc >= 0) glad_glUniform2f(sz_loc, (float)g_shadow_fbo_size, (float)g_shadow_fbo_size);
-    if (dk_loc >= 0) glad_glUniform1f(dk_loc, 0.6f);
+    MikuPan_SetUniform2fToCurrentShader((float)g_shadow_fbo_size,
+                                        (float)g_shadow_fbo_size,
+                                        "uShadowSize");
+    MikuPan_SetUniform1fToCurrentShader(0.6f, "uShadowDarkness");
 
     // Need additive/normal blending so the ellipse alpha isn't clobbered.
-    glad_glDisable(GL_DEPTH_TEST);
-    glad_glEnable(GL_BLEND);
-    glad_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    MikuPan_GPUSetDepthFunc(GL_ALWAYS);
+    MikuPan_GPUSetBlend(1, 0);
 
     MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glad_glEnable(GL_DEPTH_TEST);
-    // The render-state cache is now out of sync with the GL we just toggled;
-    // force the scene pass to reissue depth/blend on its next state change.
     MikuPan_ResetRenderStateCache();
 }
 
 void MikuPan_EndShadowPass(void)
 {
-    /* Always restore fill mode (the inspection wireframe toggle may have set
-     * GL_LINE for the caster pass). */
-    glad_glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    MikuPan_GPUSetFillLine(0);
 
     // Drop the override + active flag *before* we start pushing scene-side
     // uniforms below — those uniform pushes go through SetCurrentShaderProgram
@@ -412,16 +377,11 @@ void MikuPan_EndShadowPass(void)
     MikuPan_SetViewProjectionMatrices((float *)g_shadow_saved_world_view,
                                       (float *)g_shadow_saved_projection);
 
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)g_shadow_saved_fbo);
+    MikuPan_GPUSetTarget(MIKUPAN_GPU_TARGET_SCENE, 0);
     MikuPan_SetViewportCached(g_shadow_saved_viewport[0],
                               g_shadow_saved_viewport[1],
                               g_shadow_saved_viewport[2],
                               g_shadow_saved_viewport[3]);
-
-    // The clear colour above clobbered the renderer's; restore the value the
-    // scene clear path expects. The actual main-pass clear runs next frame so
-    // a single push here is enough.
-    glad_glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Push shadow uniforms for the receiver decal pass. The forward mesh
     // shader's built-in sampler is kept disabled so the shadow is applied
@@ -434,7 +394,7 @@ void MikuPan_EndShadowPass(void)
     MikuPan_SetUniformMatrix4fvToAllShaders((float *)g_shadow_world_clip_view,         "uShadowMatrix");
 
     MikuPan_ActiveTextureCached(GL_TEXTURE1);
-    glad_glBindTexture(GL_TEXTURE_2D, g_shadow_tex);
+    MikuPan_BindTexture2DCached(g_shadow_tex);
     MikuPan_ActiveTextureCached(GL_TEXTURE0);
 }
 
@@ -455,7 +415,7 @@ void MikuPan_BeginShadowReceiverPass(void)
     g_shadow_receiver_pass_active = 1;
 
     MikuPan_ActiveTextureCached(GL_TEXTURE1);
-    glad_glBindTexture(GL_TEXTURE_2D, g_shadow_tex);
+    MikuPan_BindTexture2DCached(g_shadow_tex);
     MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_InvalidateModelTransformCache();
 }
@@ -469,7 +429,6 @@ void MikuPan_EndShadowReceiverPass(void)
 
     MikuPan_SetShaderOverride(-1);
     g_shadow_receiver_pass_active = 0;
-    glad_glDisable(GL_POLYGON_OFFSET_FILL);
     MikuPan_ResetRenderStateCache();
     MikuPan_InvalidateModelTransformCache();
 }
@@ -558,7 +517,6 @@ void MikuPan_ShadowDebugProbeTexture(void)
 {
     /* Static (not stack) so the largest resolution doesn't overflow the stack. */
     static unsigned char pixels[SHADOW_FBO_MAX_SIZE * SHADOW_FBO_MAX_SIZE];
-    GLint saved_read_fbo = 0;
     int nonzero = 0;
     int max_value = 0;
     unsigned int sum = 0;
@@ -568,11 +526,11 @@ void MikuPan_ShadowDebugProbeTexture(void)
     const int size = g_shadow_fbo_size;
     const int total = size * size;
 
-    glad_glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &saved_read_fbo);
-    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, g_shadow_fbo);
-    glad_glReadPixels(0, 0, size, size,
-                      GL_RED, GL_UNSIGNED_BYTE, pixels);
-    glad_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint)saved_read_fbo);
+    if (!MikuPan_GPUReadTextureR8(g_shadow_tex, size, pixels))
+    {
+        g_shadow_debug.probe_valid = 0;
+        return;
+    }
 
     for (int i = 0; i < total; i++)
     {

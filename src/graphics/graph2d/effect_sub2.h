@@ -73,6 +73,7 @@ void FallObjInit(float *mpos, int leaf_no, int area, int fall_num, int fall_mode
 void FallObjInitAll(float *mpos, int area, int fall_num, int fall_mode, int height);
 void FallObjDropSet();
 void FallenObjects();
+void FallenObjectsDraw();
 void FallObjTrans(float *leaf, float *axel, float *aim, int fall_mode);
 void FallObjRot(float *rotation, float *axel, float *aim, int fall_mode);
 void FallObjWind(float *leaf, int fall_mode);

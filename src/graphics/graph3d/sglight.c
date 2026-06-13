@@ -13,6 +13,7 @@
 #include "graphics/graph3d/sgsu.h"
 
 #include "mikupan/mikupan_logging_c.h"
+#include "mikupan/rendering/mikupan_profiler.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
 
@@ -880,6 +881,7 @@ void SetSpotGroup(sceVu0FMATRIX wlmtx)
 
 void SetLightData(SgCOORDUNIT *cp0, SgCOORDUNIT *cp1)
 {
+    MIKUPAN_PERF_SCOPE(PERF_SECT_LIGHT_SETUP);
     int i;
     sceVu0FMATRIX tmp = {0};
     sceVu0FMATRIX tmp2;

@@ -1,12 +1,8 @@
 #ifndef IOPCDVD_H_
 #define IOPCDVD_H_
 
-#include "SDL3/SDL_mutex.h"
-#include "os/eeiop/eeiop.h"
-#include "sce/libcdvd.h"
-#include "typedefs.h"
-
-#include <stdio.h>
+#include "iopmain.h"
+#include "libcdvd.h"
 
 typedef struct { // 0x20
     /* 0x00 */ int req_type;
@@ -16,7 +12,6 @@ typedef struct { // 0x20
     /* 0x10 */ int size_byte;
     /* 0x10:32 */ u_int id : 32;
     /* 0x18 */ u_int* taddr;
-    /* 0x18 */ u_int se_taddr;
     /* 0x1c */ u_char se_buf_no;
     /* 0x1d */ u_char tmem;
 } CDVD_REQ_BUF;
@@ -29,7 +24,7 @@ typedef struct { // 0x10
 } CDVD_PCM;
 
 typedef struct { // 0x18
-    /* 0x00 */ void* taddr;
+    /* 0x00 */ u_int* taddr;
     /* 0x04 */ int start;
     /* 0x08 */ int file_no;
     /* 0x0c */ int size_now;
@@ -49,11 +44,8 @@ typedef struct { // 0xc
 } CDVD_TRANS_STAT;
 
 typedef struct { // 0x94
-    //sceCdRMode rmode;
-    //sceCdlFILE cdlf;
-    FILE *fp;
-    SDL_Mutex *lock;
-    SDL_Thread *thread;
+    /* 0x00 */ sceCdRMode rmode;
+    /* 0x04 */ sceCdlFILE cdlf;
     /* 0x28 */ CDVD_PCM pcm;
     /* 0x38 */ CDVD_ADPCM adpcm[2];
     /* 0x60:64 */ u_int ctime : 32;
@@ -105,12 +97,7 @@ void ICdvdInit(int reset);
 void ICdvdCmd(IOP_COMMAND* icp);
 void ICdvdMain();
 void ICdvdBreak();
-void ICdvdLoadReqAdpcm(int lsn, u_int size_now, void* buf, u_char channel, int req_type, int endld_flg);
-static void ICdvdInitOnce();
-static void ICdvdInitSoftReset();
-static void ICdvdAddCmd(IOP_COMMAND *icp);
-static void ICdvdTransSe(IOP_COMMAND *icp);
-static void ICdvdTransSeInit();
-static void ICdvdSetRetStat(int id, u_char stat);
+
+void ICdvdLoadReqAdpcm(int lsn, u_int size_now, void* buf, u_char channel, u_char req_type, u_char endld_flg);
 
 #endif // IOPCDVD_H_

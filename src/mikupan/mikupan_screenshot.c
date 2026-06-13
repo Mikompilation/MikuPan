@@ -1,6 +1,6 @@
 #include "mikupan_screenshot.h"
 #include "mikupan_logging_c.h"
-#include "glad/gl.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -182,33 +182,19 @@ void MikuPan_ScreenshotCaptureIfRequested(int drawable_w, int drawable_h)
     const size_t row_bytes   = (size_t) drawable_w * 4u;
     const size_t pixel_bytes = (size_t) drawable_h * row_bytes;
 
-    unsigned char *raw = (unsigned char *) malloc(pixel_bytes);
-    if (raw == NULL)
+    unsigned char *rgba = (unsigned char *) malloc(pixel_bytes);
+    if (rgba == NULL)
     {
         info_log("Screenshot: malloc failed (%zu bytes)", pixel_bytes);
         return;
     }
 
-    glad_glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glad_glReadPixels(0, 0, drawable_w, drawable_h, GL_RGBA, GL_UNSIGNED_BYTE, raw);
-
-    // glReadPixels returns rows bottom-to-top; PNG wants top-to-bottom. Flip
-    // into a second buffer rather than swapping in place so the encoder gets
-    // a contiguous top-down stream.
-    unsigned char *flipped = (unsigned char *) malloc(pixel_bytes);
-    if (flipped == NULL)
+    if (!MikuPan_ReadFramebufferRGBA8TopLeft(drawable_w, drawable_h, rgba))
     {
-        free(raw);
-        info_log("Screenshot: malloc failed for flip buffer (%zu bytes)", pixel_bytes);
+        free(rgba);
+        info_log("Screenshot: framebuffer readback failed");
         return;
     }
-    for (int y = 0; y < drawable_h; y++)
-    {
-        memcpy(flipped + (size_t) y * row_bytes,
-               raw     + (size_t) (drawable_h - 1 - y) * row_bytes,
-               row_bytes);
-    }
-    free(raw);
 
     char path[128];
     time_t t = time(NULL);
@@ -223,7 +209,7 @@ void MikuPan_ScreenshotCaptureIfRequested(int drawable_w, int drawable_h)
              lt.tm_year + 1900, lt.tm_mon + 1, lt.tm_mday,
              lt.tm_hour, lt.tm_min, lt.tm_sec);
 
-    if (MikuPan_ScreenshotWritePng(path, flipped, drawable_w, drawable_h))
+    if (MikuPan_ScreenshotWritePng(path, rgba, drawable_w, drawable_h))
     {
         info_log("Screenshot saved: %s (%dx%d)", path, drawable_w, drawable_h);
     }
@@ -232,5 +218,5 @@ void MikuPan_ScreenshotCaptureIfRequested(int drawable_w, int drawable_h)
         info_log("Screenshot: failed to write %s", path);
     }
 
-    free(flipped);
+    free(rgba);
 }

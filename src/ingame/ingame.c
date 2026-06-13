@@ -431,6 +431,7 @@ void InGameMain()
         
         NakasuHazeSet();
         gra3dDraw();
+        FallenObjectsDraw();
         gra2dDraw(GRA2D_CALL_IG2);
         
         room_wrk.disp_no[1] = tmp_room_no;

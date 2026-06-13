@@ -552,19 +552,22 @@
 
 };
 
+#define SE_PARAM_COUNT ((int)(sizeof(se_param_tbl) / sizeof(se_param_tbl[0])))
+
 SE_PARAM* SeGetSeParamTbl(int num)
 {
+    if (num < 0 || num >= SE_PARAM_COUNT) {
+        return 0;
+    }
+
     return &se_param_tbl[num];
 }
 
 int GetSeAdrs(int se_no)
 {
-    // This function is called with -1 unconditionlly when initing...
-    if (se_no < 0)
-    {
+    if (se_no < 0 || se_no >= SE_PARAM_COUNT) {
         return 0;
     }
 
     return se_param_tbl[se_no].adrs;
 }
-

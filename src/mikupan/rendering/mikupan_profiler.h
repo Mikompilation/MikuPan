@@ -42,6 +42,12 @@ typedef enum
     PERF_SECT_TEX_L2_LOOKUP,      ///< sub: MikuPan_GetTextureInfo (by GS-memory hash)
     PERF_SECT_TEX_CREATE,         ///< sub: MikuPan_CreateGLTexture (glTexImage2D + glGenerateMipmap)
     PERF_SECT_TEX_BIND,           ///< sub: MikuPan_BindTexture2DCached (glBindTexture under the cache)
+    /// "Other / unknown" breakdown — uninstrumented PS2/SG scene-graph emulation
+    /// that runs between frame-start and the timed render calls. These are
+    /// mutually-exclusive leaf timers, subtracted from "Other" in the UI.
+    PERF_SECT_SKIN_PREP,          ///< SetVUVNData/Post: GPU-skin gather + palette / CPU skin
+    PERF_SECT_COORD_CALC,         ///< CalcCoordinate → SetLWS (per-bone world matrices)
+    PERF_SECT_LIGHT_SETUP,        ///< SetLightData (per-coord light transform)
     PERF_SECT_COUNT
 } MikuPan_PerfSection;
 
@@ -75,12 +81,11 @@ void MikuPan_PerfScopeEnd(MikuPan_PerfScope *s);
 void MikuPan_TimedDrawElements(GLenum mode, GLsizei count, GLenum type, const void *indices);
 void MikuPan_TimedDrawArrays(GLenum mode, GLint first, GLsizei count);
 
-/* ── Frame timing (CPU/GPU split via fence-sync) ────────────────────── */
+/* Frame timing (CPU / SDL_GPU idle-wait split) */
 
-/// Split CPU and GPU wall-clock for the perf-debug graph. CPU time = from
-/// MikuPan_PerfBeginFrame through the moment we've submitted all GL commands
-/// (after our final glFlush). GPU time = wall-clock the GPU takes to drain
-/// that work, measured via fence-sync. CPU + GPU ≈ frame time minus vsync.
+/// Split CPU submission and post-submit SDL_GPU idle wait for the perf-debug
+/// graph. The wait value is a back-pressure/presentation signal, not a
+/// hardware GPU-duration query, and can include vsync pacing.
 void  MikuPan_PerfBeginFrame(void);
 void  MikuPan_PerfEndFrame(void);
 void  MikuPan_PerfResetFrame(void);

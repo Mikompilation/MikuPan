@@ -21,34 +21,9 @@
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_utils.h"
-#include "mikupan/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "os/pad.h"
 #include "os/system.h"
-
-/* [DIAG] Average R+G+B brightness over an RGBA8 buffer, for confirming whether a
- * framebuffer read returned the live scene or black. Sparse sampling so it's
- * cheap. Remove once the photo capture is diagnosed. */
-static long EffectSubDebugAvgBrightness(const unsigned char *rgba,
-                                        int width, int height, int stride_px)
-{
-    long sum = 0;
-    int n = 0;
-    if (rgba == NULL || width <= 0 || height <= 0)
-    {
-        return -1;
-    }
-    for (int y = 0; y < height; y += 8)
-    {
-        for (int x = 0; x < width; x += 8)
-        {
-            const unsigned char *p = rgba + ((long) (y * stride_px + x)) * 4;
-            sum += p[0] + p[1] + p[2];
-            n++;
-        }
-    }
-    return n ? sum / ((long) n * 3) : -1;
-}
 
 typedef struct {
 	int screen_flag;
@@ -182,6 +157,31 @@ static int EffectSubIsMainFramebufferAddress(int addr)
     return addr == 0 || addr == SCR_HEIGHT * (SCR_WIDTH / 64);
 }
 
+static int g_effect_sub_live_framebuffer_copy_addr = -1;
+
+static void EffectSubRememberLiveFramebufferCopy(int addr)
+{
+    g_effect_sub_live_framebuffer_copy_addr = addr;
+}
+
+void EffectSubMarkLiveFramebufferCopy(int addr)
+{
+    EffectSubRememberLiveFramebufferCopy(addr);
+}
+
+static void EffectSubForgetLiveFramebufferCopy(int addr)
+{
+    if (g_effect_sub_live_framebuffer_copy_addr == addr)
+    {
+        g_effect_sub_live_framebuffer_copy_addr = -1;
+    }
+}
+
+static int EffectSubIsLiveFramebufferCopyAddress(int addr)
+{
+    return addr == g_effect_sub_live_framebuffer_copy_addr;
+}
+
 static int EffectSubIsLiveFramebufferTexture(const sceGsTex0 *tex)
 {
     return tex != NULL &&
@@ -189,7 +189,8 @@ static int EffectSubIsLiveFramebufferTexture(const sceGsTex0 *tex)
         tex->TBW == SCR_WIDTH / 64 &&
         tex->TW == 10 &&
         tex->TH == 8 &&
-        EffectSubIsMainFramebufferAddress(tex->TBP0);
+        (EffectSubIsMainFramebufferAddress(tex->TBP0) ||
+         EffectSubIsLiveFramebufferCopyAddress(tex->TBP0));
 }
 
 static int EffectSubReadMainFramebuffer(u_long128 *outbuf)
@@ -228,13 +229,6 @@ static int EffectSubUploadMainFramebufferToGs(int addr)
         return 0;
     }
 
-    /* [DIAG] Working effects use this read; expect a non-zero brightness when a
-     * scene is on screen. Compare against the "photo capture" log. */
-    info_log("[DIAG] effect fb read: avg_rgb=%ld addr=0x%x",
-             EffectSubDebugAvgBrightness((const unsigned char *) framebuffer_copy,
-                                         SCR_WIDTH, SCR_HEIGHT, SCR_WIDTH),
-             addr);
-
     sceGsSetDefLoadImage(
         &gs_limage,
         addr,
@@ -246,8 +240,19 @@ static int EffectSubUploadMainFramebufferToGs(int addr)
         SCR_HEIGHT);
     sceGsExecLoadImage(&gs_limage, framebuffer_copy);
     sceGsSyncPath(0, 0);
+    EffectSubRememberLiveFramebufferCopy(addr);
 
     return 1;
+}
+
+static int EffectSubMaterializeLiveFramebufferCopy(int addr)
+{
+    if (!EffectSubIsLiveFramebufferCopyAddress(addr))
+    {
+        return 1;
+    }
+
+    return EffectSubUploadMainFramebufferToGs(addr);
 }
 
 static void EffectSubRenderTexturedSpriteVertices(sceGsTex0 *tex, float *vertices, int use_screen_pos)
@@ -3326,6 +3331,11 @@ void LocalCopyLtoB_Sub(int no, int type, int addr) {
     
     FlushCache(0);
 
+    if (!EffectSubIsMainFramebufferAddress(addr))
+    {
+        EffectSubMaterializeLiveFramebufferCopy(addr);
+    }
+
     if (!EffectSubIsMainFramebufferAddress(addr) ||
         !EffectSubReadMainFramebuffer(pbuf))
     {
@@ -3367,6 +3377,7 @@ void LocalCopyBtoL_Sub(int no, int type, int addr) {
         0,
         SCR_WIDTH,
         SCR_HEIGHT);
+    EffectSubForgetLiveFramebufferCopy(addr);
     sceGsExecLoadImage(&gs_limage, bbuf);
 
     if (type != 0)
@@ -3482,6 +3493,8 @@ static void EffectSubCopyGsPsmct32(int src_addr, int dst_addr)
     sceGsStoreImage store_image;
     sceGsLoadImage load_image;
 
+    EffectSubMaterializeLiveFramebufferCopy(src_addr);
+
     sceGsSetDefStoreImage(
         &store_image,
         src_addr,
@@ -3502,6 +3515,7 @@ static void EffectSubCopyGsPsmct32(int src_addr, int dst_addr)
         0,
         SCR_WIDTH,
         SCR_HEIGHT);
+    EffectSubForgetLiveFramebufferCopy(dst_addr);
     sceGsExecLoadImage(&load_image, copy_buf);
 }
 
@@ -3545,6 +3559,8 @@ int LocalCopyLtoLDraw(int addr1, int addr2)
 	int64_t old_ndpkt;
 	int xyoff;
 	Q_WORDDATA *ppbuf;
+
+    EffectSubForgetLiveFramebufferCopy(addr2);
 
     xyoff = GS_Y_COORD(0) + 8 - pdrawenv->xyoffset1.OFY;
     

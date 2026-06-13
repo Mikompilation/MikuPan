@@ -25,6 +25,7 @@ include(cglm)
 include(ffmpeg)
 include(xxhash)
 include(inipp)
+include(shadercross)
 
 set(MIKUPAN_SOURCES
         resources/shaders/textured_mesh_lighted.frag
@@ -227,6 +228,7 @@ set(MIKUPAN_SOURCES
         "sdk/sce/devvif1.c"
         "sdk/sce/libpc.c"
         "sdk/sce/libpad.c"
+        "sdk/iop_host.c"
         "sdk/sce/sif.c"
         "sdk/sce/devvu0.c"
         "sdk/sce/libmc.c"
@@ -245,6 +247,7 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui.c
         src/mikupan/rendering/mikupan_profiler.c
+        src/mikupan/rendering/mikupan_gpu.c
         src/mikupan/rendering/mikupan_camera.c
         src/mikupan/rendering/mikupan_debug_draw.c
         src/mikupan/rendering/mikupan_lighting.c
@@ -258,7 +261,6 @@ set(MIKUPAN_SOURCES
         src/mikupan/gs/mikupan_texture_manager.cpp
         src/mikupan/mikupan_logging.cpp
         src/graphics/graph3d/libsg.c
-        extern/glad/src/gl.c
         src/ingame/map/find_dat.c
         src/mikupan/rendering/mikupan_pipeline.c
         src/mikupan/rendering/mikupan_meshcache.c
@@ -303,6 +305,7 @@ add_custom_target(mikupan_version
 
 add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
 add_dependencies(MikuPan mikupan_version)
+add_dependencies(MikuPan compile_shaders)
 if(TARGET ffmpeg_build)
     add_dependencies(MikuPan ffmpeg_build)
 endif()
@@ -310,6 +313,7 @@ endif()
 target_include_directories(MikuPan PRIVATE
         "sdk/"
         "src"
+        "src/iop"
         "extern/"
         "extern/glad/include/"
         ${MIKUPAN_GENERATED_DIR}

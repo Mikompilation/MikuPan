@@ -102,6 +102,7 @@ void LocalCopyBtoL(int no, int addr);
 void LocalCopyLtoB_NB(int no, int addr);
 void LocalCopyBtoL_NB(int no, int addr);
 void ClearLocalCopyLtoLCache();
+void EffectSubMarkLiveFramebufferCopy(int addr);
 int LocalCopyLtoLDraw(int addr1, int addr2);
 void LocalCopyLtoL(int addr1, int addr2);
 void LocalCopyZtoBZ();

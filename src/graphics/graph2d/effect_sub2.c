@@ -92,6 +92,8 @@ typedef struct { // 0x10
 #define ANM2D_DAT_TABLE_P(table_p) ((ANM2D_DAT_TABLE *)table_p)
 #define ANM2D_WRK_TABLE_P(table_p) ((ANM2D_WRK_TABLE *)table_p)
 #define EFFECT_SUB2_MAX_GUS_VERTICES (600 * 6)
+#define EFFECT_SUB2_MAX_FALL_VERTICES (600 * 6)
+#define EFFECT_SUB2_FALL_DEPTH_BIAS 0.0f
 
 static u_char EffectSub2ClampColor(int value)
 {
@@ -168,6 +170,25 @@ static int EffectSub2AppendTexturedQuad(
     return vertex_count;
 }
 
+static void EffectSub2CopyDepthBiasedQuad(
+    sceVu0FVECTOR dst[4],
+    const sceVu0FVECTOR src[4],
+    float bias)
+{
+    int i;
+    int j;
+
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            dst[i][j] = src[i][j];
+        }
+
+        dst[i][2] -= bias;
+    }
+}
+
 #include "data/fall_table.h" /* data 270e30 */ // FALL_TABLE fall_table[/*4*/];
 /* sdata 3563e8 */ short int fallen_effect_switch = 0;
 /* sdata 3563ea */ short int gus_effect_switch = 0;
@@ -195,6 +216,18 @@ static int EffectSub2AppendTexturedQuad(
 /* bss 361010 */ static sceVu0FVECTOR rots[600];
 /* bss 363590 */ static sceVu0FVECTOR hole_gus[200];
 /* bss 364210 */ static sceVu0FVECTOR line_gus[4][80];
+
+/*
+ * On PS2 the fall quads were appended to the 2D packet buffer and DMA-kicked
+ * at end of frame, after the 3D world. The modern renderer draws immediately,
+ * but FallenObjects runs from game logic (FActWrkMain) before the map is
+ * rendered, so an immediate draw always ends up depth-occluded by the map.
+ * Batch the quads here and flush them via FallenObjectsDraw once the 3D
+ * scene has been drawn.
+ */
+static float fall_render_buffer[EFFECT_SUB2_MAX_FALL_VERTICES][12];
+static int fall_render_vertices = 0;
+static u_long fall_render_tex0 = 0;
 
 void InitEffectSub2()
 {
@@ -331,9 +364,11 @@ void FallObjDropSet()
 
 void FallenObjects()
 {
-	/* sdata 3563f8 */ static int now_status = 0;
-	/* s3 19 */ int i;
-    
+	static int now_status = 0;
+	int i;
+
+    fall_render_vertices = 0;
+
     if (fallen_effect_switch == 0)
     {
         return;
@@ -384,6 +419,23 @@ void FallenObjects()
         FallObjLight(leaves[i], fall_wrk.rgba[i], fall_wrk.mode_keep);
         FallObjDraw(leaves[i], rots[i], fall_wrk.rgba[i], fall_wrk.mode_keep);
     }
+}
+
+void FallenObjectsDraw()
+{
+    if (fall_render_vertices <= 0)
+    {
+        return;
+    }
+
+    MikuPan_RenderTexturedTriangles3DWithState(
+        (sceGsTex0 *)&fall_render_tex0,
+        &fall_render_buffer[0][0],
+        fall_render_vertices,
+        MIKUPAN_DEPTH_LEQUAL,
+        0);
+
+    fall_render_vertices = 0;
 }
 
 /* sdata 3563fc */ static u_char r_temp = 33;
@@ -651,7 +703,7 @@ void FallObjLight(/* a0 4 */ sceVu0FVECTOR leaf, /* s0 16 */ short int *rgba, /*
     }
 }
 
-void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotation, /* s1 17 */ short int *rgba, /* s2 18 */ int fall_mode)
+void FallObjDraw(sceVu0FVECTOR mpos, sceVu0FVECTOR rotation, short int *rgba, int fall_mode)
 {
 	int i;
 	int w;
@@ -662,6 +714,7 @@ void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotati
 	sceVu0FMATRIX slm;
 	//sceVu0IVECTOR ivec[4];
 	sceVu0FVECTOR ivec[4];
+	sceVu0FVECTOR render_pos[4];
 	sceVu0FVECTOR wpos;
 	sceVu0FVECTOR ppos[4] = {
         { -12.0f, +12.0f, 0.0f, 1.0f },
@@ -717,7 +770,6 @@ void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotati
     //    {
     //        w = 1;
     //    }
-    //
     //    if (ivec[i][2] < 0xff || ivec[i][2] > 0xffffff)
     //    {
     //        w = 1;
@@ -774,11 +826,9 @@ void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotati
         
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_TRUE, 340, SCE_GIF_PACKED, 3);
         pbuf[ndpkt++].ul64[1] = 0 \
-            | SCE_GS_RGBAQ << (4 * 0) 
-            | SCE_GS_UV    << (4 * 1) 
+            | SCE_GS_RGBAQ << (4 * 0)
+            | SCE_GS_UV    << (4 * 1)
             | SCE_GS_XYZF2 << (4 * 2);
-
-        float* buffer = (float*)&pbuf[ndpkt];
 
         for (i = 0; i < 4; i++)
         {
@@ -798,7 +848,18 @@ void FallObjDraw(/* a0 4 */ sceVu0FVECTOR mpos, /* s0 16 */ sceVu0FVECTOR rotati
             pbuf[ndpkt++].fl32[3] = 1.0f;
         }
 
-        MikuPan_RenderSprite3D((sceGsTex0*)&tex0, buffer);
+        EffectSub2CopyDepthBiasedQuad(render_pos, ivec, EFFECT_SUB2_FALL_DEPTH_BIAS);
+
+        fall_render_tex0 = tex0;
+        fall_render_vertices = EffectSub2AppendTexturedQuad(
+            &fall_render_buffer[0][0],
+            fall_render_vertices,
+            EFFECT_SUB2_MAX_FALL_VERTICES,
+            render_pos,
+            MikuPan_ConvertScaleColor(mr),
+            MikuPan_ConvertScaleColor(mg),
+            MikuPan_ConvertScaleColor(mb),
+            MikuPan_ConvertScaleColor(EffectSub2ClampColor(rgba[3])));
 
         //for (i = 0; i < 4; i++)
         //{

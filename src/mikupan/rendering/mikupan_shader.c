@@ -1,176 +1,263 @@
 #include "mikupan_shader.h"
 
-#include "glad/gl.h"
 #include "mikupan/mikupan_file_c.h"
+#include "mikupan_gpu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-GLuint current_program = 0;
-GLuint backup_current_program = 0;
+u_int current_program = 0;
+u_int backup_current_program = 0;
 u_int shader_list[MAX_SHADER_PROGRAMS] = {0};
 static unsigned int g_shader_generation = 0;
-
-/// Per-pass shader override. When >= 0, MikuPan_SetCurrentShaderProgram
-/// substitutes this index for whatever the caller asked for. The shadow
-/// pass uses it to redirect every mesh-type renderer onto the silhouette
-/// shader without modifying their internals.
 static int g_shader_override = -1;
 
-/// Cached uniform locations per shader. glGetUniformLocation is a string lookup
-/// in the driver and is slow; we resolve the hot uniforms once at link time.
-typedef struct
-{
-    GLint model;
-    GLint view;
-    GLint projection;
-    /// Precomputed derived matrices — pushed once per object instead of being
-    /// recomputed inside the vertex shader for every vertex.
-    GLint mvp;             ///< projection * view * model
-    GLint modelView;       ///< view * model
-    GLint viewProj;        ///< projection * view (no model factor; used by 0xA)
-    GLint normalMatrix;    ///< transpose(inverse(view * model)) — mat3
-    GLint viewNormalMatrix;///< transpose(inverse(view))         — mat3 (0xA)
+static SDL_GPUShader *g_vertex_shaders[MAX_SHADER_PROGRAMS] = {0};
+static SDL_GPUShader *g_fragment_shaders[MAX_SHADER_PROGRAMS] = {0};
 
-    /* Non-matrix uniforms */
-    GLint uColor;         ///< bounding_box.vert
-    GLint renderNormals;  ///< textured_mesh_lighted.frag
-    GLint uNormalLength;  ///< normals_debug.geom
-    GLint uFog;           ///< textured_mesh_lighted.frag
-    GLint uFogColor;      ///< textured_mesh_lighted.frag
-    GLint uMeshLightingMode;///< textured_mesh_lighted.* per-fragment/per-vertex toggle
-    GLint disableLighting;///< textured_mesh_lighted.frag — UI debug toggle
-    GLint uMirrorSurfacePass;///< textured_mesh_lighted.frag — skip fog on final mirror overlay
-} CachedUniformLocations;
-
-static CachedUniformLocations uniform_loc[MAX_SHADER_PROGRAMS] = {0};
-
-// [vert, geom (NULL = none), frag]
+// [vert, geom (NULL = none; SDL_GPU has no geometry stage), frag]
 const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
-    {                  "./resources/shaders/mesh_0x2.vert",NULL,
-     "./resources/shaders/textured_mesh_lighted.frag"                                             },
-    {                  "./resources/shaders/mesh_0xA.vert", NULL,
-     "./resources/shaders/textured_mesh_lighted.frag"                                             },
-    {                 "./resources/shaders/mesh_0x12.vert", NULL,
-     "./resources/shaders/textured_mesh_lighted.frag"                                             },
-    {"./resources/shaders/untextured_coloured_sprite.vert", NULL,
-     "./resources/shaders/untextured_coloured_sprite.frag"                                        },
-    {              "./resources/shaders/bounding_box.vert", NULL,
-     "./resources/shaders/untextured_coloured_sprite.frag"                                        },
-    {                    "./resources/shaders/sprite.vert", NULL,
-     "./resources/shaders/sprite.frag"                                                            },
-    {                 "./resources/shaders/mesh_0x12.vert",
-     "./resources/shaders/normals_debug.geom",            "./resources/shaders/normals_debug.frag"},
-    {                  "./resources/shaders/mesh_0x2.vert",
-     "./resources/shaders/normals_debug.geom",            "./resources/shaders/normals_debug.frag"},
-    // Final scene-to-window blit. Vertex layout matches sprite.vert
-    // (UV4_COLOUR4_POSITION4) so the same fullscreen-quad VBO drives it.
-    {                    "./resources/shaders/sprite.vert", NULL,
-     "./resources/shaders/postprocess.frag"                                                       },
-    // Shadow blob (debug fallback) — fullscreen-quad-style ellipse fill into
-    // the shadow FBO. Matches sprite.vert layout so the same fullscreen quad
-    // VBO drives it. Useful when no caster mesh is wired up yet.
-    {                    "./resources/shaders/sprite.vert", NULL,
-     "./resources/shaders/shadow_caster.frag"                                                     },
-    // Shadow silhouette — position-only vert + constant alpha frag. Bound by
-    // the shadow pass's shader-override mechanism, so the caster meshes drive
-    // it through the regular MikuPan_RenderMeshType* paths with whatever
-    // vertex layout they normally use (location 0 = position).
-    {         "./resources/shaders/shadow_silhouette.vert", NULL,
-     "./resources/shaders/shadow_silhouette.frag"                                                 },
-    // Shadow receiver decal — projects the generated silhouette texture onto
-    // already-rendered receiver meshes as transparent black.
-    {            "./resources/shaders/shadow_receiver.vert", NULL,
-     "./resources/shaders/shadow_receiver.frag"                                                   },
-    {             "./resources/shaders/camera_debug.vert", NULL,
-     "./resources/shaders/untextured_coloured_sprite.frag"                                        },
-    {                 "./resources/shaders/heat_haze.vert", NULL,
-     "./resources/shaders/heat_haze.frag"                                                         },
+    {"./resources/shaders/hlsl/mesh_0x2.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/textured_mesh_lighted.frag.hlsl"},
+    {"./resources/shaders/hlsl/mesh_0xA.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/textured_mesh_lighted.frag.hlsl"},
+    {"./resources/shaders/hlsl/mesh_0x12.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/textured_mesh_lighted.frag.hlsl"},
+    {"./resources/shaders/hlsl/untextured_coloured_sprite.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
+    {"./resources/shaders/hlsl/bounding_box.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
+    {"./resources/shaders/hlsl/sprite.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/sprite.frag.hlsl"},
+    {"./resources/shaders/hlsl/normals_0x12.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
+    {"./resources/shaders/hlsl/normals_0x2.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
+    {"./resources/shaders/hlsl/sprite.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/postprocess.frag.hlsl"},
+    {"./resources/shaders/hlsl/sprite.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/shadow_caster.frag.hlsl"},
+    {"./resources/shaders/hlsl/shadow_silhouette.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/shadow_silhouette.frag.hlsl"},
+    {"./resources/shaders/hlsl/shadow_receiver.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/shadow_receiver.frag.hlsl"},
+    {"./resources/shaders/hlsl/camera_debug.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
+    {"./resources/shaders/hlsl/heat_haze.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/heat_haze.frag.hlsl"},
+    {"./resources/shaders/hlsl/mesh_0x2_skinned.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/textured_mesh_lighted.frag.hlsl"},
+    {"./resources/shaders/hlsl/mesh_0xA_skinned.vert.hlsl", NULL,
+     "./resources/shaders/hlsl/textured_mesh_lighted.frag.hlsl"},
 };
 
 static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
-    "MESH_0x2",          "MESH_0xA",
-    "MESH_0x12",         "UNTEXTURED_COLOURED_SPRITE",
-    "BOUNDING_BOX",      "SPRITE",
-    "NORMALS_0x12",      "NORMALS_0x2",
-    "POSTPROCESS",       "SHADOW_BLOB",
+    "MESH_0x2", "MESH_0xA",
+    "MESH_0x12", "UNTEXTURED_COLOURED_SPRITE",
+    "BOUNDING_BOX", "SPRITE",
+    "NORMALS_0x12", "NORMALS_0x2",
+    "POSTPROCESS", "SHADOW_BLOB",
     "SHADOW_SILHOUETTE", "SHADOW_RECEIVER",
-    "CAMERA_DEBUG",
-    "HEAT_HAZE",
+    "CAMERA_DEBUG", "HEAT_HAZE",
+    "MESH_0x2_SKINNED", "MESH_0xA_SKINNED",
 };
 
-/// Linear scan — MAX_SHADER_PROGRAMS is 8, so this is faster than maintaining
-/// a parallel "current index" tracker that has to stay in sync with external
-/// glUseProgram calls (e.g. via MikuPan_ResetShaderCache).
-static int FindShaderIndex(GLuint program)
+typedef struct
 {
-    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
+    SDL_GPUShaderFormat format;
+    const char *dir;       ///< subdirectory under resources/shaders/
+    const char *extension; ///< bytecode file extension, with dot
+    const char *entrypoint;
+} MikuPan_ShaderFormatInfo;
+
+/* Every format the build produces (cmake/shadercross.cmake), ordered by
+ * preference when a device supports several. The MSL entry point is "main0":
+ * SPIRV-Cross renames main, which is a reserved word in MSL. */
+static const MikuPan_ShaderFormatInfo kShaderFormats[] = {
+    {SDL_GPU_SHADERFORMAT_SPIRV, "spirv", ".spv", "main"},
+    {SDL_GPU_SHADERFORMAT_DXIL, "dxil", ".dxil", "main"},
+    {SDL_GPU_SHADERFORMAT_MSL, "msl", ".msl", "main0"},
+};
+
+static const MikuPan_ShaderFormatInfo *PickShaderFormat(void)
+{
+    SDL_GPUShaderFormat supported =
+        SDL_GetGPUShaderFormats(MikuPan_GPUGetDevice());
+
+    for (size_t i = 0; i < SDL_arraysize(kShaderFormats); i++)
     {
-        if (shader_list[i] == program)
-            return i;
+        if (supported & kShaderFormats[i].format)
+        {
+            return &kShaderFormats[i];
+        }
     }
-    return -1;
+
+    return NULL;
 }
 
-static u_int MikuPan_BindShaderProgramIndex(int shader_program)
+static int BuildShaderBytecodePath(const char *source_path,
+                                   const MikuPan_ShaderFormatInfo *format,
+                                   char *out_path,
+                                   int out_path_size)
 {
-    if (shader_program < 0 || shader_program >= MAX_SHADER_PROGRAMS)
+    const char *name = source_path;
+    const char *slash = strrchr(source_path, '/');
+    const char *backslash = strrchr(source_path, '\\');
+    size_t len;
+
+    if (backslash != NULL && (slash == NULL || backslash > slash))
     {
-        return (u_int)-1;
+        slash = backslash;
+    }
+    if (slash != NULL)
+    {
+        name = slash + 1;
     }
 
-    GLuint new_program = shader_list[shader_program];
-    if (new_program != current_program)
+    len = strlen(name);
+    if (len > 5 && strcmp(name + len - 5, ".hlsl") == 0)
     {
-        current_program = new_program;
-        glad_glUseProgram(current_program);
+        len -= 5;
     }
 
-    return current_program;
+    return snprintf(out_path, (size_t)out_path_size,
+                    "./resources/shaders/%s/%.*s%s",
+                    format->dir, (int)len, name,
+                    format->extension) < out_path_size;
 }
 
-static GLint GetCachedLocation(int idx, const char *name)
+static Uint8 *ReadShaderBytecode(const char *path,
+                                 size_t *out_size,
+                                 char *err_buf,
+                                 int err_buf_size)
 {
-    if (idx < 0 || idx >= MAX_SHADER_PROGRAMS)
+    u_int file_size = MikuPan_GetFileSize(path);
+    Uint8 *data;
+
+    if (file_size == 0)
+    {
+        if (err_buf && err_buf_size > 0)
+        {
+            snprintf(err_buf, err_buf_size, "Missing shader bytecode: %s",
+                     path);
+        }
+        return NULL;
+    }
+
+    data = (Uint8 *)malloc(file_size);
+    if (data == NULL)
+    {
+        if (err_buf && err_buf_size > 0)
+        {
+            snprintf(err_buf, err_buf_size, "OOM reading %s", path);
+        }
+        return NULL;
+    }
+
+    MikuPan_ReadFullFile(path, (char *)data);
+    *out_size = file_size;
+    return data;
+}
+
+static SDL_GPUShader *CompileStageFromFile(const char *path,
+                                           SDL_GPUShaderStage stage,
+                                           int num_storage_buffers,
+                                           char *err_buf,
+                                           int err_buf_size)
+{
+    char bytecode_path[512];
+    size_t bytecode_size = 0;
+    Uint8 *bytecode;
+
+    const MikuPan_ShaderFormatInfo *format = PickShaderFormat();
+    if (format == NULL)
+    {
+        if (err_buf && err_buf_size > 0)
+        {
+            snprintf(err_buf, err_buf_size,
+                     "No shipped shader format matches the GPU device");
+        }
+        return NULL;
+    }
+
+    if (!BuildShaderBytecodePath(path, format, bytecode_path,
+                                 (int)sizeof(bytecode_path)))
+    {
+        if (err_buf && err_buf_size > 0)
+        {
+            snprintf(err_buf, err_buf_size,
+                     "Shader bytecode path too long for %s", path);
+        }
+        return NULL;
+    }
+
+    bytecode = ReadShaderBytecode(bytecode_path, &bytecode_size,
+                                  err_buf, err_buf_size);
+    if (bytecode == NULL)
+    {
+        return NULL;
+    }
+
+    SDL_GPUShaderCreateInfo create_info = {0};
+    create_info.code_size = bytecode_size;
+    create_info.code = bytecode;
+    create_info.entrypoint = format->entrypoint;
+    create_info.format = format->format;
+    create_info.stage = stage;
+    create_info.num_samplers =
+        stage == SDL_GPU_SHADERSTAGE_FRAGMENT ? 2u : 0u;
+    create_info.num_storage_textures = 0;
+    create_info.num_storage_buffers = (Uint32)num_storage_buffers;
+    create_info.num_uniform_buffers = 3;
+
+    SDL_GPUShader *shader =
+        SDL_CreateGPUShader(MikuPan_GPUGetDevice(), &create_info);
+
+    free(bytecode);
+
+    if (shader == NULL && err_buf && err_buf_size > 0)
+    {
+        snprintf(err_buf, err_buf_size, "%s: SDL_GPU shader compile failed: %s",
+                 path, SDL_GetError());
+    }
+
+    return shader;
+}
+
+static int BuildShaderProgram(int idx,
+                              SDL_GPUShader **out_vertex,
+                              SDL_GPUShader **out_fragment,
+                              char *err_buf,
+                              int err_buf_size)
+{
+    const char *vert_path = shader_file_name[idx][0];
+    const char *frag_path = shader_file_name[idx][2];
+
+    /// The GPU-skinned mesh shaders read the bone-matrix palette from one
+    /// vertex storage buffer; every other shader uses none.
+    int vert_storage_buffers =
+        (idx == MESH_0x2_SKINNED_SHADER || idx == MESH_0xA_SKINNED_SHADER) ? 1 : 0;
+
+    SDL_GPUShader *vs = CompileStageFromFile(
+        vert_path, SDL_GPU_SHADERSTAGE_VERTEX,
+        vert_storage_buffers, err_buf, err_buf_size);
+    if (vs == NULL)
     {
         return -1;
     }
-    const CachedUniformLocations *u = &uniform_loc[idx];
 
-    if (strcmp(name, "model") == 0)
-        return u->model;
-    if (strcmp(name, "view") == 0)
-        return u->view;
-    if (strcmp(name, "projection") == 0)
-        return u->projection;
-    if (strcmp(name, "mvp") == 0)
-        return u->mvp;
-    if (strcmp(name, "modelView") == 0)
-        return u->modelView;
-    if (strcmp(name, "viewProj") == 0)
-        return u->viewProj;
-    if (strcmp(name, "normalMatrix") == 0)
-        return u->normalMatrix;
-    if (strcmp(name, "viewNormalMatrix") == 0)
-        return u->viewNormalMatrix;
-    if (strcmp(name, "uColor") == 0)
-        return u->uColor;
-    if (strcmp(name, "renderNormals") == 0)
-        return u->renderNormals;
-    if (strcmp(name, "uNormalLength") == 0)
-        return u->uNormalLength;
-    if (strcmp(name, "uFog") == 0)
-        return u->uFog;
-    if (strcmp(name, "uFogColor") == 0)
-        return u->uFogColor;
-    if (strcmp(name, "disableLighting") == 0)
-        return u->disableLighting;
-    if (strcmp(name, "uMeshLightingMode") == 0)
-        return u->uMeshLightingMode;
-    if (strcmp(name, "uMirrorSurfacePass") == 0)
-        return u->uMirrorSurfacePass;
+    SDL_GPUShader *fs = CompileStageFromFile(
+        frag_path, SDL_GPU_SHADERSTAGE_FRAGMENT,
+        0, err_buf, err_buf_size);
+    if (fs == NULL)
+    {
+        SDL_ReleaseGPUShader(MikuPan_GPUGetDevice(), vs);
+        return -1;
+    }
 
-    return glad_glGetUniformLocation(shader_list[idx], name);
+    *out_vertex = vs;
+    *out_fragment = fs;
+    return 0;
 }
 
 const char *MikuPan_GetShaderName(int idx)
@@ -213,167 +300,27 @@ const char *MikuPan_GetShaderFragSource(int idx)
     return shader_file_name[idx][2];
 }
 
-static void CacheUniformLocations(int idx, GLuint program)
-{
-    uniform_loc[idx].model =                glad_glGetUniformLocation(program, "model");
-    uniform_loc[idx].view =                 glad_glGetUniformLocation(program, "view");
-    uniform_loc[idx].projection =           glad_glGetUniformLocation(program, "projection");
-    uniform_loc[idx].mvp =                  glad_glGetUniformLocation(program, "mvp");
-    uniform_loc[idx].modelView =            glad_glGetUniformLocation(program, "modelView");
-    uniform_loc[idx].viewProj =             glad_glGetUniformLocation(program, "viewProj");
-    uniform_loc[idx].normalMatrix =         glad_glGetUniformLocation(program, "normalMatrix");
-    uniform_loc[idx].viewNormalMatrix =     glad_glGetUniformLocation(program, "viewNormalMatrix");
-    uniform_loc[idx].uColor =               glad_glGetUniformLocation(program, "uColor");
-    uniform_loc[idx].renderNormals =        glad_glGetUniformLocation(program, "renderNormals");
-    uniform_loc[idx].uNormalLength =        glad_glGetUniformLocation(program, "uNormalLength");
-    uniform_loc[idx].uFog =                 glad_glGetUniformLocation(program, "uFog");
-    uniform_loc[idx].uFogColor =            glad_glGetUniformLocation(program, "uFogColor");
-    uniform_loc[idx].disableLighting =      glad_glGetUniformLocation(program, "disableLighting");
-    uniform_loc[idx].uMeshLightingMode =    glad_glGetUniformLocation(program, "uMeshLightingMode");
-    uniform_loc[idx].uMirrorSurfacePass =   glad_glGetUniformLocation(program, "uMirrorSurfacePass");
-}
-
-static GLuint CompileStageFromFile(GLenum stage, const char *path,
-                                   char *err_buf, int err_buf_size)
-{
-    u_int file_size = MikuPan_GetFileSize(path) + 1;
-    char *src = (char *) malloc(file_size);
-
-    if (src == NULL)
-    {
-        if (err_buf && err_buf_size > 0)
-        {
-            snprintf(err_buf, err_buf_size, "OOM reading %s", path);
-        }
-
-        return 0;
-    }
-
-    src[file_size - 1] = 0;
-    MikuPan_ReadFullFile(path, src);
-
-    GLuint sh = glad_glCreateShader(stage);
-    glad_glShaderSource(sh, 1, (const GLchar *const *) &src, NULL);
-    glad_glCompileShader(sh);
-    free(src);
-
-    GLint ok = GL_FALSE;
-    glad_glGetShaderiv(sh, GL_COMPILE_STATUS, &ok);
-    if (!ok)
-    {
-        if (err_buf && err_buf_size > 0)
-        {
-            int written = snprintf(err_buf, err_buf_size, "%s: ", path);
-
-            if (written < err_buf_size - 1)
-            {
-                glad_glGetShaderInfoLog(sh, err_buf_size - written, NULL,
-                                        err_buf + written);
-            }
-        }
-
-        glad_glDeleteShader(sh);
-        return 0;
-    }
-
-    return sh;
-}
-
-/// Build a fresh GL program for shader index `idx` from its on-disk sources.
-/// Returns 0 on failure (with an error message in err_buf when provided).
-/// Does NOT touch shader_list[idx] / uniform_loc[idx] — caller decides when
-/// to swap so a failed reload leaves the live program untouched.
-static GLuint BuildShaderProgram(int idx, char *err_buf, int err_buf_size)
-{
-    const char *vert_path = shader_file_name[idx][0];
-    const char *geom_path = shader_file_name[idx][1];
-    const char *frag_path = shader_file_name[idx][2];
-
-    GLuint vs = CompileStageFromFile(GL_VERTEX_SHADER, vert_path, err_buf,
-                                     err_buf_size);
-    if (!vs)
-    {
-        return 0;
-    }
-
-    GLuint fs = CompileStageFromFile(GL_FRAGMENT_SHADER, frag_path, err_buf,
-                                     err_buf_size);
-    if (!fs)
-    {
-        glad_glDeleteShader(vs);
-        return 0;
-    }
-
-    GLuint gs = 0;
-    if (geom_path != NULL)
-    {
-        gs = CompileStageFromFile(GL_GEOMETRY_SHADER, geom_path, err_buf,
-                                  err_buf_size);
-        if (!gs)
-        {
-            glad_glDeleteShader(vs);
-            glad_glDeleteShader(fs);
-            return 0;
-        }
-    }
-
-    GLuint prog = glad_glCreateProgram();
-    glad_glAttachShader(prog, vs);
-    glad_glAttachShader(prog, fs);
-
-    if (gs)
-    {
-        glad_glAttachShader(prog, gs);
-    }
-
-    glad_glLinkProgram(prog);
-
-    glad_glDeleteShader(vs);
-    glad_glDeleteShader(fs);
-
-    if (gs)
-    {
-        glad_glDeleteShader(gs);
-    }
-
-    GLint ok = GL_FALSE;
-    glad_glGetProgramiv(prog, GL_LINK_STATUS, &ok);
-    if (!ok)
-    {
-        if (err_buf && err_buf_size > 0)
-        {
-            int written = snprintf(err_buf, err_buf_size, "%s link: ", kShaderNames[idx]);
-
-            if (written < err_buf_size - 1)
-            {
-                glad_glGetProgramInfoLog(prog, err_buf_size - written, NULL,
-                                         err_buf + written);
-            }
-        }
-
-        glad_glDeleteProgram(prog);
-        return 0;
-    }
-
-    return prog;
-}
-
 int MikuPan_InitShaders()
 {
     for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
     {
-        GLuint prog = BuildShaderProgram(i, NULL, 0);
-        if (prog == 0)
+        SDL_GPUShader *vs = NULL;
+        SDL_GPUShader *fs = NULL;
+        if (BuildShaderProgram(i, &vs, &fs, NULL, 0) != 0)
         {
             continue;
         }
 
-        shader_list[i] = prog;
-        current_program = prog;
-        CacheUniformLocations(i, prog);
+        g_vertex_shaders[i] = vs;
+        g_fragment_shaders[i] = fs;
+        shader_list[i] = (u_int)(i + 1);
+        current_program = shader_list[i];
     }
 
-    glad_glUseProgram(current_program);
+    if (current_program != 0)
+    {
+        MikuPan_GPUSetCurrentShader((int)current_program - 1);
+    }
     g_shader_generation++;
 
     return 0;
@@ -387,30 +334,37 @@ int MikuPan_ReloadShader(int idx, char *err_buf, int err_buf_size)
         {
             snprintf(err_buf, err_buf_size, "bad shader index %d", idx);
         }
-
         return -1;
     }
 
-    GLuint prog = BuildShaderProgram(idx, err_buf, err_buf_size);
-    if (prog == 0)
+    SDL_GPUShader *vs = NULL;
+    SDL_GPUShader *fs = NULL;
+    if (BuildShaderProgram(idx, &vs, &fs, err_buf, err_buf_size) != 0)
     {
         return -1;
     }
 
-    GLuint old = shader_list[idx];
-    shader_list[idx] = prog;
-    CacheUniformLocations(idx, prog);
+    SDL_GPUDevice *device = MikuPan_GPUGetDevice();
+    SDL_GPUShader *old_vs = g_vertex_shaders[idx];
+    SDL_GPUShader *old_fs = g_fragment_shaders[idx];
 
-    // If the live program is the one we replaced, swap it on the GL side too.
-    if (current_program == old)
+    g_vertex_shaders[idx] = vs;
+    g_fragment_shaders[idx] = fs;
+    shader_list[idx] = (u_int)(idx + 1);
+    MikuPan_GPUInvalidatePipelines();
+
+    if (current_program == (u_int)(idx + 1))
     {
-        current_program = prog;
-        glad_glUseProgram(current_program);
+        MikuPan_GPUSetCurrentShader(idx);
     }
 
-    if (old != 0)
+    if (old_vs != NULL)
     {
-        glad_glDeleteProgram(old);
+        SDL_ReleaseGPUShader(device, old_vs);
+    }
+    if (old_fs != NULL)
+    {
+        SDL_ReleaseGPUShader(device, old_fs);
     }
 
     if (err_buf && err_buf_size > 0)
@@ -419,7 +373,6 @@ int MikuPan_ReloadShader(int idx, char *err_buf, int err_buf_size)
     }
 
     g_shader_generation++;
-
     return 0;
 }
 
@@ -431,14 +384,12 @@ int MikuPan_ReloadAllShaders(char *err_buf, int err_buf_size)
     for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
     {
         local_err[0] = '\0';
-        if (MikuPan_ReloadShader(i, local_err, (int) sizeof(local_err)) != 0)
+        if (MikuPan_ReloadShader(i, local_err, (int)sizeof(local_err)) != 0)
         {
-            // Keep the first error; later failures stay in the log only.
             if (!any_failed && err_buf && err_buf_size > 0)
             {
                 snprintf(err_buf, err_buf_size, "%s", local_err);
             }
-
             any_failed = 1;
         }
     }
@@ -448,14 +399,19 @@ int MikuPan_ReloadAllShaders(char *err_buf, int err_buf_size)
 
 u_int MikuPan_SetCurrentShaderProgram(int shader_program)
 {
-    // Per-pass override — used by the shadow pass to redirect every mesh
-    // renderer onto SHADOW_SILHOUETTE_SHADER without touching their bodies.
     if (g_shader_override >= 0 && g_shader_override < MAX_SHADER_PROGRAMS)
     {
         shader_program = g_shader_override;
     }
 
-    return MikuPan_BindShaderProgramIndex(shader_program);
+    if (shader_program < 0 || shader_program >= MAX_SHADER_PROGRAMS)
+    {
+        return (u_int)-1;
+    }
+
+    current_program = shader_list[shader_program];
+    MikuPan_GPUSetCurrentShader(shader_program);
+    return current_program;
 }
 
 void MikuPan_SetShaderOverride(int shader_index)
@@ -475,144 +431,57 @@ u_int MikuPan_GetCurrentShaderProgram()
 
 void MikuPan_SetUniformMatrix4fvToAllShaders(float *mat, char *name)
 {
-    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
-    {
-        GLint loc = GetCachedLocation(i, name);
-        if (loc < 0)
-        {
-            continue;
-        }
-        MikuPan_BindShaderProgramIndex(i);
-        glad_glUniformMatrix4fv(loc, 1, GL_FALSE, mat);
-    }
+    MikuPan_GPUSetMatrix4(name, mat);
 }
 
 void MikuPan_SetUniformMatrix3fvToAllShaders(float *mat, char *name)
 {
-    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
-    {
-        GLint loc = GetCachedLocation(i, name);
-        if (loc < 0)
-        {
-            continue;
-        }
-
-        MikuPan_BindShaderProgramIndex(i);
-        glad_glUniformMatrix3fv(loc, 1, GL_FALSE, mat);
-    }
+    MikuPan_GPUSetMatrix3(name, mat);
 }
 
 void MikuPan_SetUniformMatrix4fvToCurrentShader(float *mat, char *name)
 {
-    GLint loc = GetCachedLocation(FindShaderIndex(current_program), name);
-    if (loc < 0)
-    {
-        return;
-    }
-
-    glad_glUniformMatrix4fv(loc, 1, GL_FALSE, mat);
+    MikuPan_GPUSetMatrix4(name, mat);
 }
 
 void MikuPan_SetUniformMatrix3fvToCurrentShader(float *mat, char *name)
 {
-    GLint loc = GetCachedLocation(FindShaderIndex(current_program), name);
-    if (loc < 0)
-    {
-        return;
-    }
-
-    glad_glUniformMatrix3fv(loc, 1, GL_FALSE, mat);
+    MikuPan_GPUSetMatrix3(name, mat);
 }
 
 void MikuPan_SetUniform4fvToAllShaders(float *vector, char *name)
 {
-    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
-    {
-        GLint loc = GetCachedLocation(i, name);
-        if (loc < 0)
-        {
-            continue;
-        }
-
-        MikuPan_BindShaderProgramIndex(i);
-        glad_glUniform4fv(loc, 1, vector);
-    }
+    MikuPan_GPUSetVec4(name, vector);
 }
 
 void MikuPan_SetUniform4fvToCurrentShader(float *vector, char *name)
 {
-    GLint loc = GetCachedLocation(FindShaderIndex(current_program), name);
-
-    if (loc < 0)
-    {
-        return;
-    }
-
-    glad_glUniform4fv(loc, 1, vector);
+    MikuPan_GPUSetVec4(name, vector);
 }
 
 void MikuPan_SetUniform1iToAllShaders(int value, char *name)
 {
-    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
-    {
-        GLint loc = GetCachedLocation(i, name);
-
-        if (loc < 0)
-        {
-            continue;
-        }
-
-        MikuPan_BindShaderProgramIndex(i);
-        glad_glUniform1i(loc, value);
-    }
+    MikuPan_GPUSetInt(name, value);
 }
 
 void MikuPan_SetUniform1iToCurrentShader(int value, char *name)
 {
-    GLint loc = GetCachedLocation(FindShaderIndex(current_program), name);
-    if (loc < 0)
-    {
-        return;
-    }
-
-    glad_glUniform1i(loc, value);
+    MikuPan_GPUSetInt(name, value);
 }
 
 void MikuPan_SetUniform1fToAllShaders(float value, char *name)
 {
-    for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
-    {
-        GLint loc = GetCachedLocation(i, name);
-        if (loc < 0)
-        {
-            continue;
-        }
-
-        MikuPan_BindShaderProgramIndex(i);
-        glad_glUniform1f(loc, value);
-    }
+    MikuPan_GPUSetFloat(name, value);
 }
 
 void MikuPan_SetUniform1fToCurrentShader(float value, char *name)
 {
-    GLint loc = GetCachedLocation(FindShaderIndex(current_program), name);
-    if (loc < 0)
-    {
-        return;
-    }
-
-    glad_glUniform1f(loc, value);
+    MikuPan_GPUSetFloat(name, value);
 }
 
 void MikuPan_SetUniform2fToCurrentShader(float x, float y, char *name)
 {
-    GLint loc = GetCachedLocation(FindShaderIndex(current_program), name);
-    if (loc < 0)
-    {
-        return;
-    }
-
-    glad_glUniform2f(loc, x, y);
+    MikuPan_GPUSetVec2(name, x, y);
 }
 
 void MikuPan_ResetShaderCache(void)
@@ -623,4 +492,22 @@ void MikuPan_ResetShaderCache(void)
 unsigned int MikuPan_GetShaderGeneration(void)
 {
     return g_shader_generation;
+}
+
+SDL_GPUShader *MikuPan_GetGPUVertexShader(int idx)
+{
+    if (idx < 0 || idx >= MAX_SHADER_PROGRAMS)
+    {
+        return NULL;
+    }
+    return g_vertex_shaders[idx];
+}
+
+SDL_GPUShader *MikuPan_GetGPUFragmentShader(int idx)
+{
+    if (idx < 0 || idx >= MAX_SHADER_PROGRAMS)
+    {
+        return NULL;
+    }
+    return g_fragment_shaders[idx];
 }

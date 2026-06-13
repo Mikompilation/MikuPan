@@ -1,7 +1,11 @@
 #ifndef TYPEDEFS_H 
 #define TYPEDEFS_H
 
+#ifdef _WIN32
 #define __u_char_defined
+#else
+#include <sys/types.h>
+#endif
 #include <stdint.h>
 
 #ifdef _MSC_VER
@@ -23,9 +27,7 @@ typedef unsigned int u_long128 __attribute__ ((mode (TI)));
 typedef int (*sceSdTransIntrHandler)(int, void *);
 typedef int (*sceSdSpu2IntrHandler)(int, void *);
 
-#ifdef __APPLE__
-#include <sys/types.h>
-#else
+#ifdef _WIN32
 typedef unsigned long long u_long;
 typedef unsigned short u_short;
 typedef unsigned char u_char;

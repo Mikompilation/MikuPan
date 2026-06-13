@@ -1,6 +1,7 @@
 #include "mikupan_meshcache.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_profiler.h"
+#include "mikupan_gpu.h"
 
 #include <glad/gl.h>
 #include <stdint.h>
@@ -9,9 +10,33 @@
 
 #define MIKUPAN_MESHCACHE_BUCKETS 1024
 
+/// GPU-memory budget for cached mesh buffers. When exceeded, the least-recently
+/// used entries are evicted. This bounds the cache regardless of whether stale
+/// entries (PS2 memory overwritten/freed without a clean invalidation) are ever
+/// explicitly dropped — they fall to the bottom of the LRU and get reclaimed.
+#define MIKUPAN_MESHCACHE_BUDGET_BYTES (320ull * 1024 * 1024)
+
+/// Mesh buffers are created small and grown to the actual upload size (most PS2
+/// meshes are far under the old fixed 4 MiB), so the budget tracks real usage.
+#define MIKUPAN_MESHCACHE_BUF_INITIAL (4 * 1024)
+
 static MikuPan_MeshCacheEntry *g_buckets[MIKUPAN_MESHCACHE_BUCKETS] = {0};
 static int g_initialised = 0;
 static int g_enabled = 1;
+static unsigned long long g_cache_tick = 0;
+static unsigned long long g_cache_bytes = 0;
+
+/// Record a buffer (slot 0..3 = vbo, 4 = ibo) growing to `size`, updating the
+/// global byte total. MikuPan_GPUUploadBuffer only ever grows a buffer, so the
+/// tracked size mirrors the real GPU allocation.
+static void account_buffer(MikuPan_MeshCacheEntry *e, int slot, long size)
+{
+    if (size > e->buf_bytes[slot])
+    {
+        g_cache_bytes += (unsigned long long)(size - e->buf_bytes[slot]);
+        e->buf_bytes[slot] = size;
+    }
+}
 
 static inline unsigned int hash_ptr(const void *p)
 {
@@ -31,13 +56,52 @@ void MikuPan_MeshCache_Init(void)
 
 static void destroy_entry(MikuPan_MeshCacheEntry *e)
 {
-    if (e->vao) glad_glDeleteVertexArrays(1, &e->vao);
-    if (e->ibo) glad_glDeleteBuffers(1, &e->ibo);
+    for (int i = 0; i < 5; i++)
+    {
+        g_cache_bytes -= (unsigned long long)e->buf_bytes[i];
+    }
+    if (e->vao) MikuPan_GPUReleaseVertexArray(e->vao);
+    if (e->ibo) MikuPan_GPUReleaseBuffer(e->ibo);
     for (int i = 0; i < e->num_vbos; i++)
     {
-        if (e->vbo[i]) glad_glDeleteBuffers(1, &e->vbo[i]);
+        if (e->vbo[i]) MikuPan_GPUReleaseBuffer(e->vbo[i]);
     }
     free(e);
+}
+
+/// Evict least-recently-used entries until the cache is back under budget. The
+/// just-inserted / just-hit entries carry the highest ticks, so they are never
+/// the eviction target — only genuinely cold entries are dropped.
+static void evict_to_budget(void)
+{
+    while (g_cache_bytes > MIKUPAN_MESHCACHE_BUDGET_BYTES)
+    {
+        MikuPan_MeshCacheEntry **victim_link = NULL;
+        unsigned long long oldest = (unsigned long long)-1;
+        for (int b = 0; b < MIKUPAN_MESHCACHE_BUCKETS; b++)
+        {
+            for (MikuPan_MeshCacheEntry **link = &g_buckets[b];
+                 *link != NULL; link = &(*link)->next)
+            {
+                /// Never evict the entry the caller is mid-render on — it holds
+                /// the newest tick (set by the lookup/insert that returned it),
+                /// and these eviction passes run from inside its own uploads.
+                if ((*link)->last_used != g_cache_tick &&
+                    (*link)->last_used < oldest)
+                {
+                    oldest = (*link)->last_used;
+                    victim_link = link;
+                }
+            }
+        }
+        if (victim_link == NULL)
+        {
+            break; /* nothing evictable left (only the in-use entry remains) */
+        }
+        MikuPan_MeshCacheEntry *victim = *victim_link;
+        *victim_link = victim->next;
+        destroy_entry(victim);
+    }
 }
 
 void MikuPan_MeshCache_Shutdown(void)
@@ -52,7 +116,11 @@ MikuPan_MeshCacheEntry *MikuPan_MeshCache_Lookup(void *pPUHead, int kind)
     unsigned int h = hash_ptr(pPUHead);
     for (MikuPan_MeshCacheEntry *e = g_buckets[h]; e != NULL; e = e->next)
     {
-        if (e->pPUHead == pPUHead && e->kind == kind) return e;
+        if (e->pPUHead == pPUHead && e->kind == kind)
+        {
+            e->last_used = ++g_cache_tick; /* keep hot entries out of the LRU */
+            return e;
+        }
     }
     return NULL;
 }
@@ -94,33 +162,25 @@ MikuPan_MeshCacheEntry *MikuPan_MeshCache_Insert(
     e->pipeline_type = pipeline_type;
     e->num_vbos      = (p->num_buffers > 4) ? 4 : (int)p->num_buffers;
 
-    glad_glGenVertexArrays(1, &e->vao);
-    glad_glBindVertexArray(e->vao);
-
-    /// Mirror the template pipeline's attribute layout, but redirect every
-    /// glVertexAttribPointer call at our private VBOs instead of the shared
-    /// streaming buffers. Whatever VBO is bound at glVertexAttribPointer time
-    /// is what gets baked into the VAO.
+    /// Mirror the template pipeline's vertex-buffer layout with private GPU
+    /// buffers. Attribute metadata lives on the template pipeline and is read
+    /// by the SDL_GPU pipeline creator. Buffers start small and grow to the
+    /// actual upload size (MikuPan_GPUUploadBuffer grows on demand), so a small
+    /// mesh doesn't pin the old fixed 4 MiB per buffer.
     for (int b = 0; b < e->num_vbos; b++)
     {
-        glad_glGenBuffers(1, &e->vbo[b]);
-        glad_glBindBuffer(GL_ARRAY_BUFFER, e->vbo[b]);
-
-        MikuPan_BufferObjectInfo *bi = &p->buffers[b];
-        for (unsigned int a = 0; a < bi->num_attributes; a++)
-        {
-            MikuPan_AttributeInfo *ai = &bi->attributes[a];
-            glad_glEnableVertexAttribArray(ai->index);
-            glad_glVertexAttribPointer(
-                ai->index, ai->size, GL_FLOAT, GL_FALSE,
-                ai->stride, (void *)(uintptr_t)ai->offset);
-        }
+        e->vbo[b] = MikuPan_GPUCreateBuffer(
+            MIKUPAN_MESHCACHE_BUF_INITIAL, MIKUPAN_GPU_BUFFER_VERTEX);
+        account_buffer(e, b, MIKUPAN_MESHCACHE_BUF_INITIAL);
     }
 
-    glad_glGenBuffers(1, &e->ibo);
-    glad_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, e->ibo);
+    e->ibo = MikuPan_GPUCreateBuffer(
+        MIKUPAN_MESHCACHE_BUF_INITIAL, MIKUPAN_GPU_BUFFER_INDEX);
+    account_buffer(e, 4, MIKUPAN_MESHCACHE_BUF_INITIAL);
+    e->vao = MikuPan_GPURegisterVertexArray(
+        pipeline_type, (unsigned int)e->num_vbos, e->vbo, e->ibo);
 
-    glad_glBindVertexArray(0);
+    e->last_used = ++g_cache_tick;
 
     /// The cached bind shadows in mikupan_pipeline.c are now stale — anything
     /// the caller does next will go through MikuPan_BindVAO / BindBufferCached
@@ -131,6 +191,8 @@ MikuPan_MeshCacheEntry *MikuPan_MeshCache_Insert(
     e->next = g_buckets[h];
     g_buckets[h] = e;
 
+    evict_to_budget();
+
     return e;
 }
 
@@ -138,8 +200,9 @@ void MikuPan_MeshCache_UploadVbo(MikuPan_MeshCacheEntry *entry,
                                  int idx, long size, const void *data)
 {
     if (entry == NULL || idx < 0 || idx >= entry->num_vbos || size <= 0) return;
-    glad_glBindBuffer(GL_ARRAY_BUFFER, entry->vbo[idx]);
-    glad_glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)size, data, GL_STATIC_DRAW);
+    MikuPan_GPUUploadBuffer(entry->vbo[idx], (unsigned int)size, data);
+    account_buffer(entry, idx, size);
+    evict_to_budget();
     MikuPan_ResetGLBindCache();
 }
 
@@ -147,10 +210,24 @@ void MikuPan_MeshCache_UploadIbo(MikuPan_MeshCacheEntry *entry,
                                  long size, const void *data)
 {
     if (entry == NULL || size <= 0) return;
-    glad_glBindVertexArray(entry->vao);
-    glad_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entry->ibo);
-    glad_glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)size, data, GL_STATIC_DRAW);
+    MikuPan_GPUUploadBuffer(entry->ibo, (unsigned int)size, data);
+    account_buffer(entry, 4, size);
+    evict_to_budget();
     MikuPan_ResetGLBindCache();
+}
+
+static unsigned long long meshcache_hash(const void *data, long size)
+{
+    /// FNV-1a over the raw bytes. Cheap (memory-bandwidth bound) relative to the
+    /// GPU upload + render-pass teardown it lets us skip.
+    const unsigned char *p = (const unsigned char *)data;
+    unsigned long long h = 1469598103934665603ULL;
+    for (long i = 0; i < size; i++)
+    {
+        h ^= (unsigned long long)p[i];
+        h *= 1099511628211ULL;
+    }
+    return h;
 }
 
 void MikuPan_MeshCache_StreamVbo(MikuPan_MeshCacheEntry *entry,
@@ -158,24 +235,25 @@ void MikuPan_MeshCache_StreamVbo(MikuPan_MeshCacheEntry *entry,
 {
     if (entry == NULL || idx < 0 || idx >= entry->num_vbos || size <= 0) return;
 
-    glad_glBindBuffer(GL_ARRAY_BUFFER, entry->vbo[idx]);
-
-    void *ptr = glad_glMapBufferRange(GL_ARRAY_BUFFER, 0, (GLsizeiptr)size,
-        GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-
-    if (ptr != NULL)
+    /// Skip the upload when this VBO already holds identical bytes. Under the
+    /// SDL_GPU backend MikuPan_GPUUploadBuffer ends the active render pass (copy
+    /// passes cannot run inside one), so an unconditional per-mesh stream tore
+    /// the scene pass down and rebuilt it for every cached mesh. Skipping the
+    /// no-op uploads keeps all unchanged geometry inside a single render pass.
+    unsigned long long h = meshcache_hash(data, size);
+    if (entry->stream_valid[idx] &&
+        entry->stream_size[idx] == size &&
+        entry->stream_hash[idx] == h)
     {
-        memcpy(ptr, data, (size_t)size);
-        glad_glUnmapBuffer(GL_ARRAY_BUFFER);
-    }
-    else
-    {
-        /// First-call path: the VBO was created with no data store, so
-        /// glMapBufferRange has nothing to map. glBufferData allocates AND
-        /// uploads, then future frames hit the map path.
-        glad_glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)size, data, GL_DYNAMIC_DRAW);
+        return;
     }
 
+    MikuPan_GPUUploadBuffer(entry->vbo[idx], (unsigned int)size, data);
+    account_buffer(entry, idx, size);
+    entry->stream_hash[idx]  = h;
+    entry->stream_size[idx]  = size;
+    entry->stream_valid[idx] = 1;
+    evict_to_budget();
     MikuPan_ResetGLBindCache();
 }
 

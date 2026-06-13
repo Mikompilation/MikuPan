@@ -1484,7 +1484,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen, sceVu0FMATRIX *local_
         case 11:
         case 12:
         case 13:
-            LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x1a40);
+            EffectSubMarkLiveFramebufferCopy(0x1a40);
         break;
         }
     }

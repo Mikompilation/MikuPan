@@ -52,6 +52,10 @@ typedef struct {
 int sceCdInit(int init_mode);
 int sceCdMmode(int media);
 int sceCdReadClock(sceCdCLOCK *rtc);
+int sceCdRead(u_int lsn, u_int sectors, void *buf, sceCdRMode *mode);
+int sceCdSync(int mode);
+int sceCdBreak(void);
+int sceCdGetError(void);
 int sceCdStRead(u_int size, u_int *buf, u_int mode, u_int *err);
 int sceCdStStop();
 

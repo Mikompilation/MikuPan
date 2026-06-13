@@ -37,10 +37,10 @@ else()
             GIT_TAG n8.1
     )
 
-    FetchContent_GetProperties(ffmpeg)
-    if(NOT ffmpeg_POPULATED)
-        FetchContent_Populate(ffmpeg)
-    endif()
+    # FFmpeg ships no CMakeLists.txt, so MakeAvailable just populates the
+    # sources (no add_subdirectory) and sets ffmpeg_SOURCE_DIR. CMP0169-compliant
+    # replacement for the deprecated bare FetchContent_Populate().
+    FetchContent_MakeAvailable(ffmpeg)
 
     find_program(BASH_EXECUTABLE bash REQUIRED)
     find_program(MAKE_EXECUTABLE make REQUIRED)

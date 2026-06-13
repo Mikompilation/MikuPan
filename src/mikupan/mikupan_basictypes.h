@@ -41,7 +41,7 @@ typedef struct
 
 typedef struct
 {
-    /// Size in glad_glVertexAttribPointer
+    /// Number of components in the vertex attribute.
     int size;
     u_int index;
     int stride;
@@ -51,7 +51,7 @@ typedef struct
 typedef struct
 {
     u_int id;
-    /// Size in glad_glBufferData
+    /// Size of the buffer allocation in bytes.
     int buffer_length;
     u_int num_attributes;
     MikuPan_AttributeInfo* attributes;
@@ -83,6 +83,11 @@ typedef struct
     int shadow_resolution;
     float brightness;
     float gamma;
+    /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
+     * Empty = let SDL pick. The device is created once, so a change only
+     * applies on the next launch. */
+    char gpu_driver[32];
+    int gpu_debug;
 } MikuPan_ConfigRenderer;
 
 /* Apply a window display mode to the SDL window.
@@ -180,6 +185,13 @@ enum MikuPan_PipelineType
 
     /// MESH 0x2 SHADER
     POSITION4_NORMAL4_UV2,
+
+    /// GPU-SKINNED MESH 0x2 / 0xA. Static bind-pose data uploaded once:
+    /// buffer0 holds four float4 per vertex (bone-0 pos+weight, bone-1
+    /// pos+packed bone indices, bone-0 normal+normal-weight, bone-1 normal);
+    /// buffer1 holds the float2 UV. The bone-matrix palette arrives separately
+    /// in a vertex storage buffer.
+    SKIN_POSITION4X2_NORMAL4X2_UV2,
 
     /// SPRITE
     UV4_COLOUR4_POSITION4,
