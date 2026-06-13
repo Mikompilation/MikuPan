@@ -165,22 +165,7 @@ void sceSdSetSwitch(u_short entry, u_int value)
         return;
     }
 
-    for (int voice = 0; voice < 24; voice++) {
-        if ((value & (1u << voice)) == 0) {
-            continue;
-        }
-
-        int voice_index = core * 24 + voice;
-        if (voice_index >= VOICE_NUM) {
-            continue;
-        }
-
-        if (reg == SD_S_KON) {
-            Key_On(voice_index);
-        } else {
-            Key_Off(voice_index);
-        }
-    }
+    VoiceSetKeySwitch(core, value, reg == SD_S_KON);
 }
 
 u_int sceSdGetSwitch(u_short entry)

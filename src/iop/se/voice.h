@@ -57,6 +57,7 @@ void FillAdpcmHeader(int vNo);
 void Key_On(int vNo);
 void Key_Off(int vNo);
 void VoiceRun();
+void VoiceSetKeySwitch(int core, u_int value, int key_on);
 
 
 static inline void SetPitch(int vNo, u_short val)

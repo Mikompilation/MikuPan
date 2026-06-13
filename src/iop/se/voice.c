@@ -4,6 +4,7 @@
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "sce/libsd.h"
+#include <SDL3/SDL_mutex.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +12,7 @@
 bool loopEnd;
 bool loopRepeat;
 VOICE voices[VOICE_NUM];
+static SDL_Mutex *voice_mutex;
 
 #define VOICE_BUFFER_BYTES (0x15160 * 10)
 #define VOICE_BUFFER_SAMPLES (VOICE_BUFFER_BYTES / (int)sizeof(s16))
@@ -25,8 +27,33 @@ VOICE voices[VOICE_NUM];
    per call, so the streamer's IRQ -> upload -> re-arm handshake stays ordered. */
 #define VOICE_MAX_BLOCKS_PER_FILL 128
 
+static void LockVoices(void)
+{
+    if (voice_mutex != NULL)
+    {
+        SDL_LockMutex(voice_mutex);
+    }
+}
+
+static void UnlockVoices(void)
+{
+    if (voice_mutex != NULL)
+    {
+        SDL_UnlockMutex(voice_mutex);
+    }
+}
+
 void VoicesInit()
 {
+    if (voice_mutex == NULL)
+    {
+        voice_mutex = SDL_CreateMutex();
+        if (voice_mutex == NULL)
+        {
+            info_log("Failed to create voice mutex: %s", SDL_GetError());
+        }
+    }
+
     // SPU2 has 24 voices per core.
     for (int i = 0; i < VOICE_NUM; i++)
     {
@@ -235,6 +262,7 @@ static void SaveDebugBuffer()
 
 void VoiceRun()
 {
+    LockVoices();
     for (int i = 0; i < VOICE_NUM; i++)
     {
         if (voices[i].isPlaying)
@@ -242,9 +270,10 @@ void VoiceRun()
             FillStereo(i);
         }
     }
+    UnlockVoices();
 }
 
-void Key_On(int vNo)
+static void KeyOnUnlocked(int vNo)
 {
     if (vNo < 0 || vNo >= VOICE_NUM)
     {
@@ -279,7 +308,14 @@ void Key_On(int vNo)
     FillAdpcmHeader(vNo);
 }
 
-void Key_Off(int vNo)
+void Key_On(int vNo)
+{
+    LockVoices();
+    KeyOnUnlocked(vNo);
+    UnlockVoices();
+}
+
+static void KeyOffUnlocked(int vNo)
 {
     if (vNo < 0 || vNo >= VOICE_NUM)
     {
@@ -301,7 +337,42 @@ void Key_Off(int vNo)
     }
 }
 
-void CloseVoice(int vNo)
+void Key_Off(int vNo)
+{
+    LockVoices();
+    KeyOffUnlocked(vNo);
+    UnlockVoices();
+}
+
+void VoiceSetKeySwitch(int core, u_int value, int key_on)
+{
+    LockVoices();
+    for (int voice = 0; voice < 24; voice++)
+    {
+        if ((value & (1u << voice)) == 0)
+        {
+            continue;
+        }
+
+        int voice_index = core * 24 + voice;
+        if (voice_index >= VOICE_NUM)
+        {
+            continue;
+        }
+
+        if (key_on)
+        {
+            KeyOnUnlocked(voice_index);
+        }
+        else
+        {
+            KeyOffUnlocked(voice_index);
+        }
+    }
+    UnlockVoices();
+}
+
+static void CloseVoiceUnlocked(int vNo)
 {
     if (vNo < 0 || vNo >= VOICE_NUM)
     {
@@ -326,7 +397,14 @@ void CloseVoice(int vNo)
     }
 }
 
-void CloseVoices()
+void CloseVoice(int vNo)
+{
+    LockVoices();
+    CloseVoiceUnlocked(vNo);
+    UnlockVoices();
+}
+
+static void CloseVoicesUnlocked(void)
 {
     for (int i = 0; i < VOICE_NUM; i++)
     {
@@ -345,6 +423,13 @@ void CloseVoices()
         voices[i].buffer = NULL;
     }
     ClearAudioBuffer();
+}
+
+void CloseVoices()
+{
+    LockVoices();
+    CloseVoicesUnlocked();
+    UnlockVoices();
 }
 
 void FillAdpcmHeader(int vNo)

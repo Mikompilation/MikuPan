@@ -10,6 +10,7 @@
 #include "mc/mc_main.h"
 #include "mikupan/mikupan_memory.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -19,6 +20,25 @@
 
 #define KEYCODE "BA"
 #define PRODUCT_CODE "SLUS-20388"
+
+static u_char *mcResolveDataAddress(u_char *addr)
+{
+    uintptr_t raw_addr = (uintptr_t)addr;
+
+    // MC data tables mix normal C addresses with PS2 offsets cast to pointers.
+    if (MikuPan_IsPs2MemoryPointer((int64_t)raw_addr))
+    {
+        return addr;
+    }
+
+    if ((raw_addr & UINT64_C(0xffffffff00000000)) == 0
+        && MikuPan_IsPs2AddressMainMemoryRange((int)raw_addr))
+    {
+        return MikuPan_GetHostPointer((int)raw_addr);
+    }
+
+    return addr;
+}
 
 void mcSetPathDir(char file_no)
 {
@@ -595,12 +615,7 @@ void mcMakeSaveFile(u_int *work_addr, u_char file_id)
 
     for (i = 0; i < str_num; i++)
     {
-        addr1 = data_str[i].addr;
-
-        if (MikuPan_IsPs2MemoryPointer((int64_t)data_str[i].addr) || (0 == (0xFFFFFFFF00000000 & (int64_t)data_str[i].addr) && MikuPan_IsPs2AddressMainMemoryRange((int)data_str[i].addr)))
-        {
-            addr1 = MikuPan_GetHostPointer((int)data_str[i].addr);
-        }
+        addr1 = mcResolveDataAddress(data_str[i].addr);
 
         for (j = 0; j < data_str[i].size; j++)
         {
@@ -666,12 +681,7 @@ char mcSetLoadFile(u_int *work_addr, u_char file_id)
 
     for (i = 0; i < str_num; i++)
     {
-        addr1 = data_str[i].addr;
-
-        if (MikuPan_IsPs2MemoryPointer((int64_t)data_str[i].addr) || (0 == (0xFFFFFFFF00000000 & (int64_t)data_str[i].addr) && MikuPan_IsPs2AddressMainMemoryRange((int)data_str[i].addr)))
-        {
-            addr1 = MikuPan_GetHostPointer((int)data_str[i].addr);
-        }
+        addr1 = mcResolveDataAddress(data_str[i].addr);
 
         for (j = 0; j < data_str[i].size; j++)
         {

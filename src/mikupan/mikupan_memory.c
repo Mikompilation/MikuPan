@@ -2,10 +2,13 @@
 
 #include "mikupan_logging_c.h"
 
+#include <stdint.h>
 #include <string.h>
 
+#define PS2_VIRTUAL_RAM_SIZE (1024 * 1024 * 32)
+
 /// Allocate double the amount of PS2 RAM to avoid overflow issues
-unsigned char ps2_virtual_ram[1024 * 1024 * 32];
+unsigned char ps2_virtual_ram[PS2_VIRTUAL_RAM_SIZE];
 
 /// 16kb of scratchpad memory
 unsigned char ps2_virtual_scratchpad[1024*16];
@@ -18,15 +21,13 @@ int64_t MikuPan_GetHostAddress(int offset)
     }
 
     offset = MikuPan_SanitizePs2Address(offset);
-    int64_t ptr = (int64_t) (ps2_virtual_ram + offset);
-
-    if (!MikuPan_IsPs2MemoryPointer((int64_t) ptr))
+    if (!MikuPan_IsPs2AddressMainMemoryRange(offset))
     {
         info_log("0x%x pointer was requested but falls outside the range", offset);
         return -1;
     }
 
-    return ptr;
+    return (int64_t)(uintptr_t)(ps2_virtual_ram + offset);
 }
 
 void *MikuPan_GetHostPointer(int offset)
@@ -41,8 +42,11 @@ void MikuPan_InitPs2Memory()
 
 int MikuPan_IsPs2MemoryPointer(int64_t address)
 {
-    return (address >= (int64_t) ps2_virtual_ram
-            && address < (int64_t) (ps2_virtual_ram + sizeof(ps2_virtual_ram)));
+    uintptr_t ptr = (uintptr_t)address;
+    uintptr_t ps2_ram_start = (uintptr_t)ps2_virtual_ram;
+    uintptr_t ps2_ram_end = ps2_ram_start + sizeof(ps2_virtual_ram);
+
+    return (ptr >= ps2_ram_start && ptr < ps2_ram_end);
 }
 
 /**
@@ -61,7 +65,7 @@ int MikuPan_SanitizePs2Address(int address)
 int MikuPan_IsPs2AddressMainMemoryRange(int address)
 {
     address = MikuPan_SanitizePs2Address(address);
-    return (address >= 0x00000000 && address < (1024 * 1024 * 32));
+    return (address >= 0x00000000 && address < PS2_VIRTUAL_RAM_SIZE);
 }
 
 int MikuPan_GetPs2OffsetFromHostPointer(void *ptr)
@@ -72,5 +76,5 @@ int MikuPan_GetPs2OffsetFromHostPointer(void *ptr)
     }
 
     /// Conversion to int is safe because it is within the PS2 RAM size
-    return (int)((int64_t)ptr - (int64_t)ps2_virtual_ram);
+    return (int)((uintptr_t)ptr - (uintptr_t)ps2_virtual_ram);
 }

@@ -114,12 +114,16 @@ int LoadReqSe(int file_no, u_char se_type)
 int64_t LoadReqNSector(int file_no, int sector, int size, int64_t addr)
 {
     int ret;
+    uint64_t raw_addr;
     
     ret = GetFreeId();
+    raw_addr = (uint64_t)addr;
 
-    if (!MikuPan_IsPs2MemoryPointer(addr))
+    if (!MikuPan_IsPs2MemoryPointer(addr)
+        && (raw_addr & UINT64_C(0xffffffff00000000)) == 0
+        && MikuPan_IsPs2AddressMainMemoryRange((int)raw_addr))
     {
-        addr = MikuPan_GetHostAddress((int)addr);
+        addr = MikuPan_GetHostAddress((int)raw_addr);
     }
     
     if (ret != -1)
