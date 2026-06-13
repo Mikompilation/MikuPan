@@ -1012,11 +1012,11 @@ char mcCtrlMakeDir()
     case 4:
         if (mc_ctrl.mode == MC_MODE_GAMESAVE || mc_ctrl.mode == MC_MODE_GAMELOAD || mc_ctrl.mode == MC_MODE_STARTCHECK)
         {
-            load_id = LoadReq(mc_iconFile[loop], (uint64_t)mc_ctrl.work_addr);
+            load_id = LoadReqToHostPointer(mc_iconFile[loop], mc_ctrl.work_addr);
         }
         else
         {
-            load_id = LoadReq(mc_iconFileAlbum[loop], (uint64_t)mc_ctrl.work_addr);
+            load_id = LoadReqToHostPointer(mc_iconFileAlbum[loop], mc_ctrl.work_addr);
         }
 
         mc_ctrl.sub_step = 5;

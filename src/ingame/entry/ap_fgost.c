@@ -404,7 +404,8 @@ void GetFloatGhostModelLoadAfter()
 void GetFloatGhostMotionLoad()
 {
     LoadEneDmgTex(fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].mdl_no, (u_int *)MikuPan_GetHostAddress(ENEMY_DMG_TEX_ADDR));
-    LoadReq(fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].anm_no + M000_MIKU_ANM, MikuPan_GetHostAddress(ENEMY_ANM_ADDR));
+    LoadReqToHostPointer(fene_dat[ingame_wrk.msn_no][fg_load_wrk.load_no].anm_no + M000_MIKU_ANM,
+                         MikuPan_GetHostPointer(ENEMY_ANM_ADDR));
 }
 
 void GetFloatGhostMotionLoadAfter()

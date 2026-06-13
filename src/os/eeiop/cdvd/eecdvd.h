@@ -12,10 +12,12 @@ typedef struct {
 
 void CdvdInit();
 void CdvdInitSoftReset();
-int LoadReq(int file_no, uint64_t addr);
-int64_t LoadReqGetAddr(int file_no, uint64_t addr, int *id);
+int LoadReq(int file_no, uint64_t ps2_addr);
+int LoadReqToHostPointer(int file_no, void *host_addr);
+int64_t LoadReqGetHostPointerEnd(int file_no, void *host_addr, int *id);
 int LoadReqSe(int file_no, u_char se_type);
-int64_t LoadReqNSector(int file_no, int sector, int size, int64_t addr);
+int64_t LoadReqNSector(int file_no, int sector, int size, int64_t ps2_addr);
+int64_t LoadReqNSectorToHostPointer(int file_no, int sector, int size, void *host_addr);
 int LoadReqNFno(int file_no, int64_t addr);
 int LoadReqBFno(int file_no, int64_t addr);
 u_int LoadReqBFnoGetAddr(int file_no, int64_t addr);

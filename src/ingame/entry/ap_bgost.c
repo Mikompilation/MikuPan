@@ -72,7 +72,8 @@ int BindGhostLoad(void)
             motReleaseAniMdlBuf(bgst_wrk.rel_mot, (u_int *)bgst_wrk.mot_adr);
         }
 
-        LoadReq((jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].mdl_no + M000_MIKU_MDL), bgst_wrk.mdl_adr);
+        LoadReqToHostPointer(jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].mdl_no + M000_MIKU_MDL,
+                             (void *)bgst_wrk.mdl_adr);
 
         bgst_wrk.load_mode = BGLOAD_MODE_MDL;
     break;
@@ -82,7 +83,8 @@ int BindGhostLoad(void)
             motInitEnemyMdl((u_int *)bgst_wrk.mdl_adr, jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].mdl_no);
             LoadEneDmgTex(jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].mdl_no, (u_int *)(bgst_wrk.mot_adr + ENE_DMG_TEX_BASE_ADDRESS));
 
-            LoadReq((jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].anm_no + M000_MIKU_ANM), bgst_wrk.mot_adr);
+            LoadReqToHostPointer(jene_dat[ingame_wrk.msn_no][bgst_wrk.bg_no].anm_no + M000_MIKU_ANM,
+                                 (void *)bgst_wrk.mot_adr);
 
             bgst_wrk.load_mode = BGLOAD_MODE_MOT;
         }

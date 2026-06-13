@@ -4185,7 +4185,7 @@ void LoadEneDmgTex(int no, u_int *addr)
         return;
     }
 
-    LoadReq(texno, (uint64_t)addr);
+    LoadReqToHostPointer(texno, addr);
 
     for (i = 0; i < 10; i++)
     {

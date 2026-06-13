@@ -710,7 +710,8 @@ char MsnInitPlyr()
 
         break;
     case 6:
-        init_load_id = LoadReq(plyr_file_id[pk2_id].acs, init_load_adr);
+        init_load_id = LoadReqToHostPointer(plyr_file_id[pk2_id].acs,
+                                            (void *)(uintptr_t)init_load_adr);
         plyr_init_ctrl.step = 7;
         break;
     case 7:
@@ -722,7 +723,8 @@ char MsnInitPlyr()
 
         break;
     case 8:
-        init_load_id = LoadReq(plyr_file_id[pk2_id].bwc, init_load_adr);
+        init_load_id = LoadReqToHostPointer(plyr_file_id[pk2_id].bwc,
+                                            (void *)(uintptr_t)init_load_adr);
         plyr_init_ctrl.step = 9;
         break;
     case 9:
@@ -736,7 +738,8 @@ char MsnInitPlyr()
         plyr_init_ctrl.step = 10;
         break;
     case 10:
-        init_load_id = LoadReq(plyr_file_id[pk2_id].clt, init_load_adr);
+        init_load_id = LoadReqToHostPointer(plyr_file_id[pk2_id].clt,
+                                            (void *)(uintptr_t)init_load_adr);
         plyr_init_ctrl.step = 11;
         break;
     case 11:

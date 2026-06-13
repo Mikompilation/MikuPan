@@ -142,16 +142,16 @@ u_int *SceneDataLoadReq(int scene_no, u_int *load_addr)
     sc->scene_no = scene_no;
     sc->chapter_no = SceneGetChapterNo(scene_no);
 
-    next_addr = LoadReqGetAddr(scn_file_no, (uint64_t)scn_addr,
-                               &scn_load_id[scn_load_num]);
+    next_addr = LoadReqGetHostPointerEnd(scn_file_no, scn_addr,
+                                         &scn_load_id[scn_load_num]);
 
     sc->scn_data_addr = scn_addr;
     sc->light_rev_addr = scn_addr = (u_int *) next_addr;
 
     scn_load_num++;
 
-    next_addr = LoadReqGetAddr(scn_file_no + 1, (uint64_t)scn_addr,
-                               &scn_load_id[scn_load_num]);
+    next_addr = LoadReqGetHostPointerEnd(scn_file_no + 1, scn_addr,
+                                         &scn_load_id[scn_load_num]);
 
     if (next_addr == 0)
     {

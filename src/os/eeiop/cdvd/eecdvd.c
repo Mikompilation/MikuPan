@@ -66,7 +66,7 @@ static void CdvdInitResetIop()
     SetIopCmdSm(IC_CDVD_INIT, 1, 0, 0);
 }
 
-int LoadReq(int file_no, uint64_t addr)
+int LoadReq(int file_no, uint64_t ps2_addr)
 {
     IMG_ARRANGEMENT *img_arng;
     
@@ -74,17 +74,30 @@ int LoadReq(int file_no, uint64_t addr)
    
     img_arng = GetImgArrangementP(file_no);
 
-    return LoadReqNSector(file_no, img_arng->start, img_arng->size, addr);
+    return LoadReqNSector(file_no, img_arng->start, img_arng->size, ps2_addr);
 }
 
-int64_t LoadReqGetAddr(int file_no, uint64_t addr, int *id)
+int LoadReqToHostPointer(int file_no, void *host_addr)
+{
+    IMG_ARRANGEMENT *img_arng;
+
+    info_log("File No: %d", file_no);
+
+    img_arng = GetImgArrangementP(file_no);
+
+    return (int)LoadReqNSectorToHostPointer(file_no, img_arng->start,
+                                            img_arng->size, host_addr);
+}
+
+int64_t LoadReqGetHostPointerEnd(int file_no, void *host_addr, int *id)
 {
     IMG_ARRANGEMENT *img_arng;
     int64_t ret;
 
     img_arng = GetImgArrangementP(file_no);
-    *id = LoadReqNSector(file_no, img_arng->start, img_arng->size, addr);
-    ret = addr + img_arng->size;
+    *id = (int)LoadReqNSectorToHostPointer(file_no, img_arng->start,
+                                           img_arng->size, host_addr);
+    ret = (int64_t)(uintptr_t)host_addr + img_arng->size;
     
     if (ret % 16)
     {
@@ -111,24 +124,32 @@ int LoadReqSe(int file_no, u_char se_type)
     return ret;
 }
 
-int64_t LoadReqNSector(int file_no, int sector, int size, int64_t addr)
+int64_t LoadReqNSector(int file_no, int sector, int size, int64_t ps2_addr)
+{
+    int64_t resolved_host_addr;
+
+    if (!MikuPan_TryGetHostAddressFromPs2Address((uint64_t)ps2_addr,
+                                                 &resolved_host_addr))
+    {
+        info_log("0x%llx PS2 address was requested but falls outside the range",
+                 (unsigned long long)ps2_addr);
+        return -1;
+    }
+
+    return LoadReqNSectorToHostPointer(file_no, sector, size,
+                                       (void *)(uintptr_t)resolved_host_addr);
+}
+
+int64_t LoadReqNSectorToHostPointer(int file_no, int sector, int size, void *host_addr)
 {
     int ret;
-    uint64_t raw_addr;
-    
-    ret = GetFreeId();
-    raw_addr = (uint64_t)addr;
 
-    if (!MikuPan_IsPs2MemoryPointer(addr)
-        && (raw_addr & UINT64_C(0xffffffff00000000)) == 0
-        && MikuPan_IsPs2AddressMainMemoryRange((int)raw_addr))
-    {
-        addr = MikuPan_GetHostAddress((int)raw_addr);
-    }
-    
+    ret = GetFreeId();
+
     if (ret != -1)
     {
-        SetIopCmdLg(IC_CDVD_LOAD_SECT, file_no, sector, size, addr, 0, ret, 0);
+        SetIopCmdLg(IC_CDVD_LOAD_SECT, file_no, sector, size,
+                    (int64_t)(uintptr_t)host_addr, 0, ret, 0);
     }
     
     return ret;

@@ -12,6 +12,8 @@ void MikuPan_InitPs2Memory();
 int MikuPan_IsPs2MemoryPointer(int64_t address);
 int MikuPan_SanitizePs2Address(int address);
 int MikuPan_IsPs2AddressMainMemoryRange(int address);
+int MikuPan_IsPs2AddressMainMemoryRange64(uint64_t address);
+int MikuPan_TryGetHostAddressFromPs2Address(uint64_t address, int64_t *host_address);
 int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 
 #define BASE_ADDRESS                    0x007f0000

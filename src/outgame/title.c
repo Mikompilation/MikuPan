@@ -1090,9 +1090,12 @@ void TitleWaitMode()
     float message_y = PS2_RESOLUTION_Y_FLOAT - PS2_RESOLUTION_Y_FLOAT / 6;
     float message_x = PS2_RESOLUTION_X_FLOAT / 2 - 120;
 
-    SetASCIIString3(0x10, message_x, message_y, 0, ds.r, ds.g, ds.b, alp, (char *) "PRESS ");
-    SetASCIIString3(0x10, message_x + (4*24), message_y, 2, ds.r, ds.g, ds.b, alp, (char *) "\xD8");
-    SetASCIIString3(0x10, message_x + (5*24), message_y, 0, ds.r, ds.g, ds.b, alp, (char *) " TO LEAVE");
+    u_char r_message = 37;
+    u_char g_message = 23;
+    u_char b_message = 28;
+
+    SetASCIIString3(0x10, message_x, message_y, 0, r_message, g_message, b_message, alp, (char *) "PRESS   TO LEAVE");
+    SetASCIIString3(0x10, message_x + (7*12)+2, message_y, 2, r_message, g_message, b_message, alp, (char *) "\xD8");
 
     ttl_dsp.mode = 0;
 
@@ -2041,38 +2044,38 @@ void DispOutDither()
 
 int AlbmDesignLoad(u_char side, u_char type)
 {
-    /* a2 6 */ int64_t addr;
+    /* a2 6 */ void *addr;
     /* v0 2 */ int load_id;
 
     if (side == 0)
     {
-        addr = MikuPan_GetHostAddress(PL_FNDR_PK2_ADDRESS);
+        addr = MikuPan_GetHostPointer(PL_FNDR_PK2_ADDRESS);
     }
 
     else if (side == 1)
     {
-        addr = MikuPan_GetHostAddress(PL_ALBM_SIDE_1_ADDRESS);
+        addr = MikuPan_GetHostPointer(PL_ALBM_SIDE_1_ADDRESS);
     }
 
     switch(type)
     {
         case 0:
-            load_id = LoadReq(PL_ALBM_BW_PK2, addr);
+            load_id = LoadReqToHostPointer(PL_ALBM_BW_PK2, addr);
             break;
         case 1:
-            load_id = LoadReq(PL_ALBM_BP_PK2, addr);
+            load_id = LoadReqToHostPointer(PL_ALBM_BP_PK2, addr);
             break;
         case 2:
-            load_id = LoadReq(PL_ALBM_BR_PK2, addr);
+            load_id = LoadReqToHostPointer(PL_ALBM_BR_PK2, addr);
             break;
         case 3:
-            load_id = LoadReq(PL_ALBM_BG_PK2, addr);
+            load_id = LoadReqToHostPointer(PL_ALBM_BG_PK2, addr);
             break;
         case 4:
-            load_id = LoadReq(PL_ALBM_BB_PK2, addr);
+            load_id = LoadReqToHostPointer(PL_ALBM_BB_PK2, addr);
             break;
         case 5:
-            load_id = LoadReq(PL_ALBM_BO_PK2, addr);
+            load_id = LoadReqToHostPointer(PL_ALBM_BO_PK2, addr);
             break;
         default:
             load_id = -1;

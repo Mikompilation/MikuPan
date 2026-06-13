@@ -15,19 +15,16 @@ unsigned char ps2_virtual_scratchpad[1024*16];
 
 int64_t MikuPan_GetHostAddress(int offset)
 {
-    if (offset == 0)
-    {
-        return 0;
-    }
+    int64_t host_address;
 
-    offset = MikuPan_SanitizePs2Address(offset);
-    if (!MikuPan_IsPs2AddressMainMemoryRange(offset))
+    if (!MikuPan_TryGetHostAddressFromPs2Address((uint64_t)(uint32_t)offset,
+                                                 &host_address))
     {
-        info_log("0x%x pointer was requested but falls outside the range", offset);
+        info_log("0x%x PS2 address was requested but falls outside the range", offset);
         return -1;
     }
 
-    return (int64_t)(uintptr_t)(ps2_virtual_ram + offset);
+    return host_address;
 }
 
 void *MikuPan_GetHostPointer(int offset)
@@ -66,6 +63,42 @@ int MikuPan_IsPs2AddressMainMemoryRange(int address)
 {
     address = MikuPan_SanitizePs2Address(address);
     return (address >= 0x00000000 && address < PS2_VIRTUAL_RAM_SIZE);
+}
+
+int MikuPan_IsPs2AddressMainMemoryRange64(uint64_t address)
+{
+    if ((address & UINT64_C(0xffffffff00000000)) != 0)
+    {
+        return 0;
+    }
+
+    return MikuPan_IsPs2AddressMainMemoryRange((int)address);
+}
+
+int MikuPan_TryGetHostAddressFromPs2Address(uint64_t address, int64_t *host_address)
+{
+    int offset;
+
+    if (host_address == NULL)
+    {
+        return 0;
+    }
+
+    if (address == 0)
+    {
+        *host_address = 0;
+        return 1;
+    }
+
+    if (!MikuPan_IsPs2AddressMainMemoryRange64(address))
+    {
+        return 0;
+    }
+
+    offset = MikuPan_SanitizePs2Address((int)address);
+    *host_address = (int64_t)(uintptr_t)(ps2_virtual_ram + offset);
+
+    return 1;
 }
 
 int MikuPan_GetPs2OffsetFromHostPointer(void *ptr)

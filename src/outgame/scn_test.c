@@ -311,11 +311,13 @@ int SceneTestLoad()
         {
             if (scn_p->chapter_no < 0)
             {
-                load_id = LoadReq(MSN03MAP_OBJ, MikuPan_GetHostAddress(MSN_MAP_OBG_ADDRESS));
+                load_id = LoadReqToHostPointer(MSN03MAP_OBJ,
+                                               MikuPan_GetHostPointer(MSN_MAP_OBG_ADDRESS));
             }
             else
             {
-                load_id = LoadReq(scn_p->chapter_no + MSN00MAP_OBJ, MikuPan_GetHostAddress(MSN_MAP_OBG_ADDRESS));
+                load_id = LoadReqToHostPointer(scn_p->chapter_no + MSN00MAP_OBJ,
+                                               MikuPan_GetHostPointer(MSN_MAP_OBG_ADDRESS));
             }
 
             InitModelLoad();
@@ -410,7 +412,9 @@ void ScnTestMdlLoadReq(u_int *addr)
 
         if (sam->mdl_no != hero_no)
         {
-            next_addr = LoadReqGetAddr(sam->mdl_no + M000_MIKU_MDL, (uint64_t)addr, &scn_test_load_id[scn_test_load_num]);
+            next_addr = LoadReqGetHostPointerEnd(sam->mdl_no + M000_MIKU_MDL,
+                                                 addr,
+                                                 &scn_test_load_id[scn_test_load_num]);
 
             pmanmodel[sam->mdl_no] = addr;
             addr = (u_int *)next_addr;
@@ -424,7 +428,9 @@ void ScnTestMdlLoadReq(u_int *addr)
         sam = &scn_p->item_mdl[i];
 
         if (sam->mdl_no != 1) {
-            next_addr = LoadReqGetAddr(sam->mdl_no + I000_PLAY_CAMERA1_SGD, (uint64_t)addr, &scn_test_load_id[scn_test_load_num]);
+            next_addr = LoadReqGetHostPointerEnd(sam->mdl_no + I000_PLAY_CAMERA1_SGD,
+                                                 addr,
+                                                 &scn_test_load_id[scn_test_load_num]);
 
             item_addr_tbl[sam->mdl_no] = addr;
             addr = (u_int *)next_addr;

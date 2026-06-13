@@ -101,12 +101,16 @@ u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no,
     }
 
     // could be a macro?
-    next_addr = LoadReqGetAddr(file_no, next_addr, &room_load_id[room_load_num]);
+    next_addr = LoadReqGetHostPointerEnd(file_no,
+                                         (void *)(uintptr_t)next_addr,
+                                         &room_load_id[room_load_num]);
     room_addr_tbl[room_no].pk2 = addr;
     addr = (u_int *)next_addr;
     room_load_num++;
 
-    next_addr = LoadReqGetAddr(file_no + 1, next_addr, &room_load_id[room_load_num]);
+    next_addr = LoadReqGetHostPointerEnd(file_no + 1,
+                                         (void *)(uintptr_t)next_addr,
+                                         &room_load_id[room_load_num]);
     room_addr_tbl[room_no].lit_data = addr;
     addr = (u_int *)next_addr;
     room_load_num++;
@@ -116,7 +120,9 @@ u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no,
         if (LoadFDCheck(rlb->furn_id[i], 0) == 0)
         {
             /// Furniture Load Request
-            next_addr = LoadReqGetAddr(F000_CLOCK_L_SGD + rlb->furn_id[i], next_addr, &room_load_id[room_load_num]);
+            next_addr = LoadReqGetHostPointerEnd(F000_CLOCK_L_SGD + rlb->furn_id[i],
+                                                 (void *)(uintptr_t)next_addr,
+                                                 &room_load_id[room_load_num]);
             furn_addr_tbl[rlb->furn_id[i]] = addr;
             addr = (u_int *)next_addr;
             room_load_num++;
@@ -128,7 +134,9 @@ u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no,
         if (LoadFDCheck(rlb->door_id[i], 1) == 0)
         {
             /// Door Load Request
-            next_addr = LoadReqGetAddr(D000_GEN1_SGD + rlb->door_id[i], next_addr, &room_load_id[room_load_num]);
+            next_addr = LoadReqGetHostPointerEnd(D000_GEN1_SGD + rlb->door_id[i],
+                                                 (void *)(uintptr_t)next_addr,
+                                                 &room_load_id[room_load_num]);
             rlb->door_addr[i] = addr;
             addr = (u_int *)next_addr;
             room_load_num++;
@@ -138,7 +146,9 @@ u_int* RoomMdlLoadReq(u_int *addr, u_char blk_no, u_char msn_no, u_char room_no,
     if (mimchodo_tbl[rlb->room_no].dat != NULL)
     {
         /// Door Load Request
-        next_addr = LoadReqGetAddr(R000_GENKAN_MIM + rlb->room_no, next_addr, &room_load_id[room_load_num]);
+        next_addr = LoadReqGetHostPointerEnd(R000_GENKAN_MIM + rlb->room_no,
+                                             (void *)(uintptr_t)next_addr,
+                                             &room_load_id[room_load_num]);
         mimchodo_tbl[rlb->room_no].addr = addr;
         addr = (u_int *)next_addr;
         room_load_num++;
@@ -599,7 +609,8 @@ int LoadInitFurnModel(ROOM_LOAD_BLOCK *rlb)
 
         LoadFDCheck(furn_id, 0);
 
-        addr = LoadReqGetAddr(F000_CLOCK_L_SGD + furn_id, (uint64_t)rlb->load_addr, &load_id);
+        addr = LoadReqGetHostPointerEnd(F000_CLOCK_L_SGD + furn_id,
+                                        rlb->load_addr, &load_id);
 
         furn_addr_tbl[furn_id] = rlb->load_addr;
 
@@ -661,7 +672,8 @@ int LoadInitDoorModel(ROOM_LOAD_BLOCK *rlb)
 
         LoadFDCheck(door_id, 1);
 
-        addr = LoadReqGetAddr(D000_GEN1_SGD + door_id, (uint64_t)rlb->load_addr, &load_id);
+        addr = LoadReqGetHostPointerEnd(D000_GEN1_SGD + door_id,
+                                        rlb->load_addr, &load_id);
 
         door_addr_tbl[door_id] = rlb->load_addr;
 
