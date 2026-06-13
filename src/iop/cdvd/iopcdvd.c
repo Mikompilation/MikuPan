@@ -55,6 +55,7 @@ void ICdvdCmd(IOP_COMMAND* icp)
         ICdvdAddCmd(icp);
         break;
     case IC_CDVD_SE_TRANS:
+        ICdvdTransSe(icp);
         /* The EE->IOP staging DMA for the floating-ghost SE bank has no host
            transport (iop_stat.cdvd.ld_addr is reported as 0 because the IOP
            staging buffer is a 64-bit host pointer that does not fit the
@@ -679,11 +680,17 @@ static void ICdvdTransSe(IOP_COMMAND* icp)
 {
     u_int size;
     u_int addr;
+    u_char* src;
 
     size = icp->data1;
     addr = snd_buf_top[icp->data2];
+    src = (u_char*)(intptr_t)icp->data4;
+    if (src == NULL) {
+        src = (u_char*)load_buf_table[0];
+    }
+
     while (!MikuPan_IopHostShouldShutdown()
-        && sceSdVoiceTrans(1, 0, (u_char*)load_buf_table[0], addr, size) < 0)
+        && sceSdVoiceTrans(1, 0, src, addr, size) < 0)
         ;
     iop_stat.cdvd.se_trans = 1;
     SeSetStartPoint(icp->data2, icp->data3);
