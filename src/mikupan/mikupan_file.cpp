@@ -159,13 +159,13 @@ u_char MikuPan_ReadFile(const char *filename, void *buffer, int size)
     return inFile.bad() == 0;
 }
 
-u_char MikuPan_WriteFile(const char *filename, void *buffer, int size)
+u_char MikuPan_WriteFile(const char *filename, const void *buffer, int size)
 {
     auto relative_path = std::filesystem::path(MikuPan_GetRelativePath(filename));
 
     std::ofstream outFile;
     outFile.open(relative_path, std::ios::binary);
-    outFile.write(static_cast<char *>(buffer), size);
+    outFile.write(static_cast<const char *>(buffer), size);
     outFile.close();
 
     return outFile.bad() == 0;
