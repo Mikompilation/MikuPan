@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "graphics/graph2d/effect_scr.h"
+#include "graphics/graph3d/gra3d.h"
 #include "graphics/graph3d/load3d.h"
 #include "graphics/motion/mdlwork.h"
 #include "ingame/camera/camera.h"
@@ -18,6 +19,7 @@
 #include "ingame/ig_glob.h"
 #include "ingame/map/map_area.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_logging_c.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/fileload.h"
 
