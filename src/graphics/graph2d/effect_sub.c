@@ -39,7 +39,7 @@ static SCRCTRL sc_col = {0};
 static u_char old_cam_no;
 static u_long128 *buf;
 static u_long128 *buf2;
-static u_long128 *bufz;
+//static u_long128 *bufz;
 
 #define PI_HALF 1.5707964f
 #define PI 3.1415927f
@@ -402,7 +402,8 @@ void InitEffectSub()
 {
     buf = (u_long128 *)MikuPan_GetHostPointer(EFFECT_ADDRESS);
     buf2 = (u_long128 *)MikuPan_GetHostPointer(EFFECT_BUFFER_ADDRESS);
-    bufz = (u_long128 *)MikuPan_GetHostPointer(EFFECT_Z_BUFFER_ADDRESS);
+    //bufz = (u_long128 *)MikuPan_GetHostPointer(EFFECT_Z_BUFFER_ADDRESS);
+
     vib1_time = 0;
     vib2_time = 0;
     vib2_pow = 0;
@@ -3069,7 +3070,7 @@ void* GetEmptyBuffer(int no)
         case 1:
         return buf2;
         case 2:
-        return bufz;
+        return (void*)0;
     }
     
     return buf;
@@ -3755,23 +3756,27 @@ void LocalCopyLtoL(int addr1, int addr2)
 
 void LocalCopyZtoBZ()
 {
-	static sceGsStoreImage gs_simage1;
+    /// NEVER USED
+    return;
 
+	static sceGsStoreImage gs_simage1;
     sceGsSetDefStoreImage(&gs_simage1, 4480, 10, 49, 0, 0, 640, 224);
     sceGsSyncPath(0, 0);
     CheckDMATrans();
     FlushCache(0);
-    sceGsExecStoreImage(&gs_simage1,bufz);
+    //sceGsExecStoreImage(&gs_simage1,bufz);
     sceGsSyncPath(0, 0);
 }
 
 void LocalCopyBZtoZ()
 {
-	static sceGsLoadImage gs_limage1;
+    /// NEVER USED
+    return;
 
+	static sceGsLoadImage gs_limage1;
     sceGsSetDefLoadImage(&gs_limage1, 4480, 10, 49, 0, 0, 640, 224);
     FlushCache(0);
-    sceGsExecLoadImage(&gs_limage1, bufz);
+    //sceGsExecLoadImage(&gs_limage1, bufz);
     sceGsSyncPath(0, 0);
 }
 

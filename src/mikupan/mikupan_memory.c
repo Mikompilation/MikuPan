@@ -1,5 +1,7 @@
 #include "mikupan_memory.h"
 
+#include "mikupan_logging_c.h"
+
 #include <string.h>
 
 /// Allocate double the amount of PS2 RAM to avoid overflow issues
@@ -20,6 +22,7 @@ int64_t MikuPan_GetHostAddress(int offset)
 
     if (!MikuPan_IsPs2MemoryPointer((int64_t) ptr))
     {
+        info_log("0x%x pointer was requested but falls outside the range", offset);
         return -1;
     }
 
@@ -28,8 +31,7 @@ int64_t MikuPan_GetHostAddress(int offset)
 
 void *MikuPan_GetHostPointer(int offset)
 {
-    offset = MikuPan_SanitizePs2Address(offset);
-    return (void*)(ps2_virtual_ram + offset);
+    return (void*)MikuPan_GetHostAddress(offset);
 }
 
 void MikuPan_InitPs2Memory()

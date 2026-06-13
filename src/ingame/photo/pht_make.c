@@ -2931,7 +2931,7 @@ void DispPhotoFrame0()
     int num1;
     int num2;
 
-    SetSprFile2(0x1e85000, 0);
+    SetSprFile2(MikuPan_GetHostAddress(0x1e85000), 0);
 
     for (i = 0; i < 4; i++)
     {

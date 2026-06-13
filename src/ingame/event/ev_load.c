@@ -3089,7 +3089,7 @@ int MissionDataLoadReq(MSN_LOAD_DAT* dat)
     {
         if (dat->file_type == 9)
         {
-            LoadEneDmgTex(dat->tmp_no, (u_int *)(dat->addr + ENE_DMG_TEX_BASE_ADDRESS));
+            LoadEneDmgTex(dat->tmp_no, (u_int *)MikuPan_GetHostPointer(dat->addr + ENE_DMG_TEX_BASE_ADDRESS));
             ret = LoadReq(dat->file_no, (int64_t)dat->addr);
         }
         else
@@ -3188,7 +3188,7 @@ void DelDataLoadWrk(u_short file_no)
         {
             if (file_no >= M000_MIKU_ANM && file_no <= I000_PLAY_CAMERA1_SGD)
             {
-                motReleaseAniMdlBuf((u_short)file_no - M000_MIKU_ANM, (u_int *)load_dat_wrk[i].addr);
+                motReleaseAniMdlBuf((u_short)file_no - M000_MIKU_ANM, (u_int *)MikuPan_GetHostPointer(load_dat_wrk[i].addr));
             }
             else if (load_dat_wrk[i].file_type == 2)
             {
@@ -3348,7 +3348,7 @@ int EventLoadData(u_char load_no)
     {
         if (mld->file_type == 13)
         {
-            SceneDataLoadReq(mld->file_no, (u_int *)mld->addr);
+            SceneDataLoadReq(mld->file_no, (u_int *)MikuPan_GetHostPointer(mld->addr));
 
             ev_load_wrk.mode = EV_LOAD_MODE_SCENE;
 

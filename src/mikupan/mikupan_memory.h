@@ -24,7 +24,6 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define IG_MSG_OBJ_ADDRESS              0x0084a000
 #define EFFECT_ADDRESS                  0x01e90000
 #define EFFECT_BUFFER_ADDRESS           0x01F1C000
-#define EFFECT_Z_BUFFER_ADDRESS         0x05000000
 #define PBUF_ADDRESS                    0x00720000
 #define SPRITE_ADDRESS                  0x00a30000
 #define PL_BGBG_PK2_ADDRESS             0x01d05140
@@ -84,8 +83,8 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define MAP_DATA_ADDRESS                0x007F8000
 #define ENE_DMG_TEX_BASE_ADDRESS        0x00098000
 #define FLY_MDL_ADDRESS                 0x00d80000
-#define MSN00TTL_PK2_ADDRESS            0x1e900000
-#define STORY_WORK_SAVE_ADDRESS         0x10900000
+#define MSN00TTL_PK2_ADDRESS            0x01E90000
+#define STORY_WORK_SAVE_ADDRESS         0x01090000
 #define PBUF_ADDRESS                    0x00720000
 #define ANIM_MODEL_TYPE_8_ADDRESS_0     0x00c80000
 #define ANIM_MODEL_TYPE_8_ADDRESS_1     0x00d00000
@@ -106,6 +105,7 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define TEST_ROOM_CHECK_ADDRESS         0x007F0000 /* 0x04610000 */
 /* DEVKIT EXTANDED RAM */
 
+#define EFFECT_Z_BUFFER_ADDRESS         0x05000000
 #define CachedBuffer                    0x20000000
 #define UnCachedBuffer                  0x30000000
 #define VU0_ADDRESS                     0x11000000

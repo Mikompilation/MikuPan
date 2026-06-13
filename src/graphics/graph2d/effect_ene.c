@@ -306,7 +306,7 @@ int SetCamFont(int no, int fl)
         return 0xff;
     }
 
-    SetSprFile2(ADDRESS,0);
+    SetSprFile2(MikuPan_GetHostAddress(ADDRESS),0);
 
     switch (flow[no][0])
     {
@@ -780,7 +780,7 @@ void RunCamSearch()
         SetCamFont(4, 1);
     }
 
-    SetSprFile2(ADDRESS, 0);
+    SetSprFile2(MikuPan_GetHostAddress(ADDRESS), 0);
 
     for (o = 0; o < 3; o++)
     {
@@ -1117,7 +1117,7 @@ void RunCamView()
         SetCamFont(2, 1);
     }
 
-    SetSprFile2(ADDRESS, 0);
+    SetSprFile2(MikuPan_GetHostAddress(ADDRESS), 0);
 
     Get2PosRot(camera.p, camera.i, &rot_x, &rot_y);
 
@@ -1465,7 +1465,7 @@ void RunCamPush()
         SetCamFont(0, 1);
     }
 
-    SetSprFile2(ADDRESS, 0);
+    SetSprFile2(MikuPan_GetHostAddress(ADDRESS), 0);
 
     for (o = 0; o < 3; o++)
     {
@@ -1994,7 +1994,7 @@ void RunCamSlow()
         SetCamFont(1, 1);
     }
 
-    SetSprFile2(ADDRESS, 0);
+    SetSprFile2(MikuPan_GetHostAddress(ADDRESS), 0);
 
     for (o = 0; o < 3; o++)
     {
@@ -2351,7 +2351,7 @@ void RunCamStop()
         SetCamFont(3, 1);
     }
 
-    SetSprFile2(ADDRESS, 0);
+    SetSprFile2(MikuPan_GetHostAddress(ADDRESS), 0);
 
     for (o = 0; o < 3; o++)
     {
@@ -4460,7 +4460,7 @@ void SetEneDmgEffect1_Sub2(int num)
     break;
     }
 
-    SetSprFile2(ADDRESS, 0);
+    SetSprFile2(MikuPan_GetHostAddress(ADDRESS), 0);
 
     Vu0CopyVector(cpos, camera.p);
     cpos[3] = 1.0f;
@@ -4528,7 +4528,7 @@ void SetEneDmgEffect1_Sub2(int num)
                     ene_wrk[dmg1->enedmg_no].dat->mdl_no == 44
                 )
                 {
-                    SetSprFile2(ADDRESS_2, 0);
+                    SetSprFile2(MikuPan_GetHostAddress(ADDRESS_2), 0);
                 }
                 else
                 {
