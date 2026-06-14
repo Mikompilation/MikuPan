@@ -1,0 +1,1 @@
+ANI_CODE* m036anm_tbl[] = { m036anm000, arei_anm, m036anm002, arei_anm, arei_anm, arei_anm, m036anm006, m036anm007, m036anm008, m036anm009, m036anm010, m036anm011, m036anm012, m036anm013, m036anm014, m036anm015, m036anm016, NULL, };

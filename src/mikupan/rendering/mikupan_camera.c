@@ -101,6 +101,18 @@ void MikuPan_InvalidateModelTransformCache(void)
     g_has_cached_model = 0;
 }
 
+/// Set the model transform to identity. Used by the shadow caster pass for
+/// skinned meshes (VUVN vtype 2/3), whose vertices are already in world space
+/// (CPU-skinned via _CalcWeightedVertexSM) and so must NOT be re-transformed by
+/// the model's lwmtx the way rigid (vtype 0) casters are. This mirrors the main
+/// pass, where the world-space 0xA shader omits the model matrix entirely.
+void MikuPan_SetModelTransformIdentity(void)
+{
+    mat4 identity;
+    glm_mat4_identity(identity);
+    MikuPan_SetModelTransformMatrix((sceVu0FVECTOR *)identity);
+}
+
 void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
 {
     // View -> camera->wv

@@ -1,0 +1,123 @@
+MSN_LOAD_DAT msn4_title_load_dat[] = {
+    {
+        .file_no = 28,
+        .file_type = 3,
+        .tmp_no = 0,
+        .addr = 8323072,
+    },
+    {
+        .file_no = 31,
+        .file_type = 4,
+        .tmp_no = 0,
+        .addr = 8323072,
+    },
+    {
+        .file_no = 34,
+        .file_type = 5,
+        .tmp_no = 0,
+        .addr = 8323072,
+    },
+    {
+        .file_no = 37,
+        .file_type = 6,
+        .tmp_no = 0,
+        .addr = 8323072,
+    },
+    {
+        .file_no = 19,
+        .file_type = 1,
+        .tmp_no = 0,
+        .addr = 8323072,
+    },
+    {
+        .file_no = 25,
+        .file_type = 1,
+        .tmp_no = 0,
+        .addr = 8257536,
+    },
+    {
+        .file_no = 14,
+        .file_type = 7,
+        .tmp_no = 0,
+        .addr = 8355840,
+    },
+    {
+        .file_no = 826,
+        .file_type = 8,
+        .tmp_no = 0,
+        .addr = 14155776,
+    },
+    {
+        .file_no = 884,
+        .file_type = 9,
+        .tmp_no = 27,
+        .addr = 12124160,
+    },
+    {
+        .file_no = 1389,
+        .file_type = 2,
+        .tmp_no = 0,
+        .addr = 18,
+    },
+    {
+        .file_no = 827,
+        .file_type = 8,
+        .tmp_no = 0,
+        .addr = 20840448,
+    },
+    {
+        .file_no = 885,
+        .file_type = 9,
+        .tmp_no = 28,
+        .addr = 20119552,
+    },
+    {
+        .file_no = 1386,
+        .file_type = 2,
+        .tmp_no = 0,
+        .addr = 17,
+    },
+    {
+        .file_no = 1439,
+        .file_type = 2,
+        .tmp_no = 0,
+        .addr = 22,
+    },
+    {
+        .file_no = 863,
+        .file_type = 8,
+        .tmp_no = 0,
+        .addr = 13107200,
+    },
+    {
+        .file_no = 904,
+        .file_type = 9,
+        .tmp_no = 64,
+        .addr = 10682368,
+    },
+    {
+        .file_no = 1384,
+        .file_type = 2,
+        .tmp_no = 0,
+        .addr = 16,
+    },
+    {
+        .file_no = 805,
+        .file_type = 8,
+        .tmp_no = 0,
+        .addr = 14680064,
+    },
+    {
+        .file_no = 856,
+        .file_type = 8,
+        .tmp_no = 0,
+        .addr = 15204352,
+    },
+    {
+        .file_no = 65535,
+        .file_type = 0,
+        .tmp_no = 0,
+        .addr = 0,
+    },
+};
+

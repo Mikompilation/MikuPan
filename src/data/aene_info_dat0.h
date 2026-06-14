@@ -13,7 +13,7 @@ AENE_INFO_DAT aene_info_dat0[] = {
         .anm_no = 53,
         .point_base = 200,
         .se_no = 4294967295,
-        .se_foot = 1452,
+        .se_foot = 1724,
     },
     {
         .dat_no = 1,
@@ -28,8 +28,8 @@ AENE_INFO_DAT aene_info_dat0[] = {
         .mdl_no = 2,
         .anm_no = 40,
         .point_base = 200,
-        .se_no = 1431,
-        .se_foot = 1452,
+        .se_no = 1703,
+        .se_foot = 1724,
     },
     {
         .dat_no = 2,
@@ -44,8 +44,8 @@ AENE_INFO_DAT aene_info_dat0[] = {
         .mdl_no = 61,
         .anm_no = 58,
         .point_base = 0,
-        .se_no = 1434,
-        .se_foot = 1452,
+        .se_no = 1706,
+        .se_foot = 1724,
     },
 };
 

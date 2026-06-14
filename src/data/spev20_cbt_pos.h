@@ -1,1 +1,1 @@
-static short spev20_cbt_pos[][2] = {{40, 55},{40, 82},{40, 110},};
+static short spev20_cbt_pos[][2] = {{40, 58},{40, 93},{40, 125},};

@@ -434,25 +434,21 @@ void MikuPan_RenderShadowSilhouettePrepared(unsigned int *pVUVN,
     for (int i = 0; i < num_mesh; i++)
     {
         int vertex_count = (int) pMeshInfo[i].uiPointNum;
-        if (vertex_count == 0) continue;
 
-        if (vertex_count < 3 ||
-            vertex_offset + vertex_count > vnum ||
-            (long) index_write_offset + (long) (vertex_count - 2) * 3 >
+        /* Skip degenerate / out-of-range submeshes instead of abandoning the
+         * whole silhouette (a single odd submesh otherwise drops the entire
+         * caster). This matches the main mesh pass, which tolerates them. The
+         * vertex_offset still advances by vertex_count so the following
+         * submeshes index the correct vertices. */
+        if (vertex_count >= 3 &&
+            vertex_offset + vertex_count <= vnum &&
+            (long) index_write_offset + (long) (vertex_count - 2) * 3 <=
                 (long) MIKUPAN_MESH_BUFFER_CAPACITY)
         {
-            static int logged = 0;
-            if (!logged)
-            {
-                logged = 1;
-                info_log("Shadow silhouette skipped: mtype=0x%x submesh %d count=%d off=%d vnum=%d",
-                         mesh_type, i, vertex_count, vertex_offset, vnum);
-            }
-            return;
+            index_write_offset += MikuPan_SetTriangleIndex(
+                g_mesh_buffers_0x82.indices, vertex_count, vertex_offset, index_write_offset);
         }
 
-        index_write_offset += MikuPan_SetTriangleIndex(
-            g_mesh_buffers_0x82.indices, vertex_count, vertex_offset, index_write_offset);
         vertex_offset += vertex_count;
     }
 
@@ -496,6 +492,14 @@ void MikuPan_RenderShadowSilhouettePrepared(unsigned int *pVUVN,
     MikuPan_StreamUploadFull(GL_ELEMENT_ARRAY_BUFFER, pipeline->ibo,
         (GLsizeiptr) ((long) index_write_offset * (int) sizeof(unsigned int)),
         g_mesh_buffers_0x82.indices);
+
+    /// Skinned type-0 casters (vtype 2/3) are CPU-skinned to world space; reset
+    /// the model to identity so the silhouette shader's `model` doesn't transform
+    /// them a second time. Rigid (vtype 0) keeps the lwmtx from case 4.
+    if (v->vtype == 2 || v->vtype == 3)
+    {
+        MikuPan_SetModelTransformIdentity();
+    }
 
     MikuPan_ShadowDebugRecordCasterDraw(mesh_type, index_write_offset);
 

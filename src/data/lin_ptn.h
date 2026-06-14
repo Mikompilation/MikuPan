@@ -394,14 +394,14 @@ PLS_LIN lin_ptn[129] = {
     {
         .pos_x = 239,
         .pos_y = 42,
-        .siz_x = 316,
+        .siz_x = 328,
         .siz_y = 2,
         .win_no = 19,
     },
     {
         .pos_x = 239,
         .pos_y = 116,
-        .siz_x = 316,
+        .siz_x = 328,
         .siz_y = 2,
         .win_no = 19,
     },
@@ -413,14 +413,14 @@ PLS_LIN lin_ptn[129] = {
         .win_no = 19,
     },
     {
-        .pos_x = 451,
+        .pos_x = 463,
         .pos_y = 44,
         .siz_x = 2,
         .siz_y = 72,
         .win_no = 19,
     },
     {
-        .pos_x = 553,
+        .pos_x = 565,
         .pos_y = 44,
         .siz_x = 2,
         .siz_y = 72,

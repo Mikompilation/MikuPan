@@ -2206,22 +2206,39 @@ static void MikuPan_UiShadowDebugWindow(void)
     igText("Draws:  caster %d (%d indices)  receiver %d (%d indices)",
            shadow_debug->caster_draws, shadow_debug->caster_indices,
            shadow_debug->receiver_draws, shadow_debug->receiver_indices);
-    igText(
-        "Caster mesh types: 0x00=%d 0x02=%d 0x40=%d 0x42=%d 0x80=%d 0x82=%d "
-        "other=%d",
-        shadow_debug->caster_type_0, shadow_debug->caster_type_2,
-        shadow_debug->caster_type_80, shadow_debug->caster_type_82,
-        shadow_debug->caster_type_other);
-    igText(
-        "Caster draw types: 0x00=%d 0x02=%d 0x40=%d 0x42=%d 0x80=%d 0x82=%d "
-        "other=%d",
-        shadow_debug->caster_draw_type_0, shadow_debug->caster_draw_type_2,
-        shadow_debug->caster_draw_type_80, shadow_debug->caster_draw_type_82,
-        shadow_debug->caster_draw_type_other);
-    igText("Receiver mesh types: 0x00=%d 0x10=%d 0x12=%d 0x32=%d other=%d",
-           shadow_debug->receiver_type_0, shadow_debug->receiver_type_10,
-           shadow_debug->receiver_type_12, shadow_debug->receiver_type_32,
-           shadow_debug->receiver_type_other);
+    static const char *kBucketLabels[MIKUPAN_SHADOW_BUCKET_COUNT] = {
+        "0x00", "0x02", "0x0A", "0x10", "0x12",
+        "0x32", "0x42", "0x80", "0x82", "other"
+    };
+
+    /* Per-type seen vs drawn. A row is highlighted (amber) when the pass saw
+     * meshes of that type but none reached a GL draw — i.e. that type isn't
+     * implemented for shadows yet. Green means seen == drawn. */
+    int caster_seen_total = 0;
+    igText("Caster mesh types (seen / drawn):");
+    for (int b = 0; b < MIKUPAN_SHADOW_BUCKET_COUNT; b++)
+    {
+        int seen = shadow_debug->caster_seen[b];
+        int drawn = shadow_debug->caster_drawn[b];
+        caster_seen_total += seen;
+        if (seen == 0 && drawn == 0) continue;
+        igTextColored(
+            (seen > drawn) ? (ImVec4) {1.0f, 0.7f, 0.2f, 1.0f}
+                           : (ImVec4) {0.6f, 0.9f, 0.6f, 1.0f},
+            "  %-5s seen=%d  drawn=%d", kBucketLabels[b], seen, drawn);
+    }
+
+    igText("Receiver mesh types (seen / drawn):");
+    for (int b = 0; b < MIKUPAN_SHADOW_BUCKET_COUNT; b++)
+    {
+        int seen = shadow_debug->receiver_seen[b];
+        int drawn = shadow_debug->receiver_drawn[b];
+        if (seen == 0 && drawn == 0) continue;
+        igTextColored(
+            (seen > drawn) ? (ImVec4) {1.0f, 0.7f, 0.2f, 1.0f}
+                           : (ImVec4) {0.6f, 0.9f, 0.6f, 1.0f},
+            "  %-5s seen=%d  drawn=%d", kBucketLabels[b], seen, drawn);
+    }
 
     if (!shadow_debug->fbo_complete && shadow_debug->fbo_initialized)
     {
@@ -2234,10 +2251,7 @@ static void MikuPan_UiShadowDebugWindow(void)
         igTextColored((ImVec4) {1.0f, 0.7f, 0.2f, 1.0f},
                       "No caster pass this frame.");
     }
-    else if (shadow_debug->caster_draws == 0
-             && (shadow_debug->caster_type_0 != 0
-                 || shadow_debug->caster_type_80 != 0
-                 || shadow_debug->caster_type_other != 0))
+    else if (shadow_debug->caster_draws == 0 && caster_seen_total != 0)
     {
         igTextColored(
             (ImVec4) {1.0f, 0.7f, 0.2f, 1.0f},

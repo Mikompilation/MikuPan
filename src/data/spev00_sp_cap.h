@@ -5,7 +5,7 @@ SPRT_SDAT spev00_sp_cap[] = {
         .w = 58,
         .h = 32,
         .x = 21,
-        .y = 308,
+        .y = 302,
         .pri = 20,
         .alp = 128,
     },

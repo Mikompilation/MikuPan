@@ -1399,7 +1399,6 @@ int MikuPan_GPUReadTextureR8(unsigned int texture_id, int size,
         return 0;
     }
 
-    MikuPan_GPUFlushRenderPass();
     const unsigned int byte_count = (unsigned int) size * (unsigned int) size;
     SDL_GPUTransferBufferCreateInfo info = {0};
     info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
@@ -1421,14 +1420,29 @@ int MikuPan_GPUReadTextureR8(unsigned int texture_id, int size,
     dst.pixels_per_row = (Uint32) size;
     dst.rows_per_layer = (Uint32) size;
 
-    SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(g_cmd);
+    /* Use a dedicated command buffer for the readback rather than the frame's
+     * g_cmd. The swapchain is acquired lazily and bound to g_cmd (see
+     * MikuPan_GPUSetTarget); submitting and swapping g_cmd here would leave
+     * MikuPan_GPUEndFrame presenting a desynced swapchain and crash. A separate
+     * buffer reads the texture's last-submitted contents (the previous frame's
+     * shadow map), which is fine for a debug probe and leaves the frame intact. */
+    SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(g_device);
+    if (cmd == NULL)
+    {
+        SDL_ReleaseGPUTransferBuffer(g_device, transfer);
+        return 0;
+    }
+
+    SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(cmd);
     SDL_DownloadFromGPUTexture(copy, &src, &dst);
     SDL_EndGPUCopyPass(copy);
 
-    SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(g_cmd);
-    g_cmd = SDL_AcquireGPUCommandBuffer(g_device);
-    SDL_WaitForGPUFences(g_device, true, &fence, 1);
-    SDL_ReleaseGPUFence(g_device, fence);
+    SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(cmd);
+    if (fence != NULL)
+    {
+        SDL_WaitForGPUFences(g_device, true, &fence, 1);
+        SDL_ReleaseGPUFence(g_device, fence);
+    }
 
     void* mapped = SDL_MapGPUTransferBuffer(g_device, transfer, false);
     if (mapped != NULL)

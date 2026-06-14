@@ -1,0 +1,1 @@
+u_short scn4901_del_dat[] = { 65535 };

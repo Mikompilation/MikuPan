@@ -1,0 +1,123 @@
+DOOR_MOVE_DAT door_move_dat[] = {
+    {
+        .st_tbl_pos = 0,
+        .start_cnt = 35,
+        .end_cnt = 105,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 70,
+        .start_cnt = 50,
+        .end_cnt = 120,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 140,
+        .start_cnt = 46,
+        .end_cnt = 120,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 214,
+        .start_cnt = 50,
+        .end_cnt = 120,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 284,
+        .start_cnt = 32,
+        .end_cnt = 107,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 359,
+        .start_cnt = 45,
+        .end_cnt = 119,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 434,
+        .start_cnt = 45,
+        .end_cnt = 120,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 509,
+        .start_cnt = 34,
+        .end_cnt = 120,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 595,
+        .start_cnt = 46,
+        .end_cnt = 110,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 659,
+        .start_cnt = 46,
+        .end_cnt = 110,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 723,
+        .start_cnt = 66,
+        .end_cnt = 140,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 797,
+        .start_cnt = 66,
+        .end_cnt = 140,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 871,
+        .start_cnt = 55,
+        .end_cnt = 120,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 936,
+        .start_cnt = 55,
+        .end_cnt = 120,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 1001,
+        .start_cnt = 49,
+        .end_cnt = 110,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 1062,
+        .start_cnt = 60,
+        .end_cnt = 120,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 1122,
+        .start_cnt = 60,
+        .end_cnt = 110,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 1172,
+        .start_cnt = 64,
+        .end_cnt = 120,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 1228,
+        .start_cnt = 60,
+        .end_cnt = 109,
+        .sel_cnt = 80,
+    },
+    {
+        .st_tbl_pos = 1277,
+        .start_cnt = 60,
+        .end_cnt = 109,
+        .sel_cnt = 80,
+    },
+};
+

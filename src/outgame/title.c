@@ -44,378 +44,117 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* sdata 3576a0 */ int opening_movie_type;
-/* data 343070 */ TITLE_WRK title_wrk;
+int opening_movie_type = 0;
+TITLE_WRK title_wrk = {0};
 TTL_DSP_WRK ttl_dsp;
 OUT_DITHER_STR out_dither = {0};
 
-/* MikuPan: state for the "exit game?" confirmation popup shown when TRIANGLE is
- * pressed on the PRESS START title screen. */
 static int exit_prompt_open = 0;
-static int exit_prompt_sel = 1; /* 0 = Yes, 1 = No (default to the safe choice) */
+static int exit_prompt_sel = 1;
 
 #define PI 3.1415927f
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
 
-SPRT_DAT font_sprt[20] = {
-    {
-        .tex0 = 2307304836316669836,
-        .u = 0,
-        .v = 0,
-        .w = 128,
-        .h = 48,
-        .x = 206,
-        .y = 287,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 128,
-        .v = 0,
-        .w = 128,
-        .h = 48,
-        .x = 257,
-        .y = 357,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 256,
-        .v = 0,
-        .w = 128,
-        .h = 48,
-        .x = 257,
-        .y = 357,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 384,
-        .v = 0,
-        .w = 128,
-        .h = 48,
-        .x = 196,
-        .y = 287,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 384,
-        .v = 0,
-        .w = 128,
-        .h = 48,
-        .x = 303,
-        .y = 287,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 384,
-        .v = 0,
-        .w = 128,
-        .h = 48,
-        .x = 306,
-        .y = 287,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 0,
-        .v = 48,
-        .w = 144,
-        .h = 48,
-        .x = 299,
-        .y = 287,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 144,
-        .v = 48,
-        .w = 144,
-        .h = 48,
-        .x = 244,
-        .y = 287,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 288,
-        .v = 48,
-        .w = 144,
-        .h = 48,
-        .x = 217,
-        .y = 287,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 0,
-        .v = 96,
-        .w = 160,
-        .h = 48,
-        .x = 240,
-        .y = 287,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 160,
-        .v = 96,
-        .w = 160,
-        .h = 48,
-        .x = 241,
-        .y = 357,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 360,
-        .v = 96,
-        .w = 40,
-        .h = 48,
-        .x = 218,
-        .y = 358,
-        .pri = 36864,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 360,
-        .v = 96,
-        .w = 40,
-        .h = 48,
-        .x = 385,
-        .y = 358,
-        .pri = 36864,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 320,
-        .v = 96,
-        .w = 40,
-        .h = 48,
-        .x = 234,
-        .y = 358,
-        .pri = 28672,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 320,
-        .v = 96,
-        .w = 40,
-        .h = 48,
-        .x = 368,
-        .y = 358,
-        .pri = 28672,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 0,
-        .v = 144,
-        .w = 240,
-        .h = 48,
-        .x = 200,
-        .y = 321,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 240,
-        .v = 144,
-        .w = 240,
-        .h = 48,
-        .x = 200,
-        .y = 287,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307304836316669836,
-        .u = 0,
-        .v = 192,
-        .w = 458,
-        .h = 64,
-        .x = 91,
-        .y = 315,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307314180957448592,
-        .u = 1,
-        .v = 1,
-        .w = 126,
-        .h = 48,
-        .x = 33,
-        .y = 23,
-        .pri = 20480,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307314180957448592,
-        .u = 1,
-        .v = 51,
-        .w = 10,
-        .h = 48,
-        .x = 159,
-        .y = 23,
-        .pri = 20480,
-        .alpha = 128,
-    },
-};
+#include "data/title_sprt.h" // data 342c90 */ SPRT_DAT title_sprt[11];
+#include "data/font_sprt.h" // data 342df0 */ SPRT_DAT font_sprt[20];
+#ifdef BUILD_EU_VERSION
+#include "data/logotex.h" // static SPRT_DAT logotex[];
+#endif
 
+#ifdef BUILD_EU_VERSION
+static TITLE_SYS title_sys;
+#endif
 
-SPRT_DAT title_sprt[11] = {
-    {
-        .tex0 = 2307144857374827264,
-        .u = 0,
-        .v = 0,
-        .w = 512,
-        .h = 256,
-        .x = 0,
-        .y = 0,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307154202015606020,
-        .u = 0,
-        .v = 0,
-        .w = 128,
-        .h = 128,
-        .x = 512,
-        .y = 0,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307163547864442184,
-        .u = 0,
-        .v = 0,
-        .w = 128,
-        .h = 128,
-        .x = 512,
-        .y = 128,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307181689873442188,
-        .u = 0,
-        .v = 0,
-        .w = 256,
-        .h = 128,
-        .x = 0,
-        .y = 256,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307199831815300624,
-        .u = 0,
-        .v = 0,
-        .w = 256,
-        .h = 128,
-        .x = 256,
-        .y = 256,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307209177596995220,
-        .u = 0,
-        .v = 0,
-        .w = 128,
-        .h = 128,
-        .x = 512,
-        .y = 256,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307214124325578456,
-        .u = 0,
-        .v = 0,
-        .w = 128,
-        .h = 64,
-        .x = 0,
-        .y = 384,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307219072127903484,
-        .u = 0,
-        .v = 0,
-        .w = 128,
-        .h = 64,
-        .x = 128,
-        .y = 384,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307224019930228512,
-        .u = 0,
-        .v = 0,
-        .w = 128,
-        .h = 64,
-        .x = 256,
-        .y = 384,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307228967732553540,
-        .u = 0,
-        .v = 0,
-        .w = 128,
-        .h = 64,
-        .x = 384,
-        .y = 384,
-        .pri = 40960,
-        .alpha = 128,
-    },
-    {
-        .tex0 = 2307233915534878568,
-        .u = 0,
-        .v = 0,
-        .w = 128,
-        .h = 64,
-        .x = 512,
-        .y = 384,
-        .pri = 40960,
-        .alpha = 128,
-    },
-};
+#ifdef BUILD_EU_VERSION
+#define SPRITE_ADDRESS 0xa30000
+#define TIM2_ADDRESS 0x1e30000
+#define MC_WORK_ADDRESS 0x420000
 
-/* 00212ca8 00001218 */ void TitleCtrl()
+#define SPRITE_ADDR_1 0x0c80000
+#define SPRITE_ADDR_2 0x1d10000
+#define SPRITE_ADDR_3 0x1d23680
+#define SPRITE_ADDR_4 0x1d54030
+
+#define ALBUM_DESIGN_SIDE_0_ADDRESS 0x1d83000
+#define ALBUM_DESIGN_SIDE_1_ADDRESS 0x1dc3470
+#else
+#define SPRITE_ADDRESS 0xa30000
+#define TIM2_ADDRESS 0x1e30000
+#define MC_WORK_ADDRESS 0x420000
+
+#define SPRITE_ADDR_1 0x0c80000
+#define SPRITE_ADDR_2 0x1d15600
+#define SPRITE_ADDR_3 0x1d28c80
+#define SPRITE_ADDR_4 0x1d59630
+
+#define ALBUM_DESIGN_SIDE_0_ADDRESS 0x1d88100
+#define ALBUM_DESIGN_SIDE_1_ADDRESS 0x1dc8570
+#endif
+
+#ifdef BUILD_EU_VERSION
+
+void ChangeTVMode(int mode)
 {
-	/* sbss 357bc8 */ static u_int mc_pnum1;
-	/* sbss 357bcc */ static u_int mc_pnum2;
-	/* sbss 357bd0 */ static u_int mc_atyp1;
-	/* sbss 357bd4 */ static u_int mc_atyp2;
-	/* sbss 357bd8 */ static u_int mc_slot1;
-	/* sbss 357bdc */ static u_int mc_slot2;
-	/* sbss 357be0 */ static u_int mc_file1;
-	/* sbss 357be4 */ static u_int mc_file2;
-	/* sdata 3576a4 */static int title_cnt;
+    if (sys_wrk.pal_disp_mode == mode)
+    {
+        return;
+    }
+    sys_wrk.pal_disp_mode = mode;
+
+    if (mode == 0)
+    {
+        g_db.disp[1].display.DX = 0x290;
+        g_db.disp[1].display.DY = 0x68;
+        g_db.disp[0].display.DX = 0x290;
+        g_db.disp[0].display.DY = 0x68;
+
+        mc_language = mc_language & 0x7f;
+    }
+    else
+    {
+        g_db.disp[1].display.DX = 0x27c;
+        g_db.disp[1].display.DY = 0x32;
+        g_db.disp[0].display.DX = 0x27c;
+        g_db.disp[0].display.DY = 0x32;
+
+        mc_language |= 0x80;
+    }
+
+    vfunc();
+
+    clearGsMem(0, 0, 0, 640, 448);
+    sceGsSyncPath(0, 0);
+
+    vfunc();
+
+    clearGsMem(0, 0, 0, 640, 448);
+    sceGsSyncPath(0, 0);
+
+    vfunc();
+    vfunc();
+
+    sceGsResetPath();
+    sceDmaReset(1);
+    sceGsResetGraph(0, SCE_GS_INTERLACE, mode == 0 ? SCE_GS_PAL: SCE_GS_NTSC, SCE_GS_FRAME);
+
+    vfunc();
+    vfunc();
+
+    ttl_dsp.no_disp = 0xf;
+}
+#endif
+
+void TitleCtrl()
+{
+	static u_int mc_pnum1;
+	static u_int mc_pnum2;
+	static u_int mc_atyp1;
+	static u_int mc_atyp2;
+	static u_int mc_slot1;
+	static u_int mc_slot2;
+	static u_int mc_file1;
+	static u_int mc_file2;
+	static int title_cnt;
 
     switch(title_wrk.mode)
     {
@@ -423,7 +162,11 @@ SPRT_DAT title_sprt[11] = {
         ttl_dsp = (TTL_DSP_WRK){0};
         exit_prompt_open = 0;
 
-        title_wrk.load_id = LoadReq(TITLE_PK2, SPRITE_ADDRESS);
+#ifdef BUILD_EU_VERSION
+            title_wrk.load_id = LoadReqLanguage(TITLE_E_PK2, SPRITE_ADDRESS);
+#else
+            title_wrk.load_id = LoadReq(TITLE_PK2, SPRITE_ADDRESS);
+#endif
 
         InitOutDither();
         MakeOutDither();
@@ -520,7 +263,11 @@ SPRT_DAT title_sprt[11] = {
         }
     break;
     case TITLE_INIT_FROM_IN:
-        title_wrk.load_id = LoadReq(TITLE_PK2, SPRITE_ADDRESS);
+#ifdef BUILD_EU_VERSION
+            title_wrk.load_id = LoadReqLanguage(TITLE_E_PK2, SPRITE_ADDRESS);
+#else
+            title_wrk.load_id = LoadReq(TITLE_PK2, SPRITE_ADDRESS);
+#endif
 
         title_wrk.mode = TITLE_WAIT_FROM_IN;
     break;
@@ -728,8 +475,14 @@ SPRT_DAT title_sprt[11] = {
 
             MemAlbmInit(1, mc_pnum1, mc_pnum2, mc_atyp1, mc_atyp2, mc_slot1, mc_slot2, mc_file1, mc_file2 & 0xff);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_FSM_PK2, PL_ALBM_FSM_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, PL_SAVE_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_FSM_E_PK2, SPRITE_ADDR_1);
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_E_PK2, SPRITE_ADDR_2);
+#else
+                title_wrk.load_id = LoadReq(PL_ALBM_FSM_PK2, SPRITE_ADDR_1);
+                title_wrk.load_id = LoadReq(PL_ALBM_PK2, SPRITE_ADDR_2);
+#endif
+
             title_wrk.load_id = AlbmDesignLoad(0, mc_atyp1);
             title_wrk.load_id = AlbmDesignLoad(1, mc_atyp2);
 
@@ -746,8 +499,14 @@ SPRT_DAT title_sprt[11] = {
             MemAlbmInit(1, mc_pnum1, mc_pnum2, mc_atyp1, mc_atyp2, mc_slot1, mc_slot2, mc_file1, mc_file2 & 0xff);
             NewAlbumInit(1);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_FSM_PK2, PL_ALBM_FSM_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, PL_SAVE_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_FSM_E_PK2, SPRITE_ADDR_1);
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_E_PK2, SPRITE_ADDR_2);
+#else
+                title_wrk.load_id = LoadReq(PL_ALBM_FSM_PK2, SPRITE_ADDR_1);
+                title_wrk.load_id = LoadReq(PL_ALBM_PK2, SPRITE_ADDR_2);
+#endif
+
             title_wrk.load_id = AlbmDesignLoad(0, mc_atyp1);
             title_wrk.load_id = AlbmDesignLoad(1, mc_atyp2);
 
@@ -780,9 +539,15 @@ SPRT_DAT title_sprt[11] = {
 
             title_wrk.load_side = 0;
 
-            title_wrk.load_id = LoadReq(PL_PSVP_PK2, PL_PSVP_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_SAVE_PK2, PL_SAVE_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SV_PHT_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_SAVE_E_PK2, SPRITE_ADDR_3);
+#else
+                title_wrk.load_id = LoadReq(PL_PSVP_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReq(PL_SAVE_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SPRITE_ADDR_3);
+#endif
 
             title_wrk.mode = TITLE_ALBM_SAVE_PRE;
         break;
@@ -793,16 +558,28 @@ SPRT_DAT title_sprt[11] = {
 
             title_wrk.load_side = 1;
 
-            title_wrk.load_id = LoadReq(PL_PSVP_PK2, PL_PSVP_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_SAVE_PK2, PL_SAVE_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SV_PHT_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_SAVE_E_PK2, SPRITE_ADDR_3);
+#else
+                title_wrk.load_id = LoadReq(PL_PSVP_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReq(PL_SAVE_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SPRITE_ADDR_3);
+#endif
 
             title_wrk.mode = TITLE_ALBM_SAVE_PRE;
         break;
         case 3:
-            title_wrk.load_id = LoadReq(PL_PSVP_PK2, PL_PSVP_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_SAVE_PK2, PL_SAVE_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SV_PHT_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_SAVE_E_PK2, SPRITE_ADDR_3);
+#else
+                title_wrk.load_id = LoadReq(PL_PSVP_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReq(PL_SAVE_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SPRITE_ADDR_3);
+#endif
 
             title_wrk.load_side = 0;
 
@@ -811,9 +588,15 @@ SPRT_DAT title_sprt[11] = {
             title_wrk.mode = TITLE_ALBM_LOAD_MODE_PRE;
         break;
         case 4:
-            title_wrk.load_id = LoadReq(PL_PSVP_PK2, PL_PSVP_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_SAVE_PK2, PL_SAVE_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SV_PHT_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_SAVE_E_PK2, SPRITE_ADDR_3);
+#else
+                title_wrk.load_id = LoadReq(PL_PSVP_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReq(PL_SAVE_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReq(PL_ALBM_SAVE_PK2, SPRITE_ADDR_3);
+#endif
 
             title_wrk.load_side = 1;
 
@@ -878,7 +661,12 @@ SPRT_DAT title_sprt[11] = {
 
             title_wrk.load_id = AlbmDesignLoad(0, mc_atyp1);
             title_wrk.load_id = AlbmDesignLoad(1, mc_atyp2);
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, PL_SAVE_PK2_ADDRESS);
+
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_E_PK2, SPRITE_ADDR_2);
+#else
+                title_wrk.load_id = LoadReq(PL_ALBM_PK2, SPRITE_ADDR_2);
+#endif
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
@@ -887,7 +675,11 @@ SPRT_DAT title_sprt[11] = {
             AlbmDesignLoad(0, mc_atyp1);
             AlbmDesignLoad(1, mc_atyp2);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, PL_SAVE_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_E_PK2, SPRITE_ADDR_2);
+#else
+                title_wrk.load_id = LoadReq(PL_ALBM_PK2, SPRITE_ADDR_2);
+#endif
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
@@ -931,7 +723,11 @@ SPRT_DAT title_sprt[11] = {
             AlbmDesignLoad(0, mc_atyp1);
             AlbmDesignLoad(1, mc_atyp2);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, PL_SAVE_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_E_PK2, SPRITE_ADDR_2);
+#else
+                title_wrk.load_id = LoadReq(PL_ALBM_PK2, SPRITE_ADDR_2);
+#endif
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
@@ -941,7 +737,11 @@ SPRT_DAT title_sprt[11] = {
             AlbmDesignLoad(0, mc_atyp1);
             AlbmDesignLoad(1, mc_atyp2);
 
-            title_wrk.load_id = LoadReq(PL_ALBM_PK2, PL_SAVE_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_E_PK2, SPRITE_ADDR_2);
+#else
+                title_wrk.load_id = LoadReq(PL_ALBM_PK2, SPRITE_ADDR_2);
+#endif
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
@@ -962,8 +762,6 @@ SPRT_DAT title_sprt[11] = {
     }
 }
 
-/* MikuPan: one Yes/No choice in the exit prompt. Highlights the entry the pad
- * cursor is on; the returned flag also fires on a mouse click. */
 static int TitleExitPromptButton(const char *label, int selected)
 {
     int clicked;
@@ -985,9 +783,6 @@ static int TitleExitPromptButton(const char *label, int selected)
     return clicked;
 }
 
-/* MikuPan: render and drive the centred "exit game?" confirmation popup. Pad
- * navigation matches the rest of the title (D-pad/stick to move, CROSS/START to
- * confirm, TRIANGLE/CIRCLE to cancel); mouse clicks work too. */
 static void TitleExitPrompt()
 {
     ImGuiIO *io = igGetIO_Nil();
@@ -1169,11 +964,19 @@ void TitleStartSlct()
     {
         if (title_wrk.csr != 0x0)
         {
-            title_wrk.load_id = LoadReq(PL_BGBG_PK2, PL_BGBG_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_STTS_PK2, PL_STTS_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_PSVP_PK2, PL_PSVP_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(PL_SAVE_PK2, PL_SAVE_PK2_ADDRESS);
-            title_wrk.load_id = LoadReq(SV_PHT_PK2, SV_PHT_PK2_ADDRESS);
+#ifdef BUILD_EU_VERSION
+            title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
+            title_wrk.load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
+            title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
+            title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
+            title_wrk.load_id = LoadReq(SV_PHT_PK2, SPRITE_ADDR_3);
+#else
+            title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1d05140);
+            title_wrk.load_id = LoadReq(PL_STTS_PK2, 0x1ce0000);
+            title_wrk.load_id = LoadReq(PL_PSVP_PK2, SPRITE_ADDR_4);
+            title_wrk.load_id = LoadReq(PL_SAVE_PK2, SPRITE_ADDR_2);
+            title_wrk.load_id = LoadReq(SV_PHT_PK2, SPRITE_ADDR_3);
+#endif
 
             title_wrk.mode = TITLE_LOAD_PRE;
 
@@ -1215,6 +1018,248 @@ void TitleStartSlct()
     }
 }
 
+#ifdef BUILD_EU_VERSION
+void TitleStartSlctYW(u_char pad_off, u_char alp_max)
+{
+    int i;
+    u_char mode;
+    int adj;
+    u_char dsp;
+    u_char rgb;
+    u_char chr;
+    u_char alp;
+    u_int textbl[4] = { 8, 0, 7, 20 };
+    DISP_SPRT ds;
+
+    adj = 28;
+
+    if (
+        title_wrk.csr == 3 && (
+            *key_now[3] == 1 ||
+            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            Ana2PadDirCnt(1) == 1 ||
+            (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
+        )
+    )
+    {
+        ChangeTVMode(1);
+        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+    } else if (
+        title_wrk.csr == 3 && (
+            *key_now[2] == 1 ||
+            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            Ana2PadDirCnt(3) == 1 ||
+            (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
+        )
+    )
+    {
+        ChangeTVMode(0);
+        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+    }
+
+    if (ttl_dsp.no_disp == 0)
+    {
+        for (i = 0; i < 11; i++)
+        {
+            CopySprDToSpr(&ds, &title_sprt[i]);
+
+            ds.alpha = alp_max;
+
+            DispSprD(&ds);
+        }
+    }
+
+    for (mode = 0; mode < 4; mode++)
+    {
+        if (ttl_dsp.no_disp == 0)
+        {
+            chr = textbl[mode];
+            dsp = mode == title_wrk.csr ? 1 : 0;
+
+            CopySprDToSpr(&ds, &font_sprt[chr]);
+
+            ds.y += mode * adj;
+
+            alp = rgb = dsp * (alp_max / 2) + (alp_max / 2);
+
+            ds.alpha = alp;
+            ds.r = rgb;
+            ds.g = rgb;
+            ds.b = rgb;
+
+            if (dsp != 0)
+            {
+                ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+            }
+
+            ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
+
+            DispSprD(&ds);
+
+            if (mode == 3 && title_wrk.csr == 3)
+            {
+                dsp = sys_wrk.pal_disp_mode == 0;
+
+                CopySprDToSpr(&ds, &font_sprt[21]);
+
+                ds.y += mode * adj;
+
+                alp = rgb = dsp * (alp_max / 2) + (alp_max / 2);
+
+                ds.alpha = alp;
+                ds.r = rgb;
+                ds.g = rgb;
+                ds.b = rgb;
+
+                if (dsp != 0)
+                {
+                    ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+                }
+
+                DispSprD(&ds);
+
+                dsp = sys_wrk.pal_disp_mode == 1;
+
+                CopySprDToSpr(&ds, &font_sprt[22]);
+
+                ds.y += mode * adj;
+
+                alp = rgb = dsp * (alp_max / 2) + (alp_max / 2);
+
+                ds.alpha = alp;
+                ds.r = rgb;
+                ds.g = rgb;
+                ds.b = rgb;
+
+                if (dsp)
+                {
+                    ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+                }
+
+                DispSprD(&ds);
+            }
+        }
+    }
+
+    if (pad_off != 0)
+    {
+        return;
+    }
+
+    if (*key_now[5] == 1 || *key_now[0xc] == 1)
+    {
+        ingame_wrk.clear_count = 0;
+        ingame_wrk.ghost_cnt = 0;
+        ingame_wrk.rg_pht_cnt = 0;
+        ingame_wrk.pht_cnt = 0;
+        ingame_wrk.high_score = 0;
+        ingame_wrk.difficult = 0;
+
+        cribo.costume = 0;
+        cribo.clear_info = 0;
+
+        NewgameMenuAlbumInit();
+
+        realtime_scene_flg = 0;
+
+        MovieInitWrk();
+
+        motInitMsn();
+
+        switch (title_wrk.csr)
+        {
+        case 0:
+            NewGameInit();
+
+            title_wrk.mode = 9;
+            title_wrk.csr = 0;
+
+            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+        break;
+        case 1:
+            title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
+            title_wrk.load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
+            title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
+            title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
+            title_wrk.load_id = LoadReq(SV_PHT_PK2, SPRITE_ADDR_3);
+
+            ingame_wrk.stts |= 0x20;
+
+            InitialDmaBuffer();
+
+            title_wrk.mode = 6;
+
+            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            EAdpcmFadeOut(60);
+        break;
+        case 2:
+            title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
+            title_wrk.load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
+            title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
+            title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
+            title_wrk.load_id = LoadReqLanguage(PL_ALBM_SAVE_E_PK2, SPRITE_ADDR_3);
+
+            ingame_wrk.stts |= 0x20;
+
+            InitialDmaBuffer();
+
+            title_wrk.mode = 14;
+
+            SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            EAdpcmFadeOut(60);
+        break;
+        }
+    }
+    else if (*key_now[4] == 1)
+    {
+        ttl_dsp.timer = 0;
+        title_wrk.mode = 2;
+
+        SeStartFix(3, 0, 0x1000, 0x1000, 0);
+    }
+    else if (
+        *key_now[1] == 1 ||
+        (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+        Ana2PadDirCnt(2) == 1 ||
+        (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
+    )
+    {
+        if (title_wrk.csr < 3)
+        {
+            title_wrk.csr++;
+        }
+        else
+        {
+            title_wrk.csr = 0;
+        }
+
+        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+    }
+    else if (
+        *key_now[0] == 1 ||
+        (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+        Ana2PadDirCnt(0) == 1 ||
+        (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
+    )
+    {
+        if (title_wrk.csr > 0)
+        {
+            title_wrk.csr--;
+        }
+        else
+        {
+            title_wrk.csr = 3;
+        }
+
+        SeStartFix(0, 0, 0x1000, 0x1000, 0);
+    }
+
+    if (ttl_dsp.no_disp != 0)
+    {
+        ttl_dsp.no_disp--;
+    }
+}
+#else
 void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 {
     /* s0 16 */ int i;
@@ -1455,6 +1500,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
 }
+#endif
 
 void TitleLoadCtrl()
 {
@@ -2042,10 +2088,11 @@ void DispOutDither()
     out_dither.cnt += out_dither.spd;
 }
 
+/*
 int AlbmDesignLoad(u_char side, u_char type)
 {
-    /* a2 6 */ void *addr;
-    /* v0 2 */ int load_id;
+    void *addr;
+    int load_id;
 
     if (side == 0)
     {
@@ -2084,3 +2131,343 @@ int AlbmDesignLoad(u_char side, u_char type)
 
     return load_id;
 }
+*/
+
+int AlbmDesignLoad(u_char side, u_char type)
+{
+    u_int addr;
+    int load_id;
+
+    if (side == 0)
+    {
+        addr = ALBUM_DESIGN_SIDE_0_ADDRESS;
+    }
+
+    else if (side == 1)
+    {
+        addr = ALBUM_DESIGN_SIDE_1_ADDRESS;
+    }
+
+    switch(type)
+    {
+        case 0:
+#ifdef BUILD_EU_VERSION
+            load_id = LoadReqLanguage(PL_ALBM_BW_E_PK2, addr);
+#else
+            load_id = LoadReq(PL_ALBM_BW_PK2, addr);
+#endif
+            break;
+        case 1:
+#ifdef BUILD_EU_VERSION
+            load_id = LoadReqLanguage(PL_ALBM_BP_E_PK2, addr);
+#else
+            load_id = LoadReq(PL_ALBM_BP_PK2, addr);
+#endif
+            break;
+        case 2:
+#ifdef BUILD_EU_VERSION
+            load_id = LoadReqLanguage(PL_ALBM_BR_E_PK2, addr);
+#else
+            load_id = LoadReq(PL_ALBM_BR_PK2, addr);
+#endif
+            break;
+        case 3:
+#ifdef BUILD_EU_VERSION
+            load_id = LoadReqLanguage(PL_ALBM_BG_E_PK2, addr);
+#else
+            load_id = LoadReq(PL_ALBM_BG_PK2, addr);
+#endif
+            break;
+        case 4:
+#ifdef BUILD_EU_VERSION
+            load_id = LoadReqLanguage(PL_ALBM_BB_E_PK2, addr);
+#else
+            load_id = LoadReq(PL_ALBM_BB_PK2, addr);
+#endif
+            break;
+        case 5:
+#ifdef BUILD_EU_VERSION
+            load_id = LoadReqLanguage(PL_ALBM_BO_E_PK2, addr);
+#else
+            load_id = LoadReq(PL_ALBM_BO_PK2, addr);
+#endif
+            break;
+        default:
+            load_id = -1;
+            break;
+    }
+
+    return load_id;
+}
+
+#ifdef BUILD_EU_VERSION
+void InitTecmotLogo()
+{
+    title_sys.logo_flow = 0;
+    title_sys.cnt = 0;
+    title_sys.alp = 0;
+}
+
+int SetTecmoLogo() {
+    DISP_SPRT ds;
+    int sec1;
+    int sec2;
+    int sec3;
+    int sec4;
+    int n;
+
+    sec1 = 60;
+    sec2 = 90;
+    sec3 = 60;
+    sec4 = 30;
+
+    switch (title_sys.logo_flow)
+    {
+    case 0:
+        title_sys.cnt = 0;
+        title_sys.alp = 0;
+        title_sys.logo_flow = 1;
+    case 1:
+        title_sys.alp = title_sys.cnt * 128 / sec1;
+        title_sys.cnt++;
+        if (title_sys.cnt >= sec1)
+        {
+            title_sys.cnt = 0;
+            title_sys.logo_flow = 2;
+        }
+    break;
+    case 2:
+        title_sys.alp = 128;
+        title_sys.cnt++;
+        if (title_sys.cnt >= sec2)
+        {
+            title_sys.cnt = 0;
+            title_sys.logo_flow = 3;
+        }
+    break;
+    case 3:
+        title_sys.alp = (sec3 - title_sys.cnt) * 128 / sec3;
+        title_sys.cnt++;
+        if (title_sys.cnt >= sec3)
+        {
+            title_sys.logo_flow = 4;
+            title_sys.cnt = 0;
+        }
+    break;
+    case 4:
+        title_sys.alp = 0;
+        title_sys.cnt++;
+        if (title_sys.cnt >= sec4) {
+            title_sys.cnt = 0;
+            title_sys.alp = 0;
+            title_sys.logo_flow = 5;
+        }
+    break;
+    case 5:
+        title_sys.alp = title_sys.cnt * 128 / sec1;
+        title_sys.cnt++;
+        if (title_sys.cnt >= sec1)
+        {
+            title_sys.cnt = 0;
+            title_sys.logo_flow = 6;
+        }
+    break;
+    case 6:
+        title_sys.alp = 128;
+        title_sys.cnt++;
+        if (title_sys.cnt >= sec2)
+        {
+            title_sys.cnt = 0;
+            title_sys.logo_flow = 7;
+        }
+    break;
+    case 7:
+        title_sys.alp = (sec3 - title_sys.cnt) * 128 / sec3;
+        title_sys.cnt++;
+        if (title_sys.cnt >= sec3)
+        {
+            title_sys.cnt = 0;
+            title_sys.logo_flow = 8;
+        }
+    break;
+    case 8:
+        return 1;
+    default:
+    break;
+    }
+
+    SetSprFile3(0x1e90000, 0);
+
+    n = title_sys.logo_flow >= 0 && title_sys.logo_flow < 4 ? 0 : 7;
+
+    CopySprDToSpr(&ds, &logotex[n]);
+
+
+    ds.zbuf = SCE_GS_SET_ZBUF_1(0x8c, SCE_GS_PSMCT24, 1);
+    ds.test = SCE_GS_SET_TEST_1(1, SCE_GS_ALPHA_GREATER, 0, SCE_GS_AFAIL_KEEP, 0, 0, 1, SCE_GS_DEPTH_GEQUAL);
+    ds.pri = logotex[n].pri;
+    ds.z = 0x0fffffff - logotex[n].pri;
+    ds.x = logotex[n].x;
+    ds.y = logotex[n].y;
+    ds.r = 0x60;
+    ds.g = 0x60;
+    ds.b = 0x60;
+    ds.alpha = title_sys.alp;
+
+    DispSprD(&ds);
+
+    return 0;
+}
+
+void InitSelectLanguage()
+{
+    title_sys.lang_sel_flow = 0;
+    title_sys.cnt = 0;
+    title_sys.alp = 0;
+}
+
+int SetSelectLanguage(int cur_pos)
+{
+    int i;
+    DISP_SPRT ds;
+    int n;
+
+    switch(title_sys.lang_sel_flow)
+    {
+    case 0:
+        title_sys.load_id = LoadReq(LOGO_PK2, 0x1e90000);
+        title_sys.lang_sel_flow = 1;
+    case 1:
+        if (IsLoadEnd(title_sys.load_id) != 0)
+        {
+            title_sys.alp = 0;
+            title_sys.cnt = 0;
+            title_sys.lang_sel_flow = 2;
+        }
+    break;
+    case 2:
+        if (title_sys.alp + 0x10 < 0x80)
+        {
+            title_sys.alp += 0x10;
+        }
+        else
+        {
+            title_sys.alp = 0x80;
+            title_sys.lang_sel_flow = 3;
+        }
+    break;
+    case 3:
+        title_sys.alp = 0x80;
+    break;
+    case 4:
+        if (title_sys.alp - 0x10 > 0)
+        {
+            title_sys.alp -= 0x10;
+        }
+        else
+        {
+            if (IsLoadEnd(init_load_id) != 0)
+            {
+                title_sys.lang_sel_flow = 5;
+                title_sys.alp = 0;
+            }
+        }
+    break;
+    case 5:
+        // do nothing ...
+    break;
+    }
+
+    if (title_sys.lang_sel_flow > 1)
+    {
+        if (title_sys.lang_sel_flow == 3)
+        {
+            if (*key_now[1] == 1)
+            {
+                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+
+                if (sys_wrk.language < 4)
+                {
+                    sys_wrk.language++;
+                }
+                else
+                {
+                    sys_wrk.language = 0;
+                }
+            }
+            else if (*key_now[0] == 1)
+            {
+                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+
+                if (sys_wrk.language > 0)
+                {
+                    sys_wrk.language--;
+                }
+                else
+                {
+                    sys_wrk.language = 4;
+                }
+            }
+            else if (*key_now[5] == 1)
+            {
+                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+
+                title_sys.lang_sel_flow = 4;
+
+                mc_language = mc_language | sys_wrk.language;
+
+                init_load_id = LoadReqLanguage(IG_MSG_E_OBJ, 0x84a000);
+            }
+        }
+
+        SetSprFile3(0x1e90000, 0);
+
+        n = 1;
+
+        CopySprDToSpr(&ds, &logotex[n]);
+
+        ds.zbuf = SCE_GS_SET_ZBUF_1(0x8c, SCE_GS_PSMCT24, 1);
+        ds.test = SCE_GS_SET_TEST_1(1, SCE_GS_ALPHA_GREATER, 0, SCE_GS_AFAIL_KEEP, 0, 0, 1, SCE_GS_DEPTH_GEQUAL);
+        ds.pri = logotex[n].pri;
+        ds.z = 0x0fffffff - logotex[n].pri;
+        ds.x = logotex[n].x;
+        ds.y = logotex[n].y;
+        ds.r = 0x80;
+        ds.g = 0x80;
+        ds.b = 0x80;
+        ds.alpha = title_sys.alp;
+
+        DispSprD(&ds);
+
+        for (i = 0; i < 5; i++)
+        {
+            n = i + 2;
+
+            CopySprDToSpr(&ds, &logotex[n]);
+
+            ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
+            ds.x = 0x140 - (int)(logotex[n].w / 2);
+            ds.y = 0x20 + (i) * 0x50;
+
+            if (cur_pos == i)
+            {
+                ds.r = 0x80;
+                ds.g = 0x80;
+                ds.b = 0x80;
+            }
+            else
+            {
+                ds.r = 0x20;
+                ds.g = 0x20;
+                ds.b = 0x20;
+            }
+
+            ds.alpha = title_sys.alp;
+
+            DispSprD(&ds);
+        }
+    }
+
+    return title_sys.lang_sel_flow == 5;
+}
+#endif

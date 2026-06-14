@@ -3218,8 +3218,7 @@ char AlbumModeInGameOver()
 #ifdef BUILD_EU_VERSION
             albm_mode.load_id = LoadReqLanguage(PL_PSVP_E_PK2, LOAD_ADDRESS_1);
             albm_mode.load_id = LoadReqLanguage(PL_SAVE_E_PK2, LOAD_ADDRESS_2);
-            albm_mode.load_id =
-                LoadReqLanguage(PL_ALBM_SAVE_E_PK2, LOAD_ADDRESS_3);
+            albm_mode.load_id = LoadReqLanguage(PL_ALBM_SAVE_E_PK2, LOAD_ADDRESS_3);
 #else
             albm_mode.load_id = LoadReq(PL_PSVP_PK2, LOAD_ADDRESS_1);
             albm_mode.load_id = LoadReq(PL_SAVE_PK2, LOAD_ADDRESS_2);
@@ -3496,12 +3495,15 @@ char AlbumModeInGameOver()
                         MemAlbmInit(0, 0xff, 0, 0xff, 0, 0xff, 0, 0xff, 0);
                         NewAlbumInit(1);
 
-                        albm_mode.load_id =
-                            AlbmDesignLoadInGame(0, albm_mode.type[0]);
-                        albm_mode.load_id =
-                            AlbmDesignLoadInGame(1, albm_mode.type[1]);
-                        albm_mode.load_id =
-                            LoadReq(PL_ALBM_PK2, LOAD_ADDRESS_2);
+                        albm_mode.load_id = AlbmDesignLoadInGame(0, albm_mode.type[0]);
+                        albm_mode.load_id = AlbmDesignLoadInGame(1, albm_mode.type[1]);
+
+#ifdef BUILD_EU_VERSION
+                        albm_mode.load_id = LoadReqLanguage(PL_ALBM_E_PK2, LOAD_ADDRESS_2);
+#else
+                        albm_mode.load_id = LoadReq(PL_ALBM_PK2, LOAD_ADDRESS_2);
+#endif
+
                         albm_mode.step = ALBM_MODE_PRE;
                     }
                     break;
@@ -3510,12 +3512,13 @@ char AlbumModeInGameOver()
                     {
                         MemAlbmInit3();
 
-                        albm_mode.load_id =
-                            AlbmDesignLoadInGame(0, albm_mode.type[0]);
-                        albm_mode.load_id =
-                            AlbmDesignLoadInGame(1, albm_mode.type[1]);
-                        albm_mode.load_id =
-                            LoadReq(PL_ALBM_PK2, LOAD_ADDRESS_2);
+                        albm_mode.load_id = AlbmDesignLoadInGame(0, albm_mode.type[0]);
+                        albm_mode.load_id = AlbmDesignLoadInGame(1, albm_mode.type[1]);
+#ifdef BUILD_EU_VERSION
+                        albm_mode.load_id = LoadReqLanguage(PL_ALBM_E_PK2, LOAD_ADDRESS_2);
+#else
+                        albm_mode.load_id = LoadReq(PL_ALBM_PK2, LOAD_ADDRESS_2);
+#endif
                         albm_mode.step = ALBM_MODE_PRE;
                     }
                     else

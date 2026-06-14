@@ -1,4 +1,4 @@
-SPRT_SDAT stg_title_sp_bak[11] = {
+SPRT_SDAT stg_title_sp_bak[] = {
     {
         .u = 0,
         .v = 0,

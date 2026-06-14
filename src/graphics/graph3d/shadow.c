@@ -60,8 +60,8 @@ extern void DPS_PROLOGUE()   ;
 #define VU0_CLIP_Z_POS (1 << 4)
 #define VU0_CLIP_Z_NEG (1 << 5)
 
-extern sceVu0FMATRIX __work_matrix_0; // in [vf4:vf7]
-extern sceVu0FMATRIX __work_matrix_1; // in [vf8:vf11]
+extern sceVu0FMATRIX work_matrix_0; // in [vf4:vf7]
+extern sceVu0FMATRIX work_matrix_1; // in [vf8:vf11]
 
 void ShadowDbgOn()
 {
@@ -286,8 +286,8 @@ void SetVU1HeaderShadow()
 
 static void _CalcWeightedVertexSM(sceVu0FVECTOR dp, sceVu0FVECTOR *v)
 {
-    sceVu0FVECTOR *wk0 = __work_matrix_0; // in [vf4:vf7]
-    sceVu0FVECTOR *wk1 = __work_matrix_1; // in [vf8:vf11]
+    sceVu0FVECTOR *wk0 = work_matrix_0; // in [vf4:vf7]
+    sceVu0FVECTOR *wk1 = work_matrix_1; // in [vf8:vf11]
     sceVu0FVECTOR vf13, vf14;
 
     vf13[0] = (wk0[0][0] * v[0][0]) + (wk0[1][0] * v[0][1]) + (wk0[2][0] * v[0][2]) + (wk0[3][0] * 1.0f);
@@ -310,8 +310,8 @@ static void _CalcWeightedVertexSM(sceVu0FVECTOR dp, sceVu0FVECTOR *v)
 
 static void _CalcWeightedVertexBufferSM(sceVu0FVECTOR dp, sceVu0FVECTOR *v)
 {
-    sceVu0FVECTOR *wk0 = __work_matrix_0; // in [vf4:vf7]
-    sceVu0FVECTOR *wk1 = __work_matrix_1; // in [vf8:vf11]
+    sceVu0FVECTOR *wk0 = work_matrix_0; // in [vf4:vf7]
+    sceVu0FVECTOR *wk1 = work_matrix_1; // in [vf8:vf11]
     sceVu0FVECTOR vf13, vf14;
 
     vf13[0] = (wk0[0][0] * v[0][0]) + (wk0[1][0] * v[0][1]) + (wk0[2][0] * v[0][2]) + (wk0[3][0] * 1.0f);
@@ -355,7 +355,7 @@ static void *GetShadowVuvnHostPointer(u_int ps2_addr, int index, int vtype)
 
 static void _CalcVertexSM(sceVu0FVECTOR dp, sceVu0FVECTOR v)
 {
-    sceVu0FVECTOR *wk0 = __work_matrix_0; // in [vf4:vf7]
+    sceVu0FVECTOR *wk0 = work_matrix_0; // in [vf4:vf7]
 
     // regular matrix*vec multiply
     dp[0] = (wk0[0][0] * v[0]) + (wk0[1][0] * v[1]) + (wk0[2][0] * v[2]) + (wk0[3][0] * v[3]);
@@ -503,17 +503,10 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
     return (u_int *) vp_bak;
 }
 
-static float *GetPreparedShadowPositions(u_int *vuvn_prim, u_int *write_p)
-{
-    VUVN_PRIM *vh = (VUVN_PRIM *) &vuvn_prim[2];
-    return (float *) (write_p - ((int) vh->vnum * 4));
-}
-
 void ShadowModelMesh(u_int *prim)
 {
     int mtype;
     u_int *read_p;
-    u_int *mesh_read_p;
     short *tmp;
 
     tmp = (short *) vuvnprim;
@@ -530,7 +523,10 @@ void ShadowModelMesh(u_int *prim)
                 break;
             }
 
-            //MikuPan_RenderShadowSilhouettePrepared(vuvnprim, prim, GetPreparedShadowPositions(vuvnprim, read_p));
+            /* read_p is vp_bak: the start of the position-only vec4 block that
+             * SetVUVNDataShadowModel just wrote. Draw the silhouette from it now,
+             * before the PS2 DMA-call tags below overwrite the first vertex. */
+            MikuPan_RenderShadowSilhouettePrepared(vuvnprim, prim, (float *) read_p);
 
             read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE0 >> 3);
             read_p[1] = 0x17000000;
@@ -542,12 +538,18 @@ void ShadowModelMesh(u_int *prim)
             FlushModel(0);
             break;
         case 2:
-            //mesh_read_p = SetVUVNData(vuvnprim);
             read_p = SetVUVNDataShadowModel(vuvnprim);
+            if (read_p == NULL)
+            {
+                break;
+            }
 
-            MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER *) vuvnprim,
-                                      (SGDPROCUNITHEADER *) prim,
-                                      (float *) read_p);
+            /* Like case 0, SetVUVNDataShadowModel emits positions only (one vec4
+             * per vertex, SHADOW_POSITION4 layout). The silhouette must be drawn
+             * by the positions-only consumer; RenderMeshType0x2 reads pos+normal
+             * interleaved (32B/vtx) and would mis-stride this 16B/vtx data into
+             * garbage triangles (the broken skinned-character shadow). */
+            MikuPan_RenderShadowSilhouettePrepared(vuvnprim, prim, (float *) read_p);
 
             read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE2 >> 3);
             read_p[1] = 0x17000000;
@@ -765,6 +767,8 @@ void ShadowMeshDataVU(u_int *prim)
         case 0:
             // values other than 0 are also ok
             break;
+        case 0x10: // 0x10 receivers masked to 0x10 — share the 0x12/0x32 path;
+                   // MikuPan_RenderMeshType0x32 already accepts mesh type 0x10.
         case 18:
         case 0x32:
             if (MikuPan_IsShadowReceiverPassActive())
@@ -869,7 +873,7 @@ int ClipCheckShadow(sceVu0FMATRIX vec, sceVu0FVECTOR cul)
 
 int ShadowBoundClip(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
-    sceVu0FVECTOR *wk0 = __work_matrix_0; // in [vf4:vf7]
+    sceVu0FVECTOR *wk0 = work_matrix_0; // in [vf4:vf7]
     int ret = 0;
 
     v0[0] = (wk0[0][0] * v1[0]) + (wk0[1][0] * v1[1]) + (wk0[2][0] * v1[2]) + (wk0[3][0] * 1.0f);

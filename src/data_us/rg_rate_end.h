@@ -1,0 +1,1 @@
+RG_RATE_DAT* rg_rate_end[] = { rg_rate_end00, rg_rate_end01, };

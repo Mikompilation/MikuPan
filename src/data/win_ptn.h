@@ -240,9 +240,9 @@ WIN_PTN win_ptn[41] = {
         .bak = 0,
     },
     {
-        .pos_x = 148,
+        .pos_x = 123,
         .pos_y = 153,
-        .siz_x = 344,
+        .siz_x = 394,
         .siz_y = 133,
         .u_hgh = 27,
         .d_hgh = 16,

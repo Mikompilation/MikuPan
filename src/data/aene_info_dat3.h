@@ -13,7 +13,7 @@ AENE_INFO_DAT aene_info_dat3[] = {
         .anm_no = 74,
         .point_base = 700,
         .se_no = 4294967295,
-        .se_foot = 1461,
+        .se_foot = 1733,
     },
     {
         .dat_no = 1,
@@ -28,7 +28,7 @@ AENE_INFO_DAT aene_info_dat3[] = {
         .mdl_no = 59,
         .anm_no = 75,
         .point_base = 1000,
-        .se_no = 1438,
+        .se_no = 1710,
         .se_foot = -1,
     },
 };

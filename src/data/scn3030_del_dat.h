@@ -1,1 +1,1 @@
-u_short scn3030_del_dat[] = { 800, 65535 };
+u_short scn3030_del_dat[] = { 1072, 65535 };

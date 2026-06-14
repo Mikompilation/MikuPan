@@ -1,1 +1,1 @@
-u_short scn1180_del_dat[] = { 917, 65535 };
+u_short scn1180_del_dat[] = { 1189, 65535 };
