@@ -7,6 +7,7 @@
 #include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
+#include <math.h>
 #include <string.h>
 
 #define TEXTURED_SPRITE_BATCH_MAX 4096
@@ -329,15 +330,14 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
                         u_char g, u_char b, u_char a)
 {
     MikuPan_FlushTexturedSpriteBatch();
-    float sx1 = (300.0f + x1) / PS2_RESOLUTION_X_FLOAT;
-    float sy1 = (200.0f + y1) / PS2_RESOLUTION_Y_FLOAT;
-    float sx2 = (300.0f + x2) / PS2_RESOLUTION_X_FLOAT;
-    float sy2 = (200.0f + y2) / PS2_RESOLUTION_Y_FLOAT;
-
-    float ndc_x1 = sx1 * 2.0f - 1.0f;
-    float ndc_y1 = 1.0f - sy1 * 2.0f;
-    float ndc_x2 = sx2 * 2.0f - 1.0f;
-    float ndc_y2 = 1.0f - sy2 * 2.0f;
+    const float render_w = (float)MikuPan_GetRenderResolutionWidth();
+    const float render_h = (float)MikuPan_GetRenderResolutionHeight();
+    const float dx = x2 - x1;
+    const float dy = y2 - y1;
+    const float len = sqrtf(dx * dx + dy * dy);
+    float ox = 0.5f;
+    float oy = 0.5f;
+    float ndc[4][2];
 
     float colours[4] = {
         MikuPan_ConvertScaleColor(r),
@@ -346,10 +346,29 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
         MikuPan_ConvertScaleColor(a)
     };
 
-    float vertices[2][8] =
+    if (len > 0.00001f)
     {
-        { colours[0], colours[1], colours[2], colours[3], ndc_x1, ndc_y1, 0.0f, 1.0f},
-        { colours[0], colours[1], colours[2], colours[3], ndc_x2, ndc_y2, 0.0f, 1.0f},
+        ox = (-dy / len) * 0.5f;
+        oy = ( dx / len) * 0.5f;
+    }
+
+    MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(
+        ndc[0], render_w, render_h, x1 - ox, y1 - oy);
+    MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(
+        ndc[1], render_w, render_h, x1 + ox, y1 + oy);
+    MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(
+        ndc[2], render_w, render_h, x2 - ox, y2 - oy);
+    MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(
+        ndc[3], render_w, render_h, x2 + ox, y2 + oy);
+
+    float vertices[6][8] =
+    {
+        { colours[0], colours[1], colours[2], colours[3], ndc[0][0], ndc[0][1], 0.0f, 1.0f},
+        { colours[0], colours[1], colours[2], colours[3], ndc[1][0], ndc[1][1], 0.0f, 1.0f},
+        { colours[0], colours[1], colours[2], colours[3], ndc[2][0], ndc[2][1], 0.0f, 1.0f},
+        { colours[0], colours[1], colours[2], colours[3], ndc[2][0], ndc[2][1], 0.0f, 1.0f},
+        { colours[0], colours[1], colours[2], colours[3], ndc[1][0], ndc[1][1], 0.0f, 1.0f},
+        { colours[0], colours[1], colours[2], colours[3], ndc[3][0], ndc[3][1], 0.0f, 1.0f},
     };
 
     MikuPan_SetCurrentShaderProgram(UNTEXTURED_COLOURED_SPRITE_SHADER);
@@ -362,7 +381,7 @@ void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r,
 
     MikuPan_SetRenderState2D();
 
-    MikuPan_TimedDrawArrays(GL_LINES, 0, 2);
+    MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 void MikuPan_RenderBoundingBox(sceVu0FVECTOR *vertices)

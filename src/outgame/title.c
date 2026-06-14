@@ -1087,12 +1087,12 @@ void TitleWaitMode()
 
     DispSprD(&ds);
 
-    float message_y = PS2_RESOLUTION_Y_FLOAT - PS2_RESOLUTION_Y_FLOAT / 6;
+    float message_y = PS2_RESOLUTION_Y_FLOAT - PS2_RESOLUTION_Y_FLOAT / 6 + 3;
     float message_x = PS2_RESOLUTION_X_FLOAT / 2 - 120;
 
-    u_char r_message = 37;
-    u_char g_message = 23;
-    u_char b_message = 28;
+    u_char r_message = 77;
+    u_char g_message = 63;
+    u_char b_message = 68;
 
     SetASCIIString3(0x10, message_x, message_y, 0, r_message, g_message, b_message, alp, (char *) "PRESS   TO LEAVE");
     SetASCIIString3(0x10, message_x + (7*12)+2, message_y, 2, r_message, g_message, b_message, alp, (char *) "\xD8");
