@@ -8,6 +8,15 @@
 
 #define VOICE_NUM 48
 
+typedef enum
+{
+    VOICE_ADSR_OFF = 0,
+    VOICE_ADSR_ATTACK,
+    VOICE_ADSR_DECAY,
+    VOICE_ADSR_SUSTAIN,
+    VOICE_ADSR_RELEASE
+} VOICE_ADSR_PHASE;
+
 typedef struct
 {
     u8 shift_filter;
@@ -41,6 +50,9 @@ typedef struct
     u_short pitch;
     u_short adsr1;
     u_short adsr2;
+    // Q16 fixed-point envelope level, in SPU2 0..0x7fff volume units.
+    s32 adsr_level;
+    VOICE_ADSR_PHASE adsr_phase;
     float frequency_ratio;
     SDL_AudioStream *stream;
 } VOICE;

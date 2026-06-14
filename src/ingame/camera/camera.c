@@ -56,6 +56,7 @@ float camera_third_person_side = 120.0f;
 float camera_third_person_look_ahead = 1100.0f;
 float camera_third_person_interest_height = 360.0f;
 float camera_third_person_fov_deg = 51.0f;
+int camera_photo_mode_enabled = 0;
 static CAMERA_DEBUG_PATH camera_debug_path = {0};
 
 static int CameraThirdPersonCanOverride(void)
@@ -2800,7 +2801,10 @@ void CameraIdMoveCtrl()
     char *str_save = "FILE SAVE MODE";
     char *str_renewal = "RENEWAL DATA!!";
     char *str_norenewal = "NO RENEWAL DATA";
+    int show_editor_ui = camera_photo_mode_enabled == 0;
 
+    if (show_editor_ui)
+    {
     igBegin("Camera Id Move Ctrl", NULL, ImGuiWindowFlags_NoTitleBar);
 
     if (R3_PRESSED() == 1)
@@ -3053,6 +3057,12 @@ void CameraIdMoveCtrl()
         cd_step = 0;
         cam_id = 0;
     }
+    }
+    else
+    {
+        cam_info_disp = 0;
+        cd_edit_end = 0;
+    }
 
     if (dbg_wrk.mode_on == 0)
     {
@@ -3218,7 +3228,10 @@ void CameraIdMoveCtrl()
     camera.p[2] = cam_id_move.p[2];
     camera.p[3] = cam_id_move.p[3];
 
-    igEnd();
+    if (show_editor_ui)
+    {
+        igEnd();
+    }
 }
 
 // Editor Sets

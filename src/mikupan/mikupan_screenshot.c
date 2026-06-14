@@ -99,22 +99,29 @@ int MikuPan_ScreenshotWritePng(const char *path, const unsigned char *rgba,
     put_u32_be(ihdr + 0, (unsigned int) width);
     put_u32_be(ihdr + 4, (unsigned int) height);
     ihdr[8]  = 8;  // bit depth
-    ihdr[9]  = 6;  // color type: truecolor + alpha
+    ihdr[9]  = 2;  // color type: truecolor
     ihdr[10] = 0;  // compression method (must be 0)
     ihdr[11] = 0;  // filter method (must be 0)
     ihdr[12] = 0;  // interlace: none
     if (!write_chunk(f, "IHDR", ihdr, sizeof(ihdr))) { fclose(f); return 0; }
 
     // Build the filtered scan-line buffer (filter byte 0 = "None" per row).
-    const size_t row_bytes      = (size_t) width * 4u;
+    const size_t src_row_bytes  = (size_t) width * 4u;
+    const size_t row_bytes      = (size_t) width * 3u;
     const size_t filtered_size  = (size_t) height * (1u + row_bytes);
     unsigned char *filtered = (unsigned char *) malloc(filtered_size);
     if (filtered == NULL) { fclose(f); return 0; }
     for (int y = 0; y < height; y++)
     {
         unsigned char *dst = filtered + (size_t) y * (1u + row_bytes);
+        const unsigned char *src = rgba + (size_t) y * src_row_bytes;
         dst[0] = 0;
-        memcpy(dst + 1, rgba + (size_t) y * row_bytes, row_bytes);
+        for (int x = 0; x < width; x++)
+        {
+            dst[1 + (size_t) x * 3u + 0u] = src[(size_t) x * 4u + 0u];
+            dst[1 + (size_t) x * 3u + 1u] = src[(size_t) x * 4u + 1u];
+            dst[1 + (size_t) x * 3u + 2u] = src[(size_t) x * 4u + 2u];
+        }
     }
 
     // Wrap filtered data in a zlib stream of stored (uncompressed) DEFLATE

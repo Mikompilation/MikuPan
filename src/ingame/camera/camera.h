@@ -209,6 +209,7 @@ extern float camera_third_person_side;
 extern float camera_third_person_look_ahead;
 extern float camera_third_person_interest_height;
 extern float camera_third_person_fov_deg;
+extern int camera_photo_mode_enabled;
 // extern u_short fior_tm;
 extern CAM_ID_MOVE cam_id_move;
 extern int cam_kind;

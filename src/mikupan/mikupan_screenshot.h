@@ -13,7 +13,9 @@ void MikuPan_ScreenshotRequest(void);
 void MikuPan_ScreenshotCaptureIfRequested(int drawable_w, int drawable_h);
 
 /// Write top-down RGBA8 pixels (no row padding) to `path` as an uncompressed
-/// PNG. Returns 1 on success, 0 on any I/O failure.
+/// opaque RGB PNG. The input alpha channel is discarded so image viewers do not
+/// composite screenshots against their own backgrounds. Returns 1 on success,
+/// 0 on any I/O failure.
 int MikuPan_ScreenshotWritePng(const char *path,
                                const unsigned char *rgba,
                                int width, int height);

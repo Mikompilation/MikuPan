@@ -136,6 +136,8 @@ static int show_draw_inspector = 0;
 static int show_camera_debug = 0;
 static int show_photo_debug_window = 0;
 static int show_shadow_debug_window = 0;
+static int cheat_photo_mode = 0;
+static int cheat_photo_mode_previous_cam_mode = 0;
 static int cheat_tofu_mode = 0;
 static float cheat_tofu_color[3] = {0.86f, 0.81f, 0.63f};
 static int shadow_debug_auto_probe = 0;
@@ -2793,6 +2795,48 @@ static void MikuPan_CheatSetAllMenuItems(int value)
     }
 }
 
+static void MikuPan_CheatSetPhotoMode(int enabled)
+{
+    if (enabled)
+    {
+        if (!cheat_photo_mode)
+        {
+            cheat_photo_mode_previous_cam_mode = dbg_wrk.cam_mode;
+        }
+
+        cheat_photo_mode = 1;
+        camera_photo_mode_enabled = 1;
+        dbg_wrk.cam_mode = 1;
+        return;
+    }
+
+    if (cheat_photo_mode && dbg_wrk.cam_mode == 1)
+    {
+        dbg_wrk.cam_mode = cheat_photo_mode_previous_cam_mode;
+    }
+
+    cheat_photo_mode = 0;
+    camera_photo_mode_enabled = 0;
+}
+
+static void MikuPan_CheatSyncPhotoMode(void)
+{
+    if (!cheat_photo_mode)
+    {
+        camera_photo_mode_enabled = 0;
+        return;
+    }
+
+    if (dbg_wrk.cam_mode != 1)
+    {
+        cheat_photo_mode = 0;
+        camera_photo_mode_enabled = 0;
+        return;
+    }
+
+    camera_photo_mode_enabled = 1;
+}
+
 static void MikuPan_CheatMaxCoreInventory(void)
 {
     MikuPan_CheatSetInventoryItem(1, 99);
@@ -3018,6 +3062,8 @@ static void MikuPan_DataFolderSelected(void* userdata,
 
 void MikuPan_UiMenuBar(void)
 {
+    MikuPan_CheatSyncPhotoMode();
+
     if (!show_menu_bar || !igBeginMainMenuBar())
     {
         return;
@@ -3396,6 +3442,16 @@ void MikuPan_UiMenuBar(void)
         {
             MikuPan_ScreenshotRequest();
         }
+
+        {
+            int photo_mode = cheat_photo_mode;
+            if (igCheckbox("Photo Mode", (bool*) &photo_mode))
+            {
+                MikuPan_CheatSetPhotoMode(photo_mode);
+            }
+        }
+
+        igSeparator();
 
         if (igBeginMenu("Inventory", 1))
         {

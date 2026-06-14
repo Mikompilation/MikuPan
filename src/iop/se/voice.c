@@ -26,6 +26,16 @@ static SDL_Mutex *voice_mutex;
 /* One SPU buffer half (128 blocks) per fill keeps at most one IRQA crossing
    per call, so the streamer's IRQ -> upload -> re-arm handshake stays ordered. */
 #define VOICE_MAX_BLOCKS_PER_FILL 128
+#define ADSR_LEVEL_BITS 15
+#define ADSR_LEVEL_MAX ((1 << ADSR_LEVEL_BITS) - 1)
+#define ADSR_FP_SHIFT 16
+#define ADSR_LEVEL_MAX_FP (ADSR_LEVEL_MAX << ADSR_FP_SHIFT)
+#define ADSR_MIN_STEP_FP (1 << 8)
+
+static s32 GetVoiceLeftVolume(const VOICE *v);
+static s32 GetVoiceRightVolume(const VOICE *v);
+static s32 GetVoiceAdsrLevel(VOICE *v);
+static s32 ApplyEnvelopeToVolume(s32 volume, s32 envelope);
 
 static void LockVoices(void)
 {
@@ -76,6 +86,8 @@ void VoicesInit()
         voices[i].pitch = 0x1000;
         voices[i].adsr1 = 0;
         voices[i].adsr2 = 0;
+        voices[i].adsr_level = 0;
+        voices[i].adsr_phase = VOICE_ADSR_OFF;
         voices[i].frequency_ratio = 0.0f;
         voices[i].stream = NULL;
         if (v->buffer != NULL)
@@ -98,16 +110,21 @@ VOICE *GetFreeVoice()
     return NULL;
 }
 
-static void MixStereoSamples(int sampleCount, s16 *samples, const VOICE *v)
+static void MixStereoSamples(int sampleCount, s16 *samples, VOICE *v)
 {
-    const s32 volume_l =
-        (s32)(((int64_t)mVolL * (int64_t)v->volL) / INT16_MAX);
-    const s32 volume_r =
-        (s32)(((int64_t)mVolR * (int64_t)v->volR) / INT16_MAX);
+    const s32 base_volume_l = GetVoiceLeftVolume(v);
+    const s32 base_volume_r = GetVoiceRightVolume(v);
+    s16 *mono_samples = samples + sampleCount;
 
-    for (int i = sampleCount - 1; i >= 0; i--)
+    memmove(mono_samples, samples, sampleCount * (int)sizeof(s16));
+
+    for (int i = 0; i < sampleCount; i++)
     {
-        s16 sample = samples[i];
+        const s32 envelope = GetVoiceAdsrLevel(v);
+        const s32 volume_l = ApplyEnvelopeToVolume(base_volume_l, envelope);
+        const s32 volume_r = ApplyEnvelopeToVolume(base_volume_r, envelope);
+        s16 sample = mono_samples[i];
+
         samples[i * 2] = ApplyVolume(sample, volume_l);
         samples[i * 2 + 1] = ApplyVolume(sample, volume_r);
     }
@@ -182,6 +199,228 @@ static void StopVoicePlayback(int vNo)
     {
         iop_stat.sev_stat[vNo - 24].status = VOICE_FREE;
     }
+}
+
+static bool VoiceAdsrConfigured(const VOICE *v)
+{
+    return v->adsr1 != 0 || v->adsr2 != 0;
+}
+
+/* SPU2 ADSR timing is stepped by hardware counters; this approximates the
+   register bit layout and curve shape at the host sample rate. */
+static s32 ClampAdsrLevel(int64_t level)
+{
+    if (level <= 0)
+    {
+        return 0;
+    }
+
+    if (level >= ADSR_LEVEL_MAX_FP)
+    {
+        return ADSR_LEVEL_MAX_FP;
+    }
+
+    return (s32)level;
+}
+
+static s32 AdsrRateStep(int rate, int max_rate, int fastest_samples)
+{
+    const int range = max_rate + 1;
+    const int fastness = max_rate - rate + 1;
+    int64_t step = ((int64_t)fastness * fastness * ADSR_LEVEL_MAX_FP)
+        / ((int64_t)range * range * fastest_samples);
+
+    if (step < ADSR_MIN_STEP_FP)
+    {
+        step = ADSR_MIN_STEP_FP;
+    }
+
+    return (s32)step;
+}
+
+static s32 AdsrCurvedStep(s32 base_step, s32 level, bool increasing)
+{
+    const s32 curve = increasing ? ADSR_LEVEL_MAX_FP - level : level;
+    int64_t step = ((int64_t)base_step * curve) / ADSR_LEVEL_MAX_FP;
+
+    if (step < ADSR_MIN_STEP_FP)
+    {
+        step = ADSR_MIN_STEP_FP;
+    }
+
+    return (s32)step;
+}
+
+static int AdsrAttackRate(const VOICE *v)
+{
+    return (v->adsr1 >> 8) & 0x7f;
+}
+
+static bool AdsrAttackExponential(const VOICE *v)
+{
+    return (v->adsr1 & 0x8000) != 0;
+}
+
+static int AdsrDecayRate(const VOICE *v)
+{
+    return (v->adsr1 >> 4) & 0x0f;
+}
+
+static s32 AdsrSustainLevel(const VOICE *v)
+{
+    const int level = v->adsr1 & 0x0f;
+    return ((level + 1) * ADSR_LEVEL_MAX_FP) / 16;
+}
+
+static int AdsrReleaseRate(const VOICE *v)
+{
+    return v->adsr2 & 0x1f;
+}
+
+static bool AdsrReleaseExponential(const VOICE *v)
+{
+    return (v->adsr2 & 0x20) != 0;
+}
+
+static int AdsrSustainRate(const VOICE *v)
+{
+    return (v->adsr2 >> 6) & 0x7f;
+}
+
+static bool AdsrSustainDecrease(const VOICE *v)
+{
+    return (v->adsr2 & 0x2000) != 0;
+}
+
+static int AdsrSustainMode(const VOICE *v)
+{
+    return (v->adsr2 >> 14) & 0x03;
+}
+
+static void AdvanceVoiceAdsr(VOICE *v)
+{
+    s32 step;
+    const s32 sustain_level = AdsrSustainLevel(v);
+
+    if (!VoiceAdsrConfigured(v))
+    {
+        v->adsr_level = ADSR_LEVEL_MAX_FP;
+        v->adsr_phase = VOICE_ADSR_SUSTAIN;
+        return;
+    }
+
+    switch (v->adsr_phase)
+    {
+    case VOICE_ADSR_ATTACK:
+        step = AdsrRateStep(AdsrAttackRate(v), 0x7f, 32);
+        if (AdsrAttackExponential(v))
+        {
+            step = AdsrCurvedStep(step, v->adsr_level, true);
+        }
+
+        v->adsr_level = ClampAdsrLevel((int64_t)v->adsr_level + step);
+        if (v->adsr_level >= ADSR_LEVEL_MAX_FP)
+        {
+            v->adsr_level = ADSR_LEVEL_MAX_FP;
+            v->adsr_phase = VOICE_ADSR_DECAY;
+        }
+        break;
+
+    case VOICE_ADSR_DECAY:
+        if (v->adsr_level <= sustain_level)
+        {
+            v->adsr_level = sustain_level;
+            v->adsr_phase = VOICE_ADSR_SUSTAIN;
+            break;
+        }
+
+        step = AdsrRateStep(AdsrDecayRate(v), 0x0f, 64);
+        step = AdsrCurvedStep(step, v->adsr_level, false);
+        if (v->adsr_level - sustain_level <= step)
+        {
+            v->adsr_level = sustain_level;
+            v->adsr_phase = VOICE_ADSR_SUSTAIN;
+        }
+        else
+        {
+            v->adsr_level -= step;
+        }
+        break;
+
+    case VOICE_ADSR_SUSTAIN:
+        if (AdsrSustainMode(v) == 0)
+        {
+            break;
+        }
+
+        step = AdsrRateStep(AdsrSustainRate(v), 0x7f, 64);
+        if (AdsrSustainDecrease(v))
+        {
+            if (AdsrSustainMode(v) >= 2)
+            {
+                step = AdsrCurvedStep(step, v->adsr_level, false);
+            }
+            v->adsr_level = ClampAdsrLevel((int64_t)v->adsr_level - step);
+        }
+        else
+        {
+            if (AdsrSustainMode(v) >= 2)
+            {
+                step = AdsrCurvedStep(step, v->adsr_level, true);
+            }
+            v->adsr_level = ClampAdsrLevel((int64_t)v->adsr_level + step);
+        }
+
+        if (v->adsr_level == 0)
+        {
+            v->adsr_phase = VOICE_ADSR_OFF;
+            StopVoicePlayback(v->vNo);
+        }
+        break;
+
+    case VOICE_ADSR_RELEASE:
+        step = AdsrRateStep(AdsrReleaseRate(v), 0x1f, 64);
+        if (AdsrReleaseExponential(v))
+        {
+            step = AdsrCurvedStep(step, v->adsr_level, false);
+        }
+
+        if (v->adsr_level <= step)
+        {
+            v->adsr_level = 0;
+            v->adsr_phase = VOICE_ADSR_OFF;
+            StopVoicePlayback(v->vNo);
+        }
+        else
+        {
+            v->adsr_level -= step;
+        }
+        break;
+
+    case VOICE_ADSR_OFF:
+    default:
+        v->adsr_level = 0;
+        break;
+    }
+}
+
+static s32 GetVoiceAdsrLevel(VOICE *v)
+{
+    s32 level;
+
+    if (!VoiceAdsrConfigured(v))
+    {
+        return ADSR_LEVEL_MAX;
+    }
+
+    level = v->adsr_level >> ADSR_FP_SHIFT;
+    AdvanceVoiceAdsr(v);
+    return level;
+}
+
+static s32 ApplyEnvelopeToVolume(s32 volume, s32 envelope)
+{
+    return (s32)(((int64_t)volume * envelope) / ADSR_LEVEL_MAX);
 }
 
 static int StereoPairRightVoice(int vNo)
@@ -276,15 +515,28 @@ static bool DecodeVoiceBlock(int vNo, s16 *out)
 static void MixStereoPairSamples(int sampleCount, VOICE *left, VOICE *right)
 {
     s16 *left_samples = left->buffer;
+    s16 *left_mono_samples = left_samples + sampleCount;
     const s16 *right_samples = right->buffer;
-    const s32 left_volume_l = GetVoiceLeftVolume(left);
-    const s32 left_volume_r = GetVoiceRightVolume(left);
-    const s32 right_volume_l = GetVoiceLeftVolume(right);
-    const s32 right_volume_r = GetVoiceRightVolume(right);
+    const s32 left_base_volume_l = GetVoiceLeftVolume(left);
+    const s32 left_base_volume_r = GetVoiceRightVolume(left);
+    const s32 right_base_volume_l = GetVoiceLeftVolume(right);
+    const s32 right_base_volume_r = GetVoiceRightVolume(right);
 
-    for (int i = sampleCount - 1; i >= 0; i--)
+    memmove(left_mono_samples, left_samples, sampleCount * (int)sizeof(s16));
+
+    for (int i = 0; i < sampleCount; i++)
     {
-        const s16 left_sample = left_samples[i];
+        const s32 left_envelope = GetVoiceAdsrLevel(left);
+        const s32 right_envelope = GetVoiceAdsrLevel(right);
+        const s32 left_volume_l =
+            ApplyEnvelopeToVolume(left_base_volume_l, left_envelope);
+        const s32 left_volume_r =
+            ApplyEnvelopeToVolume(left_base_volume_r, left_envelope);
+        const s32 right_volume_l =
+            ApplyEnvelopeToVolume(right_base_volume_l, right_envelope);
+        const s32 right_volume_r =
+            ApplyEnvelopeToVolume(right_base_volume_r, right_envelope);
+        const s16 left_sample = left_mono_samples[i];
         const s16 right_sample = right_samples[i];
         const s32 out_l = ApplyVolume(left_sample, left_volume_l)
             + ApplyVolume(right_sample, right_volume_l);
@@ -471,6 +723,8 @@ static void KeyOnUnlocked(int vNo)
     v->histR[0] = 0;
     v->histR[1] = 0;
     v->nax = v->ssa;
+    v->adsr_level = 0;
+    v->adsr_phase = VOICE_ADSR_ATTACK;
     v->frequency_ratio = 0.0f;
     SDL_ClearAudioStream(v->stream);
     if (v->buffer != NULL)
@@ -498,16 +752,27 @@ static void KeyOffUnlocked(int vNo)
 
     info_log("Key_Off vNo=%d", vNo);
     VOICE *v = &voices[vNo];
-    StopVoicePlayback(vNo);
 
+    if (!v->isPlaying || !VoiceAdsrConfigured(v))
+    {
+        StopVoicePlayback(vNo);
+        v->adsr_level = 0;
+        v->adsr_phase = VOICE_ADSR_OFF;
+        if (v->stream)
+        {
+            SDL_ClearAudioStream(v->stream);
+        }
+        if (v->buffer != NULL)
+        {
+            memset(v->buffer, 0, VOICE_BUFFER_BYTES);
+        }
+        return;
+    }
+
+    v->adsr_phase = VOICE_ADSR_RELEASE;
     if (v->stream)
     {
         SDL_ClearAudioStream(v->stream);
-    }
-
-    if (v->buffer != NULL)
-    {
-        memset(v->buffer, 0, VOICE_BUFFER_BYTES);
     }
 }
 
@@ -557,6 +822,8 @@ static void CloseVoiceUnlocked(int vNo)
 
     v->isPlaying = false;
     v->size = 0;
+    v->adsr_level = 0;
+    v->adsr_phase = VOICE_ADSR_OFF;
 
     if (v->stream != NULL)
     {
@@ -588,6 +855,8 @@ static void CloseVoicesUnlocked(void)
         }
         voices[i].isPlaying = false;
         voices[i].size = 0;
+        voices[i].adsr_level = 0;
+        voices[i].adsr_phase = VOICE_ADSR_OFF;
         if (voices[i].stream != NULL)
         {
             SDL_DestroyAudioStream(voices[i].stream);
