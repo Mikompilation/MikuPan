@@ -20,6 +20,7 @@
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include "iop/adpcm/iopadpcm.h"
 #include "iop/iopmain.h"
+#include "mikupan/mikupan_controller.h"
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -102,6 +103,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     {
         InitGameFirst();
     }
+
+    /* Resolve finder mouse-look capture once per frame. Runs unconditionally so
+     * the cursor is released whenever this frame did not request aiming (movie,
+     * menu, soft reset, etc.). */
+    MikuPan_FinderMouseUpdate();
 
     MikuPan_EndFrame();
 

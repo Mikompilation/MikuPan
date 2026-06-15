@@ -153,6 +153,11 @@ typedef struct
     int action_profile_finder_swap_sticks;
     int action_profile_normal[16];
     int action_profile_finder[16];
+
+    /* Finder (first-person) mouse-look. enabled defaults to on and sensitivity
+     * to 1.0 at runtime; these are only read back when bindings_saved is set. */
+    int finder_mouse_enabled;
+    float finder_mouse_sensitivity;
 } MikuPan_ConfigInput;
 
 typedef struct

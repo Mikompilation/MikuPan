@@ -224,6 +224,10 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.input.action_profile_finder_reverse_y);
     ApplyValue(ini, "input.action_profile", "finder_swap_sticks",
                mikupan_configuration.input.action_profile_finder_swap_sticks);
+    ApplyValue(ini, "input", "finder_mouse_enabled",
+               mikupan_configuration.input.finder_mouse_enabled);
+    ApplyValue(ini, "input", "finder_mouse_sensitivity",
+               mikupan_configuration.input.finder_mouse_sensitivity);
     for (int i = 0; i < 16; i++)
     {
         ApplyValue(ini, "input.action_profile",
@@ -359,6 +363,10 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
                  mikupan_configuration.input.action_profile_finder_reverse_y);
         SetValue(ini, "input.action_profile", "finder_swap_sticks",
                  mikupan_configuration.input.action_profile_finder_swap_sticks);
+        SetValue(ini, "input", "finder_mouse_enabled",
+                 mikupan_configuration.input.finder_mouse_enabled);
+        SetValue(ini, "input", "finder_mouse_sensitivity",
+                 mikupan_configuration.input.finder_mouse_sensitivity);
         for (int i = 0; i < 16; i++)
         {
             SetValue(ini, "input.action_profile",

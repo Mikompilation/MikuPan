@@ -2028,6 +2028,11 @@ static void MikuPan_ApplyFatalFrameStyle(int theme)
     }
 }
 
+SDL_Window* MikuPan_GetUiWindow(void)
+{
+    return ui_window;
+}
+
 void MikuPan_InitUi(SDL_Window* window)
 {
     ui_window = window;

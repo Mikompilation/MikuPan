@@ -68,5 +68,20 @@ SDL_Gamepad* MikuPan_GetController(void);
 int MikuPan_ControllerRumble(const unsigned char* data);
 void MikuPan_ControllerDrawRemapWindow(void);
 
+/// Finder (first-person) mouse-look.
+/// Request mouse-look for the current frame (called while finder aiming is
+/// live). MikuPan_FinderMouseUpdate() turns the request into the actual SDL
+/// relative-mouse-mode state once per frame and clears it again, so the cursor
+/// is automatically released on any frame that does not aim.
+void MikuPan_FinderMouseRequest(void);
+void MikuPan_FinderMouseUpdate(void);
+/// Pixel motion accumulated since the last call. Returns non-zero only while
+/// mouse-look is engaged and the mouse actually moved.
+int MikuPan_FinderMouseConsume(float* dx, float* dy);
+int MikuPan_FinderMouseLookEnabled(void);
+void MikuPan_SetFinderMouseLookEnabled(int enabled);
+float MikuPan_FinderMouseSensitivity(void);
+void MikuPan_SetFinderMouseSensitivity(float sensitivity);
+
 
 #endif//MIKUPAN_MIKUPAN_CONTROLLER_H

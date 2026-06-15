@@ -5,6 +5,7 @@
 #include "mikupan_utils.h"
 #include "os/key_cnf.h"
 #include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_mouse.h>
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
@@ -24,6 +25,21 @@ static int remap_stick_mode = 0;
 
 SDL_Gamepad *mikupan_gamepad = NULL;
 static int mikupan_preferred_gamepad_index = MIKUPAN_CONTROLLER_AUTO_INDEX;
+
+/* Which device's bindings the mapping UI shows: 1 = keyboard & mouse, 0 = the
+ * selected gamepad. -1 until first drawn, then defaulted from whether a gamepad
+ * is present. This is a UI view only -- in-game both devices are always read. */
+static int mikupan_input_view_keyboard = -1;
+
+#define MIKUPAN_FINDER_MOUSE_SENS_MIN 0.1f
+#define MIKUPAN_FINDER_MOUSE_SENS_MAX 5.0f
+
+/// Finder mouse-look runtime state. Defaults are kept here so a fresh config
+/// (which leaves these zeroed) still starts with mouse-look on at 1.0x.
+static int finder_mouse_enabled = 1;
+static float finder_mouse_sensitivity = 1.0f;
+static int finder_mouse_requested = 0;
+static int finder_mouse_active = 0;
 
 static int MikuPan_ControllerConfigActionProfileTarget(int layout, int target);
 
@@ -65,13 +81,19 @@ static const MikuPan_ControllerBindings mikupan_controller_map_defaults[MIKUPAN_
     {MIKUPAN_CONTROLLER_BIND_BUTTON,  SDL_GAMEPAD_BUTTON_LEFT_SHOULDER},
 };
 
+/* Keyboard defaults clustered around the left hand so they pair with WASD
+ * movement (the stick defaults below) and mouse aiming. Order matches
+ * mikupan_controller_labels:
+ *   Triangle=E  Cross=Space  Square=Q  Circle=C
+ *   DPad=Arrows  R3=V  Select=Tab  Start=Esc  L3=LShift
+ *   R1=F (finder)  L2=Z / R2=X (finder zoom out/in)  L1=R */
 static const int mikupan_keyboard_map_defaults[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
-    SDL_SCANCODE_I,         SDL_SCANCODE_K,      SDL_SCANCODE_J,
-    SDL_SCANCODE_L,         SDL_SCANCODE_UP,     SDL_SCANCODE_DOWN,
-    SDL_SCANCODE_LEFT,      SDL_SCANCODE_RIGHT,  SDL_SCANCODE_M,
-    SDL_SCANCODE_BACKSPACE, SDL_SCANCODE_ESCAPE, SDL_SCANCODE_N,
-    SDL_SCANCODE_O,         SDL_SCANCODE_8,      SDL_SCANCODE_9,
-    SDL_SCANCODE_U,
+    SDL_SCANCODE_E,    SDL_SCANCODE_SPACE,  SDL_SCANCODE_Q,
+    SDL_SCANCODE_C,    SDL_SCANCODE_UP,     SDL_SCANCODE_DOWN,
+    SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,  SDL_SCANCODE_V,
+    SDL_SCANCODE_TAB,  SDL_SCANCODE_ESCAPE, SDL_SCANCODE_LSHIFT,
+    SDL_SCANCODE_F,    SDL_SCANCODE_Z,      SDL_SCANCODE_X,
+    SDL_SCANCODE_R,
 };
 
 MikuPan_ControllerBindings mikupan_controller_map[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
@@ -97,12 +119,12 @@ MikuPan_ControllerBindings mikupan_controller_map[MIKUPAN_CONTROLLER_LOGICAL_COU
 static const int mikupan_stick_rdata_byte[MIKUPAN_STICK_COUNT] = {6, 7, 4, 5};
 
 int mikupan_keyboard_map[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
-    SDL_SCANCODE_I,         SDL_SCANCODE_K,      SDL_SCANCODE_J,
-    SDL_SCANCODE_L,         SDL_SCANCODE_UP,     SDL_SCANCODE_DOWN,
-    SDL_SCANCODE_LEFT,      SDL_SCANCODE_RIGHT,  SDL_SCANCODE_M,
-    SDL_SCANCODE_BACKSPACE, SDL_SCANCODE_ESCAPE, SDL_SCANCODE_N,
-    SDL_SCANCODE_O,         SDL_SCANCODE_8,      SDL_SCANCODE_9,
-    SDL_SCANCODE_U,
+    SDL_SCANCODE_E,    SDL_SCANCODE_SPACE,  SDL_SCANCODE_Q,
+    SDL_SCANCODE_C,    SDL_SCANCODE_UP,     SDL_SCANCODE_DOWN,
+    SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,  SDL_SCANCODE_V,
+    SDL_SCANCODE_TAB,  SDL_SCANCODE_ESCAPE, SDL_SCANCODE_LSHIFT,
+    SDL_SCANCODE_F,    SDL_SCANCODE_Z,      SDL_SCANCODE_X,
+    SDL_SCANCODE_R,
 };
 
 static const char *mikupan_stick_labels[MIKUPAN_STICK_COUNT] = {
@@ -203,10 +225,19 @@ void MikuPan_ControllerDrawDeviceSelectorUi(void)
     int num_gamepads = 0;
     SDL_JoystickID *joysticks_id = SDL_GetGamepads(&num_gamepads);
 
-    char preview[160];
-    if (mikupan_preferred_gamepad_index == MIKUPAN_CONTROLLER_AUTO_INDEX)
+    if (mikupan_input_view_keyboard < 0)
     {
-        snprintf(preview, sizeof(preview), "Auto (first available)");
+        mikupan_input_view_keyboard = (num_gamepads > 0) ? 0 : 1;
+    }
+
+    char preview[160];
+    if (mikupan_input_view_keyboard)
+    {
+        snprintf(preview, sizeof(preview), "Keyboard & Mouse");
+    }
+    else if (mikupan_preferred_gamepad_index == MIKUPAN_CONTROLLER_AUTO_INDEX)
+    {
+        snprintf(preview, sizeof(preview), "Auto (first available controller)");
     }
     else if (joysticks_id != NULL &&
              mikupan_preferred_gamepad_index >= 0 &&
@@ -222,12 +253,24 @@ void MikuPan_ControllerDrawDeviceSelectorUi(void)
                  mikupan_preferred_gamepad_index + 1);
     }
 
-    if (igBeginCombo("Controller", preview, 0))
+    if (igBeginCombo("Input device", preview, 0))
     {
-        const bool auto_selected =
-            mikupan_preferred_gamepad_index == MIKUPAN_CONTROLLER_AUTO_INDEX;
-        if (igSelectable_Bool("Auto (first available)", auto_selected, 0, (ImVec2){0, 0}))
+        const bool kbm_selected = mikupan_input_view_keyboard != 0;
+        if (igSelectable_Bool("Keyboard & Mouse", kbm_selected, 0, (ImVec2){0, 0}))
         {
+            mikupan_input_view_keyboard = 1;
+        }
+        if (kbm_selected)
+        {
+            igSetItemDefaultFocus();
+        }
+
+        const bool auto_selected =
+            !mikupan_input_view_keyboard &&
+            mikupan_preferred_gamepad_index == MIKUPAN_CONTROLLER_AUTO_INDEX;
+        if (igSelectable_Bool("Auto (first available controller)", auto_selected, 0, (ImVec2){0, 0}))
+        {
+            mikupan_input_view_keyboard = 0;
             MikuPan_ControllerSetPreferredGamepadIndex(MIKUPAN_CONTROLLER_AUTO_INDEX);
         }
         if (auto_selected)
@@ -241,9 +284,11 @@ void MikuPan_ControllerDrawDeviceSelectorUi(void)
             snprintf(label, sizeof(label), "%d: %s", i + 1,
                      MikuPan_ControllerNameForId(joysticks_id[i]));
 
-            const bool is_selected = mikupan_preferred_gamepad_index == i;
+            const bool is_selected =
+                !mikupan_input_view_keyboard && mikupan_preferred_gamepad_index == i;
             if (igSelectable_Bool(label, is_selected, 0, (ImVec2){0, 0}))
             {
+                mikupan_input_view_keyboard = 0;
                 MikuPan_ControllerSetPreferredGamepadIndex(i);
             }
             if (is_selected)
@@ -255,34 +300,8 @@ void MikuPan_ControllerDrawDeviceSelectorUi(void)
         igEndCombo();
     }
 
-    if (mikupan_gamepad != NULL)
-    {
-        const char *name = SDL_GetGamepadName(mikupan_gamepad);
-        const char *safe_name = (name != NULL && name[0] != '\0') ? name : "<unknown controller>";
-        int active_index = -1;
-        if (joysticks_id != NULL)
-        {
-            active_index = MikuPan_ControllerFindGamepadIndex(
-                joysticks_id, num_gamepads, SDL_GetGamepadID(mikupan_gamepad));
-        }
-
-        if (active_index >= 0)
-        {
-            igTextDisabled("Active: %d: %s", active_index + 1, safe_name);
-        }
-        else
-        {
-            igTextDisabled("Active: %s", safe_name);
-        }
-    }
-    else if (num_gamepads > 0)
-    {
-        igTextDisabled("No active controller for the current selection.");
-    }
-    else
-    {
-        igTextDisabled("No controllers detected.");
-    }
+    igTextDisabled("Keyboard/mouse and controller are always active together; "
+                   "this selects which bindings to edit below.");
 
     if (joysticks_id != NULL)
     {
@@ -353,6 +372,8 @@ void MikuPan_ControllerResetBindings(void)
         mikupan_stick_controller_map[i] = mikupan_stick_controller_map_defaults[i];
         mikupan_stick_keyboard_map[i] = mikupan_stick_keyboard_map_defaults[i];
     }
+    finder_mouse_enabled = 1;
+    finder_mouse_sensitivity = 1.0f;
     MikuPan_ResetCustomActionProfile();
     MikuPan_SetCustomActionProfileEnabled(0);
 }
@@ -388,6 +409,8 @@ void MikuPan_ControllerStoreBindingsToConfig(void)
         MikuPan_CustomActionProfileUsesFinderReverseY();
     cfg->action_profile_finder_swap_sticks =
         MikuPan_CustomActionProfileSwapsFinderSticks();
+    cfg->finder_mouse_enabled = finder_mouse_enabled;
+    cfg->finder_mouse_sensitivity = finder_mouse_sensitivity;
     for (int i = 0; i < MIKUPAN_ACTION_PROFILE_ACTION_COUNT; i++)
     {
         cfg->action_profile_normal[i] =
@@ -427,6 +450,13 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
         mikupan_stick_controller_map[i].invert       = cfg->stick_invert[i];
         mikupan_stick_keyboard_map[i].neg_scancode   = cfg->stick_kb_neg[i];
         mikupan_stick_keyboard_map[i].pos_scancode   = cfg->stick_kb_pos[i];
+    }
+    /* A sensitivity of 0 means the config predates this option, so keep the
+     * runtime defaults instead of disabling mouse-look on older configs. */
+    if (cfg->finder_mouse_sensitivity > 0.0f)
+    {
+        finder_mouse_enabled = cfg->finder_mouse_enabled ? 1 : 0;
+        MikuPan_SetFinderMouseSensitivity(cfg->finder_mouse_sensitivity);
     }
     if (cfg->action_profile_saved)
     {
@@ -479,11 +509,20 @@ int MikuPan_ReadController(unsigned char *rdata)
     // Status 0x79: Is a DualShock 2.
     rdata[1] = 0x79;
 
-    if (mikupan_gamepad != NULL)
+    /* Read gamepad and keyboard every frame so both drive the game at once.
+     * 127 is the shared neutral (MikuPan_GamePadAxisToPS2(0, 0) == 127, the same
+     * value the keyboard path rests at). */
+    const int stick_center = 127;
+    const bool *key_states = SDL_GetKeyboardState(NULL);
+
+    /* Buttons: OR the two sources per logical button, then flip the bit once.
+     * XOR-ing per source would cancel out when both press the same button. */
+    for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
     {
-        for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+        int pressed = 0;
+
+        if (mikupan_gamepad != NULL)
         {
-            int pressed = 0;
             switch (mikupan_controller_map[i].kind)
             {
                 case MIKUPAN_CONTROLLER_BIND_BUTTON:
@@ -498,10 +537,26 @@ int MikuPan_ReadController(unsigned char *rdata)
                 default:
                     break;
             }
-            data[1] ^= pressed ? mikupan_controller_game_bitmask[i] : 0;
         }
 
-        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+        if (!pressed && key_states != NULL)
+        {
+            int sc = mikupan_keyboard_map[i];
+            if (sc >= 0 && sc < SDL_SCANCODE_COUNT && key_states[sc])
+            {
+                pressed = 1;
+            }
+        }
+
+        data[1] ^= pressed ? mikupan_controller_game_bitmask[i] : 0;
+    }
+
+    /* Sticks: combine both sources per axis, keeping whichever is deflected
+     * further from centre so either device can take over at any time. */
+    for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+    {
+        int gamepad_value = stick_center;
+        if (mikupan_gamepad != NULL)
         {
             MikuPan_StickGamepadBinding b = mikupan_stick_controller_map[i];
             int raw = 0;
@@ -513,22 +568,11 @@ int MikuPan_ReadController(unsigned char *rdata)
                     raw = -raw;
                 }
             }
-            rdata[mikupan_stick_rdata_byte[i]] = MikuPan_GamePadAxisToPS2(raw, 0);
-        }
-    }
-    else
-    {
-        const bool *key_states = SDL_GetKeyboardState(NULL);
-
-        for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
-        {
-            int sc = mikupan_keyboard_map[i];
-            int pressed =
-                (sc >= 0 && sc < SDL_SCANCODE_COUNT) ? (int) key_states[sc] : 0;
-            data[1] ^= pressed ? mikupan_controller_game_bitmask[i] : 0;
+            gamepad_value = MikuPan_GamePadAxisToPS2(raw, 0);
         }
 
-        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+        int keyboard_value = stick_center;
+        if (key_states != NULL)
         {
             MikuPan_StickKeyboardBinding b = mikupan_stick_keyboard_map[i];
             int neg = (b.neg_scancode > 0 && b.neg_scancode < SDL_SCANCODE_COUNT)
@@ -537,11 +581,18 @@ int MikuPan_ReadController(unsigned char *rdata)
             int pos = (b.pos_scancode > 0 && b.pos_scancode < SDL_SCANCODE_COUNT)
                           ? (int) key_states[b.pos_scancode]
                           : 0;
-            unsigned char v = 127;
-            if (neg && !pos) v = 0;
-            else if (pos && !neg) v = 255;
-            rdata[mikupan_stick_rdata_byte[i]] = v;
+            if (neg && !pos) keyboard_value = 0;
+            else if (pos && !neg) keyboard_value = 255;
         }
+
+        int gamepad_def = gamepad_value - stick_center;
+        if (gamepad_def < 0) gamepad_def = -gamepad_def;
+        int keyboard_def = keyboard_value - stick_center;
+        if (keyboard_def < 0) keyboard_def = -keyboard_def;
+
+        rdata[mikupan_stick_rdata_byte[i]] =
+            (unsigned char) (gamepad_def >= keyboard_def ? gamepad_value
+                                                         : keyboard_value);
     }
 
     return 1;
@@ -645,6 +696,93 @@ int MikuPan_ControllerRumble(const unsigned char *data)
     }
 
     return SDL_RumbleGamepad(mikupan_gamepad, data[0] * 32896, data[1] * 257, 100);
+}
+
+int MikuPan_FinderMouseLookEnabled(void)
+{
+    return finder_mouse_enabled;
+}
+
+void MikuPan_SetFinderMouseLookEnabled(int enabled)
+{
+    finder_mouse_enabled = enabled ? 1 : 0;
+}
+
+float MikuPan_FinderMouseSensitivity(void)
+{
+    return finder_mouse_sensitivity;
+}
+
+void MikuPan_SetFinderMouseSensitivity(float sensitivity)
+{
+    if (sensitivity < MIKUPAN_FINDER_MOUSE_SENS_MIN)
+    {
+        sensitivity = MIKUPAN_FINDER_MOUSE_SENS_MIN;
+    }
+    else if (sensitivity > MIKUPAN_FINDER_MOUSE_SENS_MAX)
+    {
+        sensitivity = MIKUPAN_FINDER_MOUSE_SENS_MAX;
+    }
+
+    finder_mouse_sensitivity = sensitivity;
+}
+
+void MikuPan_FinderMouseRequest(void)
+{
+    finder_mouse_requested = 1;
+}
+
+void MikuPan_FinderMouseUpdate(void)
+{
+    /* Engage relative mouse mode only while finder aiming asked for it this
+     * frame and the dev menu bar is closed, so toggling the menu (F1) always
+     * hands the cursor back. */
+    int want = finder_mouse_requested && finder_mouse_enabled && !show_menu_bar;
+    finder_mouse_requested = 0;
+
+    if (want == finder_mouse_active)
+    {
+        return;
+    }
+
+    SDL_Window *window = MikuPan_GetUiWindow();
+    if (window == NULL)
+    {
+        return;
+    }
+
+    SDL_SetWindowRelativeMouseMode(window, want ? true : false);
+    finder_mouse_active = want;
+
+    if (want)
+    {
+        /* Drop motion accumulated while the cursor was free so aiming does not
+         * jump on the first engaged frame. */
+        SDL_GetRelativeMouseState(NULL, NULL);
+    }
+}
+
+int MikuPan_FinderMouseConsume(float *dx, float *dy)
+{
+    float mx = 0.0f;
+    float my = 0.0f;
+
+    if (finder_mouse_active)
+    {
+        SDL_GetRelativeMouseState(&mx, &my);
+    }
+
+    if (dx != NULL)
+    {
+        *dx = mx;
+    }
+
+    if (dy != NULL)
+    {
+        *dy = my;
+    }
+
+    return finder_mouse_active && (mx != 0.0f || my != 0.0f);
 }
 
 static int MikuPan_ControllerConfigActionProfileTarget(int layout, int target)
@@ -970,7 +1108,7 @@ static void MikuPan_ControllerDrawControllerBindingList(SDL_Gamepad *gp)
 
 static void MikuPan_ControllerDrawKeyboardBindingList(void)
 {
-    igTextDisabled("Active when no controller is connected. Click 'Edit' then press a key.");
+    igTextDisabled("Always active alongside the controller. Click 'Edit' then press a key.");
 
     for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
     {
@@ -1092,7 +1230,7 @@ static void MikuPan_ControllerDrawStickGamepadList(SDL_Gamepad *gp)
 
 static void MikuPan_ControllerDrawStickKeyboardList(void)
 {
-    igTextDisabled("Active when no controller is connected. Two keys per axis drive it to its extremes.");
+    igTextDisabled("Always active alongside the controller. Two keys per axis drive it to its extremes.");
 
     for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
     {
@@ -1297,6 +1435,8 @@ static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
     {
         MikuPan_SetCustomActionProfileFinderSwapSticks(swap_sticks ? 1 : 0);
     }
+    igTextDisabled("On (default): left stick / WASD move, right stick / mouse "
+                   "aim. Off: classic (left stick aims, right stick moves).");
 
     if (igButton("Reset custom profile", (ImVec2){0, 0}))
     {
@@ -1305,6 +1445,26 @@ static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
 
     igSameLine(0.0f, -1.0f);
     igTextDisabled("(keeps the custom profile enabled state)");
+
+    igSeparatorText("Finder Mouse Look");
+    igTextDisabled("Aim the first-person finder with the mouse. Always active "
+                   "(independent of the custom profile above).");
+
+    bool mouse_enabled = MikuPan_FinderMouseLookEnabled() != 0;
+    if (igCheckbox("Enable finder mouse look", &mouse_enabled))
+    {
+        MikuPan_SetFinderMouseLookEnabled(mouse_enabled ? 1 : 0);
+    }
+
+    float sensitivity = MikuPan_FinderMouseSensitivity();
+    igSetNextItemWidth(220.0f);
+    if (igSliderFloat("Mouse sensitivity", &sensitivity, 0.1f, 5.0f, "%.2fx", 0))
+    {
+        MikuPan_SetFinderMouseSensitivity(sensitivity);
+    }
+
+    igTextDisabled("Vertical aim follows the \"Reverse finder vertical aim\" "
+                   "option above.");
 }
 
 static void MikuPan_ControllerDrawActionProfileMapsUi(void)
@@ -1350,11 +1510,11 @@ void MikuPan_ControllerDrawRemapWindow(void)
 
         if (gp != NULL)
         {
-            igText("Connected: %s", SDL_GetGamepadName(gp));
+            igText("Controller connected: %s", SDL_GetGamepadName(gp));
         }
         else
         {
-            igTextDisabled("No controller connected (keyboard fallback active).");
+            igTextDisabled("No controller connected.");
         }
 
         if (igButton("Reset to defaults", (ImVec2){0, 0}))
@@ -1367,7 +1527,8 @@ void MikuPan_ControllerDrawRemapWindow(void)
         igSameLine(0.0f, -1.0f);
         igTextDisabled("Restores all input settings.");
 
-        if (igCollapsingHeader_TreeNodeFlags("Controller Preview", 0))
+        if (!mikupan_input_view_keyboard &&
+            igCollapsingHeader_TreeNodeFlags("Controller Preview", 0))
         {
             MikuPan_ControllerDrawControllerImage(gp);
         }
@@ -1378,22 +1539,26 @@ void MikuPan_ControllerDrawRemapWindow(void)
         MikuPan_ControllerDrawActionProfileSettingsUi();
     }
 
-    if (igCollapsingHeader_TreeNodeFlags("Physical Bindings", ImGuiTreeNodeFlags_DefaultOpen))
+    /* Show only the selected device's bindings (chosen in the Input device
+     * combo above) so the gamepad and keyboard menus aren't both listed. */
+    if (igCollapsingHeader_TreeNodeFlags(
+            mikupan_input_view_keyboard ? "Keyboard & Mouse Bindings"
+                                        : "Gamepad Bindings",
+            ImGuiTreeNodeFlags_DefaultOpen))
     {
-        if (igCollapsingHeader_TreeNodeFlags("Gamepad Bindings", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            igSeparatorText("Buttons##gamepad_buttons");
-            MikuPan_ControllerDrawControllerBindingList(gp);
-            igSeparatorText("Sticks##gamepad_sticks");
-            MikuPan_ControllerDrawStickGamepadList(gp);
-        }
-
-        if (igCollapsingHeader_TreeNodeFlags("Keyboard Bindings", 0))
+        if (mikupan_input_view_keyboard)
         {
             igSeparatorText("Buttons##keyboard_buttons");
             MikuPan_ControllerDrawKeyboardBindingList();
             igSeparatorText("Sticks##keyboard_sticks");
             MikuPan_ControllerDrawStickKeyboardList();
+        }
+        else
+        {
+            igSeparatorText("Buttons##gamepad_buttons");
+            MikuPan_ControllerDrawControllerBindingList(gp);
+            igSeparatorText("Sticks##gamepad_sticks");
+            MikuPan_ControllerDrawStickGamepadList(gp);
         }
     }
 

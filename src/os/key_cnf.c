@@ -108,7 +108,10 @@ static int custom_action_profile_dpad_subjective_move = 0;
 static int custom_action_profile_stick_subjective_move = 0;
 static int custom_action_profile_last_subjective_move = 0;
 static int custom_action_profile_finder_reverse_y = 0;
-static int custom_action_profile_finder_swap_sticks = 0;
+/* Default to the modern twin-stick finder layout: left stick / WASD moves the
+ * character, right stick / mouse aims the camera. Flip to 0 for the classic
+ * layout (left stick aims, right stick moves). */
+static int custom_action_profile_finder_swap_sticks = 1;
 
 static int IsFinderProfileMode(void)
 {
@@ -217,7 +220,7 @@ void MikuPan_ResetCustomActionProfile(void)
     custom_action_profile_stick_subjective_move = 0;
     custom_action_profile_last_subjective_move = 0;
     custom_action_profile_finder_reverse_y = 0;
-    custom_action_profile_finder_swap_sticks = 0;
+    custom_action_profile_finder_swap_sticks = 1;
     SetKeyType();
 }
 

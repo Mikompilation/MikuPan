@@ -24,6 +24,7 @@
 #include "camera.h"
 #include "enums.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_controller.h"
 #include "os/key_cnf.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -2620,6 +2621,9 @@ int FinderModePadChk(char *pad_x, char *pad_y, float *ax, float *ay,
     return *pad_x != 0 || *pad_y != 0;
 }
 
+/* Radians of finder rotation per pixel of mouse motion at 1.0x sensitivity. */
+#define FINDER_MOUSE_RAD_PER_PIXEL 0.004f
+
 void SetFinderRot()
 {
     MOVE_BOX *mb;
@@ -2786,6 +2790,58 @@ void SetFinderRot()
     }
 
     RotLimitChk(&plyr_wrk.frot_x);
+
+    /* Finder mouse-look: drive yaw/pitch straight from relative mouse motion.
+     * Requesting each aiming frame keeps the cursor captured (see
+     * MikuPan_FinderMouseUpdate); the reticle stays centred because no stick
+     * input is reported, giving a clean first-person feel. */
+    MikuPan_FinderMouseRequest();
+    {
+        float mdx = 0.0f;
+        float mdy = 0.0f;
+        float sens;
+        float fov_scale;
+        float pitch;
+
+        if (MikuPan_FinderMouseConsume(&mdx, &mdy))
+        {
+            sens = MikuPan_FinderMouseSensitivity() * FINDER_MOUSE_RAD_PER_PIXEL;
+
+            /* Aim more slowly as the finder zooms in (narrower fov). */
+            fov_scale = camera.fov / DEG2RAD(51.0f);
+            if (fov_scale > 1.0f)
+            {
+                fov_scale = 1.0f;
+            }
+            else if (fov_scale < 0.25f)
+            {
+                fov_scale = 0.25f;
+            }
+            sens *= fov_scale;
+
+            mb->rot[1] += mdx * sens;
+            RotLimitChk(&mb->rot[1]);
+
+            /* Screen-up is negative dy; by default moving the mouse up looks
+             * up, matching the stick (which adds delta on pad_y < 0). */
+            pitch = -mdy * sens;
+            if (MikuPan_KeyProfileUsesFinderReverseY())
+            {
+                pitch = -pitch;
+            }
+
+            plyr_wrk.frot_x += pitch;
+            if (plyr_wrk.frot_x > DEG2RAD(60.0f))
+            {
+                plyr_wrk.frot_x = DEG2RAD(60.0f);
+            }
+            else if (plyr_wrk.frot_x < DEG2RAD(-60.0f))
+            {
+                plyr_wrk.frot_x = DEG2RAD(-60.0f);
+            }
+            RotLimitChk(&plyr_wrk.frot_x);
+        }
+    }
 }
 
 /// EDITOR CODE
