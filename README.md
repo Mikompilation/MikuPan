@@ -82,15 +82,26 @@ built with the same linker flag before they are packaged into the APK.
 Example arm64 build:
 
 ```powershell
-cmake -S . -B cmake-build-android-arm64 -G Ninja `
-  -DCMAKE_TOOLCHAIN_FILE="$env:ANDROID_HOME/ndk/28.2.13676358/build/cmake/android.toolchain.cmake" `
-  -DSDL_ANDROID_HOME="$env:ANDROID_HOME" `
-  -DMIKUPAN_ANDROID_FFMPEG_ROOT="E:/path/to/ffmpegAndroid" `
-  -DMIKUPAN_ANDROID_FFMPEG_INCLUDE_DIR="E:/path/to/ffmpegAndroid/include" `
-  -DMIKUPAN_ANDROID_FFMPEG_LIBRARY="E:/path/to/ffmpegAndroid/arm64-v8a/libffmpeg.so" `
-  -DANDROID_ABI=arm64-v8a `
-  -DANDROID_PLATFORM=android-21 `
-  -DANDROID_STL=c++_static
+$env:ANDROID_HOME="C:\Users\willi\AppData\Local\Android\Sdk"
+$env:ANDROID_NDK_HOME="$env:ANDROID_HOME\ndk\27.0.12077973"
+
+$ninja="$env:ANDROID_HOME\cmake\3.22.1\bin\ninja.exe"
+$bash="C:\msys64\usr\bin\bash.exe"
+$make="C:\msys64\usr\bin\make.exe"
+$zip="C:\msys64\usr\bin\zip.exe"
+
+$buildTools="$env:ANDROID_HOME\build-tools\37.0.0"
+$jbr="C:\Program Files\Android\Android Studio\jbr\bin"
+
+cmake -S . -B cmake-build-android-arm64 -G Ninja `                
+   -DCMAKE_MAKE_PROGRAM="$ninja" `
+   -DBASH_EXECUTABLE="$bash" `
+   -DMAKE_EXECUTABLE="$make" `
+   -DCMAKE_TOOLCHAIN_FILE="$env:ANDROID_NDK_HOME\build\cmake\android.toolchain.cmake" `
+   -DSDL_ANDROID_HOME="$env:ANDROID_HOME" `
+   -DANDROID_ABI=arm64-v8a `
+   -DANDROID_PLATFORM=android-21 `
+   -DANDROID_STL=c++_static
 
 cmake --build cmake-build-android-arm64 --target MikuPan-apk
 ```

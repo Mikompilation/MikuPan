@@ -235,6 +235,11 @@ SDL_AppResult MikuPan_Init()
         mikupan_configuration.renderer.msaa_index = desired_msaa;
     }
 
+#ifdef __ANDROID__
+    desired_msaa = 0;
+    mikupan_configuration.renderer.msaa_index = desired_msaa;
+#endif
+
     if (desired_render_width <= 0)
     {
         desired_render_width = PS2_RESOLUTION_X_INT;

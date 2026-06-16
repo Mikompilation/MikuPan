@@ -26,6 +26,7 @@
 
 #include "SDL3/SDL_dialog.h"
 #include "SDL3/SDL_hints.h"
+#include "SDL3/SDL_platform.h"
 
 #include "mikupan_version.h"
 
@@ -3176,34 +3177,41 @@ void MikuPan_UiMenuBar(void)
 
             MikuPan_UiGpuBackendCombo();
 
-            char msaa_dropdown_list[32];
-            snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%d",
-                     msaa_list[msaa_samples]);
-
-            if (igBeginCombo("MSAA", msaa_dropdown_list, 0))
+            if (strcmp(SDL_GetPlatform(), "Android") == 0)
             {
-                for (int i = 0; i < sizeof(msaa_list)/sizeof(msaa_list[0]); i++)
+                igTextDisabled("MSAA: disabled on Android");
+            }
+            else
+            {
+                char msaa_dropdown_list[32];
+                snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%d",
+                         msaa_list[msaa_samples]);
+
+                if (igBeginCombo("MSAA", msaa_dropdown_list, 0))
                 {
-                    bool is_selected = (msaa_samples == i);
-                    snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list),
-                             "%d", msaa_list[i]);
-
-                    if (igSelectable_Bool(msaa_dropdown_list, is_selected, 0,
-                                          (ImVec2) {0, 0}))
+                    for (int i = 0; i < sizeof(msaa_list)/sizeof(msaa_list[0]); i++)
                     {
-                        msaa_samples = i;
+                        bool is_selected = (msaa_samples == i);
+                        snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list),
+                                 "%d", msaa_list[i]);
+
+                        if (igSelectable_Bool(msaa_dropdown_list, is_selected, 0,
+                                              (ImVec2) {0, 0}))
+                        {
+                            msaa_samples = i;
+                        }
+
+                        if (is_selected)
+                        {
+                            igSetItemDefaultFocus();
+                        }
                     }
 
-                    if (is_selected)
-                    {
-                        igSetItemDefaultFocus();
-                    }
+                    igEndCombo();
                 }
 
-                igEndCombo();
+                igTextDisabled("Scene samples: %dx", MikuPan_GPUGetSceneMSAA());
             }
-
-            igTextDisabled("Scene samples: %dx", MikuPan_GPUGetSceneMSAA());
 
             MikuPan_UiShadowResolutionCombo("Shadow Resolution");
 
