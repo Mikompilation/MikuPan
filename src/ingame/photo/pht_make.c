@@ -2113,7 +2113,7 @@ static void TakePhotoFromResolvedScreen(void)
     }
 
     *(int *)MikuPan_GetHostAddress(EVENT_ADDRESS) = 0x18000;
-    memcpy(MikuPan_GetHostAddress(EVENT_ADDRESS) + 16,
+    memcpy((u_char *)MikuPan_GetHostAddress(EVENT_ADDRESS) + 16,
            g_photo_capture_555,
            sizeof(g_photo_capture_555));
 

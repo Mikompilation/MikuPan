@@ -35,9 +35,14 @@
 # shadercross on Linux/macOS.
 # ---------------------------------------------------------------------------
 
+set(MIKUPAN_COMPILE_SHADERS_DEFAULT ON)
+if(ANDROID)
+    set(MIKUPAN_COMPILE_SHADERS_DEFAULT OFF)
+endif()
+
 option(MIKUPAN_COMPILE_SHADERS
         "Compile HLSL shaders with SDL_shadercross during the build."
-        ON)
+        ${MIKUPAN_COMPILE_SHADERS_DEFAULT})
 
 set(MIKUPAN_HLSL_DIR ${CMAKE_SOURCE_DIR}/resources/shaders/hlsl)
 
@@ -47,10 +52,13 @@ file(GLOB MIKUPAN_HLSL_SHADERS  CONFIGURE_DEPENDS ${MIKUPAN_HLSL_DIR}/*.hlsl)
 file(GLOB MIKUPAN_HLSL_INCLUDES CONFIGURE_DEPENDS ${MIKUPAN_HLSL_DIR}/*.hlsli)
 
 # One "<directory>=<extension>" entry per SDL_GPU shader format the game can
-# load at runtime: spirv/*.spv (Vulkan), dxil/*.dxil (Direct3D 12) and
-# msl/*.msl (Metal). shadercross picks the destination format from the output
-# extension. mikupan_shader.c resolves the directory matching the device.
-set(MIKUPAN_SHADER_FORMATS "spirv=spv" "dxil=dxil" "msl=msl")
+# load at runtime. Android only consumes SPIR-V through Vulkan, and the shader
+# compiler is a host tool, so Android builds default to checked-in SPIR-V.
+if(ANDROID)
+    set(MIKUPAN_SHADER_FORMATS "spirv=spv")
+else()
+    set(MIKUPAN_SHADER_FORMATS "spirv=spv" "dxil=dxil" "msl=msl")
+endif()
 
 if(NOT MIKUPAN_COMPILE_SHADERS)
     foreach(format ${MIKUPAN_SHADER_FORMATS})

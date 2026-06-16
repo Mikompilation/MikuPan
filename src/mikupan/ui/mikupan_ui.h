@@ -13,6 +13,7 @@ SDL_Window *MikuPan_GetUiWindow(void);
 void MikuPan_RenderUi(void);
 void MikuPan_StartFrameUi(void);
 void MikuPan_DrawUi(void);
+void MikuPan_DrawMissingDataUi(const char *missing_file);
 void MikuPan_ShutDownUi(void);
 void MikuPan_ProcessEventUi(SDL_Event *event);
 void MikuPan_RequestQuit(void);

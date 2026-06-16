@@ -31,14 +31,60 @@
 #include <mikupan/mikupan_memory.h>
 #include <sce/libpad.h>
 
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
+static int mikupan_game_initialized = 0;
+static int mikupan_missing_data_prompted = 0;
+static char mikupan_missing_data_file[256] = "";
+
+static int MikuPan_TryInitializeGame(void)
 {
-    SDL_AppResult result = MikuPan_Init();
-    MikuPan_InitPs2Memory();
+    char missing_file[sizeof(mikupan_missing_data_file)] = "";
+
+    if (mikupan_game_initialized)
+    {
+        return 1;
+    }
+
+    if (!MikuPan_HasRequiredDataFiles(missing_file, sizeof(missing_file)))
+    {
+        if (strcmp(mikupan_missing_data_file, missing_file) != 0)
+        {
+            strncpy(mikupan_missing_data_file, missing_file,
+                    sizeof(mikupan_missing_data_file) - 1);
+            mikupan_missing_data_file[sizeof(mikupan_missing_data_file) - 1] =
+                '\0';
+            mikupan_missing_data_prompted = 0;
+        }
+
+        if (!mikupan_missing_data_prompted)
+        {
+            MikuPan_RequestDataFolderSelection(mikupan_missing_data_file);
+            mikupan_missing_data_prompted = 1;
+        }
+
+        return 0;
+    }
+
+    mikupan_missing_data_file[0] = '\0';
+    mikupan_missing_data_prompted = 0;
 
     /// GAME LOGIC ///
     InitSystem();
     InitGameFirst();
+    mikupan_game_initialized = 1;
+    return 1;
+}
+
+SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
+{
+    SDL_AppResult result = MikuPan_Init();
+    if (result != SDL_APP_CONTINUE)
+    {
+        return result;
+    }
+
+    MikuPan_InitPs2Memory();
+
+    MikuPan_TryInitializeGame();
 
     return result;
 }
@@ -79,6 +125,17 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     MikuPan_FlushTextureCache();
 
+    if (!mikupan_game_initialized)
+    {
+        MikuPan_TryInitializeGame();
+        if (!mikupan_game_initialized)
+        {
+            MikuPan_DrawMissingDataUi(mikupan_missing_data_file);
+            MikuPan_EndFrame();
+            return SDL_APP_CONTINUE;
+        }
+    }
+
     if (!SoftResetChk())
     {
         if (!PlayMpegEvent())
@@ -116,7 +173,10 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
-    IopShutDown();
+    if (mikupan_game_initialized)
+    {
+        IopShutDown();
+    }
 
     if (result == SDL_APP_SUCCESS)
     {

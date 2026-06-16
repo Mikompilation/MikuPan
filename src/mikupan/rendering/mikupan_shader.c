@@ -1,6 +1,7 @@
 #include "mikupan_shader.h"
 
 #include "mikupan/mikupan_file_c.h"
+#include "mikupan/mikupan_logging.h"
 #include "mikupan_gpu.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -310,12 +311,20 @@ const char *MikuPan_GetShaderFragSource(int idx)
 
 int MikuPan_InitShaders()
 {
+    int failed = 0;
+
     for (int i = 0; i < MAX_SHADER_PROGRAMS; i++)
     {
         SDL_GPUShader *vs = NULL;
         SDL_GPUShader *fs = NULL;
-        if (BuildShaderProgram(i, &vs, &fs, NULL, 0) != 0)
+        char err_buf[512] = "";
+        if (BuildShaderProgram(i, &vs, &fs, err_buf,
+                               (int)sizeof(err_buf)) != 0)
         {
+            info_log("Failed to load shader %s: %s",
+                     MikuPan_GetShaderName(i),
+                     err_buf[0] != '\0' ? err_buf : "unknown error");
+            failed = 1;
             continue;
         }
 
@@ -323,6 +332,11 @@ int MikuPan_InitShaders()
         g_fragment_shaders[i] = fs;
         shader_list[i] = (u_int)(i + 1);
         current_program = shader_list[i];
+    }
+
+    if (failed)
+    {
+        return -1;
     }
 
     if (current_program != 0)

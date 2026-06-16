@@ -11,6 +11,20 @@ if(WIN32)
     set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/extern/icon.rc")
 endif()
 
+if(ANDROID)
+    set(MIKUPAN_ANDROID_PAGE_SIZE "16384"
+            CACHE STRING "Maximum Android ELF page size for native shared libraries.")
+    set(MIKUPAN_ANDROID_PAGE_SIZE_LINK_FLAGS
+            "-Wl,-z,max-page-size=${MIKUPAN_ANDROID_PAGE_SIZE}")
+    foreach(linker_flag_var
+            CMAKE_EXE_LINKER_FLAGS
+            CMAKE_SHARED_LINKER_FLAGS
+            CMAKE_MODULE_LINKER_FLAGS)
+        set(${linker_flag_var}
+                "${${linker_flag_var}} ${MIKUPAN_ANDROID_PAGE_SIZE_LINK_FLAGS}")
+    endforeach()
+endif()
+
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -303,7 +317,12 @@ add_custom_target(mikupan_version
         COMMENT "Updating MikuPan build version info"
 )
 
-add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
+if(ANDROID)
+    add_library(MikuPan SHARED ${MIKUPAN_SOURCES})
+    set_target_properties(MikuPan PROPERTIES OUTPUT_NAME main)
+else()
+    add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
+endif()
 add_dependencies(MikuPan mikupan_version)
 add_dependencies(MikuPan compile_shaders)
 if(TARGET ffmpeg_build)
@@ -337,13 +356,21 @@ target_link_libraries(MikuPan PRIVATE
         inipp::inipp
 )
 
-add_custom_command(TARGET MikuPan POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:MikuPan>/resources
-)
-if(WIN32)
-    add_custom_command(TARGET MikuPan POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${FFMPEG_ROOT}/bin"
-            $<TARGET_FILE_DIR:MikuPan>
-    )
+if(ANDROID)
+    target_link_libraries(MikuPan PRIVATE log)
 endif()
+
+if(NOT ANDROID)
+    add_custom_command(TARGET MikuPan POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:MikuPan>/resources
+    )
+    if(WIN32)
+        add_custom_command(TARGET MikuPan POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${FFMPEG_ROOT}/bin"
+                $<TARGET_FILE_DIR:MikuPan>
+        )
+    endif()
+endif()
+
+include(mikupan_android)

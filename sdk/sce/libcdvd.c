@@ -19,7 +19,11 @@ typedef struct {
 static MikuPanCdFile cd_files[MIKUPAN_CD_MAX_FILES];
 static u_int cd_next_file_lsn = MIKUPAN_CD_FILE_LSN_BASE;
 static int cd_last_error;
-static FILE* cd_stream_file;
+/* Opened through SDL_IOFromFile so the emulated CD can read paths that are not
+ * plain filesystem paths -- notably Android content:// URIs and assets:// asset
+ * paths. stdio fopen() cannot open those, which previously made every sceCdRead
+ * fail on Android and hung ICdvdInitOnce in its load-retry loop. */
+static SDL_IOStream* cd_stream_file;
 
 static u_char DecToBcd(u_char dec)
 {
@@ -37,20 +41,31 @@ static int ResolveDataFile(const char* name, char* out, size_t out_size)
 
 static int ReadFileBytes(const char* path, u_int offset, void* buf, u_int size)
 {
-    FILE* fp = fopen(path, "rb");
-    if (fp == NULL) {
+    SDL_IOStream* io = SDL_IOFromFile(path, "rb");
+    if (io == NULL) {
         cd_last_error = 1;
         return 0;
     }
 
-    if (fseek(fp, (long)offset, SEEK_SET) != 0) {
-        fclose(fp);
+    if (offset != 0 && SDL_SeekIO(io, (Sint64)offset, SDL_IO_SEEK_SET) < 0) {
+        SDL_CloseIO(io);
         cd_last_error = 1;
         return 0;
     }
 
-    fread(buf, 1, size, fp);
-    fclose(fp);
+    /* Best-effort fill, matching the old stdio read which ignored short reads. */
+    u_char* dst = (u_char*)buf;
+    size_t remaining = size;
+    while (remaining > 0) {
+        size_t got = SDL_ReadIO(io, dst, remaining);
+        if (got == 0) {
+            break;
+        }
+        dst += got;
+        remaining -= got;
+    }
+
+    SDL_CloseIO(io);
     cd_last_error = 0;
     return 1;
 }
@@ -191,13 +206,26 @@ int sceCdStRead(u_int size, u_int* buf, u_int mode, u_int* err)
         return 0;
     }
 
-    return (int)fread(buf, 0x800, size, cd_stream_file);
+    /* Mirror fread(buf, 0x800, size, ...): fill as much as possible and report
+     * the number of complete 0x800-byte sectors read. */
+    u_char* dst = (u_char*)buf;
+    size_t want = (size_t)size * 0x800u;
+    size_t total = 0;
+    while (total < want) {
+        size_t got = SDL_ReadIO(cd_stream_file, dst + total, want - total);
+        if (got == 0) {
+            break;
+        }
+        total += got;
+    }
+
+    return (int)(total / 0x800u);
 }
 
 int sceCdStStop()
 {
     if (cd_stream_file != NULL) {
-        fclose(cd_stream_file);
+        SDL_CloseIO(cd_stream_file);
         cd_stream_file = NULL;
     }
 
@@ -263,6 +291,6 @@ int sceCdStStart(u_int lbn, sceCdRMode* mode)
         return 0;
     }
 
-    cd_stream_file = fopen(file->path, "rb");
+    cd_stream_file = SDL_IOFromFile(file->path, "rb");
     return cd_stream_file != NULL;
 }

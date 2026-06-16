@@ -1618,7 +1618,16 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
                                       ? SDL_GPU_BLENDFACTOR_ONE
                                       : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
     blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
-    blend.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+    /* Alpha channel: keep the destination (framebuffer) alpha opaque instead of
+     * blending it like a colour. With SRC_ALPHA here, every semi-transparent 2D
+     * sprite drives the framebuffer alpha below 1. D3D12 ignores swapchain alpha
+     * so desktop looks fine, but Android/Vulkan SurfaceFlinger composites the
+     * surface USING that alpha, making all 2D sprites/HUD translucent against
+     * whatever is behind the window. ONE + ONE_MINUS_SRC_ALPHA (and ONE + ONE
+     * for additive) leaves a cleared-to-1 target at alpha 1 everywhere. ImGui's
+     * backend does the same, which is why its overlay stayed correct. RGB
+     * (the visible colour) is unaffected on every backend. */
+    blend.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
     blend.dst_alpha_blendfactor = g_state.additive_blend
                                       ? SDL_GPU_BLENDFACTOR_ONE
                                       : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
