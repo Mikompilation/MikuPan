@@ -349,7 +349,7 @@ void ContSubtitlesTime(int path, u_int frame)
     };
 	u_char time[12] = {0, 0, 0, 0, 0, 0x8e, 0, 0, 0, 0, 0, 0xff};
 
-    if (*key_now[8] != 0 && st_dbg.pflg == 0)
+    if (L1_PRESSED() != 0 && st_dbg.pflg == 0)
     {
         st_dbg.pflg = 1;
         st_dbg.inout[st_dbg.num][0] = frame;
@@ -360,18 +360,18 @@ void ContSubtitlesTime(int path, u_int frame)
         st_dbg.inout[st_dbg.num][1] = frame;
     }
     
-    if (*key_now[8] == 0 && st_dbg.pflg != 0)
+    if (L1_PRESSED() == 0 && st_dbg.pflg != 0)
     {
         st_dbg.inout[st_dbg.num++][1] = frame;
         st_dbg.pflg = 0;
     }
     
-    if (*key_now[9] != 0)
+    if (L2_PRESSED() != 0)
     {
         InitSubtitlesSys();
     }
     
-    if (*key_now[11] != 0)
+    if (R2_PRESSED() != 0)
     {
         subtitles_sys.flg = 0;
     }

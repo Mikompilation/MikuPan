@@ -1411,7 +1411,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         break;
         }
     }
-    else if (*key_now[4] == 1)
+    else if (TRIANGLE_PRESSED() == 1)
     {
         ttl_dsp.timer = 0;
         title_wrk.mode = 2;
@@ -1521,13 +1521,13 @@ void TitleSelectMode()
 
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
     }
-    else if (*key_now[4] == 1)
+    else if (TRIANGLE_PRESSED() == 1)
     {
         title_wrk.mode = 3;
 
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
-    else if (*key_now[5] == 1)
+    else if (CROSS_PRESSED() == 1)
     {
         switch(title_wrk.csr)
         {
@@ -1677,7 +1677,7 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
         return;
     }
 
-    if (*key_now[5] == 1 || *key_now[12] == 1)
+    if (CROSS_PRESSED() == 1 || START_PRESSED() == 1)
     {
         switch (title_wrk.csr)
         {
@@ -1700,7 +1700,7 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
         break;
         }
     }
-    else if (*key_now[4] == 1)
+    else if (TRIANGLE_PRESSED() == 1)
     {
         title_wrk.mode = 23;
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
@@ -1807,21 +1807,21 @@ void TitleSelectDifficultyYW()
 
     DispSprD(&ds);
 
-    if (*key_now[5] == 1 || *key_now[0xc] == 1)
+    if (CROSS_PRESSED() == 1 || *key_now[0xc] == 1)
     {
         title_wrk.mode = 9;
 
         SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
     }
-    else if (*key_now[4] == 1)
+    else if (TRIANGLE_PRESSED() == 1)
     {
         title_wrk.mode = 9;
 
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
     else if (
-        *key_now[3] == 1 ||
-        (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+        DPAD_RIGHT_PRESSED() == 1 ||
+        (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
         Ana2PadDirCnt(1) == 1 ||
         (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
     )
@@ -1883,7 +1883,7 @@ void LoadGameInit()
 {
     sys_wrk.load = 1;
     title_wrk.csr = 0;
-    ingame_wrk.mode = 6;
+    ingame_wrk.mode = INGAME_MODE_NOMAL;
 
     cribo.clear_info &= 0x4;
     cribo.costume = 0;

@@ -716,7 +716,7 @@ void mcMakeHeaderFile()
 
         header->map_flg = 1;
 
-        if (ingame_wrk.mode == 23)
+        if (ingame_wrk.mode == INGAME_MODE_ENDING)
         {
             header->msn_no = 5;
         }

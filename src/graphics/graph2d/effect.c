@@ -220,7 +220,7 @@ void InitEffectsEF()
         }
     }
 
-    if (plyr_wrk.pr_info.room_no != 29)
+    if (plyr_wrk.pr_info.room_no != R029)
     {
         if (r28_torch_flag != 0)
         {
@@ -1230,10 +1230,10 @@ void EffectControl(int no)
 
     switch (no)
     {
-        case 5:
+        case GRA2D_CALL_IG2:
             if (dbg_wrk.oth_pkt_num_sw != 0)
             {
-                if (*key_now[8] != 0)
+                if (L1_PRESSED() != 0)
                 {
                     for (n = 0; n < 64; n++)
                     {
@@ -1279,7 +1279,7 @@ void EffectControl(int no)
             SetSaveCameraLamp();
 
             if (sys_wrk.game_mode != GAME_MODE_OUTGAME && tmp_effect_off == 0
-                && ingame_wrk.mode != 15 && ingame_wrk.game != 1)
+                && ingame_wrk.mode != INGAME_MODE_WANDER_SOUL && ingame_wrk.game != 1)
             {
                 CheckItemEffect();
             }
@@ -1290,103 +1290,103 @@ void EffectControl(int no)
             DrawRareEne();
             tes_p10();
 
-            if (ecm[10].dat.uc8[0] == 10)
+            if (ecm[EF_RENZFLARE].dat.uc8[0] == EF_RENZFLARE)
             {
-                SetRenzFlare(&ecm[10]);
+                SetRenzFlare(&ecm[EF_RENZFLARE]);
             }
 
             EffectZSort();
 
-            if (ecm[19].dat.uc8[0] == 19)
+            if (ecm[EF_SPIRIT].dat.uc8[0] == EF_SPIRIT)
             {
-                SetSpirit(&ecm[19]);
+                SetSpirit(&ecm[EF_SPIRIT]);
             }
 
             SetMAGATOKI2();
 
-            if (ecm[16].dat.uc8[0] == 16)
+            if (ecm[EF_MAGATOKI].dat.uc8[0] == EF_MAGATOKI)
             {
-                SetMAGATOKI(&ecm[16]);
+                SetMAGATOKI(&ecm[EF_MAGATOKI]);
             }
 
-            if (ecm[1].dat.uc8[0] == 1)
+            if (ecm[EF_Z_DEP].dat.uc8[0] == EF_Z_DEP)
             {
-                SetForcusDepth(&ecm[1]);
+                SetForcusDepth(&ecm[EF_Z_DEP]);
             }
 
-            if (ecm[36].dat.uc8[0] == 36)
+            if (ecm[EF_Z_DEP2].dat.uc8[0] == EF_Z_DEP2)
             {
-                SetForcusDepth2(&ecm[36]);
+                SetForcusDepth2(&ecm[EF_Z_DEP2]);
             }
 
-            if (ecm[3].dat.uc8[0] == 3)
+            if (ecm[EF_BLUR_N].dat.uc8[0] == EF_BLUR_N)
             {
-                SetBlur(&ecm[3]);
+                SetBlur(&ecm[EF_BLUR_N]);
             }
 
-            if (ecm[4].dat.uc8[0] == 4)
+            if (ecm[EF_BLUR_B].dat.uc8[0] == EF_BLUR_B)
             {
-                SetBlur(&ecm[4]);
+                SetBlur(&ecm[EF_BLUR_B]);
             }
 
-            if (ecm[5].dat.uc8[0] == 5)
+            if (ecm[EF_BLUR_W].dat.uc8[0] == EF_BLUR_W)
             {
-                SetBlur(&ecm[5]);
+                SetBlur(&ecm[EF_BLUR_W]);
             }
 
-            RunBlur(&ecm[3]);
+            RunBlur(&ecm[EF_BLUR_N]);
 
-            if (ecm[6].dat.uc8[0] == 6)
+            if (ecm[EF_DEFORM].dat.uc8[0] == EF_DEFORM)
             {
-                SetDeform(&ecm[6]);
+                SetDeform(&ecm[EF_DEFORM]);
             }
 
-            if (ecm[13].dat.uc8[0] == 13)
+            if (ecm[EF_NCONTRAST].dat.uc8[0] == EF_NCONTRAST)
             {
-                SetContrast2(&ecm[13]);
+                SetContrast2(&ecm[EF_NCONTRAST]);
             }
 
-            if (ecm[12].dat.uc8[0] == 12)
+            if (ecm[EF_NEGA].dat.uc8[0] == EF_NEGA)
             {
-                SetNega(&ecm[12]);
+                SetNega(&ecm[EF_NEGA]);
             }
 
-            if (ecm[15].dat.uc8[0] == 15)
+            if (ecm[EF_NCONTRAST3].dat.uc8[0] == EF_NCONTRAST3)
             {
-                SetContrast3(&ecm[15]);
+                SetContrast3(&ecm[EF_NCONTRAST3]);
             }
 
-            if (ecm[7].dat.uc8[0] == 7)
+            if (ecm[EF_FOCUS].dat.uc8[0] == EF_FOCUS)
             {
-                SetFocus1(&ecm[7]);
+                SetFocus1(&ecm[EF_FOCUS]);
             }
 
-            RunFocus(&ecm[7]);
+            RunFocus(&ecm[EF_FOCUS]);
 
-            if (ecm[2].dat.uc8[0] == 2)
+            if (ecm[EF_DITHER].dat.uc8[0] == EF_DITHER)
             {
-                SetDither3(&ecm[2]);
+                SetDither3(&ecm[EF_DITHER]);
             }
 
-            if (ecm[35].dat.uc8[0] == 35)
+            if (ecm[EF_DITHER2].dat.uc8[0] == EF_DITHER2)
             {
-                SetDither4(&ecm[35]);
+                SetDither4(&ecm[EF_DITHER2]);
             }
 
-            if (ecm[11].dat.uc8[0] == 11)
+            if (ecm[EF_BLACKFILTER].dat.uc8[0] == EF_BLACKFILTER)
             {
-                SetBlackFilter(&ecm[11]);
+                SetBlackFilter(&ecm[EF_BLACKFILTER]);
             }
 
-            if (ecm[14].dat.uc8[0] == 14)
+            if (ecm[EF_NCONTRAST2].dat.uc8[0] == EF_NCONTRAST2)
             {
-                SetContrast2(&ecm[14]);
+                SetContrast2(&ecm[EF_NCONTRAST2]);
             }
 
             tes_p11();
             SetRoomDirecPazzEne();
             break;
-        case 7:
+        case GRA2D_CALL_IG31:
             SetEneDmgEffect1_Sub();
             SetEneDmgEffect2_Sub();
             RunCamStop();
@@ -1399,28 +1399,27 @@ void EffectControl(int no)
             tes_p21();
             EffectZSort3();
             return;
-        case 8:
+        case GRA2D_CALL_IG32:
             tes_p3();
 
-            if (ecm[9].dat.uc8[0] == 9)
+            if (ecm[EF_FADEFRAME].dat.uc8[0] == EF_FADEFRAME)
             {
-                SetFadeFrame(&ecm[9]);
+                SetFadeFrame(&ecm[EF_FADEFRAME]);
             }
 
-            if (ecm[8].dat.uc8[0] == 8)
+            if (ecm[EF_OVERLAP].dat.uc8[0] == EF_OVERLAP)
             {
-                SetOverRap(&ecm[8]);
+                SetOverRap(&ecm[EF_OVERLAP]);
             }
 
             ScreenCtrl();
             CamSave();
             return;
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 6:
-
+        case GRA2D_CALL_IG0:
+        case GRA2D_CALL_IG1:
+        case GRA2D_CALL_IG0E:
+        case GRA2D_CALL_IG1E:
+        case GRA2D_CALL_IG3:
             return;
     }
     return;
@@ -1571,6 +1570,7 @@ void tes_p11()
     return;
 }
 
+/// Tests the ContHeatHaze Effect On Player
 void tes_p20()
 {
     static void *ene_fire_work = NULL;
@@ -1584,9 +1584,9 @@ void tes_p20()
     static float off_x = 0.0f;
     static float off_z = 0.0f;
 
-    if (dbg_wrk.eff_new_ene_ef_sw != 0)
+    if (dbg_wrk.eff_new_ene_ef_sw == 0)
     {
-        if (ingame_wrk.mode != 10 && plyr_wrk.mode != 1)
+        if (ingame_wrk.mode != INGAME_MODE_MENU && plyr_wrk.mode != 1)
         {
             alp = dbg_wrk.eff_new_ene_ef_alp;
 

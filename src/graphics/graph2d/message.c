@@ -1528,13 +1528,13 @@ int SetMessageV2_2(DISP_STR *s)
                     s->csr = s->csr > 0 ? s->csr - 1 : selnum - 1;
                 }
 
-                if (*key_now[3] == 1)
+                if (DPAD_RIGHT_PRESSED() == 1)
                 {
                     s->csr = s->csr >= selnum - 1 ? 0 : s->csr + 1;
                 }
             }
 
-            if (*key_now[5] == 1)
+            if (CROSS_PRESSED() == 1)
             {
                 s->st = s->st ^ 0x20 | 0x80;
             }
@@ -1868,13 +1868,13 @@ int SetMessageV2(DISP_STR *s)
                     s->csr = s->csr > 0 ? s->csr - 1 : selnum - 1;
                 }
 
-                if (*key_now[3] == 1)
+                if (DPAD_RIGHT_PRESSED() == 1)
                 {
                     s->csr = s->csr >= selnum - 1 ? 0 : s->csr + 1;
                 }
             }
 
-            if (*key_now[5] == 1)
+            if (CROSS_PRESSED() == 1)
             {
                 s->st = s->st ^ 0x20 | 0x80;
             }
@@ -2357,13 +2357,13 @@ int SubMessageV3(u_char *s, int pri, int delflg)
                     msdat.csr = msdat.csr > 0 ? msdat.csr - 1 : msdat.selnum - 1;
                 }
 
-                if (*key_now[3] == 1)
+                if (DPAD_RIGHT_PRESSED() == 1)
                 {
                     msdat.csr = msdat.csr >= msdat.selnum - 1 ? 0 : msdat.csr + 1;
                 }
             }
 
-            if (*key_now[5] == 1)
+            if (CROSS_PRESSED() == 1)
             {
                 msdat.sta ^= 0x2f;
                 msdat.decide = 1;
@@ -2464,7 +2464,7 @@ void MesPassCheck()
 
 static void MesKeyCheck()
 {
-    if ((msdat.sta & 0x10) != 0 && *key_now[5] == 1)
+    if ((msdat.sta & 0x10) != 0 && CROSS_PRESSED() == 1)
     {
         msdat.sta |= 0x1;
     }

@@ -24,7 +24,7 @@ void LayoutTestMain()
     SetSprFile(MikuPan_GetHostAddress(TEST2D_PK2_ADDRESS));
     LayoutTestDisp();
 
-    if (*key_now[5] != 0)
+    if (CROSS_PRESSED() != 0)
     {
         OutGameModeChange(OUTGAME_MODE_TITLE);
     }

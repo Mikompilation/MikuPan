@@ -31,11 +31,6 @@ struct GsFrameMetrics
 static GsFrameMetrics g_gs_frame_metrics = {0, 0, 0.0, 0, 0, 0.0};
 static GsFrameMetrics g_gs_last_frame    = {0, 0, 0.0, 0, 0, 0.0};
 
-/// Pending-upload regions accumulated since the last drain. The texture L1
-/// drains this list and invalidates only those L1 entries whose source GS
-/// region overlaps any of these — replacing the old "wipe everything on any
-/// upload" behavior that forced an XXH3 over GS memory for every fresh-this-
-/// frame tex0 (the dominant cost in PERF_SECT_SC_TEXTURE).
 struct GsUploadRegion { int addr; int size; };
 static std::vector<GsUploadRegion> g_pending_uploads;
 
@@ -785,8 +780,6 @@ void MikuPan_GsResetFrameMetrics(void)
     g_gs_frame_metrics.download_count = 0;
     g_gs_frame_metrics.download_bytes = 0;
     g_gs_frame_metrics.download_ms    = 0.0;
-    // g_pending_uploads is preserved — invalidation is lazy (drained by the
-    // L1 cache on its next lookup).
 }
 
 int    MikuPan_GsGetUploadCount(void)    { return g_gs_last_frame.upload_count; }

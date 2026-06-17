@@ -318,13 +318,13 @@ char ModeSlctPad(u_char mode)
     switch (mode)
     {
     case 0:
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dsp_ms.next_mode = 5;
             rtrn = 1;
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         { 
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dsp_ms.next_mode = dsp_ms.csr[0] + 1;
@@ -373,7 +373,7 @@ char ModeSlctPad(u_char mode)
         }
     break;
     case 1:
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             if (dsp_ms.side == 0)
@@ -397,7 +397,7 @@ char ModeSlctPad(u_char mode)
             cribo.costume = dsp_ms.sm_slct[2];
 #endif
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             switch (dsp_ms.csr[1])
@@ -430,7 +430,7 @@ char ModeSlctPad(u_char mode)
                 {
                     sys_wrk.load = 1;
                     title_wrk.csr = 0;
-                    ingame_wrk.mode = 6;
+                    ingame_wrk.mode = INGAME_MODE_NOMAL;
                 }
                 else
                 {
@@ -533,8 +533,8 @@ char ModeSlctPad(u_char mode)
                     }
                 }
                 else if (
-                    *key_now[3] == 1 ||
-                    (*key_now[3] > 0x19 && (*key_now[3] % 5) == 1) ||
+                    DPAD_RIGHT_PRESSED() == 1 ||
+                    (DPAD_RIGHT_PRESSED() > 0x19 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(1) == 1 ||
                     (Ana2PadDirCnt(1) > 0x19 && (Ana2PadDirCnt(1) % 5) == 1)
                 )
@@ -568,7 +568,7 @@ char ModeSlctPad(u_char mode)
         }
     break;
     case 2:
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             if (dsp_ms.side == 0)
@@ -581,7 +581,7 @@ char ModeSlctPad(u_char mode)
                 dsp_ms.side = 0;
             }
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             switch (dsp_ms.csr[1])
@@ -687,8 +687,8 @@ char ModeSlctPad(u_char mode)
                     
                 }
                 else if (
-                    *key_now[3] == 1 ||
-                    (*key_now[3] > 0x19 && (*key_now[3] % 5) == 1) ||
+                    DPAD_RIGHT_PRESSED() == 1 ||
+                    (DPAD_RIGHT_PRESSED() > 0x19 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(1) == 1 ||
                     (Ana2PadDirCnt(1) > 0x19 && Ana2PadDirCnt(1) % 5 == 1)
                 )
@@ -740,14 +740,14 @@ char ModeSlctPad(u_char mode)
     break;
     case 7:
         level = CheckClearStage();
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dsp_ms.next_mode = 0x2;
             OutGameModeChange(OUTGAME_MODE_MODESEL);
             rtrn = 1;
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             ingame_wrk.game = 1;
@@ -756,19 +756,19 @@ char ModeSlctPad(u_char mode)
             SaveStoryWrk();
             GameModeChange(0);
             title_bgm_no = -1;
-            if (*key_now[10] != 0)
+            if (R1_PRESSED() != 0)
             {
                 battle_scr_effct[btl_wrk.stage_no] = 6;
             }
-            else if (*key_now[11] != 0)
+            else if (R2_PRESSED() != 0)
             {
                 battle_scr_effct[btl_wrk.stage_no] = 4;
             }
-            else if (*key_now[8] != 0)
+            else if (L1_PRESSED() != 0)
             {
                 battle_scr_effct[btl_wrk.stage_no] = 2;
             }
-            else if (*key_now[9] != 0)
+            else if (L2_PRESSED() != 0)
             {
                 battle_scr_effct[btl_wrk.stage_no] = 3;
             }
@@ -837,8 +837,8 @@ char ModeSlctPad(u_char mode)
                         }
                     }
                     else if (
-                        *key_now[3] == 1 || 
-                        (*key_now[3] > 0x19 && (*key_now[3] % 5) == 1) ||
+                        DPAD_RIGHT_PRESSED() == 1 ||
+                        (DPAD_RIGHT_PRESSED() > 0x19 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                         Ana2PadDirCnt(1) == 1 ||
                         (Ana2PadDirCnt(1) > 0x19 && (Ana2PadDirCnt(1) % 5) == 1)
                     )

@@ -1369,7 +1369,7 @@ static void DoorCtrlOpen()
 
                     else if (tmp_rot_door_id == 29)
                     {
-                        if (plyr_wrk.pr_info.room_no == 4)
+                        if (plyr_wrk.pr_info.room_no == R004)
                         {
                             DoorKeyLockOnly(tmp_rot_door_id);
                         }

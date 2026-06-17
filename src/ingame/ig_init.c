@@ -250,7 +250,7 @@ int LoadStartDataSet()
 
         SetBlackIn2(0x3c);
 
-        ingame_wrk.mode = 6;
+        ingame_wrk.mode = INGAME_MODE_NOMAL;
         ingame_wrk.stts &= 0xd7;
 
         return 1;

@@ -2,6 +2,7 @@
 #include "typedefs.h"
 #include "rare_ene.h"
 
+#include "enums.h"
 #include "sce/libvu0.h"
 
 #include "graphics/graph2d/effect.h"
@@ -13,6 +14,7 @@
 #include "ingame/entry/ap_rgost.h"
 #include "ingame/map/map_area.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_logging.h"
 
 typedef struct {
     SPRT_DAT *spr;
@@ -62,8 +64,6 @@ void LoadRareEneTex()
 
 void DrawRareEne_Sub(int mno, int dno, sceVu0FVECTOR pos, int tblno, int ani, int al)
 {
-    /// TODO: Fix crash that occurs in this function
-    return;
     unsigned char alp;
     int a;
     int b;
@@ -100,6 +100,12 @@ void DrawRareEne_Sub(int mno, int dno, sceVu0FVECTOR pos, int tblno, int ani, in
     alp = al;
 
     Vu0CopyVector(bpos, pos);
+
+    if (tblno > sizeof(rare_ene)/sizeof(rare_ene[0]) && tblno < 0x80)
+    {
+        info_log("DrawRareEne_Sub received request for rare_ene[%d] that went beyond the array limit", tblno);
+        return;
+    }
 
     if (tblno < 0x80)
     {
@@ -423,12 +429,12 @@ void DrawRareEne()
                             ResetEffects(efbuf[i]);
 
                             efbuf[i] = 0; // ??
-                            efbuf[i] = SetEffects(0x1b, 2, 21, 0, redp->sclw * 10.0f, redp->sclh * 10.0f, cpos, 0, 0, 0, &alp[i], &spd, &rate, &trate);
+                            efbuf[i] = SetEffects(EF_PDEFORM, 2, 21, 0, redp->sclw * 10.0f, redp->sclh * 10.0f, cpos, 0, 0, 0, &alp[i], &spd, &rate, &trate);
                         }
                     }
                     else
                     {
-                        efbuf[i] = SetEffects(0x1b, 2, 21, 0, redp->sclw * 10.0f, redp->sclh * 10.0f, cpos, 0, 0, 0, &alp[i], &spd, &rate, &trate);
+                        efbuf[i] = SetEffects(EF_PDEFORM, 2, 21, 0, redp->sclw * 10.0f, redp->sclh * 10.0f, cpos, 0, 0, 0, &alp[i], &spd, &rate, &trate);
                     }
 
                     DrawRareEne_Sub(j, i, rg_dsp_wrk[i].pos, rg_dsp_wrk[i].rg_no, rg_dsp_wrk[i].dsp_no, rg_dsp_wrk[i].alpha);

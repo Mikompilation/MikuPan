@@ -42,6 +42,6 @@ int SetAreaLoadRoom(u_char mode, u_char area_no);
 void AreaRoomAllLoadInit();
 int AreaRoomAllLoad(u_char area_no);
 int64_t GetEmptyRoomAddr();
-// void ClearDispRoom(int wrk_no);
+void ClearDispRoom(int wrk_no);
 
 #endif // INGAME_MAP_MAP_AREA_H

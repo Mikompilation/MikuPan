@@ -145,12 +145,12 @@ char SoundTestForModeSlect()
     stf.run[4] = 0;
     stf.run[5] = 0;
 
-    if (*key_now[4] == 1)
+    if (TRIANGLE_PRESSED() == 1)
     {
         rtrn = 1;
         EAdpcmFadeOut(15);
     }
-    else if (*key_now[5] != 0)
+    else if (CROSS_PRESSED() != 0)
     {
         stf.msg_no = 0xff;
         switch(stf.csr[0])
@@ -165,7 +165,7 @@ char SoundTestForModeSlect()
             if (stf.run[2] == 2)
             {
                 stf.run[1] = 1;
-                if (*key_now[5] == 1) {
+                if (CROSS_PRESSED() == 1) {
                     stf.run_flsh[1] = 0;
                     if (stf.bgm_no != 0) stf.bgm_no--;
                     EAdpcmCmdStop(0, 0, 0);
@@ -178,7 +178,7 @@ char SoundTestForModeSlect()
             else
             {
                 stf.run[1] = 1;
-                if (*key_now[5] == 1)
+                if (CROSS_PRESSED() == 1)
                 {
                     stf.run_flsh[1] = 0;
                     if (stf.bgm_no != 0) stf.bgm_no--;
@@ -186,7 +186,7 @@ char SoundTestForModeSlect()
             }
             break;
         case 2:
-            if (*key_now[5] == 1)
+            if (CROSS_PRESSED() == 1)
             {
                 bb.lvl_now = 0;
                 stf.ply_min = stf.ply_sec = stf.ply_flm = 0;
@@ -197,7 +197,7 @@ char SoundTestForModeSlect()
             EAdpcmCmdPlay(0, 0, music_list[stf.bgm_no], 0, stf.mst_vol, 0x280, 4095, 0);
         break;
         case 3:
-            if (*key_now[5] == 1)
+            if (CROSS_PRESSED() == 1)
             {
                 bb.lvl_now = 0;
                 stf.run_flsh[3] = 0;
@@ -211,7 +211,7 @@ char SoundTestForModeSlect()
             if (stf.run[2] == 2)
             {
                 stf.run[4] = 1;
-                if (*key_now[5] == 1)
+                if (CROSS_PRESSED() == 1)
                 {
                     stf.run_flsh[4] = 0;
                     if (stf.bgm_no <= 46)
@@ -228,7 +228,7 @@ char SoundTestForModeSlect()
             else
             {
                 stf.run[4] = 1;
-                if (*key_now[5] == 1)
+                if (CROSS_PRESSED() == 1)
                 {
                     stf.run_flsh[4] = 0;
                     if (stf.bgm_no <= 46) stf.bgm_no++;
@@ -246,8 +246,8 @@ char SoundTestForModeSlect()
     else
     {
         if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -263,8 +263,8 @@ char SoundTestForModeSlect()
             }
         }
         else if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )

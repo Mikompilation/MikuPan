@@ -95,7 +95,7 @@ static u_short hp_down_deg;
 
 void PlyrCtrlMain()
 {
-    if (dbg_wrk.high_speed_mode != 0 && *key_now[6] != 0)
+    if (dbg_wrk.high_speed_mode != 0 && SQUARE_PRESSED() != 0)
     {
         plyr_wrk.spd = 27.5f;
     }
@@ -368,7 +368,7 @@ void PlyrFinderModeChk()
     {
         if (!MikuPan_KeyProfileUsesFinderShoulderToggle())
         {
-            pad_finder = *key_now[7];
+            pad_finder = CIRCLE_PRESSED();
             pad_finder_bk = *key_bak[7];
 #ifdef BUILD_EU_VERSION
 
@@ -380,7 +380,7 @@ void PlyrFinderModeChk()
         }
         else
         {
-            pad_finder = *key_now[10];
+            pad_finder = R1_PRESSED();
             pad_finder_bk = *key_bak[10];
 #ifdef BUILD_EU_VERSION
 
@@ -749,7 +749,7 @@ void PlyrFinderCtrl()
 void PlyrCamRotCngChk()
 {
     if (
-        *key_now[4] == 1 &&
+        TRIANGLE_PRESSED() == 1 &&
 #ifdef BUILD_EU_VERSION
         plyr_wrk.cond != 1 &&
 #endif
@@ -1495,7 +1495,7 @@ void PlyrSubAtkChk()
     u_char hit = 0xff;
     int sub_se_tbl[4] = { 13, 24, 9, 24 };
 
-    if (*key_now[8] == 1 && cam_custom_wrk.set_sub != 0xff && poss_item[5] != 0)
+    if (L1_PRESSED() == 1 && cam_custom_wrk.set_sub != 0xff && poss_item[5] != 0)
     {
         if (plyr_wrk.cond != 1)
         {
@@ -1542,7 +1542,7 @@ void PlyrSubAtkChk()
         }
         else if (cam_custom_wrk.set_spe == 1)
         {
-            if (*key_now[9] != 0 || *key_now[11] != 0)
+            if (L2_PRESSED() != 0 || R2_PRESSED() != 0)
             {
                 if (plyr_wrk.cond != 1)
                 {
@@ -1888,14 +1888,14 @@ void PlyrPhotoChk()
 
     if (!MikuPan_KeyProfileUsesFinderShoulderToggle())
     {
-        pad_shutter = *key_now[10];
+        pad_shutter = R1_PRESSED();
     }
     else
     {
-        pad_shutter = *key_now[7];
+        pad_shutter = CIRCLE_PRESSED();
     }
 
-    if (*key_now[5] != 1 && pad_shutter != 1)
+    if (CROSS_PRESSED() != 1 && pad_shutter != 1)
     {
         return;
     }
@@ -2965,7 +2965,7 @@ void PlyrFModeMoveCtrl()
 
 void PlyrActionChk()
 {
-    if (*key_now[5] == 1)
+    if (CROSS_PRESSED() == 1)
     {
         DoorCheckOn(0);
     }
@@ -4062,16 +4062,16 @@ float GetMovePad(u_char id)
     {
         if (MikuPan_KeyProfileUsesSubjectiveMove())
         {
-            if (*key_now[0] != 0)
+            if (DPAD_UP_PRESSED() != 0)
             {
                 dir = 4;
             }
-            else if (*key_now[1] != 0)
+            else if (DPAD_DOWN_PRESSED() != 0)
             {
                 dir = 0;
             }
 
-            if (*key_now[2] != 0)
+            if (DPAD_LEFT_PRESSED() != 0)
             {
                 if (dir == 0xff)
                 {
@@ -4082,7 +4082,7 @@ float GetMovePad(u_char id)
                     dir = (dir + 2) / 2;
                 }
             }
-            else if (*key_now[3] != 0)
+            else if (DPAD_RIGHT_PRESSED() != 0)
             {
                 if (dir == 0xff)
                 {
@@ -4187,8 +4187,8 @@ u_char PlyrMoveStaChk(float pad_chk)
     psta = 0;
 
     if (
-        (plyr_wrk.mvsta & (0x8 | 0x4 | 0x2 | 0x1) && *key_now[6] != 0) ||
-        ((plyr_wrk.mvsta & (0x8 | 0x4 | 0x2 | 0x1)) == 0 && *key_now[6] == 1)
+        (plyr_wrk.mvsta & (0x8 | 0x4 | 0x2 | 0x1) && SQUARE_PRESSED() != 0) ||
+        ((plyr_wrk.mvsta & (0x8 | 0x4 | 0x2 | 0x1)) == 0 && SQUARE_PRESSED() == 1)
     )
     {
         psta = 1;
@@ -4234,7 +4234,7 @@ u_int PlyrLeverInputChk()
 
     result = 0;
 
-    if (*key_now[0] != 0 || *key_now[1] != 0 || *key_now[3] != 0 || *key_now[2] != 0)
+    if (DPAD_UP_PRESSED() != 0 || DPAD_DOWN_PRESSED() != 0 || DPAD_RIGHT_PRESSED() != 0 || DPAD_LEFT_PRESSED() != 0)
     {
         result = 1;
     }

@@ -8,10 +8,6 @@
 #include <string.h>
 #include <time.h>
 
-// Uncompressed-DEFLATE PNG writer. Keeps the binary dependency-free at the
-// cost of larger files than a real zlib-compressed encoder would produce —
-// fine for a debug screenshot feature where the user grabs a frame or two.
-
 static int g_screenshot_pending = 0;
 
 static unsigned int s_crc_table[256];

@@ -91,7 +91,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
     case 7:
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 if (ingame_wrk.stts & 0x80)
                 {
@@ -104,7 +104,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 return 1;
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 if (*csr == 5)
                 {
@@ -132,8 +132,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 *mode = *csr;
             }
             else if (
-                *key_now[0] == 1 ||
-                (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+                DPAD_UP_PRESSED() == 1 ||
+                (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(0) == 1 ||
                 (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
             )
@@ -157,8 +157,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 }
             }
             else if (
-                *key_now[1] == 1 ||
-                (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+                DPAD_DOWN_PRESSED() == 1 ||
+                (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(2) == 1 ||
                 (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
             )
@@ -186,7 +186,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
     case 0:
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 *mode = 7;
 
@@ -201,7 +201,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                     SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
-            else if ((*key_now[6] == 1) || (*key_now[5] == 1))
+            else if ((SQUARE_PRESSED() == 1) || (CROSS_PRESSED() == 1))
             {
                 *mode = 7;
 
@@ -217,8 +217,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 }
             }
             else if (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -242,8 +242,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 }
             }
             else if (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && Ana2PadDirCnt(1) % 5 == 1)
             )
@@ -271,7 +271,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
     case 1:
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 *mode = 7;
 
@@ -284,7 +284,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                     SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 *mode = 7;
 
@@ -298,8 +298,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 }
             }
             else if (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -332,8 +332,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 }
             }
             else if (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && Ana2PadDirCnt(1) % 5 == 1)
             )
@@ -370,7 +370,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
     case 2:
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 *mode = 7;
 
@@ -383,7 +383,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                     SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 *mode = 7;
 
@@ -397,8 +397,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 }
             }
             else if (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -415,8 +415,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 }
             }
             else if (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && Ana2PadDirCnt(1) % 5 == 1)
             )
@@ -439,7 +439,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
     case 3:
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 *mode = 7;
 
@@ -452,7 +452,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                     SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 *mode = 7;
 
@@ -465,7 +465,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                     SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 }
             }
-            else if (*key_now[2] != 0 || Ana2PadDirCnt(3) != 0)
+            else if (DPAD_LEFT_PRESSED() != 0 || Ana2PadDirCnt(3) != 0)
             {
                 if (menu_opt.snd_vol - 64 < 1)
                 {
@@ -480,7 +480,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
 
                 opt_wrk.bgm_vol = menu_opt.snd_vol;
             }
-            else if (*key_now[3] != 0 || Ana2PadDirCnt(1) != 0)
+            else if (DPAD_RIGHT_PRESSED() != 0 || Ana2PadDirCnt(1) != 0)
             {
                 if (menu_opt.snd_vol + 64 < 0xfff)
                 {
@@ -500,7 +500,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
     case 4:
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 *mode = 7;
 
@@ -513,7 +513,7 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                     SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 }
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 *mode = 7;
 

@@ -455,7 +455,7 @@ void DbgGetDrmCamNo()
 {
     int j;
 
-    if (*key_now[5] == 1)
+    if (CROSS_PRESSED() == 1)
     {
         for (j = 0; j < 10; j++)
         {

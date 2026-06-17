@@ -86,10 +86,10 @@ static void gra2dSubG2(int fl)
 static void gra2dSubG3(int fl)
 {
     PhotoMakeSave();
-    EffectControl(7);
+    EffectControl(GRA2D_CALL_IG31);
     InformationDispMain();
     PhotoMakeSave2();
-    EffectControl(8);
+    EffectControl(GRA2D_CALL_IG32);
     PauseDisp();
 #ifdef BUILD_EU_VERSION
     CallSubtitles();

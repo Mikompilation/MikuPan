@@ -9,11 +9,6 @@ extern "C"
 
 std::unordered_map<uint64_t, MikuPan_TextureInfo*> mikupan_render_texture_atlas;
 
-/// L1 cache keyed on the raw 64-bit tex0 register value. Lets MikuPan_SetTexture
-/// skip the (expensive) per-call XXH3 over GS memory whenever the same tex0
-/// register has been resolved before. Each entry remembers the GS-memory range
-/// it samples; invalidation is selective — only entries whose range overlaps
-/// a recent MikuPan_GsUpload are dropped, instead of wiping the entire cache.
 struct L1Entry
 {
     MikuPan_TextureInfo *info;
@@ -118,10 +113,6 @@ void MikuPan_ForEachTexture(void (*callback)(MikuPan_TextureInfo* tex, void* use
     }
 }
 
-/// Drain callback: the C-API hands us each pending upload region in turn.
-/// We scan the L1 once per region and erase entries whose stored GS range
-/// overlaps. With ~10 uploads × ~100 entries that's ~1000 cheap integer
-/// comparisons per frame — negligible compared to the XXH3 it replaces.
 static void InvalidateOverlapping(int up_addr, int up_size, void *ud)
 {
     auto &cache = *static_cast<std::unordered_map<uint64_t, L1Entry>*>(ud);
@@ -145,10 +136,6 @@ static void InvalidateOverlapping(int up_addr, int up_size, void *ud)
 
 MikuPan_TextureInfo* MikuPan_LookupTextureByTex0(uint64_t tex0_value)
 {
-    // Lazy, selective invalidation: drain the GS-side pending-upload list and
-    // drop only L1 entries whose region overlaps one of those uploads. The
-    // remaining entries stay valid across frames, so post-upload lookups of
-    // unrelated textures hit the L1 (avoiding the XXH3-over-GS-memory path).
     if (MikuPan_GsHasPendingUploads())
     {
         MikuPan_GsConsumePendingUploads(InvalidateOverlapping,
@@ -164,7 +151,7 @@ void MikuPan_RegisterTextureForTex0(uint64_t tex0_value, sceGsTex0 *tex0,
 {
     if (info == nullptr) return;
 
-    L1Entry entry;
+    L1Entry entry = {0};
     entry.info = info;
     MikuPan_GetTextureGsRegion(tex0, &entry.gs_addr, &entry.gs_size);
     mikupan_tex0_to_info_cache[tex0_value] = entry;

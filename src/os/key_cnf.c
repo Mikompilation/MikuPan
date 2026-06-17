@@ -135,8 +135,8 @@ static int NormalMoveDpadActive(void)
 {
     return key_now[0] != NULL && key_now[1] != NULL &&
            key_now[2] != NULL && key_now[3] != NULL &&
-           (*key_now[0] != 0 || *key_now[1] != 0 ||
-            *key_now[2] != 0 || *key_now[3] != 0);
+           (DPAD_UP_PRESSED() != 0 || DPAD_DOWN_PRESSED() != 0 ||
+            DPAD_LEFT_PRESSED() != 0 || DPAD_RIGHT_PRESSED() != 0);
 }
 
 static int NormalMoveStickActive(void)

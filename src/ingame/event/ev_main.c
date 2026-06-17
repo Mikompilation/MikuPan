@@ -901,7 +901,7 @@ u_char EventOpenJudge(short int event_no)
 
     if (((u_char *)addr)[3] == 10 || ((u_char *)addr)[3] == 201 || ((u_char *)addr)[3] == 13)
     {
-        if (plyr_wrk.mode != PMODE_NORMAL || *key_now[5] != 1 || GetLoadStartLock() != 0)
+        if (plyr_wrk.mode != PMODE_NORMAL || CROSS_PRESSED() != 1 || GetLoadStartLock() != 0)
         {
             return 0;
         }
@@ -911,7 +911,7 @@ u_char EventOpenJudge(short int event_no)
     {
         if (ev_wrk.use_item == 0xff)
         {
-            if (plyr_wrk.mode != PMODE_NORMAL || *key_now[5] != 1 || GetLoadStartLock() != 0)
+            if (plyr_wrk.mode != PMODE_NORMAL || CROSS_PRESSED() != 1 || GetLoadStartLock() != 0)
             {
                 return 0;
             }
@@ -1409,7 +1409,7 @@ void LockBattleDoorOpenMSGDisp()
         case BTL_LOCK_SET_MSG:
             SetMessageV3((u_char *)GetIngameMSGAddr(6, 28), 0x64000);
 
-            if (*key_now[5] == 1)
+            if (CROSS_PRESSED() == 1)
             {
                 MessageWaitOff();
             }
@@ -1440,7 +1440,7 @@ void LockBattleDoorOpenMSGDisp()
         case BTL_LOCK_AFTER_MSG:
             SetMessageV3((u_char *)GetIngameMSGAddr(6, 0x1d),0x64000);
 
-            if (*key_now[5] == 1)
+            if (CROSS_PRESSED() == 1)
             {
                 MessageWaitOff();
             }

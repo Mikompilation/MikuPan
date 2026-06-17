@@ -16,6 +16,8 @@
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include "SDL3/SDL_timer.h"
+
+#include <mikupan_version.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,7 +27,6 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
                                                     float w, float h);
 
 #include "graphics/graph3d/sglib.h"
-#include "main/glob.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan_meshcache.h"
@@ -36,20 +37,7 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
 MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_MsaaBufferObject render_back_msaa = {0};
 static int g_mirror_scissor_enabled = 0;
-/* Set only while the reflected scene geometry is being re-rendered for a mirror
- * (between MirrorRender's setup and restore). The reflection view matrix is a
- * reflection (negative determinant) so triangle winding flips on screen — the
- * mesh render-state setup checks this to cull the front faces instead of the
- * back, otherwise reflected single-sided meshes vanish and closed meshes show
- * inside-out. */
 static int g_mirror_reflection_pass = 0;
-/*
- * Snapshot of the previous fully-composited scene texture. Game/effect logic
- * (mirror framebuffer-to-GS uploads, photo capture) needs the previous frame's
- * framebuffer contents, but downloading it to the CPU every frame forces a full
- * GPU sync (submit + fence wait) and tanks the frame rate. Instead keep a cheap
- * GPU-side copy each frame and only read it back on demand when a consumer asks.
- */
 static unsigned int g_scene_snapshot_id = 0;
 static int g_scene_snapshot_valid = 0;
 
@@ -93,7 +81,7 @@ static void MikuPan_ConvertRGBA8ToBlackWhite(unsigned char *rgba,
 
 SDL_AppResult MikuPan_Init()
 {
-    SDL_SetAppMetadata("MikuPan", "1.0", "MikuPan");
+    SDL_SetAppMetadata("MikuPan", MIKUPAN_GIT_DESCRIBE, "MikuPan");
 
     info_log("Initializing SDL");
 
@@ -103,8 +91,6 @@ SDL_AppResult MikuPan_Init()
         return SDL_APP_FAILURE;
     }
 
-    /* Load configuration after SDL is up so the data-folder default can resolve
-     * SDL_GetBasePath(); this runs before any window/asset use of the config. */
     MikuPan_LoadConfiguration(NULL);
 
     SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
@@ -289,6 +275,7 @@ void MikuPan_DestroyInternalBuffer()
         MikuPan_GPUReleaseTexture(g_scene_snapshot_id);
         g_scene_snapshot_id = 0;
     }
+
     g_scene_snapshot_valid = 0;
 
     MikuPan_GPUDestroyInternalBuffer();
@@ -383,11 +370,6 @@ static void MikuPan_UpdateLastResolvedFrameCache(void)
         return;
     }
 
-    /*
-     * Cheap GPU-to-GPU copy of the just-composited scene texture. No CPU
-     * readback or GPU sync happens here; the snapshot is only downloaded if a
-     * consumer later calls MikuPan_ReadResolvedFramebufferRGBA8TopLeft.
-     */
     MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
                            g_scene_snapshot_id,
                            render_back_msaa.texture.width,
@@ -403,15 +385,6 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
 int MikuPan_ReadResolvedFramebufferRGBA8TopLeft(int width, int height,
                                                unsigned char *out_rgba)
 {
-    /*
-     * GS local-framebuffer freezes are often requested from game/effect logic
-     * before the current frame has finished drawing. In that state the live
-     * scene target is the cleared/half-drawn current frame, so reading it back
-     * captures black. Download the snapshot of the previous completed frame
-     * instead: it is the closest equivalent to the PS2 local framebuffer
-     * contents that effects such as pause/menu/photo expect to copy. The
-     * download (and its GPU sync) only happens here, on demand, not every frame.
-     */
     if (out_rgba != NULL && g_scene_snapshot_valid && g_scene_snapshot_id != 0)
     {
         if (MikuPan_ReadTextureRGBA8TopLeft(g_scene_snapshot_id,
@@ -442,6 +415,7 @@ void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
     {
         MikuPan_GPUReleaseTexture(g_scene_snapshot_id);
     }
+
     g_scene_snapshot_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
     g_scene_snapshot_valid = 0;
 
@@ -595,12 +569,6 @@ void MikuPan_EndFrame()
 
     SDL_GetWindowSize(mikupan_render.window, &mikupan_render.width, &mikupan_render.height);
 
-    /*
-     * SDL_GPU render-target textures are stored top-down (V=0 == top row),
-     * unlike GL's bottom-up FBO textures. Map the scene texture's top row to
-     * the top of the window so the composited frame is not displayed upside
-     * down. (V coordinates flipped relative to the old GL blit.)
-     */
     float quad[] = {
         0,1,0,0,   1,1,1,1,   -1,-1,0,1,
         1,1,0,0,   1,1,1,1,    1,-1,0,1,
@@ -730,20 +698,6 @@ void MikuPan_EndFrame()
 
     MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    /*
-     * The camera photo preview is a modern replacement for a GS-resident
-     * texture. Draw it after the final scene pass so the original photo frame
-     * and negative overlays cannot cover it.
-    */
-    /*
-     * The photo preview/border, the late 2D overlays (message box), and the
-     * message text are authored in PS2 screen space and convert against the
-     * render resolution, matching the composited scene. Draw them into the same
-     * letterboxed region the scene was blitted to (offset_output) so they line
-     * up with it instead of stretching across the whole window. Restore the
-     * full-window viewport afterwards for anything drawn later (UI, screenshot
-     * capture).
-     */
     MikuPan_SetViewportCached(offset_output[0], offset_output[1],
                               offset_output[2], offset_output[3]);
     MikuPan_RenderQueuedPhotoPreviewTexture();
@@ -844,12 +798,6 @@ void MikuPan_EnableMirrorScissorFromGsBounds(int xmin, int ymin, int xmax, int y
         ymax = tmp;
     }
 
-    /*
-     * The 3D scene fills the whole render target (the projection is built
-     * from the render resolution), so the 640x448 PS2 screen maps onto the
-     * full target with independent x/y scales — not the letterboxed uniform
-     * scale of MikuPan_GetPS2Viewport, which only matches at 640:448 aspect.
-     */
     const float scale_x = (float)render_w / PS2_RESOLUTION_X_FLOAT;
     const float scale_y = (float)render_h / PS2_RESOLUTION_Y_FLOAT;
 
@@ -946,12 +894,6 @@ void MikuPan_ClearMirrorScissorDepth(void)
 
     MikuPan_GPUSetDepthWrite(1);
     MikuPan_GPUClearDepth();
-    /*
-     * SDL_GPU clears happen at render-pass begin, not immediately like
-     * glClear. Materialize this pass while the mirror scissor is still active;
-     * otherwise MikuPan_DisableMirrorScissor below would turn the deferred
-     * depth clear into a full-screen clear.
-     */
     MikuPan_GPUBeginRenderPass();
     MikuPan_GPUFlushRenderPass();
     MikuPan_ResetRenderStateCache();

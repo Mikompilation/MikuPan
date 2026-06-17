@@ -20,18 +20,9 @@ int   MikuPan_GsGetDownloadCount(void);
 int   MikuPan_GsGetDownloadBytes(void);
 float MikuPan_GsGetDownloadMs(void);
 void MikuPan_GsStore(sceGsStoreImage *sp, unsigned char *out);
-
-/// Selective L1-invalidation API. Each MikuPan_GsUpload pushes its affected
-/// GS-memory region onto a pending list. The texture L1 drains the list on
-/// its next lookup, invalidating only entries whose source region overlaps
-/// any pending upload — instead of the previous wipe-everything behavior.
 int  MikuPan_GsHasPendingUploads(void);
 void MikuPan_GsConsumePendingUploads(
     void (*cb)(int addr, int size, void *ud), void *ud);
-
-/// Compute the GS-memory byte range a texture's tex0 register samples.
-/// Same convention as MikuPan_GetTextureHash so overlap testing is
-/// consistent with the staleness check the hash performs.
 void MikuPan_GetTextureGsRegion(sceGsTex0 *tex0, int *out_addr, int *out_size);
 
 #endif //MIKUPAN_GS_SERVER_C_H

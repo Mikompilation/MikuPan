@@ -672,7 +672,7 @@ char mcCtrlSelSlot()
         return 2;
     }
 
-    if (*key_now[1] == 1 || Ana2PadDirCnt(2) == 1)
+    if (DPAD_DOWN_PRESSED() == 1 || Ana2PadDirCnt(2) == 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
@@ -683,7 +683,7 @@ char mcCtrlSelSlot()
             mc_ctrl.port = 0;
         }
     }
-    else if (*key_now[0] == 1 || Ana2PadDirCnt(0) == 1)
+    else if (DPAD_UP_PRESSED() == 1 || Ana2PadDirCnt(0) == 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
@@ -847,7 +847,7 @@ char mcCtrlFileSel()
             return 2;
         }
 
-        if (*key_now[1] == 1 || Ana2PadDirCnt(2) == 1)
+        if (DPAD_DOWN_PRESSED() == 1 || Ana2PadDirCnt(2) == 1)
         {
             if (num > 1)
             {
@@ -861,7 +861,7 @@ char mcCtrlFileSel()
                 mc_ctrl.now_cur = 0;
             }
         }
-        else if (*key_now[0] == 1 || Ana2PadDirCnt(0) == 1)
+        else if (DPAD_UP_PRESSED() == 1 || Ana2PadDirCnt(0) == 1)
         {
             if (num > 1)
             {
@@ -1334,7 +1334,7 @@ char mcCtrlYesno(int def_pos)
     }
     else
     {
-        if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1 || *key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+        if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1 || DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
         {
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
@@ -1367,7 +1367,7 @@ char mcCtrl3taku(int def_pos)
         return 3;
     }
 
-    if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
+    if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
@@ -1376,7 +1376,7 @@ char mcCtrl3taku(int def_pos)
             mc_ctrl.now_cur = 2;
         }
     }
-    else if (*key_now[3] == 1 || Ana2PadDirCnt(1)== 1)
+    else if (DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1)== 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 

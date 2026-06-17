@@ -505,7 +505,7 @@ void InGameMain()
             if (
                 dbg_wrk.mode_on == 0 &&
                 dbg_wrk.cam_mode != 1 &&
-                *key_now[4] == 1 &&
+                TRIANGLE_PRESSED() == 1 &&
                 pad[0].push[4] > 6 && 
                 plyr_wrk.mode == 0 &&
                 !GetLoadStartLock() &&
@@ -516,7 +516,7 @@ void InGameMain()
             if (
                 dbg_wrk.mode_on == 0 &&
                 dbg_wrk.cam_mode != 1 &&
-                *key_now[4] == 1 &&
+                TRIANGLE_PRESSED() == 1 &&
                 plyr_wrk.mode == 0 &&
                 !GetLoadStartLock() &&
                 plyr_wrk.cond != 1 &&

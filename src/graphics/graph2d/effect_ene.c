@@ -44,9 +44,6 @@ static NEW_PERTICLE new_perticle[44];
 #define ADDRESS 0x01fa8000
 #define ADDRESS_2 0x00ac8000
 
-/// Writes one untextured vertex (COLOUR4_POSITION4, 8 floats) into the MikuPan
-/// render buffer. Positions are expected in NDC; matches the layout consumed by
-/// MikuPan_RenderUntexturedTriangles3D / MikuPan_RenderUntexturedSprite.
 static void EneWriteUntexturedNdcVertex(float *dst, const float *ndc, u_char r, u_char g, u_char b, u_char a)
 {
     dst[0] = MikuPan_ConvertScaleColor(r);
@@ -59,9 +56,6 @@ static void EneWriteUntexturedNdcVertex(float *dst, const float *ndc, u_char r, 
     dst[7] = 1.0f;
 }
 
-/// Writes one textured vertex (UV4_COLOUR4_POSITION4, 12 floats) into the
-/// MikuPan render buffer. Positions are expected in NDC; matches the layout
-/// consumed by MikuPan_RenderSprite2D / MikuPan_RenderSprite3D.
 static void EneWriteTexturedNdcVertex(float *dst, float u, float v, const float *ndc, u_char r, u_char g, u_char b, u_char a)
 {
     dst[0] = u;
@@ -724,9 +718,7 @@ void RunCamSearch()
         .prim = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_TRUE, 84, SCE_GIF_PACKED, 3),
     };
     CAMSEARCH_STR *ct;
-    // float *v0;
     int alp;
-    // 0x50
 
     alp = 80;
 
@@ -1821,8 +1813,6 @@ void RunCamSlow2(int o, float hrt, float rrt, u_int alp)
 
     pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
 
-    /* MikuPan GL render: rebuild the two-ring band as an NDC triangle list.
-     * The pbuf packet above is legacy scratch and no longer reaches the GS. */
     {
         sceVu0FVECTOR ndcf[2][33];
         sceVu0FMATRIX slm_ndc;
@@ -1837,9 +1827,6 @@ void RunCamSlow2(int o, float hrt, float rrt, u_int alp)
 
         outn = 0;
 
-        /* The original GS packet is a triangle strip zig-zagging between the
-         * two rings: strip vertex sv -> row (sv & 1), column (sv >> 1).
-         * Cull faces are disabled, so winding does not matter. */
         for (t = 0; t < 64; t++)
         {
             int sv[3] = {t, t + 1, t + 2};
@@ -2842,10 +2829,6 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
 
     pbuf[n].ui32[0] = ndpkt + DMAend - n - 1;
 
-    /* MikuPan GL render: redraw the sword trail as a screen-space feedback
-     * smear. The original samples a GS framebuffer copy at each vertex's screen
-     * position; the screen-copy path reproduces that against the live frame.
-     * The pbuf packet above is legacy scratch and no longer reaches the GS. */
     {
         static float sword_tri[96 * 3][12];
         sceVu0FVECTOR fvec[96];
@@ -4174,6 +4157,11 @@ void LoadEneDmgTex(int no, u_int *addr)
     if (no == 55)
     {
         no = 42;
+    }
+
+    if (no > sizeof(enedmg_fileno_tbl)/sizeof(enedmg_fileno_tbl[0]))
+    {
+        return;
     }
 
     texno = enedmg_fileno_tbl[no][0];

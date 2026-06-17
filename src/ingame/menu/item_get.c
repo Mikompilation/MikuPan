@@ -176,7 +176,7 @@ static void BookGetPad(u_char model_type, u_char model_no)
         // do nothing ...
     break;
     case 4:
-        if (*key_now[6] == 1 || *key_now[5] == 1)
+        if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             if (fade_ctr.msg_end != 0)
             {
@@ -190,7 +190,7 @@ static void BookGetPad(u_char model_type, u_char model_no)
         // do nothing ...
     break;
     case 6:
-        if (*key_now[6] == 1 || *key_now[5] == 1)
+        if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             file_dsp.stp = 7;
         }
@@ -201,13 +201,13 @@ static void BookGetPad(u_char model_type, u_char model_no)
         file_dsp.stp = 8;
     break;
     case 8:
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             file_dsp.stp = 9;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[6] == 1 || *key_now[5] == 1)
+        else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             if (file_dsp.page_all >= 2)
             {
@@ -236,7 +236,7 @@ static void BookGetPad(u_char model_type, u_char model_no)
         // do nothing ...
     break;
     case 10:
-        if (*key_now[6] == 1 || *key_now[5] == 1)
+        if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             if (fade_ctr.msg_end != 0)
             {
@@ -439,7 +439,7 @@ static void PhotGetPad(u_char model_type, u_char model_no)
         // do nothing ...
     break;
     case 12:
-        if (*key_now[6] != 1 && *key_now[5] != 1)
+        if (SQUARE_PRESSED() != 1 && CROSS_PRESSED() != 1)
         {
             break;
         }
@@ -454,7 +454,7 @@ static void PhotGetPad(u_char model_type, u_char model_no)
         SeStartFix(SE_GETITEM, 0, 0x1000, 0x1000, 0);
     break;
     case 14:
-        if (*key_now[6] != 1 && *key_now[5] != 1)
+        if (SQUARE_PRESSED() != 1 && CROSS_PRESSED() != 1)
         {
             break;
         }
@@ -462,7 +462,7 @@ static void PhotGetPad(u_char model_type, u_char model_no)
         file_dsp.stp = 15;
     break;
     case 16:
-        if (*key_now[6] != 1 && *key_now[5] != 1)
+        if (SQUARE_PRESSED() != 1 && CROSS_PRESSED() != 1)
         {
             break;
         }
@@ -472,7 +472,7 @@ static void PhotGetPad(u_char model_type, u_char model_no)
         file_dsp.stp = 17;
     break;
     case 17:
-        if (*key_now[6] != 1 && *key_now[5] != 1)
+        if (SQUARE_PRESSED() != 1 && CROSS_PRESSED() != 1)
         {
             break;
         }
@@ -678,7 +678,7 @@ static void ItemGetPad(u_char model_type, u_char model_no)
         // do nothing ...
     break;
     case 19:
-        if (*key_now[6] == 1 || *key_now[5] == 1)
+        if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             if (fade_ctr.msg_end != 0)
             {
@@ -714,14 +714,14 @@ static void ItemGetPad(u_char model_type, u_char model_no)
         }
     break;
     case 2:
-        if (*key_now[6] == 1 || *key_now[5] == 1)
+        if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             file_dsp.stts = 1;
             file_dsp.stp = 23;
         }
     break;
     case 22:
-        if (*key_now[6] == 1 || *key_now[5] == 1)
+        if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             if (fade_ctr.msg_end != 0)
             {

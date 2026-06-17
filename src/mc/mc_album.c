@@ -561,7 +561,7 @@ char mcCtrlAlbumSel()
 
         return 2;
     }
-    else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+    else if (DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
@@ -577,7 +577,7 @@ char mcCtrlAlbumSel()
             mc_ctrl.now_cur = 3;
         }
     }
-    else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
+    else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
@@ -592,7 +592,7 @@ char mcCtrlAlbumSel()
         {
             mc_ctrl.now_cur = 5;
         }
-    } else if (*key_now[0] == 1 || Ana2PadDirCnt(0) == 1)
+    } else if (DPAD_UP_PRESSED() == 1 || Ana2PadDirCnt(0) == 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
@@ -602,7 +602,7 @@ char mcCtrlAlbumSel()
         {
             mc_ctrl.now_cur += 6;
         }
-    } else if (*key_now[1] == 1 || Ana2PadDirCnt(2) == 1)
+    } else if (DPAD_DOWN_PRESSED() == 1 || Ana2PadDirCnt(2) == 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 

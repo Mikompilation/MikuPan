@@ -42,7 +42,7 @@ void PauseInit()
 
 int PauseMain()
 {
-    if (*key_now[12] == 1
+    if (START_PRESSED() == 1
         || (pad[0].flags & 0x1) == 0 && pause_wrk.mode == PAUSE_MODE_NO_REQ)
     {
         if (pause_wrk.mode == PAUSE_MODE_NO_REQ)
@@ -101,22 +101,22 @@ int PauseMain()
 
         if (ps_dsp.yn_mode == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
                 pause_wrk.mode = PAUSE_MODE_MENU_OUT;
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
-                *key_now[4] = 2;
+                TRIANGLE_PRESSED() = 2;
 
                 switch (pause_wrk.csr[0])
                 {
                     case 0:
-                        *key_now[5] = 2;
+                        CROSS_PRESSED() = 2;
 
                         pause_wrk.mode = PAUSE_MODE_MENU_OUT;
                         break;
@@ -132,8 +132,8 @@ int PauseMain()
                         break;
                 }
             }
-            else if (*key_now[0] == 1
-                     || (*key_now[0] > 25 && (*key_now[0] % 5) == 1)
+            else if (DPAD_UP_PRESSED() == 1
+                     || (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1)
                      || Ana2PadDirCnt(0) == 1
                      || (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1))
             {
@@ -148,8 +148,8 @@ int PauseMain()
                     pause_wrk.csr[0] = 2;
                 }
             }
-            else if (*key_now[1] == 1
-                     || (*key_now[1] > 25 && (*key_now[1] % 5) == 1)
+            else if (DPAD_DOWN_PRESSED() == 1
+                     || (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1)
                      || Ana2PadDirCnt(2) == 1
                      || (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1))
             {
@@ -165,15 +165,15 @@ int PauseMain()
                 }
             }
         }
-        else if (*key_now[4] != 0)
+        else if (TRIANGLE_PRESSED() != 0)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
-            *key_now[4] = 2;
+            TRIANGLE_PRESSED() = 2;
 
             ps_dsp.yn_mode = 0;
         }
-        else if (*key_now[6] == 1 || *key_now[5] == 1)
+        else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             if (pause_wrk.csr[1] == 0)
             {
@@ -196,13 +196,13 @@ int PauseMain()
 
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
         }
-        else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
+        else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1)
         {
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 
             pause_wrk.csr[1] = 1 - pause_wrk.csr[1];
         }
-        else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+        else if (DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
         {
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
 

@@ -81,7 +81,7 @@ void IngameMenuGlst()
     case 0:
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 if (IsLoadEndAll() != 0)
                 {
@@ -90,7 +90,7 @@ void IngameMenuGlst()
                     SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 }
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 if (glist_index[ig_menu_wrk.csr[1]].disp_flg == 1 && glist_index[ig_menu_wrk.csr[1]].new_flg == 1)
                 {
@@ -117,8 +117,8 @@ void IngameMenuGlst()
                 }
             }
             else if (
-                *key_now[0] == 1 ||
-                (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+                DPAD_UP_PRESSED() == 1 ||
+                (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(0) == 1 ||
                 (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
             )
@@ -151,8 +151,8 @@ void IngameMenuGlst()
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
-                *key_now[1] == 1 ||
-                (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+                DPAD_DOWN_PRESSED() == 1 ||
+                (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(2) == 1 ||
                 (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
             )

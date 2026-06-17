@@ -4037,7 +4037,7 @@ int ItemGetMain()
     if (
         ingame_wrk.mode == INGAME_MODE_NOMAL && plyr_wrk.mode == PMODE_NORMAL &&
         (ingame_wrk.stts & 0x80) == 0 && (plyr_wrk.sta & 0x8) == 0 &&
-        find_wrk.mode == 0 && *key_now[5] == 1
+        find_wrk.mode == 0 && CROSS_PRESSED() == 1
     )
     {
         get_item = GetMapItemJudge();

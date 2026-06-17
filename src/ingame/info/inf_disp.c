@@ -12118,7 +12118,7 @@ static void PointerNP(short int cx, short int cy, u_char red, u_char alp, float 
 
     if (red != 0)
     {
-        SetEffects(32, 1, (float)cx, (float)cy, siz * 0.5f, alp, red, 0x80 - red, 0x80 - red);
+        SetEffects(EF_NEGACIRCLE, 1, (float)cx, (float)cy, siz * 0.5f, alp, red, 0x80 - red, 0x80 - red);
     }
 }
 

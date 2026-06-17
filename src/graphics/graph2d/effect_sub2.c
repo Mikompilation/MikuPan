@@ -683,8 +683,8 @@ void FallObjWind(/* a0 4 */ sceVu0FVECTOR leaf, /* a1 5 */ int fall_mode)
 
 void FallObjLight(/* a0 4 */ sceVu0FVECTOR leaf, /* s0 16 */ short int *rgba, /* s1 17 */ int fall_mode)
 {
-	/* -0x40(sp) */ float tes1;
-	/* -0x3c(sp) */ float tes2;
+	float tes1;
+	float tes2;
     
     tes1 = 0.0f;
     tes2 = 0.0f;
@@ -883,9 +883,9 @@ void FallObjDraw(sceVu0FVECTOR mpos, sceVu0FVECTOR rotation, short int *rgba, in
 
 void GusObjDebug()
 {
-    if (*key_now[14] != 0)
+    if (L3_PRESSED() != 0)
     {
-        if (*key_now[10] == 0)
+        if (R1_PRESSED() == 0)
         {
             if (r_temp < 0xff)
             {
@@ -901,9 +901,9 @@ void GusObjDebug()
         }
     }
     
-    if (*key_now[15] != 0)
+    if (R3_PRESSED() != 0)
     {
-        if (*key_now[10] == 0)
+        if (R1_PRESSED() == 0)
         {
             if (g_temp < 0xff)
             {
@@ -919,9 +919,9 @@ void GusObjDebug()
         }
     }
     
-    if (*key_now[5] != 0)
+    if (CROSS_PRESSED() != 0)
     {
-        if (*key_now[10] == 0)
+        if (R1_PRESSED() == 0)
         {
             if (b_temp < 0xff)
             {
@@ -967,14 +967,7 @@ void GusObjMove(/* a0 4 */ sceVu0FVECTOR mpos)
 
 void GusObjInit(/* t2 10 */ sceVu0FVECTOR mpos, /* t3 11 */ int leaf_no, /* a2 6 */ int area)
 {
-	/* v0 2 */ int tmp;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
-	// /* f1 39 */ float r;
-	// /* f1 39 */ float r;
-	// /* f0 38 */ float r;
+	int tmp;
     
     gus_wrk.mpos_keep[0] = mpos[0];
     gus_wrk.mpos_keep[1] = mpos[1];
@@ -1025,7 +1018,6 @@ void GusObjInit(/* t2 10 */ sceVu0FVECTOR mpos, /* t3 11 */ int leaf_no, /* a2 6
 void GusObjInit3(/* a0 4 */ sceVu0FVECTOR mpos, /* s3 19 */ int leaf_no, /* a2 6 */ int area, /* s1 17 */ int fall_mode)
 {
     int tmp;
-	// /* f20 58 */ float r;
     
     leaves[leaf_no][0] = -area / 2 + (leaf_no * 250) % area;
     leaves[leaf_no][2] = -area / 2 + ((leaf_no * 250) / area) * 250;
@@ -1190,6 +1182,11 @@ void GusObjDraw(/* a0 4 */ int leaf_num, /* a1 5 */ int area, /* a2 6 */ int fal
     tex0 = effdat[i].tex0;
     tw = effdat[i].w * 16;
     th = effdat[i].h * 16;
+
+    if (dbg_wrk.mode_on == 1)
+    {
+        GusObjDebug();
+    }
 
     if (monochrome_mode)
     {
@@ -2536,8 +2533,8 @@ int CallMissionClear()
         }
         
         if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -2667,8 +2664,8 @@ uint64_t CallMissionFailed()
         }
         
         if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -2806,8 +2803,8 @@ int CallMissionAllClear()
         }
         
         if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -2992,7 +2989,7 @@ int CallStoryClear()
 #endif
         }
         
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             ret_num = 1;
             
@@ -3228,7 +3225,7 @@ int BtlAnmMain()
         
         if (
             ANM2D_DAT_TABLE_P(wrk_table[i].table_p)->attribute & 0x100000 && 
-            *key_now[5] == 1
+            CROSS_PRESSED() == 1
         )
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
@@ -3743,12 +3740,12 @@ void TestPk2Data_2dg(long int sendtexaddr)
 	static int ttest_count = 0;
 	SPRT_SDAT ssd;
     
-    if (*key_now[8] == 1)
+    if (L1_PRESSED() == 1)
     {
         ttest_count++;
     }
     
-    if (*key_now[9] == 1)
+    if (L2_PRESSED() == 1)
     {
         ttest_count--;
     }

@@ -204,7 +204,7 @@ void SpecialEventMain()
 
     if (spev_wrk.ret != 0)
     {
-        ingame_wrk.mode = 6;
+        ingame_wrk.mode = INGAME_MODE_NOMAL;
 
         ev_wrk.evt_no = 0xFF;
         ev_wrk.mode = 0;
@@ -442,12 +442,12 @@ void TestPk2Data(long int sendtexaddr)
     static int ttest_count = 0;
     SPRT_SDAT ssd;
 
-    if (*key_now[8] == 1)
+    if (L1_PRESSED() == 1)
     {
         ttest_count++;
     }
 
-    if (*key_now[9] == 1)
+    if (L2_PRESSED() == 1)
     {
         ttest_count--;
     }
@@ -489,7 +489,7 @@ int ButtonMarkNext(int x_off, int y_off, int se_flg)
         spev_alp_cnt = 0;
     }
 
-    if ((*key_now[5] == 1) && (button_time == 0))
+    if ((CROSS_PRESSED() == 1) && (button_time == 0))
     {
         button_time = 20;
 
@@ -978,7 +978,7 @@ int StarPuzzleMain(int pzl_no)
             star_pzl_wrk.time--;
         }
 
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             if (star_pzl_wrk.count < star_pzl_dat[star_pzl_wrk.pzl_no].move_num)
             {
@@ -1001,7 +1001,7 @@ int StarPuzzleMain(int pzl_no)
                 SetBlackOut();
             }
         }
-        else if (*key_now[7] == 1)
+        else if (CIRCLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
@@ -1013,7 +1013,7 @@ int StarPuzzleMain(int pzl_no)
                 star_pzl_wrk.mode = STAR_PZL_MODE_RESL;
             }
         }
-        else if (*key_now[5] == 1 && star_pzl_wrk.count != 0)
+        else if (CROSS_PRESSED() == 1 && star_pzl_wrk.count != 0)
         {
             if (star_pzl_wrk.line[star_pzl_wrk.slct_no][star_pzl_wrk.empty] != 0xff)
             {
@@ -1037,8 +1037,8 @@ int StarPuzzleMain(int pzl_no)
             }
         }
         else if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -1065,8 +1065,8 @@ int StarPuzzleMain(int pzl_no)
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -1132,12 +1132,12 @@ int StarPuzzleMain(int pzl_no)
 
         if (star_pzl_wrk.menu_mode == STAR_PZL_MENU_SLCT)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 star_pzl_wrk.time = 15;
                 star_pzl_wrk.mode = STAR_PZL_MODE_RESL;
             }
-            else if (*key_now[5] == 1)
+            else if (CROSS_PRESSED() == 1)
             {
                 if (star_pzl_wrk.menu_csr[0] == 0)
                 {
@@ -1155,7 +1155,7 @@ int StarPuzzleMain(int pzl_no)
                     star_pzl_wrk.menu_csr[1] = 0;
                 }
             }
-            else if (*key_now[0] == 1)
+            else if (DPAD_UP_PRESSED() == 1)
             {
                 if (star_pzl_wrk.menu_csr[0] != 0)
                 {
@@ -1166,7 +1166,7 @@ int StarPuzzleMain(int pzl_no)
                     star_pzl_wrk.menu_csr[0] = 2;
                 }
             }
-            else if (*key_now[1] == 1)
+            else if (DPAD_DOWN_PRESSED() == 1)
             {
                 if (star_pzl_wrk.menu_csr[0] != 2)
                 {
@@ -1180,13 +1180,13 @@ int StarPuzzleMain(int pzl_no)
         }
         else if (star_pzl_wrk.menu_mode == STAR_PZL_MENU_RESET)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 star_pzl_wrk.menu_mode = STAR_PZL_MENU_SLCT;
 
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             }
-            else if (*key_now[5] == 1)
+            else if (CROSS_PRESSED() == 1)
             {
                 if (star_pzl_wrk.menu_csr[1] != 0)
                 {
@@ -1202,7 +1202,7 @@ int StarPuzzleMain(int pzl_no)
 
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             }
-            else if (*key_now[3] == 1 || *key_now[2] == 1)
+            else if (DPAD_RIGHT_PRESSED() == 1 || DPAD_LEFT_PRESSED() == 1)
             {
                 if (star_pzl_wrk.menu_csr[1] != 0)
                 {
@@ -1218,11 +1218,11 @@ int StarPuzzleMain(int pzl_no)
         }
         else if (star_pzl_wrk.menu_mode == STAR_PZL_MENU_EXIT)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 star_pzl_wrk.menu_mode = STAR_PZL_MENU_SLCT;
             }
-            else if (*key_now[5] == 1)
+            else if (CROSS_PRESSED() == 1)
             {
                 if (star_pzl_wrk.menu_csr[1] != 0)
                 {
@@ -1234,7 +1234,7 @@ int StarPuzzleMain(int pzl_no)
                     star_pzl_wrk.time = 40;
                 }
             }
-            else if (*key_now[3] == 1 || *key_now[2] == 1)
+            else if (DPAD_RIGHT_PRESSED() == 1 || DPAD_LEFT_PRESSED() == 1)
             {
                 if (star_pzl_wrk.menu_csr[1] != 0)
                 {
@@ -1285,7 +1285,7 @@ int StarPuzzleMain(int pzl_no)
         }
     break;
     case STAR_PZL_MODE_GOOD:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             star_pzl_wrk.time = 0;
         }
@@ -2414,7 +2414,7 @@ int DialKeyDoorMain()
             break;
         }
 
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             if (dkey_wrk.count != 0)
             {
@@ -2430,7 +2430,7 @@ int DialKeyDoorMain()
                 dkey_wrk.time = 40;
             }
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             if (dkey_wrk.count < dkey_dat[dkey_wrk.door_no].dial_num)
             {
@@ -2444,8 +2444,8 @@ int DialKeyDoorMain()
             }
         }
         else if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -2462,8 +2462,8 @@ int DialKeyDoorMain()
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -2916,7 +2916,7 @@ int DialKeyMSGDoorMain(int msg_no)
         }
     break;
     case DIAL_KEY_MODE_SLCT:
-        if (*key_now[4] == 1 || *key_now[5] == 1)
+        if (TRIANGLE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             dkey_wrk.mode = DIAL_KEY_MODE_OUT;
             dkey_wrk.time = 40;
@@ -3427,7 +3427,7 @@ void DollPzlMain()
         }
     break;
     case 9:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
@@ -3444,7 +3444,7 @@ void DollPzlMain()
             spev_wrk.time--;
         }
 
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 15;
             spev_wrk.time = 40;
@@ -3452,15 +3452,15 @@ void DollPzlMain()
             SetBlackOut();
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             spev_wrk.mode = 11;
 
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         }
         else if (
-            *key_now[0] == 1 ||
-            (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+            DPAD_UP_PRESSED() == 1 ||
+            (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(0) == 1 ||
             (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
         )
@@ -3478,8 +3478,8 @@ void DollPzlMain()
             }
         }
         else if (
-            *key_now[1] == 1 ||
-            (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+            DPAD_DOWN_PRESSED() == 1 ||
+            (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(2) == 1 ||
             (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
         )
@@ -3497,8 +3497,8 @@ void DollPzlMain()
             }
         }
         else if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -3516,8 +3516,8 @@ void DollPzlMain()
             }
         }
         else if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -3536,13 +3536,13 @@ void DollPzlMain()
         }
     break;
     case 11:
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 10;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             SeStartFix(SE_PUZZLE2, 0, 0x1000, 0x1000, 0);
             if (spev_wrk.csr[0] == evdl_dat[no].answer)
@@ -3562,13 +3562,13 @@ void DollPzlMain()
         }
         else if (
             (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             ) || (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )
@@ -3580,13 +3580,13 @@ void DollPzlMain()
         }
     break;
     case 12:
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 10;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
             {
                 spev_wrk.mode = 10;
 
@@ -3594,13 +3594,13 @@ void DollPzlMain()
             }
         else if (
             (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             ) || (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )
@@ -3655,7 +3655,7 @@ void DollPzlMain()
     case 17:
         if (IsEndAdpcmPuzzle() != 0)
         {
-            if ((*key_now[5] == 1) || (*key_now[4] == 1))
+            if ((CROSS_PRESSED() == 1) || (TRIANGLE_PRESSED() == 1))
             {
                 spev_wrk.mode = 20;
 
@@ -3675,7 +3675,7 @@ void DollPzlMain()
     case 18:
         if (IsEndAdpcmPuzzle() != 0)
         {
-            if (*key_now[5] == 1 || *key_now[4] == 1)
+            if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
             {
                 spev_wrk.mode = 20;
 
@@ -3702,7 +3702,7 @@ void DollPzlMain()
     case 19:
         if (IsEndAdpcmPuzzle() != 0)
         {
-            if (*key_now[5] == 1 || *key_now[4] == 1)
+            if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
             {
                 spev_wrk.mode = 20;
 
@@ -3741,7 +3741,7 @@ void DollPzlMain()
 
         if (IsEndAdpcmPuzzle() != 0)
         {
-            if (*key_now[5] == 1)
+            if (CROSS_PRESSED() == 1)
             {
                 spev_wrk.time = 0;
 
@@ -3782,7 +3782,7 @@ void DollPzlMain()
             spev_wrk.time -= 5;
         }
 
-        if (IsEndAdpcmPuzzle() != 0 && *key_now[5] == 1)
+        if (IsEndAdpcmPuzzle() != 0 && CROSS_PRESSED() == 1)
         {
             spev_wrk.mode = 23;
         }
@@ -3805,13 +3805,13 @@ void DollPzlMain()
             blink_dir = -1;
         }
 
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
 
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
 
@@ -4407,7 +4407,7 @@ void ButsuzoPzlMain()
             spev_wrk.time--;
         }
 
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             if (order_no != 0)
             {
@@ -4427,7 +4427,7 @@ void ButsuzoPzlMain()
             }
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             if (evbtz_dat[spev_wrk.csr[0]].set_place == -1)
             {
@@ -4444,8 +4444,8 @@ void ButsuzoPzlMain()
             SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
         }
         else if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -4468,8 +4468,8 @@ void ButsuzoPzlMain()
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -4512,14 +4512,14 @@ void ButsuzoPzlMain()
             spev_wrk.time--;
         }
 
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             evbtz_dat[spev_wrk.csr[0]].use_flg = 0;
             evbtz_dat[spev_wrk.csr[0]].set_place = -1;
 
             spev_wrk.mode = 4;
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             for (i = 0; i < 5; i++)
             {
@@ -4565,8 +4565,8 @@ void ButsuzoPzlMain()
             SeStartFix(SE_MN1, 0, 0x1000, 0x1000, 0);
         }
         else if (
-            *key_now[0] == 1 ||
-            (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+            DPAD_UP_PRESSED() == 1 ||
+            (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(0) == 1 ||
             (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
         )
@@ -4589,8 +4589,8 @@ void ButsuzoPzlMain()
         else
         {
             if (
-                *key_now[1] == 1 ||
-                (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+                DPAD_DOWN_PRESSED() == 1 ||
+                (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(2) == 1 ||
                 (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
             )
@@ -4611,8 +4611,8 @@ void ButsuzoPzlMain()
                 spev_wrk.time = 20;
             }
             else if (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -4633,8 +4633,8 @@ void ButsuzoPzlMain()
                 spev_wrk.time = 20;
             }
             else if (
-                    *key_now[3] == 1 ||
-                    (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                    DPAD_RIGHT_PRESSED() == 1 ||
+                    (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(1) == 1 ||
                     (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )
@@ -4658,25 +4658,25 @@ void ButsuzoPzlMain()
     break;
     case 6:
     case 7:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
 
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 5;
             spev_wrk.time = 20;
         }
         if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -4732,7 +4732,7 @@ void ButsuzoPzlMain()
         }
     break;
     case 9:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
@@ -5348,7 +5348,7 @@ void ButsuzoMSGMain()
 
     break;
     case 8:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
@@ -5612,14 +5612,14 @@ void LightsOutMain()
 
         CsrInclease(&spev_wrk.csr[1], 0x54, 4);
 
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 12;
             spev_wrk.time = 40;
 
             SetBlackOut();
         }
-        else if (*key_now[7] == 1)
+        else if (CIRCLE_PRESSED() == 1)
         {
             for (i = 0; i < 6; i++)
             {
@@ -5631,7 +5631,7 @@ void LightsOutMain()
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             if (evcdl_dat.cdl_flg[0][spev_wrk.csr[0]] == 0)
             {
@@ -5644,8 +5644,8 @@ void LightsOutMain()
             }
         }
         else if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -5661,8 +5661,8 @@ void LightsOutMain()
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -6311,11 +6311,11 @@ void FaceDoorMain(int face_no)
             break;
         }
 
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 26;
             spev_wrk.time = 40;
@@ -6325,13 +6325,13 @@ void FaceDoorMain(int face_no)
         }
         else if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[1] == 1 ||
-                (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+                DPAD_DOWN_PRESSED() == 1 ||
+                (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(2) == 1 ||
                 (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
             )
@@ -6354,13 +6354,13 @@ void FaceDoorMain(int face_no)
         }
         else if (
             (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             ) || (
-                *key_now[0] == 1 ||
-                (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+                DPAD_UP_PRESSED() == 1 ||
+                (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(0) == 1 ||
                 (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
             )
@@ -6442,11 +6442,11 @@ void FaceDoorMain(int face_no)
     break;
     case '\v':
     case '\f':
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
@@ -6465,13 +6465,13 @@ void FaceDoorMain(int face_no)
         }
         else if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -6512,7 +6512,7 @@ void FaceDoorMain(int face_no)
         }
     break;
     case 13:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
@@ -6551,7 +6551,7 @@ void FaceDoorMain(int face_no)
             spev_wrk.csr[1]++;
         }
 
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
             spev_wrk.csr[0] = 0;
@@ -6573,7 +6573,7 @@ void FaceDoorMain(int face_no)
         }
     break;
     case 16:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
 
@@ -6628,19 +6628,19 @@ void FaceDoorMain(int face_no)
     break;
     case 19:
     case 20:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
         else if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -6650,7 +6650,7 @@ void FaceDoorMain(int face_no)
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 26;
             spev_wrk.time = 40;
@@ -8270,11 +8270,11 @@ void SimenPillarMain(int event_no)
     break;
     case 6:
     case 8:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 32;
             spev_wrk.time = 10;
@@ -8283,13 +8283,13 @@ void SimenPillarMain(int event_no)
         }
         else if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -8337,7 +8337,7 @@ void SimenPillarMain(int event_no)
         }
     break;
     case 17:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
@@ -8350,11 +8350,11 @@ void SimenPillarMain(int event_no)
     break;
     case 19:
     case 20:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 32;
             spev_wrk.time = 10;
@@ -8363,13 +8363,13 @@ void SimenPillarMain(int event_no)
         }
         else if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -9667,14 +9667,14 @@ void ZushiBonjiMain(int bonji_no)
             break;
         }
 
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 10;
             spev_wrk.time = 70;
 
             SetBlackOut();
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             spev_wrk.mode = 7;
             spev_wrk.time = 40;
@@ -9682,8 +9682,8 @@ void ZushiBonjiMain(int bonji_no)
             SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
         }
         else if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -9700,8 +9700,8 @@ void ZushiBonjiMain(int bonji_no)
             zushi_alpha[0] = 0;
         }
         else if (
-            *key_now[2] == 1 ||
-            (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+            DPAD_LEFT_PRESSED() == 1 ||
+            (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(3) == 1 ||
             (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
         )
@@ -10075,7 +10075,7 @@ void ZushiBonjiMSGMain()
         }
     break;
     case 4:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
@@ -10087,7 +10087,7 @@ void ZushiBonjiMSGMain()
         }
     break;
     case 5:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
@@ -10274,7 +10274,7 @@ void ZushiBonjiAfterMain(int bonji_no)
         }
     break;
     case 4:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
@@ -10498,7 +10498,7 @@ void IdoIntoMain()
     switch(spev_wrk.mode)
     {
     case 0:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
@@ -10510,7 +10510,7 @@ void IdoIntoMain()
 
             spev_wrk.count = 0;
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 4;
             spev_wrk.time = 20;
@@ -10519,13 +10519,13 @@ void IdoIntoMain()
         }
         else if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -10536,7 +10536,7 @@ void IdoIntoMain()
         }
     break;
     case 1:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 4;
             spev_wrk.time = 20;
@@ -10545,13 +10545,13 @@ void IdoIntoMain()
         }
         else if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -10699,7 +10699,7 @@ void IdoOutMain()
     switch(spev_wrk.mode)
     {
     case 0:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
@@ -10711,7 +10711,7 @@ void IdoOutMain()
 
             spev_wrk.count = 0;
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 4;
             spev_wrk.time = 20;
@@ -10720,13 +10720,13 @@ void IdoOutMain()
         }
         else if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -10738,7 +10738,7 @@ void IdoOutMain()
         }
     break;
     case 1:
-        if (*key_now[5] == 1 || *key_now[4] == 1)
+        if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 4;
             spev_wrk.time = 20;
@@ -10747,13 +10747,13 @@ void IdoOutMain()
         }
         else if (
             (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             ) || (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -11127,7 +11127,7 @@ void ItemEventMain(int event_no)
         }
     break;
     case 5:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.mode = 8;
 
@@ -11156,7 +11156,7 @@ void ItemEventMain(int event_no)
             break;
             }
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 9;
 
@@ -11164,13 +11164,13 @@ void ItemEventMain(int event_no)
         }
         else if (
             (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             ) || (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )
@@ -11182,13 +11182,13 @@ void ItemEventMain(int event_no)
         }
     break;
     case 6:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.mode = 9;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 9;
 
@@ -11196,13 +11196,13 @@ void ItemEventMain(int event_no)
         }
         else if (
             (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             ) || (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )
@@ -11464,7 +11464,7 @@ void NawakakeFalseMain(int event_no)
         }
     break;
     case 5:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.mode = 3;
 
@@ -11484,7 +11484,7 @@ void NawakakeFalseMain(int event_no)
             break;
             }
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 9;
 
@@ -11492,13 +11492,13 @@ void NawakakeFalseMain(int event_no)
         }
         else if (
             (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             ) || (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )
@@ -11510,13 +11510,13 @@ void NawakakeFalseMain(int event_no)
         }
     break;
     case 6:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             spev_wrk.mode = 9;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[4] == 1)
+        else if (TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.mode = 9;
 
@@ -11524,13 +11524,13 @@ void NawakakeFalseMain(int event_no)
         }
         else if (
             (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             ) || (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )

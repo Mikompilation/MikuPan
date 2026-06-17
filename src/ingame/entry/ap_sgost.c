@@ -127,7 +127,7 @@ int SettleGhostAppearReq(int sg_no)
     sgst_wrk.sg_no = sg_no;
     sgst_wrk.dat_no = ingame_wrk.msn_no - 3;
     sgst_wrk.mode = 1;
-    ingame_wrk.mode = 19;
+    ingame_wrk.mode = INGAME_MODE_SGST_DISP;
 
     ReqPlayerStop(1);
 
@@ -171,7 +171,7 @@ void SettleGhostMain()
         if (end)
         {
             sgst_wrk.mode = 3;
-            ingame_wrk.mode = 6;
+            ingame_wrk.mode = INGAME_MODE_NOMAL;
 
             SettleGhostBattleSet();
 
@@ -232,7 +232,7 @@ void SettleGhostMain()
         sgst_wrk.mode = 8;
     break;
     case 8:
-        ingame_wrk.mode = 6;
+        ingame_wrk.mode = INGAME_MODE_NOMAL;
         sgst_wrk.mode = 0;
     break;
     }
@@ -574,7 +574,7 @@ int SettleGhostBattleEnd()
     if (sgst_wrk.mode != 0)
     {
         sgst_wrk.mode = 4;
-        ingame_wrk.mode = 19;
+        ingame_wrk.mode = INGAME_MODE_SGST_DISP;
 
         return 1;
     }

@@ -47,7 +47,7 @@ char SpdMenuCtrl()
 
     rtrn = 0;
 
-    if (*key_now[13] == 1)
+    if (SELECT_PRESSED() == 1)
     {
         if (CanYouOpenMyMind(1) != 0 && spd_mnu.smap == 0)
         {

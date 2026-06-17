@@ -2020,7 +2020,7 @@ void* ContHeatHaze(void *addr, int type, float *pos, float *pos2, int st, float 
     hh = (HEAT_HAZE *)addr;
     hh->flag |= 0xff;
 
-    if (ingame_wrk.mode == 0xa)
+    if (ingame_wrk.mode == INGAME_MODE_MENU)
     {
         return addr;
     }
@@ -3541,7 +3541,7 @@ void* ContSmoke(void *addr, int type, float *pos, float *pos2, int st, float r, 
 
     hh->flag |= 0xff;
 
-    if (ingame_wrk.mode != 0xa)
+    if (ingame_wrk.mode != INGAME_MODE_MENU)
     {
         if (pos2 == NULL)
         {
@@ -5834,27 +5834,27 @@ void ContCanal()
     static sceVu0FVECTOR bcp = {27850.0f, 200.0f, 29300.0f, 1.0f};
     int n;
 
-    if (*key_now[15] == 1)
+    if (R3_PRESSED() == 1)
     {
         Call3DRipple(bcp);
     }
 
-    if (*key_now[7] != 0)
+    if (CIRCLE_PRESSED() != 0)
     {
         bcp[0] += 20.0f;
     }
 
-    if (*key_now[6] != 0)
+    if (SQUARE_PRESSED() != 0)
     {
         bcp[0] -= 20.0f;
     }
 
-    if (*key_now[4] != 0)
+    if (TRIANGLE_PRESSED() != 0)
     {
         bcp[2] += 20.0f;
     }
 
-    if (*key_now[5] != 0)
+    if (CROSS_PRESSED() != 0)
     {
         bcp[2] -= 20.0f;
     }

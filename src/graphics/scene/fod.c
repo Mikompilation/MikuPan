@@ -794,7 +794,7 @@ void FodSetEffect(FOD_CTRL *fc)
 
     if (fef->zdepth == 1)
     {
-        SetEffects(1, 1);
+        SetEffects(EF_Z_DEP, 1);
     }
 
     if (fef->mono == 1 && eff_param.mono_flg == 0)
@@ -833,7 +833,7 @@ void FodSetEffect(FOD_CTRL *fc)
 
                 sceVu0ApplyMatrix(eff_param.pdf_pos, fod_cmn_mtx, eff_param.pdf_pos);
 
-                eff_param.pdf_p = SetEffects(27, 2,
+                eff_param.pdf_p = SetEffects(EF_PDEFORM, 2,
                     (u_long)(fed->dither).alpmax,
                     (u_long)(fed->dither).colmax,
                     *(float *)(&((char *)fed)[36]),

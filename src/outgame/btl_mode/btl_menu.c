@@ -456,14 +456,14 @@ void FreeModeMain()
     SetInteger2(0, 230.0f, 110.0f, 0, 0x80, 0x80, 0x80, btl_wrk.csr[1]);
     SetInteger2(0, 230.0f, 150.0f, 0, 0x80, 0x80, 0x80, btl_wrk.csr[2]);
 
-    if (*key_now[5] == 1)
+    if (CROSS_PRESSED() == 1)
     {
         OutGameModeChange(4);
 
         return;
     }
 
-    if (*key_now[7] == 1)
+    if (CIRCLE_PRESSED() == 1)
     {
         if (btl_wrk.csr[0] == 2)
         {
@@ -474,21 +474,21 @@ void FreeModeMain()
             return;
         }
     }
-    else if (*key_now[0] == 1)
+    else if (DPAD_UP_PRESSED() == 1)
     {
         if (btl_wrk.csr[0] != 0)
         {
             btl_wrk.csr[0]--;
         }
     }
-    else if (*key_now[1] == 1)
+    else if (DPAD_DOWN_PRESSED() == 1)
     {
         if (btl_wrk.csr[0] < 2)
         {
             btl_wrk.csr[0]++;
         }
     }
-    else if (*key_now[2] == 1)
+    else if (DPAD_LEFT_PRESSED() == 1)
     {
         if (btl_wrk.csr[0] == 0)
         {
@@ -514,7 +514,7 @@ void FreeModeMain()
             }
         }
     }
-    else if (*key_now[3] == 1)
+    else if (DPAD_RIGHT_PRESSED() == 1)
     {
         if (btl_wrk.csr[0] == 0)
         {
@@ -625,24 +625,24 @@ void BattleModeMain()
     SetInteger2(0, 470.0f, 270.0f, 0, 0x80, 0x80, 0x80, stage_wrk[3].rank);
     SetInteger2(0, 470.0f, 310.0f, 0, 0x80, 0x80, 0x80, stage_wrk[4].rank);
 
-    if (*key_now[5] == 1)
+    if (CROSS_PRESSED() == 1)
     {
         OutGameModeChange(4);
     }
-    else if (*key_now[7] == 1)
+    else if (CIRCLE_PRESSED() == 1)
     {
         ingame_wrk.game = 1;
 
         GameModeChange(0);
     }
-    else if (*key_now[0] == 1)
+    else if (DPAD_UP_PRESSED() == 1)
     {
         if (btl_wrk.stage_no != 0)
         {
             btl_wrk.stage_no--;
         }
     }
-    else if (*key_now[1] == 1)
+    else if (DPAD_DOWN_PRESSED() == 1)
     {
         if (btl_wrk.stage_no < 4)
         {

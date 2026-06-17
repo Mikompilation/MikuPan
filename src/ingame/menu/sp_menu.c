@@ -239,13 +239,13 @@ char SavePointMenuMain(u_char msn)
             }
             break;
         case 1:
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
                 spmenu_wrk.mode = 2;
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
@@ -272,7 +272,7 @@ char SavePointMenuMain(u_char msn)
 
                 InitialDmaBuffer();
 
-                ingame_wrk.mode = 6;
+                ingame_wrk.mode = INGAME_MODE_NOMAL;
             }
             break;
         case 3:
@@ -797,7 +797,7 @@ char SavePointMenuMain(u_char msn)
 
                         InitialDmaBuffer();
 
-                        ingame_wrk.mode = 6;
+                        ingame_wrk.mode = INGAME_MODE_NOMAL;
                     }
                     else
                     {
@@ -865,7 +865,7 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
 {
     if (dsp_svp.slct_mode == -1)
     {
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             if (spmenu_wrk.csr[3] != 3)
             {
@@ -878,7 +878,7 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
                 dsp_svp.str_no = 3;
             }
         }
-        else if (*key_now[6] == 1 || *key_now[5] == 1)
+        else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             if (mode < 2 && spmenu_wrk.csr[3] == 2)
             {
@@ -894,8 +894,8 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
                 dsp_svp.str_no = spmenu_wrk.csr[3];
             }
         }
-        else if (*key_now[3] == 1
-                 || (*key_now[3] > 25 && (*key_now[3] % 5) == 1)
+        else if (DPAD_RIGHT_PRESSED() == 1
+                 || (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1)
                  || Ana2PadDirCnt(1) == 1
                  || (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1))
         {
@@ -915,8 +915,8 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
-        else if (*key_now[2] == 1
-                 || (*key_now[2] > 25 && (*key_now[2] % 5) == 1)
+        else if (DPAD_LEFT_PRESSED() == 1
+                 || (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1)
                  || Ana2PadDirCnt(3) == 1
                  || (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1))
         {
@@ -937,13 +937,13 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     }
-    else if (*key_now[4] == 1)
+    else if (TRIANGLE_PRESSED() == 1)
     {
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
         dsp_svp.slct_mode = -1;
     }
-    else if (*key_now[6] == 1 || *key_now[5] == 1)
+    else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
     {
         if (spmenu_wrk.csr[4] == 0)
         {
@@ -1008,13 +1008,13 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
             dsp_svp.slct_mode = -1;
         }
     }
-    else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+    else if (DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
         spmenu_wrk.csr[4] = 1 - spmenu_wrk.csr[4];
     }
-    else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
+    else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1)
     {
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
@@ -1035,19 +1035,19 @@ void SavePointMenuModeSlctDisp(u_char msn, u_char csr3, u_char csr4,
     static short int adj_x = 0;
     static short int adj_y = 0;
 
-    if (*key_now[0] != 0 || *key_now[8] == 1)
+    if (DPAD_UP_PRESSED() != 0 || L1_PRESSED() == 1)
     {
         adj_y--;
     }
-    else if (*key_now[1] != 0 || *key_now[10] == 1)
+    else if (DPAD_DOWN_PRESSED() != 0 || R1_PRESSED() == 1)
     {
         adj_y++;
     }
-    else if (*key_now[2] != 0 || *key_now[9] == 1)
+    else if (DPAD_LEFT_PRESSED() != 0 || L2_PRESSED() == 1)
     {
         adj_x--;
     }
-    else if (*key_now[3] != 0 || *key_now[11] == 1)
+    else if (DPAD_RIGHT_PRESSED() != 0 || R2_PRESSED() == 1)
     {
         adj_x++;
     }
@@ -1316,7 +1316,7 @@ static u_char SaveConte()
         case CNT_SLOT_SELECT:
             sv_dsp_sw.msg = 0;
 
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
@@ -1326,7 +1326,7 @@ static u_char SaveConte()
 
                 sav_con.step = CNT_BREAK;
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
@@ -1335,8 +1335,8 @@ static u_char SaveConte()
 
                 sav_con.step = CNT_FILE_SELECT;
             }
-            else if (*key_now[1] == 1
-                     || (*key_now[1] > 25 && (*key_now[1] % 5) == 1)
+            else if (DPAD_DOWN_PRESSED() == 1
+                     || (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1)
                      || Ana2PadDirCnt(2) == 1
                      || (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1))
             {
@@ -1351,8 +1351,8 @@ static u_char SaveConte()
                     spmenu_wrk.csr[1] = 0;
                 }
             }
-            else if (*key_now[0] == 1
-                     || (*key_now[0] > 25 && (*key_now[0] % 5) == 1)
+            else if (DPAD_UP_PRESSED() == 1
+                     || (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1)
                      || Ana2PadDirCnt(0) == 1
                      || (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1))
             {
@@ -1371,7 +1371,7 @@ static u_char SaveConte()
         case CNT_FILE_SELECT:
             sv_dsp_sw.msg = 1;
 
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
@@ -1380,7 +1380,7 @@ static u_char SaveConte()
 
                 sav_con.step = CNT_SLOT_SELECT;
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 sav_con.file = spmenu_wrk.csr[2];
 
@@ -1392,8 +1392,8 @@ static u_char SaveConte()
 
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             }
-            else if (*key_now[1] == 1
-                     || (*key_now[1] > 25 && (*key_now[1] % 5) == 1)
+            else if (DPAD_DOWN_PRESSED() == 1
+                     || (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1)
                      || Ana2PadDirCnt(2) == 1
                      || (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1))
             {
@@ -1408,8 +1408,8 @@ static u_char SaveConte()
                     spmenu_wrk.csr[2] = 0;
                 }
             }
-            else if (*key_now[0] == 1
-                     || (*key_now[0] > 25 && (*key_now[0] % 5) == 1)
+            else if (DPAD_UP_PRESSED() == 1
+                     || (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1)
                      || Ana2PadDirCnt(0) == 1
                      || (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1))
             {
@@ -1428,7 +1428,7 @@ static u_char SaveConte()
         case CNT_FINAL_ANSWER:
             sv_dsp_sw.msg = 18;
 
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
 
@@ -1437,7 +1437,7 @@ static u_char SaveConte()
 
                 sav_con.step = CNT_FILE_SELECT;
             }
-            else if ((*key_now[6] == 1) || (*key_now[5] == 1))
+            else if ((SQUARE_PRESSED() == 1) || (CROSS_PRESSED() == 1))
             {
                 if (spmenu_wrk.csr[0] == 0)
                 {
@@ -1460,13 +1460,13 @@ static u_char SaveConte()
                     sav_con.step = CNT_BREAK;
                 }
             }
-            else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+            else if (DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
             {
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
                 spmenu_wrk.csr[0] = 1;
             }
-            else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1)
+            else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1)
             {
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
 
@@ -3189,7 +3189,7 @@ static int AlbmDesignLoadInGame(u_char side, u_char type)
 
 void AlbumModeInGameOverInit()
 {
-    ingame_wrk.mode = 21;
+    ingame_wrk.mode = INGAME_MODE_GAME_OVER_ALBUM;
 
     albm_mode.load_id = -1;
 

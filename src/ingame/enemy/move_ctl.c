@@ -2701,7 +2701,7 @@ void EJob049(MOVE_BOX *mb)
     f = mb->comm_add.pu8[0] | (mb->comm_add.pu8[1] << 8); mb->comm_add.pu16++;
     g = mb->comm_add.pu8[0] | (mb->comm_add.pu8[1] << 8); mb->comm_add.pu16++;
 
-    SetEffects(2, 4, a, b, spd, c, d, e, f, g);
+    SetEffects(EF_DITHER, 4, a, b, spd, c, d, e, f, g);
 
     mb->wait_time = 0;
     mb->pos_no = 0;

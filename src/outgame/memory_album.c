@@ -549,12 +549,12 @@ char NmlPadInTopPage()
     
     if (dm_albm.exit_realy == 1)
     {
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dm_albm.exit_realy = 0;
         }
-        else if ((*key_now[6] == 1) || (*key_now[5] == 1))
+        else if ((SQUARE_PRESSED() == 1) || (CROSS_PRESSED() == 1))
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             switch(dm_albm.csr[4])
@@ -592,7 +592,7 @@ char NmlPadInTopPage()
             break;
             }
         }
-        else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+        else if (DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
         {
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             if (dm_albm.side == 0 && dm_albm.is_title == 0)
@@ -684,7 +684,7 @@ char NmlPadInTopPage()
         {
             if (dm_albm.copy_wait == 0 && dm_albm.paste_wait == 0)
             {
-                if (*key_now[4] == 1)
+                if (TRIANGLE_PRESSED() == 1)
                 {
                     if (dm_albm.buf_set != 0)
                     {
@@ -699,7 +699,7 @@ char NmlPadInTopPage()
                         dm_albm.csr[4] = 2;
                     }
                 }
-                else if (*key_now[5] == 1)
+                else if (CROSS_PRESSED() == 1)
                 {
                     if (dm_albm.buf_set == 0)
                     {
@@ -740,7 +740,7 @@ char NmlPadInTopPage()
                         dm_albm.pst_mode = 1;
                     }
                 }
-                else if (*key_now[6] == 1)
+                else if (SQUARE_PRESSED() == 1)
                 {
                     if (dm_albm.buf_set != 0)
                     {
@@ -753,7 +753,7 @@ char NmlPadInTopPage()
                         dm_albm.csr[3] = 0;
                     }
                 }
-                else if (*key_now[7] == 1)
+                else if (CIRCLE_PRESSED() == 1)
                 {
                     if (dm_albm.buf_set == 0)
                     {
@@ -773,8 +773,8 @@ char NmlPadInTopPage()
                     }
                 }
                 else if (
-                    *key_now[3] == 1 ||
-                    (*key_now[3] > 0x19 && (*key_now[3] % 5 == 1) ||
+                    DPAD_RIGHT_PRESSED() == 1 ||
+                    (DPAD_RIGHT_PRESSED() > 0x19 && (DPAD_RIGHT_PRESSED() % 5 == 1) ||
                     Ana2PadDirCnt(1) == 1) ||
                     (Ana2PadDirCnt(1) > 0x19 && (Ana2PadDirCnt(1) % 5 == 1))
                 )
@@ -864,7 +864,7 @@ char NmlPadInTopPage()
                             dm_albm.csr[dm_albm.side] += csr_ay[dm_albm.csr[dm_albm.side] % 8].p;
                         }
                 }
-                else if (*key_now[10] == 1)
+                else if (R1_PRESSED() == 1)
                 {
                     if (dm_albm.side == 0)
                     {
@@ -872,7 +872,7 @@ char NmlPadInTopPage()
                         dm_albm.side_chng_wait = 15;
                     }
                 }
-                else if (*key_now[8] == 1 && dm_albm.side == 1)
+                else if (L1_PRESSED() == 1 && dm_albm.side == 1)
                 {
                     dm_albm.side_chng_mode = 0;
                     dm_albm.side_chng_wait = 15;
@@ -991,7 +991,7 @@ char AbnPadInBigPage(u_char alp)
 {
     u_char target;
 
-    if (*key_now[5] == 1)
+    if (CROSS_PRESSED() == 1)
     {
         SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         dm_albm.mode_chng = 20;
@@ -999,7 +999,7 @@ char AbnPadInBigPage(u_char alp)
     }
     else
     {
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dm_albm.mode_chng = 20;
@@ -1045,8 +1045,8 @@ char AbnPadInBigPage(u_char alp)
             }
         }
         else if (
-            *key_now[3] == 1 ||
-            (*key_now[3] > 0x19 && (*key_now[3] % 5) == 1) ||
+            DPAD_RIGHT_PRESSED() == 1 ||
+            (DPAD_RIGHT_PRESSED() > 0x19 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1) == 1 ||
             (Ana2PadDirCnt(1) > 0x19 && (Ana2PadDirCnt(1) % 5 == 1))
         )
@@ -1240,12 +1240,12 @@ char MenuPadCmn()
     // jump logic later on int the asm ... but why??
     if (dm_albm.yes_no == 0)
     {
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             dm_albm.csr_mode = 0;
         }
-        else if ((*key_now[5]) == 1)
+        else if ((CROSS_PRESSED()) == 1)
         {
             switch (dm_albm.csr[3])
             {
@@ -1436,12 +1436,12 @@ char MenuPadCmn()
         switch (dm_albm.yes_no)
         {
         case 1: {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 dm_albm.yes_no = 0;
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                 switch (dm_albm.csr[4])
@@ -1485,7 +1485,7 @@ char MenuPadCmn()
                 break;
                 }
             }
-            else if (*key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+            else if (DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
             {
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
                 if (dm_albm.side == 0 && dm_albm.is_title == 0)
@@ -1550,14 +1550,14 @@ char MenuPadCmn()
             PutStringYW(6, 0x22, 0x3c, 0x186, 0x808080, 0x80, 0x1000, 0);
             PutStringYW(9, 1, 0x166, 0x186, 0x808080, 0x80, 0x1000, 1);
             
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 dm_albm.yes_no = 0;
             }
             else
             {
-                if (*key_now[6] == 1 || *key_now[5] == 1)
+                if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
                 {
                     if (dm_albm.csr[4] != 0)
                     {
@@ -1572,7 +1572,7 @@ char MenuPadCmn()
                 }
                 // this uses the asm generated in case 3, so it must be exactly the same code
                 else if (
-                    *key_now[3] == 1 || Ana2PadDirCnt(1) == 1 ||
+                    DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1 ||
                     DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1
                 )
                 {
@@ -1595,14 +1595,14 @@ char MenuPadCmn()
             PutStringYW(6, 0x27, 0x140, 0x143, 0x808080, 0x80, 0x1000, 1);
             PutStringYW(6, 0x25, 0x3c, 0x161, 0x808080, 0x80, 0x1000, 0);
             
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
                 dm_albm.yes_no = 0;
             }
             else
             {
-                if (*key_now[6] == 1 || *key_now[5] == 1)
+                if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
                 {
                     SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
                     if (dm_albm.csr[4] == 0)
@@ -1626,7 +1626,7 @@ char MenuPadCmn()
                     }
                 }
                 else if (
-                    *key_now[3] == 1 || Ana2PadDirCnt(1) == 1 ||
+                    DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1 ||
                     DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1
                 )
                 {
@@ -1659,13 +1659,13 @@ char PasteCtrl()
         YesNoCrslOKR(0x2000, (dm_albm.csr[4] * 0x84 + 0x13e), 387.0f, 0x808080, 128.0f, 2.0f); // Line 1443
         PutStringYW(9, 1, 0x166, 0x186, 0x808080, 0x80, 0x1000, 1); // Line 1444
         PutStringYW(6, 0x26, 0x3c, 0x186, 0x808080, 0x80, 0x1000, 0); // Line 1447
-        if (*key_now[4] == 1) // Line 1450
+        if (TRIANGLE_PRESSED() == 1) // Line 1450
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0); // Line 1455
             dm_albm.pst_yes_no = 0;
             rtrn = 1;
         }
-        else if (*key_now[6] == 1 || *key_now[5] == 1) // Line 1456
+        else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1) // Line 1456
         {
             if (dm_albm.csr[4] == 0)
             {
@@ -1681,7 +1681,7 @@ char PasteCtrl()
             }
         }
         else if (( // Line 1470
-            *key_now[3] == one || Ana2PadDirCnt(1) == one ||
+            DPAD_RIGHT_PRESSED() == one || Ana2PadDirCnt(1) == one ||
             DPAD_LEFT_PRESSED() == one || Ana2PadDirCnt(3) == one
         ))
         {
@@ -1779,20 +1779,20 @@ void BuffPadCmn()
 {
     if (dm_albm.mode == 0)
     {
-        if (*key_now[6] == 1)
+        if (SQUARE_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dm_albm.csr[3] = 0;
             dm_albm.csr_mode = 3;
         }
-        else if (*key_now[5] == 1)
+        else if (CROSS_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dm_albm.buf_exp_flg = 1;
             dm_albm.mode_chng = 20;
             dm_albm.mode = 1;
         }
-        else if (*key_now[7] == 1)
+        else if (CIRCLE_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dm_albm.buf_set = 1;
@@ -1832,8 +1832,8 @@ void BuffPadCmn()
             }
         }
         else if (
-            (*key_now[3] == 1) ||
-            (*key_now[3] > 0x19 && (*key_now[3] % 5) == 1) ||
+            (DPAD_RIGHT_PRESSED() == 1) ||
+            (DPAD_RIGHT_PRESSED() > 0x19 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(1)  == 1 ||
             (Ana2PadDirCnt(1) > 0x19 && (Ana2PadDirCnt(1) % 5) == 1)
         )
@@ -1854,7 +1854,7 @@ void BuffPadCmn()
         }
         else
         {
-            if (*key_now[10] == 1)
+            if (R1_PRESSED() == 1)
             {
                 if (dm_albm.side == 0)
                 {
@@ -1864,7 +1864,7 @@ void BuffPadCmn()
             }
             else
             {
-                if (*key_now[8] == 1 && dm_albm.side == 1)
+                if (L1_PRESSED() == 1 && dm_albm.side == 1)
                 {
                     dm_albm.side_chng_mode = 0;
                     dm_albm.side_chng_wait = 15;
@@ -1878,12 +1878,12 @@ void BuffPadMnu()
 {
     int i;
 
-    if (*key_now[4] == 1)
+    if (TRIANGLE_PRESSED() == 1)
     {
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         dm_albm.csr_mode = 2;
     }
-    else if (*key_now[5] == 1)
+    else if (CROSS_PRESSED() == 1)
     {
         switch(dm_albm.csr[3])
         {
@@ -3039,39 +3039,39 @@ char InKeyTamusi()
     {
         hit = hit + 1;
     }
-    if ((*key_now[3] != 0) || Ana2PadDirCnt(1))
+    if ((DPAD_RIGHT_PRESSED() != 0) || Ana2PadDirCnt(1))
     {
         hit = hit + 1;
     }
-    if (*key_now[6] != 0)
+    if (SQUARE_PRESSED() != 0)
     {
         hit = hit + 1;
     }
-    if (*key_now[7] != 0)
+    if (CIRCLE_PRESSED() != 0)
     {
         hit = hit + 1;
     }
-    if (*key_now[4] != 0)
+    if (TRIANGLE_PRESSED() != 0)
     {
         hit = hit + 1;
     }
-    if (*key_now[10] != 0)
+    if (R1_PRESSED() != 0)
     {
         hit = hit + 1;
     }
-    if (*key_now[11] != 0)
+    if (R2_PRESSED() != 0)
     {
         hit = hit + 1;
     }
-    if (*key_now[8] != 0)
+    if (L1_PRESSED() != 0)
     {
         hit = hit + 1;
     }
-    if (*key_now[9] != 0)
+    if (L2_PRESSED() != 0)
     {
         hit = hit + 1;
     }
-    if (*key_now[13] != 0)
+    if (SELECT_PRESSED() != 0)
     {
         hit = hit + 1;
     }

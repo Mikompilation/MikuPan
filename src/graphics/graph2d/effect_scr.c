@@ -5084,8 +5084,8 @@ void InitScreenSaver()
 void SetScreenSaver()
 {
 	/* s1 17 */ int i;
-	/* t3 11 */ int r3; // *key_now[15] ?? // l3 and r3 do not stop
-	/* a0 4 */ int l3;  // *key_now[14] ?? // the screensaver in the game ...
+	/* t3 11 */ int r3; // R3_PRESSED() ?? // l3 and r3 do not stop
+	/* a0 4 */ int l3;  // L3_PRESSED() ?? // the screensaver in the game ...
 	/* v0 2 */ u_int pad_all;
 	/* s0 16 */ ONE_HAND *ohp;
 	/* 0x0(sp) */ DISP_SPRT ds;

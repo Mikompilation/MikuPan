@@ -64,11 +64,13 @@ static char *scene_name[100] = {
     NULL,
     NULL,
 };
+
 #ifdef BUILD_EU_VERSION
 static char *scene_name_staff[5] = {
     "900e movie", "900f movie", "900g movie", "900s movie", "900i movie"
 };
 #endif
+
 static int scn_test_load_id[20] = {0};
 static void (*SceneTestDBMenu[])() = {
     SceneTestMainMenu,
@@ -1625,7 +1627,7 @@ void SceneTestEffectTest()
 
     if (scn_eff_ctrl[0].eff_flg != 0)
     {
-        SetEffects(1, 1);
+        SetEffects(EF_Z_DEP, 1);
     }
 
     if (scn_eff_ctrl[1].eff_flg != 0 && mono_flg == 0)

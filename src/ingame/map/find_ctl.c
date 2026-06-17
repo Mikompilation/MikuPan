@@ -71,7 +71,7 @@ u_char FindMapReqJudge()
 
             if (find_dat[find_wrk.pos_req[i]].type & 0x20)
             {
-                if (*key_now[5] != 1)
+                if (CROSS_PRESSED() != 1)
                 {
                     open = 0;
                 }
@@ -142,7 +142,7 @@ u_char FindMapCtrl()
         }
     break;
     case 2:
-        if (*key_now[5] == 1)
+        if (CROSS_PRESSED() == 1)
         {
             MessageWaitOff();
         }

@@ -156,13 +156,6 @@ static void MikuPan_UploadLightData(void)
 
 void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
 {
-    // Populate the entire LightBlock UBO straight from the LIGHT_PACK input.
-    // The previous design relied on MikuPan_SetupAmbientLighting2() reading
-    // colors from SgLightParallelp, but that pointer is updated per-material
-    // by SetMaterialData (sglight.c:473) and is stale/zero at the SetLightData
-    // call site — which is why the scene was so dark: the shader was getting
-    // empty diffuse colors. Source the canonical values directly here.
-
     memset(&mikupan_light_data, 0, sizeof(mikupan_light_data));
     memset(g_raw_point_pos, 0, sizeof(g_raw_point_pos));
     memset(g_raw_spot_pos, 0, sizeof(g_raw_spot_pos));
@@ -326,12 +319,6 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
         mikupan_light_data.uSpotIntens[i][1] = intens_b;
     }
 
-    // The LightBlock UBO is bound to indexed binding point 0 via
-    // glBindBufferBase at init, but glBufferSubData(GL_UNIFORM_BUFFER, ...)
-    // reads from the *generic* GL_UNIFORM_BUFFER target — which was left at
-    // 0 (unbound) after pipeline init. Without this bind the upload was a
-    // silent no-op and the shader saw zeros for diffuse colors / counts,
-    // leaving the scene effectively unlit.
     MikuPan_UploadLightData();
 }
 

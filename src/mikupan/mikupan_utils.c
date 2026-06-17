@@ -318,11 +318,6 @@ void MikuPan_ConvertPs2GSSubPixelToNDC(float *out,
                                        float window_width, float window_height,
                                        int gs_sub_x, int gs_sub_y)
 {
-    // GS wire-format coordinates are sub-pixel fixed-point at 1/16 px (see
-    // FLT_TO_FIX4 in sdk/sce/libvu0.c) — that's why values around the
-    // framebuffer origin land near 32768 instead of 2048. Recover pixel space
-    // and forward to the shared pixel-space converter so both paths use the
-    // exact same letterboxing / NDC mapping.
     MikuPan_ConvertPs2GSCoordToNDC(out, window_width, window_height,
                                    (float)gs_sub_x / 16.0f,
                                    (float)gs_sub_y / 16.0f);

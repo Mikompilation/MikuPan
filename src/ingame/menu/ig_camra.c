@@ -118,15 +118,15 @@ void CameraCustomMenuSlct(char *err)
 {
     if (yw2d.pad_lock == 0)
     {
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
             yw2d.out_mode_cnt = 11;
         }
         else if (
-            *key_now[1] == 1 ||
-            (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+            DPAD_DOWN_PRESSED() == 1 ||
+            (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(2) == 1 ||
             (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
         )
@@ -143,8 +143,8 @@ void CameraCustomMenuSlct(char *err)
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
         else if (
-            *key_now[0] == 1 ||
-            (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+            DPAD_UP_PRESSED() == 1 ||
+            (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
             Ana2PadDirCnt(0) == 1 ||
             (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
         )
@@ -160,7 +160,7 @@ void CameraCustomMenuSlct(char *err)
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
-        else if (*key_now[6] == 1 || *key_now[5] == 1)
+        else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             cmr_menu_wrk.yn_mode = 0;
             cmr_menu_wrk.mode = cmr_menu_wrk.csr[0];
@@ -174,7 +174,7 @@ void CameraCustomFilm(char *err)
 {
     if (yw2d.pad_lock == 0)
     {
-        if (*key_now[4] == 1)
+        if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -190,7 +190,7 @@ void CameraCustomFilm(char *err)
             return;
         }
 
-        if (*key_now[6] == 1 || *key_now[5] == 1)
+        if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
         {
             if (*err != 0)
             {
@@ -229,13 +229,13 @@ void CameraCustomFilm(char *err)
         }
         else if (
             (
-                *key_now[1] == 1 ||
-                (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+                DPAD_DOWN_PRESSED() == 1 ||
+                (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(2) == 1 ||
                 (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
             ) || (
-                *key_now[0] == 1 ||
-                (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+                DPAD_UP_PRESSED() == 1 ||
+                (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(0) == 1 ||
                 (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
             )
@@ -263,13 +263,13 @@ void CameraCustomFilm(char *err)
         }
         else if (
             (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             ) || (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )
@@ -316,7 +316,7 @@ void CameraCustomPowerUp(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
                 if (*err == 0)
@@ -329,8 +329,8 @@ void CameraCustomPowerUp(char *err)
                 }
             }
             else if (
-                *key_now[1] == 1 ||
-                (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+                DPAD_DOWN_PRESSED() == 1 ||
+                (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(2) == 1 ||
                 (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
             )
@@ -347,8 +347,8 @@ void CameraCustomPowerUp(char *err)
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if  (
-                *key_now[0] == 1 ||
-                (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+                DPAD_UP_PRESSED() == 1 ||
+                (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(0) == 1 ||
                 (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
             )
@@ -364,7 +364,7 @@ void CameraCustomPowerUp(char *err)
                 }
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 if (*err != 0)
                 {
@@ -395,7 +395,7 @@ void CameraCustomPowerUp(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -408,7 +408,7 @@ void CameraCustomPowerUp(char *err)
                     cmr_menu_wrk.yn_mode = 0;
                 }
             }
-            else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1 || *key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+            else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1 || DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
             {
                 *err = 0;
 
@@ -423,7 +423,7 @@ void CameraCustomPowerUp(char *err)
 
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
@@ -461,7 +461,7 @@ void CameraCustomSubAbility(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -475,8 +475,8 @@ void CameraCustomSubAbility(char *err)
                 }
             }
             else if (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )
@@ -495,8 +495,8 @@ void CameraCustomSubAbility(char *err)
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -514,7 +514,7 @@ void CameraCustomSubAbility(char *err)
 
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 if (*err != 0)
                 {
@@ -567,7 +567,7 @@ void CameraCustomSubAbility(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -580,7 +580,7 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.yn_mode = 0;
                 }
             }
-            else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1 || *key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+            else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1 || DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
             {
                 *err = 0;
 
@@ -599,7 +599,7 @@ void CameraCustomSubAbility(char *err)
 
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
@@ -625,7 +625,7 @@ void CameraCustomSubAbility(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -638,7 +638,7 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.yn_mode = 0;
                 }
             }
-            else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1 || *key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+            else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1 || DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
             {
                 *err = 0;
 
@@ -653,7 +653,7 @@ void CameraCustomSubAbility(char *err)
 
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
@@ -687,7 +687,7 @@ void CameraCustomSubAbility(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -700,7 +700,7 @@ void CameraCustomSubAbility(char *err)
                     cmr_menu_wrk.yn_mode = 0;
                 }
             }
-            else if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1 || *key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+            else if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1 || DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
             {
                 *err = 0;
 
@@ -715,7 +715,7 @@ void CameraCustomSubAbility(char *err)
 
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
@@ -747,7 +747,7 @@ void CameraCustomSpecialAbility(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -764,8 +764,8 @@ void CameraCustomSpecialAbility(char *err)
             }
 
             if (
-                *key_now[3] == 1 ||
-                (*key_now[3] > 25 && (*key_now[3] % 5) == 1) ||
+                DPAD_RIGHT_PRESSED() == 1 ||
+                (DPAD_RIGHT_PRESSED() > 25 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(1) == 1 ||
                 (Ana2PadDirCnt(1) > 25 && (Ana2PadDirCnt(1) % 5) == 1)
             )
@@ -784,8 +784,8 @@ void CameraCustomSpecialAbility(char *err)
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
             else if (
-                *key_now[2] == 1 ||
-                (*key_now[2] > 25 && (*key_now[2] % 5) == 1) ||
+                DPAD_LEFT_PRESSED() == 1 ||
+                (DPAD_LEFT_PRESSED() > 25 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                 Ana2PadDirCnt(3) == 1 ||
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
@@ -803,7 +803,7 @@ void CameraCustomSpecialAbility(char *err)
 
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 if (*err != 0)
                 {
@@ -856,7 +856,7 @@ void CameraCustomSpecialAbility(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -872,7 +872,7 @@ void CameraCustomSpecialAbility(char *err)
                 return;
             }
 
-            if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1 || *key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+            if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1 || DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
             {
                 *err = 0;
 
@@ -891,7 +891,7 @@ void CameraCustomSpecialAbility(char *err)
 
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
@@ -917,7 +917,7 @@ void CameraCustomSpecialAbility(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -933,7 +933,7 @@ void CameraCustomSpecialAbility(char *err)
                 return;
             }
 
-            if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1 || *key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+            if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1 || DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
             {
                 *err = 0;
 
@@ -948,7 +948,7 @@ void CameraCustomSpecialAbility(char *err)
 
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
@@ -982,7 +982,7 @@ void CameraCustomSpecialAbility(char *err)
     {
         if (yw2d.pad_lock == 0)
         {
-            if (*key_now[4] == 1)
+            if (TRIANGLE_PRESSED() == 1)
             {
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
 
@@ -998,7 +998,7 @@ void CameraCustomSpecialAbility(char *err)
                 return;
             }
 
-            if (*key_now[2] == 1 || Ana2PadDirCnt(3) == 1 || *key_now[3] == 1 || Ana2PadDirCnt(1) == 1)
+            if (DPAD_LEFT_PRESSED() == 1 || Ana2PadDirCnt(3) == 1 || DPAD_RIGHT_PRESSED() == 1 || Ana2PadDirCnt(1) == 1)
             {
                  *err = 0;
 
@@ -1013,7 +1013,7 @@ void CameraCustomSpecialAbility(char *err)
 
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
             }
-            else if (*key_now[6] == 1 || *key_now[5] == 1)
+            else if (SQUARE_PRESSED() == 1 || CROSS_PRESSED() == 1)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
