@@ -255,16 +255,6 @@ void MikuPan_ControllerDrawDeviceSelectorUi(void)
 
     if (igBeginCombo("Input device", preview, 0))
     {
-        const bool kbm_selected = mikupan_input_view_keyboard != 0;
-        if (igSelectable_Bool("Keyboard & Mouse", kbm_selected, 0, (ImVec2){0, 0}))
-        {
-            mikupan_input_view_keyboard = 1;
-        }
-        if (kbm_selected)
-        {
-            igSetItemDefaultFocus();
-        }
-
         const bool auto_selected =
             !mikupan_input_view_keyboard &&
             mikupan_preferred_gamepad_index == MIKUPAN_CONTROLLER_AUTO_INDEX;
@@ -274,6 +264,16 @@ void MikuPan_ControllerDrawDeviceSelectorUi(void)
             MikuPan_ControllerSetPreferredGamepadIndex(MIKUPAN_CONTROLLER_AUTO_INDEX);
         }
         if (auto_selected)
+        {
+            igSetItemDefaultFocus();
+        }
+
+        const bool kbm_selected = mikupan_input_view_keyboard != 0;
+        if (igSelectable_Bool("Keyboard & Mouse", kbm_selected, 0, (ImVec2){0, 0}))
+        {
+            mikupan_input_view_keyboard = 1;
+        }
+        if (kbm_selected)
         {
             igSetItemDefaultFocus();
         }
@@ -1049,45 +1049,83 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
     }
 }
 
+/* Shared look for "click the current binding to remap it". The button fills its
+ * table cell and turns amber while waiting for input. Returns true when clicked. */
+static bool MikuPan_DrawRemapValueButton(const char *label, bool armed)
+{
+    ImVec2 avail = igGetContentRegionAvail();
+    if (avail.x < 60.0f)
+    {
+        avail.x = 60.0f;
+    }
+    avail.y = 0.0f;
+
+    if (armed)
+    {
+        igPushStyleColor_U32(ImGuiCol_Button,        0xFF1E78D2);
+        igPushStyleColor_U32(ImGuiCol_ButtonHovered, 0xFF2E88E2);
+        igPushStyleColor_U32(ImGuiCol_ButtonActive,  0xFF1668C2);
+    }
+
+    bool clicked = igButton(armed ? "Press input... (Esc)"
+                                  : (label != NULL && label[0] != '\0' ? label : "<unmapped>"),
+                            avail);
+
+    if (armed)
+    {
+        igPopStyleColor(3);
+    }
+
+    return clicked;
+}
+
+/* Tables clip every cell to its own column, so rows can no longer overlap on a
+ * narrow window the way the old fixed igSameLine() offsets did. */
+#define MIKUPAN_BIND_TABLE_FLAGS                                               \
+    (ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |                   \
+     ImGuiTableFlags_PadOuterX | ImGuiTableFlags_NoBordersInBody)
+
 static void MikuPan_ControllerDrawControllerBindingList(SDL_Gamepad *gp)
 {
-    igTextDisabled(gp != NULL ? "Click 'Edit' on a row, then press a button on your controller."
-                              : "No controller connected. Connect one to remap gamepad bindings.");
+    igTextWrapped(gp != NULL
+                      ? "Click a binding, then press a button on your controller. 'x' clears it."
+                      : "No controller connected. Connect one to remap gamepad bindings.");
 
-    for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+    if (igBeginTable("##gp_buttons", 3, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
     {
-        igPushID_Int(i);
+        igTableSetupColumn("Action",  ImGuiTableColumnFlags_WidthStretch, 0.40f, 0);
+        igTableSetupColumn("Binding", ImGuiTableColumnFlags_WidthStretch, 0.60f, 0);
+        igTableSetupColumn("##clear", ImGuiTableColumnFlags_WidthFixed,  26.0f, 0);
 
-        igText("%-18s", mikupan_controller_labels[i]);
-        igSameLine(180.0f, -1.0f);
-        igText("%-22s", MikuPan_ControllerBindingLabel(mikupan_controller_map[i]));
-        igSameLine(390.0f, -1.0f);
+        for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+        {
+            igPushID_Int(i);
+            igTableNextRow(0, 0.0f);
 
-        if (remap_target == i && remap_target_kb == 0)
-        {
-            igTextColored((ImVec4){1.0f, 0.7f, 0.2f, 1.0f}, "Press a button...");
-            igSameLine(0.0f, -1.0f);
-            if (igButton("Cancel", (ImVec2){0, 0}))
+            igTableNextColumn();
+            igAlignTextToFramePadding();
+            igTextUnformatted(mikupan_controller_labels[i], NULL);
+
+            igTableNextColumn();
+            bool armed = remap_target == i && remap_target_kb == 0;
+            if (MikuPan_DrawRemapValueButton(
+                    MikuPan_ControllerBindingLabel(mikupan_controller_map[i]), armed))
             {
-                remap_target = -1;
-            }
-        }
-        else
-        {
-            if (igButton("Edit", (ImVec2){60, 0}))
-            {
-                remap_target = i;
+                remap_target = armed ? -1 : i;
                 remap_target_kb = 0;
             }
-            igSameLine(0.0f, -1.0f);
-            if (igButton("Clear", (ImVec2){60, 0}))
+
+            igTableNextColumn();
+            if (igButton("x", (ImVec2){24, 0}))
             {
                 mikupan_controller_map[i].kind = MIKUPAN_CONTROLLER_BIND_NONE;
                 mikupan_controller_map[i].code = 0;
             }
+
+            igPopID();
         }
 
-        igPopID();
+        igEndTable();
     }
 
     if (remap_target >= 0 && remap_target_kb == 0)
@@ -1108,44 +1146,43 @@ static void MikuPan_ControllerDrawControllerBindingList(SDL_Gamepad *gp)
 
 static void MikuPan_ControllerDrawKeyboardBindingList(void)
 {
-    igTextDisabled("Always active alongside the controller. Click 'Edit' then press a key.");
+    igTextWrapped("Always active alongside the controller. Click a binding, then "
+                  "press a key. 'x' clears it.");
 
-    for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+    if (igBeginTable("##kb_buttons", 3, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
     {
-        igPushID_Int(0x100 + i);
+        igTableSetupColumn("Action",  ImGuiTableColumnFlags_WidthStretch, 0.40f, 0);
+        igTableSetupColumn("Key",     ImGuiTableColumnFlags_WidthStretch, 0.60f, 0);
+        igTableSetupColumn("##clear", ImGuiTableColumnFlags_WidthFixed,  26.0f, 0);
 
-        igText("%-18s", mikupan_controller_labels[i]);
-        igSameLine(180.0f, -1.0f);
-        igText("%-22s", MikuPan_ControllerScanCodeLabel(mikupan_keyboard_map[i]));
-        igSameLine(390.0f, -1.0f);
-
-        if (remap_target == i && remap_target_kb == 1)
+        for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
         {
-            igTextColored((ImVec4){1.0f, 0.7f, 0.2f, 1.0f}, "Press a key...");
-            igSameLine(0.0f, -1.0f);
+            igPushID_Int(0x100 + i);
+            igTableNextRow(0, 0.0f);
 
-            if (igButton("Cancel", (ImVec2){0, 0}))
+            igTableNextColumn();
+            igAlignTextToFramePadding();
+            igTextUnformatted(mikupan_controller_labels[i], NULL);
+
+            igTableNextColumn();
+            bool armed = remap_target == i && remap_target_kb == 1;
+            if (MikuPan_DrawRemapValueButton(
+                    MikuPan_ControllerScanCodeLabel(mikupan_keyboard_map[i]), armed))
             {
-                remap_target = -1;
-            }
-        }
-        else
-        {
-            if (igButton("Edit", (ImVec2){60, 0}))
-            {
-                remap_target = i;
+                remap_target = armed ? -1 : i;
                 remap_target_kb = 1;
             }
 
-            igSameLine(0.0f, -1.0f);
-
-            if (igButton("Clear", (ImVec2){60, 0}))
+            igTableNextColumn();
+            if (igButton("x", (ImVec2){24, 0}))
             {
                 mikupan_keyboard_map[i] = 0;
             }
+
+            igPopID();
         }
 
-        igPopID();
+        igEndTable();
     }
 
     if (remap_target >= 0 && remap_target_kb == 1)
@@ -1167,50 +1204,53 @@ static void MikuPan_ControllerDrawKeyboardBindingList(void)
 
 static void MikuPan_ControllerDrawStickGamepadList(SDL_Gamepad *gp)
 {
-    igTextDisabled(gp != NULL
-                       ? "Click 'Edit' on a stick row, then move a stick on your controller."
-                       : "No controller connected. Connect one to remap stick axes.");
+    igTextWrapped(gp != NULL
+                      ? "Click an axis, then move a stick on your controller. 'x' clears it."
+                      : "No controller connected. Connect one to remap stick axes.");
 
-    for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+    if (igBeginTable("##gp_sticks", 4, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
     {
-        igPushID_Int(0x200 + i);
+        igTableSetupColumn("Stick",    ImGuiTableColumnFlags_WidthStretch, 0.40f, 0);
+        igTableSetupColumn("Axis",     ImGuiTableColumnFlags_WidthStretch, 0.60f, 0);
+        igTableSetupColumn("##invert", ImGuiTableColumnFlags_WidthFixed,  96.0f, 0);
+        igTableSetupColumn("##clear",  ImGuiTableColumnFlags_WidthFixed,  26.0f, 0);
 
-        igText("%-18s", mikupan_stick_labels[i]);
-        igSameLine(180.0f, -1.0f);
-        igText("%-18s", MikuPan_ControllerStickAxisLabel(mikupan_stick_controller_map[i].axis));
-        igSameLine(340.0f, -1.0f);
-
-        bool invert = mikupan_stick_controller_map[i].invert != 0;
-        if (igCheckbox("Invert", &invert))
+        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
         {
-            mikupan_stick_controller_map[i].invert = invert ? 1 : 0;
-        }
-        igSameLine(0.0f, -1.0f);
+            igPushID_Int(0x200 + i);
+            igTableNextRow(0, 0.0f);
 
-        if (remap_stick_target == i && remap_stick_mode == 0)
-        {
-            igTextColored((ImVec4){1.0f, 0.7f, 0.2f, 1.0f}, "Move a stick...");
-            igSameLine(0.0f, -1.0f);
-            if (igButton("Cancel", (ImVec2){0, 0}))
+            igTableNextColumn();
+            igAlignTextToFramePadding();
+            igTextUnformatted(mikupan_stick_labels[i], NULL);
+
+            igTableNextColumn();
+            bool armed = remap_stick_target == i && remap_stick_mode == 0;
+            if (MikuPan_DrawRemapValueButton(
+                    MikuPan_ControllerStickAxisLabel(mikupan_stick_controller_map[i].axis), armed))
             {
-                remap_stick_target = -1;
-            }
-        }
-        else
-        {
-            if (igButton("Edit", (ImVec2){60, 0}))
-            {
-                remap_stick_target = i;
+                remap_stick_target = armed ? -1 : i;
                 remap_stick_mode = 0;
             }
-            igSameLine(0.0f, -1.0f);
-            if (igButton("Clear", (ImVec2){60, 0}))
+
+            igTableNextColumn();
+            igAlignTextToFramePadding();
+            bool invert = mikupan_stick_controller_map[i].invert != 0;
+            if (igCheckbox("Invert", &invert))
+            {
+                mikupan_stick_controller_map[i].invert = invert ? 1 : 0;
+            }
+
+            igTableNextColumn();
+            if (igButton("x", (ImVec2){24, 0}))
             {
                 mikupan_stick_controller_map[i].axis = -1;
             }
+
+            igPopID();
         }
 
-        igPopID();
+        igEndTable();
     }
 
     if (remap_stick_target >= 0 && remap_stick_mode == 0)
@@ -1230,68 +1270,67 @@ static void MikuPan_ControllerDrawStickGamepadList(SDL_Gamepad *gp)
 
 static void MikuPan_ControllerDrawStickKeyboardList(void)
 {
-    igTextDisabled("Always active alongside the controller. Two keys per axis drive it to its extremes.");
+    igTextWrapped("Always active alongside the controller. Each axis is driven to "
+                  "its extremes by a negative and a positive key. Click a key to "
+                  "rebind it, 'x' clears it.");
 
-    for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+    if (igBeginTable("##kb_sticks", 5, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
     {
-        igPushID_Int(0x300 + i);
+        igTableSetupColumn("Stick",     ImGuiTableColumnFlags_WidthStretch, 0.28f, 0);
+        igTableSetupColumn("Negative",  ImGuiTableColumnFlags_WidthStretch, 0.36f, 0);
+        igTableSetupColumn("##clr_neg", ImGuiTableColumnFlags_WidthFixed,  26.0f, 0);
+        igTableSetupColumn("Positive",  ImGuiTableColumnFlags_WidthStretch, 0.36f, 0);
+        igTableSetupColumn("##clr_pos", ImGuiTableColumnFlags_WidthFixed,  26.0f, 0);
 
-        igText("%-16s", mikupan_stick_labels[i]);
-        igSameLine(170.0f, -1.0f);
-        igText("- %-10s", MikuPan_ControllerScanCodeLabel(mikupan_stick_keyboard_map[i].neg_scancode));
-        igSameLine(0.0f, -1.0f);
+        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+        {
+            igPushID_Int(0x300 + i);
+            igTableNextRow(0, 0.0f);
 
-        if (remap_stick_target == i && remap_stick_mode == 1)
-        {
-            igTextColored((ImVec4){1.0f, 0.7f, 0.2f, 1.0f}, "Press key...");
-            igSameLine(0.0f, -1.0f);
-            if (igButton("Cancel##neg", (ImVec2){0, 0}))
+            igTableNextColumn();
+            igAlignTextToFramePadding();
+            igTextUnformatted(mikupan_stick_labels[i], NULL);
+
+            igTableNextColumn();
+            igPushID_Int(1);
+            bool neg_armed = remap_stick_target == i && remap_stick_mode == 1;
+            if (MikuPan_DrawRemapValueButton(
+                    MikuPan_ControllerScanCodeLabel(mikupan_stick_keyboard_map[i].neg_scancode),
+                    neg_armed))
             {
-                remap_stick_target = -1;
-            }
-        }
-        else
-        {
-            if (igButton("Edit##neg", (ImVec2){60, 0}))
-            {
-                remap_stick_target = i;
+                remap_stick_target = neg_armed ? -1 : i;
                 remap_stick_mode = 1;
             }
-            igSameLine(0.0f, -1.0f);
-            if (igButton("Clear##neg", (ImVec2){60, 0}))
+            igPopID();
+
+            igTableNextColumn();
+            if (igButton("x##neg", (ImVec2){24, 0}))
             {
                 mikupan_stick_keyboard_map[i].neg_scancode = 0;
             }
-        }
 
-        igSameLine(0.0f, 18.0f);
-        igText("+ %-10s", MikuPan_ControllerScanCodeLabel(mikupan_stick_keyboard_map[i].pos_scancode));
-        igSameLine(0.0f, -1.0f);
-
-        if (remap_stick_target == i && remap_stick_mode == 2)
-        {
-            igTextColored((ImVec4){1.0f, 0.7f, 0.2f, 1.0f}, "Press key...");
-            igSameLine(0.0f, -1.0f);
-            if (igButton("Cancel##pos", (ImVec2){0, 0}))
+            igTableNextColumn();
+            igPushID_Int(2);
+            bool pos_armed = remap_stick_target == i && remap_stick_mode == 2;
+            if (MikuPan_DrawRemapValueButton(
+                    MikuPan_ControllerScanCodeLabel(mikupan_stick_keyboard_map[i].pos_scancode),
+                    pos_armed))
             {
-                remap_stick_target = -1;
-            }
-        }
-        else
-        {
-            if (igButton("Edit##pos", (ImVec2){60, 0}))
-            {
-                remap_stick_target = i;
+                remap_stick_target = pos_armed ? -1 : i;
                 remap_stick_mode = 2;
             }
-            igSameLine(0.0f, -1.0f);
-            if (igButton("Clear##pos", (ImVec2){60, 0}))
+            igPopID();
+
+            igTableNextColumn();
+            if (igButton("x##pos", (ImVec2){24, 0}))
             {
                 mikupan_stick_keyboard_map[i].pos_scancode = 0;
             }
+
+            igPopID();
         }
 
-        igPopID();
+        igEndTable();
     }
 
     if (remap_stick_target >= 0 && (remap_stick_mode == 1 || remap_stick_mode == 2))
@@ -1354,23 +1393,36 @@ static void MikuPan_ControllerDrawActionTargetCombo(int mode, int action)
 
 static void MikuPan_ControllerDrawActionProfileList(int mode)
 {
-    for (int i = 0; i < MIKUPAN_ACTION_PROFILE_ACTION_COUNT; i++)
+    if (igBeginTable("##action_list", 3, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
     {
-        igPushID_Int(0x500 + mode * 0x100 + i);
+        igTableSetupColumn("Action",   ImGuiTableColumnFlags_WidthStretch, 0.45f, 0);
+        igTableSetupColumn("Target",   ImGuiTableColumnFlags_WidthStretch, 0.55f, 0);
+        igTableSetupColumn("##default", ImGuiTableColumnFlags_WidthFixed, 76.0f, 0);
 
-        igText("%-24s", MikuPan_ActionProfileActionLabel(mode, i));
-        igSameLine(230.0f, -1.0f);
-        igSetNextItemWidth(180.0f);
-        MikuPan_ControllerDrawActionTargetCombo(mode, i);
-        igSameLine(0.0f, -1.0f);
-
-        if (igButton("Default", (ImVec2){72, 0}))
+        for (int i = 0; i < MIKUPAN_ACTION_PROFILE_ACTION_COUNT; i++)
         {
-            MikuPan_SetCustomActionProfileTarget(
-                mode, i, MikuPan_GetDefaultActionProfileTarget(i));
+            igPushID_Int(0x500 + mode * 0x100 + i);
+            igTableNextRow(0, 0.0f);
+
+            igTableNextColumn();
+            igAlignTextToFramePadding();
+            igTextUnformatted(MikuPan_ActionProfileActionLabel(mode, i), NULL);
+
+            igTableNextColumn();
+            igSetNextItemWidth(igGetContentRegionAvail().x);
+            MikuPan_ControllerDrawActionTargetCombo(mode, i);
+
+            igTableNextColumn();
+            if (igButton("Default", (ImVec2){72, 0}))
+            {
+                MikuPan_SetCustomActionProfileTarget(
+                    mode, i, MikuPan_GetDefaultActionProfileTarget(i));
+            }
+
+            igPopID();
         }
 
-        igPopID();
+        igEndTable();
     }
 }
 
@@ -1412,13 +1464,12 @@ static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
         MikuPan_SetCustomActionProfileEnabled(enabled ? 1 : 0);
     }
 
-    igTextDisabled("Normal movement");
+    igSeparatorText("Normal movement");
     MikuPan_ControllerDrawMovementModeCombo(
         "DPad##normal_move_dpad",
         MikuPan_CustomActionProfileUsesDpadSubjectiveMove(),
         MikuPan_SetCustomActionProfileDpadSubjectiveMove);
 
-    igSameLine(0.0f, 24.0f);
     MikuPan_ControllerDrawMovementModeCombo(
         "Stick##normal_move_stick",
         MikuPan_CustomActionProfileUsesStickSubjectiveMove(),
@@ -1469,6 +1520,9 @@ static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
 
 static void MikuPan_ControllerDrawActionProfileMapsUi(void)
 {
+    igTextWrapped("Advanced: remap which in-game action each button triggers, "
+                  "separately for normal and finder mode.");
+
     if (igCollapsingHeader_TreeNodeFlags("Normal Mode Actions", ImGuiTreeNodeFlags_DefaultOpen))
     {
         MikuPan_ControllerDrawActionProfileList(
@@ -1480,6 +1534,35 @@ static void MikuPan_ControllerDrawActionProfileMapsUi(void)
         MikuPan_ControllerDrawActionProfileList(
             MIKUPAN_ACTION_PROFILE_MODE_FINDER);
     }
+}
+
+/* Renders the buttons + sticks for whichever device the selector is showing.
+ * Wrapped in a scrolling child so a long list never pushes the tab bar around or
+ * forces the window taller than a small screen. */
+static void MikuPan_ControllerDrawBindingsTab(SDL_Gamepad *gp)
+{
+    if (igBeginChild_Str("##bindings_scroll", (ImVec2){0, 0}, 0, 0))
+    {
+        if (mikupan_input_view_keyboard)
+        {
+            igSeparatorText("Buttons");
+            MikuPan_ControllerDrawKeyboardBindingList();
+            igSeparatorText("Sticks");
+            MikuPan_ControllerDrawStickKeyboardList();
+        }
+        else
+        {
+            if (igCollapsingHeader_TreeNodeFlags("Live preview", 0))
+            {
+                MikuPan_ControllerDrawControllerImage(gp);
+            }
+            igSeparatorText("Buttons");
+            MikuPan_ControllerDrawControllerBindingList(gp);
+            igSeparatorText("Sticks");
+            MikuPan_ControllerDrawStickGamepadList(gp);
+        }
+    }
+    igEndChild();
 }
 
 void MikuPan_ControllerDrawRemapWindow(void)
@@ -1498,73 +1581,60 @@ void MikuPan_ControllerDrawRemapWindow(void)
     }
     last_draw_frame = frame;
 
-    igSetNextWindowSize((ImVec2){900.0f, 760.0f}, ImGuiCond_FirstUseEver);
+    igSetNextWindowSize((ImVec2){560.0f, 600.0f}, ImGuiCond_FirstUseEver);
     igBegin("Controller Mapping", NULL, 0);
 
     SDL_Gamepad *gp = MikuPan_GetController();
 
-    if (igCollapsingHeader_TreeNodeFlags("Device", ImGuiTreeNodeFlags_DefaultOpen))
+    /* Device selector and reset stay above the tabs: the selector decides which
+     * device the Bindings tab edits, and reset applies to everything. */
+    MikuPan_ControllerDrawDeviceSelectorUi();
+
+    if (gp != NULL)
     {
-        MikuPan_ControllerDrawDeviceSelectorUi();
-        igSpacing();
-
-        if (gp != NULL)
-        {
-            igText("Controller connected: %s", SDL_GetGamepadName(gp));
-        }
-        else
-        {
-            igTextDisabled("No controller connected.");
-        }
-
-        if (igButton("Reset to defaults", (ImVec2){0, 0}))
-        {
-            MikuPan_ControllerResetBindings();
-            remap_target = -1;
-            remap_stick_target = -1;
-        }
-
-        igSameLine(0.0f, -1.0f);
-        igTextDisabled("Restores all input settings.");
-
-        if (!mikupan_input_view_keyboard &&
-            igCollapsingHeader_TreeNodeFlags("Controller Preview", 0))
-        {
-            MikuPan_ControllerDrawControllerImage(gp);
-        }
+        igText("Connected: %s", SDL_GetGamepadName(gp));
+    }
+    else
+    {
+        igTextDisabled("No controller connected.");
     }
 
-    if (igCollapsingHeader_TreeNodeFlags("Profile & Movement", ImGuiTreeNodeFlags_DefaultOpen))
+    if (igButton("Reset all input settings", (ImVec2){0, 0}))
     {
-        MikuPan_ControllerDrawActionProfileSettingsUi();
+        MikuPan_ControllerResetBindings();
+        remap_target = -1;
+        remap_stick_target = -1;
     }
 
-    /* Show only the selected device's bindings (chosen in the Input device
-     * combo above) so the gamepad and keyboard menus aren't both listed. */
-    if (igCollapsingHeader_TreeNodeFlags(
-            mikupan_input_view_keyboard ? "Keyboard & Mouse Bindings"
-                                        : "Gamepad Bindings",
-            ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        if (mikupan_input_view_keyboard)
-        {
-            igSeparatorText("Buttons##keyboard_buttons");
-            MikuPan_ControllerDrawKeyboardBindingList();
-            igSeparatorText("Sticks##keyboard_sticks");
-            MikuPan_ControllerDrawStickKeyboardList();
-        }
-        else
-        {
-            igSeparatorText("Buttons##gamepad_buttons");
-            MikuPan_ControllerDrawControllerBindingList(gp);
-            igSeparatorText("Sticks##gamepad_sticks");
-            MikuPan_ControllerDrawStickGamepadList(gp);
-        }
-    }
+    igSeparator();
 
-    if (igCollapsingHeader_TreeNodeFlags("Action Maps", 0))
+    /* Three tabs replace the old stack of collapsing headers: Bindings (the
+     * device's buttons/sticks), Movement & Aim (profile + mouse-look), and the
+     * advanced per-action maps. The ###id keeps the first tab stable while its
+     * label tracks the selected device. */
+    if (igBeginTabBar("##input_tabs", ImGuiTabBarFlags_None))
     {
-        MikuPan_ControllerDrawActionProfileMapsUi();
+        if (igBeginTabItem(mikupan_input_view_keyboard ? "Keyboard & Mouse###bindings"
+                                                       : "Gamepad###bindings",
+                           NULL, 0))
+        {
+            MikuPan_ControllerDrawBindingsTab(gp);
+            igEndTabItem();
+        }
+
+        if (igBeginTabItem("Movement & Aim", NULL, 0))
+        {
+            MikuPan_ControllerDrawActionProfileSettingsUi();
+            igEndTabItem();
+        }
+
+        if (igBeginTabItem("Action Maps", NULL, 0))
+        {
+            MikuPan_ControllerDrawActionProfileMapsUi();
+            igEndTabItem();
+        }
+
+        igEndTabBar();
     }
 
     igEnd();

@@ -25,6 +25,7 @@ cmake-build-release-mingw/
 /.vs
 /out
 cmake-build-mingw/
+cmake-build-android-*/
 .DS_Store
 /cmake-build-mingw
 /cmake-build-mingw/.cmake

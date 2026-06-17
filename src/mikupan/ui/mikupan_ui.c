@@ -25,9 +25,12 @@
 #include "mikupan/mikupan_config.h"
 
 #include "SDL3/SDL_dialog.h"
+#include "SDL3/SDL_hints.h"
+#include "SDL3/SDL_platform.h"
 
 #include "mikupan_version.h"
 
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1372,10 +1375,30 @@ static void MikuPan_LoadUiFonts(void)
                                 font_path,
                                 sizeof(font_path)))
     {
-        ui_fonts[1] = ImFontAtlas_AddFontFromFileTTF(
-            io->Fonts, font_path,
-            ui_font_regular_size, NULL,
-            ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
+        if (strncmp(font_path, "assets://", 9) == 0
+            || strncmp(font_path, "assets:/", 8) == 0)
+        {
+            u_int font_size = MikuPan_GetFileSize(font_path);
+            if (font_size > 0 && font_size <= INT_MAX)
+            {
+                void *font_data = malloc(font_size);
+                if (font_data != NULL)
+                {
+                    MikuPan_ReadFullFile(font_path, font_data);
+                    ui_fonts[1] = ImFontAtlas_AddFontFromMemoryTTF(
+                        io->Fonts, font_data, (int) font_size,
+                        ui_font_regular_size, NULL,
+                        ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
+                }
+            }
+        }
+        else
+        {
+            ui_fonts[1] = ImFontAtlas_AddFontFromFileTTF(
+                io->Fonts, font_path,
+                ui_font_regular_size, NULL,
+                ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
+        }
     }
 
     if (ui_fonts[1] == NULL)
@@ -2515,6 +2538,44 @@ void MikuPan_DrawUi(void)
     }
 }
 
+void MikuPan_DrawMissingDataUi(const char *missing_file)
+{
+    ImGuiIO* io = igGetIO_Nil();
+    const float scale = ui_display_scale > 0.0f ? ui_display_scale : 1.0f;
+    const float width = 520.0f * scale;
+    const float height = 0.0f;
+    const char *file = (missing_file != NULL && missing_file[0] != '\0')
+                           ? missing_file
+                           : "IMG_HD.BIN";
+
+    igSetNextWindowPos(
+        (ImVec2){io->DisplaySize.x * 0.5f, io->DisplaySize.y * 0.5f},
+        ImGuiCond_Always,
+        (ImVec2){0.5f, 0.5f});
+    igSetNextWindowSize((ImVec2){width, height}, ImGuiCond_Always);
+    if (!igBegin("Game Data Required", NULL,
+                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
+                 | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+    {
+        igEnd();
+        return;
+    }
+
+    igTextWrapped("MikuPan needs the extracted Fatal Frame disc data before it can start.");
+    igSpacing();
+    igText("Missing: %s", file);
+    igSpacing();
+    igTextWrapped("Select the folder that contains IMG_HD.BIN and IMG_BD.BIN.");
+    igSpacing();
+
+    if (igButton("Select Folder", (ImVec2){160.0f * scale, 0.0f}))
+    {
+        MikuPan_RequestDataFolderSelection(file);
+    }
+
+    igEnd();
+}
+
 void MikuPan_ShutDownUi(void)
 {
     MikuPan_ImGui_ImplShutdown();
@@ -3116,38 +3177,45 @@ void MikuPan_UiMenuBar(void)
 
             MikuPan_UiGpuBackendCombo();
 
-            char msaa_dropdown_list[32];
-            snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%d",
-                     msaa_list[msaa_samples]);
-
-            if (igBeginCombo("MSAA", msaa_dropdown_list, 0))
+            if (strcmp(SDL_GetPlatform(), "Android") == 0)
             {
-                for (int i = 0; i < sizeof(msaa_list)/sizeof(msaa_list[0]); i++)
+                igTextDisabled("MSAA: disabled on Android");
+            }
+            else
+            {
+                char msaa_dropdown_list[32];
+                snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%d",
+                         msaa_list[msaa_samples]);
+
+                if (igBeginCombo("MSAA", msaa_dropdown_list, 0))
                 {
-                    bool is_selected = (msaa_samples == i);
-                    snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list),
-                             "%d", msaa_list[i]);
-
-                    if (igSelectable_Bool(msaa_dropdown_list, is_selected, 0,
-                                          (ImVec2) {0, 0}))
+                    for (int i = 0; i < sizeof(msaa_list)/sizeof(msaa_list[0]); i++)
                     {
-                        msaa_samples = i;
+                        bool is_selected = (msaa_samples == i);
+                        snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list),
+                                 "%d", msaa_list[i]);
+
+                        if (igSelectable_Bool(msaa_dropdown_list, is_selected, 0,
+                                              (ImVec2) {0, 0}))
+                        {
+                            msaa_samples = i;
+                        }
+
+                        if (is_selected)
+                        {
+                            igSetItemDefaultFocus();
+                        }
                     }
 
-                    if (is_selected)
-                    {
-                        igSetItemDefaultFocus();
-                    }
+                    igEndCombo();
                 }
 
-                igEndCombo();
+                igTextDisabled("Scene samples: %dx", MikuPan_GPUGetSceneMSAA());
             }
-
-            igTextDisabled("Scene samples: %dx", MikuPan_GPUGetSceneMSAA());
 
             MikuPan_UiShadowResolutionCombo("Shadow Resolution");
 
-            const char* display_lighting_modes[] = {"Pixel (Mordern)",
+            const char* display_lighting_modes[] = {"Pixel (Modern)",
                                                     "Vertex (PS2)"};
             igCombo_Str_arr("Lighting Mode", &mesh_lighting_mode,
                             display_lighting_modes, 2, -1);
@@ -3277,6 +3345,9 @@ void MikuPan_UiMenuBar(void)
             const char *start = mikupan_configuration.data_folder[0] != '\0'
                                     ? mikupan_configuration.data_folder
                                     : NULL;
+#ifdef __ANDROID__
+            SDL_SetHint("SDL_ANDROID_ALLOW_PERSISTENT_FOLDER_ACCESS", "1");
+#endif
             SDL_ShowOpenFolderDialog(MikuPan_DataFolderSelected, NULL,
                                      ui_window, start, false);
         }

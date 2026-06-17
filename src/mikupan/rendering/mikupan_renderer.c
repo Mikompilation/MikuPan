@@ -140,9 +140,17 @@ SDL_AppResult MikuPan_Init()
         mikupan_configuration.renderer.window.height = desired_window_height;
     }
 
-    int config_window_flags = SDL_WINDOW_RESIZABLE;
+    int config_window_flags =
+#ifdef __ANDROID__
+        SDL_WINDOW_FULLSCREEN;
+#else
+        SDL_WINDOW_RESIZABLE;
+#endif
 
     int startup_window_mode = mikupan_configuration.renderer.window_mode;
+#ifdef __ANDROID__
+    startup_window_mode = MIKUPAN_WINDOW_FULLSCREEN;
+#else
     if (startup_window_mode == MIKUPAN_WINDOW_WINDOWED &&
         mikupan_configuration.renderer.is_fullscreen)
     {
@@ -154,6 +162,7 @@ SDL_AppResult MikuPan_Init()
     {
         startup_window_mode = MIKUPAN_WINDOW_WINDOWED;
     }
+#endif
 
     mikupan_configuration.renderer.window_mode = startup_window_mode;
     mikupan_configuration.renderer.is_fullscreen = (startup_window_mode != MIKUPAN_WINDOW_WINDOWED);
@@ -180,12 +189,15 @@ SDL_AppResult MikuPan_Init()
         return SDL_APP_FAILURE;
     }
 
+#ifndef __ANDROID__
     MikuPan_ApplyWindowMode(startup_window_mode);
+#endif
 
     SDL_GetWindowSize(mikupan_render.window, &mikupan_render.width, &mikupan_render.height);
     mikupan_configuration.renderer.window.width = mikupan_render.width;
     mikupan_configuration.renderer.window.height = mikupan_render.height;
 
+#ifndef __ANDROID__
     char icon_path[1024];
     SDL_Surface* iconSurface = NULL;
     if (MikuPan_ResolveBasePath("resources/mikupan.png",
@@ -208,6 +220,7 @@ SDL_AppResult MikuPan_Init()
     {
         SDL_DestroySurface(iconSurface);
     }
+#endif
 
     int desired_render_width = mikupan_configuration.renderer.render.width;
     int desired_render_height = mikupan_configuration.renderer.render.height;
@@ -221,6 +234,11 @@ SDL_AppResult MikuPan_Init()
         desired_msaa = 4;
         mikupan_configuration.renderer.msaa_index = desired_msaa;
     }
+
+#ifdef __ANDROID__
+    desired_msaa = 0;
+    mikupan_configuration.renderer.msaa_index = desired_msaa;
+#endif
 
     if (desired_render_width <= 0)
     {
@@ -249,7 +267,11 @@ SDL_AppResult MikuPan_Init()
 
     MikuPan_InitUi(mikupan_render.window);
     MikuPan_CreateInternalBuffer(desired_render_width, desired_render_height, msaa_list[desired_msaa]);
-    MikuPan_InitShaders();
+    if (MikuPan_InitShaders() != 0)
+    {
+        info_log("Error initializing shaders");
+        return SDL_APP_FAILURE;
+    }
     MikuPan_InitPipeline();
     MikuPan_MeshCache_Init();
 

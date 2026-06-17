@@ -246,7 +246,7 @@ void FinderModeCameraCtrl();
 void PlyrCamCondChk();
 void PconMahiCameraCtrl();
 void PconTebureCameraCtrl();
-int FinderModePadChk(char *pad_x, char *pad_y, float *ax, float *ay,
+int FinderModePadChk(int *pad_x, int *pad_y, float *ax, float *ay,
                      u_char *jpad_on);
 void SetFinderRot();
 void CameraIdMoveCtrl();

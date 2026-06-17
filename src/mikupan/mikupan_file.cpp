@@ -7,7 +7,9 @@
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_hints.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_messagebox.h>
 #include <SDL3/SDL_timer.h>
 #include <algorithm>
@@ -19,6 +21,8 @@
 #include <cstring>
 #include <condition_variable>
 #include <mutex>
+#include <system_error>
+#include <vector>
 
 extern "C" {
 #include "mikupan_memory.h"
@@ -53,6 +57,231 @@ static std::filesystem::path MikuPan_GetDataRoot()
     }
 
     return MikuPan_GetApplicationBasePath();
+}
+
+#ifdef __ANDROID__
+static bool MikuPan_IsAndroidContentUriString(const std::string& path)
+{
+    return path.rfind("content://", 0) == 0;
+}
+
+static bool MikuPan_IsAndroidTreeUriString(const std::string& path)
+{
+    return MikuPan_IsAndroidContentUriString(path)
+        && path.find("/tree/") != std::string::npos;
+}
+
+static bool MikuPan_IsUriUnreserved(unsigned char ch)
+{
+    return (ch >= 'A' && ch <= 'Z')
+        || (ch >= 'a' && ch <= 'z')
+        || (ch >= '0' && ch <= '9')
+        || ch == '-' || ch == '.' || ch == '_' || ch == '~';
+}
+
+static std::string MikuPan_EncodeAndroidDocumentPath(
+    const std::string& relative_path)
+{
+    static const char hex[] = "0123456789ABCDEF";
+    std::string encoded;
+    encoded.reserve(relative_path.size() * 3);
+
+    for (unsigned char ch : relative_path)
+    {
+        if (ch == '/' || ch == '\\')
+        {
+            encoded += "%2F";
+        }
+        else if (MikuPan_IsUriUnreserved(ch))
+        {
+            encoded += static_cast<char>(ch);
+        }
+        else
+        {
+            encoded += '%';
+            encoded += hex[ch >> 4];
+            encoded += hex[ch & 0x0f];
+        }
+    }
+
+    return encoded;
+}
+
+static std::string MikuPan_NormalizeRelativePathString(
+    const std::filesystem::path& path)
+{
+    std::filesystem::path relative_path;
+    for (const auto& part : path.relative_path())
+    {
+        if (part.empty() || part == "." || part == "..")
+        {
+            continue;
+        }
+
+        relative_path /= part;
+    }
+
+    return relative_path.generic_string();
+}
+
+static std::string MikuPan_GetAndroidTreeChildUri(
+    const std::string& tree_uri,
+    const std::filesystem::path& relative_path)
+{
+    const std::string marker = "/tree/";
+    const size_t tree_pos = tree_uri.find(marker);
+    if (tree_pos == std::string::npos)
+    {
+        return tree_uri;
+    }
+
+    const size_t tree_doc_id_start = tree_pos + marker.size();
+    const size_t tree_doc_id_end = tree_uri.find('/', tree_doc_id_start);
+    const std::string tree_doc_id =
+        tree_uri.substr(tree_doc_id_start,
+                        tree_doc_id_end == std::string::npos
+                            ? std::string::npos
+                            : tree_doc_id_end - tree_doc_id_start);
+    const std::string child =
+        MikuPan_NormalizeRelativePathString(relative_path);
+    if (tree_doc_id.empty() || child.empty())
+    {
+        return tree_uri;
+    }
+
+    return tree_uri.substr(0, tree_doc_id_start)
+        + tree_doc_id
+        + "/document/"
+        + tree_doc_id
+        + "%2F"
+        + MikuPan_EncodeAndroidDocumentPath(child);
+}
+#endif
+
+static std::string MikuPan_GetDataPathString(
+    const std::filesystem::path& relative_path)
+{
+    const char *folder = mikupan_configuration.data_folder;
+#ifdef __ANDROID__
+    if (folder != nullptr && MikuPan_IsAndroidTreeUriString(folder))
+    {
+        return MikuPan_GetAndroidTreeChildUri(folder, relative_path);
+    }
+#endif
+
+    return (MikuPan_GetDataRoot() / relative_path).generic_string();
+}
+
+static std::string MikuPan_NormalizeSdlAssetPathString(const std::string& path)
+{
+    if (path.rfind("assets://", 0) == 0)
+    {
+        return path;
+    }
+
+    if (path.rfind("assets:/", 0) == 0)
+    {
+        return "assets://" + path.substr(8);
+    }
+
+    return path;
+}
+
+static bool MikuPan_IsSdlAssetPathString(const std::string& path)
+{
+    return path.rfind("assets://", 0) == 0
+#ifdef __ANDROID__
+        || MikuPan_IsAndroidContentUriString(path)
+#endif
+        ;
+}
+
+static bool MikuPan_IsSdlAssetPath(const char *filename,
+                                   std::string *normalized = nullptr)
+{
+    if (filename == nullptr)
+    {
+        return false;
+    }
+
+    std::string path = MikuPan_NormalizeSdlAssetPathString(filename);
+    const bool result = MikuPan_IsSdlAssetPathString(path);
+    if (result && normalized != nullptr)
+    {
+        *normalized = path;
+    }
+    return result;
+}
+
+static u_int MikuPan_GetSdlFileSize(const char *filename)
+{
+    std::string path;
+    if (!MikuPan_IsSdlAssetPath(filename, &path))
+    {
+        return 0;
+    }
+
+    SDL_IOStream *stream = SDL_IOFromFile(path.c_str(), "rb");
+    if (stream == nullptr)
+    {
+        return 0;
+    }
+
+    const Sint64 size = SDL_GetIOSize(stream);
+    SDL_CloseIO(stream);
+
+    if (size <= 0
+        || static_cast<uint64_t>(size) > std::numeric_limits<u_int>::max())
+    {
+        return 0;
+    }
+
+    return static_cast<u_int>(size);
+}
+
+static bool MikuPan_ReadSdlFileRange(const char *filename,
+                                     Sint64 offset,
+                                     void *buffer,
+                                     size_t size)
+{
+    if (buffer == nullptr)
+    {
+        return false;
+    }
+
+    std::string path;
+    if (!MikuPan_IsSdlAssetPath(filename, &path))
+    {
+        return false;
+    }
+
+    SDL_IOStream *stream = SDL_IOFromFile(path.c_str(), "rb");
+    if (stream == nullptr)
+    {
+        return false;
+    }
+
+    if (offset != 0 && SDL_SeekIO(stream, offset, SDL_IO_SEEK_SET) < 0)
+    {
+        SDL_CloseIO(stream);
+        return false;
+    }
+
+    size_t total = 0;
+    char *dst = static_cast<char *>(buffer);
+    while (total < size)
+    {
+        const size_t read =
+            SDL_ReadIO(stream, dst + total, size - total);
+        if (read == 0)
+        {
+            break;
+        }
+        total += read;
+    }
+
+    SDL_CloseIO(stream);
+    return total == size;
 }
 
 static std::string MikuPan_ToLowerPathString(const std::filesystem::path& path)
@@ -293,6 +522,90 @@ static bool MikuPan_RequestMissingDataFolderDialog(
     }
 }
 
+static bool MikuPan_RequestMissingDataFolderDialogAsync(
+    const std::filesystem::path& path)
+{
+    if (!MikuPan_ShouldPromptForMissingDataFile(path))
+    {
+        return false;
+    }
+
+    if (SDL_WasInit(SDL_INIT_VIDEO) == 0)
+    {
+        return false;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(missing_data_dialog_mutex);
+        if (missing_data_dialog_open || missing_data_dialog_requested)
+        {
+            return true;
+        }
+
+        missing_data_path = path.lexically_normal().generic_string();
+        missing_data_dialog_requested = true;
+        missing_data_dialog_selected = false;
+    }
+
+    return true;
+}
+
+extern "C" void MikuPan_RequestDataFolderSelection(const char *missing_path)
+{
+    const char *path = (missing_path != nullptr && missing_path[0] != '\0')
+                           ? missing_path
+                           : "IMG_HD.BIN";
+    MikuPan_RequestMissingDataFolderDialogAsync(std::filesystem::path(path));
+}
+
+static bool MikuPan_DataPathExistsNoPrompt(
+    const std::filesystem::path& relative_path)
+{
+    const std::string data_path = MikuPan_GetDataPathString(relative_path);
+    if (MikuPan_IsSdlAssetPathString(data_path))
+    {
+        return MikuPan_GetSdlFileSize(data_path.c_str()) > 0;
+    }
+
+    std::error_code error;
+    if (!std::filesystem::is_regular_file(data_path, error) || error)
+    {
+        return false;
+    }
+
+    const uintmax_t file_size = std::filesystem::file_size(data_path, error);
+    return !error && file_size > 0;
+}
+
+extern "C" bool MikuPan_HasRequiredDataFiles(char *missing_file,
+                                             size_t missing_file_size)
+{
+    const char *required_files[] = {
+        "IMG_HD.BIN",
+        "IMG_BD.BIN",
+    };
+
+    for (const char *required_file : required_files)
+    {
+        if (!MikuPan_DataPathExistsNoPrompt(required_file))
+        {
+            if (missing_file != nullptr && missing_file_size > 0)
+            {
+                std::strncpy(missing_file, required_file,
+                             missing_file_size - 1);
+                missing_file[missing_file_size - 1] = '\0';
+            }
+            return false;
+        }
+    }
+
+    if (missing_file != nullptr && missing_file_size > 0)
+    {
+        missing_file[0] = '\0';
+    }
+    return true;
+}
+
 static void SDLCALL MikuPan_MissingDataFolderSelected(
     void *userdata, const char *const *filelist, int filter)
 {
@@ -340,14 +653,19 @@ extern "C" void MikuPan_ServiceMissingDataFolderDialog()
         + "\n\nSelect the folder that contains the Fatal Frame data files. "
           "The selected folder will be saved to the configuration file.";
 
+#ifndef __ANDROID__
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
                              "File not found",
                              message.c_str(),
                              nullptr);
+#endif
 
     const char *start = mikupan_configuration.data_folder[0] != '\0'
                             ? mikupan_configuration.data_folder
                             : nullptr;
+#ifdef __ANDROID__
+    SDL_SetHint("SDL_ANDROID_ALLOW_PERSISTENT_FOLDER_ACCESS", "1");
+#endif
     SDL_ShowOpenFolderDialog(MikuPan_MissingDataFolderSelected,
                              nullptr,
                              nullptr,
@@ -357,14 +675,41 @@ extern "C" void MikuPan_ServiceMissingDataFolderDialog()
 
 void MikuPan_LoadImgHdFile()
 {
-    auto data_path = MikuPan_GetDataRoot() / "IMG_HD.BIN";
+    std::string data_path_string = MikuPan_GetDataPathString("IMG_HD.BIN");
+    if (MikuPan_IsSdlAssetPathString(data_path_string))
+    {
+        if (MikuPan_GetSdlFileSize(data_path_string.c_str()) == 0)
+        {
+            if (MikuPan_RequestMissingDataFolderDialog("IMG_HD.BIN"))
+            {
+                data_path_string = MikuPan_GetDataPathString("IMG_HD.BIN");
+            }
+        }
+
+        if (MikuPan_GetSdlFileSize(data_path_string.c_str()) == 0)
+        {
+            return;
+        }
+
+        MikuPan_ReadFullFile(data_path_string.c_str(),
+            static_cast<char *>(MikuPan_GetHostPointer(ImgHdAddress)));
+        return;
+    }
+
+    auto data_path = std::filesystem::path(data_path_string);
     if (!std::filesystem::exists(data_path))
     {
         const auto old_root = MikuPan_GetDataRoot();
         if (MikuPan_RequestMissingDataFolderDialog(data_path))
         {
-            data_path =
-                MikuPan_RebasePathAfterDataFolderSelection(data_path, old_root);
+            data_path_string = MikuPan_GetDataPathString("IMG_HD.BIN");
+            if (MikuPan_IsSdlAssetPathString(data_path_string))
+            {
+                MikuPan_LoadImgHdFile();
+                return;
+            }
+            data_path = MikuPan_RebasePathAfterDataFolderSelection(data_path,
+                                                                   old_root);
         }
 
         if (!std::filesystem::exists(data_path))
@@ -380,6 +725,19 @@ void MikuPan_LoadImgHdFile()
 
 void MikuPan_ReadFullFile(const char *filename, char *buffer)
 {
+    std::string asset_path;
+    if (MikuPan_IsSdlAssetPath(filename, &asset_path))
+    {
+        const u_int file_size = MikuPan_GetSdlFileSize(asset_path.c_str());
+        if (file_size == 0 || buffer == nullptr)
+        {
+            return;
+        }
+
+        MikuPan_ReadSdlFileRange(asset_path.c_str(), 0, buffer, file_size);
+        return;
+    }
+
     std::filesystem::path path_filename(filename);
 
     if (!std::filesystem::exists(path_filename))
@@ -429,15 +787,69 @@ void MikuPan_NotifyPs2MemoryLoad(int ps2_address)
 
 void MikuPan_ReadFileInArchive(int sector, int size, u_int *address)
 {
-    auto archive = MikuPan_GetDataRoot() / "IMG_BD.BIN";
+    std::string archive_string = MikuPan_GetDataPathString("IMG_BD.BIN");
+
+    if (MikuPan_IsSdlAssetPathString(archive_string))
+    {
+        if (MikuPan_GetSdlFileSize(archive_string.c_str()) == 0)
+        {
+            if (MikuPan_RequestMissingDataFolderDialog("IMG_BD.BIN"))
+            {
+                archive_string = MikuPan_GetDataPathString("IMG_BD.BIN");
+            }
+        }
+
+        if (MikuPan_GetSdlFileSize(archive_string.c_str()) == 0)
+        {
+            return;
+        }
+
+        if (address == nullptr)
+        {
+            spdlog::critical("File loading address is NULL, abort load request!");
+            return;
+        }
+
+        if (!MikuPan_IsPs2MemoryPointer((int64_t) address))
+        {
+            spdlog::critical("File loading address is not in PS2 memory range!");
+            return;
+        }
+
+        auto ps2_address = MikuPan_GetPs2OffsetFromHostPointer(address);
+
+        if (std::find(file_loaded_address.begin(), file_loaded_address.end(),
+                      ps2_address)
+            != file_loaded_address.end())
+        {
+            MikuPan_RequestFlushTextureCache();
+        }
+
+        file_loaded_address.push_back(ps2_address);
+        info_log("PS2 Address 0x%x", ps2_address);
+
+        MikuPan_ReadSdlFileRange(archive_string.c_str(),
+                                 static_cast<Sint64>(sector) * 0x800,
+                                 address,
+                                 static_cast<size_t>(size));
+        return;
+    }
+
+    auto archive = std::filesystem::path(archive_string);
     if (!std::filesystem::exists(archive))
     {
         spdlog::critical("IMG_BD.BIN not found!");
         const auto old_root = MikuPan_GetDataRoot();
         if (MikuPan_RequestMissingDataFolderDialog(archive))
         {
-            archive =
-                MikuPan_RebasePathAfterDataFolderSelection(archive, old_root);
+            archive_string = MikuPan_GetDataPathString("IMG_BD.BIN");
+            if (MikuPan_IsSdlAssetPathString(archive_string))
+            {
+                MikuPan_ReadFileInArchive(sector, size, address);
+                return;
+            }
+            archive = MikuPan_RebasePathAfterDataFolderSelection(archive,
+                                                                 old_root);
         }
 
         if (!std::filesystem::exists(archive))
@@ -479,14 +891,57 @@ void MikuPan_ReadFileInArchive(int sector, int size, u_int *address)
 
 void MikuPan_BufferFile(int sector, int size, int64_t address)
 {
-    auto archive = MikuPan_GetDataRoot() / "IMG_BD.BIN";
+    std::string archive_string = MikuPan_GetDataPathString("IMG_BD.BIN");
+
+    if (MikuPan_IsSdlAssetPathString(archive_string))
+    {
+        if (MikuPan_GetSdlFileSize(archive_string.c_str()) == 0)
+        {
+            if (MikuPan_RequestMissingDataFolderDialog("IMG_BD.BIN"))
+            {
+                archive_string = MikuPan_GetDataPathString("IMG_BD.BIN");
+            }
+        }
+
+        if (MikuPan_GetSdlFileSize(archive_string.c_str()) == 0)
+        {
+            return;
+        }
+
+        if (address == 0)
+        {
+            return;
+        }
+
+        if ((int64_t *) *(int64_t *) address != nullptr)
+        {
+            free((int64_t *) *(int64_t *) address);
+        }
+
+        void *file_ptr = malloc(size);
+        *((int64_t *) address) = (int64_t) file_ptr;
+
+        MikuPan_ReadSdlFileRange(archive_string.c_str(),
+                                 static_cast<Sint64>(sector) * 0x800,
+                                 file_ptr,
+                                 static_cast<size_t>(size));
+        return;
+    }
+
+    auto archive = std::filesystem::path(archive_string);
     if (!std::filesystem::exists(archive))
     {
         const auto old_root = MikuPan_GetDataRoot();
         if (MikuPan_RequestMissingDataFolderDialog(archive))
         {
-            archive =
-                MikuPan_RebasePathAfterDataFolderSelection(archive, old_root);
+            archive_string = MikuPan_GetDataPathString("IMG_BD.BIN");
+            if (MikuPan_IsSdlAssetPathString(archive_string))
+            {
+                MikuPan_BufferFile(sector, size, address);
+                return;
+            }
+            archive = MikuPan_RebasePathAfterDataFolderSelection(archive,
+                                                                 old_root);
         }
 
         if (!std::filesystem::exists(archive))
@@ -558,6 +1013,12 @@ u_char MikuPan_WriteFile(const char *filename, const void *buffer, int size)
 
 u_int MikuPan_GetFileSize(const char *filename)
 {
+    std::string asset_path;
+    if (MikuPan_IsSdlAssetPath(filename, &asset_path))
+    {
+        return MikuPan_GetSdlFileSize(asset_path.c_str());
+    }
+
     std::filesystem::path path(filename);
     if (!std::filesystem::exists(path))
     {
@@ -630,6 +1091,24 @@ bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size)
     }
 
     if (!s.empty()) {
+#ifdef __ANDROID__
+        const char *folder = mikupan_configuration.data_folder;
+        if (folder != nullptr && MikuPan_IsAndroidTreeUriString(folder))
+        {
+            std::string resolved_path = MikuPan_GetDataPathString(s);
+            if (MikuPan_GetSdlFileSize(resolved_path.c_str()) == 0)
+            {
+                if (MikuPan_RequestMissingDataFolderDialog(
+                        std::filesystem::path(s)))
+                {
+                    resolved_path = MikuPan_GetDataPathString(s);
+                }
+            }
+            s = resolved_path;
+        }
+        else
+#endif
+        {
         const std::filesystem::path relative_data_path(s);
         std::filesystem::path resolved_path =
             MikuPan_GetDataRoot() / relative_data_path;
@@ -639,6 +1118,7 @@ bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size)
             }
         }
         s = resolved_path.generic_string();
+        }
     }
 
     if (s.length() + 1 > buffer_size) {
@@ -672,9 +1152,51 @@ bool MikuPan_ResolveBasePath(const char* path, char* buffer, size_t buffer_size)
         return false;
     }
 
+    std::string asset_path;
+    if (MikuPan_IsSdlAssetPath(path, &asset_path))
+    {
+        if (asset_path.length() + 1 > buffer_size)
+        {
+            spdlog::error(
+                "MikuPan_ResolveBasePath: Buffer too small. Need {} bytes, got {}",
+                asset_path.length() + 1, buffer_size);
+            return false;
+        }
+
+        std::strcpy(buffer, asset_path.c_str());
+        return true;
+    }
+
     std::filesystem::path resolved_path(path);
     if (resolved_path.is_relative())
     {
+        const char *base = SDL_GetBasePath();
+        if (base != nullptr && std::strncmp(base, "assets://", 9) == 0)
+        {
+            std::string relative =
+                resolved_path.lexically_normal().generic_string();
+            while (relative.rfind("./", 0) == 0)
+            {
+                relative.erase(0, 2);
+            }
+            while (!relative.empty() && relative.front() == '/')
+            {
+                relative.erase(0, 1);
+            }
+
+            const std::string resolved = std::string(base) + relative;
+            if (resolved.length() + 1 > buffer_size)
+            {
+                spdlog::error(
+                    "MikuPan_ResolveBasePath: Buffer too small. Need {} bytes, got {}",
+                    resolved.length() + 1, buffer_size);
+                return false;
+            }
+
+            std::strcpy(buffer, resolved.c_str());
+            return true;
+        }
+
         resolved_path = MikuPan_GetApplicationBasePath()
             / resolved_path.relative_path();
     }

@@ -2474,8 +2474,8 @@ void PconTebureCameraCtrl()
     MOVE_BOX *mb;
     float ax;
     float ay;
-    char pad_x;
-    char pad_y;
+    int pad_x;
+    int pad_y;
     u_char jpad_on;
     static float rot;
     static float rot_adj = 0.0f;
@@ -2545,7 +2545,7 @@ void PconTebureCameraCtrl()
 
 u_short fior_tm = 0;
 
-int FinderModePadChk(char *pad_x, char *pad_y, float *ax, float *ay,
+int FinderModePadChk(int *pad_x, int *pad_y, float *ax, float *ay,
                      u_char *jpad_on)
 {
     *pad_y = 0;
@@ -2633,8 +2633,8 @@ void SetFinderRot()
     float ax;
     float ay;
     float rot;
-    char pad_x;
-    char pad_y;
+    int pad_x;
+    int pad_y;
     u_char jpad_on;
 
     mb = &plyr_wrk.move_box;

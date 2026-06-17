@@ -7,11 +7,21 @@
 
 #define PS2_VIRTUAL_RAM_SIZE (1024 * 1024 * 32)
 
-/// Allocate double the amount of PS2 RAM to avoid overflow issues
-unsigned char ps2_virtual_ram[PS2_VIRTUAL_RAM_SIZE];
+/// Allocate double the amount of PS2 RAM to avoid overflow issues.
+///
+/// The base MUST be aligned to at least 16 bytes (qword). PS2 data structures
+/// are qword-aligned by design (sceVu0FMATRIX, DMA tags, scene-graph coord
+/// units), and host pointers are computed as base + ps2_address, so the base's
+/// alignment is added to every translated address. A plain char array has no
+/// such guarantee: x86-64 toolchains happen to over-align large BSS arrays, but
+/// the arm64 NDK linker placed this only 4-byte aligned, which made every
+/// 16-aligned model resolve to a host pointer off by 0xc. SgSortUnit then
+/// rejected them ("Data broken") and the models vanished. Align to 64 (qword +
+/// cache line) so the translation preserves PS2 alignment on every platform.
+unsigned char ps2_virtual_ram[PS2_VIRTUAL_RAM_SIZE] __attribute__((aligned(64)));
 
 /// 16kb of scratchpad memory
-unsigned char ps2_virtual_scratchpad[1024*16];
+unsigned char ps2_virtual_scratchpad[1024*16] __attribute__((aligned(64)));
 
 int64_t MikuPan_GetHostAddress(int offset)
 {

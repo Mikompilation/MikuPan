@@ -490,7 +490,7 @@ void __attribute__((optimize("O3"))) GS::GSHelper::StorePSMCT16(unsigned char* o
 void __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT8(unsigned char* outbuf, int dbp, int dbw,
                                                       int dsax, int dsay,
                                                       int rrw, int rrh, int cbp,
-                                                      int cbw, char alpha_reg)
+                                                      int cbw, int alpha_reg)
 {
     int dst_addr = 0;
 
@@ -513,13 +513,16 @@ void __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT8(unsigned c
             outbuf[dst_addr + 0x01] = mem_[p + 0x01];
             outbuf[dst_addr + 0x02] = mem_[p + 0x02];
 
+            /* Keep alpha_reg as int: -1 is the "use CLUT alpha" sentinel, and
+             * plain char is unsigned on Android/ARM. */
             if (alpha_reg >= 0)
             {
                 outbuf[dst_addr + 0x03] = alpha_reg;
             }
             else
             {
-                const char src_alpha = mem_[p + 0x03];
+                const unsigned char src_alpha =
+                    (unsigned char)mem_[p + 0x03];
                 outbuf[dst_addr + 0x03] = src_alpha;
             }
 
@@ -532,7 +535,7 @@ void __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT4(unsigned c
                                                       int dsax, int dsay,
                                                       int rrw, int rrh, int cbp,
                                                       int cbw, int csa,
-                                                      char alpha_reg)
+                                                      int alpha_reg)
 {
     int dst_addr = 0;
 
@@ -551,13 +554,16 @@ void __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT4(unsigned c
             outbuf[dst_addr + 0x01] = mem_[p + 0x01];
             outbuf[dst_addr + 0x02] = mem_[p + 0x02];
 
+            /* Keep alpha_reg as int: -1 is the "use CLUT alpha" sentinel, and
+             * plain char is unsigned on Android/ARM. */
             if (alpha_reg >= 0)
             {
                 outbuf[dst_addr + 0x03] = alpha_reg;
             }
             else
             {
-                const char src_alpha = mem_[p + 0x03];
+                const unsigned char src_alpha =
+                    (unsigned char)mem_[p + 0x03];
                 outbuf[dst_addr + 0x03] = src_alpha;// >= 0 ? (src_alpha << 1) : 0xFF;
             }
 

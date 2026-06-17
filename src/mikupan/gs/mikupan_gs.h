@@ -128,10 +128,10 @@ class GSHelper
                                       int rrw, int rrh);
     void DownloadImagePSMT8(unsigned char* outbuf, int dbp, int dbw, int dsax,
                                             int dsay, int rrw, int rrh, int cbp,
-                                            int cbw, char alpha_reg);
+                                            int cbw, int alpha_reg);
     void DownloadImagePSMT4(unsigned char* outbuf, int dbp, int dbw, int dsax,
                                             int dsay, int rrw, int rrh, int cbp,
-                                            int cbw, int csa, char alpha_reg);
+                                            int cbw, int csa, int alpha_reg);
     void Clear();
 
     std::vector<char> mem_ = std::vector<char> (8 * 1024 * 1024);
