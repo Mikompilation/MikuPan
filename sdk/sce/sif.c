@@ -61,6 +61,12 @@ unsigned int sceSifSetDma(sceSifDmaData* sdd, int len)
             continue;
         }
 
+        if (dst_is_ps2_memory && !MikuPan_IsPs2MemoryPointer(
+                (int64_t)(uintptr_t)((unsigned char*)dst + sdd[i].size - 1)))
+        {
+            continue;
+        }
+
         memcpy(dst, src, sdd[i].size);
 
         if (dst_is_ps2_memory)
