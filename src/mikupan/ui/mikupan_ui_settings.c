@@ -15,6 +15,7 @@
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_ui_debug.h"
+#include "mikupan_ui_theme.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,16 +48,6 @@ static int is_fullscreen = 0;
 static int window_mode = 0; /* MikuPan_WindowMode: 0=windowed, 1=fullscreen, 2=borderless */
 static float brightness = 1.0f;
 static float gamma_value = 1.0f;
-
-static const char* theme_labels[MIKUPAN_UI_THEME_COUNT] = {
-    "Moonlit Blue", "Ghost Cyan", "Crimson",
-    "FF1 Ritual",   "Mist Teal",  "Sepia Photo",
-};
-
-static const char* font_labels[MIKUPAN_UI_FONT_COUNT] = {
-    "ImGui Default Monospace",
-    "Century Old Style",
-};
 
 #define MIKUPAN_CRT_DEFAULTS                                                   \
     {0,     1.0f,  0.08f, 0.02f, 0.18f, 1.0f,  1.6f,  0.22f, 1.0f,             \
@@ -592,7 +583,7 @@ void MikuPan_UiSettingsRender(void)
                 mikupan_configuration.selected_theme = selected_theme;
             }
 
-            if (igCombo_Str_arr("Theme", &selected_theme, theme_labels,
+            if (igCombo_Str_arr("Theme", &selected_theme, MikuPan_UiThemeLabels,
                                 MIKUPAN_UI_THEME_COUNT, -1))
             {
                 mikupan_configuration.selected_theme = selected_theme;
@@ -606,7 +597,7 @@ void MikuPan_UiSettingsRender(void)
                 mikupan_configuration.selected_font = selected_font;
             }
 
-            if (igCombo_Str_arr("Font", &selected_font, font_labels,
+            if (igCombo_Str_arr("Font", &selected_font, MikuPan_UiFontLabels,
                                 MIKUPAN_UI_FONT_COUNT, -1))
             {
                 mikupan_configuration.selected_font = selected_font;

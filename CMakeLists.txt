@@ -297,6 +297,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui_debug.h
         src/mikupan/ui/mikupan_ui_settings.c
         src/mikupan/ui/mikupan_ui_settings.h
+        src/mikupan/ui/mikupan_ui_theme.c
+        src/mikupan/ui/mikupan_ui_theme.h
 )
 
 # --- Build version info (git tag + commit) -------------------------------------
