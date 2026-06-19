@@ -243,6 +243,11 @@ u_int* motInitAniCtrl(ANI_CTRL *ani_ctrl, u_int *anm_p, u_int *mdl_p, u_int *pkt
     u_int *tmp_p;
     HeaderSection *hs;
 
+    if (mdl_p == NULL)
+    {
+        return NULL;
+    }
+
     ani_ctrl->anm_p = anm_p;
     pack_num = *anm_p;
 

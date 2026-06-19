@@ -290,6 +290,12 @@ extern SDL_GPUShader* MikuPan_GetGPUFragmentShader(int idx);
 
 static SDL_GPUTextureFormat PickSupportedDepthFormat(void);
 
+static int CurrentTargetDrawable(void)
+{
+    return g_cmd != NULL && g_target_color != NULL && g_target_width > 0
+           && g_target_height > 0;
+}
+
 static unsigned int AllocBufferId(void)
 {
     for (unsigned int i = g_next_buffer_id; i < MIKUPAN_GPU_MAX_BUFFERS; i++)
@@ -1708,6 +1714,11 @@ static void BeginTargetPassIfNeeded(void)
         MikuPan_GPUSetTarget(g_target, g_target_clear);
     }
 
+    if (!CurrentTargetDrawable())
+    {
+        return;
+    }
+
     SDL_GPUColorTargetInfo color = {0};
     const int resolving_scene = g_target_resolve != NULL
                                 && g_scene_resolve_requested;
@@ -1749,6 +1760,12 @@ static void BeginTargetPassIfNeeded(void)
 
     g_pass = SDL_BeginGPURenderPass(g_cmd, &color, 1, depth_ptr);
     g_pass_resolves_scene = resolving_scene && g_pass != NULL;
+
+    if (g_pass == NULL)
+    {
+        info_log("SDL_BeginGPURenderPass failed: %s", SDL_GetError());
+        return;
+    }
 
     if (g_pass != NULL && g_target == MIKUPAN_GPU_TARGET_SCENE
         && g_target_resolve != NULL && !resolving_scene)
@@ -1997,15 +2014,43 @@ void MikuPan_GPUSetTarget(MikuPan_GPUTarget target, int clear)
 
     if (target == MIKUPAN_GPU_TARGET_WINDOW)
     {
+        Uint32 swapchain_width = 0;
+        Uint32 swapchain_height = 0;
+
+        g_target_color = NULL;
+        g_target_color_format = g_swapchain_format;
+        g_target_width = 0;
+        g_target_height = 0;
+
+        if (g_cmd == NULL || g_window == NULL)
+        {
+            return;
+        }
+
         if (g_swapchain == NULL)
         {
-            SDL_WaitAndAcquireGPUSwapchainTexture(g_cmd, g_window, &g_swapchain,
-                                                  NULL, NULL);
+            if (!SDL_WaitAndAcquireGPUSwapchainTexture(g_cmd, g_window,
+                                                       &g_swapchain,
+                                                       &swapchain_width,
+                                                       &swapchain_height))
+            {
+                info_log("SDL_WaitAndAcquireGPUSwapchainTexture failed: %s",
+                         SDL_GetError());
+                return;
+            }
         }
 
         g_target_color = g_swapchain;
-        g_target_color_format = g_swapchain_format;
-        SDL_GetWindowSizeInPixels(g_window, &g_target_width, &g_target_height);
+        if (swapchain_width > 0 && swapchain_height > 0)
+        {
+            g_target_width = (int)swapchain_width;
+            g_target_height = (int)swapchain_height;
+        }
+        else if (g_target_color != NULL)
+        {
+            SDL_GetWindowSizeInPixels(g_window, &g_target_width,
+                                      &g_target_height);
+        }
     }
     else
     {
@@ -2099,8 +2144,13 @@ SDL_GPUTexture* MikuPan_GPUGetTextureHandle(unsigned int id)
 static void BindDrawState(unsigned int primitive)
 {
     BeginTargetPassIfNeeded();
+    if (g_pass == NULL)
+    {
+        return;
+    }
+
     SDL_GPUGraphicsPipeline* pipeline = GetPipeline(primitive);
-    if (pipeline == NULL || g_pass == NULL)
+    if (pipeline == NULL)
     {
         return;
     }

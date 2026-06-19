@@ -37,15 +37,13 @@ static void MikuPan_DecodeAdpcmBlock(s16 *buffer, s16 *block, s32 *prev1,
     for (; blockbytes <= blockend; ++blockbytes)
     {
         s32 data = ((*blockbytes) << 28) & 0xF0000000;
-        s32 pcm =
-            (data >> shift) + (((pred1 * *prev1) + (pred2 * *prev2) + 32) >> 6);
+        s32 pcm = (data >> shift) + (((pred1 * *prev1) + (pred2 * *prev2) + 32) >> 6);
 
         pcm = clamp(pcm, -0x8000, 0x7fff);
         *(buffer++) = pcm;
 
         data = ((*blockbytes) << 24) & 0xF0000000;
-        s32 pcm2 =
-            (data >> shift) + (((pred1 * pcm) + (pred2 * *prev1) + 32) >> 6);
+        s32 pcm2 = (data >> shift) + (((pred1 * pcm) + (pred2 * *prev1) + 32) >> 6);
 
         pcm2 = clamp(pcm2, -0x8000, 0x7fff);
         *(buffer++) = pcm2;

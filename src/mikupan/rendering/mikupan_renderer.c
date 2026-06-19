@@ -569,6 +569,12 @@ void MikuPan_EndFrame()
     MikuPan_UpdateLastResolvedFrameCache();
 
     SDL_GetWindowSize(mikupan_render.window, &mikupan_render.width, &mikupan_render.height);
+    if (mikupan_render.width <= 0 || mikupan_render.height <= 0)
+    {
+        MikuPan_GPUEndFrame();
+        MikuPan_PerfEndFrame();
+        return;
+    }
 
     float quad[] = {
         0,1,0,0,   1,1,1,1,   -1,-1,0,1,
