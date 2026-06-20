@@ -1319,9 +1319,9 @@ static void FilmAnime(short int pos_x, short int pos_y, short int alpha)
 static void ItemList(short int pos_x, short int pos_y, short int alpha)
 {
     int i;
-    float top_bar;
-    float mdl_bar;
-    float dwn_bar;
+    float top_bar = 0.0f;
+    float mdl_bar = 0.0f;
+    float dwn_bar = 0.0f;
     u_short alp;
     int y_off_1 = 114;
     int y_off_2 = 115;

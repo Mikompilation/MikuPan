@@ -1094,10 +1094,17 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
             pointer += 2;
         break;
         case 27:
-            SetRDBloodDrop((float *)((int)map_item_dat + fawp->furn_id * 16 + 0x4d0), pointer[1], fawp->furn_id); // ???
+        {
+            float* blood_drop_pos;
+
+            blood_drop_pos =
+                (float*)((u_char*)map_item_dat + fawp->furn_id * 16 + 0x4d0);
+
+            SetRDBloodDrop(blood_drop_pos, pointer[1], fawp->furn_id);
 
             pointer += 2;
-        break;
+            break;
+        }
         case 11:
             motPlyrActReq(pointer[1], &fawp->pos, *(u_short *)(pointer + 2));
 

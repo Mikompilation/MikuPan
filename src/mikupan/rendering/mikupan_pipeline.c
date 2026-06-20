@@ -5,6 +5,40 @@
 #include <glad/gl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
+
+typedef struct MikuPanPosition3Normal3Vertex
+{
+    float position[3];
+    float normal[3];
+} MikuPanPosition3Normal3Vertex;
+
+typedef struct MikuPanPosition4Normal4Vertex
+{
+    float position[4];
+    float normal[4];
+} MikuPanPosition4Normal4Vertex;
+
+typedef struct MikuPanColour4Position4Vertex
+{
+    float colour[4];
+    float position[4];
+} MikuPanColour4Position4Vertex;
+
+typedef struct MikuPanSpriteVertex
+{
+    float uv[4];
+    float colour[4];
+    float position[4];
+} MikuPanSpriteVertex;
+
+typedef struct MikuPanSkinnedVertex
+{
+    float bone_pos0[4];
+    float bone_pos1[4];
+    float bone_norm0[4];
+    float bone_norm1[4];
+} MikuPanSkinnedVertex;
 
 typedef enum
 {
@@ -51,10 +85,12 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 4 * 1024 * 1024, 2);
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0], 3, 0,
-        sizeof(float[6]), 0);
+        (int) sizeof(MikuPanPosition3Normal3Vertex),
+        (u_int) offsetof(MikuPanPosition3Normal3Vertex, position));
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1], 3, 1,
-        sizeof(float[6]), sizeof(float[3]));
+        (int) sizeof(MikuPanPosition3Normal3Vertex),
+        (u_int) offsetof(MikuPanPosition3Normal3Vertex, normal));
 
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[1], 4 * 1024 * 1024, 1);
     MikuPan_SetVertexBufferAttributeInfo(
@@ -105,10 +141,12 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 4 * 1024 * 1024, 2);
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0], 4, 0,
-        sizeof(float[2][4]), 0);
+        (int) sizeof(MikuPanPosition4Normal4Vertex),
+        (u_int) offsetof(MikuPanPosition4Normal4Vertex, position));
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1], 4, 1,
-        sizeof(float[2][4]), sizeof(float[4]));
+        (int) sizeof(MikuPanPosition4Normal4Vertex),
+        (u_int) offsetof(MikuPanPosition4Normal4Vertex, normal));
 
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[1], 4 * 1024 * 1024, 1);
     MikuPan_SetVertexBufferAttributeInfo(
@@ -128,16 +166,23 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 4 * 1024 * 1024, 4);
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0], 4, 0,
-        sizeof(float[4][4]), sizeof(float[4]));
+        (int) sizeof(MikuPanSkinnedVertex),
+        (u_int) offsetof(MikuPanSkinnedVertex, bone_pos0));
+
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1], 4, 1,
-        sizeof(float[4][4]), sizeof(float[1][4]));
+        (int) sizeof(MikuPanSkinnedVertex),
+        (u_int) offsetof(MikuPanSkinnedVertex, bone_pos1));
+
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[2], 4, 2,
-        sizeof(float[4][4]), sizeof(float[2][4]));
+        (int) sizeof(MikuPanSkinnedVertex),
+        (u_int) offsetof(MikuPanSkinnedVertex, bone_norm0));
+
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[3], 4, 3,
-        sizeof(float[4][4]), sizeof(float[3][4]));
+        (int) sizeof(MikuPanSkinnedVertex),
+        (u_int) offsetof(MikuPanSkinnedVertex, bone_norm1));
 
     /// buffer1: float2 UV (attribute location 4).
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[1], 4 * 1024 * 1024, 1);
@@ -156,10 +201,12 @@ void MikuPan_InitPipeline()
         &curr_pipeline->buffers[0], 4096 * 8 * (int)sizeof(float), 2);
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0], 4, 0,
-        sizeof(float[8]), 0);
+        (int) sizeof(MikuPanColour4Position4Vertex),
+        (u_int) offsetof(MikuPanColour4Position4Vertex, colour));
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1], 4, 1,
-        sizeof(float[8]), sizeof(float[4]));
+        (int) sizeof(MikuPanColour4Position4Vertex),
+        (u_int) offsetof(MikuPanColour4Position4Vertex, position));
     MikuPan_FinalizePipeline(COLOUR4_POSITION4);
 
     ///////// BOUNDING_BOX_SHADER /////////
@@ -191,13 +238,16 @@ void MikuPan_InitPipeline()
         4096 * 6 * 12 * (int)sizeof(float), 3);
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0], 4, 0,
-        sizeof(float[3][4]), 0);
+        (int) sizeof(MikuPanSpriteVertex),
+        (u_int) offsetof(MikuPanSpriteVertex, uv));
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1], 4, 1,
-        sizeof(float[3][4]), sizeof(float[4]));
+        (int) sizeof(MikuPanSpriteVertex),
+        (u_int) offsetof(MikuPanSpriteVertex, colour));
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[2], 4, 2,
-        sizeof(float[3][4]), sizeof(float[2][4]));
+        (int) sizeof(MikuPanSpriteVertex),
+        (u_int) offsetof(MikuPanSpriteVertex, position));
     MikuPan_FinalizePipeline(UV4_COLOUR4_POSITION4);
 
     ///////// LIGHT DATA BUFFER /////////

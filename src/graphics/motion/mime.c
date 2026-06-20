@@ -754,9 +754,10 @@ void mimChodoInitWork()
 void mimChodoSetWork(u_int furn_id, u_char room_no)
 {
     u_int i;
-    char room_id;
+    s_char room_id;
     u_char mim_no;
 
+    room_id = -1;
     mim_no = furn_dat[furn_id].acs_flg;
 
     if (!(mim_no & 0x80)) // sign bit is used as flag?
@@ -773,11 +774,11 @@ void mimChodoSetWork(u_int furn_id, u_char room_no)
             room_id = room_load_block[i].block_no;
             break;
         }
+    }
 
-        if (i == 1 || room_id == -1)
-        {
-            return;
-        }
+    if (room_id == -1)
+    {
+        return;
     }
 
     for (i = 0; i < 20; i++)

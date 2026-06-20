@@ -361,6 +361,8 @@ void SetPartsDeform(EFFECT_CONT *ec)
     sbj = n0 % 10;
     page = n0 / 10;
 
+    ef = 0;
+
     if (n0 == 24)
     {
         // ??

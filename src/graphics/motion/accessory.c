@@ -1266,9 +1266,9 @@ u_char acsCheckCollisionSphere(SPHERE *sphere, float *current, float *relative_v
 {
     float r1;
     float r2;
-    sceVu0FVECTOR tmp;
-    sceVu0FVECTOR v;
-    sceVu0FVECTOR v1;
+    sceVu0FVECTOR tmp = {0.0f, 0.0f, 0.0f, 0.0f};
+    sceVu0FVECTOR v = {0.0f, 0.0f, 0.0f, 0.0f};
+    sceVu0FVECTOR v1 = {0.0f, 0.0f, 0.0f, 0.0f};
 
     r1 = sphere->r;
 

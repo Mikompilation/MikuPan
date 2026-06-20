@@ -501,11 +501,15 @@ static void PhotGetDsp(u_char model_type, u_char model_no, u_char msg0_no, u_cha
     fade_type = 0;
     name_dsp = 0;
     msg_dsp = 0;
+    msg_no = 0;
+    file_pct = 0xff;
 
     switch(file_dsp.stp)
     {
     case 0:
         chng_tm = 0;
+
+        file_pct = map_file_dat[msg_type][model_no].dsp_pct;
 
         if (file_pct != 0xff)
         {
@@ -745,6 +749,7 @@ static void ItemGetDsp(u_char model_type, u_char model_no, u_char msg0_no, u_cha
     chng_tm = 16;
     fade_type = 0;
     msg_dsp = 0;
+    msg_no = 0;
 
     switch(file_dsp.stp)
     {

@@ -1284,8 +1284,10 @@ void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp
                 int blc = (i * 2 + 1) * c;
                 int trc = (i * 2 + 2) * c;
                 int brc = (i * 2 + 3) * c;
+
                 float src_x[4] = {tx[j][i], tx[j + 1][i], tx[j][i + 1], tx[j + 1][i + 1]};
-                float src_y[4] = {ty[j][i], ty[j + 1][i], ty[j][i + 1], ty[j + 1][i + 1]};
+                float src_y[4] = {ty[j][i] - yoff,ty[j + 1][i] - yoff,ty[j][i + 1] - yoff,ty[j + 1][i + 1] - yoff};
+
                 float dst_x[4] = {vtw[j][i][0], vtw[j + 1][i][0], vtw[j][i + 1][0], vtw[j + 1][i + 1][0]};
                 float dst_y[4] = {vtw[j][i][1], vtw[j + 1][i][1], vtw[j][i + 1][1], vtw[j + 1][i + 1][1]};
                 int rgba[4][4] = {

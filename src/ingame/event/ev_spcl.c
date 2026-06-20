@@ -5086,7 +5086,7 @@ void SpecialEventDisp004()
         ssd.y = 368;
 
 #endif
-        SimpleDispSprt(&ssd, EVENT_ADDRESS, 11, NULL, NULL, 0x64);
+        SimpleDispSprt(&ssd, MikuPan_GetHostAddress(EVENT_ADDRESS), 11, NULL, NULL, 0x64);
     }
     else
     {
@@ -6947,7 +6947,7 @@ void FaceDoorDisp(int face_no)
     {
         for (i = 0; i < 11; i++)
         {
-            SimpleDispSprt(&pzl_men_bg[i], EVENT_ADDRESS, i, NULL, NULL, 0x64);
+            SimpleDispSprt(&pzl_men_bg[i], MikuPan_GetHostAddress(EVENT_ADDRESS), i, NULL, NULL, 0x64);
         }
     }
 
@@ -6959,19 +6959,20 @@ void FaceDoorDisp(int face_no)
     {
         SimpleDispSprtDatCopy(&spev21_sp_menz[1], &ssd);
         ssd.alp = spev_wrk.csr[1];
-        SimpleDispSprt(&ssd, EVENT_ADDRESS_2, 1, NULL, NULL, 0x64);
+        SimpleDispSprt(&ssd, MikuPan_GetHostAddress(EVENT_ADDRESS_2), 1, NULL, NULL, 0x64);
     }
     else if (face_no == 1)
     {
         SimpleDispSprtDatCopy(&spev21_sp_menz[2], &ssd);
         ssd.alp = spev_wrk.csr[1];
-        SimpleDispSprt(&ssd, EVENT_ADDRESS_2, 2, NULL, NULL, 0x64);
+        SimpleDispSprt(&ssd, MikuPan_GetHostAddress(EVENT_ADDRESS_2), 2, NULL, NULL, 0x64);
     }
     else if (face_no == 2)
     {
         SimpleDispSprtDatCopy(&spev21_sp_menz[3], &ssd);
         ssd.alp = spev_wrk.csr[1];
-        SimpleDispSprt(&ssd, EVENT_ADDRESS_2, 3, NULL, NULL, 0x64);
+        SimpleDispSprt(&ssd, MikuPan_GetHostAddress(EVENT_ADDRESS_2), 3, NULL,
+                       NULL, 0x64);
     }
     else if (face_no == 3)
     {
@@ -8057,7 +8058,8 @@ void SurpriseDoorDisp(int face_no)
 
     for (i = 0 ; i < 11; i++)
     {
-        SimpleDispSprt(&pzl_men_bg[i], EVENT_ADDRESS, i, NULL, NULL, 0x64);
+        SimpleDispSprt(&pzl_men_bg[i], MikuPan_GetHostAddress(EVENT_ADDRESS), i,
+                       NULL, NULL, 0x64);
     }
 
     SimpleDispSprtDatCopy(&spev21_sp_menz[5], &ssd);
