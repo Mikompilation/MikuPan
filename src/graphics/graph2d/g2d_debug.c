@@ -142,6 +142,8 @@ static DEBUG_MENU *dbgmenu_tbl[] = {
     &dbg_menu_param_item,
 };
 
+#define DBG_MENU_COUNT ((int) (sizeof(dbgmenu_tbl) / sizeof(dbgmenu_tbl[0])))
+
 static int *dbgmenu_inttbl[] = {
     &dbg_wrk.mode_on,
     &dbg_wrk.lgt_spot,
@@ -377,7 +379,10 @@ void gra2dDrawDbgMenuSub(DEBUG_MENU *wlp)
 
     /// Changed the code to be recursive so that parents get drawn first
     /// this avoids the parent writing over the child
-    gra2dDrawDbgMenuSub(dbgmenu_tbl[wlp->parent]);
+    if (wlp->parent >= 0 && wlp->parent < DBG_MENU_COUNT)
+    {
+        gra2dDrawDbgMenuSub(dbgmenu_tbl[wlp->parent]);
+    }
 
     bx = (wlp->kai * 32) - 300;
     by = (wlp->kai * 32) - 200;
