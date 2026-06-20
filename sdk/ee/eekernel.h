@@ -50,14 +50,14 @@ extern void *_gp;
 //    ");
 
 //int CreateThread(ThreadParam *);
-int StartThread(int, void *arg);
+int StartThread(int thread_id, void *arg);
 int GetThreadId(void);
-int ChangeThreadPriority(int, int);
-int RotateThreadReadyQueue(int);
+int ChangeThreadPriority(int thread_id, int priority);
+int RotateThreadReadyQueue(int priority);
 
 int CreateSema(SemaParam *param);
-int SignalSema(int);
-int WaitSema(int);
-int DeleteSema(int);
+int SignalSema(int sema_id);
+int WaitSema(int sema_id);
+int DeleteSema(int sema_id);
 
 #endif // EE_EEKERNEL_H

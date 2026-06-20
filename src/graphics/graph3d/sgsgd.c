@@ -165,7 +165,7 @@ void MappingMeshData(u_int *intpointer, u_int *vuvnprim, HeaderSection *hs)
 {
     int mtype;
     int gloops;
-    int hsize;
+    int hsize = 0;
     static u_int *old_mesh_p;
 
     mtype = GET_MESH_TYPE(intpointer);

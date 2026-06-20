@@ -72,6 +72,7 @@ void VoicesInit()
         voices[i].vNo = i;
         voices[i].size = 0;
         voices[i].isPlaying = false;
+        voices[i].endPending = false;
         voices[i].buffer = malloc(VOICE_BUFFER_BYTES);
         voices[i].header = 0;
         voices[i].ssa = 0;
@@ -148,7 +149,7 @@ static bool EnsureVoiceStream(VOICE *v)
     spec.format = SDL_AUDIO_S16;
     spec.freq = 48000;
 
-    v->stream = SDL_CreateAudioStream(&spec, NULL);
+    v->stream = SDL_CreateAudioStream(&spec, &spec);
     if (v->stream == NULL)
     {
         info_log("Failed to create audio stream: %s", SDL_GetError());
@@ -195,9 +196,46 @@ static void StopVoicePlayback(int vNo)
     VOICE *v = &voices[vNo];
 
     v->isPlaying = false;
+    v->endPending = false;
     if (vNo >= 24 && vNo < 48)
     {
         iop_stat.sev_stat[vNo - 24].status = VOICE_FREE;
+    }
+}
+
+static void FinishVoicePlayback(int vNo)
+{
+    VOICE *v = &voices[vNo];
+
+    v->isPlaying = false;
+    v->endPending = false;
+    if (vNo >= 24 && vNo < 48)
+    {
+        iop_stat.sev_stat[vNo - 24].status = VOICE_FREE;
+        MikuPan_SdSetVoiceEnd(vNo);
+    }
+}
+
+static void BeginVoiceEnd(int vNo)
+{
+    VOICE *v = &voices[vNo];
+
+    v->isPlaying = false;
+    v->endPending = true;
+}
+
+static void FinishVoiceEndIfDrained(int vNo)
+{
+    VOICE *v = &voices[vNo];
+
+    if (!v->endPending)
+    {
+        return;
+    }
+
+    if (v->stream == NULL || SDL_GetAudioStreamQueued(v->stream) <= 0)
+    {
+        FinishVoicePlayback(vNo);
     }
 }
 
@@ -374,7 +412,7 @@ static void AdvanceVoiceAdsr(VOICE *v)
         if (v->adsr_level == 0)
         {
             v->adsr_phase = VOICE_ADSR_OFF;
-            StopVoicePlayback(v->vNo);
+            BeginVoiceEnd(v->vNo);
         }
         break;
 
@@ -389,7 +427,7 @@ static void AdvanceVoiceAdsr(VOICE *v)
         {
             v->adsr_level = 0;
             v->adsr_phase = VOICE_ADSR_OFF;
-            StopVoicePlayback(v->vNo);
+            BeginVoiceEnd(v->vNo);
         }
         else
         {
@@ -503,7 +541,7 @@ static bool DecodeVoiceBlock(int vNo, s16 *out)
 
         if (!loopRepeat)
         {
-            StopVoicePlayback(vNo);
+            BeginVoiceEnd(vNo);
         }
     }
 
@@ -663,7 +701,7 @@ static void FillStereo(int vNo)
 
             if (!loopRepeat)
             {
-                StopVoicePlayback(vNo);
+                BeginVoiceEnd(vNo);
             }
         }
 
@@ -695,6 +733,7 @@ void VoiceRun()
         {
             FillStereo(i);
         }
+        FinishVoiceEndIfDrained(i);
     }
     UnlockVoices();
 }
@@ -713,6 +752,7 @@ static void KeyOnUnlocked(int vNo)
         return;
     }
 
+    v->endPending = false;
     if (vNo >= 24 && vNo < 48)
     {
         iop_stat.sev_stat[vNo - 24].status = VOICE_USE;
@@ -821,6 +861,7 @@ static void CloseVoiceUnlocked(int vNo)
     VOICE *v = &voices[vNo];
 
     v->isPlaying = false;
+    v->endPending = false;
     v->size = 0;
     v->adsr_level = 0;
     v->adsr_phase = VOICE_ADSR_OFF;
@@ -854,6 +895,7 @@ static void CloseVoicesUnlocked(void)
             iop_stat.sev_stat[i].status = VOICE_FREE;
         }
         voices[i].isPlaying = false;
+        voices[i].endPending = false;
         voices[i].size = 0;
         voices[i].adsr_level = 0;
         voices[i].adsr_phase = VOICE_ADSR_OFF;
@@ -883,6 +925,6 @@ void FillAdpcmHeader(int vNo)
 
     if (v->header & (1 << 10))
     {
-        v->lsa = v->ssa & ~0x7;
+        v->lsa = v->nax & ~0x7;
     }
 }

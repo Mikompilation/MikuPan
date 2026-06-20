@@ -499,7 +499,7 @@ void SetParticleEffect() {
 
     n = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
     start_pktaddr = (uint64_t)&pbuf[ndpkt];
 
@@ -511,7 +511,7 @@ void SetParticleEffect() {
 
     pbuf[ndpkt++].ul64[0] = effdat[46].tex0;
 
-    pbuf[ndpkt++].ul128 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0); // shouldn't this be a SCE_GS_TEX0_2 ??
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0)); // shouldn't this be a SCE_GS_TEX0_2 ??
 
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
     pbuf[ndpkt++].ul64[1] = SCE_GS_ALPHA_1;
@@ -596,7 +596,7 @@ void EyeLightCtrl() {
 
         n = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
         start_pktaddr = (uint64_t)&pbuf[ndpkt];
         qd = (Q_WORDDATA *)start_pktaddr;
@@ -613,7 +613,7 @@ void EyeLightCtrl() {
         qd->ul64[0] = *(u_long *)&tex;
         qd++;
 
-        qd->ul128 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0); // shouldn't this be a SCE_GS_TEX0_2 ??
+        qd->ul128 = u_long128_from_u64(SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0)); // shouldn't this be a SCE_GS_TEX0_2 ??
         qd++;
 
         qd->ul64[0] = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);

@@ -197,7 +197,7 @@ void SimpleDispAlphaSprt(SPRT_SDAT *ssd, int64_t addr, int sp_no, u_char alp_rat
 void SimpleDispSprtRGB(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SSCL *sscl, u_char alp_rate, u_char rr, u_char gg, u_char bb);
 void SimpleDispSprtLNR(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SSCL *sscl, u_char alp_rate, int lnr);
 void SimpleDispSprtDatCopy(SPRT_SDAT *org, SPRT_SDAT *cpy);
-void TestPk2Data(long int sendtexaddr);
+void TestPk2Data(long long sendtexaddr);
 int ButtonMarkNext(int x_off, int y_off, int se_flg);
 int ButtonMarkWait();
 void ButtonMarkTimeClear();

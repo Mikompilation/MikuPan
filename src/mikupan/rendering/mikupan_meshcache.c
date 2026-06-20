@@ -29,7 +29,7 @@ static unsigned long long g_cache_bytes = 0;
 /// Record a buffer (slot 0..3 = vbo, 4 = ibo) growing to `size`, updating the
 /// global byte total. MikuPan_GPUUploadBuffer only ever grows a buffer, so the
 /// tracked size mirrors the real GPU allocation.
-static void account_buffer(MikuPan_MeshCacheEntry *e, int slot, long size)
+static void account_buffer(MikuPan_MeshCacheEntry *e, int slot, long long size)
 {
     if (size > e->buf_bytes[slot])
     {
@@ -197,7 +197,7 @@ MikuPan_MeshCacheEntry *MikuPan_MeshCache_Insert(
 }
 
 void MikuPan_MeshCache_UploadVbo(MikuPan_MeshCacheEntry *entry,
-                                 int idx, long size, const void *data)
+                                 int idx, long long size, const void *data)
 {
     if (entry == NULL || idx < 0 || idx >= entry->num_vbos || size <= 0) return;
     MikuPan_GPUUploadBuffer(entry->vbo[idx], (unsigned int)size, data);
@@ -207,7 +207,7 @@ void MikuPan_MeshCache_UploadVbo(MikuPan_MeshCacheEntry *entry,
 }
 
 void MikuPan_MeshCache_UploadIbo(MikuPan_MeshCacheEntry *entry,
-                                 long size, const void *data)
+                                 long long size, const void *data)
 {
     if (entry == NULL || size <= 0) return;
     MikuPan_GPUUploadBuffer(entry->ibo, (unsigned int)size, data);
@@ -216,13 +216,13 @@ void MikuPan_MeshCache_UploadIbo(MikuPan_MeshCacheEntry *entry,
     MikuPan_ResetGLBindCache();
 }
 
-static unsigned long long meshcache_hash(const void *data, long size)
+static unsigned long long meshcache_hash(const void *data, long long size)
 {
     /// FNV-1a over the raw bytes. Cheap (memory-bandwidth bound) relative to the
     /// GPU upload + render-pass teardown it lets us skip.
     const unsigned char *p = (const unsigned char *)data;
     unsigned long long h = 1469598103934665603ULL;
-    for (long i = 0; i < size; i++)
+    for (long long i = 0; i < size; i++)
     {
         h ^= (unsigned long long)p[i];
         h *= 1099511628211ULL;
@@ -231,7 +231,7 @@ static unsigned long long meshcache_hash(const void *data, long size)
 }
 
 void MikuPan_MeshCache_StreamVbo(MikuPan_MeshCacheEntry *entry,
-                                 int idx, long size, const void *data)
+                                 int idx, long long size, const void *data)
 {
     if (entry == NULL || idx < 0 || idx >= entry->num_vbos || size <= 0) return;
 

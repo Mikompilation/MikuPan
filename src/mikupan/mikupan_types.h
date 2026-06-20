@@ -11,7 +11,8 @@ typedef float LMATRIX[3][4];
 typedef float VECTOR3[3];
 typedef unsigned int void_type[4];
 
-typedef struct __attribute__((packed))
+MIKUPAN_PACKED_STRUCT_BEGIN
+typedef struct MIKUPAN_PACKED
 {
     /// Ambient Lighting
     float uAmbient[4];
@@ -44,19 +45,22 @@ typedef struct __attribute__((packed))
     float uMaterialAlpha[4];   ///< .x = SgMaterial.Diffuse[3] in normalized GS alpha units.
 
 } MikuPan_LightData;
+MIKUPAN_PACKED_STRUCT_END
 
 /// Per-material colour block. Pushed by MikuPan_SetMaterial when the renderer
 /// switches material — mirrors the four SgMaterialC colour fields the original
 /// PS2 path bakes into Parallel_Ambient / Parallel_DColor / Parallel_SColor at
 /// SetMaterialData (sglight.c:473). Bound to UBO binding point 1 (LightBlock
 /// is binding point 0).
-typedef struct __attribute__((packed))
+MIKUPAN_PACKED_STRUCT_BEGIN
+typedef struct MIKUPAN_PACKED
 {
     float uMatAmbient[4];   ///< material ambient colour
     float uMatDiffuse[4];   ///< material diffuse colour
     float uMatSpecular[4];  ///< material specular colour; .w treated as shininess factor
     float uMatEmission[4];  ///< material self-illumination
 } MikuPan_MaterialData;
+MIKUPAN_PACKED_STRUCT_END
 
 typedef struct
 {
@@ -406,7 +410,7 @@ typedef struct
     /* 0x4 */ int iCategory;
     /* 0x8 */ union
     {// 0x8
-        /* 0x8 */ long int lPrimType;
+        /* 0x8 */ long long lPrimType;
         /* 0x8 */ SGDVUVNDESC VUVNDesc;
         /* 0x8 */ SGDVUMESHDESC VUMeshDesc;
     };
@@ -433,7 +437,7 @@ typedef struct
     /* 0x04 */ short int sOffsetToST;
     /* 0x06 */ short int sOffsetToPrim;
     /* 0x08 */ int aiPad1[2];
-    /* 0x10 */ long int alData[1];
+    /* 0x10 */ long long alData[1];
 } SGDVUMESHDATA_PRESET;
 
 typedef struct

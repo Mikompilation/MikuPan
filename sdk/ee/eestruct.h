@@ -179,7 +179,7 @@
     ((u_long)(prim)<<47) | ((u_long)(flg)<<58) | ((u_long)(nreg)<<60))
 
 #define SCE_GIF_CLEAR_TAG(tp) \
-    (*(u_long128 *)(tp) = (u_long128)0)
+    (*(u_long128 *)(tp) = u_long128_from_u64(0))
 
 #define SCE_GS_SET_ALPHA_1  SCE_GS_SET_ALPHA
 #define SCE_GS_SET_ALPHA_2  SCE_GS_SET_ALPHA

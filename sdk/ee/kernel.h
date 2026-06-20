@@ -2,6 +2,6 @@
 #define EE_KERNEL_H
 
 void EiInit();
-void FlushCache(int);
+void FlushCache(int v);
 
 #endif // EE_KERNEL_H

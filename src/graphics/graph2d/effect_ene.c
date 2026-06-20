@@ -178,7 +178,7 @@ void SetETOCircleTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, float w, float h, u_cha
 
         bak = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -480,7 +480,7 @@ int SetCamFont(int no, int fl)
 
     bak = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TEX0_1(0x5, 2, SCE_GS_PSMCT32, 0, 0, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 16, 0);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1763,7 +1763,7 @@ void RunCamSlow2(int o, float hrt, float rrt, u_int alp)
 
     bak = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(3, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -2669,7 +2669,7 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
 
     n = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -2709,7 +2709,7 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
 
     if (SWORDTYPE == 0)
     {
-        pbuf[ndpkt].ul64[0] = (long)(0 \
+        pbuf[ndpkt].ul64[0] = (long long)(0 \
             | SCE_GS_XYZF3 << (4 * 0)
             | SCE_GS_XYZF2 << (4 * 1)
             | SCE_GS_RGBAQ << (4 * 2)
@@ -2717,7 +2717,7 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
     }
     else
     {
-        pbuf[ndpkt].ul64[0] = (long)(0 \
+        pbuf[ndpkt].ul64[0] = (long long)(0 \
             | SCE_GS_XYZF3 << (4 * 0)
             | SCE_GS_XYZ2  << (4 * 1)
             | SCE_GS_RGBAQ << (4 * 2)
@@ -2760,7 +2760,7 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
 
         if (cl >= 3)
         {
-            reg |= (long)(0 \
+            reg |= (long long)(0 \
                 | SCE_GS_UV    << (4 * 0)
                 | SCE_GS_RGBAQ << (4 * 1)
                 | SCE_GS_XYZF2 << (4 * 2)
@@ -2768,7 +2768,7 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
         }
         else
         {
-            reg |= (long)(0 \
+            reg |= (long long)(0 \
                 | SCE_GS_UV    << (4 * 0)
                 | SCE_GS_RGBAQ << (4 * 1)
                 | SCE_GS_XYZF3 << (4 * 2)
@@ -2786,7 +2786,7 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
 
         if (cl >= 3)
         {
-            reg |= (long)(0 \
+            reg |= (long long)(0 \
                 | SCE_GS_UV    << (4 * 0)
                 | SCE_GS_RGBAQ << (4 * 1)
                 | SCE_GS_XYZF2 << (4 * 2)
@@ -2794,7 +2794,7 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
         }
         else
         {
-            reg |= (long)(0 \
+            reg |= (long long)(0 \
                 | SCE_GS_UV    << (4 * 0)
                 | SCE_GS_RGBAQ << (4 * 1)
                 | SCE_GS_XYZF3 << (4 * 2)
@@ -3329,7 +3329,7 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
 
         bak = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -4571,7 +4571,7 @@ void SetEneDmgEffect1_Sub2(int num)
 
     bak = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(5, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;

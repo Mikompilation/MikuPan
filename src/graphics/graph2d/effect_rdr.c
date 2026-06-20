@@ -541,7 +541,7 @@ void SubRDFire(EFFECT_CONT *ec)
 
         bak = ndpkt;
 
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;

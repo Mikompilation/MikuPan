@@ -101,26 +101,10 @@ void MikuPan_ApplyUiFont(int font)
     }
 }
 
-static float MikuPan_ClampFontScale(float scale)
-{
-    if (scale < 0.5f)
-    {
-        return 0.5f;
-    }
-
-    if (scale > 3.0f)
-    {
-        return 3.0f;
-    }
-    
-    return scale;
-}
-
 void MikuPan_ApplyUiFontScale(void)
 {
     ImGuiStyle* style = igGetStyle();
-    mikupan_configuration.font_scale =
-        MikuPan_ClampFontScale(mikupan_configuration.font_scale);
+    MikuPan_ConfigurationValidate();
     style->FontScaleMain = mikupan_configuration.font_scale;
 }
 
@@ -180,8 +164,7 @@ static void MikuPan_LoadUiFonts(void)
         ui_fonts[1] = ui_fonts[0];
     }
 
-    mikupan_configuration.selected_font =
-        MikuPan_ClampFontIndex(mikupan_configuration.selected_font);
+    MikuPan_ConfigurationValidate();
     MikuPan_ApplyUiFont(mikupan_configuration.selected_font);
 }
 
@@ -827,10 +810,7 @@ void MikuPan_ApplyFatalFrameStyle(int theme)
 
 void MikuPan_UiThemeInit(SDL_Window* window)
 {
-    mikupan_configuration.selected_theme =
-        MikuPan_ClampThemeIndex(mikupan_configuration.selected_theme);
-    mikupan_configuration.selected_font =
-        MikuPan_ClampFontIndex(mikupan_configuration.selected_font);
+    MikuPan_ConfigurationValidate();
     ui_display_scale = MikuPan_CalculateUiDisplayScale(window);
     MikuPan_LoadUiFonts();
     MikuPan_ApplyUiFontScale();

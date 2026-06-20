@@ -1242,7 +1242,7 @@ static void SetLineStrip(int pri, u_char num, LINE_PRT *prot, u_short alp)
 
     z = 0xfffffff - pri;
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128 = u_long128_from_u64(0);
     pbuf[ndpkt++].ui32[0] = (DMAend | 4) + num * 2;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(2, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -1308,7 +1308,7 @@ static void SetCircle(int pri, short int xo, short int yo, short int r, u_char d
 
     z = 0xfffffff - mpri;
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128 = u_long128_from_u64(0);
     pbuf[ndpkt++].ui32[0] = (DMAend | 4) + (dtl + 2) * 2;
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(2, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -1395,7 +1395,7 @@ void AngleForWin(int pri, short int xo, short int yo, short int r, u_char ptn)
 
     z = 0xfffffff - mpri;
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128 = u_long128_from_u64(0);
     pbuf[ndpkt++].ui32[0] = (DMAend | 26);
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(2, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);

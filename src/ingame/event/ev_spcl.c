@@ -437,7 +437,7 @@ void SimpleDispSprtDatCopy(SPRT_SDAT *org, SPRT_SDAT *cpy)
     cpy->alp = org->alp;
 }
 
-void TestPk2Data(long int sendtexaddr)
+void TestPk2Data(long long sendtexaddr)
 {
     static int ttest_count = 0;
     SPRT_SDAT ssd;

@@ -16,8 +16,8 @@ typedef struct {
 	u_int g_nTexSizeW;
 	u_int g_nTexSizeH;
 	u_char g_bMipmapLv;
-	long unsigned int g_GsMiptbp1;
-	long unsigned int g_GsMiptbp2;
+	unsigned long long g_GsMiptbp1;
+	unsigned long long g_GsMiptbp2;
 	float pos_x;
 	float pos_y;
 	int pos_z;

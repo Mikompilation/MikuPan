@@ -182,7 +182,7 @@ static u_long128 *viBufData;
 
 static u_long128 viBufTag[257];
 static TimeStamp timeStamp[512];
-static char _0_buf[2048] __attribute__((aligned(64)));
+ATTRIBUTE_ALIGNED(64, static char _0_buf[2048]);
 
 #define min(x, y) (((x) > (y)) ? (y) : (x))
 #define max(x, y) (((x) < (y)) ? (y) : (x))
@@ -3095,7 +3095,7 @@ u_int videoDecSetState(VideoDec *vd, u_int state)
     return old;
 }
 
-int videoDecPutTs(VideoDec *vd, long int pts_val, long int dts_val,
+int videoDecPutTs(VideoDec *vd, long long pts_val, long long dts_val,
                   u_char *start, int len)
 {
     TimeStamp ts;

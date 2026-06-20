@@ -351,7 +351,6 @@ target_include_directories(MikuPan PRIVATE
 )
 
 target_link_libraries(MikuPan PRIVATE
-        m
         cimgui
         SDL3::SDL3
         spdlog::spdlog
@@ -364,6 +363,10 @@ target_link_libraries(MikuPan PRIVATE
         xxHash::xxhash
         inipp::inipp
 )
+
+if(NOT MSVC)
+    target_link_libraries(MikuPan PRIVATE m)
+endif()
 
 if(ANDROID)
     target_link_libraries(MikuPan PRIVATE log)

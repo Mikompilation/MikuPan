@@ -13,7 +13,7 @@ typedef struct
     unsigned short Year;
 } MikuPan_McStDateTime;
 
-typedef struct
+TYPEDEF_ALIGNED(64, struct
 {
     MikuPan_McStDateTime _Create;
     MikuPan_McStDateTime _Modify;
@@ -23,7 +23,7 @@ typedef struct
     unsigned int Reserve2;
     unsigned int PdaAplNo;
     unsigned char EntryName[32];
-} MikuPan_McTblGetDir __attribute__((aligned (64)));
+} MikuPan_McTblGetDir);
 
 
 

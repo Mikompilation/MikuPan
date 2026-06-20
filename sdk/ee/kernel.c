@@ -1,5 +1,5 @@
 #include "kernel.h"
 
-void FlushCache(int)
+void FlushCache(int v)
 {
 }

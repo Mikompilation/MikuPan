@@ -161,6 +161,10 @@ void sceSdSetSwitch(u_short entry, u_int value)
 
     sd_switch_regs[entry] = value;
 
+    if (reg == SD_S_KON || reg == SD_S_KOFF) {
+        sd_switch_regs[SD_S_ENDX | core] &= ~value;
+    }
+
     if (reg != SD_S_KON && reg != SD_S_KOFF) {
         return;
     }
@@ -279,6 +283,20 @@ void MikuPan_SdVoiceReachedAddress(int voice_index, u_int nax)
     if (nax == sd_core_irqa[core]) {
         sd_spu2_handler(core == SD_CORE_1 ? 2 : 1, sd_spu2_common);
     }
+}
+
+void MikuPan_SdSetVoiceEnd(int voice_index)
+{
+    int core;
+    int voice;
+
+    if (voice_index < 0 || voice_index >= VOICE_NUM) {
+        return;
+    }
+
+    core = voice_index >= 24 ? SD_CORE_1 : SD_CORE_0;
+    voice = voice_index % 24;
+    sd_switch_regs[SD_S_ENDX | core] |= 1u << voice;
 }
 
 void sceSdSetEffectAttr(int core, sceSdEffectAttr* attr)

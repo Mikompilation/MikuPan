@@ -310,7 +310,7 @@ void RelDspBackGrd();
 void RelationDispMsg(RELATION_DAT *r_dat);
 void SimpleDispSprtDS(SPRT_DAT *ssd, u_int addr, int sp_no, SPRT_SROT *srot,
                       SPRT_SSCL *sscl, u_char alp_rate);
-void TestPk2DataSou(long int sendtexaddr);
+void TestPk2DataSou(long long sendtexaddr);
 void DispCaption(int no, u_char alp);
 
 #endif// INGAME_MENU_IG_FILE_H

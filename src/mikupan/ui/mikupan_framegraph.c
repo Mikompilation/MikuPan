@@ -18,8 +18,8 @@ const int mikupan_perf_window_flags =
     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration
     | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize;
 
-const ImVec2 mikupan_style_origin = (ImVec2) {0.0f, 0.0f};
-const ImVec2 mikupan_plot_size = (ImVec2) {0.0f, 60.0f};
+const ImVec2 mikupan_style_origin = {0.0f, 0.0f};
+const ImVec2 mikupan_plot_size = {0.0f, 60.0f};
 
 void FrameTimeGraph_Update(FrameTimeGraph* g, float total_ms,
                                   float cpu_ms, float gpu_ms)

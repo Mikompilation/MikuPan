@@ -236,7 +236,7 @@ int videoDecDelete(VideoDec *vd);
 void videoDecAbort(VideoDec *vd);
 u_int videoDecGetState(VideoDec *vd);
 u_int videoDecSetState(VideoDec *vd, u_int state);
-int videoDecPutTs(VideoDec *vd, long int pts_val, long int dts_val, u_char *start, int len);
+int videoDecPutTs(VideoDec *vd, long long pts_val, long long dts_val, u_char *start, int len);
 int videoDecInputCount(VideoDec *vd);
 int videoDecInputSpaceCount(VideoDec *vd);
 int videoDecFlush(VideoDec *vd);

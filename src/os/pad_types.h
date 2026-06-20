@@ -8,7 +8,7 @@
 typedef struct {
 	int port;
 	int slot;
-	u_long128 pad_dma_buf[16] __attribute__((aligned (64)));
+	ATTRIBUTE_ALIGNED(64, u_long128 pad_dma_buf[16]);
 	u_short now;
 	u_short old;
 	u_short cnt[16];

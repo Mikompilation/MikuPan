@@ -1341,7 +1341,7 @@ u_char PosInAreaJudge1(u_char map, u_char room, u_char data, u_short pos_x, u_sh
 
     for (i = 0; i < sq_num; i++)
     {
-        type = *(char *)MikuPan_GetHostPointer(*addr + i + 1 + (long)MAP_DATA_ADDRESS + ofs[map]); // cast to long?
+        type = *(char *)MikuPan_GetHostPointer(*addr + i + 1 + (long long)MAP_DATA_ADDRESS + ofs[map]); // cast to long long?
 
         addr = &addr[i] + 1;
         addr = (int *)MikuPan_GetHostPointer(*addr + MAP_DATA_ADDRESS);

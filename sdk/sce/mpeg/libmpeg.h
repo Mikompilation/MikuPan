@@ -29,11 +29,11 @@ typedef struct {
     int width;
     int height;
     int frameCount;
-    long int pts;
-    long int dts;
+    long long pts;
+    long long dts;
     u_long flags;
-    long int pts2nd;
-    long int dts2nd;
+    long long pts2nd;
+    long long dts2nd;
     u_long flags2nd;
     void *sys;
 } sceMpeg;
@@ -45,8 +45,8 @@ typedef struct {
 
 typedef struct {
     sceMpegCbType type;
-    long int pts;
-    long int dts;
+    long long pts;
+    long long dts;
 } sceMpegCbDataTimeStamp;
 
 typedef struct {
@@ -54,8 +54,8 @@ typedef struct {
     u_char *header;
     u_char *data;
     u_int len;
-    long int pts;
-    long int dts;
+    long long pts;
+    long long dts;
 } sceMpegCbDataStr;
 
 typedef union {

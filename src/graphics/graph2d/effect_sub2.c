@@ -793,7 +793,7 @@ void FallObjDraw(sceVu0FVECTOR mpos, sceVu0FVECTOR rotation, short int *rgba, in
         
         bak = ndpkt;
         
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
         
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_FALSE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1213,7 +1213,7 @@ void GusObjDraw(/* a0 4 */ int leaf_num, /* a1 5 */ int area, /* a2 6 */ int fal
 
     bak = ndpkt;
     
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1615,7 +1615,7 @@ void HoleGusDraw(/* s5 21 */ int leaf_no)
         
         bak = ndpkt;
         
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
         
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -2270,7 +2270,7 @@ void LineGusDraw(/* s6 22 */ int leaf_no, /* s5 21 */ int line_num)
         
         bak = ndpkt;
         
-        pbuf[ndpkt++].ul128 = (u_long128)0;
+        pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
         pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
         pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -3727,7 +3727,7 @@ void DispSprtTemp(/* s1 17 */ SPRT_SDAT *ssd, /* a1 5 */ int64_t addr, /* a2 6 *
     DispSprD(&ds);
 }
 
-void TestPk2Data_2dg(long int sendtexaddr)
+void TestPk2Data_2dg(long long sendtexaddr)
 {
 	static int ttest_count = 0;
 	SPRT_SDAT ssd;

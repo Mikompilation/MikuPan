@@ -12006,8 +12006,6 @@ static void WeakPoint(short int pos_x, short int pos_y)
 
         if (inf_dsp.weak5_alp[i] != 0)
         {
-            char dummy = ~dummy; // HACK: fixes diff
-
             PointerNP(ex, ey, 0, inf_dsp.weak5_alp[i], siz);
 
             ray_alp_num++;

@@ -87,11 +87,11 @@ void GetTrgtRot(sceVu0FVECTOR p0, sceVu0FVECTOR p1, sceVu0FVECTOR rot, int id)
 
 int GetRndSP(u_int min, u_int lng)
 {
-    long int result;
+    long long result;
 
     if (lng != 0)
     {
-        result = (int)(min + (long)((lng * (long)MikuPan_Rand()) / (float)MikuPan_RAND_MAX));
+        result = (int)(min + (long long)((lng * (long long)MikuPan_Rand()) / (float)MikuPan_RAND_MAX));
     }
     else
     {

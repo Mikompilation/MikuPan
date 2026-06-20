@@ -11,8 +11,8 @@
 // int printf ( const char * format, ... );
 
 EI_SYS ei_sys = {0};
-IOP_COMMAND send_cmd[32] __attribute__((aligned(64))) = {0};
-IOP_STAT rcv_stat __attribute__((aligned(64))) = {0};
+ATTRIBUTE_ALIGNED(64, IOP_COMMAND send_cmd[32]) = {0};
+ATTRIBUTE_ALIGNED(64, IOP_STAT rcv_stat) = {0};
 
 static int EiInitRpc();
 static int EiInitIopDev();

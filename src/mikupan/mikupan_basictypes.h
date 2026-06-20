@@ -71,9 +71,13 @@ typedef struct
     int height;
 } MikuPan_Resolution;
 
+#define MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW (-1)
+
 typedef struct
 {
     MikuPan_Resolution window;
+    /* Use MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW for both render dimensions to
+     * follow the current window size. */
     MikuPan_Resolution render;
     int is_fullscreen;   /* legacy; kept in sync with window_mode != windowed */
     int window_mode;     /* 0 = windowed, 1 = fullscreen, 2 = borderless */

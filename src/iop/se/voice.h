@@ -34,6 +34,7 @@ typedef struct
     int size;
 
     bool isPlaying;
+    bool endPending;
 
     s16 *buffer;
     u16 header;

@@ -40,9 +40,9 @@ BTL_MODE_WRK btl_wrk = {0};
 STAGE_WRK stage_wrk[20] = {0};
 
 static int sp_load_id = 0;
-long int msn_high_score = 0;
-long int msn_total_score = 0;
-long int msn_bonus = 0;
+long long msn_high_score = 0;
+long long msn_total_score = 0;
+long long msn_bonus = 0;
 int stage_all_clear_bak = 0;
 int btl_mode_bgm_init = 0;
 int btl_clear_disp = 0;
@@ -393,7 +393,7 @@ void BattleModeClear()
     btl_wrk.mode = BTL_MODE_CLEAR;
 }
 
-void BattleModeScoreRecord(long int score)
+void BattleModeScoreRecord(long long score)
 {
     if (msn_high_score < score)
     {

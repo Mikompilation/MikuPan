@@ -20,7 +20,7 @@ u_int sceDevVif1GetErr(void)
 {
 }
 
-int sceDevVif1GetCnd(sceDevVif1Cnd*)
+int sceDevVif1GetCnd(sceDevVif1Cnd* cnd)
 {
 }
 

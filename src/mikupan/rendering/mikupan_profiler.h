@@ -105,10 +105,17 @@ void MikuPan_PerfScopeEnd(MikuPan_PerfScope *s);
 #define MIKUPAN_PERF_SCOPE_PASTE_(a, b) a##b
 #define MIKUPAN_PERF_SCOPE_PASTE(a, b)  MIKUPAN_PERF_SCOPE_PASTE_(a, b)
 
+#if defined(__GNUC__) || defined(__clang__)
 #define MIKUPAN_PERF_SCOPE(sect) \
     MikuPan_PerfScope MIKUPAN_PERF_SCOPE_PASTE(_perf_scope_, __LINE__) \
         __attribute__((cleanup(MikuPan_PerfScopeEnd))) = \
         { SDL_GetPerformanceCounter(), (sect) }
+#else
+#define MIKUPAN_PERF_SCOPE(sect) \
+    MikuPan_PerfScope MIKUPAN_PERF_SCOPE_PASTE(_perf_scope_, __LINE__) = \
+        { SDL_GetPerformanceCounter(), (sect) }; \
+    (void)MIKUPAN_PERF_SCOPE_PASTE(_perf_scope_, __LINE__)
+#endif
 
 /* ── Timed glDraw wrappers ──────────────────────────────────────────── */
 

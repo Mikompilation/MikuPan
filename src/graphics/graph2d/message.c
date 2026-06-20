@@ -702,7 +702,7 @@ static void SetFontPacketHeader(int n, int type, u_char alp)
 
     MikuPan_SetFontTexture(type);
 
-    mpbuf[nmdpkt].ul128 = (u_long128)0;
+    mpbuf[nmdpkt].ul128 = u_long128_from_u64(0);
 
     mpbuf[nmdpkt++].ui32[0] = (DMAend | 10) + n * 5;
 
@@ -921,7 +921,7 @@ static void SetFontTex(int flg, int bank)
 #ifdef BUILD_EU_VERSION
     if (path == 1)
     {
-        mpbuf[nmdpkt].ul128 = (u_long128)0;
+        mpbuf[nmdpkt].ul128 = u_long128_from_u64(0);
         mpbuf[nmdpkt++].ui32[0] = DMAcnt | 4;
     }
 #endif
@@ -966,7 +966,7 @@ static void SetFontEnv()
 #ifdef BUILD_EU_VERSION
     if (path == 1)
     {
-        mpbuf[nmdpkt].ul128 = (u_long128)0;
+        mpbuf[nmdpkt].ul128 = u_long128_from_u64(0);
         mpbuf[nmdpkt++].ui32[0] = DMAcnt | 6;
     }
 #endif
@@ -1062,7 +1062,7 @@ static void SetFontPat(int pri, int fn, int x, int y, int fw, u_char r, u_char g
 #ifdef BUILD_EU_VERSION
     if (path == 1)
     {
-        mpbuf[nmdpkt].ul128 = (u_long128)0;
+        mpbuf[nmdpkt].ul128 = u_long128_from_u64(0);
         mpbuf[nmdpkt++].ui32[0] = DMAcnt | 6;
     }
 #endif
@@ -1154,7 +1154,7 @@ static void MesPacketEnd()
 static void PacketEnd()
 #endif
 {
-    mpbuf[nmdpkt].ul128 = (u_long128)0;
+    mpbuf[nmdpkt].ul128 = u_long128_from_u64(0);
 
     mpbuf[nmdpkt++].ui32[0] = DMAend | 2;
 
@@ -1578,7 +1578,7 @@ int SetMessageV2_2(DISP_STR *s)
 
     i = draw_mpri[nmdpri][1];
 
-    mpbuf[i].ul128 = (u_long128)0;
+    mpbuf[i].ul128 = u_long128_from_u64(0);
 
     mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
     nmdpri++;
@@ -1917,7 +1917,7 @@ int SetMessageV2(DISP_STR *s)
     s->brnch_num = selnum;
 
     i = draw_mpri[nmdpri][1];
-    mpbuf[i].ul128 = (u_long128)0;
+    mpbuf[i].ul128 = u_long128_from_u64(0);
 
     mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
     nmdpri++;
@@ -2430,7 +2430,7 @@ int SubMessageV3(u_char *s, int pri, int delflg)
     }
 
     i = draw_mpri[nmdpri][1];
-    mpbuf[i].ul128 = (u_long128)0;
+    mpbuf[i].ul128 = u_long128_from_u64(0);
 
     mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
     nmdpri++;
@@ -3051,7 +3051,7 @@ int SetMessageMov(int path, int type, DISP_STR *s)
     if (path != 1)
     {
         i = draw_mpri[nmdpri][1];
-        mpbuf[i].ul128 = (u_long128)0;
+        mpbuf[i].ul128 = u_long128_from_u64(0);
         mpbuf[i].ui32[0] = nmdpkt + DMAend - i - 1;
         nmdpri++;
     }

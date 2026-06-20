@@ -2483,7 +2483,7 @@ static void DspSpData(u_char csr2, u_char alp, u_char type)
 {
     int i;
     u_short pos_y;
-    float csr_alp;
+    float csr_alp = 0.0f;
 
     CmnWindow(18, 0, 0, alp, 0x80);
     SpSideBar(0, 0, alp);

@@ -43,7 +43,7 @@ typedef struct MikuPan_MeshCacheEntry
     /// (and the render-pass break it forces under SDL_GPU) when the bytes are
     /// unchanged — the common case for static furniture/room colour streams.
     unsigned long long stream_hash[4];
-    long  stream_size[4];
+    long long stream_size[4];
     int   stream_valid[4];
     /// LRU / memory-budget bookkeeping. `last_used` is a monotonic access tick
     /// bumped on every lookup hit and insert; the eviction pass drops the
@@ -53,7 +53,7 @@ typedef struct MikuPan_MeshCacheEntry
     /// `buf_bytes` tracks each owned GPU buffer's allocated size (vbo[0..3],
     /// ibo at index 4) so the budget reflects real usage.
     unsigned long long last_used;
-    long  buf_bytes[5];
+    long long buf_bytes[5];
     struct MikuPan_MeshCacheEntry *next; ///< chaining within hash bucket
 } MikuPan_MeshCacheEntry;
 
@@ -74,11 +74,11 @@ MikuPan_MeshCacheEntry *MikuPan_MeshCache_Insert(
 
 /// One-shot static upload into one of the entry's VBOs. Allocates+copies.
 void MikuPan_MeshCache_UploadVbo(MikuPan_MeshCacheEntry *entry,
-                                 int idx, long size, const void *data);
+                                 int idx, long long size, const void *data);
 
 /// One-shot static upload into the entry's IBO.
 void MikuPan_MeshCache_UploadIbo(MikuPan_MeshCacheEntry *entry,
-                                 long size, const void *data);
+                                 long long size, const void *data);
 
 /// Per-frame streaming upload into a cache-owned VBO — used for the partial
 /// cache pattern (e.g. CPU-skinned 0x2/0xA meshes) where indices/UVs/VAO are
@@ -86,7 +86,7 @@ void MikuPan_MeshCache_UploadIbo(MikuPan_MeshCacheEntry *entry,
 /// glMapBufferRange(MAP_INVALIDATE_BUFFER) semantics of MikuPan_StreamUploadFull
 /// so the GL driver gets the orphan-and-rewrite hint.
 void MikuPan_MeshCache_StreamVbo(MikuPan_MeshCacheEntry *entry,
-                                 int idx, long size, const void *data);
+                                 int idx, long long size, const void *data);
 
 /// Drop every entry whose owning sgd_top matches. Called from SgMapUnit when
 /// fresh data is detected at an address that may have been cached before.

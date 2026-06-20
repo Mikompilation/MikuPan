@@ -84,5 +84,6 @@ void MikuPan_SdShutdown(void);
    into spuRam) each time it advances to a new ADPCM block; raises the SPU2
    interrupt when the position matches the core's IRQA. */
 void MikuPan_SdVoiceReachedAddress(int voice_index, u_int nax);
+void MikuPan_SdSetVoiceEnd(int voice_index);
 
 #endif /* _LIBSD_H_ */

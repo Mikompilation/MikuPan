@@ -6131,7 +6131,7 @@ void SimpleDispSprtDS(SPRT_DAT *ssd, u_int addr, int sp_no, SPRT_SROT *srot, SPR
     DispSprD(&ds);
 }
 
-void TestPk2DataSou(long int sendtexaddr)
+void TestPk2DataSou(long long sendtexaddr)
 {
     static int ttest_count = 0;
     SPRT_DAT ssd;

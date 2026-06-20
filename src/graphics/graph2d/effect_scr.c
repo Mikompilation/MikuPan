@@ -751,7 +751,7 @@ void CallFocus2(/* a0 4 */ int in, /* a1 5 */ int keep, /* a2 6 */ int out, /* a
     eff_focus.out = out;
 }
 
-void SubDeform(/* a2 6 */ int type, /* f12 50 */ float rate, /* a1 5 */ u_char alp)
+void SubDeform(int type, float rate, u_char alp)
 {
     switch(type)
     {
@@ -779,10 +779,10 @@ void SubDeform(/* a2 6 */ int type, /* f12 50 */ float rate, /* a1 5 */ u_char a
     }
 }
 
-void SetDeform(/* s0 16 */ EFFECT_CONT *ec)
+void SetDeform(EFFECT_CONT *ec)
 {
-	/* f12 50 */ float ef;
-	/* f2 40 */ float phase;
+	float ef = 0.0f;
+	float phase;
 
     if (ec->dat.uc8[2] != eff_deform.otype)
     {
@@ -863,7 +863,7 @@ void SetDeform(/* s0 16 */ EFFECT_CONT *ec)
 void RunDeform(/* s0 16 */ EFFECT_CONT *ec)
 {
     float ef;
-	/* f2 40 */ float phase;
+	float phase;
     
     if (ec->dat.uc8[1] & 4)
     {
@@ -954,7 +954,7 @@ void MakeScrDeformPacket(/* s1 17 */ int pnumw, /* 0x0(sp) */ int pnumh, /* s2 1
     
     ppbuf = Get2DPacketBufferAddress();
     
-    ppbuf->ul128 = (u_long128)0;
+    ppbuf->ul128 = u_long128_from_u64(0);
 
     ppbuf->ui32[0] = (pnumh * (pnumw + 1)) * 4 + DMAend + 9;
     ppbuf++;
@@ -1199,7 +1199,7 @@ void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp
 
     Reserve2DPacket(0x1000);
     
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128 = u_long128_from_u64(0);
 
     // (25 * 16) * 6 + 0x70000008
     pbuf[ndpkt++].ui32[0] = DMAend + 8 + (pnumh * (vnumw+1)) * 6;
@@ -1539,7 +1539,7 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
     
     bak = ndpkt;
     
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1870,7 +1870,7 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
     
     Reserve2DPacket(0x1000);
     
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128 = u_long128_from_u64(0);
     pbuf[ndpkt++].ui32[0] = DMAend + (pnumh)*(pnumw+1)*2*3 + 8; // 0x1298; // 8 + 24*33*2*3;
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
@@ -4022,7 +4022,7 @@ u_char SubNowLoading(/* a0 4 */ int fl, /* 0x3440(sp) */ int num, /* f12 50 */ f
     
     bak = ndpkt;
     
-    pbuf[ndpkt++].ul128 = (u_long128)0; // Line 4843
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0); // Line 4843
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1); // Line 4845
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD; // Line 4846
@@ -4446,7 +4446,7 @@ void SubGameOver(/* 0x11b60(sp) */ u_char alp, /* f20 58 */ float rate)
     
     bak = ndpkt;
     
-    pbuf[ndpkt++].ul128 = (u_long128)0; // Line 5199
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0); // Line 5199
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(6, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1); // Line 5201
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD; // Line 5202

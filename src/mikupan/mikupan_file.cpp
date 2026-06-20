@@ -981,7 +981,7 @@ u_char MikuPan_ReadFile(const char *filename, void *buffer, int size)
     }
 
     std::ifstream inFile;
-    inFile.open(relative_path);
+    inFile.open(relative_path, std::ios::binary);
     inFile.read(static_cast<char *>(buffer), size);
     inFile.close();
     return inFile.bad() == 0;

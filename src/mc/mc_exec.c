@@ -9,7 +9,9 @@
 #include "mc/mc_icon.h"
 #include "mc/mc_main.h"
 #include "mikupan/mikupan_memory.h"
+#include "outgame/btl_mode/btl_mode.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -19,6 +21,74 @@
 
 #define KEYCODE "BA"
 #define PRODUCT_CODE "SLUS-20388"
+
+typedef struct
+{
+    u_char rank;
+    u_char pad;
+    u_short best_time;
+    int32_t best_shot;
+} MC_LEGACY_STAGE_WRK;
+
+typedef char mc_legacy_stage_wrk_must_be_8_bytes[
+    (sizeof(MC_LEGACY_STAGE_WRK) == 8) ? 1 : -1];
+
+static u_int mcGetLegacyGameFileSize(void)
+{
+    u_int legacy_stage_size =
+        (u_int)(sizeof(MC_LEGACY_STAGE_WRK)
+                * (sizeof(stage_wrk) / sizeof(stage_wrk[0])));
+
+    if (sizeof(stage_wrk) <= legacy_stage_size)
+    {
+        return mc_game_size;
+    }
+
+    return mc_game_size - ((u_int)sizeof(stage_wrk) - legacy_stage_size);
+}
+
+static int mcIsValidGameFileSize(u_int size)
+{
+    return size == mc_game_size || size == mcGetLegacyGameFileSize();
+}
+
+static u_int mcFindListedFileSize(const char *name)
+{
+    const char *entry_name = strrchr(name, '/');
+    u_int i;
+
+    if (entry_name != NULL)
+    {
+        entry_name++;
+    }
+    else
+    {
+        entry_name = name;
+    }
+
+    for (i = 0; i < mc_ctrl.dir.file_num; i++)
+    {
+        if (strcmp((char *)mc_ctrl.dir.table[i].EntryName, entry_name) == 0)
+        {
+            return mc_ctrl.dir.table[i].FileSizeByte;
+        }
+    }
+
+    return 0;
+}
+
+static void mcLoadLegacyStageWrk(const u_char *src)
+{
+    const MC_LEGACY_STAGE_WRK *legacy = (const MC_LEGACY_STAGE_WRK *)src;
+    u_int i;
+
+    for (i = 0; i < sizeof(stage_wrk) / sizeof(stage_wrk[0]); i++)
+    {
+        stage_wrk[i].rank = legacy[i].rank;
+        stage_wrk[i].best_time = legacy[i].best_time;
+        stage_wrk[i].best_shot = legacy[i].best_shot;
+    }
+}
 
 static u_char *mcResolveDataAddress(const MC_DATA_STR *data_str)
 {
@@ -110,6 +180,7 @@ char mcCheckEmpty(u_int offset)
 
 void mcAcsFileReq(char type, int mode, int header)
 {
+    u_int listed_size;
 
     switch(type) {
     case MC_FILE_ICONSYS:
@@ -155,6 +226,14 @@ void mcAcsFileReq(char type, int mode, int header)
         else
         {
             mc_ctrl.rw.size = mc_game_size;
+            if (mode == 1)
+            {
+                listed_size = mcFindListedFileSize(mc_ctrl.rw.name);
+                if (mcIsValidGameFileSize(listed_size))
+                {
+                    mc_ctrl.rw.size = listed_size;
+                }
+            }
         }
     break;
     case MC_FILE_ALBUMDATA1:
@@ -323,7 +402,7 @@ char mcCheckFileList()
 
                 size = mc_ctrl.dir.table[i].FileSizeByte;
 
-                if (size != mc_game_size)
+                if (!mcIsValidGameFileSize(size))
                 {
                     return 2;
                 }
@@ -629,6 +708,7 @@ char mcSetLoadFile(u_int *work_addr, u_char file_id)
     int j;
     u_int size;
     u_int str_num;
+    u_int legacy_size;
     MC_DATA_STR *data_str;
 
     switch (file_id)
@@ -659,6 +739,11 @@ char mcSetLoadFile(u_int *work_addr, u_char file_id)
         size = 0x200;
         str_num = 1;
     }
+    else if ((file_id == 5 || file_id == 6 || file_id == 7)
+             && mcIsValidGameFileSize(mc_ctrl.rw.size))
+    {
+        size = mc_ctrl.rw.size;
+    }
 
     addr0 = (u_char *)&work_addr[0];
 
@@ -674,6 +759,17 @@ char mcSetLoadFile(u_int *work_addr, u_char file_id)
 
     for (i = 0; i < str_num; i++)
     {
+        if (size == mcGetLegacyGameFileSize()
+            && data_str[i].addr_kind == MC_DATA_ADDR_HOST
+            && data_str[i].addr == (uintptr_t)stage_wrk)
+        {
+            legacy_size = (u_int)(sizeof(MC_LEGACY_STAGE_WRK)
+                          * (sizeof(stage_wrk) / sizeof(stage_wrk[0])));
+            mcLoadLegacyStageWrk(addr0);
+            addr0 += legacy_size;
+            continue;
+        }
+
         addr1 = mcResolveDataAddress(&data_str[i]);
 
         for (j = 0; j < data_str[i].size; j++)

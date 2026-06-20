@@ -4,15 +4,15 @@
 typedef unsigned char u_char;
 typedef short unsigned int u_short;
 typedef unsigned int u_int;
-typedef long unsigned int u_long;
+typedef unsigned long long u_long;
 typedef unsigned char unchar;
 typedef short unsigned int ushort;
 typedef unsigned int uint;
-typedef long unsigned int ulong;
+typedef unsigned long long ulong;
 
 typedef signed char s_char;
 typedef short int s_short;
-typedef long int s_long;
+typedef long long s_long;
 
 enum IOP_COMMAND_ID {
     IC_COM_NOTHING = 0,

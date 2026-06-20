@@ -2192,7 +2192,7 @@ static void SetDoorOpenPlyrPos()
 u_char DoorOpenJudge()
 {
     u_short door_id[2];
-    u_char sq_no;
+    u_char sq_no = 0;
 
     plyr_wrk.sta &= ~0x8;
 

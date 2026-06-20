@@ -94,39 +94,39 @@ typedef struct  {
   unsigned long long REGS15 : 4;
 } sceGifTag;
 
-typedef struct {
+TYPEDEF_ALIGNED(16, struct {
     sceGsFrame frame1;
     u_long frame1addr;
     sceGsZbuf zbuf1;
-    long zbuf1addr;
+    long long zbuf1addr;
     sceGsXyoffset xyoffset1;
-    long xyoffset1addr;
+    long long xyoffset1addr;
     sceGsScissor scissor1;
-    long scissor1addr;
+    long long scissor1addr;
     sceGsPrmodecont prmodecont;
-    long prmodecontaddr;
+    long long prmodecontaddr;
     sceGsColclamp colclamp;
-    long colclampaddr;
+    long long colclampaddr;
     sceGsDthe dthe;
-    long dtheaddr;
+    long long dtheaddr;
     sceGsTest test1;
-    long test1addr;
-} sceGsDrawEnv1 __attribute__((aligned(16)));
+    long long test1addr;
+} sceGsDrawEnv1);
 
-typedef struct {
+TYPEDEF_ALIGNED(16, struct {
     sceGsTest testa;
-    long testaaddr;
+    long long testaaddr;
     sceGsPrim prim;
-    long primaddr;
+    long long primaddr;
     sceGsRgbaq rgbaq;
-    long rgbaqaddr;
+    long long rgbaqaddr;
     sceGsXyz xyz2a;
-    long xyz2aaddr;
+    long long xyz2aaddr;
     sceGsXyz xyz2b;
-    long xyz2baddr;
+    long long xyz2baddr;
     sceGsTest testb;
-    long testbaddr;
-} sceGsClear __attribute__((aligned(16)));
+    long long testbaddr;
+} sceGsClear);
 
 typedef struct {
     tGS_PMODE pmode;
@@ -199,20 +199,20 @@ typedef struct {
   sceGifTag giftag1;
 } sceGsLoadImage;
 
-typedef struct { // 0x10
+TYPEDEF_ALIGNED(16, struct { // 0x10
   /* 0x0 */ short int sceGsInterMode;
   /* 0x2 */ short int sceGsOutMode;
   /* 0x4 */ short int sceGsFFMode;
   /* 0x6 */ short int sceGsVersion;
   /* 0x8 */ int (*sceGsVSCfunc)(int);
   /* 0xc */ int sceGsVSCid;
-} sceGsGParam __attribute__((aligned(16)));
+} sceGsGParam);
 
 typedef struct {
-  long unsigned long pad00;
+  unsigned long long pad00;
 } sceGsFinish;
 
-typedef struct {
+TYPEDEF_ALIGNED(16, struct {
   u_int vifcode[4];
   sceGifTag giftag;
   sceGsBitbltbuf bitbltbuf;
@@ -225,7 +225,7 @@ typedef struct {
   unsigned long long finishaddr;
   sceGsTrxdir trxdir;
   unsigned long long trxdiraddr;
-} sceGsStoreImage __attribute__((aligned(16)));
+} sceGsStoreImage);
 
 
 

@@ -302,15 +302,12 @@ void SceneLightRevision(SCENE_CTRL *sc)
 {
     sceVu0FVECTOR amb;
     FOD_LIGHT *fl;
-    u_int *lit_addr;
+    u_int *lit_addr = 0;
     int i;
     int err_flg;
 
-    lit_addr =
-        (u_int
-             *) ((char *) lit_addr
-                 + sizeof(
-                     SgLIGHT));// this forces proper instruction ordering ... why??
+    lit_addr = (u_int*) ((char *) lit_addr + sizeof(SgLIGHT));// this forces proper instruction ordering ... why??
+
     lit_addr = sc->light_rev_addr;
 
     fl = &sc->fod_ctrl.fod_light;

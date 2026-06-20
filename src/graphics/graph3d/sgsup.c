@@ -211,7 +211,7 @@ void DrawBoundingBox(sceVu0FVECTOR *box)
         ((u_long *) datap)[0] =
             SCE_GIF_SET_TAG(4, eop, SCE_GS_TRUE, 100, SCE_GIF_PACKED, 2);
 
-        ((long *) datap)[1] = 0 |
+        ((u_long *) datap)[1] = 0 |
             SCE_GS_RGBAQ << (4 * 0) |
             SCE_GS_XYZF2 << (4 * 1);
 

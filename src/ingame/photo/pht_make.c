@@ -1722,25 +1722,22 @@ static void CopyScreenSourceToBuffer(int addr, int szfl, int src_addr,
 
     LocalCopyLtoBD(src_addr, data_i);
 
-    /* [DIAG] The photo is built from this captured buffer. If avg_rgb is ~0 the
-     * framebuffer was black at capture time (the root cause of the black photo);
-     * compare with the "[DIAG] effect fb read" brightness logged elsewhere. */
     {
         const unsigned char *dbg_px = (const unsigned char *) data_i;
-        long dbg_sum = 0;
+        long long dbg_sum = 0;
         int dbg_n = 0;
         for (int dy = 0; dy < mhh; dy += 8)
         {
             for (int dx = 0; dx < mw; dx += 8)
             {
                 const unsigned char *p =
-                    dbg_px + ((long) ((mx + dx) + (myy + dy) * oneli)) * 4;
+                    dbg_px + ((long long) ((mx + dx) + (myy + dy) * oneli)) * 4;
                 dbg_sum += p[0] + p[1] + p[2];
                 dbg_n++;
             }
         }
-        info_log("[DIAG] photo capture read: avg_rgb=%ld src=0x%x region=%d,%d %dx%d count=%d",
-                 dbg_n ? dbg_sum / ((long) dbg_n * 3) : -1,
+        info_log("[DIAG] photo capture read: avg_rgb=%lld src=0x%x region=%d,%d %dx%d count=%d",
+                 dbg_n ? dbg_sum / ((long long) dbg_n * 3) : -1,
                  src_addr, mx, my, mw, mh, (int) sys_wrk.count);
     }
 
@@ -2039,7 +2036,7 @@ static int CaptureResolvedPhotoForLater(void)
         rgba);
 
     {
-        long dbg_sum = 0;
+        long long dbg_sum = 0;
         int dbg_n = 0;
         int dbg_min = 255;
         int dbg_max = 0;
@@ -2049,7 +2046,7 @@ static int CaptureResolvedPhotoForLater(void)
             for (int dx = 0; dx < PHOTO_CAPTURE_W; dx += 8)
             {
                 const unsigned char *p =
-                    rgba + ((long)((PHOTO_CAPTURE_X + dx) +
+                    rgba + ((long long)((PHOTO_CAPTURE_X + dx) +
                                    (myy + dy) * PHOTO_CAPTURE_SCREEN_W)) * 4;
                 const int lum = (p[0] + p[1] + p[2]) / 3;
                 dbg_sum += lum;
@@ -2059,7 +2056,7 @@ static int CaptureResolvedPhotoForLater(void)
             }
         }
 
-        info_log("[DIAG] photo staged read: avg_rgb=%ld min=%d max=%d region=%d,%d %dx%d count=%d",
+        info_log("[DIAG] photo staged read: avg_rgb=%lld min=%d max=%d region=%d,%d %dx%d count=%d",
                  dbg_n ? dbg_sum / dbg_n : -1,
                  dbg_n ? dbg_min : -1,
                  dbg_n ? dbg_max : -1,
@@ -2073,7 +2070,7 @@ static int CaptureResolvedPhotoForLater(void)
         for (int x = 0; x < PHOTO_CAPTURE_W; x++)
         {
             const unsigned char *p =
-                rgba + ((long)((PHOTO_CAPTURE_X + x) +
+                rgba + ((long long)((PHOTO_CAPTURE_X + x) +
                                (myy + y) * PHOTO_CAPTURE_SCREEN_W)) * 4;
             g_photo_capture_555[x + y * PHOTO_CAPTURE_PITCH] =
                 PhotoPackRgb555(p[0] >> 3, p[1] >> 3, p[2] >> 3);
@@ -2082,7 +2079,7 @@ static int CaptureResolvedPhotoForLater(void)
             {
                 unsigned char *preview =
                     g_photo_preview_rgba +
-                    ((long)(x + (y * 2 + yy) * PHOTO_CAPTURE_W)) * 4;
+                    ((long long)(x + (y * 2 + yy) * PHOTO_CAPTURE_W)) * 4;
                 preview[0] = p[0];
                 preview[1] = p[1];
                 preview[2] = p[2];
@@ -3114,7 +3111,7 @@ int DispPhotoFrame1(int fl)
     int j;
     int x;
     int y;
-    int ret;
+    int ret = 0;
     int one; // not in STAB, fix a stack swap
     int pri; // not in STAB, fix a stack swap
     u_int xx;// not in STAB, fix a stack swap
@@ -4689,14 +4686,12 @@ void PhotoMakeSave2()
                 RankingChkMem(pfile_wrk.pic[pfile_wrk.pic_num - 1]);
 
                 ReSetGhostList(pfile_wrk.pic[pfile_wrk.pic_num - 1]);
-                asm("");// what the ???
                 break;
             case 9:
                 ClearResolvedPhotoFrameOverlay();
                 FModeScreenEffect();
                 DispPhotoFrame00(0);
                 DrawAll2D();
-                asm("");// what the ???
                 break;
         }
     }

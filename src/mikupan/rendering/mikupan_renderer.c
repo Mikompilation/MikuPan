@@ -82,6 +82,8 @@ static void MikuPan_ConvertRGBA8ToBlackWhite(unsigned char *rgba,
 
 SDL_AppResult MikuPan_Init()
 {
+    MikuPan_InitLogging();
+
     SDL_SetAppMetadata("MikuPan", MIKUPAN_GIT_DESCRIBE, "MikuPan");
 
     info_log("Initializing SDL");
@@ -115,13 +117,13 @@ SDL_AppResult MikuPan_Init()
     int desired_window_width = mikupan_configuration.renderer.window.width;
     int desired_window_height = mikupan_configuration.renderer.window.height;
 
-    if (desired_window_width <= 0 || desired_window_width > mode->w)
+    if (desired_window_width > mode->w)
     {
         desired_window_width = mode->w;
         mikupan_configuration.renderer.window.width = desired_window_width;
     }
 
-    if (desired_window_height <= 0 || desired_window_height > mode->h)
+    if (desired_window_height > mode->h)
     {
         desired_window_height = mode->h;
         mikupan_configuration.renderer.window.height = desired_window_height;
@@ -137,18 +139,6 @@ SDL_AppResult MikuPan_Init()
     int startup_window_mode = mikupan_configuration.renderer.window_mode;
 #ifdef __ANDROID__
     startup_window_mode = MIKUPAN_WINDOW_FULLSCREEN;
-#else
-    if (startup_window_mode == MIKUPAN_WINDOW_WINDOWED &&
-        mikupan_configuration.renderer.is_fullscreen)
-    {
-        startup_window_mode = MIKUPAN_WINDOW_FULLSCREEN;
-    }
-
-    if (startup_window_mode < MIKUPAN_WINDOW_WINDOWED ||
-        startup_window_mode > MIKUPAN_WINDOW_BORDERLESS)
-    {
-        startup_window_mode = MIKUPAN_WINDOW_WINDOWED;
-    }
 #endif
 
     mikupan_configuration.renderer.window_mode = startup_window_mode;
@@ -209,41 +199,15 @@ SDL_AppResult MikuPan_Init()
     }
 #endif
 
-    int desired_render_width = mikupan_configuration.renderer.render.width;
-    int desired_render_height = mikupan_configuration.renderer.render.height;
     int desired_msaa = mikupan_configuration.renderer.msaa_index;
     int desired_vsync = mikupan_configuration.renderer.vsync;
 
     const int msaa_list[] = {0, 2, 4, 8, 16, 32};
 
-    if (desired_msaa < 0 || desired_msaa > 5)
-    {
-        desired_msaa = 4;
-        mikupan_configuration.renderer.msaa_index = desired_msaa;
-    }
-
 #ifdef __ANDROID__
     desired_msaa = 0;
     mikupan_configuration.renderer.msaa_index = desired_msaa;
 #endif
-
-    if (desired_render_width <= 0)
-    {
-        desired_render_width = PS2_RESOLUTION_X_INT;
-        mikupan_configuration.renderer.render.width = desired_render_width;
-    }
-
-    if (desired_render_height <= 0)
-    {
-        desired_render_height = PS2_RESOLUTION_Y_INT;
-        mikupan_configuration.renderer.render.height = desired_render_height;
-    }
-
-    if (desired_vsync < 0 || desired_vsync > 1)
-    {
-        desired_vsync = 1;
-        mikupan_configuration.renderer.vsync = desired_vsync;
-    }
 
     if (!MikuPan_GPUInit(mikupan_render.window, desired_vsync,
                          mikupan_configuration.renderer.gpu_driver,
@@ -253,7 +217,9 @@ SDL_AppResult MikuPan_Init()
     }
 
     MikuPan_InitUi(mikupan_render.window);
-    MikuPan_CreateInternalBuffer(desired_render_width, desired_render_height, msaa_list[desired_msaa]);
+    MikuPan_CreateInternalBuffer(MikuPan_GetRenderResolutionWidth(),
+                                 MikuPan_GetRenderResolutionHeight(),
+                                 msaa_list[desired_msaa]);
     if (MikuPan_InitShaders() != 0)
     {
         info_log("Error initializing shaders");
@@ -990,4 +956,5 @@ void MikuPan_Shutdown()
     MikuPan_TextureShutdown();
     MikuPan_GPUShutdown();
     SDL_DestroyWindow(mikupan_render.window);
+    MikuPan_ShutdownLogging();
 }

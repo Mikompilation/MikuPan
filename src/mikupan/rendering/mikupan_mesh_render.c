@@ -71,7 +71,7 @@ static void MikuPan_BindSkinPalette(void)
     unsigned long long h = MikuPan_SkinPaletteHash();
     if (!g_skin_palette_valid || g_skin_palette_uploaded_hash != h)
     {
-        long size = (long)bones * 64; /* sceVu0FMATRIX = 4x float4 */
+        long long size = (long long)bones * 64; /* sceVu0FMATRIX = 4x float4 */
         MikuPan_GPUUploadBuffer(g_skin_palette_buffer, (unsigned int)size, pal);
         g_skin_palette_uploaded_hash = h;
         g_skin_palette_valid = 1;
@@ -326,19 +326,19 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
     {
         if (desired_pipeline == POSITION3_NORMAL3_UV2_SOA)
         {
-            MikuPan_MeshCache_UploadVbo(cache_entry, 0, (long)(N * pos_stride), g_mesh_buffers_0x32.positions);
-            MikuPan_MeshCache_UploadVbo(cache_entry, 1, (long)(N * pipeline->buffers[1].attributes[0].stride), g_mesh_buffers_0x32.normals);
-            MikuPan_MeshCache_UploadVbo(cache_entry, 2, (long)(N * pipeline->buffers[2].attributes[0].stride), g_mesh_buffers_0x32.uvs);
-            MikuPan_MeshCache_StreamVbo(cache_entry, color_buf_idx, (long)(N * color_stride), g_mesh_buffers_0x32.colors);
+            MikuPan_MeshCache_UploadVbo(cache_entry, 0, (long long)(N * pos_stride), g_mesh_buffers_0x32.positions);
+            MikuPan_MeshCache_UploadVbo(cache_entry, 1, (long long)(N * pipeline->buffers[1].attributes[0].stride), g_mesh_buffers_0x32.normals);
+            MikuPan_MeshCache_UploadVbo(cache_entry, 2, (long long)(N * pipeline->buffers[2].attributes[0].stride), g_mesh_buffers_0x32.uvs);
+            MikuPan_MeshCache_StreamVbo(cache_entry, color_buf_idx, (long long)(N * color_stride), g_mesh_buffers_0x32.colors);
         }
         else
         {
             /// 0x12 / 0x10: pos+norm AoS in buffer 0, UVs in 1, colors in 2.
-            MikuPan_MeshCache_UploadVbo(cache_entry, 0, (long)(pVUVN->VUVNDesc.sNumVertex * pos_stride), vertices);
-            MikuPan_MeshCache_UploadVbo(cache_entry, 1, (long)(N * uv_stride),    g_mesh_buffers_0x32.uvs);
-            MikuPan_MeshCache_StreamVbo(cache_entry, color_buf_idx, (long)(N * color_stride), g_mesh_buffers_0x32.colors);
+            MikuPan_MeshCache_UploadVbo(cache_entry, 0, (long long)(pVUVN->VUVNDesc.sNumVertex * pos_stride), vertices);
+            MikuPan_MeshCache_UploadVbo(cache_entry, 1, (long long)(N * uv_stride),    g_mesh_buffers_0x32.uvs);
+            MikuPan_MeshCache_StreamVbo(cache_entry, color_buf_idx, (long long)(N * color_stride), g_mesh_buffers_0x32.colors);
         }
-        MikuPan_MeshCache_UploadIbo(cache_entry, (long)(index_write_offset * (int)sizeof(u_int)), g_mesh_buffers_0x32.indices);
+        MikuPan_MeshCache_UploadIbo(cache_entry, (long long)(index_write_offset * (int)sizeof(u_int)), g_mesh_buffers_0x32.indices);
 
         cache_entry->index_count = index_write_offset;
 
@@ -438,8 +438,8 @@ void MikuPan_RenderShadowSilhouettePrepared(unsigned int *pVUVN,
 
         if (vertex_count < 3 ||
             vertex_offset + vertex_count > vnum ||
-            (long) index_write_offset + (long) (vertex_count - 2) * 3 >
-                (long) MIKUPAN_MESH_BUFFER_CAPACITY)
+            (long long) index_write_offset + (long long) (vertex_count - 2) * 3 >
+                (long long) MIKUPAN_MESH_BUFFER_CAPACITY)
         {
             static int logged = 0;
             if (!logged)
@@ -492,9 +492,9 @@ void MikuPan_RenderShadowSilhouettePrepared(unsigned int *pVUVN,
      * location 0 = xyz) and the index list. UV/colour VAO attributes are left
      * untouched — they are never sampled by the silhouette shader. */
     MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
-        (GLsizeiptr) ((long) vnum * pos_stride), shadow_positions);
+        (GLsizeiptr) ((long long) vnum * pos_stride), shadow_positions);
     MikuPan_StreamUploadFull(GL_ELEMENT_ARRAY_BUFFER, pipeline->ibo,
-        (GLsizeiptr) ((long) index_write_offset * (int) sizeof(unsigned int)),
+        (GLsizeiptr) ((long long) index_write_offset * (int) sizeof(unsigned int)),
         g_mesh_buffers_0x82.indices);
 
     MikuPan_ShadowDebugRecordCasterDraw(mesh_type, index_write_offset);
@@ -590,8 +590,8 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
 
         if (vertex_count < 3 ||
             vertex_offset + vertex_count > vnum ||
-            (long) index_write_offset + (long) (vertex_count - 2) * 3 >
-                (long) MIKUPAN_MESH_BUFFER_CAPACITY)
+            (long long) index_write_offset + (long long) (vertex_count - 2) * 3 >
+                (long long) MIKUPAN_MESH_BUFFER_CAPACITY)
         {
             static int logged = 0;
             if (!logged)
@@ -616,9 +616,9 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
     if (cache_on)
     {
         MikuPan_MeshCache_UploadVbo(cache_entry, 0,
-            (long) ((long) vnum * pos_stride), pVUVNData->avt2);
+            (long long) ((long long) vnum * pos_stride), pVUVNData->avt2);
         MikuPan_MeshCache_UploadIbo(cache_entry,
-            (long) ((long) index_write_offset * (int) sizeof(unsigned int)),
+            (long long) ((long long) index_write_offset * (int) sizeof(unsigned int)),
             g_mesh_buffers_0x82.indices);
         cache_entry->index_count = index_write_offset;
         MikuPan_BindVAO(cache_entry->vao);
@@ -626,9 +626,9 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
     else
     {
         MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
-            (GLsizeiptr) ((long) vnum * pos_stride), pVUVNData->avt2);
+            (GLsizeiptr) ((long long) vnum * pos_stride), pVUVNData->avt2);
         MikuPan_StreamUploadFull(GL_ELEMENT_ARRAY_BUFFER, pipeline->ibo,
-            (GLsizeiptr) ((long) index_write_offset * (int) sizeof(unsigned int)),
+            (GLsizeiptr) ((long long) index_write_offset * (int) sizeof(unsigned int)),
             g_mesh_buffers_0x82.indices);
     }
 
@@ -749,16 +749,16 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
     if (cache_on)
     {
         MikuPan_MeshCache_UploadVbo(cache_entry, 0,
-            (long)(v->vnum * pipeline->buffers[0].attributes[0].stride),
+            (long long)(v->vnum * pipeline->buffers[0].attributes[0].stride),
             pVUVNData->avt2);
         MikuPan_MeshCache_UploadVbo(cache_entry, 1,
-            (long)(N * pipeline->buffers[1].attributes[0].stride),
+            (long long)(N * pipeline->buffers[1].attributes[0].stride),
             g_mesh_buffers_0x82.uvs);
         MikuPan_MeshCache_UploadVbo(cache_entry, 2,
-            (long)(N * pipeline->buffers[2].attributes[0].stride),
+            (long long)(N * pipeline->buffers[2].attributes[0].stride),
             g_mesh_buffers_0x82.colors);
         MikuPan_MeshCache_UploadIbo(cache_entry,
-            (long)(index_write_offset * (int)sizeof(u_int)),
+            (long long)(index_write_offset * (int)sizeof(u_int)),
             g_mesh_buffers_0x82.indices);
 
         cache_entry->index_count = index_write_offset;
@@ -911,8 +911,8 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
         // Buffer 0 holds the immutable per-vertex bind data (m0/m1/n0/n1); the
         // VS blends it with the bone palette. Uploaded once on a cache miss, so
         // the steady state streams nothing per frame.
-        const long bind_bytes =
-            (long)MikuPan_SkinVertexCount() *
+        const long long bind_bytes =
+            (long long)MikuPan_SkinVertexCount() *
             pipeline->buffers[0].attributes[0].stride;
         if (cache_on)
         {
@@ -934,7 +934,7 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
         if (cache_on)
         {
             MikuPan_MeshCache_StreamVbo(cache_entry, 0,
-                (long)(v->vnum * pipeline->buffers[0].attributes[0].stride),
+                (long long)(v->vnum * pipeline->buffers[0].attributes[0].stride),
                 vertices);
         }
         else
@@ -978,10 +978,10 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
         if (cache_on)
         {
             MikuPan_MeshCache_UploadVbo(cache_entry, 1,
-                (long)(N * pipeline->buffers[1].attributes[0].stride),
+                (long long)(N * pipeline->buffers[1].attributes[0].stride),
                 g_mesh_buffers_0x2.uvs);
             MikuPan_MeshCache_UploadIbo(cache_entry,
-                (long)(index_write_offset * (int)sizeof(u_int)),
+                (long long)(index_write_offset * (int)sizeof(u_int)),
                 g_mesh_buffers_0x2.indices);
             cache_entry->index_count = index_write_offset;
 

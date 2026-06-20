@@ -13,9 +13,9 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
 
-long int PhotoScoreCount()
+long long PhotoScoreCount()
 {
-    long int score;
+    long long score;
     int i;
     float point;
     float point_2d;

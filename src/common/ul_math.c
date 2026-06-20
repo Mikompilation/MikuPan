@@ -13,17 +13,6 @@ void GetSquare(sceVu0FVECTOR *v0, sceVu0FVECTOR *v1)
     (*v1)[1] = (*v0)[1] * (*v0)[1]; // y*y
     (*v1)[2] = (*v0)[2] * (*v0)[2]; // z*z
     (*v1)[3] = (*v0)[3];
-
-    /*
-    asm(
-        "lqc2      $vf10,%1\n"
-        "lqc2      $vf11,%2\n"
-        "vmul.xyz  $vf10, $vf10, $vf11\n"
-        "sqc2      $vf10,%0\n"
-        :"=m"(v1[0][0])
-        :"m"(v0[0][0]), "m"(v0[0][0])
-    );
-    */
 }
 
 float GetDist(float x, float z)

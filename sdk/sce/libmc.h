@@ -1,6 +1,8 @@
 #ifndef SCE_LIBMC_H
 #define SCE_LIBMC_H
 
+#include "typedefs.h"
+
 typedef int _iconVu0IVECTOR[4];
 typedef float _iconVu0FVECTOR[4];
 
@@ -29,7 +31,7 @@ typedef struct
 	unsigned short Year;
 } sceMcStDateTime;
 
-typedef struct
+TYPEDEF_ALIGNED(64, struct
 {
 	sceMcStDateTime _Create;
 	sceMcStDateTime _Modify;
@@ -39,7 +41,7 @@ typedef struct
 	unsigned int Reserve2;
 	unsigned int PdaAplNo;
 	unsigned char EntryName[32];
-} sceMcTblGetDir __attribute__((aligned (64)));
+} sceMcTblGetDir);
 
 #define sceMcFuncNoCardInfo	    (1)
 #define sceMcFuncNoOpen		    (2)

@@ -292,9 +292,9 @@ static int    g_gpu_skin_enabled = 1;
 static int    g_skin_mode = 0;          /* 0 = none, 2 = vtype2, 3 = vtype3 */
 static int    g_skin_vcount = 0;
 static unsigned char *g_skin_staging = NULL;
-static long   g_skin_staging_cap = 0;
+static long long g_skin_staging_cap = 0;
 static unsigned char *g_skin_palette = NULL;
-static long   g_skin_palette_cap = 0;
+static long long g_skin_palette_cap = 0;
 static int    g_skin_palette_bones = 0;
 
 /// The palette is identical for every mesh of a model within a frame (and the
@@ -318,7 +318,7 @@ static int    g_skin_bind_valid = 0;
 #define MIKUPAN_SKIN_VERTEX_STRIDE 64   /* four float4: m0, m1, n0, n1 */
 #define MIKUPAN_SKIN_MATRIX_BYTES  64   /* sceVu0FMATRIX = 4x float4 */
 
-static unsigned char *SkinEnsure(unsigned char **buf, long *cap, long need)
+static unsigned char *SkinEnsure(unsigned char **buf, long long *cap, long long need)
 {
     if (need > *cap)
     {
@@ -333,11 +333,11 @@ static unsigned char *SkinEnsure(unsigned char **buf, long *cap, long need)
     return *buf;
 }
 
-static unsigned long long SkinFnv1a(const void *data, long size)
+static unsigned long long SkinFnv1a(const void *data, long long size)
 {
     const unsigned char *p = (const unsigned char *) data;
     unsigned long long h = 1469598103934665603ULL;
-    for (long i = 0; i < size; i++)
+    for (long long i = 0; i < size; i++)
     {
         h ^= (unsigned long long) p[i];
         h *= 1099511628211ULL;
@@ -362,7 +362,7 @@ static void SkinGatherPalette(void)
     }
 
     if (SkinEnsure(&g_skin_palette, &g_skin_palette_cap,
-                   (long) bones * MIKUPAN_SKIN_MATRIX_BYTES) == NULL)
+                   (long long) bones * MIKUPAN_SKIN_MATRIX_BYTES) == NULL)
     {
         g_skin_palette_bones = 0;
         g_skin_palette_last_lcp = NULL;
@@ -371,12 +371,12 @@ static void SkinGatherPalette(void)
 
     for (int b = 0; b < bones; b++)
     {
-        memcpy(g_skin_palette + (long) b * MIKUPAN_SKIN_MATRIX_BYTES,
+        memcpy(g_skin_palette + (long long) b * MIKUPAN_SKIN_MATRIX_BYTES,
                lcp[b].lwmtx, MIKUPAN_SKIN_MATRIX_BYTES);
     }
     g_skin_palette_bones = bones;
     g_skin_palette_hash =
-        SkinFnv1a(g_skin_palette, (long) bones * MIKUPAN_SKIN_MATRIX_BYTES);
+        SkinFnv1a(g_skin_palette, (long long) bones * MIKUPAN_SKIN_MATRIX_BYTES);
     g_skin_palette_last_lcp = lcp;
 }
 
@@ -473,7 +473,7 @@ const void *MikuPan_SkinBindData(void)
     }
 
     if (SkinEnsure(&g_skin_staging, &g_skin_staging_cap,
-                   (long) vnum * MIKUPAN_SKIN_VERTEX_STRIDE) == NULL)
+                   (long long) vnum * MIKUPAN_SKIN_VERTEX_STRIDE) == NULL)
     {
         return NULL;
     }
@@ -481,7 +481,7 @@ const void *MikuPan_SkinBindData(void)
     u_int *p = g_skin_loop_prim;
     for (int i = 0; i < vnum; i++, p += 2)
     {
-        unsigned char *dst = g_skin_staging + (long) i * MIKUPAN_SKIN_VERTEX_STRIDE;
+        unsigned char *dst = g_skin_staging + (long long) i * MIKUPAN_SKIN_VERTEX_STRIDE;
         memcpy(dst,      MikuPan_GetHostPointer(p[0]), 32); /* m0, m1 */
         memcpy(dst + 32, MikuPan_GetHostPointer(p[1]), 32); /* n0, n1 */
 

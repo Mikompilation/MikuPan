@@ -6,7 +6,7 @@
 typedef char s8;
 typedef short s16;
 typedef int s32;
-typedef long s64;
+typedef long long s64;
 
 typedef volatile s8 vs8;
 typedef volatile s16 vs16;
@@ -17,7 +17,7 @@ typedef volatile s64 vs64;
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
-typedef unsigned long u64;
+typedef unsigned long long u64;
 
 typedef volatile u8 vu8;
 typedef volatile u16 vu16;

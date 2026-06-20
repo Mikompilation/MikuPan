@@ -6,7 +6,7 @@
 
 #include "ingame/menu/ig_rank.h"
 
-long int PhotoScoreCount();
+long long PhotoScoreCount();
 int SubjectScoreCount(SUBJECT_WRK *sj);
 int SpecialPhotoMakeJudge();
 void AddPhotoData();

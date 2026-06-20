@@ -2628,7 +2628,7 @@ void SetFinderRot()
 {
     MOVE_BOX *mb;
     float delta;
-    float dist;
+    float dist = 0.0f;
     float spd;
     float ax;
     float ay;

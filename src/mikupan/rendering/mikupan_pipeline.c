@@ -128,7 +128,7 @@ void MikuPan_InitPipeline()
     MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 4 * 1024 * 1024, 4);
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0], 4, 0,
-        sizeof(float[4][4]), sizeof(float[0][4]));
+        sizeof(float[4][4]), sizeof(float[4]));
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[1], 4, 1,
         sizeof(float[4][4]), sizeof(float[1][4]));

@@ -111,7 +111,7 @@ extern sceVu0FVECTOR furn_photo_center100;
 extern sceVu0FVECTOR furn_photo_center101;
 extern sceVu0FVECTOR furn_photo_center102;
 extern sceVu0FVECTOR *fpc_dat[];
-extern u_char fpc_rot_dat[0][8];
+extern u_char fpc_rot_dat[][8];
 
 FURN_DAT* GetFurnDatP(u_short furn_id);
 

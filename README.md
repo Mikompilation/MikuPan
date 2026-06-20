@@ -101,7 +101,8 @@ cmake -S . -B cmake-build-android-arm64 -G Ninja `
    -DSDL_ANDROID_HOME="$env:ANDROID_HOME" `
    -DANDROID_ABI=arm64-v8a `
    -DANDROID_PLATFORM=android-21 `
-   -DANDROID_STL=c++_static
+   -DANDROID_STL=c++_static `
+   -DCMAKE_BUILD_TYPE=Release
 
 cmake --build cmake-build-android-arm64 --target MikuPan-apk
 ```

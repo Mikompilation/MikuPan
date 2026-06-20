@@ -82,9 +82,9 @@ typedef struct {
 
 extern ITEM_USE_DAT item_use_dat[70];
 extern short int item_sort[70];
-extern short int file2item[0];
-extern char file2phot[0];
-extern char pht_waku_put[0];
+extern short int file2item[];
+extern char file2phot[];
+extern char pht_waku_put[];
 extern FOR_YW2D yw2d;
 extern INGAME_MENU_WRK ig_menu_wrk;
 extern MENU_ITEM_WRK menu_item_wrk[200];

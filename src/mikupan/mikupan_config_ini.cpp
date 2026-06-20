@@ -485,10 +485,14 @@ extern "C" void MikuPan_LoadConfiguration(const char *filename)
                 [sizeof(mikupan_configuration.data_folder) - 1] = '\0';
         }
     }
+
+    MikuPan_ConfigurationValidate();
 }
 
 extern "C" int MikuPan_SaveConfiguration(const char *filename)
 {
+    MikuPan_ConfigurationValidate();
+
     if (filename != nullptr && filename[0] != '\0')
     {
         return TrySaveConfigurationFile(filename) ? 1 : 0;

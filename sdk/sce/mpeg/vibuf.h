@@ -25,8 +25,8 @@
 //}
 
 typedef struct { // 0x18
-	/* 0x00 */ long int pts;
-	/* 0x08 */ long int dts;
+	/* 0x00 */ long long pts;
+	/* 0x08 */ long long dts;
 	/* 0x10 */ int pos;
 	/* 0x14 */ int len;
 } TimeStamp;
@@ -42,7 +42,7 @@ typedef struct { // 0x60
 	/* 0x1c */ sceIpuDmaEnv env;
 	/* 0x40 */ int sema;
 	/* 0x44 */ int isActive;
-	/* 0x48 */ long int totalBytes;
+	/* 0x48 */ long long totalBytes;
 	/* 0x50 */ TimeStamp *ts;
 	/* 0x54 */ int n_ts;
 	/* 0x58 */ int count_ts;

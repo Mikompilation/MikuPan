@@ -556,7 +556,7 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
 
     ppbuf = Get2DPacketBufferAddress();
 
-    ppbuf[0].ul128 = (u_long128)0;
+    ppbuf[0].ul128 = u_long128_from_u64(0);
 
     ppbuf[1].ul64[0] = SCE_GIF_SET_TAG(7, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     ppbuf[1].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1366,7 +1366,7 @@ u_char SubPartsDeform2(EFFECT_CONT *ec, u_char num, int page, int sbj, float scl
     EFFPOS *pefp;
     EFFINFO2 *pefi;
     static EFFINFO2 pefi_once[3];
-    u_char retnum;
+    u_char retnum = 0;
     int i;
     int j;
     int k;
@@ -2151,7 +2151,7 @@ void SetStarRay(float *bpos, int tp, float sc, int num, float aang)
 
     Reserve2DPacket(0x1000);
 
-    pbuf[ndpkt].ul128 = (u_long128)0;
+    pbuf[ndpkt].ul128 = u_long128_from_u64(0);
 
     pbuf[ndpkt++].ui32[0] = num * 8 + DMAend + 5 ;
 
@@ -2263,7 +2263,7 @@ void SetNegaCircle(EFFECT_CONT *ec)
 
     bak = ndpkt;
 
-    pbuf[ndpkt++].ul128 = (u_long128)0;
+    pbuf[ndpkt++].ul128 = u_long128_from_u64(0);
 
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(3, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;

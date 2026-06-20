@@ -68,7 +68,6 @@ void EAdpcmGhostMain()
             // Line 104
             if (adpcm_map.ghost.mode == AMG_MODE_END) 
             {
-                asm("");
                 // Line 106
                 adpcm_map.ghost.mode = AMG_MODE_REQ_STOP;
             }

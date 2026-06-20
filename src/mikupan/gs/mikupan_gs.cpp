@@ -33,7 +33,7 @@ static GsFrameMetrics g_gs_last_frame    = {0, 0, 0.0, 0, 0, 0.0};
 struct GsUploadRegion { int addr; int size; };
 static std::vector<GsUploadRegion> g_pending_uploads;
 
-int __attribute__((optimize("O3"))) GetBlockIdPSMCT32(int block, int x, int y)
+int MIKUPAN_OPTIMIZE_O3 GetBlockIdPSMCT32(int block, int x, int y)
 {
     const int block_y = (y >> 3) & 0x03;
     const int block_x = (x >> 3) & 0x07;
@@ -41,7 +41,7 @@ int __attribute__((optimize("O3"))) GetBlockIdPSMCT32(int block, int x, int y)
            + GS::kBlockTablePSMCT32[(block_y << 3) | block_x];
 }
 
-int __attribute__((optimize("O3"))) GetPixelAddressPSMCT32(int block, int width, int x, int y)
+int MIKUPAN_OPTIMIZE_O3 GetPixelAddressPSMCT32(int block, int width, int x, int y)
 {
     const int page = (block >> 5) + (y >> 5) * width + (x >> 6);
     const int column_base = ((y >> 1) & 0x03) << 4;
@@ -55,7 +55,7 @@ int __attribute__((optimize("O3"))) GetPixelAddressPSMCT32(int block, int width,
     return (addr << 2) & 0x003FFFFC;
 }
 
-int __attribute__((optimize("O3"))) GetBlockIdPSMCT16(int block, int x, int y)
+int MIKUPAN_OPTIMIZE_O3 GetBlockIdPSMCT16(int block, int x, int y)
 {
     static constexpr int block_table[] = {
         0,  2,  8,  10,
@@ -72,7 +72,7 @@ int __attribute__((optimize("O3"))) GetBlockIdPSMCT16(int block, int x, int y)
     return block + block_table[(block_y << 2) | block_x];
 }
 
-int __attribute__((optimize("O3"))) GetPixelAddressPSMCT16(int block, int width, int x, int y)
+int MIKUPAN_OPTIMIZE_O3 GetPixelAddressPSMCT16(int block, int width, int x, int y)
 {
     static constexpr int column_table[] = {
         0,  2,  8,  10, 16, 18, 24, 26,
@@ -93,7 +93,7 @@ int __attribute__((optimize("O3"))) GetPixelAddressPSMCT16(int block, int width,
     return addr & 0x003FFFFE;
 }
 
-int __attribute__((optimize("O3"))) GetBlockIdPSMT8(int block, int x, int y)
+int MIKUPAN_OPTIMIZE_O3 GetBlockIdPSMT8(int block, int x, int y)
 {
     const int block_y = (y >> 4) & 0x03;
     const int block_x = (x >> 4) & 0x07;
@@ -101,7 +101,7 @@ int __attribute__((optimize("O3"))) GetBlockIdPSMT8(int block, int x, int y)
            + GS::kBlockTablePSMT8[(block_y << 3) | block_x];
 }
 
-int __attribute__((optimize("O3"))) GetPixelAddressPSMT8(int block, int width, int x, int y)
+int MIKUPAN_OPTIMIZE_O3 GetPixelAddressPSMT8(int block, int width, int x, int y)
 {
     const int page = (block >> 5) + (y >> 6) * (width >> 1) + (x >> 7);
     const int column_y = y & 0x0F;
@@ -113,7 +113,7 @@ int __attribute__((optimize("O3"))) GetPixelAddressPSMT8(int block, int width, i
     return addr;
 }
 
-int  __attribute__((optimize("O3"))) GetBlockIdPSMT4(int block, int x, int y)
+int  MIKUPAN_OPTIMIZE_O3 GetBlockIdPSMT4(int block, int x, int y)
 {
     const int block_base = ((y >> 6) & 0x01) << 4;
     const int block_y = (y >> 4) & 0x03;
@@ -122,7 +122,7 @@ int  __attribute__((optimize("O3"))) GetBlockIdPSMT4(int block, int x, int y)
            + GS::kBlockTablePSMT4[(block_y << 2) | block_x];
 }
 
-int __attribute__((optimize("O3"))) GetPixelAddressPSMT4(int block, int width, int x, int y)
+int MIKUPAN_OPTIMIZE_O3 GetPixelAddressPSMT4(int block, int width, int x, int y)
 {
     const int page = ((block >> 5) + (y >> 7) * (width >> 1) + (x >> 7));
     const int column_y = y & 0x0F;
@@ -346,7 +346,7 @@ GS::GSHelper::GSHelper()
     mem_.resize(4 * 1024 * 1024);// 4 MB
 }
 
-void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMCT32(int dbp, int dbw, int dsax, int dsay, int rrw,
+void MIKUPAN_OPTIMIZE_O3 GS::GSHelper::UploadPSMCT32(int dbp, int dbw, int dsax, int dsay, int rrw,
                                  int rrh, const uint8_t *inbuf)
 {
     int src_addr = 0;
@@ -365,7 +365,7 @@ void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMCT32(int dbp, int db
     }
 }
 
-void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMCT16(int dbp, int dbw, int dsax, int dsay, int rrw,
+void MIKUPAN_OPTIMIZE_O3 GS::GSHelper::UploadPSMCT16(int dbp, int dbw, int dsax, int dsay, int rrw,
                                  int rrh, const uint8_t *inbuf)
 {
     int src_addr = 0;
@@ -382,7 +382,7 @@ void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMCT16(int dbp, int db
     }
 }
 
-void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMT8(int dbp, int dbw, int dsax, int dsay, int rrw,
+void MIKUPAN_OPTIMIZE_O3 GS::GSHelper::UploadPSMT8(int dbp, int dbw, int dsax, int dsay, int rrw,
                                int rrh, const uint8_t *inbuf)
 {
     int src_addr = 0;
@@ -397,7 +397,7 @@ void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMT8(int dbp, int dbw,
     }
 }
 
-void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMT4(int dbp, int dbw, int dsax, int dsay, int rrw,
+void MIKUPAN_OPTIMIZE_O3 GS::GSHelper::UploadPSMT4(int dbp, int dbw, int dsax, int dsay, int rrw,
                                int rrh, const uint8_t *inbuf)
 {
     int src_addr = 0;
@@ -414,7 +414,7 @@ void __attribute__((optimize("O3"))) GS::GSHelper::UploadPSMT4(int dbp, int dbw,
     }
 }
 
-void __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMCT32(unsigned char* outbuf, int dbp, int dbw, int dsax,
+void MIKUPAN_OPTIMIZE_O3 GS::GSHelper::DownloadPSMCT32(unsigned char* outbuf, int dbp, int dbw, int dsax,
                                                    int dsay, int rrw, int rrh)
 {
     int dst_addr = 0;
@@ -445,7 +445,7 @@ static inline void ExpandPSMCT16Pixel(uint16_t p, unsigned char *out)
     out[3] = (p & 0x8000) ? 0x80 : 0x00;
 }
 
-void __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax,
+void MIKUPAN_OPTIMIZE_O3 GS::GSHelper::DownloadPSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax,
                                                    int dsay, int rrw, int rrh)
 {
     int dst_addr = 0;
@@ -464,7 +464,7 @@ void __attribute__((optimize("O3"))) GS::GSHelper::DownloadPSMCT16(unsigned char
     }
 }
 
-void __attribute__((optimize("O3"))) GS::GSHelper::StorePSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax,
+void MIKUPAN_OPTIMIZE_O3 GS::GSHelper::StorePSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax,
                                                 int dsay, int rrw, int rrh)
 {
     int dst_addr = 0;
@@ -481,7 +481,7 @@ void __attribute__((optimize("O3"))) GS::GSHelper::StorePSMCT16(unsigned char* o
     }
 }
 
-void __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT8(unsigned char* outbuf, int dbp, int dbw,
+void MIKUPAN_OPTIMIZE_O3 GS::GSHelper::DownloadImagePSMT8(unsigned char* outbuf, int dbp, int dbw,
                                                       int dsax, int dsay,
                                                       int rrw, int rrh, int cbp,
                                                       int cbw, int alpha_reg)
@@ -523,7 +523,7 @@ void __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT8(unsigned c
     }
 }
 
-void __attribute__((optimize("O3"))) GS::GSHelper::DownloadImagePSMT4(unsigned char* outbuf, int dbp, int dbw,
+void MIKUPAN_OPTIMIZE_O3 GS::GSHelper::DownloadImagePSMT4(unsigned char* outbuf, int dbp, int dbw,
                                                       int dsax, int dsay,
                                                       int rrw, int rrh, int cbp,
                                                       int cbw, int csa,

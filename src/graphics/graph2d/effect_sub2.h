@@ -134,6 +134,6 @@ void SimpleMaskDraw(u_char alpha);
 void DispSprt2(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SSCL *sscl, u_char alp_rate);
 void DispSprt3(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SSCL *sscl, u_char alp_rate);
 void DispSprtTemp(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SSCL *sscl, u_char alp_rate);
-void TestPk2Data_2dg(long int sendtexaddr);
+void TestPk2Data_2dg(long long sendtexaddr);
 
 #endif // GRAPHICS_GRAPH2D_EFFECT_SUB2_H

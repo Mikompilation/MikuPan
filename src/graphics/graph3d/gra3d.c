@@ -603,7 +603,7 @@ void SetEnvironment()
     base[2][1] = (int)(SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0x40) >> 32); // second half
 
     base[3][2] = SCE_GS_TEX1_1;
-    *(long *)base[3] = SCE_GS_SET_TEX1_1(0, 0, SCE_GS_LINEAR, SCE_GS_LINEAR, 0, 0, 0);
+    *(long long *)base[3] = SCE_GS_SET_TEX1_1(0, 0, SCE_GS_LINEAR, SCE_GS_LINEAR, 0, 0, 0);
 
     base[4][2] = SCE_GS_CLAMP_1;
     base[4][0] = (int)(SCE_GS_SET_CLAMP_1(SCE_GS_REPEAT, SCE_GS_REPEAT, 0, 0, 0, 0) >>  0); // first half
@@ -613,16 +613,16 @@ void SetEnvironment()
     base[5][0] = SCE_GS_SET_TEST_1(1, SCE_GS_ALPHA_GEQUAL, 1, SCE_GS_AFAIL_KEEP, 0, 0, 1, SCE_GS_DEPTH_GEQUAL);
 
     base[6][2] = SCE_GS_SCISSOR_1;
-    *(long *)base[6] = *(long *)&pdrawenv->scissor1;
+    *(long long *)base[6] = *(long long *)&pdrawenv->scissor1;
 
     base[7][2] = SCE_GS_ZBUF_1;
-    *(long *)base[7] = *(long *)&pdrawenv->zbuf1;
+    *(long long *)base[7] = *(long long *)&pdrawenv->zbuf1;
 
     base[8][2] = SCE_GS_FRAME_1;
-    *(long *)base[8] = *(long *)&pdrawenv->frame1;
+    *(long long *)base[8] = *(long long *)&pdrawenv->frame1;
 
     base[9][2] = SCE_GS_XYOFFSET_1;
-    *(long *)base[9] = *(long *)&pdrawenv->xyoffset1;
+    *(long long *)base[9] = *(long long *)&pdrawenv->xyoffset1;
 
     base[10][2] = SCE_GS_DTHE;
     base[10][0] = SCE_GS_SET_DTHE(0);
@@ -658,7 +658,7 @@ void SetEnvironment2()
     base[2][1] = (int)(SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0x40) >> 32); // second half
 
     base[3][2] = SCE_GS_TEX1_1;
-    *(long *)base[3] = SCE_GS_SET_TEX1_1(0, 0, SCE_GS_LINEAR, SCE_GS_LINEAR, 0, 0, 0);
+    *(long long *)base[3] = SCE_GS_SET_TEX1_1(0, 0, SCE_GS_LINEAR, SCE_GS_LINEAR, 0, 0, 0);
 
     base[4][2] = SCE_GS_CLAMP_1;
     base[4][0] = (int)(SCE_GS_SET_CLAMP_1(SCE_GS_REPEAT, SCE_GS_REPEAT, 0, 0, 0, 0) >>  0); // first half
@@ -668,16 +668,16 @@ void SetEnvironment2()
     base[5][0] = SCE_GS_SET_TEST_1(1, SCE_GS_ALPHA_GEQUAL, 1, SCE_GS_AFAIL_KEEP, 0, 0, 1, SCE_GS_DEPTH_GEQUAL);
 
     base[6][2] = SCE_GS_SCISSOR_1;
-    *(long *)base[6] = *(long *)&pdrawenv->scissor1;
+    *(long long *)base[6] = *(long long *)&pdrawenv->scissor1;
 
     base[7][2] = SCE_GS_ZBUF_1;
-    *(long *)base[7] = *(long *)&pdrawenv->zbuf1;
+    *(long long *)base[7] = *(long long *)&pdrawenv->zbuf1;
 
     base[8][2] = SCE_GS_FRAME_1;
-    *(long *)base[8] = *(long *)&pdrawenv->frame1;
+    *(long long *)base[8] = *(long long *)&pdrawenv->frame1;
 
     base[9][2] = SCE_GS_XYOFFSET_1;
-    *(long *)base[9] = *(long *)&pdrawenv->xyoffset1;
+    *(long long *)base[9] = *(long long *)&pdrawenv->xyoffset1;
 
     base[10][2] = SCE_GS_DTHE;
     base[10][0] = SCE_GS_SET_DTHE(0);
