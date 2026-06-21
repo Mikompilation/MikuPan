@@ -3117,6 +3117,7 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
     float ml = 0.0f;
     int tx2[289];
     int ty2[289];
+    float src_uv[289][2];
     sceVu0FVECTOR vpos;
     sceVu0FVECTOR pos = {0.0f, 0.0f, 0.0f, 1.0f};
     sceVu0FVECTOR fzero = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -3255,6 +3256,41 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
 
         tx2[i] = tx2[i] < 16 ? 16 : (tx2[i] > sx2 ? sx2 : tx2[i]);
         ty2[i] = ty2[i] < 16 ? 16 : (ty2[i] > sy2 ? sy2 : ty2[i]);
+    }
+
+    /* Save the untwisted source screen position for the GL screen-copy path.
+     * The original PS2 packet uses tx2/ty2 from the untwisted grid as UVs,
+     * then draws the twisted vt/vtiw positions.
+     */
+    {
+        sceVu0FVECTOR src_ndc[289];
+        sceVu0FMATRIX src_slm_ndc;
+
+        sceVu0MulMatrix(src_slm_ndc, *(sceVu0FMATRIX*) MikuPan_GetWorldClipView(), wlm);
+        sceVu0RotTransPersNF(src_ndc, src_slm_ndc, vt, vnumw * vnumh, 0);
+
+        for (i = 0; i < vnumw * vnumh; i++)
+        {
+            src_uv[i][0] = src_ndc[i][0] * 0.5f + 0.5f;
+            src_uv[i][1] = 0.5f - src_ndc[i][1] * 0.5f;
+
+            if (src_uv[i][0] < 0.0f)
+            {
+                src_uv[i][0] = 0.0f;
+            }
+            if (src_uv[i][0] > 1.0f)
+            {
+                src_uv[i][0] = 1.0f;
+            }
+            if (src_uv[i][1] < 0.0f)
+            {
+                src_uv[i][1] = 0.0f;
+            }
+            if (src_uv[i][1] > 1.0f)
+            {
+                src_uv[i][1] = 1.0f;
+            }
+        }
     }
 
     if (1)
@@ -3474,7 +3510,6 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
             static float grid_ovl[256 * 6][12];
             sceVu0FVECTOR gndc[289];
             sceVu0FMATRIX slm_ndc;
-            u_long gtex0;
             int gx;
             int gy;
             int c;
@@ -3506,11 +3541,14 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
                     {
                         int g = idx[c];
 
+                        float u = (float) tx2[g] / (16.0f * 1024.0f);
+                        float v = (float) ty2[g] / (16.0f * 256.0f);
+
                         EneWriteTexturedNdcVertex(
-                            grid_tex[outn], 0.0f, 0.0f, gndc[g],
+                            grid_tex[outn], u, v, gndc[g],
                             0x80, 0x80, 0x80, (u_char)(alpha1[g] * fa));
                         EneWriteTexturedNdcVertex(
-                            grid_ovl[outn], 0.0f, 0.0f, gndc[g],
+                            grid_ovl[outn], u, v, gndc[g],
                             0xa0, 0xc0, 0xff, (u_char)(alpha1[g] * l * fa * 0.5f));
                         outn++;
                     }
@@ -3519,12 +3557,22 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
 
             if (outn > 0)
             {
-                gtex0 = SCE_GS_SET_TEX0_1(0, 10, SCE_GS_PSMCT32, 10, 8, 0,
-                                          SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 1);
-                MikuPan_RenderScreenCopyTriangles3DScreenPos(
-                    (sceGsTex0 *)&gtex0, &grid_tex[0][0], outn, MIKUPAN_DEPTH_ALWAYS);
-                MikuPan_RenderScreenCopyTriangles3DScreenPos(
-                    (sceGsTex0 *)&gtex0, &grid_ovl[0][0], outn, MIKUPAN_DEPTH_ALWAYS);
+                u_long deform_tex0;
+                u_long overlay_tex0;
+
+                deform_tex0 = SCE_GS_SET_TEX0_1(0x1a40, 10, SCE_GS_PSMCT32, 10,
+                                                8, 0, SCE_GS_MODULATE, 0,
+                                                SCE_GS_PSMCT32, 0, 0, 1);
+
+                overlay_tex0 = SCE_GS_SET_TEX0_1(
+                    (sys_wrk.count + 1 & 1) * 0x8c0, 10, SCE_GS_PSMCT32, 10, 8,
+                    0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 1);
+
+                MikuPan_RenderTexturedTriangles3DWithState(
+                    (sceGsTex0*)&deform_tex0, &grid_tex[0][0], outn, MIKUPAN_DEPTH_ALWAYS, 0);
+
+                MikuPan_RenderTexturedTriangles3DWithState(
+                    (sceGsTex0*)&overlay_tex0, &grid_ovl[0][0], outn, MIKUPAN_DEPTH_ALWAYS, 0);
             }
         }
     }

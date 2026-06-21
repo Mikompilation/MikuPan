@@ -1527,7 +1527,9 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
             //pbuf[ndpkt++].ui32[3] = (i <= 1) ? 0x8000 : 0;
         }
 
-        MikuPan_RenderSprite3D((sceGsTex0*)&tx0, render_buffer);
+        int additive_blend = de->alpha == SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+
+        MikuPan_RenderSprite3DWithState((sceGsTex0*) &tx0, render_buffer, additive_blend);
         
         pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
     }

@@ -200,6 +200,7 @@ void MikuPan_RenderUntexturedSpriteDepthState(float *buffer, int depth_test,
                                               int depth_write,
                                               unsigned int depth_func);
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer);
+void MikuPan_RenderSprite3DWithState(sceGsTex0* tex, float* buffer, int additive_blend);
 void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count);
 void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int depth_mode, int additive_blend);
 void MikuPan_RenderSolidUntexturedTriangles3D(float *buffer, int vertex_count, int depth_mode);

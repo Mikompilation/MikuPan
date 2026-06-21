@@ -302,9 +302,13 @@ u_char HitChkSegment2All2D(sceVu0FVECTOR f, sceVu0FVECTOR t, float deg)
 u_char FurnCoverCheck(u_short pos_x, short int pos_y, u_short pos_z,
                       u_char room_no)
 {
-    u_int *addr;
-    u_int *addr_bak;
-    FURN_DATA_POP *fedp;
+    u_int* map_dat;
+    u_int* room_table;
+    u_int* room_block;
+    u_int* furn_entry;
+    FURN_DATA_POP* fedp;
+    int* area;
+
     int i;
     u_char dt_num;
     u_char type;
@@ -314,25 +318,59 @@ u_char FurnCoverCheck(u_short pos_x, short int pos_y, u_short pos_z,
         return 0;
     }
 
-    addr = (u_int *) (map_wrk.dat_adr + 11 * 4);
-    addr = (u_int *) MikuPan_GetHostPointer(*addr + BASE_ADDRESS);
-    addr = &addr[room_no] + 1;
-    addr_bak = addr = (u_int *) MikuPan_GetHostPointer(*addr + BASE_ADDRESS);
+    map_dat = (u_int*) map_wrk.dat_adr;
 
-    dt_num = *(u_char *) MikuPan_GetHostPointer(*addr + BASE_ADDRESS);
+    room_table = (u_int*) MikuPan_GetHostPointer(map_dat[11] + BASE_ADDRESS);
+    if (room_table == NULL)
+    {
+        return 0;
+    }
+
+    room_block =
+        (u_int*) MikuPan_GetHostPointer(room_table[room_no + 1] + BASE_ADDRESS);
+    if (room_block == NULL)
+    {
+        return 0;
+    }
+
+    dt_num = *(u_char*) MikuPan_GetHostPointer(room_block[0] + BASE_ADDRESS);
 
     for (i = 0; i < dt_num; i++)
     {
-        addr = &addr_bak[i] + 1;
-        addr = (u_int *) MikuPan_GetHostPointer(*addr + BASE_ADDRESS);
+        furn_entry =
+            (u_int*) MikuPan_GetHostPointer(room_block[i + 1] + BASE_ADDRESS);
+        if (furn_entry == NULL)
+        {
+            continue;
+        }
 
-        fedp = (FURN_DATA_POP *) MikuPan_GetHostPointer(*addr + BASE_ADDRESS);
+        fedp = (FURN_DATA_POP*) MikuPan_GetHostPointer(furn_entry[0]
+                                                       + BASE_ADDRESS);
+        if (fedp == NULL)
+        {
+            continue;
+        }
 
         GetFurnAttr(fedp->id, ingame_wrk.msn_no);
 
-        addr = (u_int *) MikuPan_GetHostPointer(addr[1] + BASE_ADDRESS);
-        type = ((u_char *) fedp)[25];
-        if (PosInAreaJudgeSub((int *) addr, pos_z, pos_x, type) != 0)
+        type = ((u_char*) fedp)[25];
+
+        /*
+            No collision/cover area. In this case furn_entry[1] is not an
+            area pointer; it may be the first word of inline furniture data.
+        */
+        if (type == 0xff)
+        {
+            continue;
+        }
+
+        area = (int*) MikuPan_GetHostPointer(furn_entry[1] + BASE_ADDRESS);
+        if (area == NULL)
+        {
+            continue;
+        }
+
+        if (PosInAreaJudgeSub(area, pos_z, pos_x, type) != 0)
         {
             if (-fedp->top <= pos_y && pos_y <= -fedp->btm)
             {

@@ -712,7 +712,7 @@ void MikuPan_RenderUntexturedSpriteDepthState(float *buffer, int depth_test,
                                            depth_func);
 }
 
-void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
+static void MikuPan_RenderSprite3DInternal(sceGsTex0* tex, float* buffer, int additive_blend)
 {
     float upload_buffer[4][12];
 
@@ -729,14 +729,27 @@ void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer)
     MikuPan_SetRenderStateSprite3D();
     MikuPan_GPUSetDepthWrite(0);
     MikuPan_GPUSetDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetBlend(1, additive_blend);
 
     MikuPan_StreamUploadFull(
         GL_ARRAY_BUFFER, pipeline->buffers[0].id,
         (GLsizeiptr)sizeof(upload_buffer), upload_buffer);
 
     MikuPan_TimedDrawArrays(MikuPan_GetRenderMode(), 0, 4);
+    MikuPan_GPUSetBlend(1, 0);
     MikuPan_GPUSetDepthWrite(1);
     MikuPan_ResetRenderStateCache();
+}
+
+void MikuPan_RenderSprite3D(sceGsTex0* tex, float* buffer)
+{
+    MikuPan_RenderSprite3DInternal(tex, buffer, 0);
+}
+
+void MikuPan_RenderSprite3DWithState(sceGsTex0* tex, float* buffer,
+                                     int additive_blend)
+{
+    MikuPan_RenderSprite3DInternal(tex, buffer, additive_blend);
 }
 
 void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count)
