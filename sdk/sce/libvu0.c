@@ -68,7 +68,7 @@ void sceVu0CopyVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 void sceVu0Normalize(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
 {
     glm_vec3_normalize_to(v1, v0);
-    v0[3] = v1[3];
+    v0[3] = 0.0f;
 }
 
 float sceVu0InnerProduct(sceVu0FVECTOR v0, sceVu0FVECTOR v1)
