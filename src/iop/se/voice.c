@@ -29,7 +29,7 @@ static SDL_Mutex *voice_mutex;
 #define ADSR_LEVEL_BITS 15
 #define ADSR_LEVEL_MAX ((1 << ADSR_LEVEL_BITS) - 1)
 #define ADSR_FP_SHIFT 16
-#define ADSR_LEVEL_MAX_FP (ADSR_LEVEL_MAX << ADSR_FP_SHIFT)
+#define ADSR_LEVEL_MAX_FP ((s32)((int64_t) ADSR_LEVEL_MAX << ADSR_FP_SHIFT))
 #define ADSR_MIN_STEP_FP (1 << 8)
 
 static s32 GetVoiceLeftVolume(const VOICE *v);
@@ -212,7 +212,6 @@ static void FinishVoicePlayback(int vNo)
     if (vNo >= 24 && vNo < 48)
     {
         iop_stat.sev_stat[vNo - 24].status = VOICE_FREE;
-        MikuPan_SdSetVoiceEnd(vNo);
     }
 }
 
@@ -220,7 +219,20 @@ static void BeginVoiceEnd(int vNo)
 {
     VOICE *v = &voices[vNo];
 
+    if (!v->isPlaying && v->endPending)
+    {
+        return;
+    }
+
     v->isPlaying = false;
+
+    MikuPan_SdSetVoiceEnd(vNo);
+
+    if (v->stream != NULL)
+    {
+        SDL_FlushAudioStream(v->stream);
+    }
+
     v->endPending = true;
 }
 
@@ -263,10 +275,20 @@ static s32 ClampAdsrLevel(int64_t level)
 
 static s32 AdsrRateStep(int rate, int max_rate, int fastest_samples)
 {
+    if (rate < 0)
+    {
+        rate = 0;
+    }
+    else if (rate > max_rate)
+    {
+        rate = max_rate;
+    }
+
     const int range = max_rate + 1;
     const int fastness = max_rate - rate + 1;
+
     int64_t step = ((int64_t)fastness * fastness * ADSR_LEVEL_MAX_FP)
-        / ((int64_t)range * range * fastest_samples);
+                   / ((int64_t)range * range * fastest_samples);
 
     if (step < ADSR_MIN_STEP_FP)
     {
@@ -307,7 +329,7 @@ static int AdsrDecayRate(const VOICE *v)
 static s32 AdsrSustainLevel(const VOICE *v)
 {
     const int level = v->adsr1 & 0x0f;
-    return ((level + 1) * ADSR_LEVEL_MAX_FP) / 16;
+    return (s32) (((int64_t)(level + 1) * ADSR_LEVEL_MAX_FP) / 16);
 }
 
 static int AdsrReleaseRate(const VOICE *v)
@@ -448,11 +470,24 @@ static s32 GetVoiceAdsrLevel(VOICE *v)
 
     if (!VoiceAdsrConfigured(v))
     {
+        v->adsr_level = ADSR_LEVEL_MAX_FP;
+        v->adsr_phase = VOICE_ADSR_SUSTAIN;
         return ADSR_LEVEL_MAX;
     }
 
+    if (v->adsr_phase == VOICE_ADSR_OFF)
+    {
+        v->adsr_level = 0;
+        return 0;
+    }
+
+    v->adsr_level = ClampAdsrLevel(v->adsr_level);
     level = v->adsr_level >> ADSR_FP_SHIFT;
+
     AdvanceVoiceAdsr(v);
+
+    v->adsr_level = ClampAdsrLevel(v->adsr_level);
+
     return level;
 }
 
@@ -809,11 +844,12 @@ static void KeyOffUnlocked(int vNo)
         return;
     }
 
-    v->adsr_phase = VOICE_ADSR_RELEASE;
-    if (v->stream)
+    if (v->adsr_level <= 0 || v->adsr_level > ADSR_LEVEL_MAX_FP)
     {
-        SDL_ClearAudioStream(v->stream);
+        v->adsr_level = ADSR_LEVEL_MAX_FP;
     }
+
+    v->adsr_phase = VOICE_ADSR_RELEASE;
 }
 
 void Key_Off(int vNo)
