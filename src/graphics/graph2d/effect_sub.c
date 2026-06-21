@@ -3799,7 +3799,7 @@ void LocalCopyLtoBD(int addr, void *outbuf)
         !EffectSubReadMainFramebuffer((u_long128 *)outbuf))
     {
         sceGsExecStoreImage(&gs_simage1, outbuf);
-        sceGsExecStoreImage(&gs_simage2, (u_char*)outbuf + 0x7d000);
+        sceGsExecStoreImage(&gs_simage2, (u_long128 *)((u_char*)outbuf + 0x7d000));
     }
     sceGsSyncPath(0, 0);
 }
