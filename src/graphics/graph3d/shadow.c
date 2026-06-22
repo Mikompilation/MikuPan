@@ -431,6 +431,8 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
     prim = &prim[12];
     vp = vp + 2;
 
+    void* vp_bak = vp;
+
     switch (((char *) vh)[5])
     {
         case 0:
@@ -504,7 +506,7 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
             break;
     }
 
-    return (u_int *) vp;
+    return (u_int *) vp_bak;
 }
 
 void ShadowModelMesh(u_int *prim)
@@ -540,15 +542,17 @@ void ShadowModelMesh(u_int *prim)
             break;
         case 2:
             read_p = SetVUVNDataShadowModel(vuvnprim);
-
             if (read_p == NULL)
             {
                 break;
             }
 
-            MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER *) vuvnprim,
-                (SGDPROCUNITHEADER *) prim,
-                GetPreparedShadowPositions(vuvnprim, read_p));
+            /* Like case 0, SetVUVNDataShadowModel emits positions only (one vec4
+             * per vertex, SHADOW_POSITION4 layout). The silhouette must be drawn
+             * by the positions-only consumer; RenderMeshType0x2 reads pos+normal
+             * interleaved (32B/vtx) and would mis-stride this 16B/vtx data into
+             * garbage triangles (the broken skinned-character shadow). */
+            MikuPan_RenderShadowSilhouettePrepared(vuvnprim, prim, (float *) read_p);
 
             read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE2 >> 3);
             read_p[1] = 0x17000000;

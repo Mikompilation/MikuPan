@@ -402,7 +402,8 @@ void MikuPan_RenderShadowSilhouettePrepared(unsigned int *pVUVN,
         return;
     }
 
-    SGDVUMESHPOINTNUM* pMeshInfo = (SGDVUMESHPOINTNUM*) &((unsigned int*) pPUHead)[6];
+    SGDVUMESHPOINTNUM *pMeshInfo =
+        (SGDVUMESHPOINTNUM *) &(((SGDPROCUNITHEADER *) pPUHead)[4]);
     VUVN_PRIM *v = ((VUVN_PRIM *) &((int *) pVUVN)[2]);
 
     const int num_mesh = (int) GET_NUM_MESH(pPUHead);
@@ -477,10 +478,6 @@ void MikuPan_RenderShadowSilhouettePrepared(unsigned int *pVUVN,
     MikuPan_FlushTexturedSpriteBatch();
     MikuPan_SetCurrentShaderProgram(SHADOW_SILHOUETTE_SHADER);
     MikuPan_SetMeshRenderStateForCurrentPass();
-
-    /* SetVUVNDataShadowModel already produced world/skinned-space positions. */
-    MikuPan_SetWorldSpaceModelTransform();
-
     MikuPan_BindVAO(pipeline->vao);
 
     /* Upload positions (interleaved pos+normal; the silhouette shader reads only
@@ -523,7 +520,7 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
     }
 
     SGDVUVNDATA_PRESET *pVUVNData = (SGDVUVNDATA_PRESET *) &(((SGDPROCUNITHEADER *) pVUVN)[1]);
-    SGDVUMESHPOINTNUM* pMeshInfo = (SGDVUMESHPOINTNUM*) &((unsigned int*) pPUHead)[6];
+    SGDVUMESHPOINTNUM *pMeshInfo = (SGDVUMESHPOINTNUM *) &(((SGDPROCUNITHEADER *) pPUHead)[4]);
     VUVN_PRIM *v = ((VUVN_PRIM *) &((int *) pVUVN)[2]);
 
     const int num_mesh = (int) GET_NUM_MESH(pPUHead);
@@ -568,7 +565,7 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
             MikuPan_BindVAO(cache_entry->vao);
             MikuPan_ShadowDebugRecordCasterDraw(mesh_type, cache_entry->index_count);
             MikuPan_PerfDrawCall();
-            MikuPan_TimedDrawElements(GL_TRIANGLES,
+            MikuPan_TimedDrawElements(GL_TRIANGLE_STRIP,
                                       cache_entry->index_count, GL_UNSIGNED_INT, (void *) 0);
             MikuPan_PerfMeshCacheHit();
             return;
@@ -638,7 +635,7 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
     MikuPan_ShadowDebugRecordCasterDraw(mesh_type, index_write_offset);
 
     MikuPan_PerfDrawCall();
-    MikuPan_TimedDrawElements(GL_TRIANGLES,
+    MikuPan_TimedDrawElements(GL_TRIANGLE_STRIP,
                               index_write_offset, GL_UNSIGNED_INT, (void *) 0);
 }
 
