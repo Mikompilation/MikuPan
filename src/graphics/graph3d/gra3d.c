@@ -43,6 +43,7 @@
 #include "main/glob.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/ui/mikupan_ui_cheats.h"
 #include "os/system.h"
 
 #define SCR_WIDTH 640
@@ -2492,10 +2493,10 @@ static void DrawPlayerTofu(SgCOORDUNIT *cp)
     static const float face_color[]  = {0.04f, 0.035f, 0.03f, 1.0f};
 
     const float *base_color;
-    float front_color[4];
-    float back_color[4];
-    float side_color[4];
-    float top_color[4];
+    float front_color[4] = {0};
+    float back_color[4] = {0};
+    float side_color[4] = {0};
+    float top_color[4] = {0};
     sceVu0FVECTOR local_vertices[32];
     sceVu0FMATRIX local_clip;
     sceVu0FVECTOR projected[32];
