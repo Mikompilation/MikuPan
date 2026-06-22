@@ -63,6 +63,7 @@ typedef struct
     SDL_GPUCompareOp compare;
     int blend;
     int additive_blend;
+    MikuPan_GPUBlendMode blend_mode;
     SDL_GPUCullMode cull_mode;
     SDL_GPUFillMode fill_mode;
     SDL_GPUColorComponentFlags color_mask;
@@ -187,6 +188,77 @@ static GPUPipelineEntry g_pipeline_cache[MIKUPAN_GPU_MAX_PIPELINES];
 static unsigned int g_next_buffer_id = 1;
 static unsigned int g_next_texture_id = 1;
 static unsigned int g_next_vao_id = 1;
+
+static unsigned int CountUsedBuffers(void)
+{
+    unsigned int used = 0;
+
+    for (unsigned int i = 1; i < MIKUPAN_GPU_MAX_BUFFERS; i++)
+    {
+        if (g_buffers[i].buffer != NULL || g_buffers[i].cpu_data != NULL)
+        {
+            used++;
+        }
+    }
+
+    return used;
+}
+
+static unsigned int CountUsedTextures(void)
+{
+    unsigned int used = 0;
+
+    for (unsigned int i = 1; i < MIKUPAN_GPU_MAX_TEXTURES; i++)
+    {
+        if (g_textures[i].texture != NULL)
+        {
+            used++;
+        }
+    }
+
+    return used;
+}
+
+static unsigned int CountUsedVaos(void)
+{
+    unsigned int used = 0;
+
+    for (unsigned int i = 1; i < MIKUPAN_GPU_MAX_VAOS; i++)
+    {
+        if (g_vaos[i].pipeline_type != 0)
+        {
+            used++;
+        }
+    }
+
+    return used;
+}
+
+static unsigned int CountUsedPipelines(void)
+{
+    unsigned int used = 0;
+
+    for (unsigned int i = 0; i < MIKUPAN_GPU_MAX_PIPELINES; i++)
+    {
+        if (g_pipeline_cache[i].used)
+        {
+            used++;
+        }
+    }
+
+    return used;
+}
+
+static void LogGpuPoolStats(const char* reason)
+{
+    info_log(
+        "[GPU POOL] %s: buffers=%u/%u textures=%u/%u vaos=%u/%u "
+        "pipelines=%u/%u",
+        reason, CountUsedBuffers(), MIKUPAN_GPU_MAX_BUFFERS - 1,
+        CountUsedTextures(), MIKUPAN_GPU_MAX_TEXTURES - 1, CountUsedVaos(),
+        MIKUPAN_GPU_MAX_VAOS - 1, CountUsedPipelines(),
+        MIKUPAN_GPU_MAX_PIPELINES);
+}
 
 static unsigned int g_scene_texture_id =
     0; /* single-sample resolve target (sampled/blitted) */
@@ -526,6 +598,7 @@ static void SetDefaultRenderState(void)
     g_state.compare = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
     g_state.blend = 1;
     g_state.additive_blend = 0;
+    g_state.blend_mode = MIKUPAN_GPU_BLEND_NORMAL;
     g_state.cull_mode = SDL_GPU_CULLMODE_BACK;
     g_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     g_state.color_mask = SDL_GPU_COLORCOMPONENT_R | SDL_GPU_COLORCOMPONENT_G
@@ -1067,8 +1140,18 @@ unsigned int MikuPan_GPUCreateBuffer(unsigned int size,
 {
     unsigned int id = AllocBufferId();
 
-    if (id == 0 || size == 0)
+   if (size == 0)
     {
+        info_log("[GPU ALLOC] Refused zero-size GPU buffer, kind=%d", kind);
+        return 0;
+    }
+
+    if (id == 0)
+    {
+        LogGpuPoolStats("GPU buffer id pool exhausted");
+        info_log(
+            "[GPU ALLOC] Failed to allocate GPU buffer id, size=%u kind=%d",
+            size, kind);
         return 0;
     }
 
@@ -1078,23 +1161,50 @@ unsigned int MikuPan_GPUCreateBuffer(unsigned int size,
     g_buffers[id].buffer = SDL_CreateGPUBuffer(g_device, &info);
     g_buffers[id].size = size;
     g_buffers[id].kind = kind;
+
     if (g_buffers[id].buffer == NULL)
     {
-        info_log("SDL_CreateGPUBuffer failed: %s", SDL_GetError());
+        info_log(
+            "[GPU ALLOC] SDL_CreateGPUBuffer failed: id=%u size=%u kind=%d "
+            "err=%s",
+            id, size, kind, SDL_GetError());
         memset(&g_buffers[id], 0, sizeof(g_buffers[id]));
         return 0;
     }
+
     return id;
 }
 
 unsigned int MikuPan_GPUCreateUniformCPUBuffer(unsigned int size)
 {
     unsigned int id = AllocBufferId();
-    if (id == 0 || size == 0)
+
+    if (size == 0)
     {
+        info_log("[GPU ALLOC] Refused zero-size uniform CPU buffer");
         return 0;
     }
+
+    if (id == 0)
+    {
+        LogGpuPoolStats("GPU buffer id pool exhausted for uniform CPU buffer");
+        info_log(
+            "[GPU ALLOC] Failed to allocate uniform CPU buffer id, size=%u",
+            size);
+        return 0;
+    }
+
     g_buffers[id].cpu_data = calloc(1, size);
+
+    if (g_buffers[id].cpu_data == NULL)
+    {
+        info_log(
+            "[GPU ALLOC] calloc failed for uniform CPU buffer: id=%u size=%u",
+            id, size);
+        memset(&g_buffers[id], 0, sizeof(g_buffers[id]));
+        return 0;
+    }
+
     g_buffers[id].size = size;
     g_buffers[id].kind = MIKUPAN_GPU_BUFFER_UNIFORM_CPU;
     return id;
@@ -1126,10 +1236,23 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
     if (size > entry->size)
     {
         SDL_ReleaseGPUBuffer(g_device, entry->buffer);
+
         SDL_GPUBufferCreateInfo info = {0};
         info.usage = BufferUsageFromKind(entry->kind);
         info.size = size;
+
         entry->buffer = SDL_CreateGPUBuffer(g_device, &info);
+
+        if (entry->buffer == NULL)
+        {
+            info_log(
+                "[GPU ALLOC] SDL_CreateGPUBuffer failed while growing buffer: "
+                "old_size=%u new_size=%u kind=%d err=%s",
+                entry->size, size, entry->kind, SDL_GetError());
+            entry->size = 0;
+            return;
+        }
+
         entry->size = size;
     }
 
@@ -1222,6 +1345,11 @@ static unsigned int CreateTexture(int width, int height,
     unsigned int id = AllocTextureId();
     if (id == 0)
     {
+        LogGpuPoolStats("GPU texture id pool exhausted");
+        info_log(
+            "[GPU ALLOC] Failed to allocate texture id: %dx%d format=%d "
+            "usage=0x%x repeat=%d mipmaps=%d",
+            width, height, format, usage, repeat, mipmaps);
         return 0;
     }
 
@@ -1242,7 +1370,10 @@ static unsigned int CreateTexture(int width, int height,
     g_textures[id].usage = usage;
     if (g_textures[id].texture == NULL)
     {
-        info_log("SDL_CreateGPUTexture failed: %s", SDL_GetError());
+        info_log(
+            "[GPU ALLOC] SDL_CreateGPUTexture failed: id=%u size=%dx%d "
+            "format=%d usage=0x%x err=%s",
+            id, width, height, format, usage, SDL_GetError());
         MikuPan_GPUReleaseTexture(id);
         return 0;
     }
@@ -1495,6 +1626,11 @@ unsigned int MikuPan_GPURegisterVertexArray(int pipeline_type,
     unsigned int id = AllocVaoId();
     if (id == 0)
     {
+        LogGpuPoolStats("GPU VAO id pool exhausted");
+        info_log(
+            "[GPU ALLOC] Failed to allocate VAO id: pipeline_type=%d "
+            "num_buffers=%u ibo=%u",
+            pipeline_type, num_buffers, ibo);
         return 0;
     }
     MikuPan_GPUUpdateVertexArrayBuffers(id, num_buffers, buffers, ibo);
@@ -1633,11 +1769,37 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
 
     SDL_GPUColorTargetBlendState blend = {0};
     blend.enable_blend = g_state.blend ? true : false;
-    blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
-    blend.dst_color_blendfactor = g_state.additive_blend
-                                      ? SDL_GPU_BLENDFACTOR_ONE
-                                      : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-    blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+    switch (g_state.blend_mode)
+    {
+        case MIKUPAN_GPU_BLEND_ADDITIVE:
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
+
+        case MIKUPAN_GPU_BLEND_SUBTRACTIVE:
+            /* Cd - Cs * As */
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            blend.color_blend_op = SDL_GPU_BLENDOP_REVERSE_SUBTRACT;
+            break;
+
+        case MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD:
+            /* Shader writes As into RGB; blend adds As * Cd. */
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_DST_COLOR;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
+
+        case MIKUPAN_GPU_BLEND_NORMAL:
+        default:
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            blend.dst_color_blendfactor =
+                SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+            blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
+    }
+
     /* Alpha channel: keep the destination (framebuffer) alpha opaque instead of
      * blending it like a colour. With SRC_ALPHA here, every semi-transparent 2D
      * sprite drives the framebuffer alpha below 1. D3D12 ignores swapchain alpha
@@ -1925,6 +2087,13 @@ void MikuPan_GPUSetBlend(int enabled, int additive)
 {
     g_state.blend = enabled ? 1 : 0;
     g_state.additive_blend = additive ? 1 : 0;
+    g_state.blend_mode = additive ? MIKUPAN_GPU_BLEND_ADDITIVE : MIKUPAN_GPU_BLEND_NORMAL;
+}
+void MikuPan_GPUSetBlendMode(int enabled, enum MikuPan_GPUBlendMode mode)
+{
+    g_state.blend = enabled ? 1 : 0;
+    g_state.additive_blend = mode == MIKUPAN_GPU_BLEND_ADDITIVE ? 1 : 0;
+    g_state.blend_mode = mode;
 }
 void MikuPan_GPUSetCullBack(void)
 {
