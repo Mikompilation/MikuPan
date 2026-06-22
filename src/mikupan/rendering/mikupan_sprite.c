@@ -534,16 +534,20 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
     MikuPan_RenderSpriteInternal(src, dst, r, g, b, a, texture_info, 0.0f, 0);
 }
 
-static void MikuPan_RenderSprite2DInternal(sceGsTex0 *tex, float *buffer,
-                                           int depth_enabled,
-                                           int depth_write,
-                                           unsigned int depth_func)
+static void MikuPan_RenderSprite2DInternal(sceGsTex0* tex, float* buffer,
+                                                int depth_enabled,
+                                                int depth_write,
+                                                unsigned int depth_func,
+                                                int shader,
+                                                enum MikuPan_GPUBlendMode blend_mode)
 {
     float upload_buffer[4][12];
 
     MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
 
-    if (MikuPan_IsLate2DOverlayQueueActive())
+    if (MikuPan_IsLate2DOverlayQueueActive()
+        && shader == SPRITE_SHADER
+        && blend_mode == MIKUPAN_GPU_BLEND_NORMAL)
     {
         if (!MikuPan_QueueLate2DTexturedOverlay(tex, buffer, depth_enabled,
                                                 depth_write, depth_func))
@@ -554,8 +558,10 @@ static void MikuPan_RenderSprite2DInternal(sceGsTex0 *tex, float *buffer,
     }
 
     MikuPan_FlushTexturedSpriteBatch();
-    MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+    MikuPan_SetCurrentShaderProgram(shader);
+
+    MikuPan_PipelineInfo* pipeline =
+        MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_SetTexture(tex);
@@ -572,31 +578,89 @@ static void MikuPan_RenderSprite2DInternal(sceGsTex0 *tex, float *buffer,
         MikuPan_SetRenderState2D();
     }
 
-    // Caller passes a 4-vert quad worth of data (UV4_COLOUR4_POSITION4 layout).
-    MikuPan_StreamUploadFull(
-        GL_ARRAY_BUFFER, pipeline->buffers[0].id,
-        (GLsizeiptr)sizeof(float[4][12]),
-        depth_enabled ? &upload_buffer[0][0] : buffer);
+    MikuPan_GPUSetBlendMode(1, blend_mode);
+
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr) sizeof(float[4][12]),
+                             depth_enabled ? &upload_buffer[0][0] : buffer);
 
     MikuPan_TimedDrawArrays(MikuPan_GetRenderMode(), 0, 4);
+
+    if (shader != SPRITE_SHADER || blend_mode != MIKUPAN_GPU_BLEND_NORMAL)
+    {
+        MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
+        MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    }
 }
 
 void MikuPan_RenderSprite2D(sceGsTex0 *tex, float *buffer)
 {
-    MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL);
+    MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL, SPRITE_SHADER, MIKUPAN_GPU_BLEND_NORMAL);
 }
 
 void MikuPan_RenderSprite2DDepth(sceGsTex0 *tex, float *buffer)
 {
-    MikuPan_RenderSprite2DInternal(tex, buffer, 1, 1, GL_LEQUAL);
+    MikuPan_RenderSprite2DInternal(tex, buffer, 1, 1, GL_LEQUAL, SPRITE_SHADER, MIKUPAN_GPU_BLEND_NORMAL);
 }
 
 void MikuPan_RenderSprite2DDepthState(sceGsTex0 *tex, float *buffer,
                                       int depth_test, int depth_write,
                                       unsigned int depth_func)
 {
-    MikuPan_RenderSprite2DInternal(tex, buffer, depth_test, depth_write,
-                                   depth_func);
+    MikuPan_RenderSprite2DInternal(tex, buffer, depth_test, depth_write, depth_func, SPRITE_SHADER, MIKUPAN_GPU_BLEND_NORMAL);
+}
+
+void MikuPan_RenderSprite2DGSAlpha(sceGsTex0* tex, float* buffer,
+                                   unsigned long gs_alpha)
+{
+    switch (gs_alpha & 0xff)
+    {
+        case MIKUPAN_GS_ALPHA_DST_MINUS_SRC:
+            /*
+             * GS ALPHA 0x41:
+             *   (Cd - Cs) * As + Cd
+             * = Cd + Cd * As - Cs * As
+             *
+             * Pass 1: Cd + Cd * As
+             * Pass 2: Cd - Cs * As
+             */
+            MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL,
+                                           SPRITE_ALPHA_AS_RGB_SHADER,
+                                           MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD);
+
+            MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL,
+                                           SPRITE_SHADER,
+                                           MIKUPAN_GPU_BLEND_SUBTRACTIVE);
+            break;
+
+        case MIKUPAN_GS_ALPHA_SUBTRACTIVE:
+            /* Cd - Cs * As */
+            MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL,
+                                           SPRITE_SHADER,
+                                           MIKUPAN_GPU_BLEND_SUBTRACTIVE);
+            break;
+
+        case MIKUPAN_GS_ALPHA_ADDITIVE:
+            /* Cs * As + Cd */
+            MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL,
+                                           SPRITE_SHADER,
+                                           MIKUPAN_GPU_BLEND_ADDITIVE);
+            break;
+
+        case MIKUPAN_GS_ALPHA_DST_BOOST:
+            /* Cd * As + Cd */
+            MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL,
+                                           SPRITE_ALPHA_AS_RGB_SHADER,
+                                           MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD);
+            break;
+
+        case MIKUPAN_GS_ALPHA_NORMAL:
+        default:
+            MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL,
+                                           SPRITE_SHADER,
+                                           MIKUPAN_GPU_BLEND_NORMAL);
+            break;
+    }
 }
 
 static float MikuPan_NormalizeSpriteDepthValue(float z)
