@@ -19,6 +19,7 @@ const char* const MikuPan_UiThemeLabels[MIKUPAN_UI_THEME_COUNT] = {
 const char* const MikuPan_UiFontLabels[MIKUPAN_UI_FONT_COUNT] = {
     "ImGui Default Monospace",
     "Century Old Style",
+    "Zapf Chancery",
 };
 
 static ImFont* ui_fonts[MIKUPAN_UI_FONT_COUNT] = {0};
@@ -108,6 +109,56 @@ void MikuPan_ApplyUiFontScale(void)
     style->FontScaleMain = mikupan_configuration.font_scale;
 }
 
+ImFont* MikuPan_GetTitleBlockFont(void)
+{
+    return ui_fonts[1] != NULL ? ui_fonts[1] : ui_fonts[0];
+}
+
+ImFont* MikuPan_GetTitleFont(void)
+{
+    if (ui_fonts[2] != NULL)
+    {
+        return ui_fonts[2];
+    }
+
+    return MikuPan_GetTitleBlockFont();
+}
+
+static ImFont* MikuPan_LoadUiFontTtf(const char* relative_path,
+                                     float size_pixels)
+{
+    ImGuiIO* io = igGetIO_Nil();
+    char font_path[1024];
+
+    if (!MikuPan_ResolveBasePath(relative_path, font_path, sizeof(font_path)))
+    {
+        return NULL;
+    }
+
+    if (strncmp(font_path, "assets://", 9) == 0
+        || strncmp(font_path, "assets:/", 8) == 0)
+    {
+        u_int font_size = MikuPan_GetFileSize(font_path);
+        if (font_size > 0 && font_size <= INT_MAX)
+        {
+            void *font_data = malloc(font_size);
+            if (font_data != NULL)
+            {
+                MikuPan_ReadFullFile(font_path, font_data);
+                return ImFontAtlas_AddFontFromMemoryTTF(
+                    io->Fonts, font_data, (int) font_size, size_pixels, NULL,
+                    ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
+            }
+        }
+
+        return NULL;
+    }
+
+    return ImFontAtlas_AddFontFromFileTTF(
+        io->Fonts, font_path, size_pixels, NULL,
+        ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
+}
+
 static void MikuPan_LoadUiFonts(void)
 {
     ImGuiIO* io = igGetIO_Nil();
@@ -128,40 +179,20 @@ static void MikuPan_LoadUiFonts(void)
         ImFontConfig_destroy(default_font_config);
     }
 
-    char font_path[1024];
-    if (MikuPan_ResolveBasePath("resources/fonts/CenturyOldStyle.ttf",
-                                font_path,
-                                sizeof(font_path)))
-    {
-        if (strncmp(font_path, "assets://", 9) == 0
-            || strncmp(font_path, "assets:/", 8) == 0)
-        {
-            u_int font_size = MikuPan_GetFileSize(font_path);
-            if (font_size > 0 && font_size <= INT_MAX)
-            {
-                void *font_data = malloc(font_size);
-                if (font_data != NULL)
-                {
-                    MikuPan_ReadFullFile(font_path, font_data);
-                    ui_fonts[1] = ImFontAtlas_AddFontFromMemoryTTF(
-                        io->Fonts, font_data, (int) font_size,
-                        ui_font_regular_size, NULL,
-                        ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
-                }
-            }
-        }
-        else
-        {
-            ui_fonts[1] = ImFontAtlas_AddFontFromFileTTF(
-                io->Fonts, font_path,
-                ui_font_regular_size, NULL,
-                ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
-        }
-    }
+    ui_fonts[1] = MikuPan_LoadUiFontTtf(
+        "resources/fonts/CenturyOldStyle.ttf", ui_font_regular_size);
 
     if (ui_fonts[1] == NULL)
     {
         ui_fonts[1] = ui_fonts[0];
+    }
+
+    ui_fonts[2] = MikuPan_LoadUiFontTtf(
+        "resources/fonts/zapfchancer.ttf", ui_font_regular_size);
+
+    if (ui_fonts[2] == NULL)
+    {
+        ui_fonts[2] = ui_fonts[0];
     }
 
     MikuPan_ConfigurationValidate();

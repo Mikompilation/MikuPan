@@ -16,6 +16,7 @@
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_ui_debug.h"
 #include "mikupan_ui_theme.h"
+#include "outgame/title.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -592,6 +593,14 @@ void MikuPan_UiSettingsRender(void)
             {
                 mikupan_configuration.font_scale = font_scale;
                 MikuPan_ApplyUiFontScale();
+            }
+
+            igSeparator();
+            int title_room_background = TitleUseRoomBackground();
+            if (igCheckbox("Room title background",
+                           (bool*) &title_room_background))
+            {
+                TitleSetUseRoomBackground(title_room_background);
             }
 
             igEndMenu();
