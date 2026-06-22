@@ -733,9 +733,75 @@ int MikuPan_GetRenderResolutionHeight(void)
     return render_resolution_height;
 }
 
+int MikuPan_GetRenderResolutionOptionCount(void)
+{
+    return resolution_count;
+}
+
+int MikuPan_GetSelectedRenderResolutionOption(void)
+{
+    return resolution_selected;
+}
+
+const char* MikuPan_GetRenderResolutionOptionLabel(int index)
+{
+    if (index < 0 || index >= resolution_count)
+    {
+        return NULL;
+    }
+
+    return resolution_label_ptrs[index];
+}
+
+int MikuPan_SelectRenderResolutionOption(int index)
+{
+    if (index < 0 || index >= resolution_count)
+    {
+        return 0;
+    }
+
+    resolution_selected = index;
+    render_resolution_width = resolution_list[index].width;
+    render_resolution_height = resolution_list[index].height;
+    return 1;
+}
+
 int MikuPan_GetMSAA(void)
 {
     return msaa_list[msaa_samples];
+}
+
+int MikuPan_GetMSAAOptionCount(void)
+{
+    return (int) (sizeof(msaa_list) / sizeof(msaa_list[0]));
+}
+
+int MikuPan_GetSelectedMSAAOption(void)
+{
+    return msaa_samples;
+}
+
+const char* MikuPan_GetMSAAOptionLabel(int index)
+{
+    static char labels[sizeof(msaa_list) / sizeof(msaa_list[0])][8];
+    if (index < 0 || index >= MikuPan_GetMSAAOptionCount())
+    {
+        return NULL;
+    }
+
+    snprintf(labels[index], sizeof(labels[index]), "%d", msaa_list[index]);
+    return labels[index];
+}
+
+int MikuPan_SelectMSAAOption(int index)
+{
+    if (index < 0 || index >= MikuPan_GetMSAAOptionCount())
+    {
+        return 0;
+    }
+
+    msaa_samples = index;
+    return 1;
 }
 
 int MikuPan_ShowControllerRemapWindow(void)
@@ -743,9 +809,24 @@ int MikuPan_ShowControllerRemapWindow(void)
     return show_controller_remap;
 }
 
+void MikuPan_SetControllerRemapWindowVisible(int visible)
+{
+    show_controller_remap = visible ? 1 : 0;
+}
+
+void MikuPan_ResetControllerBindingsFromUi(void)
+{
+    MikuPan_ControllerResetBindings();
+}
+
 float MikuPan_GetBrightness(void)
 {
     return brightness;
+}
+
+void MikuPan_SetBrightness(float value)
+{
+    brightness = MikuPan_ClampFloat(value, 0.0f, 2.0f);
 }
 
 float MikuPan_GetGamma(void)
@@ -753,9 +834,183 @@ float MikuPan_GetGamma(void)
     return gamma_value;
 }
 
+void MikuPan_SetGamma(float value)
+{
+    gamma_value = MikuPan_ClampFloat(value, 0.1f, 3.0f);
+}
+
 const MikuPan_ConfigCrt* MikuPan_GetCrtSettings(void)
 {
     return &crt_settings;
+}
+
+void MikuPan_SetCrtEnabled(int enabled)
+{
+    crt_settings.enabled = enabled ? 1 : 0;
+}
+
+static float* MikuPan_GetCrtFieldPointer(int index)
+{
+    switch (index)
+    {
+        case 0:
+            return &crt_settings.strength;
+        case 1:
+            return &crt_settings.curvature;
+        case 2:
+            return &crt_settings.overscan;
+        case 3:
+            return &crt_settings.scanline_strength;
+        case 4:
+            return &crt_settings.scanline_scale;
+        case 5:
+            return &crt_settings.scanline_thickness;
+        case 6:
+            return &crt_settings.mask_strength;
+        case 7:
+            return &crt_settings.mask_scale;
+        case 8:
+            return &crt_settings.vignette_strength;
+        case 9:
+            return &crt_settings.vignette_size;
+        case 10:
+            return &crt_settings.chroma_offset;
+        case 11:
+            return &crt_settings.blend_strength;
+        case 12:
+            return &crt_settings.blend_radius;
+        case 13:
+            return &crt_settings.noise_strength;
+        case 14:
+            return &crt_settings.flicker_strength;
+        case 15:
+            return &crt_settings.glow_strength;
+        default:
+            return NULL;
+    }
+}
+
+int MikuPan_GetCrtFieldCount(void)
+{
+    return 16;
+}
+
+const char* MikuPan_GetCrtFieldLabel(int index)
+{
+    static const char* labels[] = {
+        "Strength",
+        "Curvature",
+        "Overscan",
+        "Scanline Strength",
+        "Scanline Scale",
+        "Scanline Thickness",
+        "Mask Strength",
+        "Mask Scale",
+        "Vignette Strength",
+        "Vignette Size",
+        "Chroma Offset",
+        "Blend Strength",
+        "Blend Radius",
+        "Noise",
+        "Flicker",
+        "Glow",
+    };
+
+    if (index < 0 || index >= MikuPan_GetCrtFieldCount())
+    {
+        return NULL;
+    }
+
+    return labels[index];
+}
+
+float MikuPan_GetCrtFieldValue(int index)
+{
+    float* value = MikuPan_GetCrtFieldPointer(index);
+    return value != NULL ? *value : 0.0f;
+}
+
+float MikuPan_GetCrtFieldMin(int index)
+{
+    switch (index)
+    {
+        case 1:
+        case 2:
+        case 10:
+        case 12:
+            return 0.0f;
+        case 4:
+        case 9:
+            return 0.25f;
+        case 5:
+        case 7:
+            return 0.5f;
+        default:
+            return 0.0f;
+    }
+}
+
+float MikuPan_GetCrtFieldMax(int index)
+{
+    switch (index)
+    {
+        case 1:
+            return 0.30f;
+        case 2:
+            return 0.12f;
+        case 4:
+            return 3.0f;
+        case 5:
+        case 7:
+            return 4.0f;
+        case 9:
+            return 1.25f;
+        case 10:
+        case 12:
+            return 3.0f;
+        case 13:
+            return 0.15f;
+        case 14:
+            return 0.10f;
+        case 15:
+            return 0.50f;
+        default:
+            return 1.0f;
+    }
+}
+
+float MikuPan_GetCrtFieldStep(int index)
+{
+    switch (index)
+    {
+        case 1:
+        case 2:
+        case 13:
+        case 14:
+            return 0.001f;
+        default:
+            return 0.01f;
+    }
+}
+
+void MikuPan_SetCrtFieldValue(int index, float value)
+{
+    float* field = MikuPan_GetCrtFieldPointer(index);
+    if (field == NULL)
+    {
+        return;
+    }
+
+    *field = value;
+    mikupan_configuration.crt = crt_settings;
+    MikuPan_ConfigurationValidate();
+    crt_settings = mikupan_configuration.crt;
+}
+
+void MikuPan_ResetCrtSettings(void)
+{
+    crt_settings = crt_defaults;
+    mikupan_configuration.crt = crt_settings;
 }
 
 int MikuPan_IsFullScreen(void)
@@ -768,7 +1023,257 @@ int MikuPan_GetWindowMode(void)
     return window_mode;
 }
 
+void MikuPan_SetWindowMode(int mode)
+{
+    if (mode < MIKUPAN_WINDOW_WINDOWED || mode > MIKUPAN_WINDOW_BORDERLESS)
+    {
+        mode = MIKUPAN_WINDOW_WINDOWED;
+    }
+
+    window_mode = mode;
+    is_fullscreen = (window_mode != MIKUPAN_WINDOW_WINDOWED);
+}
+
 int MikuPan_IsVsync(void)
 {
     return mikupan_configuration.renderer.vsync;
+}
+
+void MikuPan_SetVsync(int enabled)
+{
+    mikupan_configuration.renderer.vsync = enabled ? 1 : 0;
+}
+
+int MikuPan_GetGpuDriverOptionCount(void)
+{
+    return gpu_driver_count;
+}
+
+int MikuPan_GetSelectedGpuDriverOption(void)
+{
+    return gpu_driver_selected;
+}
+
+const char* MikuPan_GetGpuDriverOptionLabel(int index)
+{
+    if (index < 0 || index >= gpu_driver_count)
+    {
+        return NULL;
+    }
+
+    return gpu_driver_labels[index];
+}
+
+int MikuPan_IsGpuDriverOptionSupported(int index)
+{
+    if (index < 0 || index >= gpu_driver_count)
+    {
+        return 0;
+    }
+
+    return gpu_driver_supported[index];
+}
+
+int MikuPan_SelectGpuDriverOption(int index)
+{
+    if (index < 0 || index >= gpu_driver_count || !gpu_driver_supported[index])
+    {
+        return 0;
+    }
+
+    gpu_driver_selected = index;
+    snprintf(mikupan_configuration.renderer.gpu_driver,
+             sizeof(mikupan_configuration.renderer.gpu_driver), "%s",
+             gpu_driver_names[index]);
+    return 1;
+}
+
+const char* MikuPan_GetActiveGpuDriverLabel(void)
+{
+    SDL_GPUDevice* device = MikuPan_GPUGetDevice();
+    const char* active = (device != NULL) ? SDL_GetGPUDeviceDriver(device) : NULL;
+    return active != NULL ? MikuPan_GpuDriverDisplayName(active) : "none";
+}
+
+int MikuPan_IsGpuDriverRestartPending(void)
+{
+    SDL_GPUDevice* device = MikuPan_GPUGetDevice();
+    const char* active = (device != NULL) ? SDL_GetGPUDeviceDriver(device) : NULL;
+
+    return gpu_driver_names[gpu_driver_selected][0] != '\0'
+           && (active == NULL
+               || SDL_strcasecmp(gpu_driver_names[gpu_driver_selected], active)
+                      != 0);
+}
+
+int MikuPan_GetShadowResolutionOptionCount(void)
+{
+    return 5;
+}
+
+int MikuPan_GetSelectedShadowResolutionOption(void)
+{
+    static const int res_values[] = {128, 256, 512, 1024, 2048};
+    const int current = MikuPan_GetShadowResolution();
+    for (int i = 0; i < MikuPan_GetShadowResolutionOptionCount(); i++)
+    {
+        if (res_values[i] == current)
+        {
+            return i;
+        }
+    }
+
+    return 1;
+}
+
+const char* MikuPan_GetShadowResolutionOptionLabel(int index)
+{
+    static const char* labels[] = {"128", "256", "512", "1024", "2048"};
+    if (index < 0 || index >= MikuPan_GetShadowResolutionOptionCount())
+    {
+        return NULL;
+    }
+
+    return labels[index];
+}
+
+int MikuPan_SelectShadowResolutionOption(int index)
+{
+    static const int res_values[] = {128, 256, 512, 1024, 2048};
+    if (index < 0 || index >= MikuPan_GetShadowResolutionOptionCount())
+    {
+        return 0;
+    }
+
+    MikuPan_SetShadowResolution(res_values[index]);
+    return 1;
+}
+
+int MikuPan_GetLightingMode(void)
+{
+    return mikupan_configuration.renderer.lighting_mode;
+}
+
+void MikuPan_SetLightingMode(int mode)
+{
+    mikupan_configuration.renderer.lighting_mode = mode == 1 ? 1 : 0;
+}
+
+int MikuPan_GetThemeOptionCount(void)
+{
+    return MIKUPAN_UI_THEME_COUNT;
+}
+
+int MikuPan_GetSelectedThemeOption(void)
+{
+    mikupan_configuration.selected_theme =
+        MikuPan_ClampThemeIndex(mikupan_configuration.selected_theme);
+    return mikupan_configuration.selected_theme;
+}
+
+const char* MikuPan_GetThemeOptionLabel(int index)
+{
+    if (index < 0 || index >= MIKUPAN_UI_THEME_COUNT)
+    {
+        return NULL;
+    }
+
+    return MikuPan_UiThemeLabels[index];
+}
+
+int MikuPan_SelectThemeOption(int index)
+{
+    if (index < 0 || index >= MIKUPAN_UI_THEME_COUNT)
+    {
+        return 0;
+    }
+
+    mikupan_configuration.selected_theme = index;
+    MikuPan_ApplyFatalFrameStyle(index);
+    return 1;
+}
+
+int MikuPan_GetFontOptionCount(void)
+{
+    return MIKUPAN_UI_FONT_COUNT;
+}
+
+int MikuPan_GetSelectedFontOption(void)
+{
+    mikupan_configuration.selected_font =
+        MikuPan_ClampFontIndex(mikupan_configuration.selected_font);
+    return mikupan_configuration.selected_font;
+}
+
+const char* MikuPan_GetFontOptionLabel(int index)
+{
+    if (index < 0 || index >= MIKUPAN_UI_FONT_COUNT)
+    {
+        return NULL;
+    }
+
+    return MikuPan_UiFontLabels[index];
+}
+
+int MikuPan_SelectFontOption(int index)
+{
+    if (index < 0 || index >= MIKUPAN_UI_FONT_COUNT)
+    {
+        return 0;
+    }
+
+    mikupan_configuration.selected_font = index;
+    MikuPan_ApplyUiFont(index);
+    return 1;
+}
+
+float MikuPan_GetUiFontScale(void)
+{
+    return mikupan_configuration.font_scale;
+}
+
+void MikuPan_SetUiFontScale(float scale)
+{
+    mikupan_configuration.font_scale = MikuPan_ClampFloat(scale, 0.5f, 3.0f);
+    MikuPan_ApplyUiFontScale();
+}
+
+const char* MikuPan_GetDataFolder(void)
+{
+    return mikupan_configuration.data_folder;
+}
+
+void MikuPan_SetDataFolder(const char* folder)
+{
+    if (folder == NULL)
+    {
+        folder = "";
+    }
+
+    strncpy(mikupan_configuration.data_folder, folder,
+            sizeof(mikupan_configuration.data_folder) - 1);
+    mikupan_configuration
+        .data_folder[sizeof(mikupan_configuration.data_folder) - 1] = '\0';
+}
+
+void MikuPan_BrowseDataFolderFromUi(void)
+{
+    const char* start = mikupan_configuration.data_folder[0] != '\0'
+                            ? mikupan_configuration.data_folder
+                            : NULL;
+#ifdef __ANDROID__
+    SDL_SetHint("SDL_ANDROID_ALLOW_PERSISTENT_FOLDER_ACCESS", "1");
+#endif
+    SDL_ShowOpenFolderDialog(MikuPan_DataFolderSelected, NULL,
+                             MikuPan_GetUiWindow(), start, false);
+}
+
+void MikuPan_SaveConfigurationFromUi(void)
+{
+    MikuPan_UiSaveConfiguration();
+}
+
+const char* MikuPan_GetConfigSaveStatus(void)
+{
+    return config_save_status;
 }

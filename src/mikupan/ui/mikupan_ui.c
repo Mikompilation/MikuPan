@@ -7,6 +7,7 @@
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_screenshot.h"
 #include "mikupan/rendering/mikupan_gpu.h"
+#include "mikupan/ui/mikupan_rmlui.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_ui_cheats.h"
 #include "mikupan_ui_debug.h"
@@ -46,12 +47,16 @@ void MikuPan_InitUi(SDL_Window* window)
     MikuPan_UiSettingsInit();
 
     MikuPan_ImGui_ImplInit(window);
+    MikuPan_RmlUiInit(window);
 }
 
 void MikuPan_RenderUi(void)
 {
     igRender();
     ImGuiIO* io = igGetIO_Nil();
+    MikuPan_GPUSetViewport(0, 0, (int) io->DisplaySize.x,
+                           (int) io->DisplaySize.y);
+    MikuPan_RmlUiRender();
     MikuPan_GPUSetViewport(0, 0, (int) io->DisplaySize.x,
                            (int) io->DisplaySize.y);
     MikuPan_ImGui_ImplRenderDrawData();
@@ -61,6 +66,7 @@ void MikuPan_StartFrameUi(void)
 {
     MikuPan_ImGui_ImplNewFrame();
     igNewFrame();
+    MikuPan_RmlUiStartFrame();
 }
 
 void MikuPan_DrawUi(void)
@@ -112,6 +118,7 @@ void MikuPan_DrawMissingDataUi(const char *missing_file)
 
 void MikuPan_ShutDownUi(void)
 {
+    MikuPan_RmlUiShutdown();
     MikuPan_ImGui_ImplShutdown();
     igDestroyContext(NULL);
 }
@@ -119,6 +126,7 @@ void MikuPan_ShutDownUi(void)
 void MikuPan_ProcessEventUi(SDL_Event* event)
 {
     MikuPan_ImGui_ImplProcessEvent(event);
+    MikuPan_RmlUiProcessEvent(event);
 }
 
 void MikuPan_RequestQuit(void)
@@ -181,6 +189,13 @@ void MikuPan_UiHandleShortcuts(void)
     {
         dbg_wrk.mode_on = !dbg_wrk.mode_on;
     }
+
+    if (igIsKeyPressed_Bool(ImGuiKey_F3, 0))
+    {
+        MikuPan_RmlUiToggleHiWindow();
+    }
+
+    MikuPan_UiDebugHandleShortcuts();
 
     if (igIsKeyPressed_Bool(ImGuiKey_F12, 0))
     {

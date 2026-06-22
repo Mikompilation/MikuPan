@@ -33,6 +33,7 @@ list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)
 
 include(sdl3)
+include(rmlui)
 include(cimgui)
 include(spdlog)
 include(cglm)
@@ -260,6 +261,7 @@ set(MIKUPAN_SOURCES
         src/mikupan/av/mikupan_audio_decoder_c.cpp
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui.c
+        src/mikupan/ui/mikupan_rmlui.cpp
         src/mikupan/rendering/mikupan_profiler.c
         src/mikupan/rendering/mikupan_gpu.c
         src/mikupan/rendering/mikupan_camera.c
@@ -351,6 +353,7 @@ target_include_directories(MikuPan PRIVATE
 )
 
 target_link_libraries(MikuPan PRIVATE
+        RmlUi::RmlUi
         cimgui
         SDL3::SDL3
         spdlog::spdlog
