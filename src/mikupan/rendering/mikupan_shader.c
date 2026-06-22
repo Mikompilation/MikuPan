@@ -30,6 +30,8 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
      "resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
     {"resources/shaders/hlsl/sprite.vert.hlsl", NULL,
      "resources/shaders/hlsl/sprite.frag.hlsl"},
+    {"resources/shaders/hlsl/sprite.vert.hlsl", NULL,
+     "resources/shaders/hlsl/sprite_alpha_as_rgb.frag.hlsl"},
     {"resources/shaders/hlsl/normals_0x12.vert.hlsl", NULL,
      "resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
     {"resources/shaders/hlsl/normals_0x2.vert.hlsl", NULL,
@@ -55,7 +57,7 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
 static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
     "MESH_0x2", "MESH_0xA",
     "MESH_0x12", "UNTEXTURED_COLOURED_SPRITE",
-    "BOUNDING_BOX", "SPRITE",
+    "BOUNDING_BOX", "SPRITE", "SPRITE_ALPHA_AS_RGB",
     "NORMALS_0x12", "NORMALS_0x2",
     "POSTPROCESS", "SHADOW_BLOB",
     "SHADOW_SILHOUETTE", "SHADOW_RECEIVER",

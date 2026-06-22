@@ -31,7 +31,7 @@ float4 main(PSInput input) : SV_Target0
         discard;
     }
 
-    float occluded = uAuxTexture.Sample(uAuxTextureSampler, suv).r;
+    float occluded = uAuxTexture.Sample(uAuxTextureSampler, float2(suv.x, 1.0 - suv.y)).r;
     if (uFlags1.z != 0)
     {
         return float4(occluded, 0.35 + 0.65 * (1.0 - occluded), 0.0, 1.0);

@@ -384,8 +384,6 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
     prim = &prim[12];
     vp = vp + 2;
 
-    void* vp_bak = vp;
-
     switch (((char *) vh)[5])
     {
         case 0:
@@ -459,7 +457,7 @@ u_int *SetVUVNDataShadowModel(u_int *prim)
             break;
     }
 
-    return (u_int *) vp_bak;
+    return (u_int *) vp;
 }
 
 static float *GetPreparedShadowPositions(u_int *vuvn_prim, u_int *write_p)
@@ -504,9 +502,14 @@ void ShadowModelMesh(u_int *prim)
             //mesh_read_p = SetVUVNData(vuvnprim);
             read_p = SetVUVNDataShadowModel(vuvnprim);
 
+            if (read_p == NULL)
+            {
+                break;
+            }
+
             MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER *) vuvnprim,
-                                      (SGDPROCUNITHEADER *) prim,
-                                      (float *) read_p);
+                (SGDPROCUNITHEADER *) prim,
+                GetPreparedShadowPositions(vuvnprim, read_p));
 
             read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE2 >> 3);
             read_p[1] = 0x17000000;

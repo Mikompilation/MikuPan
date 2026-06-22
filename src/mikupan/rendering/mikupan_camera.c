@@ -96,6 +96,13 @@ void MikuPan_SetViewProjectionMatrices(float *view_matrix,
     MikuPan_RecomputeAndUploadDerived();
 }
 
+void MikuPan_SetWorldSpaceModelTransform(void)
+{
+    sceVu0FMATRIX identity;
+    sceVu0UnitMatrix(identity);
+    MikuPan_SetModelTransformMatrix(identity);
+}
+
 void MikuPan_InvalidateModelTransformCache(void)
 {
     g_has_cached_model = 0;
