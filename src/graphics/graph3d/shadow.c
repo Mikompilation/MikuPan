@@ -529,7 +529,7 @@ void ShadowModelMesh(u_int *prim)
                 break;
             }
 
-            MikuPan_RenderShadowSilhouettePrepared(vuvnprim, prim, (float *) read_p);
+            //MikuPan_RenderShadowSilhouettePrepared(vuvnprim, prim, (float *) read_p);
 
             read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE0 >> 3);
             read_p[1] = 0x17000000;

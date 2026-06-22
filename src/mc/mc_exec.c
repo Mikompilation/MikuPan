@@ -19,8 +19,13 @@
 #define SECONDS_PER_MINUTE (60)
 #define SECONDS_PER_HOUR   (60 * SECONDS_PER_MINUTE)
 
+#ifdef BUILD_EU_VERSION
+#define KEYCODE "BA"
+#define PRODUCT_CODE "SLES-50821"
+#else
 #define KEYCODE "BA"
 #define PRODUCT_CODE "SLUS-20388"
+#endif
 
 typedef struct
 {
