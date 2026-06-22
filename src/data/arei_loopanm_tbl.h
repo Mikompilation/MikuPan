@@ -1,1 +1,1 @@
-ANI_CODE* arei_loopanm_tbl[] = { arei_loop_anm, NULL, };
+u_short* arei_loopanm_tbl[] = { arei_loop_anm, NULL, };
