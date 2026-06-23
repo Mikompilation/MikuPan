@@ -37,6 +37,32 @@ typedef enum MikuPan_GPUBufferKind
     MIKUPAN_GPU_BUFFER_STORAGE
 } MikuPan_GPUBufferKind;
 
+typedef enum MikuPan_GPUBlendMode
+{
+    MIKUPAN_GPU_BLEND_NORMAL = 0,
+    MIKUPAN_GPU_BLEND_ADDITIVE,
+    MIKUPAN_GPU_BLEND_SUBTRACTIVE,
+    MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD,
+} MikuPan_GPUBlendMode;
+
+typedef enum MikuPan_GSAlphaMode
+{
+    /* (Cs - Cd) * As + Cd = normal source-over */
+    MIKUPAN_GS_ALPHA_NORMAL = 0x44,
+
+    /* (Cd - Cs) * As + Cd = destination contrast / finder dither */
+    MIKUPAN_GS_ALPHA_DST_MINUS_SRC = 0x41,
+
+    /* (0 - Cs) * As + Cd = subtractive */
+    MIKUPAN_GS_ALPHA_SUBTRACTIVE = 0x42,
+
+    /* (Cs - 0) * As + Cd = additive */
+    MIKUPAN_GS_ALPHA_ADDITIVE = 0x48,
+
+    /* (Cd - 0) * As + Cd = destination boost */
+    MIKUPAN_GS_ALPHA_DST_BOOST = 0x49,
+} MikuPan_GSAlphaMode;
+
 typedef struct MikuPan_GPUUniformBlock
 {
     float model[16];
@@ -167,6 +193,7 @@ void MikuPan_GPUSetRenderStateShadowReceiver(void);
 void MikuPan_GPUSetDepthWrite(int enabled);
 void MikuPan_GPUSetDepthFunc(unsigned int gl_func);
 void MikuPan_GPUSetBlend(int enabled, int additive);
+void MikuPan_GPUSetBlendMode(int enabled, MikuPan_GPUBlendMode mode);
 void MikuPan_GPUSetCullBack(void);
 void MikuPan_GPUSetCullFront(void);
 void MikuPan_GPUSetCullNone(void);

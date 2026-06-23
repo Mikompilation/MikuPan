@@ -63,6 +63,7 @@ typedef struct
     SDL_GPUCompareOp compare;
     int blend;
     int additive_blend;
+    MikuPan_GPUBlendMode blend_mode;
     SDL_GPUCullMode cull_mode;
     SDL_GPUFillMode fill_mode;
     SDL_GPUColorComponentFlags color_mask;
@@ -460,6 +461,7 @@ static unsigned int RenderStateHash(void)
         (unsigned int) g_state.compare,
         (unsigned int) g_state.blend,
         (unsigned int) g_state.additive_blend,
+        (unsigned int) g_state.blend_mode,
         (unsigned int) g_state.cull_mode,
         (unsigned int) g_state.fill_mode,
         (unsigned int) g_state.color_mask,
@@ -526,6 +528,7 @@ static void SetDefaultRenderState(void)
     g_state.compare = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
     g_state.blend = 1;
     g_state.additive_blend = 0;
+    g_state.blend_mode = MIKUPAN_GPU_BLEND_NORMAL;
     g_state.cull_mode = SDL_GPU_CULLMODE_BACK;
     g_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     g_state.color_mask = SDL_GPU_COLORCOMPONENT_R | SDL_GPU_COLORCOMPONENT_G
@@ -1633,11 +1636,36 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
 
     SDL_GPUColorTargetBlendState blend = {0};
     blend.enable_blend = g_state.blend ? true : false;
-    blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
-    blend.dst_color_blendfactor = g_state.additive_blend
-                                      ? SDL_GPU_BLENDFACTOR_ONE
-                                      : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-    blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+    switch (g_state.blend_mode)
+    {
+        case MIKUPAN_GPU_BLEND_ADDITIVE:
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
+
+        case MIKUPAN_GPU_BLEND_SUBTRACTIVE:
+            /* Cd - Cs * As */
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            blend.color_blend_op = SDL_GPU_BLENDOP_REVERSE_SUBTRACT;
+            break;
+
+        case MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD:
+            /* The shader writes As into RGB, so blending adds As * Cd. */
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_DST_COLOR;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
+
+        case MIKUPAN_GPU_BLEND_NORMAL:
+        default:
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            blend.dst_color_blendfactor =
+                SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+            blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
+    }
     /* Alpha channel: keep the destination (framebuffer) alpha opaque instead of
      * blending it like a colour. With SRC_ALPHA here, every semi-transparent 2D
      * sprite drives the framebuffer alpha below 1. D3D12 ignores swapchain alpha
@@ -1925,6 +1953,15 @@ void MikuPan_GPUSetBlend(int enabled, int additive)
 {
     g_state.blend = enabled ? 1 : 0;
     g_state.additive_blend = additive ? 1 : 0;
+    g_state.blend_mode =
+        additive ? MIKUPAN_GPU_BLEND_ADDITIVE : MIKUPAN_GPU_BLEND_NORMAL;
+}
+
+void MikuPan_GPUSetBlendMode(int enabled, MikuPan_GPUBlendMode mode)
+{
+    g_state.blend = enabled ? 1 : 0;
+    g_state.additive_blend = mode == MIKUPAN_GPU_BLEND_ADDITIVE ? 1 : 0;
+    g_state.blend_mode = mode;
 }
 void MikuPan_GPUSetCullBack(void)
 {

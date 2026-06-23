@@ -21,6 +21,7 @@
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "os/pad.h"
 #include "os/system.h"
@@ -257,7 +258,10 @@ static int EffectSubMaterializeLiveFramebufferCopy(int addr)
     return EffectSubUploadMainFramebufferToGs(addr);
 }
 
-static void EffectSubRenderTexturedSpriteVertices(sceGsTex0 *tex, float *vertices, int use_screen_pos)
+static void EffectSubRenderTexturedSpriteVertices(sceGsTex0 *tex,
+                                                  float *vertices,
+                                                  int use_screen_pos,
+                                                  u_long gs_alpha)
 {
     if (EffectSubIsLiveFramebufferTexture(tex))
     {
@@ -287,7 +291,14 @@ static void EffectSubRenderTexturedSpriteVertices(sceGsTex0 *tex, float *vertice
         return;
     }
 
-    MikuPan_RenderSprite2D(tex, vertices);
+    if ((gs_alpha & 0xff) != MIKUPAN_GS_ALPHA_NORMAL)
+    {
+        MikuPan_RenderSprite2DGSAlpha(tex, vertices, gs_alpha);
+    }
+    else
+    {
+        MikuPan_RenderSprite2D(tex, vertices);
+    }
 }
 
 static void EffectSubRenderTexturedSpriteQuad(
@@ -313,7 +324,8 @@ static void EffectSubRenderTexturedSpriteQuad(
     EffectSubWriteTextured2DVertex(vertices[2], u0, v1, x0, y1, z, r, g, b, a);
     EffectSubWriteTextured2DVertex(vertices[3], u1, v1, x1, y1, z, r, g, b, a);
 
-    EffectSubRenderTexturedSpriteVertices(tex, &vertices[0][0], 0);
+    EffectSubRenderTexturedSpriteVertices(tex, &vertices[0][0], 0,
+                                          MIKUPAN_GS_ALPHA_NORMAL);
 }
 
 static void EffectSubConvertGSPointToNDC(const sceVu0IVECTOR ivec, float ndc[2])
@@ -2148,7 +2160,8 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
         buffer[i][11] = 1.0f;
     }
 
-    EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &buffer[0][0], 1);
+    EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &buffer[0][0],
+                                          1, alpha);
 
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
@@ -2393,7 +2406,8 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
         buffer[i][11] = 1.0f;
     }
 
-    EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &buffer[0][0], 1);
+    EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &buffer[0][0],
+                                          1, MIKUPAN_GS_ALPHA_NORMAL);
 
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
@@ -2693,7 +2707,8 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
             vertices[i][8], vertices[i][9]);
     }
 
-    EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &vertices[0][0], 1);
+    EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &vertices[0][0],
+                                          1, MIKUPAN_GS_ALPHA_NORMAL);
 
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
