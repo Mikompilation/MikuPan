@@ -1786,16 +1786,14 @@ void EJob028(MOVE_BOX *mb)
         fmb->pos[3] = ene_wrk[mb->idx].bep[3];
 
         fmb->comm_add_top = MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS);
-        
-        // addr = ((u_short *)COMM_ADD_TOP_ADDRESS)[3] + COMM_ADD_TOP_ADDRESS;
-        addr = INDEX16(MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS), 3);
-        adj = READ_LE16(addr);
-        addr = SEGMENT_ADDR(MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS), adj);
 
-        // fmb->comm_add.wrk = ((u_short *)addr)[no] + COMM_ADD_TOP_ADDRESS;
+        addr = INDEX16(fmb->comm_add_top, 3);
+        adj = READ_LE16(addr);
+        addr = MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS | adj);
+
         addr = INDEX16(addr, no);
         adj = READ_LE16(addr);
-        fmb->comm_add.wrk = SEGMENT_ADDR(MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS), adj);
+        fmb->comm_add.wrk = MikuPan_GetHostAddress(COMM_ADD_TOP_ADDRESS | adj);
 
         fmb->pos_no = 0;
         fmb->wait_time = 1;

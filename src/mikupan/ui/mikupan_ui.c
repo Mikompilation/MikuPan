@@ -35,6 +35,11 @@ SDL_Window* MikuPan_GetUiWindow(void)
     return ui_window;
 }
 
+int MikuPan_UiIsMenuOpen(void)
+{
+    return show_menu_bar != 0;
+}
+
 void MikuPan_InitUi(SDL_Window* window)
 {
     ui_window = window;

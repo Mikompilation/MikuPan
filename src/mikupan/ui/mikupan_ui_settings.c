@@ -10,6 +10,7 @@
 #include "ingame/camera/camera.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_controller.h"
+#include "mikupan/mikupan_first_person.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_renderer.h"
@@ -114,6 +115,24 @@ static void MikuPan_ApplyThirdPersonCameraConfiguration(void)
     camera_third_person_fov_deg = tps->fov_deg;
 }
 
+static void MikuPan_ApplyFirstPersonCameraConfiguration(void)
+{
+    MikuPan_ConfigFirstPersonCamera* fps =
+        &mikupan_configuration.first_person_camera;
+
+    MikuPan_ConfigurationValidate();
+    mikupan_first_person_r3_toggle_enabled = fps->r3_toggle_enabled;
+    mikupan_first_person_auto_run_enabled = fps->auto_run_enabled;
+    mikupan_first_person_eye_height = fps->eye_height;
+    mikupan_first_person_eye_forward = fps->eye_forward;
+    mikupan_first_person_look_distance = fps->look_distance;
+    mikupan_first_person_fov_deg = fps->fov_deg;
+    mikupan_first_person_stick_yaw_speed_deg = fps->stick_yaw_speed_deg;
+    mikupan_first_person_stick_pitch_speed_deg = fps->stick_pitch_speed_deg;
+
+    MikuPan_FirstPersonSetEnabled(fps->enabled);
+}
+
 static void MikuPan_UiStoreRuntimeConfiguration(void)
 {
     mikupan_configuration.renderer.render.width = render_resolution_width;
@@ -141,6 +160,24 @@ static void MikuPan_UiStoreRuntimeConfiguration(void)
         camera_third_person_interest_height;
     mikupan_configuration.third_person_camera.fov_deg =
         camera_third_person_fov_deg;
+    mikupan_configuration.first_person_camera.enabled =
+        MikuPan_FirstPersonEnabled() ? 1 : 0;
+    mikupan_configuration.first_person_camera.r3_toggle_enabled =
+        mikupan_first_person_r3_toggle_enabled ? 1 : 0;
+    mikupan_configuration.first_person_camera.auto_run_enabled =
+        mikupan_first_person_auto_run_enabled ? 1 : 0;
+    mikupan_configuration.first_person_camera.eye_height =
+        mikupan_first_person_eye_height;
+    mikupan_configuration.first_person_camera.eye_forward =
+        mikupan_first_person_eye_forward;
+    mikupan_configuration.first_person_camera.look_distance =
+        mikupan_first_person_look_distance;
+    mikupan_configuration.first_person_camera.fov_deg =
+        mikupan_first_person_fov_deg;
+    mikupan_configuration.first_person_camera.stick_yaw_speed_deg =
+        mikupan_first_person_stick_yaw_speed_deg;
+    mikupan_configuration.first_person_camera.stick_pitch_speed_deg =
+        mikupan_first_person_stick_pitch_speed_deg;
     mikupan_configuration.input.selected_gamepad_index =
         MikuPan_ControllerGetPreferredGamepadIndex();
     MikuPan_ControllerStoreBindingsToConfig();
@@ -471,6 +508,7 @@ void MikuPan_UiSettingsInit(void)
 
     MikuPan_SetShadowResolution(mikupan_configuration.renderer.shadow_resolution);
     MikuPan_ApplyThirdPersonCameraConfiguration();
+    MikuPan_ApplyFirstPersonCameraConfiguration();
     MikuPan_ControllerSetPreferredGamepadIndex(mikupan_configuration.input.selected_gamepad_index);
     mikupan_configuration.input.selected_gamepad_index = MikuPan_ControllerGetPreferredGamepadIndex();
     MikuPan_ControllerLoadBindingsFromConfig();

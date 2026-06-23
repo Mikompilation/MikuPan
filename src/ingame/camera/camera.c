@@ -25,6 +25,7 @@
 #include "enums.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_controller.h"
+#include "mikupan/mikupan_first_person.h"
 #include "os/key_cnf.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -1184,6 +1185,8 @@ void CameraMain()
 
     CameraDebugClear();
 
+    MikuPan_FirstPersonBeginFrame();
+
     if (dbg_wrk.cam_mode == 1 && DBG_cam_id_move_chk == 0)
     {
         cam_id_move.i[0] = camera.i[0];
@@ -1231,6 +1234,8 @@ void CameraMain()
         CameraIdMoveCtrl();
         return;
     }
+
+    MikuPan_FirstPersonUpdateToggle();
 
     plyr_wrk.pr_info.cam_type = 0xff;
 
@@ -1287,7 +1292,10 @@ void CameraMain()
     plyr_wrk.pr_info.camera_btl_old = plyr_wrk.pr_info.camera_btl;
     plyr_wrk.pr_info.camera_drm_old = plyr_wrk.pr_info.camera_drm;
 
-    if (camera_third_person_enabled && CameraThirdPersonCanOverride())
+    if (MikuPan_FirstPersonCameraCtrl())
+    {
+    }
+    else if (camera_third_person_enabled && CameraThirdPersonCanOverride())
     {
         CameraThirdPersonFollowCtrl();
     }
