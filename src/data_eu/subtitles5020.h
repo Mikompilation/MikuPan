@@ -1,0 +1,117 @@
+SUBTITLES subtitles5020[] = {
+    {
+        .mesno = 138,
+        .in = 875,
+        .out = 970,
+        .attr = 0,
+    },
+    {
+        .mesno = 139,
+        .in = 1635,
+        .out = 1710,
+        .attr = 0,
+    },
+    {
+        .mesno = 140,
+        .in = 2740,
+        .out = 2830,
+        .attr = 0,
+    },
+    {
+        .mesno = 141,
+        .in = 3710,
+        .out = 3760,
+        .attr = 0,
+    },
+    {
+        .mesno = 142,
+        .in = 3780,
+        .out = 3850,
+        .attr = 0,
+    },
+    {
+        .mesno = 143,
+        .in = 3900,
+        .out = 3940,
+        .attr = 0,
+    },
+    {
+        .mesno = 144,
+        .in = 3950,
+        .out = 4050,
+        .attr = 0,
+    },
+    {
+        .mesno = 145,
+        .in = 4115,
+        .out = 4220,
+        .attr = 0,
+    },
+    {
+        .mesno = 146,
+        .in = 4435,
+        .out = 4500,
+        .attr = 0,
+    },
+    {
+        .mesno = 147,
+        .in = 5720,
+        .out = 5760,
+        .attr = 0,
+    },
+    {
+        .mesno = 148,
+        .in = 5760,
+        .out = 5860,
+        .attr = 0,
+    },
+    {
+        .mesno = 149,
+        .in = 6045,
+        .out = 6080,
+        .attr = 0,
+    },
+    {
+        .mesno = 150,
+        .in = 6140,
+        .out = 6220,
+        .attr = 0,
+    },
+    {
+        .mesno = 151,
+        .in = 6430,
+        .out = 6610,
+        .attr = 0,
+    },
+    {
+        .mesno = 152,
+        .in = 6630,
+        .out = 6720,
+        .attr = 0,
+    },
+    {
+        .mesno = 153,
+        .in = 6935,
+        .out = 7090,
+        .attr = 0,
+    },
+    {
+        .mesno = 154,
+        .in = 7110,
+        .out = 7200,
+        .attr = 0,
+    },
+    {
+        .mesno = 155,
+        .in = 7505,
+        .out = 7770,
+        .attr = 16,
+    },
+    {
+        .mesno = -1,
+        .in = 0,
+        .out = 0,
+        .attr = 0,
+    },
+};
+

@@ -1,0 +1,1 @@
+RG_ANI_DAT* rg_ani_inter[] = { rg_ani_inter00, rg_ani_inter01, };

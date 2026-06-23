@@ -3,13 +3,15 @@
 #include "enums.h"
 #include "ea_autog.h"
 
-#include "main/glob.h"
 #include "common/ul_math.h"
+#include "ea_dat.h"
+#include "graphics/graph2d/subtitles.h"
 #include "graphics/graph3d/sglib.h"
-#include "os/eeiop/se_cmd.h"
+#include "iop/adpcm/iopadpcm.h"
+#include "main/glob.h"
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
-#include "iop/adpcm/iopadpcm.h"
+#include "os/eeiop/se_cmd.h"
 
 static void EadpcmUpdateAutog(ADPCM_TUNE_PARAM *atpp);
 static void EAdpcmAutogParaSet(ADPCM_TUNE_PARAM *atpp);

@@ -1720,7 +1720,7 @@ void SetSprFile2(int64_t addr, u_int offset)
  */
 void SetSprFile3(int64_t addr, u_int offset)
 {
-    addr = MikuPan_GetHostAddress(addr);
+    addr = MikuPan_GetHostAddress((int)addr);
     MakeTim2ClutDirect3(addr, -1, -1, offset);
 }
 

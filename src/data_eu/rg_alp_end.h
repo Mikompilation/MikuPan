@@ -1,0 +1,1 @@
+RG_ALP_DAT* rg_alp_end[] = { rg_alp_end00, rg_alp_end01, };

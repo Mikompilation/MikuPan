@@ -1,0 +1,1 @@
+MSN_LOAD_DAT* msn_title_load_dat[] = { msn0_title_load_dat, msn1_title_load_dat, msn2_title_load_dat, msn3_title_load_dat, msn4_title_load_dat, };

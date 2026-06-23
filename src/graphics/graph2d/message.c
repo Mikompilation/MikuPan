@@ -64,7 +64,6 @@ static void SetFontEnv();
 static void SetFontPat(int pri, int fn, int x, int y, int fw, u_char r, u_char g, u_char b, u_char a);
 static void SetUnderLine(int sw, int pri, int x, int y, int fw, u_char r, u_char g, u_char b, u_char a);
 #endif
-static void MesPacketEnd();
 static void PacketEnd();
 static void MesKeyCheck();
 
@@ -1149,7 +1148,7 @@ static void SetUnderLine(int sw, int pri, int x, int y, int fw, u_char r, u_char
 }
 
 #ifdef BUILD_EU_VERSION
-static void MesPacketEnd()
+void MesPacketEnd()
 #else
 static void PacketEnd()
 #endif

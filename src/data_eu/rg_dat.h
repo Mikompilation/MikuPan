@@ -1,0 +1,43 @@
+RGOST_DAT rg_dat[] = {
+    {
+        .score = 1000,
+        .center_no = 1,
+        .center_num = 2,
+        .start = 0,
+        .inter = 0,
+        .end = 0,
+        .dummy = 255,
+        .pos = {500, -900, 500},
+    },
+    {
+        .score = 500,
+        .center_no = 1,
+        .center_num = 2,
+        .start = 0,
+        .inter = 0,
+        .end = 0,
+        .dummy = 255,
+        .pos = {500, -500, 500},
+    },
+    {
+        .score = 700,
+        .center_no = 1,
+        .center_num = 2,
+        .start = 0,
+        .inter = 0,
+        .end = 0,
+        .dummy = 255,
+        .pos = {3000, -2100, 500},
+    },
+    {
+        .score = 500,
+        .center_no = 1,
+        .center_num = 2,
+        .start = 0,
+        .inter = 0,
+        .end = 0,
+        .dummy = 255,
+        .pos = {3500, -1100, 3500},
+    },
+};
+

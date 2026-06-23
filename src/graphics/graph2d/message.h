@@ -108,4 +108,8 @@ void FontDispSample();
 int SetMessageMov(int path, int type, DISP_STR *s);
 #endif
 
+#ifdef BUILD_EU_VERSION
+void MesPacketEnd();
+#endif
+
 #endif // GRAPHICS_GRAPH2D_MESSAGE_H

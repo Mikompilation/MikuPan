@@ -1,0 +1,1 @@
+u_char msn_start_room[] = { 0, 0, 40, 29, 35 };

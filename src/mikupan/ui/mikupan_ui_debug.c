@@ -445,22 +445,6 @@ void MikuPan_UiShadowDebugWindow(void)
     igText("Draws:  caster %d (%d indices)  receiver %d (%d indices)",
            shadow_debug->caster_draws, shadow_debug->caster_indices,
            shadow_debug->receiver_draws, shadow_debug->receiver_indices);
-    igText(
-        "Caster mesh types: 0x00=%d 0x02=%d 0x40=%d 0x42=%d 0x80=%d 0x82=%d "
-        "other=%d",
-        shadow_debug->caster_type_0, shadow_debug->caster_type_2,
-        shadow_debug->caster_type_80, shadow_debug->caster_type_82,
-        shadow_debug->caster_type_other);
-    igText(
-        "Caster draw types: 0x00=%d 0x02=%d 0x40=%d 0x42=%d 0x80=%d 0x82=%d "
-        "other=%d",
-        shadow_debug->caster_draw_type_0, shadow_debug->caster_draw_type_2,
-        shadow_debug->caster_draw_type_80, shadow_debug->caster_draw_type_82,
-        shadow_debug->caster_draw_type_other);
-    igText("Receiver mesh types: 0x00=%d 0x10=%d 0x12=%d 0x32=%d other=%d",
-           shadow_debug->receiver_type_0, shadow_debug->receiver_type_10,
-           shadow_debug->receiver_type_12, shadow_debug->receiver_type_32,
-           shadow_debug->receiver_type_other);
 
     if (!shadow_debug->fbo_complete && shadow_debug->fbo_initialized)
     {
@@ -473,10 +457,7 @@ void MikuPan_UiShadowDebugWindow(void)
         igTextColored((ImVec4) {1.0f, 0.7f, 0.2f, 1.0f},
                       "No caster pass this frame.");
     }
-    else if (shadow_debug->caster_draws == 0
-             && (shadow_debug->caster_type_0 != 0
-                 || shadow_debug->caster_type_80 != 0
-                 || shadow_debug->caster_type_other != 0))
+    else if (shadow_debug->caster_draws == 0)
     {
         igTextColored(
             (ImVec4) {1.0f, 0.7f, 0.2f, 1.0f},

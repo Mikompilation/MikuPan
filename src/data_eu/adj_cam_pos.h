@@ -1,0 +1,1 @@
+sceVu0FVECTOR adj_cam_pos = { 100.0f, -1400.0f, -1200.0f, 0.0f };

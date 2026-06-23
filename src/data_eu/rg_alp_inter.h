@@ -1,0 +1,1 @@
+RG_ALP_DAT* rg_alp_inter[] = { rg_alp_inter00, rg_alp_inter01, };

@@ -11,6 +11,7 @@
 #include "graphics/graph2d/message.h"
 #include "ingame/menu/ig_menu.h"
 #include "graphics/graph2d/tim2.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 
 typedef struct {
 	int mesno;
@@ -331,6 +332,17 @@ static SUBTITLES_DBG st_dbg;
 
 #define DMA_MEM 0x0FFFFFFF
 
+static int RenderSubtitlesMessage(int path, int type, DISP_STR *s)
+{
+    int ret;
+
+    MikuPan_BeginLate2DOverlayQueue();
+    ret = SetMessageMov(path, type, s);
+    MikuPan_EndLate2DOverlayQueue();
+
+    return ret;
+}
+
 void ContSubtitlesTime(int path, u_int frame)
 {
 	int i;
@@ -406,7 +418,7 @@ void ContSubtitlesTime(int path, u_int frame)
         ds.pos_x = 484;
         ds.pos_y = (n - i - 1) * 24 + 70;
         
-        SetMessageMov(path,0,&ds);
+        RenderSubtitlesMessage(path, 0, &ds);
     }
 }
 
@@ -458,7 +470,7 @@ void DispNowFrame(int path, u_int frame)
     
     ds.str = time;
     
-    SetMessageMov(path, 0, &ds);
+    RenderSubtitlesMessage(path, 0, &ds);
     
     time2[4] += (frame / 1) % 10;
     time2[3] += (frame / 10) % 10;
@@ -470,7 +482,7 @@ void DispNowFrame(int path, u_int frame)
     
     ds.str = time2;
     
-    SetMessageMov(path, 0, &ds);
+    RenderSubtitlesMessage(path, 0, &ds);
 }
 
 int GetIndexNums(int *tbl, int no)
@@ -697,7 +709,7 @@ void SetSubtitles(int type, int no, u_int mframe)
                     ((ingame_wrk.mode & 7) && ingame_wrk.stts == 0 && (plyr_wrk.mode == 0 || plyr_wrk.mode == 10))
                 )
                 {
-                    SetMessageMov(path, (stp->attr & 0x100) == 0, &ds);
+                    RenderSubtitlesMessage(path, (stp->attr & 0x100) == 0, &ds);
                 }
 
                 subtitles_sys.run = 1;

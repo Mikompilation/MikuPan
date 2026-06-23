@@ -373,10 +373,10 @@ int SceneTestLoad()
         scn_test_wrk.load_status = 7;
     break;
     case 7:
-        //if (IsAdpcmScenePreLoadEnd() != 1 && IsAdpcmScenePreLoadEnd() != -1)
-        //{
-        //    break;
-        //}
+        if (IsAdpcmScenePreLoadEnd() != 1 && IsAdpcmScenePreLoadEnd() != -1)
+        {
+            break;
+        }
 
         scn_test_wrk.load_status = 8;
     case 8:
