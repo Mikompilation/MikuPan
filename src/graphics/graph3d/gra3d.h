@@ -90,6 +90,7 @@ int CalcShadowDirecion(ShadowHandle *shandle);
 u_int* SearchBoundingBoxPacket(u_int *prim);
 void DrawRoomShadow();
 void DrawFurniture(int disp_room);
+void DrawFurnitureForced(int disp_room);
 void SetWScissorBox(int disp_room);
 void ReSetWScissorBox();
 void InitFogSelection();

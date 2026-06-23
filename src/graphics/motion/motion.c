@@ -1439,6 +1439,11 @@ static u_int motGetBoneNum(u_int *mot_p)
 
     mfh = (MOT_FILE_HEADER *)mot_p;
 
+    if (mfh == NULL)
+    {
+        return 0;
+    }
+
     return mfh->bone_num;
 }
 

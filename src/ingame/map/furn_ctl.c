@@ -229,6 +229,11 @@ int GetRoomFurnID(u_char room_id, u_short *furn_id, u_char msn_no)
         addr_si0 = (int *)GetFloorTopAddr(k);
         addr_si0 = (int *)MikuPan_GetHostPointer(addr_si0[11] + BASE_ADDRESS);
 
+        if (addr_si0 == -1)
+        {
+            continue;
+        }
+
         addr_uc0 = (u_char *)MikuPan_GetHostPointer(*addr_si0 + BASE_ADDRESS);
 
         room_num = *addr_uc0;

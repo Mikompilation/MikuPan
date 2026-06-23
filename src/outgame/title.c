@@ -15,8 +15,15 @@
 #include "graphics/graph3d/sgcam.h"
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
+#include "graphics/motion/accessory.h"
 #include "graphics/motion/mdlwork.h"
+#include "graphics/motion/mime.h"
 #include "graphics/mov/movie.h"
+#include "ingame/ig_glob.h"
+#include "ingame/map/door_ctl.h"
+#include "ingame/map/furn_ctl.h"
+#include "ingame/map/furn_spe/furn_spe.h"
+#include "ingame/map/map_ctrl.h"
 #include "ingame/menu/ig_album.h"
 #include "ingame/menu/ig_camra.h"
 #include "ingame/menu/ig_glst.h"
@@ -64,6 +71,7 @@ static int exit_prompt_sel = 1; /* 0 = Yes, 1 = No (default to the safe choice) 
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
 
 #define TITLE_BG_MSN_NO 3
+#define TITLE_BG_MSN_MAX 4
 #define TITLE_BG_ROOM_NO 16
 #define TITLE_BG_ROOM_BLOCK 0
 #define TITLE_BG_ROOM_MAX 63
@@ -72,6 +80,7 @@ static int exit_prompt_sel = 1; /* 0 = Yes, 1 = No (default to the safe choice) 
 
 typedef enum {
     TITLE_BG_ROOM_UNLOADED = 0,
+    TITLE_BG_ROOM_LOADING_MAP,
     TITLE_BG_ROOM_LOADING,
     TITLE_BG_ROOM_READY,
 } TITLE_BG_ROOM_STATE;
@@ -100,15 +109,15 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
         .msn_no = 3,
         .room_no = 16,
         .audio_file_no = 1541,
-        .cycle_seconds = 10,
+        .cycle_seconds = 120,
         .camera = {
             .camera_p = {4654.2f, -450.0f, 5244.8f},
             .camera_i = {4931.7f, -350.0f, 4171.2f},
             .fov_deg = 79.4f,
         },
         .lerp_enabled = 1,
-        .lerp_seconds = 15.9f,
-        .lerp_t = 0.469f,
+        .lerp_seconds = 115.0f,
+        .lerp_t = 0.0f,
         .lerp_a = {
             .camera_p = {5153.2f, -450.0f, 5373.8f},
             .camera_i = {5430.7f, -350.0f, 4300.2f},
@@ -124,14 +133,14 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
         .msn_no = 3,
         .room_no = 14,
         .audio_file_no = 1539,
-        .cycle_seconds = 16,
+        .cycle_seconds = 120,
         .camera = {
             .camera_p = {2272.5f, -50.0f, -12.4f},
             .camera_i = {2288.7f, -365.0f, 892.0f},
             .fov_deg = 100.0f,
         },
         .lerp_enabled = 1,
-        .lerp_seconds = 15.9f,
+        .lerp_seconds = 115.0f,
         .lerp_t = 0.0f,
         .lerp_a = {
             .camera_p = {2272.5f, -50.0f, -12.4f},
@@ -148,14 +157,14 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
         .msn_no = 3,
         .room_no = 10,
         .audio_file_no = 1540,
-        .cycle_seconds = 28,
+        .cycle_seconds = 120,
         .camera = {
             .camera_p = {1402.7f, -450.0f, 2767.5f},
             .camera_i = {1394.6f, -350.0f, 1233.7f},
             .fov_deg = 43.4f,
         },
         .lerp_enabled = 1,
-        .lerp_seconds = 29.2f,
+        .lerp_seconds = 115.0f,
         .lerp_t = 0.0f,
         .lerp_a = {
             .camera_p = {1402.7f, -450.0f, 2767.5f},
@@ -172,14 +181,14 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
         .msn_no = 3,
         .room_no = 10,
         .audio_file_no = 1541,
-        .cycle_seconds = 10,
+        .cycle_seconds = 60,
         .camera = {
             .camera_p = {1509.8f, -595.0f, 1254.6f},
             .camera_i = {481.6f, -480.0f, 1218.4f},
             .fov_deg = 32.1f,
         },
         .lerp_enabled = 1,
-        .lerp_seconds = 50.9f,
+        .lerp_seconds = 51.0f,
         .lerp_t = 0.0f,
         .lerp_a = {
             .camera_p = {1509.8f, -595.0f, 1254.6f},
@@ -196,14 +205,14 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
         .msn_no = 3,
         .room_no = 6,
         .audio_file_no = 1563,
-        .cycle_seconds = 17,
+        .cycle_seconds = 120,
         .camera = {
             .camera_p = {5311.4f, -20.0f, 955.7f},
             .camera_i = {4619.5f, -135.0f, 1534.4f},
             .fov_deg = 64.1f,
         },
         .lerp_enabled = 1,
-        .lerp_seconds = 15.9f,
+        .lerp_seconds = 115.0f,
         .lerp_t = 0.0f,
         .lerp_a = {
             .camera_p = {5311.4f, -20.0f, 955.7f},
@@ -249,6 +258,9 @@ static int title_bg_camera_lerp_timer = 447;
 static int title_debug_window_visible = 1;
 static int title_bgm_file_no = TITLE_BGM_DEFAULT_FILE_NO;
 static int title_bgm_playing_file_no = -1;
+static int title_bg_map_load_id = -1;
+static int title_bg_floor = 0;
+static int title_bg_map_room_no = 0xff;
 
 int TitleUseRoomBackground(void)
 {
@@ -662,6 +674,8 @@ static const char *TitleBgRoomStateName(void)
     {
     case TITLE_BG_ROOM_UNLOADED:
         return "unloaded";
+    case TITLE_BG_ROOM_LOADING_MAP:
+        return "loading map";
     case TITLE_BG_ROOM_LOADING:
         return "loading";
     case TITLE_BG_ROOM_READY:
@@ -735,6 +749,8 @@ void TitleSetUseRoomBackground(int enabled)
 static void TitleBgRequestRoomReload(void)
 {
     title_bg_room_state = TITLE_BG_ROOM_UNLOADED;
+    title_bg_map_load_id = -1;
+    title_bg_map_room_no = 0xff;
 }
 
 static void TitleBgPauseAutoCycle(void)
@@ -932,7 +948,7 @@ static void TitleBgAutoCycleUpdate(void)
 
 static void TitleBgSetMissionNo(int msn_no)
 {
-    msn_no = TitleBgClampInt(msn_no, 0, 255);
+    msn_no = TitleBgClampInt(msn_no, 0, TITLE_BG_MSN_MAX);
 
     if (title_bg_msn_no == msn_no)
     {
@@ -1129,11 +1145,92 @@ static void TitleBgCopyRoomLights(void)
 
 static void TitleBgSetupRoomState(void)
 {
-    room_wrk.room_no = title_bg_room_no;
+    room_wrk.room_no = title_bg_map_room_no;
     room_wrk.disp_no[0] = title_bg_room_no;
     room_wrk.disp_no[1] = 0xff;
     TitleBgSetVector(room_wrk.pos[0], 0.0f, 0.0f, 0.0f, 1.0f);
     TitleBgSetVector(room_wrk.pos[1], 0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+static int TitleBgResolveMapRoom(void)
+{
+    int floor;
+    int room_no;
+
+    title_bg_floor = 0;
+    title_bg_map_room_no = 0xff;
+
+    for (floor = 0; floor < 4; floor++)
+    {
+        if (floor_exist[title_bg_msn_no][floor] == 0)
+        {
+            continue;
+        }
+
+        title_bg_floor = floor;
+
+        for (room_no = 0; room_no <= TITLE_BG_ROOM_MAX; room_no++)
+        {
+            if (GetRoomIdFromRoomNoFloor(MAP_ROOM_DAT, room_no, floor) == title_bg_room_no)
+            {
+                title_bg_map_room_no = room_no;
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static void TitleBgSetupMapWork(void)
+{
+    TitleBgResolveMapRoom();
+
+    map_wrk.floor = title_bg_floor;
+    map_wrk.dat_adr = GetFloorTopAddr(title_bg_floor);
+    map_wrk.now_room = title_bg_room_no;
+    map_wrk.next_room = 0xff;
+    map_wrk.room_update_flg = 0;
+    map_wrk.mirror_flg = 0;
+
+    TitleBgSetupRoomState();
+}
+
+static void TitleBgSetupFurnitureWork(void)
+{
+    int old_msn_no = ingame_wrk.msn_no;
+    int i;
+
+    ingame_wrk.msn_no = title_bg_msn_no;
+    InitMapStatus(title_bg_msn_no);
+    InitAreaReadWrk();
+    PreGameInitFActWrk();
+
+    memset(furn_wrk, 0, sizeof(furn_wrk));
+    memset(fefct_wrk, 0, sizeof(fefct_wrk));
+    room_wrk = (ROOM_WRK){0};
+
+    for (i = 0; i < 60; i++)
+    {
+        FurnSetWrkNoUse(&furn_wrk[i], i);
+    }
+
+    mimChodoInitWork();
+    acsInitRopeWork();
+    acsInitChodoWork();
+    DoorAcInit();
+    TitleBgSetupMapWork();
+    DoorCtrlInit();
+
+    if (title_bg_map_room_no != 0xff)
+    {
+        FurnDataInit();
+        DoorDataInit();
+        FurnSortFurnWrk(0);
+    }
+
+    TitleBgSetupRoomState();
+    ingame_wrk.msn_no = old_msn_no;
 }
 
 static void TitleBgSetupCamera(void)
@@ -1169,9 +1266,8 @@ static void TitleBgSetupCamera(void)
 static void TitleBgBeginRoomLoad(void)
 {
     InitModelLoad();
-    TitleBgSetupRoomState();
-    RoomMdlLoadReq(NULL, TITLE_BG_ROOM_BLOCK, title_bg_msn_no, title_bg_room_no, 0);
-    title_bg_room_state = TITLE_BG_ROOM_LOADING;
+    title_bg_map_load_id = MissonMapDataLoad(title_bg_msn_no);
+    title_bg_room_state = TITLE_BG_ROOM_LOADING_MAP;
 }
 
 static void TitleBgUpdateRoomLoad(void)
@@ -1181,10 +1277,22 @@ static void TitleBgUpdateRoomLoad(void)
         TitleBgBeginRoomLoad();
     }
 
+    if (title_bg_room_state == TITLE_BG_ROOM_LOADING_MAP)
+    {
+        if (title_bg_map_load_id >= 0 && IsLoadEnd(title_bg_map_load_id) == 0)
+        {
+            return;
+        }
+
+        TitleBgSetupMapWork();
+        RoomMdlLoadReq(NULL, TITLE_BG_ROOM_BLOCK, title_bg_msn_no, title_bg_room_no, 0);
+        title_bg_room_state = TITLE_BG_ROOM_LOADING;
+    }
+
     if (title_bg_room_state == TITLE_BG_ROOM_LOADING && RoomMdlLoadWait() != 0)
     {
-        TitleBgSetupRoomState();
         InitialDmaBuffer();
+        TitleBgSetupFurnitureWork();
         title_bg_room_state = TITLE_BG_ROOM_READY;
     }
 }
@@ -1244,6 +1352,7 @@ static void TitleBgDrawRoom(void)
         16);
 
     TitleBgCopyRoomLights();
+    FurnAplyAmbient();
 
     CalcRoomCoord(room_addr_tbl[room_no].near_sgd, room_wrk.pos[0]);
 
@@ -1255,6 +1364,7 @@ static void TitleBgDrawRoom(void)
     search_num = 0;
     search_num2 = 0;
     DrawOneRoom(TITLE_BG_ROOM_BLOCK);
+    DrawFurnitureForced(room_no);
 }
 
 static void TitleBgDebugUi(void)
@@ -1284,6 +1394,7 @@ static void TitleBgDebugUi(void)
 
     igText("State: %s", TitleBgRoomStateName());
     igText("Room asset: %s", TitleBgRoomName(title_bg_room_no));
+    igText("Map floor: %d local room: %d", title_bg_floor, title_bg_map_room_no);
 
     igSeparator();
     igText("Title style");
@@ -2611,7 +2722,7 @@ void TitleWaitMode()
 }
 
 void TitleStartSlct()
-{    
+{
     char *str_o = "o";
 	/* s0 16 */ char *str1 = "ZERO HOUR";
 	/* s1 17 */ char *str2 = "NEW GAME";
@@ -2943,12 +3054,13 @@ void TitleLoadCtrl()
 void TitleSelectMode()
 {
     /* s1 17 */ int i;
-    /* 0x0(sp) */ char *mode_str[9] = {
+    /* 0x0(sp) */ char *mode_str[10] = {
         "STORY MODE",
         "BATTLE MODE",
         "OPTION",
         "MAP DATA EDIT",
         "SOUND TEST",
+        "SND TEST",
         "SCENE TEST",
         "MOTION TEST",
         "ROOM SIZE CHECK",
@@ -2958,7 +3070,7 @@ void TitleSelectMode()
 
     TitleDrawClassicBackground(0, 0);
 
-    for (i = 0; i < 9; i++)
+    for (i = 0; i < 10; i++)
     {
         SetASCIIString(110.0f, 30 + 40 * i, mode_str[i]);
     }
@@ -2979,7 +3091,7 @@ void TitleSelectMode()
         }
         else
         {
-            title_wrk.csr = 0x8;
+            title_wrk.csr = 0x9;
         }
 
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
@@ -2991,7 +3103,7 @@ void TitleSelectMode()
         (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
     )
     {
-        if (title_wrk.csr < 8)
+        if (title_wrk.csr < 9)
         {
             title_wrk.csr++;
         }
@@ -3024,20 +3136,24 @@ void TitleSelectMode()
                 OutGameModeChange(OUTGAME_MODE_OPTION);
                 break;
             case 3: // MAP DATA EDIT
+                OutGameModeChange(OUTGAME_MODE_MAP_DATA_EDIT);
                 break;
             case 4:
                 OutGameModeChange(OUTGAME_MODE_SOUND_TEST);
                 break;
             case 5:
-                OutGameModeChange(OUTGAME_MODE_SCENE_TEST);
+                OutGameModeChange(OUTGAME_MODE_SND_TEST);
                 break;
             case 6:
-                OutGameModeChange(OUTGAME_MODE_MOTION_TEST);
+                OutGameModeChange(OUTGAME_MODE_SCENE_TEST);
                 break;
             case 7:
-                OutGameModeChange(OUTGAME_MODE_ROOM_SIZE_CHECK);
+                OutGameModeChange(OUTGAME_MODE_MOTION_TEST);
                 break;
             case 8:
+                OutGameModeChange(OUTGAME_MODE_ROOM_SIZE_CHECK);
+                break;
+            case 9:
                 OutGameModeChange(OUTGAME_MODE_LAYOUT_TEST);
                 break;
         }
