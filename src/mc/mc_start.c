@@ -13,6 +13,8 @@
 #include "mc/mc_disp.h"
 #include "mc/mc_exec.h"
 
+#include <stdio.h>
+
 MC_START_CHECK mc_start_check[] = {
     {0}, {0},
 };
@@ -273,7 +275,7 @@ char mcLanguageLoadMain()
                 return 1;
             }
 
-            mcInit(7, (u_int *)MC_WORK_ADDRESS, 0);
+            mcInit(7, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
 
             mcSetStep(MC_CHECK, MC_MSG_NONE);
 

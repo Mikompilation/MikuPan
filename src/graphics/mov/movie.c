@@ -34,6 +34,7 @@
 #include "os/system.h"
 // #include "ingame/map/map_area.h"
 #include "SDL3/SDL_timer.h"
+#include "graphics/graph2d/subtitles.h"
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
@@ -651,6 +652,22 @@ static int stepMovPlayback(void)
         return 0;
     }
 
+#ifdef BUILD_EU_VERSION
+    SetSubtitles(0, movie_wrk.play_event_no, g_vd.current_frame);
+    MakeMovMes();
+
+    if (sys_wrk.pal_disp_mode == 0)
+    {
+        SceneSetVibrate(movie_wrk.play_event_no, (g_vd.current_frame * 6) / 5);
+    }
+    else
+    {
+        SceneSetVibrate(movie_wrk.play_event_no, g_vd.current_frame);
+    }
+#else
+    SceneSetVibrate(movie_wrk.play_event_no, g_vd.current_frame);
+#endif
+
     /*
      * End-of-video path:
      * keep showing the last decoded frame while queued audio drains.
@@ -820,19 +837,6 @@ static int readMpeg(VideoDecoder *vd, ReadBuffer *rb)
     }
 
     vd->current_frame++;
-
-#ifdef BUILD_EU_VERSION
-    if (sys_wrk.pal_disp_mode == 0)
-    {
-        SceneSetVibrate(movie_wrk.play_event_no, (vd->mpeg.frameCount * 6) / 5);
-    }
-    else
-    {
-        SceneSetVibrate(movie_wrk.play_event_no, vd->mpeg.frameCount);
-    }
-#else
-    SceneSetVibrate(movie_wrk.play_event_no, vd->current_frame);
-#endif
 
     if (START_PRESSED() != 0 && vd->current_frame >= 31 && movie_wrk.play_event_sta != 7)
     {

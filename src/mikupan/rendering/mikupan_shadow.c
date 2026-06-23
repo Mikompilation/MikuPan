@@ -65,75 +65,45 @@ void MikuPan_ShadowDebugBeginFrame(void)
     MikuPan_UpdateShadowDebugStaticFields();
 }
 
-static void MikuPan_ShadowDebugCountMeshType(int mesh_type,
-                                             int *type_0,
-                                             int *type_2,
-                                             int *type_10,
-                                             int *type_12,
-                                             int *type_32,
-                                             int *type_80,
-                                             int *type_82,
-                                             int *type_other)
+static int MikuPan_ShadowBucketOf(int mesh_type)
 {
     switch (mesh_type & 0xff)
     {
-        case 0x00: if (type_0 != NULL)  (*type_0)++;  break;
-        case 0x02: if (type_2 != NULL)  (*type_2)++;  break;
-        case 0x10: if (type_10 != NULL) (*type_10)++; break;
-        case 0x12: if (type_12 != NULL) (*type_12)++; break;
-        case 0x32: if (type_32 != NULL) (*type_32)++; break;
-        case 0x80: if (type_80 != NULL) (*type_80)++; break;
-        case 0x82: if (type_82 != NULL) (*type_82)++; break;
-        default:   if (type_other != NULL) (*type_other)++; break;
+        case 0x00: return MIKUPAN_SHADOW_BUCKET_0;
+        case 0x02: return MIKUPAN_SHADOW_BUCKET_2;
+        case 0x0A: return MIKUPAN_SHADOW_BUCKET_A;
+        case 0x10: return MIKUPAN_SHADOW_BUCKET_10;
+        case 0x12: return MIKUPAN_SHADOW_BUCKET_12;
+        case 0x32: return MIKUPAN_SHADOW_BUCKET_32;
+        case 0x42: return MIKUPAN_SHADOW_BUCKET_42;
+        case 0x80: return MIKUPAN_SHADOW_BUCKET_80;
+        case 0x82: return MIKUPAN_SHADOW_BUCKET_82;
+        default:   return MIKUPAN_SHADOW_BUCKET_OTHER;
     }
 }
 
 void MikuPan_ShadowDebugRecordCasterMeshType(int mesh_type)
 {
-    MikuPan_ShadowDebugCountMeshType(mesh_type,
-        &g_shadow_debug.caster_type_0,
-        &g_shadow_debug.caster_type_2,
-        NULL,
-        NULL,
-        NULL,
-        &g_shadow_debug.caster_type_80,
-        &g_shadow_debug.caster_type_82,
-        &g_shadow_debug.caster_type_other);
+    g_shadow_debug.caster_seen[MikuPan_ShadowBucketOf(mesh_type)]++;
 }
 
 void MikuPan_ShadowDebugRecordReceiverMeshType(int mesh_type)
 {
-    MikuPan_ShadowDebugCountMeshType(mesh_type,
-        &g_shadow_debug.receiver_type_0,
-        NULL,
-        &g_shadow_debug.receiver_type_10,
-        &g_shadow_debug.receiver_type_12,
-        &g_shadow_debug.receiver_type_32,
-        NULL,
-        NULL,
-        &g_shadow_debug.receiver_type_other);
+    g_shadow_debug.receiver_seen[MikuPan_ShadowBucketOf(mesh_type)]++;
 }
 
 void MikuPan_ShadowDebugRecordCasterDraw(int mesh_type, int index_count)
 {
     g_shadow_debug.caster_draws++;
     g_shadow_debug.caster_indices += index_count;
-    MikuPan_ShadowDebugCountMeshType(mesh_type,
-        &g_shadow_debug.caster_draw_type_0,
-        &g_shadow_debug.caster_draw_type_2,
-        NULL,
-        NULL,
-        NULL,
-        &g_shadow_debug.caster_draw_type_80,
-        &g_shadow_debug.caster_draw_type_82,
-        &g_shadow_debug.caster_draw_type_other);
+    g_shadow_debug.caster_drawn[MikuPan_ShadowBucketOf(mesh_type)]++;
 }
 
 void MikuPan_ShadowDebugRecordReceiverDraw(int mesh_type, int index_count)
 {
-    (void)mesh_type;
     g_shadow_debug.receiver_draws++;
     g_shadow_debug.receiver_indices += index_count;
+    g_shadow_debug.receiver_drawn[MikuPan_ShadowBucketOf(mesh_type)]++;
 }
 
 const MikuPan_ShadowDebugInfo *MikuPan_GetShadowDebugInfo(void)

@@ -445,6 +445,11 @@ void SgMapUnit(void *sgd_top)
 
         while ((int64_t)matp < (int64_t)phead)
         {
+            if (matp == (void*)0 || matp == (void*)phead )
+            {
+                break;
+            }
+
             size++;
             matp++;
         }

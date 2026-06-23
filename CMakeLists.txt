@@ -11,6 +11,8 @@ if(WIN32)
     set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/extern/icon.rc")
 endif()
 
+#add_compile_definitions(BUILD_EU_VERSION)
+
 if(ANDROID)
     set(MIKUPAN_ANDROID_PAGE_SIZE "16384"
             CACHE STRING "Maximum Android ELF page size for native shared libraries.")

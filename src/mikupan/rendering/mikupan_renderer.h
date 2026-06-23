@@ -95,6 +95,24 @@ typedef struct
     int negative_debug_layer_count;
 } MikuPan_PhotoDebugInfo;
 
+/* Shadow per-mesh-type debug buckets. Order is the display order in the Shadow
+ * Debug window. MikuPan_ShadowBucketOf() in mikupan_shadow.c maps a raw mesh
+ * type (mtype & 0xff) to one of these. */
+typedef enum
+{
+    MIKUPAN_SHADOW_BUCKET_0 = 0, /* 0x00 */
+    MIKUPAN_SHADOW_BUCKET_2,     /* 0x02 */
+    MIKUPAN_SHADOW_BUCKET_A,     /* 0x0A skinned */
+    MIKUPAN_SHADOW_BUCKET_10,    /* 0x10 */
+    MIKUPAN_SHADOW_BUCKET_12,    /* 0x12 */
+    MIKUPAN_SHADOW_BUCKET_32,    /* 0x32 */
+    MIKUPAN_SHADOW_BUCKET_42,    /* 0x42 multi */
+    MIKUPAN_SHADOW_BUCKET_80,    /* 0x80 */
+    MIKUPAN_SHADOW_BUCKET_82,    /* 0x82 */
+    MIKUPAN_SHADOW_BUCKET_OTHER, /* anything else */
+    MIKUPAN_SHADOW_BUCKET_COUNT
+} MikuPan_ShadowTypeBucket;
+
 typedef struct
 {
     int enabled;
@@ -112,23 +130,13 @@ typedef struct
     int receiver_draws;
     int receiver_indices;
 
-    int caster_type_0;
-    int caster_type_2;
-    int caster_type_80;
-    int caster_type_82;
-    int caster_type_other;
-
-    int caster_draw_type_0;
-    int caster_draw_type_2;
-    int caster_draw_type_80;
-    int caster_draw_type_82;
-    int caster_draw_type_other;
-
-    int receiver_type_0;
-    int receiver_type_10;
-    int receiver_type_12;
-    int receiver_type_32;
-    int receiver_type_other;
+    /* Per-mesh-type breakdown, indexed by MikuPan_ShadowTypeBucket. *_seen is
+     * every mesh the pass traversed; *_drawn is those that reached a GL draw.
+     * seen > drawn for a bucket means that mesh type isn't implemented yet. */
+    int caster_seen[MIKUPAN_SHADOW_BUCKET_COUNT];
+    int caster_drawn[MIKUPAN_SHADOW_BUCKET_COUNT];
+    int receiver_seen[MIKUPAN_SHADOW_BUCKET_COUNT];
+    int receiver_drawn[MIKUPAN_SHADOW_BUCKET_COUNT];
 
     int probe_valid;
     int probe_nonzero_pixels;
@@ -194,7 +202,6 @@ void MikuPan_RenderSprite2DDepth(sceGsTex0 *tex, float* buffer);
 void MikuPan_RenderSprite2DDepthState(sceGsTex0 *tex, float *buffer,
                                       int depth_test, int depth_write,
                                       unsigned int depth_func);
-void MikuPan_RenderSprite2DGSAlpha(sceGsTex0* tex, float* buffer, unsigned long gs_alpha);
 void MikuPan_RenderUntexturedSprite(float* buffer);
 void MikuPan_RenderUntexturedSpriteDepth(float* buffer);
 void MikuPan_RenderUntexturedSpriteDepthState(float *buffer, int depth_test,

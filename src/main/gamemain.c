@@ -48,7 +48,7 @@ void GameMain()
             if (mc_start_flg == 1)
             {
                 sys_wrk.game_mode = mc_start_flg;
-                mcInit(7, (u_int *)0x00420000, 0);
+                mcInit(7, (u_int *)MikuPan_GetHostPointer(0x00420000), 0);
                 mc_start_flg = 0;
             }
             else

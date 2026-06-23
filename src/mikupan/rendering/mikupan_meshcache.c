@@ -3,8 +3,6 @@
 #include "mikupan_profiler.h"
 #include "mikupan_gpu.h"
 
-#include "mikupan/mikupan_logging_c.h"
-
 #include <glad/gl.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -16,7 +14,7 @@
 /// used entries are evicted. This bounds the cache regardless of whether stale
 /// entries (PS2 memory overwritten/freed without a clean invalidation) are ever
 /// explicitly dropped — they fall to the bottom of the LRU and get reclaimed.
-#define MIKUPAN_MESHCACHE_BUDGET_BYTES (24ull * 1024 * 1024)
+#define MIKUPAN_MESHCACHE_BUDGET_BYTES (320ull * 1024 * 1024)
 
 /// Mesh buffers are created small and grown to the actual upload size (most PS2
 /// meshes are far under the old fixed 4 MiB), so the budget tracks real usage.
@@ -27,28 +25,6 @@ static int g_initialised = 0;
 static int g_enabled = 1;
 static unsigned long long g_cache_tick = 0;
 static unsigned long long g_cache_bytes = 0;
-
-static int count_cache_entries(void)
-{
-    int count = 0;
-
-    for (int b = 0; b < MIKUPAN_MESHCACHE_BUCKETS; b++)
-    {
-        for (MikuPan_MeshCacheEntry* e = g_buckets[b]; e != NULL; e = e->next)
-        {
-            count++;
-        }
-    }
-
-    return count;
-}
-
-static void log_cache_stats(const char* reason)
-{
-    info_log("[MESH CACHE] %s: entries=%d bytes=%llu budget=%llu", reason,
-             count_cache_entries(), g_cache_bytes,
-             (unsigned long long) MIKUPAN_MESHCACHE_BUDGET_BYTES);
-}
 
 /// Record a buffer (slot 0..3 = vbo, 4 = ibo) growing to `size`, updating the
 /// global byte total. MikuPan_GPUUploadBuffer only ever grows a buffer, so the
@@ -193,46 +169,16 @@ MikuPan_MeshCacheEntry *MikuPan_MeshCache_Insert(
     /// mesh doesn't pin the old fixed 4 MiB per buffer.
     for (int b = 0; b < e->num_vbos; b++)
     {
-        e->vbo[b] = MikuPan_GPUCreateBuffer(MIKUPAN_MESHCACHE_BUF_INITIAL,
-                                            MIKUPAN_GPU_BUFFER_VERTEX);
-
-        if (e->vbo[b] == 0)
-        {
-            log_cache_stats("mesh cache VBO allocation failed");
-            info_log(
-                "[MESH CACHE] Failed VBO allocation: pPUHead=%p sgd_top=%p "
-                "pipeline=%d kind=%d vbo_slot=%d num_vbos=%d",
-                pPUHead, sgd_top, pipeline_type, kind, b, e->num_vbos);
-        }
-
+        e->vbo[b] = MikuPan_GPUCreateBuffer(
+            MIKUPAN_MESHCACHE_BUF_INITIAL, MIKUPAN_GPU_BUFFER_VERTEX);
         account_buffer(e, b, MIKUPAN_MESHCACHE_BUF_INITIAL);
     }
 
-    e->ibo = MikuPan_GPUCreateBuffer(MIKUPAN_MESHCACHE_BUF_INITIAL,
-                                     MIKUPAN_GPU_BUFFER_INDEX);
-
-    if (e->ibo == 0)
-    {
-        log_cache_stats("mesh cache IBO allocation failed");
-        info_log(
-            "[MESH CACHE] Failed IBO allocation: pPUHead=%p sgd_top=%p "
-            "pipeline=%d kind=%d num_vbos=%d",
-            pPUHead, sgd_top, pipeline_type, kind, e->num_vbos);
-    }
-
+    e->ibo = MikuPan_GPUCreateBuffer(
+        MIKUPAN_MESHCACHE_BUF_INITIAL, MIKUPAN_GPU_BUFFER_INDEX);
     account_buffer(e, 4, MIKUPAN_MESHCACHE_BUF_INITIAL);
-
     e->vao = MikuPan_GPURegisterVertexArray(
-        pipeline_type, (unsigned int) e->num_vbos, e->vbo, e->ibo);
-
-    if (e->vao == 0)
-    {
-        log_cache_stats("mesh cache VAO allocation failed");
-        info_log(
-            "[MESH CACHE] Failed VAO allocation: pPUHead=%p sgd_top=%p "
-            "pipeline=%d kind=%d num_vbos=%d ibo=%u",
-            pPUHead, sgd_top, pipeline_type, kind, e->num_vbos, e->ibo);
-    }
+        pipeline_type, (unsigned int)e->num_vbos, e->vbo, e->ibo);
 
     e->last_used = ++g_cache_tick;
 

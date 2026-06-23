@@ -3,10 +3,11 @@
 #include "enums.h"
 #include "ea_gdead.h"
 
-#include "os/eeiop/adpcm/ea_cmd.h"
-#include "os/eeiop/adpcm/ea_dat.h"
-#include "os/eeiop/adpcm/ea_ctrl.h"
+#include "graphics/graph2d/subtitles.h"
 #include "iop/adpcm/iopadpcm.h"
+#include "os/eeiop/adpcm/ea_cmd.h"
+#include "os/eeiop/adpcm/ea_ctrl.h"
+#include "os/eeiop/adpcm/ea_dat.h"
 
 void EAdpcmGdeadMain()
 {

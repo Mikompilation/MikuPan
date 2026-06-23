@@ -1,0 +1,1 @@
+sceVu0FVECTOR* rgc_dat[] = { rg_center00, rg_center01, };

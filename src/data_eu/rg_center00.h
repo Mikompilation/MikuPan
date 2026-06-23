@@ -1,0 +1,1 @@
+sceVu0FVECTOR rg_center00 = { 0.0f, 0.0f, 0.0f, 1.0f };

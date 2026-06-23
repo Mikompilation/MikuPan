@@ -12,10 +12,12 @@ typedef struct {
 	u_char load_side;
 } TITLE_WRK;
 
-typedef struct { // 0x4
-    /* 0x0 */ u_short timer;
-    /* 0x2 */ u_char mode;
-    /* 0x3 */ u_char no_disp;
+typedef struct {
+    u_short timer;
+    u_char mode;
+#ifdef BUILD_EU_VERSION
+    u_char no_disp;
+#endif
 } TTL_DSP_WRK;
 
 typedef struct { // 0x10
@@ -26,6 +28,17 @@ typedef struct { // 0x10
     /* 0xd */ u_char colmx;
     /* 0xe */ u_short type;
 } OUT_DITHER_STR;
+
+#ifdef BUILD_EU_VERSION
+typedef struct {
+    int logo_flow;
+    int lang_sel_flow;
+    int cnt;
+    u_char alp;
+    u_char dummy;
+    u_short load_id;
+} TITLE_SYS;
+#endif
 
 #include "outgame/mode_slct.h"
 

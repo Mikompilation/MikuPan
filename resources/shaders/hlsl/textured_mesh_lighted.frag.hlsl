@@ -55,7 +55,8 @@ float4 main(PSInput input) : SV_Target0
         if (shadowClip.w > 0.0)
         {
             float3 sndc = shadowClip.xyz / shadowClip.w;
-            float2 suv = sndc.xy * 0.5 + 0.5;
+            // Flip y: offscreen targets are top-down here (see shadow_receiver.frag).
+            float2 suv = float2(sndc.x * 0.5 + 0.5, 0.5 - sndc.y * 0.5);
             if (suv.x >= 0.0 && suv.x <= 1.0 &&
                 suv.y >= 0.0 && suv.y <= 1.0 &&
                 sndc.z >= -1.0 && sndc.z <= 1.0)
