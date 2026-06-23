@@ -36,6 +36,7 @@
 #include "ingame/plyr/time_ctl.h"
 #include "ingame/plyr/unit_ctl.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_first_person.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_shader.h"
 #include "os/eeiop/eese.h"
@@ -618,6 +619,11 @@ void PlyrSpotMoveCtrl()
     u_char d;
 
     if (plyr_wrk.cond == 1 || plyr_wrk.cond == 2)
+    {
+        return;
+    }
+
+    if (MikuPan_FirstPersonShouldBlockSpotMove())
     {
         return;
     }
@@ -1320,7 +1326,8 @@ void SetPlyrSpotLight(u_char id)
 
     if (id != 0)
     {
-        if (plyr_wrk.mode == PMODE_FINDER)
+        if (plyr_wrk.mode == PMODE_FINDER
+            || MikuPan_FirstPersonShouldUseCameraSpotlight())
         {
             ts0.pos[0] = camera.p[0];
             ts0.pos[1] = camera.p[1];
@@ -2984,6 +2991,9 @@ void PlyrNModeMoveCtrl()
         {
             PlyrKonwakuMove(mb, tv);
         }
+        else if (MikuPan_FirstPersonMoveCtrl(mb, tv))
+        {
+        }
         else if (MikuPan_KeyProfileUsesSubjectiveMove())
         {
             PlyrMovePadV(mb, tv);
@@ -3011,7 +3021,7 @@ void PlyrHitTurnChk(MOVE_BOX *mb, sceVu0FVECTOR tv)
 {
     float rot;
 
-    if (MikuPan_KeyProfileUsesSubjectiveMove())
+    if (MikuPan_FirstPersonEnabled() || MikuPan_KeyProfileUsesSubjectiveMove())
     {
         return;
     }

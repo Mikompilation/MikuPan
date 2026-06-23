@@ -7,6 +7,7 @@
 
 void MikuPan_InitUi(SDL_Window *window);
 SDL_Window *MikuPan_GetUiWindow(void);
+int MikuPan_UiIsMenuOpen(void);
 void MikuPan_RenderUi(void);
 void MikuPan_StartFrameUi(void);
 void MikuPan_DrawUi(void);

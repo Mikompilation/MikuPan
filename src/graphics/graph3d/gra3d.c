@@ -40,7 +40,9 @@
 #include "ingame/ig_glob.h"
 #include "ingame/map/door_ctl.h"
 #include "ingame/map/furn_dat.h"
+#include "ingame/camera/camera.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_first_person.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/ui/mikupan_ui_cheats.h"
@@ -1990,7 +1992,7 @@ void FogSelection(int disp_room)
     u_char plyr_wrk_mode_or;
     u_char now_cam_door_or;
 
-    plyr_wrk_mode_or = plyr_wrk.mode == 6 || plyr_wrk.mode == 1;
+    plyr_wrk_mode_or = plyr_wrk.mode == 6 || plyr_wrk.mode == 1 || MikuPan_FirstPersonUseFinderFog();
     now_cam_door_or = plyr_wrk.pr_info.cam_type == 3;
 
     if (!bak_cam_door_or && now_cam_door_or)
@@ -2014,7 +2016,7 @@ void FogSelection(int disp_room)
         disp_room = 48;
     }
 
-    if (plyr_wrk.mode == 1)
+    if (plyr_wrk.mode == 1 || MikuPan_FirstPersonUseFinderFog())
     {
         SgSetFog(
             fog_param_finder[disp_room][0], fog_param_finder[disp_room][1],
@@ -2565,8 +2567,12 @@ void DrawGirl(int in_mirror)
     sceVu0FMATRIX tmpmat;
     sceVu0FVECTOR tmpvec;
     sceVu0FVECTOR tmpvec2;
+    int hide_player_model;
 
     dsearch_num = 0;
+    hide_player_model =
+        ((plyr_wrk.sta & 0x10) != 0) ||
+        MikuPan_FirstPersonShouldHidePlayerModel();
 
     hs = (HeaderSection *)pgirlbase;
     cp = GetCoordP(hs);
@@ -2591,7 +2597,8 @@ void DrawGirl(int in_mirror)
 
     sceVu0UnitMatrix(transmtx);
 
-    if (((plyr_wrk.sta & 0x10) == 0 || in_mirror != 0) && CheckModelBoundingBox(transmtx, tgirlbox) != 0)
+    if ((!hide_player_model || in_mirror != 0)
+        && CheckModelBoundingBox(transmtx, tgirlbox) != 0)
     {
         SetMyLightObj(&girls_light, &plyr_wrk.mylight, GetCurrentCameraZDir(), plyr_wrk.bwp);
 
@@ -2611,7 +2618,8 @@ void DrawGirl(int in_mirror)
             DrawGirlSubObj(ani_mdl[0].mpk_p, 0x7f);
         }
 
-        if (in_mirror != 0 || plyr_wrk.mode != 1)
+        if (in_mirror != 0
+            || (plyr_wrk.mode != 1 && !MikuPan_FirstPersonActive()))
         {
             DispPlyrAcs(pgirlbase, pgirlacs[0], &plyracs_ctrl[0], 6);
         }
@@ -2619,7 +2627,8 @@ void DrawGirl(int in_mirror)
         DispPlyrAcs(pgirlbase, pgirlacs[1], &plyracs_ctrl[1], 5);
     }
 
-    if (disp3d_girl == 0 || plyr_wrk.sta & 0x10 || in_mirror != 0 || (plyr_wrk.sta & 0x1 && map_wrk.mirror_flg != 0x0))
+    if (disp3d_girl == 0 || hide_player_model || in_mirror != 0
+        || (plyr_wrk.sta & 0x1 && map_wrk.mirror_flg != 0x0))
     {
         return;
     }

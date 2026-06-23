@@ -11,6 +11,7 @@
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_basictypes.h"
 #include "mikupan/mikupan_config.h"
+#include "mikupan/mikupan_first_person.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_meshcache.h"
 #include "mikupan/rendering/mikupan_profiler.h"
@@ -937,26 +938,70 @@ void MikuPan_UiDebugMenuRender(void)
 
         if (igBeginMenu("Camera", 1))
         {
-            igCheckbox("Camera World Info", (bool*) &show_camera_debug);
-            igCheckbox("Third-Person Camera",
-                       (bool*) &camera_third_person_enabled);
-            if (camera_third_person_enabled)
+            bool first_person_enabled = MikuPan_FirstPersonEnabled() != 0;
+            bool first_person_r3_toggle =
+                mikupan_first_person_r3_toggle_enabled != 0;
+            bool third_person_enabled = camera_third_person_enabled != 0;
+
+            igSeparatorText("First Person");
+
+            if (igCheckbox("First Person Mode", &first_person_enabled))
             {
-                igSeparator();
-                igSliderFloat("Distance", &camera_third_person_distance, 100.0f,
-                              2500.0f, "%.0f", 0);
-                igSliderFloat("Height", &camera_third_person_height, 0.0f,
-                              1400.0f, "%.0f", 0);
-                igSliderFloat("Side", &camera_third_person_side, -600.0f,
-                              600.0f, "%.0f", 0);
-                igSliderFloat("Look Ahead", &camera_third_person_look_ahead,
-                              100.0f, 2500.0f, "%.0f", 0);
-                igSliderFloat("Interest Height",
-                              &camera_third_person_interest_height, -400.0f,
-                              1200.0f, "%.0f", 0);
-                igSliderFloat("FOV", &camera_third_person_fov_deg, 20.0f, 90.0f,
-                              "%.0f", 0);
+                MikuPan_FirstPersonSetEnabled(first_person_enabled ? 1 : 0);
             }
+
+            if (igCheckbox("R3 Toggles First Person", &first_person_r3_toggle))
+            {
+                mikupan_first_person_r3_toggle_enabled =
+                    first_person_r3_toggle ? 1 : 0;
+            }
+
+            bool first_person_auto_run =
+                mikupan_first_person_auto_run_enabled != 0;
+            if (igCheckbox("Auto Run in First Person", &first_person_auto_run))
+            {
+                mikupan_first_person_auto_run_enabled =
+                    first_person_auto_run ? 1 : 0;
+            }
+
+            igSliderFloat("FP Eye Height", &mikupan_first_person_eye_height,
+                          600.0f, 800.0f, "%.0f", 0);
+            igSliderFloat("FP Eye Forward", &mikupan_first_person_eye_forward,
+                          -100.0f, 100.0f, "%.0f", 0);
+            igSliderFloat("FP Look Distance",
+                          &mikupan_first_person_look_distance, 250.0f, 2500.0f,
+                          "%.0f", 0);
+            igSliderFloat("FP FOV", &mikupan_first_person_fov_deg, 20.0f, 90.0f,
+                          "%.1f deg", 0);
+            igSliderFloat("FP Stick Yaw Speed",
+                          &mikupan_first_person_stick_yaw_speed_deg, 0.1f,
+                          8.0f, "%.2f deg/frame", 0);
+            igSliderFloat("FP Stick Pitch Speed",
+                          &mikupan_first_person_stick_pitch_speed_deg, 0.1f,
+                          8.0f, "%.2f deg/frame", 0);
+
+            igTextDisabled("Left stick strafes. Right stick/mouse aims.");
+
+            igSeparatorText("Third Person");
+
+            if (igCheckbox("Third Person Camera", &third_person_enabled))
+            {
+                camera_third_person_enabled = third_person_enabled ? 1 : 0;
+            }
+
+            igSliderFloat("TP Distance", &camera_third_person_distance, 100.0f,
+                          2500.0f, "%.0f", 0);
+            igSliderFloat("TP Height", &camera_third_person_height, 0.0f,
+                          1400.0f, "%.0f", 0);
+            igSliderFloat("TP Side", &camera_third_person_side, -600.0f, 600.0f,
+                          "%.0f", 0);
+            igSliderFloat("TP Look Ahead", &camera_third_person_look_ahead,
+                          100.0f, 2500.0f, "%.0f", 0);
+            igSliderFloat("TP Interest Height",
+                          &camera_third_person_interest_height, -400.0f,
+                          1200.0f, "%.0f", 0);
+            igSliderFloat("TP FOV", &camera_third_person_fov_deg, 20.0f, 90.0f,
+                          "%.1f deg", 0);
 
             igEndMenu();
         }

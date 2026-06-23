@@ -734,7 +734,13 @@ void MikuPan_FinderMouseRequest(void)
 
 void MikuPan_FinderMouseUpdate(void)
 {
-    int want = finder_mouse_requested && finder_mouse_enabled;
+    ImGuiIO* io = igGetIO_Nil();
+    int ui_blocks_mouse =
+        MikuPan_UiIsMenuOpen()
+        || (io != NULL && (io->WantCaptureMouse || io->WantTextInput));
+
+    int want = finder_mouse_requested && finder_mouse_enabled && !ui_blocks_mouse;
+
     finder_mouse_requested = 0;
 
     if (want == finder_mouse_active)

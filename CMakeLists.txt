@@ -54,6 +54,7 @@ set(MIKUPAN_SOURCES
         resources/shaders/normals_debug.geom
         resources/shaders/normals_debug.frag
         "src/mikupan/mikupan_file.cpp"
+        "src/mikupan/mikupan_first_person.c"
         "src/common/ul_math.c"
         "src/common/utility.c"
         "src/edit/test_2d.c"

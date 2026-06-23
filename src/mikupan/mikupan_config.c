@@ -62,6 +62,17 @@ MikuPan_Config mikupan_configuration = {
         51.0f
     },
     {
+        0,
+        1,
+        1,
+        650.0f,
+        -100.0f,
+        1000.0f,
+        60.0f,
+        2.4f,
+        2.0f
+    },
+    {
         -1
     },
     ""
@@ -192,6 +203,23 @@ static void MikuPan_ConfigurationValidateThirdPersonCamera(
     tps->fov_deg = MikuPan_ClampFloat(tps->fov_deg, 20.0f, 90.0f);
 }
 
+static void MikuPan_ConfigurationValidateFirstPersonCamera(
+    MikuPan_ConfigFirstPersonCamera* fps)
+{
+    fps->enabled = fps->enabled ? 1 : 0;
+    fps->r3_toggle_enabled = fps->r3_toggle_enabled ? 1 : 0;
+    fps->auto_run_enabled = fps->auto_run_enabled ? 1 : 0;
+    fps->eye_height = MikuPan_ClampFloat(fps->eye_height, 350.0f, 900.0f);
+    fps->eye_forward = MikuPan_ClampFloat(fps->eye_forward, -100.0f, 200.0f);
+    fps->look_distance =
+        MikuPan_ClampFloat(fps->look_distance, 250.0f, 2500.0f);
+    fps->fov_deg = MikuPan_ClampFloat(fps->fov_deg, 20.0f, 90.0f);
+    fps->stick_yaw_speed_deg =
+        MikuPan_ClampFloat(fps->stick_yaw_speed_deg, 0.1f, 8.0f);
+    fps->stick_pitch_speed_deg =
+        MikuPan_ClampFloat(fps->stick_pitch_speed_deg, 0.1f, 8.0f);
+}
+
 static void MikuPan_ConfigurationValidateInput(MikuPan_ConfigInput* input)
 {
     input->bindings_saved = input->bindings_saved ? 1 : 0;
@@ -221,6 +249,8 @@ void MikuPan_ConfigurationValidate(void)
     MikuPan_ConfigurationValidateCrt(&mikupan_configuration.crt);
     MikuPan_ConfigurationValidateThirdPersonCamera(
         &mikupan_configuration.third_person_camera);
+    MikuPan_ConfigurationValidateFirstPersonCamera(
+        &mikupan_configuration.first_person_camera);
     MikuPan_ConfigurationValidateInput(&mikupan_configuration.input);
 
     mikupan_configuration.selected_theme =

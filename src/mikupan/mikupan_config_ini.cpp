@@ -220,6 +220,24 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.third_person_camera.interest_height);
     ApplyValue(ini, "third_person_camera", "fov_deg",
                mikupan_configuration.third_person_camera.fov_deg);
+    ApplyValue(ini, "first_person_camera", "enabled",
+               mikupan_configuration.first_person_camera.enabled);
+    ApplyValue(ini, "first_person_camera", "r3_toggle_enabled",
+               mikupan_configuration.first_person_camera.r3_toggle_enabled);
+    ApplyValue(ini, "first_person_camera", "auto_run_enabled",
+               mikupan_configuration.first_person_camera.auto_run_enabled);
+    ApplyValue(ini, "first_person_camera", "eye_height",
+               mikupan_configuration.first_person_camera.eye_height);
+    ApplyValue(ini, "first_person_camera", "eye_forward",
+               mikupan_configuration.first_person_camera.eye_forward);
+    ApplyValue(ini, "first_person_camera", "look_distance",
+               mikupan_configuration.first_person_camera.look_distance);
+    ApplyValue(ini, "first_person_camera", "fov_deg",
+               mikupan_configuration.first_person_camera.fov_deg);
+    ApplyValue(ini, "first_person_camera", "stick_yaw_speed_deg",
+               mikupan_configuration.first_person_camera.stick_yaw_speed_deg);
+    ApplyValue(ini, "first_person_camera", "stick_pitch_speed_deg",
+               mikupan_configuration.first_person_camera.stick_pitch_speed_deg);
     ApplyValue(ini, "input", "selected_gamepad_index",
                mikupan_configuration.input.selected_gamepad_index);
     ApplyValue(ini, "input", "bindings_saved",
@@ -355,6 +373,24 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
              mikupan_configuration.third_person_camera.interest_height);
     SetValue(ini, "third_person_camera", "fov_deg",
              mikupan_configuration.third_person_camera.fov_deg);
+    SetValue(ini, "first_person_camera", "enabled",
+             mikupan_configuration.first_person_camera.enabled);
+    SetValue(ini, "first_person_camera", "r3_toggle_enabled",
+             mikupan_configuration.first_person_camera.r3_toggle_enabled);
+    SetValue(ini, "first_person_camera", "auto_run_enabled",
+             mikupan_configuration.first_person_camera.auto_run_enabled);
+    SetValue(ini, "first_person_camera", "eye_height",
+             mikupan_configuration.first_person_camera.eye_height);
+    SetValue(ini, "first_person_camera", "eye_forward",
+             mikupan_configuration.first_person_camera.eye_forward);
+    SetValue(ini, "first_person_camera", "look_distance",
+             mikupan_configuration.first_person_camera.look_distance);
+    SetValue(ini, "first_person_camera", "fov_deg",
+             mikupan_configuration.first_person_camera.fov_deg);
+    SetValue(ini, "first_person_camera", "stick_yaw_speed_deg",
+             mikupan_configuration.first_person_camera.stick_yaw_speed_deg);
+    SetValue(ini, "first_person_camera", "stick_pitch_speed_deg",
+             mikupan_configuration.first_person_camera.stick_pitch_speed_deg);
     SetValue(ini, "input", "selected_gamepad_index",
              mikupan_configuration.input.selected_gamepad_index);
     SetValue(ini, "input", "bindings_saved",
