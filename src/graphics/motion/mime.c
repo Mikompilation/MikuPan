@@ -1049,6 +1049,11 @@ u_int mimGetFlg(u_int *mim_top)
 {
     MIM_FILE_HEADER *mfh = (MIM_FILE_HEADER *)mim_top;
 
+    if (mfh == NULL)
+    {
+        return 0;
+    }
+
     return mfh->flg;
 }
 

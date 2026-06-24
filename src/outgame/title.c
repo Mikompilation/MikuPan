@@ -2,6 +2,8 @@
 #include "title.h"
 
 #include "btl_mode/btl_menu.h"
+#include "data/load_door_num.h"
+#include "data/load_furn_num.h"
 #include "data/room_name.h"
 #include "ee/kernel.h"
 #include "enums.h"
@@ -73,15 +75,29 @@ static int exit_prompt_sel = 1;
 #define TITLE_BG_ROOM_NO 16
 #define TITLE_BG_ROOM_BLOCK 0
 #define TITLE_BG_ROOM_MAX 63
+#define TITLE_BG_MODEL_LOAD_MAX 64
+/* Frames to wait for the room background to load before giving up, so a stuck
+ * CDVD load can never leave the title on an infinite black screen. */
+#define TITLE_BG_LOAD_TIMEOUT (60 * 8)
+#define TITLE_BG_FADE_FRAMES 30
+#define TITLE_BG_FADE_ALPHA_MAX 0x80
 #define TITLE_BGM_DEFAULT_FILE_NO 1541
 #define TITLE_AUDIO_FILE_MAX RSHADE_SGD
 
 typedef enum {
     TITLE_BG_ROOM_UNLOADED = 0,
-    TITLE_BG_ROOM_LOADING_MAP,
-    TITLE_BG_ROOM_LOADING,
+    TITLE_BG_ROOM_LOADING,      /* room model (PK2 + LIT) only */
+    TITLE_BG_ROOM_LOADING_MAP,  /* mission map data (for furniture placement) */
+    TITLE_BG_ROOM_LOADING_FURN, /* furniture + door models, one id at a time */
     TITLE_BG_ROOM_READY,
 } TITLE_BG_ROOM_STATE;
+
+typedef enum {
+    TITLE_BG_FADE_IDLE = 0,
+    TITLE_BG_FADE_OUT,
+    TITLE_BG_FADE_WAIT_READY,
+    TITLE_BG_FADE_IN,
+} TITLE_BG_FADE_STATE;
 
 typedef struct {
     float camera_p[3];
@@ -223,6 +239,54 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
             .fov_deg = 64.1f,
         },
     },
+    {
+        .msn_no = 3,
+        .room_no = 25,
+        .audio_file_no = 1560,
+        .cycle_seconds = 120,
+        .camera = {
+            .camera_p = {5267.4f, -1850.0f, 6140.8f},
+            .camera_i = {5281.3f, -2150.0f, 7393.6f},
+            .fov_deg = 79.4f,
+        },
+        .lerp_enabled = 1,
+        .lerp_seconds = 120.0f,
+        .lerp_t = 0.0f,
+        .lerp_a = {
+            .camera_p = {5206.2f, -650.0f, 641.2f},
+            .camera_i = {5220.1f, -950.0f, 1893.9f},
+            .fov_deg = 100.0f,
+        },
+        .lerp_b = {
+            .camera_p = {5267.4f, -1850.0f, 6140.8f},
+            .camera_i = {5281.3f, -2150.0f, 7393.6f},
+            .fov_deg = 79.4f,
+        },
+    },
+    {
+        .msn_no = 3,
+        .room_no = 33,
+        .audio_file_no = 1533,
+        .cycle_seconds = 120,
+        .camera = {
+            .camera_p = {783.3f, -450.0f, 986.5f},
+            .camera_i = {155.1f, -450.0f, 1657.4f},
+            .fov_deg = 100.0f,
+        },
+        .lerp_enabled = 1,
+        .lerp_seconds = 120.0f,
+        .lerp_t = 0.0f,
+        .lerp_a = {
+            .camera_p = {1076.4f, -450.0f, 760.3f},
+            .camera_i = {418.5f, -450.0f, 1390.5f},
+            .fov_deg = 100.0f,
+        },
+        .lerp_b = {
+            .camera_p = {-2429.4f, -450.0f, 3465.9f},
+            .camera_i = {-2731.7f, -450.0f, 4583.3f},
+            .fov_deg = 100.0f,
+        },
+    },
 };
 
 #define TITLE_BG_PRESET_COUNT ((int)(sizeof(title_bg_presets) / sizeof(title_bg_presets[0])))
@@ -259,9 +323,27 @@ static int title_bgm_playing_file_no = -1;
 static int title_bg_map_load_id = -1;
 static int title_bg_floor = 0;
 static int title_bg_map_room_no = 0xff;
+static u_int *title_bg_furn_load_addr = NULL;
+static int title_bg_model_load_id[TITLE_BG_MODEL_LOAD_MAX];
+static int title_bg_model_load_num = 0;
+static int title_bg_load_timer = 0;
+static int title_bg_load_failed = 0;
+static TITLE_BG_FADE_STATE title_bg_fade_state = TITLE_BG_FADE_IDLE;
+static int title_bg_fade_timer = 0;
+static int title_bg_fade_alpha = 0;
+static int title_bg_pending_preset_index = -1;
+static int title_bg_pending_msn_no = -1;
+static int title_bg_pending_room_no = -1;
 
 int TitleUseRoomBackground(void)
 {
+    /* A load that never completes must not hang the title; once the watchdog
+     * gives up we behave as if the room background were off (classic 2D title). */
+    if (title_bg_load_failed)
+    {
+        return 0;
+    }
+
     return mikupan_configuration.title_room_background != 0;
 }
 
@@ -273,6 +355,12 @@ int TitleDebugWindowVisible(void)
 void TitleSetDebugWindowVisible(int enabled)
 {
     title_debug_window_visible = enabled != 0;
+}
+
+static int TitleDebugSelectionMenuActive(void)
+{
+    return ttl_dsp.mode == 0 &&
+        (title_wrk.mode == TITLE_TITLE_SEL || title_wrk.mode == TITLE_MODE_SEL);
 }
 
 #include "data/title_sprt.h" // data 342c90 */ SPRT_DAT title_sprt[11];
@@ -397,6 +485,11 @@ static float TitleBgLerpFloat(float a, float b, float t)
     return a + (b - a) * t;
 }
 
+static int TitleBgFadeFrameCount(void)
+{
+    return TitleBgClampInt(TITLE_BG_FADE_FRAMES, 1, 180);
+}
+
 static const char *TitleBgRoomName(int room_no)
 {
     if (room_no >= 0 && room_no < (int)(sizeof(room_name) / sizeof(room_name[0])))
@@ -413,10 +506,12 @@ static const char *TitleBgRoomStateName(void)
     {
     case TITLE_BG_ROOM_UNLOADED:
         return "unloaded";
+    case TITLE_BG_ROOM_LOADING:
+        return "loading model";
     case TITLE_BG_ROOM_LOADING_MAP:
         return "loading map";
-    case TITLE_BG_ROOM_LOADING:
-        return "loading";
+    case TITLE_BG_ROOM_LOADING_FURN:
+        return "loading furniture";
     case TITLE_BG_ROOM_READY:
         return "ready";
     }
@@ -468,6 +563,16 @@ static void TitleAudioStopBgm(void)
     title_bgm_playing_file_no = -1;
 }
 
+static void TitleBgResetFade(void)
+{
+    title_bg_fade_state = TITLE_BG_FADE_IDLE;
+    title_bg_fade_timer = 0;
+    title_bg_fade_alpha = 0;
+    title_bg_pending_preset_index = -1;
+    title_bg_pending_msn_no = -1;
+    title_bg_pending_room_no = -1;
+}
+
 void TitleSetUseRoomBackground(int enabled)
 {
     int use_room_background = enabled != 0;
@@ -478,6 +583,7 @@ void TitleSetUseRoomBackground(int enabled)
     }
 
     mikupan_configuration.title_room_background = use_room_background;
+    TitleBgResetFade();
 
     if (title_bgm_playing_file_no != -1)
     {
@@ -604,7 +710,7 @@ static void TitleBgCameraLerpUpdate(void)
     title_bg_camera_lerp_timer++;
 }
 
-static void TitleBgApplyPreset(int preset_index)
+static void TitleBgApplyPresetNow(int preset_index)
 {
     const TITLE_BG_PRESET *preset;
     int reload_room;
@@ -643,6 +749,89 @@ static void TitleBgApplyPreset(int preset_index)
     }
 }
 
+static void TitleBgApplyRoomNow(int msn_no, int room_no)
+{
+    msn_no = TitleBgClampInt(msn_no, 0, TITLE_BG_MSN_MAX);
+    room_no = TitleBgClampInt(room_no, 0, TITLE_BG_ROOM_MAX);
+
+    if (title_bg_msn_no == msn_no && title_bg_room_no == room_no)
+    {
+        return;
+    }
+
+    title_bg_msn_no = msn_no;
+    title_bg_room_no = room_no;
+    title_bg_auto_cycle_timer = 0;
+    TitleBgPauseCameraAnimations();
+    TitleBgRequestRoomReload();
+}
+
+static int TitleBgShouldFadeRoomChange(int msn_no, int room_no)
+{
+    if (TitleUseRoomBackground() == 0)
+    {
+        return 0;
+    }
+
+    if (title_bg_room_state != TITLE_BG_ROOM_READY)
+    {
+        return 0;
+    }
+
+    if (title_bg_msn_no == msn_no && title_bg_room_no == room_no)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+static void TitleBgBeginPresetTransition(int preset_index)
+{
+    const TITLE_BG_PRESET *preset;
+
+    preset_index = TitleBgClampInt(preset_index, 0, TITLE_BG_PRESET_COUNT - 1);
+    preset = &title_bg_presets[preset_index];
+
+    if (TitleBgShouldFadeRoomChange(preset->msn_no, preset->room_no) == 0)
+    {
+        TitleBgApplyPresetNow(preset_index);
+        return;
+    }
+
+    title_bg_pending_preset_index = preset_index;
+    title_bg_pending_msn_no = -1;
+    title_bg_pending_room_no = -1;
+    title_bg_fade_state = TITLE_BG_FADE_OUT;
+    title_bg_fade_timer = 0;
+    title_bg_fade_alpha = 0;
+}
+
+static void TitleBgBeginRoomTransition(int msn_no, int room_no)
+{
+    msn_no = TitleBgClampInt(msn_no, 0, TITLE_BG_MSN_MAX);
+    room_no = TitleBgClampInt(room_no, 0, TITLE_BG_ROOM_MAX);
+
+    if (TitleBgShouldFadeRoomChange(msn_no, room_no) == 0)
+    {
+        TitleBgApplyRoomNow(msn_no, room_no);
+        return;
+    }
+
+    title_bg_pending_preset_index = -1;
+    title_bg_pending_msn_no = msn_no;
+    title_bg_pending_room_no = room_no;
+    title_bg_fade_state = TITLE_BG_FADE_OUT;
+    title_bg_fade_timer = 0;
+    title_bg_fade_alpha = 0;
+    TitleBgPauseCameraAnimations();
+}
+
+static void TitleBgApplyPreset(int preset_index)
+{
+    TitleBgBeginPresetTransition(preset_index);
+}
+
 static void TitleBgApplyNextPreset(void)
 {
     int next_index = title_bg_preset_index + 1;
@@ -671,7 +860,8 @@ static void TitleBgAutoCycleUpdate(void)
 {
     int cycle_frames;
 
-    if (title_bg_auto_cycle == 0 || title_bg_room_state != TITLE_BG_ROOM_READY)
+    if (title_bg_auto_cycle == 0 || title_bg_room_state != TITLE_BG_ROOM_READY
+        || title_bg_fade_state != TITLE_BG_FADE_IDLE)
     {
         return;
     }
@@ -687,30 +877,12 @@ static void TitleBgAutoCycleUpdate(void)
 
 static void TitleBgSetMissionNo(int msn_no)
 {
-    msn_no = TitleBgClampInt(msn_no, 0, TITLE_BG_MSN_MAX);
-
-    if (title_bg_msn_no == msn_no)
-    {
-        return;
-    }
-
-    title_bg_msn_no = msn_no;
-    TitleBgPauseCameraAnimations();
-    TitleBgRequestRoomReload();
+    TitleBgBeginRoomTransition(msn_no, title_bg_room_no);
 }
 
 static void TitleBgSetRoomNo(int room_no)
 {
-    room_no = TitleBgClampInt(room_no, 0, TITLE_BG_ROOM_MAX);
-
-    if (title_bg_room_no == room_no)
-    {
-        return;
-    }
-
-    title_bg_room_no = room_no;
-    TitleBgPauseCameraAnimations();
-    TitleBgRequestRoomReload();
+    TitleBgBeginRoomTransition(title_bg_msn_no, room_no);
 }
 
 static void TitleBgResetCamera(void)
@@ -972,6 +1144,187 @@ static void TitleBgSetupFurnitureWork(void)
     ingame_wrk.msn_no = old_msn_no;
 }
 
+static int TitleBgFurnitureEntryIsDrawable(const FURN_WRK *fwp)
+{
+    return fwp->use != 5 && fwp->furn_no != 0xffff;
+}
+
+static int TitleBgCountDrawableFurnitureWork(void)
+{
+    int i;
+    int count = 0;
+
+    for (i = 0; i < 60; i++)
+    {
+        if (TitleBgFurnitureEntryIsDrawable(&furn_wrk[i]) != 0 &&
+            furn_wrk[i].furn_no < 1000)
+        {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+static int TitleBgCountDrawableDoorWork(void)
+{
+    int i;
+    int count = 0;
+
+    for (i = 0; i < 60; i++)
+    {
+        if (TitleBgFurnitureEntryIsDrawable(&furn_wrk[i]) != 0 &&
+            furn_wrk[i].furn_no >= 1000)
+        {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+static void TitleBgPreRenderFurnitureWork(void)
+{
+    int i;
+
+    for (i = 0; i < 60; i++)
+    {
+        if (TitleBgFurnitureEntryIsDrawable(&furn_wrk[i]) != 0)
+        {
+            ChoudoPreRender(&furn_wrk[i]);
+        }
+    }
+}
+
+static int TitleBgModelCanLoad(u_short model_id, const short *model_ids)
+{
+    while (*model_ids != -1)
+    {
+        if (model_id == (u_short)*model_ids)
+        {
+            return 1;
+        }
+
+        model_ids++;
+    }
+
+    return 0;
+}
+
+static int TitleBgQueueModelLoad(
+    int file_no, u_int **load_addr, u_int **model_addr, int *load_id)
+{
+    int id = -1;
+    u_int *addr = *load_addr;
+    int64_t next_addr = LoadReqGetHostPointerEnd(file_no, *load_addr, &id);
+
+    if (id == -1)
+    {
+        return 0;
+    }
+
+    *load_id = id;
+    *model_addr = addr;
+    *load_addr = (u_int *)(uintptr_t)next_addr;
+
+    return 1;
+}
+
+static void TitleBgQueueFurnitureModels(ROOM_LOAD_BLOCK *rlb)
+{
+    u_int *load_addr = title_bg_furn_load_addr;
+    u_short model_id;
+    int i;
+    int queue_failed = 0;
+
+    title_bg_model_load_num = 0;
+
+    for (i = 0; i < rlb->furn_num && title_bg_model_load_num < TITLE_BG_MODEL_LOAD_MAX &&
+         queue_failed == 0; i++)
+    {
+        model_id = rlb->furn_id[i];
+
+        if (TitleBgModelCanLoad(model_id, load_furn_num) == 0)
+        {
+            continue;
+        }
+
+        if (TitleBgQueueModelLoad(
+            F000_CLOCK_L_SGD + model_id,
+            &load_addr,
+            &furn_addr_tbl[model_id],
+            &title_bg_model_load_id[title_bg_model_load_num]) == 0)
+        {
+            queue_failed = 1;
+            continue;
+        }
+
+        title_bg_model_load_num++;
+    }
+
+    for (i = 0; i < rlb->door_num && title_bg_model_load_num < TITLE_BG_MODEL_LOAD_MAX &&
+         queue_failed == 0; i++)
+    {
+        model_id = rlb->door_id[i];
+
+        if (TitleBgModelCanLoad(model_id, load_door_num) == 0)
+        {
+            continue;
+        }
+
+        if (TitleBgQueueModelLoad(
+            D000_GEN1_SGD + model_id,
+            &load_addr,
+            &door_addr_tbl[model_id],
+            &title_bg_model_load_id[title_bg_model_load_num]) == 0)
+        {
+            queue_failed = 1;
+            continue;
+        }
+
+        rlb->door_addr[i] = door_addr_tbl[model_id];
+        title_bg_model_load_num++;
+    }
+
+    rlb->load_addr = load_addr;
+}
+
+static int TitleBgFurnitureModelsReady(void)
+{
+    if (title_bg_model_load_num <= 0)
+    {
+        return 1;
+    }
+
+    return IsLoadEnd(title_bg_model_load_id[title_bg_model_load_num - 1]) != 0;
+}
+
+static void TitleBgMapFurnitureModels(ROOM_LOAD_BLOCK *rlb)
+{
+    u_short model_id;
+    int i;
+
+    for (i = 0; i < rlb->furn_num; i++)
+    {
+        model_id = rlb->furn_id[i];
+
+        if (furn_addr_tbl[model_id] != NULL)
+        {
+            SgMapUnit(furn_addr_tbl[model_id]);
+        }
+    }
+
+    for (i = 0; i < rlb->door_num; i++)
+    {
+        model_id = rlb->door_id[i];
+
+        if (door_addr_tbl[model_id] != NULL)
+        {
+            SgMapUnit(door_addr_tbl[model_id]);
+        }
+    }
+}
+
 static void TitleBgSetupCamera(void)
 {
     memset(&title_bg_camera, 0, sizeof(title_bg_camera));
@@ -1005,17 +1358,87 @@ static void TitleBgSetupCamera(void)
 static void TitleBgBeginRoomLoad(void)
 {
     InitModelLoad();
-    title_bg_map_load_id = MissonMapDataLoad(title_bg_msn_no);
-    title_bg_room_state = TITLE_BG_ROOM_LOADING_MAP;
+
+    title_bg_load_timer = 0;
+    title_bg_load_failed = 0;
+    title_bg_model_load_num = 0;
+
+    /*
+     * Load the room model on its own, before any map data exists. RoomMdlLoadReq
+     * calls GetRoomFurnID/GetRoomDoorID against MAP_DATA_ADDRESS; with the map
+     * blob cleared they return 0, so only the PK2 + LIT get queued. RoomMdlLoadWait
+     * then keys off the LIT id, which the IOP transfers *after* the whole 1.5MB PK2
+     * (FIFO), so InitializeRoom never walks a half-transferred model. Bundling the
+     * furniture loads here is exactly what made RoomMdlLoadWait finish on a
+     * furniture id before the PK2 DMA landed (the zeroed-pk2 / far_sgd crash).
+     */
+    memset(MikuPan_GetHostPointer(MAP_DATA_ADDRESS), 0, 0x80);
+
+    TitleBgSetupRoomState();
+    title_bg_furn_load_addr =
+        RoomMdlLoadReq(NULL, TITLE_BG_ROOM_BLOCK, title_bg_msn_no, title_bg_room_no, 0);
+    title_bg_room_state = TITLE_BG_ROOM_LOADING;
 }
 
 static void TitleBgUpdateRoomLoad(void)
 {
+    ROOM_LOAD_BLOCK *rlb = &room_load_block[TITLE_BG_ROOM_BLOCK];
+
     if (title_bg_room_state == TITLE_BG_ROOM_UNLOADED)
     {
         TitleBgBeginRoomLoad();
     }
 
+    /*
+     * Watchdog: if any load stage stalls (e.g. a CDVD load id that never reports
+     * complete after returning to the title), recover instead of hanging forever
+     * on a black screen.
+     */
+    if (title_bg_room_state != TITLE_BG_ROOM_READY)
+    {
+        if (++title_bg_load_timer > TITLE_BG_LOAD_TIMEOUT)
+        {
+            title_bg_load_timer = 0;
+
+            if (title_bg_room_state == TITLE_BG_ROOM_LOADING_FURN)
+            {
+                /* Room model + map are up and the furniture work tables are built,
+                 * so reveal the room even if some furniture models are still stuck. */
+                title_bg_room_state = TITLE_BG_ROOM_READY;
+            }
+            else
+            {
+                /* The room model or map never arrived; fall back to the classic
+                 * 2D title rather than hang on a black screen. */
+                title_bg_load_failed = 1;
+            }
+
+            return;
+        }
+    }
+
+    /* Stage 1: room model. RoomMdlLoadWait runs InitializeRoom only once the PK2
+     * is fully present, because no furniture loads were queued behind it. */
+    if (title_bg_room_state == TITLE_BG_ROOM_LOADING)
+    {
+        if (RoomMdlLoadWait() == 0)
+        {
+            return;
+        }
+
+        /*
+         * MissonMapDataLoad() hardcodes MSN01MAP_OBJ, so it would leave mission
+         * 1's map at MAP_DATA_ADDRESS while everything here treats it as mission
+         * title_bg_msn_no (==3). InitFurnAttrFlg / GetRoomFurnID then walk
+         * floor_exist[3]'s four floors over a two-floor blob and read garbage.
+         * Load the matching mission map directly, the way scn_test does.
+         */
+        title_bg_map_load_id = LoadReq(MSN00MAP_OBJ + title_bg_msn_no, MAP_DATA_ADDRESS);
+        title_bg_room_state = TITLE_BG_ROOM_LOADING_MAP;
+    }
+
+    /* Stage 2: mission map data, needed to resolve which furniture/doors live in
+     * this room. Then build the work tables and the model id lists. */
     if (title_bg_room_state == TITLE_BG_ROOM_LOADING_MAP)
     {
         if (title_bg_map_load_id >= 0 && IsLoadEnd(title_bg_map_load_id) == 0)
@@ -1023,15 +1446,33 @@ static void TitleBgUpdateRoomLoad(void)
             return;
         }
 
-        TitleBgSetupMapWork();
-        RoomMdlLoadReq(NULL, TITLE_BG_ROOM_BLOCK, title_bg_msn_no, title_bg_room_no, 0);
-        title_bg_room_state = TITLE_BG_ROOM_LOADING;
-    }
-
-    if (title_bg_room_state == TITLE_BG_ROOM_LOADING && RoomMdlLoadWait() != 0)
-    {
         InitialDmaBuffer();
         TitleBgSetupFurnitureWork();
+
+        rlb->furn_num = GetRoomFurnID(title_bg_room_no, rlb->furn_id, title_bg_msn_no);
+        DelSameMdlID(rlb->furn_id, (int *)&rlb->furn_num);
+        rlb->door_num = GetRoomDoorID(title_bg_room_no, rlb->door_id, title_bg_msn_no);
+        TitleBgQueueFurnitureModels(rlb);
+        title_bg_room_state = TITLE_BG_ROOM_LOADING_FURN;
+    }
+
+    /* Stage 3: furniture + door models. The title loader owns this queue so room
+     * switches cannot inherit LoadInitFurnModel/LoadInitDoorModel static state. */
+    if (title_bg_room_state == TITLE_BG_ROOM_LOADING_FURN)
+    {
+        if (TitleBgFurnitureModelsReady() == 0)
+        {
+            return;
+        }
+
+        TitleBgMapFurnitureModels(rlb);
+
+        /*
+         * FurnDataInit / DoorDataInit (run back in stage 2) pre-render while the
+         * model address tables are still NULL, so redo it after mapping the SGDs.
+         */
+        TitleBgPreRenderFurnitureWork();
+
         title_bg_room_state = TITLE_BG_ROOM_READY;
     }
 }
@@ -1043,9 +1484,173 @@ static int TitleBgRoomReady(void)
     return title_bg_room_state == TITLE_BG_ROOM_READY;
 }
 
+static void TitleBgApplyPendingFadeTarget(void)
+{
+    if (title_bg_pending_preset_index >= 0)
+    {
+        TitleBgApplyPresetNow(title_bg_pending_preset_index);
+    }
+    else if (title_bg_pending_msn_no >= 0 && title_bg_pending_room_no >= 0)
+    {
+        TitleBgApplyRoomNow(title_bg_pending_msn_no, title_bg_pending_room_no);
+    }
+
+    title_bg_pending_preset_index = -1;
+    title_bg_pending_msn_no = -1;
+    title_bg_pending_room_no = -1;
+}
+
+static void TitleBgFadeUpdate(int room_ready)
+{
+    int frames = TitleBgFadeFrameCount();
+
+    switch (title_bg_fade_state)
+    {
+    case TITLE_BG_FADE_OUT:
+        title_bg_fade_alpha = title_bg_fade_timer * TITLE_BG_FADE_ALPHA_MAX / frames;
+
+        if (title_bg_fade_timer >= frames)
+        {
+            title_bg_fade_alpha = TITLE_BG_FADE_ALPHA_MAX;
+            TitleBgApplyPendingFadeTarget();
+            title_bg_fade_state = TITLE_BG_FADE_WAIT_READY;
+            title_bg_fade_timer = 0;
+        }
+        else
+        {
+            title_bg_fade_timer++;
+        }
+    break;
+    case TITLE_BG_FADE_WAIT_READY:
+        title_bg_fade_alpha = TITLE_BG_FADE_ALPHA_MAX;
+
+        if (room_ready != 0)
+        {
+            title_bg_fade_state = TITLE_BG_FADE_IN;
+            title_bg_fade_timer = 0;
+        }
+    break;
+    case TITLE_BG_FADE_IN:
+        title_bg_fade_alpha =
+            (frames - title_bg_fade_timer) * TITLE_BG_FADE_ALPHA_MAX / frames;
+
+        if (title_bg_fade_timer >= frames)
+        {
+            title_bg_fade_state = TITLE_BG_FADE_IDLE;
+            title_bg_fade_timer = 0;
+            title_bg_fade_alpha = 0;
+        }
+        else
+        {
+            title_bg_fade_timer++;
+        }
+    break;
+    case TITLE_BG_FADE_IDLE:
+    default:
+        title_bg_fade_alpha = 0;
+    break;
+    }
+}
+
+static void TitleBgDrawFadeOverlay(void)
+{
+    u_char ps2_alpha;
+    int imgui_alpha;
+    float alpha;
+    float vertices[4][8];
+    ImGuiIO *io;
+    ImDrawList *draw_list;
+    float viewport_x;
+    float viewport_y;
+    float viewport_w;
+    float viewport_h;
+    float viewport_scale;
+    ImU32 bar_color;
+
+    if (title_bg_fade_alpha <= 0)
+    {
+        return;
+    }
+
+    ps2_alpha = (u_char)TitleBgClampInt(
+        title_bg_fade_alpha, 0, TITLE_BG_FADE_ALPHA_MAX);
+    alpha = MikuPan_ConvertScaleColor(ps2_alpha);
+
+    vertices[0][0] = 0.0f; vertices[0][1] = 0.0f; vertices[0][2] = 0.0f; vertices[0][3] = alpha;
+    vertices[0][4] = -1.0f; vertices[0][5] = -1.0f; vertices[0][6] = 0.0f; vertices[0][7] = 1.0f;
+    vertices[1][0] = 0.0f; vertices[1][1] = 0.0f; vertices[1][2] = 0.0f; vertices[1][3] = alpha;
+    vertices[1][4] = 1.0f; vertices[1][5] = -1.0f; vertices[1][6] = 0.0f; vertices[1][7] = 1.0f;
+    vertices[2][0] = 0.0f; vertices[2][1] = 0.0f; vertices[2][2] = 0.0f; vertices[2][3] = alpha;
+    vertices[2][4] = -1.0f; vertices[2][5] = 1.0f; vertices[2][6] = 0.0f; vertices[2][7] = 1.0f;
+    vertices[3][0] = 0.0f; vertices[3][1] = 0.0f; vertices[3][2] = 0.0f; vertices[3][3] = alpha;
+    vertices[3][4] = 1.0f; vertices[3][5] = 1.0f; vertices[3][6] = 0.0f; vertices[3][7] = 1.0f;
+
+    MikuPan_RenderUntexturedSprite(&vertices[0][0]);
+
+    io = igGetIO_Nil();
+    draw_list = igGetBackgroundDrawList_Nil();
+
+    if (io == NULL || draw_list == NULL)
+    {
+        return;
+    }
+
+    imgui_alpha = TitleBgClampInt(
+        (int)ps2_alpha * 255 / TITLE_BG_FADE_ALPHA_MAX, 0, 255);
+    bar_color = ((ImU32)imgui_alpha << 24);
+
+    MikuPan_GetPS2Viewport(
+        (int)io->DisplaySize.x,
+        (int)io->DisplaySize.y,
+        &viewport_x,
+        &viewport_y,
+        &viewport_w,
+        &viewport_h,
+        &viewport_scale);
+    (void)viewport_scale;
+
+    if (viewport_y > 0.0f)
+    {
+        ImDrawList_AddRectFilled(
+            draw_list,
+            (ImVec2){0.0f, 0.0f},
+            (ImVec2){io->DisplaySize.x, viewport_y},
+            bar_color,
+            0.0f,
+            0);
+        ImDrawList_AddRectFilled(
+            draw_list,
+            (ImVec2){0.0f, viewport_y + viewport_h},
+            (ImVec2){io->DisplaySize.x, io->DisplaySize.y},
+            bar_color,
+            0.0f,
+            0);
+    }
+
+    if (viewport_x > 0.0f)
+    {
+        ImDrawList_AddRectFilled(
+            draw_list,
+            (ImVec2){0.0f, viewport_y},
+            (ImVec2){viewport_x, viewport_y + viewport_h},
+            bar_color,
+            0.0f,
+            0);
+        ImDrawList_AddRectFilled(
+            draw_list,
+            (ImVec2){viewport_x + viewport_w, viewport_y},
+            (ImVec2){io->DisplaySize.x, viewport_y + viewport_h},
+            bar_color,
+            0.0f,
+            0);
+    }
+}
+
 static void TitleBgDrawRoom(void)
 {
     int room_no;
+    int room_ready;
+    int old_msn_no;
 
     if (TitleUseRoomBackground() == 0)
     {
@@ -1054,16 +1659,24 @@ static void TitleBgDrawRoom(void)
 
     TitleBgAutoCycleUpdate();
     room_no = title_bg_room_no;
+    room_ready = TitleBgRoomReady();
 
-    if (TitleBgRoomReady() == 0)
+    if (room_ready == 0)
     {
+        TitleBgFadeUpdate(room_ready);
+        TitleBgDrawFadeOverlay();
         return;
     }
 
     if (room_addr_tbl[room_no].near_sgd == NULL || room_addr_tbl[room_no].lit_data == NULL)
     {
+        TitleBgFadeUpdate(room_ready);
+        TitleBgDrawFadeOverlay();
         return;
     }
+
+    old_msn_no = ingame_wrk.msn_no;
+    ingame_wrk.msn_no = title_bg_msn_no;
 
     TitleBgCameraLerpUpdate();
 
@@ -1104,6 +1717,9 @@ static void TitleBgDrawRoom(void)
     search_num2 = 0;
     DrawOneRoom(TITLE_BG_ROOM_BLOCK);
     DrawFurnitureForced(room_no);
+    ingame_wrk.msn_no = old_msn_no;
+    TitleBgFadeUpdate(room_ready);
+    TitleBgDrawFadeOverlay();
 }
 
 static void TitleBgDebugUi(void)
@@ -1134,6 +1750,13 @@ static void TitleBgDebugUi(void)
     igText("State: %s", TitleBgRoomStateName());
     igText("Room asset: %s", TitleBgRoomName(title_bg_room_no));
     igText("Map floor: %d local room: %d", title_bg_floor, title_bg_map_room_no);
+    igText(
+        "Furn work/load: %d/%u  Door work/load: %d/%u  Model req: %d",
+        TitleBgCountDrawableFurnitureWork(),
+        room_load_block[TITLE_BG_ROOM_BLOCK].furn_num,
+        TitleBgCountDrawableDoorWork(),
+        room_load_block[TITLE_BG_ROOM_BLOCK].door_num,
+        title_bg_model_load_num);
 
     igSeparator();
     igText("Title style");
@@ -1245,6 +1868,7 @@ static void TitleBgDebugUi(void)
 
     if (igButton("Reload room", (ImVec2){0.0f, 0.0f}))
     {
+        TitleBgResetFade();
         TitleBgPauseCameraAnimations();
         TitleBgRequestRoomReload();
     }
@@ -1501,6 +2125,11 @@ static void TitleDrawClassicBackground(int use_alpha, u_char alpha)
     int i;
     DISP_SPRT ds;
 
+    if (TitleDebugSelectionMenuActive() != 0)
+    {
+        return;
+    }
+
     if (TitleUseRoomBackground() != 0)
     {
         return;
@@ -1698,7 +2327,7 @@ static void TitleDrawGameTitle(void)
         display_scale = 1.0f;
     }
 
-    target_width = io->DisplaySize.x * 0.62f;
+    target_width = io->DisplaySize.x * 0.50f;
     block_size = TitleFontSizeForWidth(block_font, top_text, target_width);
     top_pos = TitleCenteredTextPos(
         io, block_font, block_size, top_text, io->DisplaySize.y * 0.26f);
@@ -1738,7 +2367,10 @@ void TitleCtrl()
 #else
         title_wrk.load_id = LoadReq(TITLE_PK2, SPRITE_ADDRESS);
 #endif
-        if (TitleUseRoomBackground() != 0)
+        /* Kick off on the configured setting, not TitleUseRoomBackground(): the
+         * latter reads 0 after a prior watchdog give-up, which would stop us from
+         * ever retrying the room background. TitleBgBeginRoomLoad clears the flag. */
+        if (mikupan_configuration.title_room_background != 0)
         {
             TitleBgBeginRoomLoad();
         }
@@ -1852,7 +2484,10 @@ void TitleCtrl()
 #else
         title_wrk.load_id = LoadReq(TITLE_PK2, SPRITE_ADDRESS);
 #endif
-        if (TitleUseRoomBackground() != 0)
+        /* Kick off on the configured setting, not TitleUseRoomBackground(): the
+         * latter reads 0 after a prior watchdog give-up, which would stop us from
+         * ever retrying the room background. TitleBgBeginRoomLoad clears the flag. */
+        if (mikupan_configuration.title_room_background != 0)
         {
             TitleBgBeginRoomLoad();
         }
@@ -1886,13 +2521,17 @@ void TitleCtrl()
         title_wrk.csr = 1;
         title_wrk.mode = TITLE_TITLE_SEL;
     case TITLE_TITLE_SEL:
-        TitleBgDrawRoom();
-        SetSprFile(MikuPan_GetHostAddress(SPRITE_ADDRESS));
-
         if (L1_PRESSED() >= 1 && R1_PRESSED()  >= 1)
         {
             ttl_dsp.mode = 0;
         }
+
+        if (ttl_dsp.mode != 0)
+        {
+            TitleBgDrawRoom();
+        }
+
+        SetSprFile(MikuPan_GetHostAddress(SPRITE_ADDRESS));
 
         if (ttl_dsp.mode != 0)
         {
@@ -1981,7 +2620,11 @@ void TitleCtrl()
         }
     break;
     case TITLE_MODE_SEL:
-        TitleBgDrawRoom();
+        if (ttl_dsp.mode != 0)
+        {
+            TitleBgDrawRoom();
+        }
+
         SetSprFile(MikuPan_GetHostAddress(SPRITE_ADDRESS));
 
         if (ttl_dsp.mode != 0)
