@@ -9,6 +9,7 @@ void MikuPan_UiDrawCallInspector(void);
 const char* MikuPan_CameraDebugKindName(int kind);
 void MikuPan_UiCameraDebugWindow(void);
 void MikuPan_UiShaderReloadWindow(void);
+void MikuPan_UiEffectDebugWindow(void);
 void MikuPan_UiShadowDebugWindow(void);
 void MikuPan_UiPhotoDebugWindow(void);
 void MikuPan_UiShadowResolutionCombo(const char* label);

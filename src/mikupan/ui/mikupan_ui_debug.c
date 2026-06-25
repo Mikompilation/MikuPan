@@ -4,6 +4,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "glad/gl.h"
+#include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "ingame/camera/camera.h"
 #include "ingame/camera/camera_types.h"
@@ -35,6 +36,7 @@ static char last_reload_error[1280] = {0};
 static int show_texture_list = 0;
 static int show_shader_reload = 0;
 static int show_draw_inspector = 0;
+static int show_effect_debug_window = 0;
 static int show_camera_debug = 0;
 static int show_photo_debug_window = 0;
 static int show_shadow_debug_window = 0;
@@ -808,6 +810,116 @@ float MikuPan_GetFrameRate(void)
     return io->Framerate;
 }
 
+void MikuPan_UiEffectDebugWindow(void)
+{
+    if (!show_effect_debug_window)
+    {
+        return;
+    }
+
+    igSetNextWindowSize((ImVec2) {720.0f, 560.0f}, ImGuiCond_FirstUseEver);
+    if (!igBegin("Effect Debug", (bool*) &show_effect_debug_window, 0))
+    {
+        igEnd();
+        return;
+    }
+
+    if (igButton("Enable All", (ImVec2) {150.0f, 0.0f}))
+    {
+        MikuPan_EffectDebugSetAll(1);
+    }
+
+    igSameLine(0.0f, -1.0f);
+    if (igButton("Clear All", (ImVec2) {90.0f, 0.0f}))
+    {
+        MikuPan_EffectDebugSetAll(0);
+    }
+
+    igSpacing();
+    igTextDisabled("Rows list EFFECT_ID names and the render function/path used by the test toggle.");
+    igTextDisabled("Unavailable rows need live enemy or scene-specific state, or have no renderer in this port.");
+    igSeparator();
+
+    const int table_flags =
+        ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH
+        | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Resizable
+        | ImGuiTableFlags_ScrollY;
+
+    if (igBeginTable("##effect_debug_table", 4, table_flags,
+                     (ImVec2) {0.0f, 0.0f}, 0.0f))
+    {
+        igTableSetupColumn("On", ImGuiTableColumnFlags_WidthFixed, 48.0f, 0);
+        igTableSetupColumn("Enum", ImGuiTableColumnFlags_WidthStretch, 0.35f,
+                           0);
+        igTableSetupColumn("Function", ImGuiTableColumnFlags_WidthStretch,
+                           0.30f, 0);
+        igTableSetupColumn("Note", ImGuiTableColumnFlags_WidthStretch, 0.35f,
+                           0);
+        igTableHeadersRow();
+
+        const int count = MikuPan_EffectDebugCount();
+        for (int id = 0; id < count; id++)
+        {
+            const int can_toggle = MikuPan_EffectDebugCanToggle(id);
+            int enabled = MikuPan_EffectDebugEnabled(id);
+
+            igPushID_Int(id);
+            igTableNextRow(0, 0.0f);
+
+            igTableNextColumn();
+            if (can_toggle)
+            {
+                if (igCheckbox("##enabled", (bool*) &enabled))
+                {
+                    MikuPan_EffectDebugSetEnabled(id, enabled);
+                }
+            }
+            else
+            {
+                igTextDisabled("-");
+            }
+
+            igTableNextColumn();
+            if (can_toggle)
+            {
+                igText("%02d  %s", id, MikuPan_EffectDebugEnumName(id));
+            }
+            else
+            {
+                igTextDisabled("%02d  %s", id,
+                               MikuPan_EffectDebugEnumName(id));
+            }
+
+            igTableNextColumn();
+            if (can_toggle)
+            {
+                igText("%s", MikuPan_EffectDebugFunctionName(id));
+            }
+            else
+            {
+                igTextDisabled("%s", MikuPan_EffectDebugFunctionName(id));
+            }
+
+            igTableNextColumn();
+            const char* note = MikuPan_EffectDebugNote(id);
+            if (note[0] != '\0')
+            {
+                igTextDisabled("%s", note);
+            }
+            else
+            {
+                igTextDisabled("Default test values");
+            }
+
+            igPopID();
+        }
+
+        igEndTable();
+    }
+
+    igEnd();
+}
+
 void MikuPan_UiDebugMenuRender(void)
 {
     if (igBeginMenu("Debug", 1))
@@ -820,6 +932,8 @@ void MikuPan_UiDebugMenuRender(void)
         {
             igCheckbox("Draw Call Inspector", (bool*) &show_draw_inspector);
             igCheckbox("Shader Reload", (bool*) &show_shader_reload);
+            igCheckbox("Effect Debug Window",
+                       (bool*) &show_effect_debug_window);
 
             if (igBeginMenu("Visualization", 1))
             {
@@ -1022,6 +1136,7 @@ void MikuPan_UiDebugWindowsRender(void)
     }
 
     MikuPan_UiShaderReloadWindow();
+    MikuPan_UiEffectDebugWindow();
     MikuPan_UiDrawCallInspector();
     MikuPan_UiCameraDebugWindow();
     MikuPan_UiPhotoDebugWindow();

@@ -40,6 +40,425 @@ static void *r23_e2 = 0;
 static u_char r28_torch_flag = 0;
 static int set_buffer[2];
 
+#define EFFECT_DEBUG_COUNT (EF_SEPIA + 1)
+
+typedef struct {
+    int id;
+    const char *enum_name;
+    const char *function_name;
+    const char *note;
+    u_char can_toggle;
+    u_char persistent;
+} EFFECT_DEBUG_ENTRY;
+
+static EFFECT_DEBUG_ENTRY effect_debug_entries[EFFECT_DEBUG_COUNT] = {
+    [EF_NULL] = {EF_NULL, "EF_NULL", "-", "No effect body.", 0, 0},
+    [EF_Z_DEP] = {EF_Z_DEP, "EF_Z_DEP", "SetForcusDepth", "", 1, 0},
+    [EF_DITHER] = {EF_DITHER, "EF_DITHER", "SetDither3", "", 1, 0},
+    [EF_BLUR_N] = {EF_BLUR_N, "EF_BLUR_N", "SetBlur", "", 1, 0},
+    [EF_BLUR_B] = {EF_BLUR_B, "EF_BLUR_B", "SetBlur", "", 1, 0},
+    [EF_BLUR_W] = {EF_BLUR_W, "EF_BLUR_W", "SetBlur", "", 1, 0},
+    [EF_DEFORM] = {EF_DEFORM, "EF_DEFORM", "SetDeform", "", 1, 0},
+    [EF_FOCUS] = {EF_FOCUS, "EF_FOCUS", "SetFocus1", "", 1, 0},
+    [EF_OVERLAP] = {EF_OVERLAP, "EF_OVERLAP", "SetOverRap", "", 1, 0},
+    [EF_FADEFRAME] = {EF_FADEFRAME, "EF_FADEFRAME", "SetFadeFrame", "", 1, 0},
+    [EF_RENZFLARE] = {EF_RENZFLARE, "EF_RENZFLARE", "SetRenzFlare", "", 1, 1},
+    [EF_BLACKFILTER] = {EF_BLACKFILTER, "EF_BLACKFILTER", "SetBlackFilter", "", 1, 0},
+    [EF_NEGA] = {EF_NEGA, "EF_NEGA", "SetNega", "", 1, 0},
+    [EF_NCONTRAST] = {EF_NCONTRAST, "EF_NCONTRAST", "SetContrast2", "", 1, 0},
+    [EF_NCONTRAST2] = {EF_NCONTRAST2, "EF_NCONTRAST2", "SetContrast2", "", 1, 0},
+    [EF_NCONTRAST3] = {EF_NCONTRAST3, "EF_NCONTRAST3", "SetContrast3", "", 1, 0},
+    [EF_MAGATOKI] = {EF_MAGATOKI, "EF_MAGATOKI", "SetMAGATOKI", "", 1, 1},
+    [EF_ENEDMG1] = {EF_ENEDMG1, "EF_ENEDMG1", "SetEneDmgEffect1_Sub", "Needs live enemy damage state.", 0, 0},
+    [EF_ENEDMG2] = {EF_ENEDMG2, "EF_ENEDMG2", "SetEneDmgEffect2_Sub", "Needs live enemy damage state.", 0, 0},
+    [EF_SPIRIT] = {EF_SPIRIT, "EF_SPIRIT", "SetSpirit", "Spawns nested flame buffers; use scene data path.", 0, 0},
+    [EF_HALO] = {EF_HALO, "EF_HALO", "SetHalo", "", 1, 1},
+    [EF_RIPPLE] = {EF_RIPPLE, "EF_RIPPLE", "SetRipple", "", 1, 0},
+    [EF_RIPPLE2] = {EF_RIPPLE2, "EF_RIPPLE2", "SetRipple", "", 1, 0},
+    [EF_FIRE] = {EF_FIRE, "EF_FIRE", "SetFire", "", 1, 1},
+    [EF_FIRE2] = {EF_FIRE2, "EF_FIRE2", "SetFire2", "", 1, 1},
+    [EF_TORCH] = {EF_TORCH, "EF_TORCH", "SetTorch", "", 1, 1},
+    [EF_SMOKE] = {EF_SMOKE, "EF_SMOKE", "SetSmoke", "", 1, 1},
+    [EF_PDEFORM] = {EF_PDEFORM, "EF_PDEFORM", "SetPartsDeform", "", 1, 1},
+    [EF_ENEFIRE] = {EF_ENEFIRE, "EF_ENEFIRE", "SetEneFire", "Needs live enemy pointers.", 0, 0},
+    [EF_DUST] = {EF_DUST, "EF_DUST", "SetDust", "", 1, 1},
+    [EF_WATERDROP] = {EF_WATERDROP, "EF_WATERDROP", "SetWaterdrop", "", 1, 1},
+    [EF_SUNSHINE] = {EF_SUNSHINE, "EF_SUNSHINE", "SetSunshine", "", 1, 1},
+    [EF_NEGACIRCLE] = {EF_NEGACIRCLE, "EF_NEGACIRCLE", "SetNegaCircle", "", 1, 0},
+    [EF_ENEFACE] = {EF_ENEFACE, "EF_ENEFACE", "SetEneFace", "", 1, 1},
+    [EF_FACESPIRIT] = {EF_FACESPIRIT, "EF_FACESPIRIT", "SetFaceSpirit", "Needs fly/facespirit runtime state.", 0, 0},
+    [EF_DITHER2] = {EF_DITHER2, "EF_DITHER2", "SetDither4", "", 1, 0},
+    [EF_Z_DEP2] = {EF_Z_DEP2, "EF_Z_DEP2", "SetForcusDepth2", "", 1, 0},
+    [EF_HAZE] = {EF_HAZE, "EF_HAZE", "SetHaze_Pond", "Only visible in haze-enabled rooms.", 1, 0},
+    [EF_PBLUR] = {EF_PBLUR, "EF_PBLUR", "pblur", "", 1, 0},
+    [EF_ENEIN] = {EF_ENEIN, "EF_ENEIN", "SetPartsDeform", "Needs enemy-specific position/state.", 0, 0},
+    [EF_ENEOUT] = {EF_ENEOUT, "EF_ENEOUT", "SetEneSeal", "Needs live enemy state.", 0, 0},
+    [EF_LUMINE] = {EF_LUMINE, "EF_LUMINE", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
+    [EF_STEALTH] = {EF_STEALTH, "EF_STEALTH", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
+    [EF_STEALTH2] = {EF_STEALTH2, "EF_STEALTH2", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
+    [EF_007] = {EF_007, "EF_007", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
+    [EF_MONO] = {EF_MONO, "EF_MONO", "ChangeMonochrome", "", 1, 0},
+    [EF_SEPIA] = {EF_SEPIA, "EF_SEPIA", "FOD_EFF_FRAME.sepia", "FOD parses this flag, but the port has no sepia renderer yet.", 0, 0},
+};
+
+static int effect_debug_enabled[EFFECT_DEBUG_COUNT] = {0};
+static void *effect_debug_handle[EFFECT_DEBUG_COUNT] = {0};
+static u_char effect_debug_blur_alpha = 0x64;
+static u_char effect_debug_nega_alpha = 0x80;
+static float effect_debug_rate = 1.0f;
+static float effect_debug_parts_speed = 0.0f;
+static float effect_debug_parts_rate = 1.0f;
+static float effect_debug_parts_trate = 1.0f;
+static u_char effect_debug_magatoki_flag = 0;
+static int effect_debug_mono_active = 0;
+static int effect_debug_haze_active = 0;
+static sceVu0FVECTOR effect_debug_pos = {0.0f, 0.0f, 0.0f, 1.0f};
+static sceVu0FVECTOR effect_debug_pos2 = {0.0f, 0.0f, 0.0f, 1.0f};
+static sceVu0FVECTOR effect_debug_rot = {0.0f, 0.0f, 0.0f, 1.0f};
+
+static EFFECT_CONT *MikuPan_EffectDebugCont(int id)
+{
+    if (id < 0 || id >= EFFECT_DEBUG_COUNT)
+    {
+        return NULL;
+    }
+
+    return (EFFECT_CONT *)effect_debug_handle[id];
+}
+
+static void MikuPan_EffectDebugUpdateAnchor(void)
+{
+    if (sys_wrk.game_mode != GAME_MODE_OUTGAME)
+    {
+        Vu0CopyVector(effect_debug_pos, plyr_wrk.move_box.pos);
+    }
+    else
+    {
+        Vu0CopyVector(effect_debug_pos, camera.i);
+    }
+
+    effect_debug_pos[1] -= 120.0f;
+    effect_debug_pos[3] = 1.0f;
+
+    Vu0CopyVector(effect_debug_pos2, effect_debug_pos);
+    effect_debug_pos2[1] -= 700.0f;
+    effect_debug_pos2[3] = 1.0f;
+
+    effect_debug_rot[0] = 0.0f;
+    effect_debug_rot[1] = 0.0f;
+    effect_debug_rot[2] = 0.0f;
+    effect_debug_rot[3] = 1.0f;
+}
+
+static void MikuPan_EffectDebugResetState(void)
+{
+    memset(effect_debug_enabled, 0, sizeof(effect_debug_enabled));
+    memset(effect_debug_handle, 0, sizeof(effect_debug_handle));
+    effect_debug_magatoki_flag = 0;
+    effect_debug_mono_active = 0;
+    effect_debug_haze_active = 0;
+}
+
+static void MikuPan_EffectDebugStopPersistent(int id)
+{
+    EFFECT_CONT *ec = MikuPan_EffectDebugCont(id);
+
+    if (ec == NULL)
+    {
+        return;
+    }
+
+    if (id == EF_MAGATOKI)
+    {
+        effect_debug_magatoki_flag = 4;
+
+        if (ec->dat.uc8[0] == 0)
+        {
+            effect_debug_handle[id] = NULL;
+        }
+
+        return;
+    }
+
+    ResetEffects(ec);
+    effect_debug_handle[id] = NULL;
+}
+
+static void MikuPan_EffectDebugStartPersistent(int id)
+{
+    EFFECT_CONT *ec = MikuPan_EffectDebugCont(id);
+
+    if (ec != NULL && ec->dat.uc8[0] == 0)
+    {
+        effect_debug_handle[id] = NULL;
+        ec = NULL;
+    }
+
+    if (ec != NULL)
+    {
+        return;
+    }
+
+    switch (id)
+    {
+        case EF_RENZFLARE:
+            effect_debug_handle[id] =
+                SetEffects(id, 2, 4, effect_debug_pos, effect_debug_rot);
+            break;
+        case EF_MAGATOKI:
+            effect_debug_magatoki_flag = 1;
+            effect_debug_handle[id] =
+                SetEffects(id, 8, 30, 30, &effect_debug_magatoki_flag);
+            break;
+        case EF_HALO:
+            effect_debug_handle[id] = SetEffects(
+                id, 2, 0, effect_debug_pos, 0x80, 0x80, 0xff, 0.8f, 0);
+            break;
+        case EF_FIRE:
+            effect_debug_handle[id] = SetEffects(
+                id, 2, 3, effect_debug_pos, 0x50, 0x46, 0x1e, 0.4f, 0xf0,
+                0xd0, 0xa0, 3.0f);
+            break;
+        case EF_FIRE2:
+            effect_debug_handle[id] = SetEffects(
+                id, 2, 3, effect_debug_pos, 0x50, 0x46, 0x1e, 0.4f, 0xf0,
+                0xd0, 0xa0, 3.0f, 1.0f);
+            break;
+        case EF_TORCH:
+            effect_debug_handle[id] =
+                SetEffects(id, 2, 1, effect_debug_pos, &effect_debug_rate,
+                           &effect_debug_rate);
+            break;
+        case EF_SMOKE:
+            effect_debug_handle[id] = SetEffects(id, 2, effect_debug_pos);
+            break;
+        case EF_PDEFORM:
+            effect_debug_handle[id] =
+                SetEffects(id, 2, 23, 0x80, 0.8f, 0.8f, effect_debug_pos, 0, 0,
+                           0, (void *)0, &effect_debug_parts_speed,
+                           &effect_debug_parts_rate, &effect_debug_parts_trate);
+            break;
+        case EF_DUST:
+            effect_debug_handle[id] = SetEffects(id, 2, effect_debug_pos);
+            break;
+        case EF_WATERDROP:
+            effect_debug_handle[id] = SetEffects(
+                id, 2, effect_debug_pos, 1, 250.0f, 200, 0x80, 0x80, 0x80);
+            break;
+        case EF_SUNSHINE:
+            effect_debug_handle[id] =
+                SetEffects(id, 2, effect_debug_pos, effect_debug_pos2,
+                           effect_debug_rot, 8, 0.9f, 0.6f, 0xff, 0xf0, 0xc0);
+            break;
+        case EF_ENEFACE:
+            effect_debug_handle[id] =
+                SetEffects(id, 2, 0, 0, effect_debug_pos[0],
+                           effect_debug_pos[1], effect_debug_pos[2]);
+            break;
+    }
+}
+
+static void MikuPan_EffectDebugApplyOneShot(int id)
+{
+    switch (id)
+    {
+        case EF_Z_DEP:
+            SetEffects(id, 1);
+            break;
+        case EF_DITHER:
+            SetEffects(id, 1, 2, 24.0f, 8.0f, 0x6a, 0x65);
+            break;
+        case EF_BLUR_N:
+        case EF_BLUR_B:
+        case EF_BLUR_W:
+            SetEffects(id, 1, &effect_debug_blur_alpha, 1000, 1800, 320.0f,
+                       112.0f);
+            break;
+        case EF_DEFORM:
+            SetEffects(id, 1, 2, 12);
+            break;
+        case EF_FOCUS:
+            SetEffects(id, 1, 20);
+            break;
+        case EF_OVERLAP:
+            SetEffects(id, 1, 0x28);
+            break;
+        case EF_FADEFRAME:
+            SetEffects(id, 1, 0x50, 0x80000);
+            break;
+        case EF_BLACKFILTER:
+            SetEffects(id, 1, 0x48);
+            break;
+        case EF_NEGA:
+            SetEffects(id, 1, 0x40, 0xc4, &effect_debug_nega_alpha);
+            break;
+        case EF_NCONTRAST:
+        case EF_NCONTRAST2:
+        case EF_NCONTRAST3:
+            SetEffects(id, 1, 0x80, 0x80);
+            break;
+        case EF_RIPPLE:
+            SetEffects(id, 1, 1, 16, effect_debug_pos);
+            break;
+        case EF_RIPPLE2:
+            SetEffects(id, 8, 1, 16, 0x80, 0x80, 0x80, 1.0f, 3.2f,
+                       effect_debug_pos, effect_debug_rot, 1);
+            break;
+        case EF_NEGACIRCLE:
+            SetEffects(id, 1, 320.0f, 224.0f, 180.0f, 0x60, 0x80, 0x40,
+                       0x40);
+            break;
+        case EF_DITHER2:
+            SetEffects(id, 1, 1, 18.0f, 7.0f);
+            break;
+        case EF_Z_DEP2:
+            SetEffects(id, 1);
+            break;
+        case EF_HAZE:
+            if (!effect_debug_haze_active)
+            {
+                SetHaze_Pond_SW(1);
+                effect_debug_haze_active = 1;
+            }
+            break;
+        case EF_PBLUR:
+            dbg_wrk.eff_prtblr_sw = 1;
+            dbg_wrk.eff_prtblr_alp = 0x46;
+            break;
+        case EF_MONO:
+            if (!effect_debug_mono_active)
+            {
+                ChangeMonochrome(1);
+                effect_debug_mono_active = 1;
+            }
+            break;
+    }
+}
+
+int MikuPan_EffectDebugCount(void)
+{
+    return EFFECT_DEBUG_COUNT;
+}
+
+const char *MikuPan_EffectDebugEnumName(int id)
+{
+    if (id < 0 || id >= EFFECT_DEBUG_COUNT)
+    {
+        return "?";
+    }
+
+    return effect_debug_entries[id].enum_name;
+}
+
+const char *MikuPan_EffectDebugFunctionName(int id)
+{
+    if (id < 0 || id >= EFFECT_DEBUG_COUNT)
+    {
+        return "?";
+    }
+
+    return effect_debug_entries[id].function_name;
+}
+
+const char *MikuPan_EffectDebugNote(int id)
+{
+    if (id < 0 || id >= EFFECT_DEBUG_COUNT)
+    {
+        return "";
+    }
+
+    return effect_debug_entries[id].note;
+}
+
+int MikuPan_EffectDebugCanToggle(int id)
+{
+    if (id < 0 || id >= EFFECT_DEBUG_COUNT)
+    {
+        return 0;
+    }
+
+    return effect_debug_entries[id].can_toggle != 0;
+}
+
+int MikuPan_EffectDebugEnabled(int id)
+{
+    if (id < 0 || id >= EFFECT_DEBUG_COUNT)
+    {
+        return 0;
+    }
+
+    return effect_debug_enabled[id] != 0;
+}
+
+void MikuPan_EffectDebugSetEnabled(int id, int enabled)
+{
+    if (id < 0 || id >= EFFECT_DEBUG_COUNT
+        || !MikuPan_EffectDebugCanToggle(id))
+    {
+        return;
+    }
+
+    effect_debug_enabled[id] = enabled != 0;
+}
+
+void MikuPan_EffectDebugSetAll(int enabled)
+{
+    int i;
+
+    for (i = 0; i < EFFECT_DEBUG_COUNT; i++)
+    {
+        MikuPan_EffectDebugSetEnabled(i, enabled);
+    }
+}
+
+void MikuPan_EffectDebugApply(void)
+{
+    int i;
+
+    MikuPan_EffectDebugUpdateAnchor();
+
+    for (i = 0; i < EFFECT_DEBUG_COUNT; i++)
+    {
+        if (!MikuPan_EffectDebugCanToggle(i))
+        {
+            continue;
+        }
+
+        if (effect_debug_entries[i].persistent)
+        {
+            if (effect_debug_enabled[i])
+            {
+                MikuPan_EffectDebugStartPersistent(i);
+            }
+            else
+            {
+                MikuPan_EffectDebugStopPersistent(i);
+            }
+        }
+        else if (effect_debug_enabled[i])
+        {
+            MikuPan_EffectDebugApplyOneShot(i);
+        }
+    }
+
+    if (!effect_debug_enabled[EF_HAZE] && effect_debug_haze_active)
+    {
+        SetHaze_Pond_SW(0);
+        effect_debug_haze_active = 0;
+    }
+
+    if (!effect_debug_enabled[EF_PBLUR])
+    {
+        dbg_wrk.eff_prtblr_sw = 0;
+    }
+
+    if (!effect_debug_enabled[EF_MONO] && effect_debug_mono_active)
+    {
+        ChangeMonochrome(0);
+        effect_debug_mono_active = 0;
+    }
+}
+
 void InitEffects()
 {
     eff_blur_off = 1;
@@ -78,6 +497,8 @@ void InitEffects()
     set_buffer[1] = 0;
     now_buffer[0] = 0;
     now_buffer[1] = 0;
+
+    MikuPan_EffectDebugResetState();
 }
 
 void InitEffectsEF()
@@ -171,6 +592,8 @@ void InitEffectsEF()
             ChangeMonochrome(1);
         }
     }
+
+    MikuPan_EffectDebugApply();
 
     for (i = 0; i < 3; i++)
     {

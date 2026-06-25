@@ -1729,9 +1729,9 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
 	int mz;
 	u_int th;
 	float div;
-	int u[11];
+	int u[14];
 	int v;
-	int x[11];
+	int x[14];
 	int i;
 	int n;
 	int mtw;
