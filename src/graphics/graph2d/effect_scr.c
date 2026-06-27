@@ -1061,7 +1061,7 @@ void MakeScrDeformPacket(/* s1 17 */ int pnumw, /* 0x0(sp) */ int pnumh, /* s2 1
         &render_buffer[0][0],
         render_vertices,
         1,
-        0);
+        MIKUPAN_GPU_BLEND_NORMAL);
 }
 
 void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp) */ u_char alp)
@@ -1314,7 +1314,7 @@ void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
 
     eff_deform.init = 1;
@@ -1682,7 +1682,7 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
     
     pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
@@ -1995,7 +1995,7 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
     
     eff_deform.pass = 1;
@@ -4153,7 +4153,7 @@ u_char SubNowLoading(/* a0 4 */ int fl, /* 0x3440(sp) */ int num, /* f12 50 */ f
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
 
     return pbuf[bak].ui32[0];
@@ -4560,7 +4560,7 @@ void SubGameOver(/* 0x11b60(sp) */ u_char alp, /* f20 58 */ float rate)
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
 }
 

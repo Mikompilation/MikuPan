@@ -24,6 +24,7 @@ typedef struct
 {
     SDL_GPUTexture* texture;
     SDL_GPUSampler* sampler;
+    SDL_GPUSampler* sampler_nearest;
     int width;
     int height;
     SDL_GPUTextureFormat format;
@@ -62,7 +63,7 @@ typedef struct
     int depth_write;
     SDL_GPUCompareOp compare;
     int blend;
-    int additive_blend;
+    MikuPan_GPUBlendMode blend_mode;
     SDL_GPUCullMode cull_mode;
     SDL_GPUFillMode fill_mode;
     SDL_GPUColorComponentFlags color_mask;
@@ -459,7 +460,7 @@ static unsigned int RenderStateHash(void)
         (unsigned int) g_state.depth_write,
         (unsigned int) g_state.compare,
         (unsigned int) g_state.blend,
-        (unsigned int) g_state.additive_blend,
+        (unsigned int) g_state.blend_mode,
         (unsigned int) g_state.cull_mode,
         (unsigned int) g_state.fill_mode,
         (unsigned int) g_state.color_mask,
@@ -525,7 +526,7 @@ static void SetDefaultRenderState(void)
     g_state.depth_write = 1;
     g_state.compare = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
     g_state.blend = 1;
-    g_state.additive_blend = 0;
+    g_state.blend_mode = MIKUPAN_GPU_BLEND_NORMAL;
     g_state.cull_mode = SDL_GPU_CULLMODE_BACK;
     g_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     g_state.color_mask = SDL_GPU_COLORCOMPONENT_R | SDL_GPU_COLORCOMPONENT_G
@@ -1198,12 +1199,12 @@ void MikuPan_GPUSetVertexStorageBuffer(unsigned int buffer_id)
     g_vertex_storage_buffer = (entry != NULL) ? entry->buffer : NULL;
 }
 
-static SDL_GPUSampler* CreateSampler(int repeat, int mipmaps)
+static SDL_GPUSampler* CreateSampler(int repeat, int mipmaps, int nearest)
 {
     SDL_GPUSamplerCreateInfo info = {0};
-    info.min_filter = SDL_GPU_FILTER_LINEAR;
-    info.mag_filter = SDL_GPU_FILTER_LINEAR;
-    info.mipmap_mode = mipmaps ? SDL_GPU_SAMPLERMIPMAPMODE_LINEAR
+    info.min_filter = nearest ? SDL_GPU_FILTER_NEAREST : SDL_GPU_FILTER_LINEAR;
+    info.mag_filter = nearest ? SDL_GPU_FILTER_NEAREST : SDL_GPU_FILTER_LINEAR;
+    info.mipmap_mode = mipmaps && !nearest ? SDL_GPU_SAMPLERMIPMAPMODE_LINEAR
                                : SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
     info.address_mode_u = repeat ? SDL_GPU_SAMPLERADDRESSMODE_REPEAT
                                  : SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
@@ -1235,7 +1236,8 @@ static unsigned int CreateTexture(int width, int height,
     info.num_levels = 1;
     info.sample_count = SDL_GPU_SAMPLECOUNT_1;
     g_textures[id].texture = SDL_CreateGPUTexture(g_device, &info);
-    g_textures[id].sampler = CreateSampler(repeat, mipmaps);
+    g_textures[id].sampler = CreateSampler(repeat, mipmaps, 0);
+    g_textures[id].sampler_nearest = CreateSampler(repeat, mipmaps, 1);
     g_textures[id].width = width;
     g_textures[id].height = height;
     g_textures[id].format = format;
@@ -1286,6 +1288,10 @@ void MikuPan_GPUReleaseTexture(unsigned int id)
     if (g_textures[id].sampler != NULL)
     {
         SDL_ReleaseGPUSampler(g_device, g_textures[id].sampler);
+    }
+    if (g_textures[id].sampler_nearest != NULL)
+    {
+        SDL_ReleaseGPUSampler(g_device, g_textures[id].sampler_nearest);
     }
     if (g_textures[id].texture != NULL)
     {
@@ -1633,11 +1639,37 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
 
     SDL_GPUColorTargetBlendState blend = {0};
     blend.enable_blend = g_state.blend ? true : false;
+    switch (g_state.blend_mode)
+    {
+        case MIKUPAN_GPU_BLEND_ADDITIVE:
     blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
-    blend.dst_color_blendfactor = g_state.additive_blend
-                                      ? SDL_GPU_BLENDFACTOR_ONE
-                                      : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
     blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
+
+        case MIKUPAN_GPU_BLEND_SUBTRACTIVE:
+            /* Cd - Cs * As */
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            blend.color_blend_op = SDL_GPU_BLENDOP_REVERSE_SUBTRACT;
+            break;
+
+        case MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD:
+            /* The shader writes As into RGB, so blending adds As * Cd. */
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_DST_COLOR;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
+
+
+        case MIKUPAN_GPU_BLEND_NORMAL:
+        default:
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            blend.dst_color_blendfactor =
+                SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+            blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
+    }
     /* Alpha channel: keep the destination (framebuffer) alpha opaque instead of
      * blending it like a colour. With SRC_ALPHA here, every semi-transparent 2D
      * sprite drives the framebuffer alpha below 1. D3D12 ignores swapchain alpha
@@ -1648,7 +1680,9 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
      * backend does the same, which is why its overlay stayed correct. RGB
      * (the visible colour) is unaffected on every backend. */
     blend.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
-    blend.dst_alpha_blendfactor = g_state.additive_blend
+    blend.dst_alpha_blendfactor =
+        g_state.blend_mode == MIKUPAN_GPU_BLEND_ADDITIVE ||
+                g_state.blend_mode == MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD
                                       ? SDL_GPU_BLENDFACTOR_ONE
                                       : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
     blend.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
@@ -1837,7 +1871,7 @@ void MikuPan_GPUSetRenderState3D(void)
     g_state.depth_write = 1;
     g_state.compare = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
     g_state.blend = 1;
-    g_state.additive_blend = 0;
+    g_state.blend_mode = MIKUPAN_GPU_BLEND_NORMAL;
     g_state.cull_mode = SDL_GPU_CULLMODE_BACK;
     g_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     g_state.depth_bias = 0;
@@ -1855,7 +1889,7 @@ void MikuPan_GPUSetRenderState2D(void)
     g_state.depth_test = 0;
     g_state.depth_write = 0;
     g_state.blend = 1;
-    g_state.additive_blend = 0;
+    g_state.blend_mode = MIKUPAN_GPU_BLEND_NORMAL;
     g_state.cull_mode = SDL_GPU_CULLMODE_NONE;
     g_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     g_state.depth_bias = 0;
@@ -1868,7 +1902,7 @@ void MikuPan_GPUSetRenderState2DDepth(void)
     g_state.depth_write = 1;
     g_state.compare = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
     g_state.blend = 1;
-    g_state.additive_blend = 0;
+    g_state.blend_mode = MIKUPAN_GPU_BLEND_NORMAL;
     g_state.cull_mode = SDL_GPU_CULLMODE_NONE;
     g_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     g_state.depth_bias = 0;
@@ -1881,7 +1915,7 @@ void MikuPan_GPUSetRenderStateSprite3D(void)
     g_state.depth_write = 1;
     g_state.compare = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
     g_state.blend = 1;
-    g_state.additive_blend = 0;
+    g_state.blend_mode = MIKUPAN_GPU_BLEND_NORMAL;
     g_state.cull_mode = SDL_GPU_CULLMODE_NONE;
     g_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     g_state.depth_bias = 0;
@@ -1893,7 +1927,7 @@ void MikuPan_GPUSetRenderStateShadow(void)
     g_state.depth_test = 0;
     g_state.depth_write = 0;
     g_state.blend = 0;
-    g_state.additive_blend = 0;
+    g_state.blend_mode = MIKUPAN_GPU_BLEND_NORMAL;
     g_state.cull_mode = SDL_GPU_CULLMODE_NONE;
     g_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     g_state.depth_bias = 0;
@@ -1906,7 +1940,7 @@ void MikuPan_GPUSetRenderStateShadowReceiver(void)
     g_state.depth_write = 0;
     g_state.compare = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
     g_state.blend = 1;
-    g_state.additive_blend = 0;
+    g_state.blend_mode = MIKUPAN_GPU_BLEND_NORMAL;
     g_state.cull_mode = SDL_GPU_CULLMODE_NONE;
     g_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     g_state.depth_bias = 1;
@@ -1921,10 +1955,10 @@ void MikuPan_GPUSetDepthFunc(unsigned int gl_func)
 {
     g_state.compare = CompareFromGL(gl_func);
 }
-void MikuPan_GPUSetBlend(int enabled, int additive)
+void MikuPan_GPUSetBlendMode(int enabled, MikuPan_GPUBlendMode mode)
 {
     g_state.blend = enabled ? 1 : 0;
-    g_state.additive_blend = additive ? 1 : 0;
+    g_state.blend_mode = mode;
 }
 void MikuPan_GPUSetCullBack(void)
 {
@@ -2155,6 +2189,16 @@ SDL_GPUTexture* MikuPan_GPUGetTextureHandle(unsigned int id)
     return entry ? entry->texture : NULL;
 }
 
+void MikuPan_GPUSetSamplerNearestOverride(int enabled)
+{
+    enabled = enabled != 0;
+    if (g_sampler_nearest_override != enabled)
+    {
+        g_sampler_nearest_override = enabled;
+        g_sampler_binding_valid = 0;
+    }
+}
+
 static void BindDrawState(unsigned int primitive)
 {
     BeginTargetPassIfNeeded();
@@ -2268,10 +2312,17 @@ static void BindDrawState(unsigned int primitive)
     for (int i = 0; i < 2; i++)
     {
         GPUTextureEntry* tex = TextureEntry(g_bound_textures[i]);
-        if (tex != NULL && tex->texture != NULL && tex->sampler != NULL)
+        SDL_GPUSampler* sampler = NULL;
+        if (tex != NULL)
+        {
+            sampler = g_sampler_nearest_override && tex->sampler_nearest != NULL
+                ? tex->sampler_nearest
+                : tex->sampler;
+        }
+        if (tex != NULL && tex->texture != NULL && sampler != NULL)
         {
             samplers[i].texture = tex->texture;
-            samplers[i].sampler = tex->sampler;
+            samplers[i].sampler = sampler;
         }
         else
         {

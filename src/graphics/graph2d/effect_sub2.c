@@ -425,7 +425,7 @@ void FallenObjectsDraw()
         &fall_render_buffer[0][0],
         fall_render_vertices,
         MIKUPAN_DEPTH_LEQUAL,
-        0);
+        MIKUPAN_GPU_BLEND_NORMAL);
 
     fall_render_vertices = 0;
 }

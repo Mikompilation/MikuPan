@@ -329,7 +329,7 @@ void MikuPan_DrawShadowSilhouetteEllipse(void)
 
     // Need additive/normal blending so the ellipse alpha isn't clobbered.
     MikuPan_GPUSetDepthFunc(GL_ALWAYS);
-    MikuPan_GPUSetBlend(1, 0);
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
 
     MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     MikuPan_ResetRenderStateCache();
