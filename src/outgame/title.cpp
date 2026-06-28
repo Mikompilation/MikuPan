@@ -317,7 +317,7 @@ static float title_bg_camera_lerp_t = 0.469f;
 static float title_bg_camera_lerp_seconds = 15.9f;
 static int title_bg_camera_lerp_enabled = 1;
 static int title_bg_camera_lerp_timer = 447;
-static int title_debug_window_visible = 1;
+static int title_debug_window_visible = 0;
 static int title_bgm_file_no = TITLE_BGM_DEFAULT_FILE_NO;
 static int title_bgm_playing_file_no = -1;
 static int title_bg_map_load_id = -1;
@@ -1019,7 +1019,7 @@ static void TitleBgCopyRoomLights(void)
     int count;
     int i;
 
-    *light_pack = (LIGHT_PACK){0};
+    *light_pack = LIGHT_PACK{0};
     Vu0CopyVector(light_pack->ambient, room_ambient_light);
 
     count = TitleBgLightCount(room_pararell_light, 3);
@@ -1119,7 +1119,7 @@ static void TitleBgSetupFurnitureWork(void)
 
     memset(furn_wrk, 0, sizeof(furn_wrk));
     memset(fefct_wrk, 0, sizeof(fefct_wrk));
-    room_wrk = (ROOM_WRK){0};
+    room_wrk = ROOM_WRK{0};
 
     for (i = 0; i < 60; i++)
     {
@@ -1613,15 +1613,15 @@ static void TitleBgDrawFadeOverlay(void)
     {
         ImDrawList_AddRectFilled(
             draw_list,
-            (ImVec2){0.0f, 0.0f},
-            (ImVec2){io->DisplaySize.x, viewport_y},
+            ImVec2{0.0f, 0.0f},
+            ImVec2{io->DisplaySize.x, viewport_y},
             bar_color,
             0.0f,
             0);
         ImDrawList_AddRectFilled(
             draw_list,
-            (ImVec2){0.0f, viewport_y + viewport_h},
-            (ImVec2){io->DisplaySize.x, io->DisplaySize.y},
+            ImVec2{0.0f, viewport_y + viewport_h},
+            ImVec2{io->DisplaySize.x, io->DisplaySize.y},
             bar_color,
             0.0f,
             0);
@@ -1631,15 +1631,15 @@ static void TitleBgDrawFadeOverlay(void)
     {
         ImDrawList_AddRectFilled(
             draw_list,
-            (ImVec2){0.0f, viewport_y},
-            (ImVec2){viewport_x, viewport_y + viewport_h},
+            ImVec2{0.0f, viewport_y},
+            ImVec2{viewport_x, viewport_y + viewport_h},
             bar_color,
             0.0f,
             0);
         ImDrawList_AddRectFilled(
             draw_list,
-            (ImVec2){viewport_x + viewport_w, viewport_y},
-            (ImVec2){io->DisplaySize.x, viewport_y + viewport_h},
+            ImVec2{viewport_x + viewport_w, viewport_y},
+            ImVec2{io->DisplaySize.x, viewport_y + viewport_h},
             bar_color,
             0.0f,
             0);
@@ -1741,9 +1741,9 @@ static void TitleBgDebugUi(void)
     char full_values[2048];
 
     igSetNextWindowPos(
-        (ImVec2){12.0f, 36.0f},
+        ImVec2{12.0f, 36.0f},
         ImGuiCond_FirstUseEver,
-        (ImVec2){0.0f, 0.0f});
+        ImVec2{0.0f, 0.0f});
 
     igBegin("Title Background Room", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 
@@ -1787,19 +1787,19 @@ static void TitleBgDebugUi(void)
     igText("Effective title BGM: %d", TitleAudioActiveFileNo());
     igText("Volume table value: %u", GetAdpcmVol(TitleAudioActiveFileNo()));
 
-    if (igButton("Play / restart audio", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Play / restart audio", ImVec2{0.0f, 0.0f}))
     {
         TitleAudioRestartBgm();
     }
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Stop audio", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Stop audio", ImVec2{0.0f, 0.0f}))
     {
         TitleAudioStopBgm();
     }
 
-    if (igButton("Use 1541##title_audio", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Use 1541##title_audio", ImVec2{0.0f, 0.0f}))
     {
         title_bgm_file_no = TITLE_BGM_DEFAULT_FILE_NO;
         TitleAudioRestartBgm();
@@ -1807,7 +1807,7 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Use original title BGM##title_audio", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Use original title BGM##title_audio", ImVec2{0.0f, 0.0f}))
     {
         title_bgm_file_no = AO000_TITLE_STR;
         TitleAudioRestartBgm();
@@ -1840,7 +1840,7 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Prev##title_bg_preset", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Prev##title_bg_preset", ImVec2{0.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgApplyPrevPreset();
@@ -1848,7 +1848,7 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Next##title_bg_preset", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Next##title_bg_preset", ImVec2{0.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgApplyNextPreset();
@@ -1866,7 +1866,7 @@ static void TitleBgDebugUi(void)
         TitleBgSetRoomNo(room_no);
     }
 
-    if (igButton("Reload room", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Reload room", ImVec2{0.0f, 0.0f}))
     {
         TitleBgResetFade();
         TitleBgPauseCameraAnimations();
@@ -1875,7 +1875,7 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Reset camera", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Reset camera", ImVec2{0.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgResetCamera();
@@ -1886,7 +1886,7 @@ static void TitleBgDebugUi(void)
 
     igText("Pan camera + target");
 
-    if (igButton("Forward##title_bg_pan", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Forward##title_bg_pan", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgPanForward(title_bg_camera_move_step);
@@ -1894,13 +1894,13 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Back##title_bg_pan", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Back##title_bg_pan", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgPanForward(-title_bg_camera_move_step);
     }
 
-    if (igButton("Left##title_bg_pan", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Left##title_bg_pan", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgPanRight(-title_bg_camera_move_step);
@@ -1908,13 +1908,13 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Right##title_bg_pan", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Right##title_bg_pan", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgPanRight(title_bg_camera_move_step);
     }
 
-    if (igButton("Up##title_bg_pan", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Up##title_bg_pan", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgPanY(-title_bg_camera_move_step);
@@ -1922,7 +1922,7 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Down##title_bg_pan", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Down##title_bg_pan", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgPanY(title_bg_camera_move_step);
@@ -1930,7 +1930,7 @@ static void TitleBgDebugUi(void)
 
     igText("Dolly camera");
 
-    if (igButton("In##title_bg_dolly", (ImVec2){92.0f, 0.0f}))
+    if (igButton("In##title_bg_dolly", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgDolly(title_bg_camera_move_step);
@@ -1938,7 +1938,7 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Out##title_bg_dolly", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Out##title_bg_dolly", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgDolly(-title_bg_camera_move_step);
@@ -1946,7 +1946,7 @@ static void TitleBgDebugUi(void)
 
     igText("Look target");
 
-    if (igButton("Left##title_bg_look", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Left##title_bg_look", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgLookRight(-title_bg_camera_move_step);
@@ -1954,13 +1954,13 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Right##title_bg_look", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Right##title_bg_look", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgLookRight(title_bg_camera_move_step);
     }
 
-    if (igButton("Up##title_bg_look", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Up##title_bg_look", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgLookY(-title_bg_camera_move_step);
@@ -1968,7 +1968,7 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Down##title_bg_look", (ImVec2){92.0f, 0.0f}))
+    if (igButton("Down##title_bg_look", ImVec2{92.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgLookY(title_bg_camera_move_step);
@@ -1994,7 +1994,7 @@ static void TitleBgDebugUi(void)
     igSeparator();
     igText("Camera lerp");
 
-    if (igButton("Set A from camera##title_bg_lerp", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Set A from camera##title_bg_lerp", ImVec2{0.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgCopyCurrentCamera(&title_bg_camera_lerp_a);
@@ -2002,14 +2002,14 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Apply A##title_bg_lerp", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Apply A##title_bg_lerp", ImVec2{0.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgApplyCameraPoint(&title_bg_camera_lerp_a);
         title_bg_camera_lerp_t = 0.0f;
     }
 
-    if (igButton("Set B from camera##title_bg_lerp", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Set B from camera##title_bg_lerp", ImVec2{0.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgCopyCurrentCamera(&title_bg_camera_lerp_b);
@@ -2017,7 +2017,7 @@ static void TitleBgDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Apply B##title_bg_lerp", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Apply B##title_bg_lerp", ImVec2{0.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgApplyCameraPoint(&title_bg_camera_lerp_b);
@@ -2104,7 +2104,7 @@ static void TitleBgDebugUi(void)
     igSeparator();
     igTextWrapped("%s", constants);
 
-    if (igButton("Copy current camera", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Copy current camera", ImVec2{0.0f, 0.0f}))
     {
         igSetClipboardText(constants);
     }
@@ -2112,7 +2112,7 @@ static void TitleBgDebugUi(void)
     igSeparator();
     igTextWrapped("%s", full_values);
 
-    if (igButton("Copy full setup", (ImVec2){0.0f, 0.0f}))
+    if (igButton("Copy full setup", ImVec2{0.0f, 0.0f}))
     {
         igSetClipboardText(full_values);
     }
@@ -2181,7 +2181,7 @@ static ImVec2 TitleCenteredTextPos(ImGuiIO *io, ImFont *font, float font_size,
     ImVec2 size = ImFont_CalcTextSizeA(
         font, font_size, 100000.0f, 0.0f, text, NULL, NULL);
 
-    return (ImVec2){
+    return ImVec2{
         io->DisplaySize.x * 0.5f - size.x * 0.5f,
         center_y - size.y * 0.5f,
     };
@@ -2202,28 +2202,28 @@ static void TitleDrawTextOutline(ImDrawList *draw_list, ImFont *font,
 {
     TitleDrawText(
         draw_list, font, font_size,
-        (ImVec2){pos.x + radius * 1.4f, pos.y + radius * 1.8f},
+        ImVec2{pos.x + radius * 1.4f, pos.y + radius * 1.8f},
         shadow, text, NULL);
 
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x - radius, pos.y}, outline, text, NULL);
+                  ImVec2{pos.x - radius, pos.y}, outline, text, NULL);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x + radius, pos.y}, outline, text, NULL);
+                  ImVec2{pos.x + radius, pos.y}, outline, text, NULL);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x, pos.y - radius}, outline, text, NULL);
+                  ImVec2{pos.x, pos.y - radius}, outline, text, NULL);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x, pos.y + radius}, outline, text, NULL);
+                  ImVec2{pos.x, pos.y + radius}, outline, text, NULL);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x - radius, pos.y - radius}, outline, text,
+                  ImVec2{pos.x - radius, pos.y - radius}, outline, text,
                   NULL);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x + radius, pos.y - radius}, outline, text,
+                  ImVec2{pos.x + radius, pos.y - radius}, outline, text,
                   NULL);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x - radius, pos.y + radius}, outline, text,
+                  ImVec2{pos.x - radius, pos.y + radius}, outline, text,
                   NULL);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x + radius, pos.y + radius}, outline, text,
+                  ImVec2{pos.x + radius, pos.y + radius}, outline, text,
                   NULL);
 }
 
@@ -2258,14 +2258,14 @@ static void TitleDrawBlockLogoLine(ImDrawList *draw_list, ImFont *font,
         TitleImGuiColor(4, 0, 8, 210),
         TitleImGuiColor(84, 16, 14, 235));
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x + 2.0f * display_scale, pos.y},
+                  ImVec2{pos.x + 2.0f * display_scale, pos.y},
                   TitleImGuiColor(65, 13, 22, 245), text, NULL);
     TitleDrawText(draw_list, font, font_size, pos,
                   TitleImGuiColor(155, 42, 34, 248), text, NULL);
     TitleDrawText(draw_list, font, font_size, pos,
                   TitleImGuiColor(218, 105, 70, 230), text, &upper_clip);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x, pos.y - 1.0f * display_scale},
+                  ImVec2{pos.x, pos.y - 1.0f * display_scale},
                   TitleImGuiColor(245, 232, 209, 245), text, &middle_clip);
     TitleDrawText(draw_list, font, font_size, pos,
                   TitleImGuiColor(116, 24, 29, 245), text, &lower_clip);
@@ -2281,13 +2281,13 @@ static void TitleDrawSerifSubtitle(ImDrawList *draw_list, ImFont *font,
     float radius = 2.0f * display_scale;
 
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x + radius, pos.y + radius},
+                  ImVec2{pos.x + radius, pos.y + radius},
                   TitleImGuiColor(0, 0, 0, 190), text, NULL);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x - radius, pos.y},
+                  ImVec2{pos.x - radius, pos.y},
                   TitleImGuiColor(75, 19, 26, 220), text, NULL);
     TitleDrawText(draw_list, font, font_size,
-                  (ImVec2){pos.x + radius, pos.y},
+                  ImVec2{pos.x + radius, pos.y},
                   TitleImGuiColor(75, 19, 26, 220), text, NULL);
     TitleDrawText(draw_list, font, font_size, pos,
                   TitleImGuiColor(222, 198, 184, 245), text, NULL);
