@@ -64,6 +64,8 @@ typedef enum MikuPan_GSAlphaMode
 
 } MikuPan_GSAlphaMode;
 
+MikuPan_GPUBlendMode MikuPan_GPUBlendModeFromGSAlpha(u_long gs_alpha);
+
 typedef struct MikuPan_GPUUniformBlock
 {
     float model[16];

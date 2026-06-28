@@ -1095,7 +1095,7 @@ static void BeginDepthQueryPass(void)
 
     SDL_GPUColorTargetInfo color = {0};
     color.texture = g_target_color;
-    color.clear_color = (SDL_FColor){0.0f, 0.0f, 0.0f, 0.0f};
+    color.clear_color = SDL_FColor{0.0f, 0.0f, 0.0f, 0.0f};
     color.load_op = SDL_GPU_LOADOP_CLEAR;
     color.cycle = false;
 

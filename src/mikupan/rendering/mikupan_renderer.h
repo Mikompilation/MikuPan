@@ -229,6 +229,9 @@ void MikuPan_RenderSprite2DGSAlpha(sceGsTex0 *tex, float *buffer,
 void MikuPan_RenderSprite2DFilteredGSAlpha(sceGsTex0 *tex, float *buffer,
                                            int nearest_sampler,
                                            unsigned long gs_alpha);
+void MikuPan_RenderSprite2DDepthStateFilteredGSAlpha(
+    sceGsTex0 *tex, float *buffer, int depth_test, int depth_write,
+    unsigned int depth_func, int nearest_sampler, unsigned long gs_alpha);
 void MikuPan_RenderUntexturedSprite(float* buffer);
 void MikuPan_RenderUntexturedSpriteDepth(float* buffer);
 void MikuPan_RenderUntexturedSpriteDepthState(float *buffer, int depth_test,
