@@ -142,7 +142,7 @@ static void MikuPan_LoadUiFonts(void)
                 void *font_data = malloc(font_size);
                 if (font_data != NULL)
                 {
-                    MikuPan_ReadFullFile(font_path, font_data);
+                    MikuPan_ReadFullFile(font_path, (char *)font_data);
                     ui_fonts[1] = ImFontAtlas_AddFontFromMemoryTTF(
                         io->Fonts, font_data, (int) font_size,
                         ui_font_regular_size, NULL,

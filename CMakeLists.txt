@@ -316,11 +316,14 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
             COMPILE_OPTIONS "-fpermissive;-Wno-narrowing;-Wno-write-strings")
 elseif(MSVC)
     # MSVC mirror of -fpermissive/-Wno-write-strings for the legacy C-as-C++ files:
+    # /TP forces compile-as-C++ (also makes VS IntelliSense parse these .c files as C++
+    #   instead of C, otherwise it floods the Error List with phantom E0254/E0065 on
+    #   valid C++ like `ImVec4{...}`);
     # /permissive relaxes C-isms (e.g. braced narrowing); /Zc:strictStrings- re-allows
     # string-literal -> char* (the hundreds of "..." fields in src/data/*.h struct tables).
     # NOTE: there is no MSVC flag for void* -> T*; those still need explicit casts in code.
     set_source_files_properties(${MIKUPAN_CXX_SOURCES} PROPERTIES
-            COMPILE_OPTIONS "/permissive;/Zc:strictStrings-")
+            COMPILE_OPTIONS "/TP;/permissive;/Zc:strictStrings-")
 endif()
 
 # --- Build version info (git tag + commit) -------------------------------------
