@@ -20,6 +20,7 @@
 #include "data/scamera.h"// SgCAMERA scamera;
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_graph3d_compat.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #include <math.h>
@@ -1813,6 +1814,8 @@ void DrawShadow(ShadowHandle *shandle, EnvFuncCallback env_func)
 
     if (MikuPan_IsShadowEnabled())
     {
+        MikuPan_ApplyShadowStrengthFromPs2Alpha(shandle->color[3]);
+
         // scamera.wcv is a PS2 GS-space matrix and is not a valid GL clip
         // transform. Build the projector's world->clip matrix in GL conventions
         // (cglm ortho * lookat, NDC [-1,1]) from world-space inputs instead.

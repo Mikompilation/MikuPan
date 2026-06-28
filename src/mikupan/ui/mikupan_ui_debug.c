@@ -724,6 +724,22 @@ int MikuPan_IsNormalsRendering(void)
     return render_normals;
 }
 
+static const char* MikuPanUIDebugBlendModeName(MikuPan_GPUBlendMode mode)
+{
+    switch (mode)
+    {
+    case MIKUPAN_GPU_BLEND_ADDITIVE:
+        return "additive";
+    case MIKUPAN_GPU_BLEND_SUBTRACTIVE:
+        return "subtractive";
+    case MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD:
+        return "src*dst+dst";
+    case MIKUPAN_GPU_BLEND_NORMAL:
+    default:
+        return "normal";
+    }
+}
+
 void MikuPan_ShowTextureList(void)
 {
     const MikuPan_TextureInfo* screen_copy;
@@ -765,7 +781,7 @@ void MikuPan_ShowTextureList(void)
 
                 igText("last draw: %d vertices, depth %s, blend %s",
                        debug->vertex_count, depth,
-                       debug->additive_blend ? "add" : "alpha");
+                       MikuPanUIDebugBlendModeName(debug->blend_mode));
                 igText("uv:  %.3f %.3f  ->  %.3f %.3f", debug->uv_min[0],
                        debug->uv_min[1], debug->uv_max[0], debug->uv_max[1]);
                 igText("ndc: %.3f %.3f  ->  %.3f %.3f", debug->ndc_min[0],
@@ -997,6 +1013,20 @@ void MikuPan_UiDebugMenuRender(void)
                 {
                     MikuPan_MeshCache_Flush();
                 }
+
+                unsigned long long mesh_cache_bytes = 0;
+                unsigned int mesh_cache_buffers = 0;
+                unsigned int mesh_cache_entries = 0;
+                MikuPan_MeshCache_GetStats(&mesh_cache_bytes,
+                                            &mesh_cache_buffers,
+                                            &mesh_cache_entries);
+                igText("Cache: %u entries, %u buffers, %.1f MiB",
+                       mesh_cache_entries,
+                       mesh_cache_buffers,
+                       (double)mesh_cache_bytes / (1024.0 * 1024.0));
+                igText("GPU buffers: %u live / %u max",
+                       MikuPan_GPUGetLiveBufferCount(),
+                       MikuPan_GPUGetMaxBufferCount());
 
                 extern int MikuPan_GpuSkinningEnabled(void);
                 extern void MikuPan_SetGpuSkinningEnabled(int);

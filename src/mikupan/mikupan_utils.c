@@ -63,6 +63,20 @@ float MikuPan_ConvertScaleColor(unsigned char color_fragment)
     return (float) color_fragment / 255.0f;
 }
 
+float MikuPan_ConvertOverbrightColor(unsigned char color_fragment)
+{
+    if (color_fragment < 0)
+    {
+        color_fragment = 0;
+    }
+    if (color_fragment > 0xff)
+    {
+        color_fragment = 0xff;
+    }
+
+    return (float)color_fragment / 128.0f;
+}
+
 float MikuPan_ConvertColorFloat(unsigned char color_fragment)
 {
     return (float) color_fragment / 255.0f;

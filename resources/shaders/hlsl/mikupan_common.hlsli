@@ -39,12 +39,14 @@ cbuffer MikuPanUniforms : register(b0, MIKUPAN_UNIFORM_SPACE)
     float4 uCrt1;    // x=scanline scale, y=thickness, z=mask strength, w=mask scale
     float4 uCrt2;    // x=vignette strength, y=size, z=chroma offset, w=blend strength
     float4 uCrt3;    // x=blend radius, y=noise, z=flicker, w=glow
-    float4 uParams1; // x=time, y=photo negative strength
+    float4 uParams1; // x=time, y=photo negative strength, z=final output curve
+    float4 uPs2Feedback; // x=strength, y=burn, z=saturation, w=ghost
+    float4 uScreenNegative; // rgb=Himuro negative colour, a=strength
 
     int4 uFlags0; // x=renderNormals, y=disableLighting, z=staticLighting, w=meshLightingMode
     int4 uFlags1; // x=mirrorSurfacePass, y=shadowEnabled, z=shadowDebugView, w=crtEnabled
-    int4 uFlags2; // x=blackWhiteMode, y=photoNegativeEnabled, z=photoNegativeSourceEnabled, w=useScreenPos
-    int4 uPadFlags;
+    int4 uFlags2; // x=blackWhiteMode, y=photoNegativeEnabled, z=photoNegativeSourceEnabled, w=screenCopyMode
+    int4 uPadFlags; // x=ps2FeedbackEnabled, y=ps2FeedbackPreviousEnabled
 };
 
 cbuffer LightBlock : register(b1, MIKUPAN_UNIFORM_SPACE)
@@ -177,6 +179,11 @@ float3 ToBlackWhite(float3 color)
 {
     float gray = (color.r + color.g + color.b) / 3.0;
     return gray.xxx;
+}
+
+float3 ApplyBlackWhiteLightOnly(float3 color)
+{
+    return uFlags2.x != 0 ? ToBlackWhite(color) : color;
 }
 
 #endif

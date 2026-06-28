@@ -583,7 +583,37 @@ u_int GetLoadDataAddr(u_short file_no)
 
 void SortLoadDataAddr()
 {
-    info_log("SORT LOAD DATA ADDR ");
+    int i;
+    int j;
+    MSN_LOAD_DAT tmp;
+
+    for (i = 0; i < 40; i++)
+    {
+        if (load_dat_wrk[i].file_type == 9 || load_dat_wrk[i].file_type == 10)
+        {
+            for (j = i + 1; j < 40; j++)
+            {
+                if (load_dat_wrk[j].file_type != 9
+                    && load_dat_wrk[j].file_type != 10)
+                {
+                    tmp.file_no = load_dat_wrk[i].file_no;
+                    tmp.file_type = load_dat_wrk[i].file_type;
+                    tmp.tmp_no = load_dat_wrk[i].tmp_no;
+                    tmp.addr = load_dat_wrk[i].addr;
+
+                    load_dat_wrk[i].file_no = load_dat_wrk[j].file_no;
+                    load_dat_wrk[i].file_type = load_dat_wrk[j].file_type;
+                    load_dat_wrk[i].tmp_no = load_dat_wrk[j].tmp_no;
+                    load_dat_wrk[i].addr = load_dat_wrk[j].addr;
+
+                    load_dat_wrk[j].file_no = tmp.file_no;
+                    load_dat_wrk[j].file_type = tmp.file_type;
+                    load_dat_wrk[j].tmp_no = tmp.tmp_no;
+                    load_dat_wrk[j].addr = tmp.addr;
+                }
+            }
+        }
+    }
 }
 
 void MissionTitleDisp(int msn_no)

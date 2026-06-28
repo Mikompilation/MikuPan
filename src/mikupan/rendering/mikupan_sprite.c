@@ -7,6 +7,7 @@
 #include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
+#include "main/glob.h"
 #include <math.h>
 #include <string.h>
 
@@ -537,13 +538,19 @@ void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r,
 static void MikuPan_RenderSprite2DInternal(sceGsTex0 *tex, float *buffer,
                                            int depth_enabled,
                                            int depth_write,
-                                           unsigned int depth_func)
+                                           unsigned int depth_func,
+                                           int shader,
+                                           MikuPan_GPUBlendMode blend_mode,
+                                           int nearest_sampler)
 {
     float upload_buffer[4][12];
 
     MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
 
-    if (MikuPan_IsLate2DOverlayQueueActive())
+    if (MikuPan_IsLate2DOverlayQueueActive()
+        && shader == SPRITE_SHADER
+        && blend_mode == MIKUPAN_GPU_BLEND_NORMAL
+        && nearest_sampler == 0)
     {
         if (!MikuPan_QueueLate2DTexturedOverlay(tex, buffer, depth_enabled,
                                                 depth_write, depth_func))
@@ -554,7 +561,7 @@ static void MikuPan_RenderSprite2DInternal(sceGsTex0 *tex, float *buffer,
     }
 
     MikuPan_FlushTexturedSpriteBatch();
-    MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    MikuPan_SetCurrentShaderProgram(shader);
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
 
     MikuPan_BindVAO(pipeline->vao);
@@ -572,23 +579,35 @@ static void MikuPan_RenderSprite2DInternal(sceGsTex0 *tex, float *buffer,
         MikuPan_SetRenderState2D();
     }
 
+    MikuPan_GPUSetBlendMode(1, blend_mode);
     // Caller passes a 4-vert quad worth of data (UV4_COLOUR4_POSITION4 layout).
-    MikuPan_StreamUploadFull(
-        GL_ARRAY_BUFFER, pipeline->buffers[0].id,
-        (GLsizeiptr)sizeof(float[4][12]),
-        depth_enabled ? &upload_buffer[0][0] : buffer);
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr)sizeof(float[4][12]),
+                             depth_enabled ? &upload_buffer[0][0] : buffer);
 
+    MikuPan_GPUSetSamplerNearestOverride(nearest_sampler);
     MikuPan_TimedDrawArrays(MikuPan_GetRenderMode(), 0, 4);
+    MikuPan_GPUSetSamplerNearestOverride(0);
+
+    if (shader != SPRITE_SHADER || blend_mode != MIKUPAN_GPU_BLEND_NORMAL)
+    {
+        MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
+        MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    }
 }
 
 void MikuPan_RenderSprite2D(sceGsTex0 *tex, float *buffer)
 {
-    MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL);
+    MikuPan_RenderSprite2DInternal(tex, buffer, 0, 0, GL_LEQUAL,
+                                   SPRITE_SHADER,
+                                   MIKUPAN_GPU_BLEND_NORMAL, 0);
 }
 
 void MikuPan_RenderSprite2DDepth(sceGsTex0 *tex, float *buffer)
 {
-    MikuPan_RenderSprite2DInternal(tex, buffer, 1, 1, GL_LEQUAL);
+    MikuPan_RenderSprite2DInternal(tex, buffer, 1, 1, GL_LEQUAL,
+                                   SPRITE_SHADER,
+                                   MIKUPAN_GPU_BLEND_NORMAL, 0);
 }
 
 void MikuPan_RenderSprite2DDepthState(sceGsTex0 *tex, float *buffer,
@@ -596,7 +615,98 @@ void MikuPan_RenderSprite2DDepthState(sceGsTex0 *tex, float *buffer,
                                       unsigned int depth_func)
 {
     MikuPan_RenderSprite2DInternal(tex, buffer, depth_test, depth_write,
-                                   depth_func);
+                                   depth_func, SPRITE_SHADER,
+                                   MIKUPAN_GPU_BLEND_NORMAL, 0);
+}
+
+void MikuPan_RenderSprite2DDepthStateFiltered(sceGsTex0 *tex, float *buffer,
+                                             int depth_test, int depth_write,
+                                             unsigned int depth_func,
+                                             int nearest_sampler)
+{
+    MikuPan_RenderSprite2DInternal(tex, buffer, depth_test, depth_write,
+                                   depth_func, SPRITE_SHADER,
+                                   MIKUPAN_GPU_BLEND_NORMAL,
+                                   nearest_sampler);
+}
+
+static void MikuPan_RenderSprite2DGSAlphaInternal(
+    sceGsTex0 *tex, float *buffer, int depth_test, int depth_write,
+    unsigned int depth_func, int nearest_sampler, unsigned long gs_alpha)
+{
+    switch (gs_alpha & 0xff)
+    {
+        case MIKUPAN_GS_ALPHA_DST_MINUS_SRC:
+            /*
+             * GS ALPHA 0x41:
+             *   (Cd - Cs) * As + Cd
+             * = Cd + Cd * As - Cs * As
+             *
+             * Pass 1: Cd + Cd * As
+             * Pass 2: Cd - Cs * As
+             */
+            MikuPan_RenderSprite2DInternal(
+                tex, buffer, depth_test, depth_write, depth_func,
+                SPRITE_ALPHA_AS_RGB_SHADER, MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD,
+                nearest_sampler);
+            MikuPan_RenderSprite2DInternal(
+                tex, buffer, depth_test, depth_write, depth_func, SPRITE_SHADER,
+                MIKUPAN_GPU_BLEND_SUBTRACTIVE, nearest_sampler);
+            break;
+
+        case MIKUPAN_GS_ALPHA_SUBTRACTIVE:
+            /* Cd - Cs * As */
+            MikuPan_RenderSprite2DInternal(
+                tex, buffer, depth_test, depth_write, depth_func, SPRITE_SHADER,
+                MIKUPAN_GPU_BLEND_SUBTRACTIVE, nearest_sampler);
+            break;
+
+        case MIKUPAN_GS_ALPHA_ADDITIVE:
+            /* Cs * As + Cd */
+            MikuPan_RenderSprite2DInternal(
+                tex, buffer, depth_test, depth_write, depth_func, SPRITE_SHADER,
+                MIKUPAN_GPU_BLEND_ADDITIVE, nearest_sampler);
+            break;
+
+        case MIKUPAN_GS_ALPHA_DST_BOOST:
+            /* Cd * As + Cd */
+            MikuPan_RenderSprite2DInternal(
+                tex, buffer, depth_test, depth_write, depth_func,
+                SPRITE_ALPHA_AS_RGB_SHADER, MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD,
+                nearest_sampler);
+            break;
+
+        case MIKUPAN_GS_ALPHA_NORMAL:
+        default:
+            MikuPan_RenderSprite2DInternal(
+                tex, buffer, depth_test, depth_write, depth_func, SPRITE_SHADER,
+                MIKUPAN_GPU_BLEND_NORMAL, nearest_sampler);
+            break;
+    }
+}
+
+void MikuPan_RenderSprite2DGSAlpha(sceGsTex0 *tex, float *buffer,
+                                   unsigned long gs_alpha)
+{
+    MikuPan_RenderSprite2DGSAlphaInternal(tex, buffer, 0, 0, GL_LEQUAL, 0,
+                                          gs_alpha);
+}
+
+void MikuPan_RenderSprite2DFilteredGSAlpha(sceGsTex0 *tex, float *buffer,
+                                           int nearest_sampler,
+                                           unsigned long gs_alpha)
+{
+    MikuPan_RenderSprite2DGSAlphaInternal(tex, buffer, 0, 0, GL_LEQUAL,
+                                          nearest_sampler, gs_alpha);
+}
+
+void MikuPan_RenderSprite2DDepthStateFilteredGSAlpha(
+    sceGsTex0 *tex, float *buffer, int depth_test, int depth_write,
+    unsigned int depth_func, int nearest_sampler, unsigned long gs_alpha)
+{
+    MikuPan_RenderSprite2DGSAlphaInternal(tex, buffer, depth_test, depth_write,
+                                          depth_func, nearest_sampler,
+                                          gs_alpha);
 }
 
 static float MikuPan_NormalizeSpriteDepthValue(float z)
@@ -712,7 +822,8 @@ void MikuPan_RenderUntexturedSpriteDepthState(float *buffer, int depth_test,
                                            depth_func);
 }
 
-static void MikuPan_RenderSprite3DInternal(sceGsTex0* tex, float* buffer, int additive_blend)
+static void MikuPan_RenderSprite3DInternal(sceGsTex0* tex, float* buffer,
+                                             MikuPan_GPUBlendMode blend_mode)
 {
     float upload_buffer[4][12];
 
@@ -729,28 +840,36 @@ static void MikuPan_RenderSprite3DInternal(sceGsTex0* tex, float* buffer, int ad
     MikuPan_SetRenderStateSprite3D();
     MikuPan_GPUSetDepthWrite(0);
     MikuPan_GPUSetDepthFunc(GL_LEQUAL);
-    MikuPan_GPUSetBlend(1, additive_blend);
+    MikuPan_GPUSetBlendMode(1, blend_mode);
 
     MikuPan_StreamUploadFull(
         GL_ARRAY_BUFFER, pipeline->buffers[0].id,
         (GLsizeiptr)sizeof(upload_buffer), upload_buffer);
 
     MikuPan_TimedDrawArrays(MikuPan_GetRenderMode(), 0, 4);
-    MikuPan_GPUSetBlend(1, 0);
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
     MikuPan_GPUSetDepthWrite(1);
     MikuPan_ResetRenderStateCache();
 }
 
 void MikuPan_RenderSprite3D(sceGsTex0* tex, float* buffer)
 {
-    MikuPan_RenderSprite3DInternal(tex, buffer, 0);
+    MikuPan_RenderSprite3DInternal(tex, buffer, MIKUPAN_GPU_BLEND_NORMAL);
 }
 
 void MikuPan_RenderSprite3DWithState(sceGsTex0* tex, float* buffer,
-                                     int additive_blend)
+                                     MikuPan_GPUBlendMode blend_mode)
 {
-    MikuPan_RenderSprite3DInternal(tex, buffer, additive_blend);
+    MikuPan_RenderSprite3DInternal(tex, buffer, blend_mode);
 }
+
+void MikuPan_RenderSprite3DWithStateGSAlpha(sceGsTex0* tex, float* buffer,
+                                            unsigned long gs_alpha)
+{
+    MikuPan_RenderSprite3DWithState(
+        tex, buffer, MikuPan_GPUBlendModeFromGSAlpha(gs_alpha));
+}
+
 
 void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count)
 {
@@ -797,35 +916,25 @@ static GLenum MikuPan_GetDepthFuncForMode(int depth_mode)
     }
 }
 
-static void MikuPan_ApplyParticleTriangleState(int depth_mode, int additive_blend)
+static void MikuPan_ApplyParticleTriangleState(int depth_mode, MikuPan_GPUBlendMode blend_mode)
 {
     MikuPan_SetRenderStateSprite3D();
     MikuPan_GPUSetDepthWrite(0);
     MikuPan_GPUSetDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
-    MikuPan_GPUSetBlend(1, additive_blend);
+    MikuPan_GPUSetBlendMode(1, blend_mode);
 }
 
-static void MikuPan_ApplyHeatHazeTriangleState(int depth_mode, int additive_blend)
+static void MikuPan_ApplyHeatHazeTriangleState(int depth_mode, MikuPan_GPUBlendMode blend_mode)
 {
     MikuPan_SetRenderStateSprite3D();
     MikuPan_GPUSetDepthWrite(0);
     MikuPan_GPUSetDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
-    /* PS2 heat-haze / distortion particles use additive blending
-     * (CS*AS + CD), which makes the distortion area visibly brighter.
-     * Standard alpha blend produces only a near-invisible 1-2 px shift. */
-    if (additive_blend)
-    {
-        MikuPan_GPUSetBlend(1, 1);
-    }
-    else
-    {
-        MikuPan_GPUSetBlend(1, 0);
-    }
+    MikuPan_GPUSetBlendMode(1, blend_mode);
 }
 
 static void MikuPan_RestoreParticleTriangleState(void)
 {
-    MikuPan_GPUSetBlend(1, 0);
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
     MikuPan_GPUSetDepthFunc(GL_LEQUAL);
     MikuPan_GPUSetDepthWrite(1);
     MikuPan_ResetRenderStateCache();
@@ -867,6 +976,45 @@ static int MikuPan_EnsureScreenCopyTexture(int width, int height)
     return 1;
 }
 
+static int MikuPan_IsPs2MainFramebufferAddress(int addr)
+{
+    return addr == 0 || addr == (224 * (640 / 64));
+}
+
+static int MikuPan_IsPs2DisplayedFramebufferAddress(int addr)
+{
+    return MikuPan_IsPs2MainFramebufferAddress(addr) &&
+           addr == (int)((sys_wrk.count & 1) * (224 * (640 / 64)));
+}
+
+static int MikuPan_IsPs2NamedFeedbackCopyAddress(int addr)
+{
+    return addr == 0x1a40;
+}
+
+static int g_force_feedback_screen_copy_source = 0;
+
+static unsigned int MikuPan_GetScreenCopySourceTexture(sceGsTex0 *tex)
+{
+    if (tex != NULL &&
+        (g_force_feedback_screen_copy_source ||
+         MikuPan_IsPs2DisplayedFramebufferAddress(tex->TBP0)))
+    {
+        unsigned int feedback = MikuPan_GetSceneFeedbackTextureId(0);
+        if (feedback != 0)
+        {
+            return feedback;
+        }
+    }
+
+    /* 0x1A40 is the old PS2 scratch framebuffer address, but in MikuPan it
+     * is just a named live screen copy used by haze/menu/loading paths.
+     * DO NOT assume every 0x1A40 texture is feedback history.
+     * 
+     * Effect-specific feedbacks can opt in with g_force_feedback_screen_copy_source. */
+    return render_back_msaa.texture.id;
+}
+
 static int MikuPan_UpdateScreenCopyTexture(sceGsTex0 *tex)
 {
     int texture_w;
@@ -880,8 +1028,15 @@ static int MikuPan_UpdateScreenCopyTexture(sceGsTex0 *tex)
     float viewport_w;
     float viewport_h;
     float viewport_scale;
+    unsigned int source_texture;
 
     if (tex == NULL || render_back_msaa.texture.id == 0)
+    {
+        return 0;
+    }
+
+    source_texture = MikuPan_GetScreenCopySourceTexture(tex);
+    if (source_texture == 0)
     {
         return 0;
     }
@@ -925,14 +1080,14 @@ static int MikuPan_UpdateScreenCopyTexture(sceGsTex0 *tex)
         g_screen_copy_uv_offset[1] +
         (PS2_CENTER_Y / (float)texture_h) * g_screen_copy_uv_scale[1];
 
-    MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
+    MikuPan_GPUCopyTexture(source_texture,
                            g_screen_copy_texture,
                            copy_w,
                            copy_h);
     return 1;
 }
 
-void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int depth_mode, int additive_blend)
+void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int depth_mode, MikuPan_GPUBlendMode blend_mode)
 {
     if (vertex_count <= 0)
     {
@@ -945,7 +1100,7 @@ void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int de
     MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(COLOUR4_POSITION4);
 
     MikuPan_BindVAO(pipeline->vao);
-    MikuPan_ApplyParticleTriangleState(depth_mode, additive_blend);
+    MikuPan_ApplyParticleTriangleState(depth_mode, blend_mode);
     MikuPan_NormalizeUntexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
@@ -976,7 +1131,7 @@ void MikuPan_RenderSolidUntexturedTriangles3D(float *buffer, int vertex_count, i
     MikuPan_GPUSetCullNone();
     MikuPan_GPUSetDepthWrite(1);
     MikuPan_GPUSetDepthFunc(MikuPan_GetDepthFuncForMode(depth_mode));
-    MikuPan_GPUSetBlend(1, 0);
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
     MikuPan_NormalizeUntexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
@@ -994,11 +1149,16 @@ void MikuPan_RenderSolidUntexturedTriangles3D(float *buffer, int vertex_count, i
     MikuPan_ResetRenderStateCache();
 }
 
-void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode, int additive_blend)
+void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode, MikuPan_GPUBlendMode blend_mode)
 {
     int i;
 
     if (vertex_count <= 0)
+    {
+        return;
+    }
+
+    if (MikuPan_ArePhotoCaptureScreenCopyEffectsSuppressed())
     {
         return;
     }
@@ -1013,8 +1173,12 @@ void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vert
     MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
     MikuPan_SetCurrentShaderProgram(HEAT_HAZE_SHADER);
     MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
-    MikuPan_SetUniform1iToCurrentShader(MikuPan_IsBlackWhiteModeActive(),
-                                        "uBlackWhiteMode");
+    /*
+     * DO NOT apply the global monochrome flag to framebuffer/effect copies!!
+     * The original game handles monochrome through scene/material/CLUT.
+     * Late additive effects like the blue save lamp must be able to remain coloured.
+     */
+    MikuPan_SetUniform1iToCurrentShader(0, "uBlackWhiteMode");
     MikuPan_SetUniform2fToCurrentShader(g_screen_copy_uv_offset[0],
                                         g_screen_copy_uv_offset[1],
                                         "uFramebufferUvOffset");
@@ -1030,12 +1194,12 @@ void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vert
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_BindTexture2DCached(g_screen_copy_texture);
-    MikuPan_ApplyHeatHazeTriangleState(depth_mode, additive_blend);
+    MikuPan_ApplyHeatHazeTriangleState(depth_mode, blend_mode);
     MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
 
     g_screen_copy_debug.vertex_count = vertex_count;
     g_screen_copy_debug.depth_mode = depth_mode;
-    g_screen_copy_debug.additive_blend = additive_blend;
+    g_screen_copy_debug.blend_mode = blend_mode;
     g_screen_copy_debug.uv_min[0] = buffer[0];
     g_screen_copy_debug.uv_max[0] = buffer[0];
     g_screen_copy_debug.uv_min[1] = buffer[1];
@@ -1070,9 +1234,47 @@ void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vert
     MikuPan_RestoreParticleTriangleState();
 }
 
-void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode)
+void MikuPan_RenderScreenCopyTriangles3DGSAlpha(sceGsTex0 *tex,
+                                                float *buffer,
+                                                int vertex_count,
+                                                int depth_mode,
+                                                unsigned long gs_alpha)
+{
+    MikuPan_RenderScreenCopyTriangles3D(
+        tex, buffer, vertex_count, depth_mode,
+        MikuPan_GPUBlendModeFromGSAlpha(gs_alpha));
+}
+
+
+typedef enum MikuPan_ScreenCopyScreenPosMode
+{
+    MIKUPAN_SCREEN_COPY_SCREEN_POS_NORMAL = 0,
+    MIKUPAN_SCREEN_COPY_SCREEN_POS_MODULATE = 1,
+} MikuPan_ScreenCopyScreenPosMode;
+
+static MikuPan_ScreenCopyScreenPosMode MikuPan_ScreenCopyScreenPosModeFromTex(const sceGsTex0 *tex)
+{
+    if (tex != NULL && tex->TFX == SCE_GS_MODULATE)
+    {
+        return MIKUPAN_SCREEN_COPY_SCREEN_POS_MODULATE;
+    }
+
+    return MIKUPAN_SCREEN_COPY_SCREEN_POS_NORMAL;
+}
+
+static void MikuPan_RenderScreenCopyTriangles3DScreenPosMode(sceGsTex0 *tex,
+                                                              float *buffer,
+                                                              int vertex_count,
+                                                              int depth_mode,
+                                                              MikuPan_GPUBlendMode blend_mode,
+                                                              MikuPan_ScreenCopyScreenPosMode screen_pos_mode)
 {
     if (vertex_count <= 0)
+    {
+        return;
+    }
+
+    if (MikuPan_ArePhotoCaptureScreenCopyEffectsSuppressed())
     {
         return;
     }
@@ -1087,8 +1289,7 @@ void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer,
     MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
     MikuPan_SetCurrentShaderProgram(HEAT_HAZE_SHADER);
     MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
-    MikuPan_SetUniform1iToCurrentShader(MikuPan_IsBlackWhiteModeActive(),
-                                        "uBlackWhiteMode");
+    MikuPan_SetUniform1iToCurrentShader(0, "uBlackWhiteMode");
     MikuPan_SetUniform2fToCurrentShader(g_screen_copy_uv_offset[0],
                                         g_screen_copy_uv_offset[1],
                                         "uFramebufferUvOffset");
@@ -1098,7 +1299,9 @@ void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer,
     MikuPan_SetUniform2fToCurrentShader(g_screen_copy_content_uv_max[0],
                                         g_screen_copy_content_uv_max[1],
                                         "uFramebufferContentUvMax");
-    MikuPan_SetUniform1iToCurrentShader(1, "uUseScreenPos");
+    MikuPan_SetUniform1iToCurrentShader(
+        screen_pos_mode == MIKUPAN_SCREEN_COPY_SCREEN_POS_MODULATE ? 4 : 1,
+        "uUseScreenPos");
     MikuPan_SetUniform2fToCurrentShader((float)g_screen_copy_w,
                                         (float)g_screen_copy_h,
                                         "uRenderSize");
@@ -1107,7 +1310,92 @@ void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer,
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_BindTexture2DCached(g_screen_copy_texture);
-    MikuPan_ApplyHeatHazeTriangleState(depth_mode, 0); /* screen-pos path: standard blend */
+    MikuPan_ApplyHeatHazeTriangleState(depth_mode, blend_mode);
+    MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
+
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER,
+        pipeline->buffers[0].id,
+        (GLsizeiptr)(vertex_count * 12 * (int)sizeof(float)),
+        buffer);
+
+    MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, vertex_count);
+    MikuPan_PerfDrawCall();
+    MikuPan_RestoreParticleTriangleState();
+}
+
+void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex,
+                                                   float *buffer,
+                                                   int vertex_count,
+                                                   int depth_mode,
+                                                   MikuPan_GPUBlendMode blend_mode)
+{
+    MikuPan_RenderScreenCopyTriangles3DScreenPosMode(
+        tex, buffer, vertex_count, depth_mode, blend_mode,
+        MikuPan_ScreenCopyScreenPosModeFromTex(tex));
+}
+
+void MikuPan_RenderScreenCopyTriangles3DScreenPosGSAlpha(sceGsTex0 *tex,
+                                                         float *buffer,
+                                                         int vertex_count,
+                                                         int depth_mode,
+                                                         unsigned long gs_alpha)
+{
+    MikuPan_RenderScreenCopyTriangles3DScreenPos(
+        tex, buffer, vertex_count, depth_mode,
+        MikuPan_GPUBlendModeFromGSAlpha(gs_alpha));
+}
+
+
+void MikuPan_RenderScreenCopyTriangles3DFeedbackModulate(sceGsTex0 *tex,
+                                                         float *buffer,
+                                                         int vertex_count,
+                                                         int depth_mode,
+                                                         MikuPan_GPUBlendMode blend_mode)
+{
+    if (vertex_count <= 0)
+    {
+        return;
+    }
+
+    if (MikuPan_ArePhotoCaptureScreenCopyEffectsSuppressed())
+    {
+        return;
+    }
+
+    MikuPan_FlushTexturedSpriteBatch();
+
+    g_force_feedback_screen_copy_source = 1;
+    if (!MikuPan_UpdateScreenCopyTexture(tex))
+    {
+        g_force_feedback_screen_copy_source = 0;
+        return;
+    }
+    g_force_feedback_screen_copy_source = 0;
+
+    MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
+    MikuPan_SetCurrentShaderProgram(HEAT_HAZE_SHADER);
+    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
+    MikuPan_SetUniform1iToCurrentShader(0, "uBlackWhiteMode");
+    MikuPan_SetUniform2fToCurrentShader(g_screen_copy_uv_offset[0],
+                                        g_screen_copy_uv_offset[1],
+                                        "uFramebufferUvOffset");
+    MikuPan_SetUniform2fToCurrentShader(g_screen_copy_uv_scale[0],
+                                        g_screen_copy_uv_scale[1],
+                                        "uFramebufferUvScale");
+    MikuPan_SetUniform2fToCurrentShader(g_screen_copy_content_uv_max[0],
+                                        g_screen_copy_content_uv_max[1],
+                                        "uFramebufferContentUvMax");
+    MikuPan_SetUniform1iToCurrentShader(3, "uUseScreenPos");
+    MikuPan_SetUniform2fToCurrentShader((float)g_screen_copy_w,
+                                        (float)g_screen_copy_h,
+                                        "uRenderSize");
+    MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+    MikuPan_BindTexture2DCached(g_screen_copy_texture);
+    MikuPan_ApplyHeatHazeTriangleState(depth_mode, blend_mode);
     MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
@@ -1128,6 +1416,11 @@ void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int v
         return;
     }
 
+    if (MikuPan_ArePhotoCaptureScreenCopyEffectsSuppressed())
+    {
+        return;
+    }
+
     MikuPan_FlushTexturedSpriteBatch();
 
     if (!MikuPan_UpdateScreenCopyTexture(tex))
@@ -1138,8 +1431,7 @@ void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int v
     MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
     MikuPan_SetCurrentShaderProgram(HEAT_HAZE_SHADER);
     MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
-    MikuPan_SetUniform1iToCurrentShader(MikuPan_IsBlackWhiteModeActive(),
-                                        "uBlackWhiteMode");
+    MikuPan_SetUniform1iToCurrentShader(0, "uBlackWhiteMode");
     MikuPan_SetUniform2fToCurrentShader(g_screen_copy_uv_offset[0],
                                         g_screen_copy_uv_offset[1],
                                         "uFramebufferUvOffset");
@@ -1158,7 +1450,7 @@ void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int v
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_BindTexture2DCached(g_screen_copy_texture);
-    MikuPan_ApplyHeatHazeTriangleState(depth_mode, 0);
+    MikuPan_ApplyHeatHazeTriangleState(depth_mode, MIKUPAN_GPU_BLEND_NORMAL);
     MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(
@@ -1200,7 +1492,11 @@ const MikuPan_ScreenCopyDebugInfo *MikuPan_GetScreenCopyDebugInfo(void)
     return &g_screen_copy_debug;
 }
 
-void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode, int additive_blend)
+void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex,
+                                           float *buffer,
+                                           int vertex_count,
+                                           int depth_mode,
+                                           MikuPan_GPUBlendMode blend_mode)
 {
     if (vertex_count <= 0)
     {
@@ -1214,7 +1510,7 @@ void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex, float *buffer, i
 
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_SetTexture(tex);
-    MikuPan_ApplyParticleTriangleState(depth_mode, additive_blend);
+    MikuPan_ApplyParticleTriangleState(depth_mode, blend_mode);
     MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
 
     MikuPan_StreamUploadFull(

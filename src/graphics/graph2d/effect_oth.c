@@ -690,7 +690,7 @@ void RunRipple2()
                             }
 
                             MikuPan_RenderTexturedTriangles3DWithState(
-                                (sceGsTex0 *)&tx0, &render_buffer[0][0], 6, 0, 0);
+                                (sceGsTex0 *)&tx0, &render_buffer[0][0], 6, 0, MIKUPAN_GPU_BLEND_NORMAL);
                         }
 
                         for (i = 0;  i < 4; i++)
@@ -1496,7 +1496,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen,
     float window_h;
     int render_vertices;
     int depth_mode;
-    int additive_blend;
+    MikuPan_GPUBlendMode blend_mode;
     int can_render_gl;
     static float textured_render_buffer[DISTORTION_PARTICLE_MAX_VERTICES][12];
     static float untextured_render_buffer[DISTORTION_PARTICLE_MAX_VERTICES][8];
@@ -1507,7 +1507,8 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen,
     window_h = (float)MikuPan_GetWindowHeight();
     render_vertices = 0;
     depth_mode = MIKUPAN_DEPTH_LEQUAL;
-    additive_blend = type != 13;
+    blend_mode = type != 13 ? MIKUPAN_GPU_BLEND_ADDITIVE
+                            : MIKUPAN_GPU_BLEND_NORMAL;
     can_render_gl = window_w > 0.0f && window_h > 0.0f;
     distortion_tex0 = SCE_GS_SET_TEX0_1(0x1a40, 10, SCE_GS_PSMCT32, 10, 8, 0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 0);
 
@@ -1690,10 +1691,25 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen,
                         dst_y[3] + warp_add[1],
                         dst_y[4] + warp_add[1],
                     };
-                    float cr = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][0]));
-                    float cg = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][1]));
-                    float cb = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][2]));
+                    float cr;
+                    float cg;
+                    float cb;
                     float ca = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][3]));
+
+                    // Type 9: Amulet Fire needs to retain support for overbright colour calculation.
+                    // This is what gives it its distinct blue flame.
+                    if (type == 9)
+                    {
+                        cr = MikuPan_ConvertOverbrightColor(p[1][0]);
+                        cg = MikuPan_ConvertOverbrightColor(p[1][1]);
+                        cb = MikuPan_ConvertOverbrightColor(p[1][2]);
+                    }
+                    else
+                    {
+                        cr = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][0]));
+                        cg = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][1]));
+                        cb = MikuPan_ConvertScaleColor(EffectClampColor((int)p[1][2]));
+                    }
                     int k;
 
                     for (k = 0; k < DISTORTION_PARTICLE_VERTICES; k++)
@@ -1864,12 +1880,24 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen,
     {
         if (dtex != 0)
         {
-            MikuPan_RenderScreenCopyTriangles3D(
-                (sceGsTex0 *)&distortion_tex0,
-                &textured_render_buffer[0][0],
-                render_vertices,
-                depth_mode,
-                additive_blend);
+            if (type == 9)
+            {
+                MikuPan_RenderScreenCopyTriangles3DFeedbackModulate(
+                    (sceGsTex0 *)&distortion_tex0,
+                    &textured_render_buffer[0][0],
+                    render_vertices,
+                    depth_mode,
+                    blend_mode);
+            }
+            else
+            {
+                MikuPan_RenderScreenCopyTriangles3D(
+                    (sceGsTex0 *)&distortion_tex0,
+                    &textured_render_buffer[0][0],
+                    render_vertices,
+                    depth_mode,
+                    blend_mode);
+            }
         }
         else
         {
@@ -1877,7 +1905,7 @@ int draw_distortion_particles(sceVu0FMATRIX *local_screen,
                 &untextured_render_buffer[0][0],
                 render_vertices,
                 depth_mode,
-                                                additive_blend);
+                blend_mode);
         }
     }
 
@@ -3083,10 +3111,12 @@ int SetAmuletFire()
         tt[i][1].fl32 = ((i * 0.96f) / fdiv + 0.02f) * tq[i][1].fl32;
     }
 
-    if (w)
-    {
-        return ret;
-    }
+    // Keep this clipping check disabled;
+    // The renderer clips the Amulet effect after projection.
+    //if (w)
+    //{
+    //    return ret;
+    //}
 
     Reserve2DPacket(0x1000);
 
@@ -3189,7 +3219,7 @@ int SetAmuletFire()
             &render_buffer[0][0],
             out,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
 
     pbuf[c].ui32[0] = ndpkt + DMAend - c - 1;
@@ -4069,7 +4099,7 @@ void SetSunshine(EFFECT_CONT *ec)
                 &render_buffer[0][0],
                 out,
                 0,
-                1);
+                MIKUPAN_GPU_BLEND_ADDITIVE);
         }
     }
 
@@ -7105,7 +7135,7 @@ void SetHaze_Pond()
             &render_buffer[0][0],
             out,
             0,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
 
     pbuf[c].ui32[0] = ndpkt + DMAend - c - 1;
@@ -7413,7 +7443,7 @@ void DrawNewPerticleSub(int num, sceVu0FVECTOR *pos, u_char r1, u_char g1, u_cha
 
         if (out > 0)
         {
-            MikuPan_RenderUntexturedTriangles3D(&render_buffer[0][0], out, 0, 0);
+            MikuPan_RenderUntexturedTriangles3D(&render_buffer[0][0], out, 0, MIKUPAN_GPU_BLEND_NORMAL);
         }
     }
 
@@ -7636,7 +7666,7 @@ void SetEneFace(EFFECT_CONT *ec)
                 &render_buffer[0][0],
                 out,
                 0,
-                0);
+                MIKUPAN_GPU_BLEND_NORMAL);
         }
     }
 
@@ -8125,7 +8155,7 @@ void SetFaceSpirit(EFFECT_CONT *ec)
                 &render_buffer[0][0],
                 out,
                 0,
-                1);
+                MIKUPAN_GPU_BLEND_ADDITIVE);
         }
     }
 

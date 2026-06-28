@@ -952,7 +952,6 @@ void acsClothCtrl(ANI_CTRL* ani_ctrl, u_int* mpk_p, u_int mdl_no, u_char scene_f
     COLLISION_DAT* collision;
     float scale;
 
-    return;
     cloth = ani_ctrl->cloth_ctrl;
     limit = 0;
 

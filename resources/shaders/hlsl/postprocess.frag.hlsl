@@ -117,10 +117,51 @@ float3 ApplyCrt(float2 uv, float2 fragCoord)
     return color;
 }
 
+
+float3 AdjustSaturationPs2(float3 color, float saturation)
+{
+    float luma = dot(color, float3(0.299, 0.587, 0.114));
+    return lerp(luma.xxx, color, saturation);
+}
+
+float3 ApplyPs2FeedbackGrade(float3 color, float2 uv)
+{
+    if (uPadFlags.x == 0)
+    {
+        return color;
+    }
+
+    float strength = clamp(uPs2Feedback.x, 0.0, 1.0);
+    if (strength <= 0.001)
+    {
+        return color;
+    }
+
+    if (uPadFlags.y != 0)
+    {
+        float ghost = clamp(uPs2Feedback.w * strength, 0.0, 0.20);
+        if (ghost > 0.0001)
+        {
+            float3 previous = uAuxTexture.Sample(uAuxTextureSampler, ClampTexelUv(uv)).rgb;
+            color = lerp(color, previous, ghost);
+        }
+    }
+
+    float burn = clamp(uPs2Feedback.y * strength, 0.0, 1.0);
+    color = lerp(color, color * color, burn);
+
+    float saturation = lerp(1.0, clamp(uPs2Feedback.z, 0.5, 1.5), strength);
+    color = AdjustSaturationPs2(color, saturation);
+
+    return color;
+}
+
 float4 main(PSInput input) : SV_Target0
 {
     float4 source = uTexture.Sample(uTextureSampler, input.vUV) * input.uColor;
     float3 color = source.rgb;
+
+    color = ApplyPs2FeedbackGrade(color, input.vUV);
 
     if (uFlags1.w != 0 && uCrt0.x > 0.001)
     {
@@ -166,6 +207,14 @@ float4 main(PSInput input) : SV_Target0
                 clamp((96.0 / 255.0).xxx - negative_source, 0.0.xxx, 1.0.xxx);
             color = lerp(color, negative_color, strength);
         }
+    }
+
+    if (uScreenNegative.a > 0.001)
+    {
+        float strength = clamp(uScreenNegative.a, 0.0, 1.0);
+        float3 negative_color =
+            clamp(uScreenNegative.rgb - color, 0.0.xxx, 1.0.xxx);
+        color = lerp(color, negative_color, strength);
     }
 
     return float4(clamp(ToneMap(color), 0.0.xxx, 1.0.xxx), source.a);

@@ -59,6 +59,8 @@
 #include "ingame/event/wan_soul.h"
 #include "ingame/menu/ig_camra.h"
 #include "outgame/btl_mode/btl_mode.h"
+#include "mikupan/mikupan_enemy_entry.h"
+#include "mikupan/mikupan_point_depth.h"
 int erootd0[20][3] = {0};
 int erootd1[20][3] = {0};
 int erootd2[20][3] = {0};
@@ -132,6 +134,11 @@ void EneCtrlMain()
 
 void EneEntryChk(u_char no)
 {
+    if (MikuPan_EneEntryBeforeOriginal(no) == 0)
+    {
+        return;
+    }
+
     switch (ene_wrk[no].type)
     {
     case 0:
@@ -146,6 +153,12 @@ void EneEntryChk(u_char no)
     }
 
     motSetAnmPacket(no);
+
+    if (MikuPan_EneEntryAfterAnmPacket(no) == 0)
+    {
+        return;
+    }
+
     SetEneTexture(no);
     SetEneDmgTex(no);
     RequestSpirit(no, 1);
@@ -1591,7 +1604,8 @@ void EneInDispChk(ENE_WRK *ew)
 
         sceVu0AddVector(ppj.p[0], ew->mpos.p0, tv);
 
-        CheckPointDepth(&ppj);
+        // CheckPointDepth(&ppj);
+        MikuPan_CheckPointDepth(&ppj);
 
         if (ppj.result[0] != 0)
         {

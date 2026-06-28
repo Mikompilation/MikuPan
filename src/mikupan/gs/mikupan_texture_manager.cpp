@@ -161,3 +161,13 @@ void MikuPan_InvalidateTex0Cache(void)
 {
     mikupan_tex0_to_info_cache.clear();
 }
+
+void MikuPan_TextureCache_InvalidateGsRange(int up_addr, int up_size)
+{
+    if (up_size <= 0)
+    {
+        return;
+    }
+
+    InvalidateOverlapping(up_addr, up_size, &mikupan_tex0_to_info_cache);
+}

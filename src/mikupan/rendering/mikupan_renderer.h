@@ -6,6 +6,7 @@
 #include "graphics/graph3d/light_types.h"
 #include "mikupan/mikupan_basictypes.h"
 #include "mikupan/mikupan_types.h"
+#include "mikupan/rendering/mikupan_gpu.h"
 
 typedef struct {
     sceVu0FVECTOR p;
@@ -36,7 +37,7 @@ typedef struct
 {
     int vertex_count;
     int depth_mode;
-    int additive_blend;
+    MikuPan_GPUBlendMode blend_mode;
     float uv_min[2];
     float uv_max[2];
     float ndc_min[2];
@@ -93,6 +94,13 @@ typedef struct
     int negative_debug_layer_enabled;
     int negative_debug_layer_drawn;
     int negative_debug_layer_count;
+
+    int screen_negative_overlay_active;
+    int screen_negative_overlay_count;
+    float screen_negative_r;
+    float screen_negative_g;
+    float screen_negative_b;
+    float screen_negative_strength;
 } MikuPan_PhotoDebugInfo;
 
 /* Shadow per-mesh-type debug buckets. Order is the display order in the Shadow
@@ -171,15 +179,24 @@ void MikuPan_RenderCameraDebug(void);
 void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r, u_char g, u_char b, u_char a, MikuPan_TextureInfo* texture_info);
 void MikuPan_UpdatePhotoPreviewTextureRGBA(int width, int height,
                                            const unsigned char *rgba);
+void MikuPan_UpdatePhotoBasePreviewTextureRGBA(int width, int height,
+                                               const unsigned char *rgba);
 void MikuPan_UpdatePhotoNegativeSourceTextureRGBA(int width, int height,
                                                   const unsigned char *rgba);
 void MikuPan_QueuePhotoPreviewTexture(int x, int y, int w, int h,
                                       u_char alpha);
 void MikuPan_SetPhotoPreviewOverlayActiveForFrame(int x, int y, int w, int h,
                                                   u_char alpha);
+void MikuPan_SetPhotoBasePreviewOverlayActiveForFrame(int x, int y, int w, int h,
+                                                      u_char alpha);
 void MikuPan_SetPhotoNegativeOverlayActiveForFrame(int x, int y, int w, int h,
                                                    float strength);
+void MikuPan_SetScreenNegativeOverlayActiveForFrame(float r, float g, float b,
+                                                    float strength);
+void MikuPan_ApplyScreenNegative(void);
+void MikuPan_ClearScreenNegativeOverlay(void);
 void MikuPan_ClearPhotoPreviewOverlay(void);
+void MikuPan_ClearPhotoBasePreviewOverlay(void);
 void MikuPan_ClearPhotoNegativeOverlay(void);
 void MikuPan_RenderPhotoPreviewTexture(int x, int y, int w, int h,
                                        u_char alpha);
@@ -202,19 +219,61 @@ void MikuPan_RenderSprite2DDepth(sceGsTex0 *tex, float* buffer);
 void MikuPan_RenderSprite2DDepthState(sceGsTex0 *tex, float *buffer,
                                       int depth_test, int depth_write,
                                       unsigned int depth_func);
+void MikuPan_RenderSprite2DDepthStateFiltered(sceGsTex0 *tex, float *buffer,
+                                             int depth_test, int depth_write,
+                                             unsigned int depth_func,
+                                             int nearest_sampler);
+void MikuPan_RenderSprite2DGSAlpha(sceGsTex0 *tex, float *buffer,
+                                   unsigned long gs_alpha);
+void MikuPan_RenderSprite2DFilteredGSAlpha(sceGsTex0 *tex, float *buffer,
+                                           int nearest_sampler,
+                                           unsigned long gs_alpha);
 void MikuPan_RenderUntexturedSprite(float* buffer);
 void MikuPan_RenderUntexturedSpriteDepth(float* buffer);
 void MikuPan_RenderUntexturedSpriteDepthState(float *buffer, int depth_test,
                                               int depth_write,
                                               unsigned int depth_func);
 void MikuPan_RenderSprite3D(sceGsTex0 *tex, float* buffer);
-void MikuPan_RenderSprite3DWithState(sceGsTex0* tex, float* buffer, int additive_blend);
+void MikuPan_RenderSprite3DWithState(sceGsTex0* tex, float* buffer,
+                                     MikuPan_GPUBlendMode blend_mode);
+void MikuPan_RenderSprite3DWithStateGSAlpha(sceGsTex0* tex, float* buffer,
+                                            unsigned long gs_alpha);
 void MikuPan_RenderTexturedTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count);
-void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count, int depth_mode, int additive_blend);
+void MikuPan_RenderUntexturedTriangles3D(float *buffer, int vertex_count,
+                                       int depth_mode,
+                                       MikuPan_GPUBlendMode blend_mode);
 void MikuPan_RenderSolidUntexturedTriangles3D(float *buffer, int vertex_count, int depth_mode);
-void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode, int additive_blend);
-void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode, int additive_blend);
-void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode);
+void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex,
+                                           float *buffer,
+                                           int vertex_count,
+                                           int depth_mode,
+                                           MikuPan_GPUBlendMode blend_mode);
+
+void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex,
+                                      float *buffer,
+                                      int vertex_count,
+                                      int depth_mode,
+                                      MikuPan_GPUBlendMode blend_mode);
+void MikuPan_RenderScreenCopyTriangles3DGSAlpha(sceGsTex0 *tex,
+                                                float *buffer,
+                                                int vertex_count,
+                                                int depth_mode,
+                                                unsigned long gs_alpha);
+void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex,
+                                                   float *buffer,
+                                                   int vertex_count,
+                                                   int depth_mode,
+                                                   MikuPan_GPUBlendMode blend_mode);
+void MikuPan_RenderScreenCopyTriangles3DScreenPosGSAlpha(sceGsTex0 *tex,
+                                                         float *buffer,
+                                                         int vertex_count,
+                                                         int depth_mode,
+                                                         unsigned long gs_alpha);
+void MikuPan_RenderScreenCopyTriangles3DFeedbackModulate(sceGsTex0 *tex,
+                                                         float *buffer,
+                                                         int vertex_count,
+                                                         int depth_mode,
+                                                         MikuPan_GPUBlendMode blend_mode);
 void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode);
 const MikuPan_TextureInfo *MikuPan_GetScreenCopyTextureInfo(void);
 const MikuPan_ScreenCopyDebugInfo *MikuPan_GetScreenCopyDebugInfo(void);
@@ -239,6 +298,8 @@ void MikuPan_SetBakedLighting(int parallel_count,
                               const sceVu0FVECTOR spot_btimes,
                               const sceVu0FVECTOR spot_intens,
                               const sceVu0FVECTOR spot_intens_b);
+float MikuPan_GetCurrentMaterialAlpha(void);
+int MikuPan_IsCurrentMaterialFullyTransparent(void);
 void MikuPan_SetMaterial(const sceVu0FVECTOR* ambient,
                          const sceVu0FVECTOR* diffuse,
                          const sceVu0FVECTOR* specular,
@@ -280,6 +341,19 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
 /// before the current GL frame has been rendered.
 int MikuPan_ReadResolvedFramebufferRGBA8TopLeft(int width, int height,
                                                 unsigned char *out_rgba);
+int MikuPan_ReadSceneFeedbackFramebufferRGBA8TopLeft(int width, int height,
+                                                     unsigned char *out_rgba);
+int MikuPan_ReadPhotoFramebufferRGBA8TopLeft(int width, int height,
+                                             unsigned char *out_rgba);
+void MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(int suppressed);
+int MikuPan_ArePhotoCaptureScreenCopyEffectsSuppressed(void);
+void MikuPan_ClearSceneFeedbackFrameHistory(void);
+void MikuPan_SuppressNextSceneFeedbackFrameCapture(void);
+void MikuPan_CaptureSceneFeedbackFrame(void);
+unsigned int MikuPan_GetSceneFeedbackTextureId(int age);
+int MikuPan_IsSceneFeedbackTextureValid(int age);
+void MikuPan_CapturePhotoFramebuffer(void);
+unsigned int MikuPan_GetPhotoFramebufferTextureId(void);
 int MikuPan_IsBlackWhiteModeActive(void);
 
 /// ----- Shadow pass --------------------------------------------------------
@@ -300,6 +374,8 @@ int MikuPan_IsBlackWhiteModeActive(void);
 ///   4. `BeginShadowReceiverPass()` / `EndShadowReceiverPass()` bracket the
 ///      AssignShadow receiver traversal and draw transparent black decals.
 void MikuPan_BeginShadowPass(float *world_clip_view);
+/// Set receiver decal strength from the original PS2 alpha value (0x80 = 1.0).
+void MikuPan_SetShadowStrengthFromPs2Alpha(int alpha);
 /// Build a GL-convention orthographic light view-projection (NDC [-1,1]) for the
 /// shadow projector from world-space inputs. Returns a pointer to a static mat4.
 float *MikuPan_ComputeShadowClipView(const float *center,

@@ -2170,12 +2170,36 @@ void DispSprD(DISP_SPRT *s)
         //pbuf[ndpkt++].ui32[3] = 0;
     }
 
-    MikuPan_RenderSprite2DDepthState(
-        (sceGsTex0*)&tex0,
+    /* 
+     * CopySprDToSpr/Himuro sets TEX1.MMAG to SCE_GS_NEAREST for normal 2D
+     * sprites. Honour that here; using the global linear sampler causes
+     * atlas/transparent-edge bleeding on sprites such as the candle puzzle
+     * flame halos.
+     */
+    int nearest_sampler = ((sceGsTex1 *)&mtex1)->MMAG == SCE_GS_NEAREST;
+
+    if ((malpr & 0xff) == MIKUPAN_GS_ALPHA_NORMAL)
+    {
+        MikuPan_RenderSprite2DDepthStateFiltered(
+            (sceGsTex0 *)&tex0,
+            render_buffer,
+            GsDepthTestEnabled(mtest),
+            GsDepthWriteEnabled(mzbuf),
+            GsDepthTestToGLFunc(mtest),
+            nearest_sampler);
+    }
+    else
+    {
+        // Respect the GS ALPHA register for ordinary 2D sprite draws.
+        MikuPan_RenderSprite2DDepthStateFilteredGSAlpha(
+            (sceGsTex0 *)&tex0,
         render_buffer,
         GsDepthTestEnabled(mtest),
         GsDepthWriteEnabled(mzbuf),
-        GsDepthTestToGLFunc(mtest));
+            GsDepthTestToGLFunc(mtest),
+            nearest_sampler,
+            malpr);
+    }
 }
 
 void CopySqrDToSqr(DISP_SQAR *s, SQAR_DAT *d)

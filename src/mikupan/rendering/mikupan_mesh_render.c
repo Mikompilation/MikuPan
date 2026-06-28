@@ -131,6 +131,29 @@ static int MikuPan_CanUseMeshCacheForCurrentPass(void)
     return MikuPan_MeshCache_IsEnabled();
 }
 
+static int MikuPan_ShouldSkipFullyTransparentMaterialMesh(void)
+{
+    if (MikuPan_IsShadowPassActive() || MikuPan_IsShadowReceiverPassActive())
+    {
+        return 0;
+    }
+
+    return MikuPan_IsCurrentMaterialFullyTransparent();
+}
+
+static void MikuPan_BindDiffuseTextureForShadowCaster(sceGsTex0 *tex0)
+{
+    if (tex0 != NULL)
+    {
+        MikuPan_SetTexture(tex0);
+    }
+    else
+    {
+        MikuPan_ActiveTextureCached(GL_TEXTURE0);
+        MikuPan_BindTexture2DCached(0);
+    }
+}
+
 void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUHead)
 {
     MIKUPAN_PERF_SCOPE(PERF_SECT_MESH_RENDER);
@@ -154,6 +177,11 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
         {
             return;
         }
+    }
+
+    if (MikuPan_ShouldSkipFullyTransparentMaterialMesh())
+    {
+        return;
     }
 
     int per_type_sect = (mesh_type == 0x32) ? PERF_SECT_MESH_0x32 :
@@ -188,12 +216,17 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
     MikuPan_SetCurrentShaderProgram(MESH_0x12_SHADER);
     MikuPan_PerfEnd(PERF_SECT_SC_SHADER, _t);
 
-    if (!MikuPan_IsShadowPassActive() &&
-        !MikuPan_IsShadowReceiverPassActive() &&
-        (int64_t)mesh_tex_reg < (int64_t)pVMCD)
+    if (!MikuPan_IsShadowReceiverPassActive())
     {
         _t = MikuPan_PerfBegin();
-        MikuPan_SetTexture(mesh_tex_reg);
+        if ((int64_t)mesh_tex_reg < (int64_t)pVMCD)
+        {
+            MikuPan_BindDiffuseTextureForShadowCaster(mesh_tex_reg);
+        }
+        else if (MikuPan_IsShadowPassActive())
+        {
+            MikuPan_BindDiffuseTextureForShadowCaster(NULL);
+        }
         MikuPan_PerfEnd(PERF_SECT_SC_TEXTURE, _t);
     }
 
@@ -207,7 +240,7 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
     /// the baked preset vertex colours are all immutable, so a cache hit binds
     /// the VAO and draws with zero per-frame buffer work. Lighting and BW run in
     /// the shader, so they need no CPU colour rebuild.
-    const int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
+    int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
     const int cache_kind = MikuPan_CurrentPassCacheKind();
     MikuPan_MeshCacheEntry *cache_entry = NULL;
 
@@ -249,6 +282,15 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
         /// instead of the shared streaming buffers during the upload phase.
         MikuPan_PerfMeshCacheMissNew();
         cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, desired_pipeline, cache_kind);
+        if (cache_entry == NULL)
+        {
+            // Could not allocate cache-owned buffers even after LRU eviction;
+            // fall back to the shared streaming VAO for this draw.
+            cache_on = 0;
+            _t = MikuPan_PerfBegin();
+            MikuPan_BindVAO(pipeline->vao);
+            MikuPan_PerfEnd(PERF_SECT_SC_VAO, _t);
+        }
     }
     else
     {
@@ -557,7 +599,7 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
     /// (avt2) and strip topology never change for the life of the loaded SGD.
     /// Cache the position VBO + IBO + VAO once, then steady-state draws collapse
     /// to bind + glDrawElements — no index rebuild, no per-frame GPU upload.
-    const int cache_on = MikuPan_CanUseMeshCacheForCurrentPass();
+    int cache_on = MikuPan_CanUseMeshCacheForCurrentPass();
     MikuPan_MeshCacheEntry *cache_entry = NULL;
 
     if (cache_on)
@@ -578,6 +620,11 @@ void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
         cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr,
                                                POSITION3_NORMAL3_UV2,
                                                MIKUPAN_MESHCACHE_KIND_CASTER);
+        if (cache_entry == NULL)
+        {
+            cache_on = 0;
+            MikuPan_BindVAO(pipeline->vao);
+        }
     }
     else
     {
@@ -651,6 +698,11 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
         return;
     }
 
+    if (MikuPan_ShouldSkipFullyTransparentMaterialMesh())
+    {
+        return;
+    }
+
     MIKUPAN_PERF_SCOPE(PERF_SECT_MESH_0x82);
 
     SGDVUVNDATA_PRESET *pVUVNData = (SGDVUVNDATA_PRESET *) &(((SGDPROCUNITHEADER *) pVUVN)[1]);
@@ -670,10 +722,10 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
     MikuPan_SetCurrentShaderProgram(MESH_0x12_SHADER);
     MikuPan_PerfEnd(PERF_SECT_SC_SHADER, _t);
 
-    if (!MikuPan_IsShadowPassActive() && !MikuPan_IsShadowReceiverPassActive())
+    if (!MikuPan_IsShadowReceiverPassActive())
     {
         _t = MikuPan_PerfBegin();
-        MikuPan_SetTexture(mesh_tex_reg);
+        MikuPan_BindDiffuseTextureForShadowCaster(mesh_tex_reg);
         MikuPan_PerfEnd(PERF_SECT_SC_TEXTURE, _t);
     }
 
@@ -683,7 +735,7 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
     MikuPan_PerfEnd(PERF_SECT_STATE_CHANGE, _sc_t0);
 
     /// ── Cache fast path ──
-    const int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
+    int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
     const int cache_kind = MikuPan_CurrentPassCacheKind();
     MikuPan_MeshCacheEntry *cache_entry = NULL;
 
@@ -715,6 +767,13 @@ void MikuPan_RenderMeshType0x82(unsigned int *pVUVN, unsigned int *pPUHead)
 
         MikuPan_PerfMeshCacheMissNew();
         cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, POSITION3_NORMAL3_UV2, cache_kind);
+        if (cache_entry == NULL)
+        {
+            cache_on = 0;
+            _t = MikuPan_PerfBegin();
+            MikuPan_BindVAO(pipeline->vao);
+            MikuPan_PerfEnd(PERF_SECT_SC_VAO, _t);
+        }
     }
     else
     {
@@ -840,6 +899,11 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
     const int pipeline_type = is_skin ? SKIN_POSITION4X2_NORMAL4X2_UV2
                                       : POSITION4_NORMAL4_UV2;
 
+    if (MikuPan_ShouldSkipFullyTransparentMaterialMesh())
+    {
+        return;
+    }
+
     int per_type_sect = (mesh_type == 0x2) ? PERF_SECT_MESH_0x2
                                            : PERF_SECT_MESH_0xA;
     MIKUPAN_PERF_SCOPE(per_type_sect);
@@ -861,10 +925,10 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
     MikuPan_SetCurrentShaderProgram(shader);
     MikuPan_PerfEnd(PERF_SECT_SC_SHADER, _t);
 
-    if (!MikuPan_IsShadowPassActive() && !MikuPan_IsShadowReceiverPassActive())
+    if (!MikuPan_IsShadowReceiverPassActive())
     {
         _t = MikuPan_PerfBegin();
-        MikuPan_SetTexture(mesh_tex_reg);
+        MikuPan_BindDiffuseTextureForShadowCaster(mesh_tex_reg);
         MikuPan_PerfEnd(PERF_SECT_SC_TEXTURE, _t);
     }
 
@@ -877,7 +941,7 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
     /// 0x2/0xA meshes are CPU-skinned: positions+normals change every frame,
     /// but the triangle topology and UVs are immutable. Cache the static
     /// streams (UV VBO + IBO) and the VAO; stream only pos+norm.
-    const int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
+    int cache_on   = MikuPan_CanUseMeshCacheForCurrentPass();
     const int cache_kind = MikuPan_CurrentPassCacheKind();
     MikuPan_MeshCacheEntry *cache_entry = NULL;
     int need_static_upload = 0;
@@ -891,15 +955,29 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
             cache_entry = MikuPan_MeshCache_Insert(pPUHead, sgd_top_addr, pipeline_type, cache_kind);
             need_static_upload = 1;
             MikuPan_PerfMeshCacheMissNew();
+            if (cache_entry == NULL)
+            {
+                cache_on = 0;
+                need_static_upload = 0;
+            }
         }
         else
         {
             MikuPan_PerfMeshCacheHit();
         }
 
-        _t = MikuPan_PerfBegin();
-        MikuPan_BindVAO(cache_entry->vao);
-        MikuPan_PerfEnd(PERF_SECT_SC_VAO, _t);
+        if (cache_on)
+        {
+            _t = MikuPan_PerfBegin();
+            MikuPan_BindVAO(cache_entry->vao);
+            MikuPan_PerfEnd(PERF_SECT_SC_VAO, _t);
+        }
+        else
+        {
+            _t = MikuPan_PerfBegin();
+            MikuPan_BindVAO(pipeline->vao);
+            MikuPan_PerfEnd(PERF_SECT_SC_VAO, _t);
+        }
     }
     else
     {

@@ -590,6 +590,7 @@ void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image)
 
         if (MikuPan_GetUploadRegion(image_load, &up_addr, &up_size))
         {
+            MikuPan_TextureCache_InvalidateGsRange(up_addr, up_size);
             g_pending_uploads.push_back({up_addr, up_size});
         }
     }

@@ -39,8 +39,13 @@ MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_MsaaBufferObject render_back_msaa = {0};
 static int g_mirror_scissor_enabled = 0;
 static int g_mirror_reflection_pass = 0;
-static unsigned int g_scene_snapshot_id = 0;
-static int g_scene_snapshot_valid = 0;
+static unsigned int g_scene_history_id[2] = {0, 0};
+static int g_scene_history_valid[2] = {0, 0};
+static int g_scene_history_suppress_next_capture = 0;
+static int g_photo_capture_suppress_screen_copy_effects = 0;
+static unsigned int g_photo_framebuffer_id = 0;
+static int g_photo_framebuffer_valid = 0;
+static unsigned int g_screen_negative_scene_copy_id = 0;
 
 void MikuPan_StreamUploadFull(GLenum target, GLuint buffer,
                                             GLsizeiptr size, const void *data)
@@ -237,13 +242,28 @@ SDL_AppResult MikuPan_Init()
 
 void MikuPan_DestroyInternalBuffer()
 {
-    if (g_scene_snapshot_id != 0)
+    for (int i = 0; i < 2; i++)
     {
-        MikuPan_GPUReleaseTexture(g_scene_snapshot_id);
-        g_scene_snapshot_id = 0;
+        if (g_scene_history_id[i] != 0)
+        {
+            MikuPan_GPUReleaseTexture(g_scene_history_id[i]);
+            g_scene_history_id[i] = 0;
+        }
+        g_scene_history_valid[i] = 0;
     }
 
-    g_scene_snapshot_valid = 0;
+    if (g_photo_framebuffer_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_photo_framebuffer_id);
+        g_photo_framebuffer_id = 0;
+    }
+    g_photo_framebuffer_valid = 0;
+
+    if (g_screen_negative_scene_copy_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_screen_negative_scene_copy_id);
+        g_screen_negative_scene_copy_id = 0;
+    }
 
     MikuPan_GPUDestroyInternalBuffer();
     memset(&render_back_msaa, 0, sizeof(render_back_msaa));
@@ -328,20 +348,224 @@ static int MikuPan_ReadFramebufferRGBA8TopLeftFromFbo(GLuint src_fbo,
     return MikuPan_ReadSceneTextureRGBA8TopLeft(width, height, out_rgba);
 }
 
-static void MikuPan_UpdateLastResolvedFrameCache(void)
+static void MikuPan_CopyCurrentSceneToTexture(unsigned int dst_texture_id,
+                                                int *valid_flag)
 {
-    g_scene_snapshot_valid = 0;
+    if (valid_flag != NULL)
+    {
+        *valid_flag = 0;
+    }
 
-    if (render_back_msaa.texture.id == 0 || g_scene_snapshot_id == 0)
+    if (render_back_msaa.texture.id == 0 || dst_texture_id == 0 ||
+        render_back_msaa.texture.width <= 0 || render_back_msaa.texture.height <= 0)
     {
         return;
     }
 
     MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
-                           g_scene_snapshot_id,
+                           dst_texture_id,
                            render_back_msaa.texture.width,
                            render_back_msaa.texture.height);
-    g_scene_snapshot_valid = 1;
+
+    if (valid_flag != NULL)
+    {
+        *valid_flag = 1;
+    }
+}
+
+
+void MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(int suppressed)
+{
+    g_photo_capture_suppress_screen_copy_effects = suppressed ? 1 : 0;
+}
+
+int MikuPan_ArePhotoCaptureScreenCopyEffectsSuppressed(void)
+{
+    return g_photo_capture_suppress_screen_copy_effects;
+}
+
+void MikuPan_ClearSceneFeedbackFrameHistory(void)
+{
+    g_scene_history_valid[0] = 0;
+    g_scene_history_valid[1] = 0;
+}
+
+void MikuPan_SuppressNextSceneFeedbackFrameCapture(void)
+{
+    g_scene_history_suppress_next_capture = 1;
+}
+
+
+void MikuPan_ApplyScreenNegative(void)
+{
+    const MikuPan_PhotoDebugInfo *photo_debug = MikuPan_GetPhotoDebugInfo();
+
+    if (photo_debug == NULL || !photo_debug->screen_negative_overlay_active ||
+        photo_debug->screen_negative_strength <= 0.0f)
+    {
+        return;
+    }
+
+    if (render_back_msaa.texture.id == 0 ||
+        render_back_msaa.texture.width <= 0 ||
+        render_back_msaa.texture.height <= 0 ||
+        g_screen_negative_scene_copy_id == 0)
+    {
+        MikuPan_ClearScreenNegativeOverlay();
+        return;
+    }
+
+    MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
+                           g_screen_negative_scene_copy_id,
+                           render_back_msaa.texture.width,
+                           render_back_msaa.texture.height);
+
+    float quad[] = {
+        0,1,0,0,   1,1,1,1,   -1,-1,0,1,
+        1,1,0,0,   1,1,1,1,    1,-1,0,1,
+        0,0,0,0,   1,1,1,1,   -1, 1,0,1,
+        1,0,0,0,   1,1,1,1,    1, 1,0,1
+    };
+
+    MikuPan_SetViewportCached(0, 0,
+                              render_back_msaa.texture.width,
+                              render_back_msaa.texture.height);
+    MikuPan_GPUSetTarget(MIKUPAN_GPU_TARGET_SCENE, 0);
+
+    MikuPan_BindTexture2DCached(g_screen_negative_scene_copy_id);
+    MikuPan_SetRenderState2D();
+    MikuPan_SetCurrentShaderProgram(POSTPROCESS_SHADER);
+    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
+    MikuPan_SetUniform1iToCurrentShader(1, "uPhotoNegativeSourceTexture");
+    MikuPan_SetUniform1iToCurrentShader(0, "uBlackWhiteMode");
+    MikuPan_SetUniform1fToCurrentShader(1.0f, "uBrightness");
+    MikuPan_SetUniform1fToCurrentShader(1.0f, "uGamma");
+
+    MikuPan_SetUniform1iToCurrentShader(0, "uCrtEnabled");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtStrength");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtCurvature");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtOverscan");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtScanlineStrength");
+    MikuPan_SetUniform1fToCurrentShader(1.0f, "uCrtScanlineScale");
+    MikuPan_SetUniform1fToCurrentShader(1.0f, "uCrtScanlineThickness");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtMaskStrength");
+    MikuPan_SetUniform1fToCurrentShader(1.0f, "uCrtMaskScale");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtVignetteStrength");
+    MikuPan_SetUniform1fToCurrentShader(1.0f, "uCrtVignetteSize");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtChromaOffset");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtBlendStrength");
+    MikuPan_SetUniform1fToCurrentShader(1.0f, "uCrtBlendRadius");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtNoiseStrength");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtFlickerStrength");
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uCrtGlowStrength");
+    MikuPan_SetUniform2fToCurrentShader((float) render_back_msaa.texture.width,
+                                        (float) render_back_msaa.texture.height,
+                                        "uTextureSize");
+    MikuPan_SetUniform2fToCurrentShader((float) render_back_msaa.texture.width,
+                                        (float) render_back_msaa.texture.height,
+                                        "uOutputSize");
+    MikuPan_SetUniform1fToCurrentShader((float) ((double) SDL_GetTicks() / 1000.0),
+                                        "uTime");
+
+    MikuPan_SetUniform1iToCurrentShader(0, "uPhotoNegativeEnabled");
+    MikuPan_SetUniform1iToCurrentShader(0, "uPhotoNegativeSourceEnabled");
+    {
+        float full_rect[4] = {0.0f, 0.0f, 1.0f, 1.0f};
+        MikuPan_SetUniform4fvToCurrentShader(full_rect,
+                                             "uPhotoNegativeContentRect");
+        MikuPan_SetUniform4fvToCurrentShader(full_rect,
+                                             "uPhotoNegativeRect");
+    }
+    MikuPan_SetUniform1fToCurrentShader(0.0f, "uPhotoNegativeStrength");
+
+    {
+        float screen_negative[4] = {
+            photo_debug->screen_negative_r,
+            photo_debug->screen_negative_g,
+            photo_debug->screen_negative_b,
+            photo_debug->screen_negative_strength,
+        };
+        MikuPan_SetUniform4fvToCurrentShader(screen_negative,
+                                             "uScreenNegative");
+    }
+
+    MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr)sizeof(quad), quad);
+    MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    MikuPan_ClearScreenNegativeOverlay();
+}
+
+void MikuPan_CaptureSceneFeedbackFrame(void)
+{
+    if (g_scene_history_suppress_next_capture)
+    {
+        g_scene_history_suppress_next_capture = 0;
+        MikuPan_ClearSceneFeedbackFrameHistory();
+        return;
+    }
+
+    if (g_scene_history_id[0] == 0 || g_scene_history_id[1] == 0)
+    {
+        return;
+    }
+
+    if (g_scene_history_valid[0])
+    {
+        MikuPan_GPUCopyTexture(g_scene_history_id[0],
+                               g_scene_history_id[1],
+                               render_back_msaa.texture.width,
+                               render_back_msaa.texture.height);
+        g_scene_history_valid[1] = 1;
+    }
+    else
+    {
+        g_scene_history_valid[1] = 0;
+    }
+
+    MikuPan_CopyCurrentSceneToTexture(g_scene_history_id[0],
+                                      &g_scene_history_valid[0]);
+}
+
+unsigned int MikuPan_GetSceneFeedbackTextureId(int age)
+{
+    if (age < 0)
+    {
+        age = 0;
+    }
+    if (age > 1)
+    {
+        age = 1;
+    }
+
+    return g_scene_history_valid[age] ? g_scene_history_id[age] : 0;
+}
+
+int MikuPan_IsSceneFeedbackTextureValid(int age)
+{
+    if (age < 0 || age > 1)
+    {
+        return 0;
+    }
+
+    return g_scene_history_valid[age] && g_scene_history_id[age] != 0;
+}
+
+void MikuPan_CapturePhotoFramebuffer(void)
+{
+    MikuPan_CopyCurrentSceneToTexture(g_photo_framebuffer_id,
+                                      &g_photo_framebuffer_valid);
+}
+
+unsigned int MikuPan_GetPhotoFramebufferTextureId(void)
+{
+    return g_photo_framebuffer_valid ? g_photo_framebuffer_id : 0;
+}
+
+static void MikuPan_UpdateLastResolvedFrameCache(void)
+{
 }
 
 int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *out_rgba)
@@ -352,15 +576,32 @@ int MikuPan_ReadFramebufferRGBA8TopLeft(int width, int height, unsigned char *ou
 int MikuPan_ReadResolvedFramebufferRGBA8TopLeft(int width, int height,
                                                unsigned char *out_rgba)
 {
-    if (out_rgba != NULL && g_scene_snapshot_valid && g_scene_snapshot_id != 0)
+    return MikuPan_ReadFramebufferRGBA8TopLeft(width, height, out_rgba);
+}
+
+int MikuPan_ReadSceneFeedbackFramebufferRGBA8TopLeft(int width, int height,
+                                                     unsigned char *out_rgba)
+{
+    if (out_rgba != NULL && g_scene_history_valid[0] && g_scene_history_id[0] != 0)
     {
-        if (MikuPan_ReadTextureRGBA8TopLeft(g_scene_snapshot_id,
-                                            render_back_msaa.texture.width,
-                                            render_back_msaa.texture.height,
-                                            width, height, out_rgba))
-        {
-            return 1;
-        }
+        return MikuPan_ReadTextureRGBA8TopLeft(g_scene_history_id[0],
+                                              render_back_msaa.texture.width,
+                                              render_back_msaa.texture.height,
+                                              width, height, out_rgba);
+    }
+
+    return 0;
+}
+
+int MikuPan_ReadPhotoFramebufferRGBA8TopLeft(int width, int height,
+                                             unsigned char *out_rgba)
+{
+    if (out_rgba != NULL && g_photo_framebuffer_valid && g_photo_framebuffer_id != 0)
+    {
+        return MikuPan_ReadTextureRGBA8TopLeft(g_photo_framebuffer_id,
+                                              render_back_msaa.texture.width,
+                                              render_back_msaa.texture.height,
+                                              width, height, out_rgba);
     }
 
     return MikuPan_ReadFramebufferRGBA8TopLeft(width, height, out_rgba);
@@ -378,13 +619,28 @@ void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
     render_back_msaa.texture.height = h;
     render_back_msaa.msaa = msaa;
 
-    if (g_scene_snapshot_id != 0)
+    for (int i = 0; i < 2; i++)
     {
-        MikuPan_GPUReleaseTexture(g_scene_snapshot_id);
+        if (g_scene_history_id[i] != 0)
+        {
+            MikuPan_GPUReleaseTexture(g_scene_history_id[i]);
+        }
+        g_scene_history_id[i] = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
+        g_scene_history_valid[i] = 0;
     }
 
-    g_scene_snapshot_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
-    g_scene_snapshot_valid = 0;
+    if (g_photo_framebuffer_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_photo_framebuffer_id);
+    }
+    g_photo_framebuffer_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
+    g_photo_framebuffer_valid = 0;
+
+    if (g_screen_negative_scene_copy_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_screen_negative_scene_copy_id);
+    }
+    g_screen_negative_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
 
     MikuPan_SetViewportCached(0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height);
 }
@@ -661,6 +917,19 @@ void MikuPan_EndFrame()
             MikuPan_BindTexture2DCached(photo_debug->negative_source_texture_id);
             MikuPan_ActiveTextureCached(GL_TEXTURE0);
         }
+
+        {
+            float screen_negative[4] = {
+                photo_debug->screen_negative_r,
+                photo_debug->screen_negative_g,
+                photo_debug->screen_negative_b,
+                photo_debug->screen_negative_overlay_active ?
+                    photo_debug->screen_negative_strength : 0.0f,
+            };
+
+            MikuPan_SetUniform4fvToCurrentShader(screen_negative,
+                                                 "uScreenNegative");
+        }
     }
 
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
@@ -901,6 +1170,7 @@ void MikuPan_RenderSetDebugValues()
     static int   last_disable_lighting = -1;
     static int   last_static_lighting  = -1;
     static int   last_mesh_lighting_mode = -1;
+    static int   last_black_white_mode = -1;
     static unsigned int last_shader_generation = 0;
 
     int   render_normals   = MikuPan_IsNormalsRendering();
@@ -908,6 +1178,7 @@ void MikuPan_RenderSetDebugValues()
     int   disable_lighting = MikuPan_IsLightingDisabled();
     int   static_lighting  = MikuPan_ShowStaticLighting();
     int   mesh_lighting_mode = MikuPan_GetMeshLightingMode();
+    int   black_white_mode = MikuPan_IsBlackWhiteModeActive();
     unsigned int shader_generation = MikuPan_GetShaderGeneration();
 
     if (shader_generation != last_shader_generation)
@@ -917,6 +1188,7 @@ void MikuPan_RenderSetDebugValues()
         last_disable_lighting = -1;
         last_static_lighting = -1;
         last_mesh_lighting_mode = -1;
+        last_black_white_mode = -1;
         last_shader_generation = shader_generation;
     }
 
@@ -948,6 +1220,12 @@ void MikuPan_RenderSetDebugValues()
     {
         MikuPan_SetUniform1iToAllShaders(mesh_lighting_mode, "uMeshLightingMode");
         last_mesh_lighting_mode = mesh_lighting_mode;
+    }
+
+    if (black_white_mode != last_black_white_mode)
+    {
+        MikuPan_SetUniform1iToAllShaders(black_white_mode, "uBlackWhiteMode");
+        last_black_white_mode = black_white_mode;
     }
 }
 
