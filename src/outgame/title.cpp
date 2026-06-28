@@ -72,7 +72,7 @@ static int exit_prompt_sel = 1;
 
 #define TITLE_BG_MSN_NO 3
 #define TITLE_BG_MSN_MAX 4
-#define TITLE_BG_ROOM_NO 16
+#define TITLE_BG_ROOM_NO R016_NAKANIWA
 #define TITLE_BG_ROOM_BLOCK 0
 #define TITLE_BG_ROOM_MAX 63
 #define TITLE_BG_MODEL_LOAD_MAX 64
@@ -83,7 +83,7 @@ static int exit_prompt_sel = 1;
 #define TITLE_BG_FADE_ALPHA_MAX 0x80
 #define TITLE_BGM_FADE_OUT_FRAMES 0x1e
 #define TITLE_BGM_FADE_IN_FRAMES 0x1e
-#define TITLE_BGM_DEFAULT_FILE_NO 1541
+#define TITLE_BGM_DEFAULT_FILE_NO AB014_STR
 #define TITLE_AUDIO_FILE_MAX RSHADE_SGD
 
 typedef enum {
@@ -123,8 +123,8 @@ typedef struct {
 static const TITLE_BG_PRESET title_bg_presets[] = {
     {
         .msn_no = 3,
-        .room_no = 16,
-        .audio_file_no = 1541,
+        .room_no = R016_NAKANIWA,
+        .audio_file_no = AB014_STR,
         .cycle_seconds = 120,
         .camera = {
             .camera_p = {4654.2f, -450.0f, 5244.8f},
@@ -147,8 +147,8 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
     },
     {
         .msn_no = 3,
-        .room_no = 14,
-        .audio_file_no = 1539,
+        .room_no = R014,
+        .audio_file_no = AB012_STR,
         .cycle_seconds = 120,
         .camera = {
             .camera_p = {2272.5f, -50.0f, -12.4f},
@@ -171,8 +171,8 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
     },
     {
         .msn_no = 3,
-        .room_no = 10,
-        .audio_file_no = 1540,
+        .room_no = R010_NINGYO,
+        .audio_file_no = AB013_STR,
         .cycle_seconds = 120,
         .camera = {
             .camera_p = {1402.7f, -450.0f, 2767.5f},
@@ -195,8 +195,8 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
     },
     {
         .msn_no = 3,
-        .room_no = 10,
-        .audio_file_no = 1541,
+        .room_no = R010_NINGYO,
+        .audio_file_no = AB014_STR,
         .cycle_seconds = 60,
         .camera = {
             .camera_p = {1509.8f, -595.0f, 1254.6f},
@@ -219,8 +219,8 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
     },
     {
         .msn_no = 3,
-        .room_no = 6,
-        .audio_file_no = 1563,
+        .room_no = R006_HAKONIWA,
+        .audio_file_no = AK007_KAMINARIFAR_STR,
         .cycle_seconds = 120,
         .camera = {
             .camera_p = {5311.4f, -20.0f, 955.7f},
@@ -243,8 +243,8 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
     },
     {
         .msn_no = 3,
-        .room_no = 25,
-        .audio_file_no = 1560,
+        .room_no = R025_SANDO,
+        .audio_file_no = AK004_SANDOU_STR,
         .cycle_seconds = 120,
         .camera = {
             .camera_p = {5267.4f, -1850.0f, 6140.8f},
@@ -267,8 +267,8 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
     },
     {
         .msn_no = 3,
-        .room_no = 33,
-        .audio_file_no = 1533,
+        .room_no = R033,
+        .audio_file_no = AB001_STR,
         .cycle_seconds = 120,
         .camera = {
             .camera_p = {783.3f, -450.0f, 986.5f},
@@ -296,7 +296,7 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
 static TITLE_BG_ROOM_STATE title_bg_room_state = TITLE_BG_ROOM_UNLOADED;
 static SgCAMERA title_bg_camera;
 static int title_bg_msn_no = 3;
-static int title_bg_room_no = 16;
+static int title_bg_room_no = R016_NAKANIWA;
 static float title_bg_camera_p[3] = {4654.2f, -450.0f, 5244.8f};
 static float title_bg_camera_i[3] = {4931.7f, -350.0f, 4171.2f};
 static float title_bg_camera_fov_deg = 79.4f;
@@ -1807,7 +1807,7 @@ static void TitleBgDebugUi(void)
         TitleAudioStopBgm();
     }
 
-    if (igButton("Use 1541##title_audio", ImVec2{0.0f, 0.0f}))
+    if (igButton("Use AB014##title_audio", ImVec2{0.0f, 0.0f}))
     {
         title_bgm_file_no = TITLE_BGM_DEFAULT_FILE_NO;
         TitleAudioRestartBgm();
