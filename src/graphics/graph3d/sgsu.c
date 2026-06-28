@@ -760,7 +760,7 @@ void SetVUMeshDataPost(u_int *prim)
             read_p = SetVUVNDataPost(vuvnprim, SkinAllowedForMeshType(mtype));
 
             /// Needs to be its own function since the actual type is 0x10
-            MikuPan_RenderMeshType0x2((void*)vuvnprim, (void*)prim, (float*)read_p);
+            MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER *)vuvnprim, (SGDPROCUNITHEADER *)prim, (float *)read_p);
 
             read_p[0] = 0x14000000 | ((u_int) DRAWTYPE2W >> 3);
             read_p[1] = 0x17000000;

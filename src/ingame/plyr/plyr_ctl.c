@@ -79,7 +79,7 @@ float photo_charge_ratio[] = {
     1.4f, 1.6f, 1.8f, 2.0f
 };
 PWARP_DAT pwarp_dat[] = {
-    { .room = 19, .floor = 1, .pos_x = 21975, .pos_y = 65311, .pos_z = 25575 },
+    { .room = 19, .floor = 1, .pos_x = 21975, .pos_y = -225, .pos_z = 25575 },
     { .room = 31, .floor = 0, .pos_x = 21975, .pos_y =  3000, .pos_z = 27000 },
 };
 
@@ -4316,7 +4316,7 @@ void InitPhotoWrk()
 
     pw = &photo_wrk;
 
-    *pw = (PHOTO_WRK){0};
+    *pw = {};
 
     InitSubjectWrk(&pw->plyr);
 

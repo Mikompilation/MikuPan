@@ -62,7 +62,7 @@ static MikuPanIopTimer* FindTimer(int timer_id)
 
 static int SDLCALL IopThreadMain(void* data)
 {
-    MikuPanIopThread* thread = data;
+    MikuPanIopThread* thread = (MikuPanIopThread *)data;
     IopThreadEntry entry = (IopThreadEntry)thread->entry;
 
     SDL_SetTLS(&iop_thread_tls, thread, NULL);
@@ -76,7 +76,7 @@ static int SDLCALL IopThreadMain(void* data)
 
 static int SDLCALL IopTimerMain(void* data)
 {
-    MikuPanIopTimer* timer = data;
+    MikuPanIopTimer* timer = (MikuPanIopTimer *)data;
     Uint64 interval = (Uint64)(timer->compare ? timer->compare : 1) * 1000ULL;
     Uint64 next = SDL_GetTicksNS() + interval;
 
@@ -143,7 +143,7 @@ int MikuPan_IopStartThread(int thread_id, void* arg)
 
 int MikuPan_IopSleepThread(void)
 {
-    MikuPanIopThread* thread = SDL_GetTLS(&iop_thread_tls);
+    MikuPanIopThread* thread = (MikuPanIopThread *)SDL_GetTLS(&iop_thread_tls);
     if (iop_host_shutdown) {
         return -1;
     }
@@ -178,7 +178,7 @@ int MikuPan_IopWakeupThreadFromInterrupt(int thread_id)
 
 int MikuPan_IopGetThreadId(void)
 {
-    MikuPanIopThread* thread = SDL_GetTLS(&iop_thread_tls);
+    MikuPanIopThread* thread = (MikuPanIopThread *)SDL_GetTLS(&iop_thread_tls);
     return thread != NULL ? thread->id : 0;
 }
 

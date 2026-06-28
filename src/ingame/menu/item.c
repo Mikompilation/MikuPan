@@ -452,8 +452,8 @@ void NewgameItemInit()
     memset(flm_exp_flg, 0, sizeof(flm_exp_flg));
     memset(item_dsp_wrk, 0, sizeof(item_dsp_wrk));
 
-    iew = (ITM_EFF_WRK){0};
-    msg = (MSG_DSP){0};
+    iew = {};
+    msg = {};
 }
 
 void NewgameItemInit2()
@@ -470,8 +470,8 @@ void NewgameItemInit2()
 
     memset(item_dsp_wrk, 0, sizeof(item_dsp_wrk));
 
-    iew = (ITM_EFF_WRK){0};
-    msg = (MSG_DSP){0};
+    iew = {};
+    msg = {};
 }
 
 void MissionSelectItemInit()
@@ -506,8 +506,8 @@ void MenuItemInit()
 {
     memset(&item_dsp_wrk, 0, sizeof(item_dsp_wrk));
 
-    iew = (ITM_EFF_WRK){0};
-    msg = (MSG_DSP){0};
+    iew = {};
+    msg = {};
 
     FileDateInit();
 }
@@ -516,8 +516,8 @@ void LoadgameMenuItemInit()
 {
     memset(&item_dsp_wrk, 0, sizeof(item_dsp_wrk));
 
-    iew = (ITM_EFF_WRK){0};
-    msg = (MSG_DSP){0};
+    iew = {};
+    msg = {};
 }
 
 void StartItemModeInit()

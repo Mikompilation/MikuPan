@@ -3,6 +3,7 @@
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/ui/mikupan_ui_debug.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_gpu.h"
 #include "mikupan_profiler.h"

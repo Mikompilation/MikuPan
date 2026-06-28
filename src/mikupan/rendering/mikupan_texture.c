@@ -142,7 +142,7 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
     unsigned int tex = MikuPan_GPUCreateTextureRGBA8(
         width, height, pixels, width * 4, 1, 0);
 
-    MikuPan_TextureInfo *texture_info = malloc(sizeof(MikuPan_TextureInfo));
+    MikuPan_TextureInfo *texture_info = (MikuPan_TextureInfo *)malloc(sizeof(MikuPan_TextureInfo));
     texture_info->height = height;
     texture_info->width = width;
     texture_info->id = tex;

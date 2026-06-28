@@ -180,7 +180,7 @@ void SetRDLongFire2(sceVu0FVECTOR pos, u_char sta, float szw, float szh, float s
 
     if (ret != NULL)
     {
-        BURN_FIRE *bf = ret;
+        BURN_FIRE *bf = (BURN_FIRE *)ret;
 
         Vu0CopyVector(bf->fpos, pos);
 
@@ -202,7 +202,7 @@ void SetRDLongFire2(sceVu0FVECTOR pos, u_char sta, float szw, float szh, float s
             bf->lignum = AddNewPointLight(&bf->ligpos, &bf->ligdiff, &bf->ligpow, room);
         }
 
-        ecw = bf->ebuf;
+        ecw = (EFFECT_CONT *)bf->ebuf;
 
         ecw->pnt[5] = bf;
     }
@@ -221,7 +221,7 @@ void ResetRDLongFire(u_short furn_id)
 
     if (ret != NULL)
     {
-        BURN_FIRE *bf = ret;
+        BURN_FIRE *bf = (BURN_FIRE *)ret;
 
         if (bf->sta & 1)
         {
@@ -369,15 +369,15 @@ void SubRDFire(EFFECT_CONT *ec)
 
         if (plyr_wrk.pr_info.room_no == 14)
         {
-            SeStartPosEventFlame(plyr_wrk.pr_info.room_no, 0, ec->pnt[0], 0, 0x1000, 0x1000);
+            SeStartPosEventFlame(plyr_wrk.pr_info.room_no, 0, (float *)ec->pnt[0], 0, 0x1000, 0x1000);
         }
         else if (plyr_wrk.pr_info.room_no == 29)
         {
-            SeStartPosSrundFlame(plyr_wrk.pr_info.room_no, ec->pnt[0], 0, 0x1000, 0x1000);
+            SeStartPosSrundFlame(plyr_wrk.pr_info.room_no, (float *)ec->pnt[0], 0, 0x1000, 0x1000);
         }
         else
         {
-            SeStartPut(17, ec->pnt[0], 0, 0x1000, 0x1000, 0xff);
+            SeStartPut(17, (float *)ec->pnt[0], 0, 0x1000, 0x1000, 0xff);
         }
 
         ec->flow = 1;
@@ -951,7 +951,7 @@ void SetRDPFire2(float *pos, u_short furn_id)
         return;
     }
 
-    ecw = pfire_rsv[ret].adr;
+    ecw = (EFFECT_CONT *)pfire_rsv[ret].adr;
 
     ecw->dat.uc8[3] = 18;
 }
@@ -969,9 +969,9 @@ void ResetRDPFire(u_short furn_id)
         return;
     }
 
-    ec = pfire_rsv[ret].adr;
+    ec = (EFFECT_CONT *)pfire_rsv[ret].adr;
 
-    hh = ec->pnt[1];
+    hh = (HEAT_HAZE *)ec->pnt[1];
 
     if (hh == NULL)
     {

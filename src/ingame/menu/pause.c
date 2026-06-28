@@ -32,8 +32,8 @@ static FLSH_CORE flsh;
 
 void PauseInit()
 {
-    pause_wrk = (PAUSE_WRK) {0};
-    ps_dsp = (PAUSE_DSP) {0};
+    pause_wrk = {};
+    ps_dsp = {};
 
     gra2dInitDbgMenu();
 

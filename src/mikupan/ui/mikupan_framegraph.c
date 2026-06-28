@@ -115,15 +115,15 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
 
     if (gpu_latest < cpu_latest * 0.25f)
     {
-        igTextColored((ImVec4) {1.0f, 0.6f, 0.3f, 1.0f}, "   - CPU submit");
+        igTextColored(ImVec4{1.0f, 0.6f, 0.3f, 1.0f}, "   - CPU submit");
     }
     else if (gpu_latest > cpu_latest)
     {
-        igTextColored((ImVec4) {0.4f, 0.7f, 1.0f, 1.0f},"   - GPU/present wait");
+        igTextColored(ImVec4{0.4f, 0.7f, 1.0f, 1.0f},"   - GPU/present wait");
     }
     else
     {
-        igTextColored((ImVec4) {0.6f, 0.9f, 0.6f, 1.0f}, "   - balanced");
+        igTextColored(ImVec4{0.6f, 0.9f, 0.6f, 1.0f}, "   - balanced");
     }
 
     if (igBeginTable("##perf_summary", 4, mikupan_frame_graph_window_style,

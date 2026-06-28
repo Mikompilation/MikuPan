@@ -86,7 +86,7 @@ void* IopDrvFunc(unsigned int command, void* data, int size)
 
         IopInitMain();
     } else if (command == 1) {
-        icp = data;
+        icp = (IOP_COMMAND *)data;
 
         se_start_flg = 0;
         se_stop_flg = 0;

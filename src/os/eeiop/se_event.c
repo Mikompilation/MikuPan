@@ -6,7 +6,7 @@
 #include "os/eeiop/eese.h"
 #include "os/eeiop/sd_room.h"
 #include "ingame/map/door_ctl.h"
-// #include "ingame/map/map_ctrl.h"
+#include "ingame/map/map_ctrl.h"
 #include "main/glob.h"
 
 static void SEventNoUse(u_char room_id0, u_char room_id1);

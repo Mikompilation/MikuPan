@@ -16,11 +16,17 @@
 #include <stdio.h>
 
 // -- Backend wrappers (defined in mikupan_ui.cpp) ----------------------------
+#ifdef __cplusplus
+extern "C" {
+#endif
 void MikuPan_ImGui_ImplInit(SDL_Window* window);
 void MikuPan_ImGui_ImplShutdown(void);
 void MikuPan_ImGui_ImplNewFrame(void);
 void MikuPan_ImGui_ImplProcessEvent(SDL_Event* event);
 void MikuPan_ImGui_ImplRenderDrawData(void);
+#ifdef __cplusplus
+}
+#endif
 
 int show_menu_bar = 0;
 static SDL_Window* ui_window = NULL;
@@ -88,10 +94,10 @@ void MikuPan_DrawMissingDataUi(const char *missing_file)
                            : "IMG_HD.BIN";
 
     igSetNextWindowPos(
-        (ImVec2){io->DisplaySize.x * 0.5f, io->DisplaySize.y * 0.5f},
+        ImVec2{io->DisplaySize.x * 0.5f, io->DisplaySize.y * 0.5f},
         ImGuiCond_Always,
-        (ImVec2){0.5f, 0.5f});
-    igSetNextWindowSize((ImVec2){width, height}, ImGuiCond_Always);
+        ImVec2{0.5f, 0.5f});
+    igSetNextWindowSize(ImVec2{width, height}, ImGuiCond_Always);
     if (!igBegin("Game Data Required", NULL,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
                  | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
@@ -107,7 +113,7 @@ void MikuPan_DrawMissingDataUi(const char *missing_file)
     igTextWrapped("Select the folder that contains IMG_HD.BIN and IMG_BD.BIN.");
     igSpacing();
 
-    if (igButton("Select Folder", (ImVec2){160.0f * scale, 0.0f}))
+    if (igButton("Select Folder", ImVec2{160.0f * scale, 0.0f}))
     {
         MikuPan_RequestDataFolderSelection(file);
     }
@@ -220,7 +226,7 @@ void MikuPan_UiMenuBar(void)
         char version_line[256];
         snprintf(version_line, sizeof(version_line), "%s (%s)",
                  MIKUPAN_GIT_DESCRIBE, MIKUPAN_GIT_COMMIT);
-        if (igButton("Copy version to clipboard", (ImVec2) {0.0f, 0.0f}))
+        if (igButton("Copy version to clipboard", ImVec2{0.0f, 0.0f}))
         {
             igSetClipboardText(version_line);
         }

@@ -89,8 +89,8 @@ void LoadgameMenuInit()
 
 void IngameMenuInit()
 {
-    ig_menu_wrk = (INGAME_MENU_WRK){0};
-    yw2d = (FOR_YW2D){0};
+    ig_menu_wrk = {};
+    yw2d = {};
 
     menu_load_id = -1;
     fndr_load_id = -1;
@@ -117,7 +117,7 @@ static void IngameMenuOpenInit()
 
     memset(menu_item_wrk, 0xff, sizeof(ANA_PAD) * 3);
 
-    ana_pad = (ANA_PAD){0};
+    ana_pad = {};
 
     yw2d.menu_io_flg = 1;
     yw2d.menu_io_cnt = 0;

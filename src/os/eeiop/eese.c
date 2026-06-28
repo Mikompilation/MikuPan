@@ -1441,4 +1441,5 @@ u_char SeGetFreeSv()
 int SeStartV(int se_no, u_char voice_no)
 {
     // no return with int return value in function signature ...
+    return 0;
 }

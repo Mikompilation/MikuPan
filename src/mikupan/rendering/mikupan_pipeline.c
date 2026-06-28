@@ -268,7 +268,8 @@ void MikuPan_CreateBufferObjectsInfo(MikuPan_PipelineInfo *pipeline_info,
 {
     pipeline_info->num_buffers = num_buffers;
     pipeline_info->buffers =
-        calloc(num_buffers, sizeof(MikuPan_BufferObjectInfo));
+        (MikuPan_BufferObjectInfo *)calloc(
+            num_buffers, sizeof(MikuPan_BufferObjectInfo));
 }
 
 void MikuPan_SetVertexBufferAttributeInfo(MikuPan_AttributeInfo *attribute_info,
@@ -290,7 +291,8 @@ void MikuPan_SetUniformBufferObjectInfo(MikuPan_BufferObjectInfo *object_info,
     object_info->num_attributes = num_attributes;
     object_info->attributes =
         num_attributes > 0 ?
-            calloc(num_attributes, sizeof(MikuPan_AttributeInfo)) :
+            (MikuPan_AttributeInfo *)calloc(
+                num_attributes, sizeof(MikuPan_AttributeInfo)) :
             NULL;
 }
 
@@ -304,7 +306,8 @@ void MikuPan_SetBufferObjectInfo(MikuPan_BufferObjectInfo *object_info,
     object_info->num_attributes = num_attributes;
     object_info->attributes =
         num_attributes > 0 ?
-            calloc(num_attributes, sizeof(MikuPan_AttributeInfo)) :
+            (MikuPan_AttributeInfo *)calloc(
+                num_attributes, sizeof(MikuPan_AttributeInfo)) :
             NULL;
 }
 

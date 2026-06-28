@@ -68,7 +68,7 @@ void ReturnGameOver()
 
 static void GameOverInit()
 {
-    go_wrk = (GO_WRK) {0};
+    go_wrk = {};
 
     ingame_wrk.stts |= 0x20;
 }

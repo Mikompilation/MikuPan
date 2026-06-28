@@ -336,7 +336,7 @@ void FallObjInitAll(/* a0 4 */ sceVu0FVECTOR mpos, /* s2 18 */ int area, /* s1 1
 
     for (i = 0; i < fall_num; i++)
     {
-        FallObjInit(fall_wrk.pos_p, i, area, fall_num, fall_mode);
+        FallObjInit((float *)fall_wrk.pos_p, i, area, fall_num, fall_mode);
     }
 }
 
@@ -398,7 +398,7 @@ void FallenObjects()
             if (fall_table[fall_wrk.mode_keep].stop_time < fall_wrk.at_ground[i])
             {
                 leaves[i][1] = fall_wrk.mpos_keep[1];
-                FallObjInit(fall_wrk.pos_p, i, fall_wrk.area_keep, fall_wrk.fnum_keep, fall_wrk.mode_keep);
+                FallObjInit((float *)fall_wrk.pos_p, i, fall_wrk.area_keep, fall_wrk.fnum_keep, fall_wrk.mode_keep);
             }
         }
         else
@@ -1053,7 +1053,7 @@ void GusObjInitAll(/* a0 4 */ sceVu0FVECTOR mpos, /* s2 18 */ int area, /* a2 6 
     
     for (i = 0; i < gus_wrk.fnum_keep; i++)
     {
-        GusObjInit(gus_wrk.pos_p,i,area);
+        GusObjInit((float *)gus_wrk.pos_p, i, area);
     }
     
     gus_wrk.init_flg = 1;
@@ -1080,7 +1080,7 @@ void GusObjects()
         {
             if (i <= gus_wrk.fall_count && GusObjTrans(i) != 0)
             {
-                GusObjInit(gus_wrk.pos_p, i, gus_wrk.area_keep);
+                GusObjInit((float *)gus_wrk.pos_p, i, gus_wrk.area_keep);
             }
         }
         
@@ -3756,4 +3756,4 @@ void TestPk2Data_2dg(long long sendtexaddr)
     SimpleDispSprt(&ssd, sendtexaddr, ttest_count, NULL, NULL, 0x64);
 }
 
-enum T_LOAD_MODE T_LOAD_MODE = 0;
+enum T_LOAD_MODE T_LOAD_MODE = (enum T_LOAD_MODE)0;

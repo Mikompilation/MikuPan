@@ -33,7 +33,7 @@ extern FLSH_CORE flsh2;
 
 void CameraCustomNewgameInit()
 {
-    cam_custom_wrk = (CAM_CUSTOM_WRK){0};
+    cam_custom_wrk = {};
 
     cam_custom_wrk.set_spe = 0xff;
     cam_custom_wrk.set_sub = 0xff;
@@ -58,8 +58,8 @@ void CameraCustomInit()
         &cam_custom_wrk.charge_range, &cam_custom_wrk.charge_speed, &cam_custom_wrk.charge_max,
     };
 
-    cam_dsp = (CAM_DSP){0};
-    cmr_menu_wrk = (CAMERA_MENU_WRK){0};
+    cam_dsp = {};
+    cmr_menu_wrk = {};
 
     cmr_menu_wrk.mode = 4;
 
@@ -78,8 +78,8 @@ void CameraCustomInit()
     cam_dsp.pfm_max[1] = 0;
     cam_dsp.pfm_max[2] = 0;
 
-    flsh = (FLSH_CORE){0};
-    flsh2 = (FLSH_CORE){0};
+    flsh = {};
+    flsh2 = {};
 
     for (i = 0; i < 5; i++)
     {

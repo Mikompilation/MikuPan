@@ -1304,7 +1304,7 @@ void SetFire2(EFFECT_CONT *ec)
 
 void SetHalo(EFFECT_CONT *ec)
 {
-    SubHalo(ec->pnt[0], ec->dat.uc8[2], ec->dat.uc8[6], ec->z, ec->dat.uc8[3], ec->dat.uc8[4], ec->dat.uc8[5], 0x64, ec->dat.fl32[2]);
+    SubHalo((float *)ec->pnt[0], ec->dat.uc8[2], ec->dat.uc8[6], ec->z, ec->dat.uc8[3], ec->dat.uc8[4], ec->dat.uc8[5], 0x64, ec->dat.fl32[2]);
 
     if (ec->dat.uc8[1] & 1)
     {
@@ -3329,7 +3329,7 @@ void* ContTorch(void *addr, int type, float *pos, float *pos2, int st, float r, 
         return NULL;
     }
 
-    hh = addr;
+    hh = (HEAT_HAZE *)addr;
 
     hh->flag |= 0xff;
 
@@ -3428,7 +3428,7 @@ void* ContTorch(void *addr, int type, float *pos, float *pos2, int st, float r, 
                     pvel[1] = -(ysp1 * vu0Rand()) - ysp2;
                     pvel[2] = (vu0Rand() - 0.5f) * 0.02f * rrate;
 
-                    add_particle(type, addr, ppos, pvel, r, g, b, a * ar);
+                    add_particle(type, (HEAT_HAZE *)addr, ppos, pvel, r, g, b, a * ar);
                 }
             break;
             case 0:
@@ -3444,7 +3444,7 @@ void* ContTorch(void *addr, int type, float *pos, float *pos2, int st, float r, 
                     pvel[1] = -(vu0Rand() * 0.03f) - 0.05f;
                     pvel[2] = (vu0Rand() - 0.5f) * 0.02f;
 
-                    add_particle(type, addr, ppos, pvel, r, g, b, a * ar);
+                    add_particle(type, (HEAT_HAZE *)addr, ppos, pvel, r, g, b, a * ar);
                 }
             break;
             }
@@ -3585,7 +3585,7 @@ void* ContSmoke(void *addr, int type, float *pos, float *pos2, int st, float r, 
         return NULL;
     }
 
-    hh = addr;
+    hh = (HEAT_HAZE *)addr;
 
     hh->flag |= 0xff;
 

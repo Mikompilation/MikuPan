@@ -104,7 +104,7 @@ static void ICdvdInitOnce()
         cdvd_lock = SDL_CreateMutex();
     }
 
-    load_buf_table[0] = AllocSysMemory(0, 0x64000, 0);
+    load_buf_table[0] = (u_int *)AllocSysMemory(0, 0x64000, 0);
     if (!load_buf_table[0]) {
     } else {
         load_buf_table[1] = (u_int*)((u_char*)load_buf_table[0] + 0x32000);
@@ -700,6 +700,8 @@ int ICdvdTransSeEnd()
         }
     } else if (iop_stat.cdvd.se_trans == 2) {
     }
+
+    return 0;
 }
 
 static void ICdvdTransSeInit()

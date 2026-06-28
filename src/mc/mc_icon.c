@@ -60,7 +60,7 @@ const float mc_ambient[4] = {
     0.3f, 0.3f, 0.3f, 0.0f
 };
 
-const u_char *mc_iconName[] = {
+const char *mc_iconName[] = {
     "zero.ico", "zero.ico", "zero.ico"
 };
 

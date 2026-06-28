@@ -2632,7 +2632,7 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
         LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x1a40);
     }
 
-    sceVu0RotTransPersN(ivec, SgWSMtx, pos, num * 2, 1);
+    sceVu0RotTransPersN(ivec, SgWSMtx, (sceVu0FVECTOR *)pos, num * 2, 1);
 
     for (i = 0; i < num * 2; i++)
     {

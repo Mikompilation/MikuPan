@@ -17,6 +17,17 @@ void calc_skinned_data(sceVu0FVECTOR *dp, float *_m, float *_n);
 void calc_skinned_position(sceVu0FVECTOR dp, sceVu0FVECTOR *v);
 void calc_skinned_normal(sceVu0FVECTOR dp, sceVu0FVECTOR *v);
 void Vu0CopyVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1);
+#ifdef __cplusplus
+inline void Vu0CopyVector(sceVu0FVECTOR v0, void *v1)
+{
+    Vu0CopyVector(v0, (float *)v1);
+}
+
+inline void Vu0CopyVector(sceVu0FVECTOR v0, const void *v1)
+{
+    Vu0CopyVector(v0, (float *)v1);
+}
+#endif
 void Vu0ZeroVector(sceVu0FVECTOR v);
 void Vu0AddVector(sceVu0FVECTOR v, sceVu0FVECTOR v0, sceVu0FVECTOR v1);
 void Vu0SubVector(sceVu0FVECTOR v, sceVu0FVECTOR v0, sceVu0FVECTOR v1);

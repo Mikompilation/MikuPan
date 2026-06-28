@@ -52,6 +52,8 @@
 #include "os/key_cnf.h"
 #include "plyr/time_ctl.h"
 
+int ItemGetMain();
+
 int start_msn = 0;
 int msn0_wait_timer = 0;
 

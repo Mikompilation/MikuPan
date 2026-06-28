@@ -49,8 +49,8 @@ void NewgameMenuAlbumInit()
 {
     int i;
 
-    pfile_wrk = (PFILE_WRK){0};
-    albm_wrk = (ALBM_WRK){0};
+    pfile_wrk = {};
+    albm_wrk = {};
 
     for (i = 0; i < 24; i++)
     {
@@ -62,8 +62,8 @@ void LoadgameMenuAlbumInit()
 {
     int i;
 
-    pfile_wrk = (PFILE_WRK){0};
-    albm_wrk = (ALBM_WRK){0};
+    pfile_wrk = {};
+    albm_wrk = {};
 
     for (i = 0; i < 24; i++)
     {

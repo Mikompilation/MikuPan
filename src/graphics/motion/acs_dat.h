@@ -86,7 +86,7 @@ typedef struct {
 } CMOVE_CTRL;
 
 typedef struct {
-	u_char *name;
+	const char *name;
 	float mass;
 	float Ks;
 	float dec;

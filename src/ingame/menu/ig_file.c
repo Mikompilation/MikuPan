@@ -81,14 +81,14 @@ static short int menu_dsp_file[50];
 
 void NewgameMenuFileInit()
 {
-    menu_file = (MENU_FILE){0};
+    menu_file = {};
 
     memset(&phot_file, 0, sizeof(phot_file));
 }
 
 void LoadgameMenuFileInit()
 {
-    menu_file = (MENU_FILE){0};
+    menu_file = {};
 
     memset(&phot_file, 0, sizeof(phot_file));
 }
@@ -2671,8 +2671,8 @@ void RelDspBackGrd()
        .v = 1,
        .w = 164,
        .h = 24,
-       .y = 0x62,
        .x = 30,
+       .y = 0x62,
        .pri = 0x1e000,
        .alpha = 0x80,
     };
@@ -2682,8 +2682,8 @@ void RelDspBackGrd()
        .v = 0x1b,
        .w = 164,
        .h = 24,
-       .y = 338,
        .x = 26,
+       .y = 338,
        .pri = 0x1e000,
        .alpha = 0x80,
     };
@@ -2693,8 +2693,8 @@ void RelDspBackGrd()
        .v = 53,
        .w = 164,
        .h = 24,
-       .y = 379,
        .x = 453,
+       .y = 379,
        .pri = 0x1e000,
        .alpha = 0x80,
     };
@@ -2704,8 +2704,8 @@ void RelDspBackGrd()
        .v = 79,
        .w = 164,
        .h = 24,
-       .y = 668,
        .x = 30,
+       .y = 668,
        .pri = 0x1e000,
        .alpha = 0x80,
     };

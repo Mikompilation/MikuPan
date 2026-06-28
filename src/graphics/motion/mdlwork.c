@@ -53,7 +53,7 @@ u_int* MpkMapUnit(u_int *mpk_p)
 {
     if (mpk_p == (void*)NULL)
     {
-        return (void*)NULL;
+        return NULL;
     }
 
     mpk_p += 4;
@@ -94,7 +94,7 @@ void DrawGirlSubObj(u_int *mpk_p, u_char alpha)
 
     for (i = 1; i < obj_num; i++)
     {
-        hs = GetFileInPak(mpk_p,i);
+        hs = (HeaderSection *)GetFileInPak(mpk_p, i);
 
         switch (i)
         {
@@ -132,7 +132,7 @@ void DrawEneSubObj(u_int *mpk_p, u_char alpha1, u_char alpha2)
     {
         alpha = i == 1 ? alpha2 : alpha1;
 
-        hs = GetFileInPak(mpk_p, i);
+        hs = (HeaderSection *)GetFileInPak(mpk_p, i);
         ManmdlSetAlpha(hs, alpha);
         ManTexflush();
         SortUnitRefCoordKind(hs, cp, -1);
@@ -538,7 +538,7 @@ void SetManmdlTm2(u_int *pak_addr, int offset, char mode)
 
     for (i = 0; i < tm2_num; i++)
     {
-        tm2_addr = GetFileInPak(pak_addr, i);
+        tm2_addr = (u_int *)GetFileInPak(pak_addr, i);
 
         if (mode == 0)
         {
@@ -594,7 +594,7 @@ void SgdAddTexOffset(void *sgd_top, int offset)
     //u_int *pk;
     HeaderSection* hs;
 
-    hs = sgd_top;
+    hs = (HeaderSection *)sgd_top;
 
     //pk = (u_int *)&hs->primitives;
 

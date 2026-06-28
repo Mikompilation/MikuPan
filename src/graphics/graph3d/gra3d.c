@@ -1484,7 +1484,7 @@ void AppendSearchModel(void *sgd_top, int room_no)
     {
         if (search_num < 15)
         {
-            ssearch_models[search_num] = sgd_top;
+            ssearch_models[search_num] = (u_int *)sgd_top;
             search_num++;
         }
     }
@@ -1492,7 +1492,7 @@ void AppendSearchModel(void *sgd_top, int room_no)
     {
         if (search_num2 < 15)
         {
-            ssearch_models2[search_num] = sgd_top;
+            ssearch_models2[search_num] = (u_int *)sgd_top;
             search_num2++;
         }
     }

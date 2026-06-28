@@ -19,7 +19,7 @@ static DOOR_CONTE dorcon;
 
 void DoorOpenConteInit()
 {
-    dorcon = (DOOR_CONTE){0};
+    dorcon = {};
 
     dorcon.mtn_no = TargetDoorKindChk();
 

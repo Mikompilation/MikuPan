@@ -59,7 +59,7 @@ PGOST_WRK pg_wrk = {0};
 
 void PuzzleGhostInit()
 {
-    pg_wrk = (PGOST_WRK){0};
+    pg_wrk = {};
 
     pg_wrk.pgst_no = 0xff;
     pg_wrk.req_no = 0xff;

@@ -363,10 +363,10 @@ void EneRule(ENE_WRK *ew)
 {
     u_char act_no;
     u_char view_chk;
-    char *str1 = "JIBAKU ENE ";
-    char *str2 = "FUYU ENE   ";
-    char *str3 = "JIDOU ENE  ";
-    char *str_clr = "           ";
+    char *str1 = (char *)"JIBAKU ENE ";
+    char *str2 = (char *)"FUYU ENE   ";
+    char *str3 = (char *)"JIDOU ENE  ";
+    char *str_clr = (char *)"           ";
 
     if (dbg_wrk.param_enetype != 0)
     {
@@ -514,7 +514,7 @@ void InitEneWrk(u_char wrk_no)
 
     ew = &ene_wrk[wrk_no];
 
-    *ew = (ENE_WRK){0};
+    *ew = {};
 
     InitMoveBox(&ew->move_box);
 

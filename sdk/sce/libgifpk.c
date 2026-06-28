@@ -2,6 +2,7 @@
 
 u_long128* sceGifPkTerminate(sceGifPacket* pPacket)
 {
+    return NULL;
 }
 
 void sceGifPkCloseGifTag(sceGifPacket* pPacket)
@@ -34,6 +35,7 @@ void sceGifPkCnt(sceGifPacket* pPacket, u_int opt1, u_int opt2, u_int flag)
 
 u_int* sceGifPkReserve(sceGifPacket* pPacket, u_int count)
 {
+    return NULL;
 }
 
 void sceGifPkRef(sceGifPacket* pPacket, u_long128* pRef, u_int size, u_int opt1, u_int opt2, u_int flag)

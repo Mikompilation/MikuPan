@@ -312,7 +312,7 @@ void SortRegisterPEObj(PARTICLE_EFF_OBJ *obj)
     temppe = &dummy_pe_obj;
     flg = 1;
 
-    while (nextpe = temppe->nextpe, temppe->nextpe != 0)
+    while (nextpe = (PARTICLE_EFF_OBJ *)temppe->nextpe, temppe->nextpe != 0)
     {
         if (obj->scrvec[2] < nextpe->scrvec[2])
         {
@@ -323,7 +323,7 @@ void SortRegisterPEObj(PARTICLE_EFF_OBJ *obj)
             break;
         }
 
-        temppe = temppe->nextpe;
+        temppe = (PARTICLE_EFF_OBJ *)temppe->nextpe;
     }
 
     if (flg)
@@ -558,7 +558,7 @@ void EyeLightCtrl() {
     uint64_t start_pktaddr;
     uint64_t end_pktaddr;
     sceVu0IVECTOR scr[2];
-    sceVu0IVECTOR col = {0.0f, 0.0f, 0.0f, 0.0f};
+    sceVu0IVECTOR col = {0, 0, 0, 0};
     sceGsTex0 tex;
     Q_WORDDATA *qd;
 

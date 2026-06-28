@@ -4,11 +4,9 @@
 #include "os/pad.h"
 #include "typedefs.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
-
-// newlib/libm/math/wf_fmod.c
-float fmodf(float x, float y);
 
 #include "sce/sifdev.h"
 #include "sce/libvu0.h"
@@ -141,7 +139,7 @@ int SceneTestInit()
         InitEffects();
         InitPerformanceCounter();
 
-        scn_test_wrk = (SCN_TEST_WRK){0};
+        scn_test_wrk = {};
 
         item_addr_tbl[1] = pgirlacs[1];
 
@@ -193,7 +191,7 @@ void SceneTestSelect()
 
         if (SceneDecisionMovie(scene_no) == 0)
         {
-            scn_test_wrk = (SCN_TEST_WRK){0};
+            scn_test_wrk = {};
 
             SceneTestSetDefEffect();
 
@@ -476,8 +474,8 @@ int ScnTestMdlLoadWait()
         {
             addr = (int *)pmanmodel[sam->mdl_no];
 
-            pmanmpk[sam->mdl_no] = GetFileInPak(addr, 0);
-            pmanpk2[sam->mdl_no] = GetFileInPak(addr, 1);
+            pmanmpk[sam->mdl_no] = (u_int *)GetFileInPak(addr, 0);
+            pmanpk2[sam->mdl_no] = (u_int *)GetFileInPak(addr, 1);
 
             MpkMapUnit((u_int *)pmanmpk[sam->mdl_no]);
         }
@@ -1743,9 +1741,9 @@ void SceneTestSetDefEffect()
 
     mono_flg = 0;
 
-    scn_eff_ctrl[0].eff_data = (FOD_EFF_DATA){0};
-    scn_eff_ctrl[1].eff_data = (FOD_EFF_DATA){0};
-    scn_eff_ctrl[2].eff_data = (FOD_EFF_DATA){0};
+    scn_eff_ctrl[0].eff_data = {};
+    scn_eff_ctrl[1].eff_data = {};
+    scn_eff_ctrl[2].eff_data = {};
 
 
     scn_eff_ctrl[3].eff_data.dither.type = 0x1;

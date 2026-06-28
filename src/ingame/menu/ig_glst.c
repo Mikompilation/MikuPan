@@ -43,7 +43,7 @@ void NewgameMenuGlstInit()
 {
     u_int i;
 
-    menu_glist = (MENU_GLST){0};
+    menu_glist = {};
 
     for (i = 0; i < 108; i++)
     {

@@ -28,7 +28,7 @@ if(ANDROID)
 endif()
 
 set(BUILD_SHARED_LIBS OFF)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -303,6 +303,25 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui_theme.c
         src/mikupan/ui/mikupan_ui_theme.h
 )
+
+set(MIKUPAN_CXX_SOURCES)
+foreach(mikupan_source IN LISTS MIKUPAN_SOURCES)
+    if(mikupan_source MATCHES "^(src|sdk)/.*\\.c$")
+        list(APPEND MIKUPAN_CXX_SOURCES "${mikupan_source}")
+    endif()
+endforeach()
+set_source_files_properties(${MIKUPAN_CXX_SOURCES} PROPERTIES LANGUAGE CXX)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set_source_files_properties(${MIKUPAN_CXX_SOURCES} PROPERTIES
+            COMPILE_OPTIONS "-fpermissive;-Wno-narrowing;-Wno-write-strings")
+elseif(MSVC)
+    # MSVC mirror of -fpermissive/-Wno-write-strings for the legacy C-as-C++ files:
+    # /permissive relaxes C-isms (e.g. braced narrowing); /Zc:strictStrings- re-allows
+    # string-literal -> char* (the hundreds of "..." fields in src/data/*.h struct tables).
+    # NOTE: there is no MSVC flag for void* -> T*; those still need explicit casts in code.
+    set_source_files_properties(${MIKUPAN_CXX_SOURCES} PROPERTIES
+            COMPILE_OPTIONS "/permissive;/Zc:strictStrings-")
+endif()
 
 # --- Build version info (git tag + commit) -------------------------------------
 set(MIKUPAN_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated)

@@ -289,8 +289,8 @@ void SetVUMeshDataP(u_int *prim)
 
             AppendDmaBuffer(1);
 
-            MikuPan_RenderMeshType0x32((void *) vuvnprim,
-                                       (void *) prim);
+            MikuPan_RenderMeshType0x32((SGDPROCUNITHEADER *)vuvnprim,
+                                       (SGDPROCUNITHEADER *)prim);
             break;
         case 0x12:
         case 0x32:
@@ -302,8 +302,8 @@ void SetVUMeshDataP(u_int *prim)
 
             datap = (u_int *) getObjWrk();
 
-            MikuPan_RenderMeshType0x32((void *) vuvnprim,
-                                       (void *) prim);
+            MikuPan_RenderMeshType0x32((SGDPROCUNITHEADER *)vuvnprim,
+                                       (SGDPROCUNITHEADER *)prim);
 
             if (edge_check != 0)
             {

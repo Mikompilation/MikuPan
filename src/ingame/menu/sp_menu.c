@@ -91,7 +91,7 @@ static BOOK book[6];
 
 void SavePointMenuInit()
 {
-    spmenu_wrk = (SAVE_POINT_MENU_WRK) {0};
+    spmenu_wrk = {};
 }
 
 void SavePointMenuOpen()
@@ -104,10 +104,10 @@ void SavePointMenuOpen()
 
 void SavePointMenuOpenInit(u_char msn)
 {
-    sav_con = (SAVE_CONTE) {0};
-    mrcl_lnz = (MIRACLE_LENZ) {0};
-    sv_dsp_sw = (SV_DSP_SW) {0};
-    dsp_svp = (DSP_SVP) {0};
+    sav_con = {};
+    mrcl_lnz = {};
+    sv_dsp_sw = {};
+    dsp_svp = {};
 
     spmenu_wrk.csr[3] = 0;
     spmenu_wrk.csr[4] = 1;
@@ -143,10 +143,10 @@ void SavePointMenuOpenInit(u_char msn)
 
 void BtlModSaveInit()
 {
-    sav_con = (SAVE_CONTE) {0};
-    mrcl_lnz = (MIRACLE_LENZ) {0};
-    sv_dsp_sw = (SV_DSP_SW) {0};
-    dsp_svp = (DSP_SVP) {0};
+    sav_con = {};
+    mrcl_lnz = {};
+    sv_dsp_sw = {};
+    dsp_svp = {};
 
     spmenu_wrk.csr[3] = 0;
     spmenu_wrk.csr[4] = 1;

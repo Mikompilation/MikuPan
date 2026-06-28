@@ -292,7 +292,7 @@ static void _CalcWeightedVertexBufferSM(sceVu0FVECTOR dp, sceVu0FVECTOR *v)
 }
 
 
-static void *GetShadowVuvnHostPointer(u_int ps2_addr, int index, int vtype)
+static sceVu0FVECTOR *GetShadowVuvnHostPointer(u_int ps2_addr, int index, int vtype)
 {
     int64_t host_addr = MikuPan_GetHostAddress((int) ps2_addr);
 
@@ -309,7 +309,7 @@ static void *GetShadowVuvnHostPointer(u_int ps2_addr, int index, int vtype)
         return NULL;
     }
 
-    return (void *) host_addr;
+    return (sceVu0FVECTOR *)host_addr;
 }
 
 static void _CalcVertexSM(sceVu0FVECTOR dp, sceVu0FVECTOR v)

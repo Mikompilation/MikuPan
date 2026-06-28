@@ -119,7 +119,7 @@ SGST_WRK sgst_wrk = {0};
 
 void SettleGhostInit()
 {
-    sgst_wrk = (SGST_WRK){0};
+    sgst_wrk = {};
 }
 
 int SettleGhostAppearReq(int sg_no)

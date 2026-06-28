@@ -23,7 +23,7 @@ void FindMapInit()
 {
     int i;
 
-    find_wrk = (FIND_WRK){0};
+    find_wrk = {};
 
     find_wrk.mode = 0;
 

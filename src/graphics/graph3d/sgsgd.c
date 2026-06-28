@@ -62,8 +62,8 @@ void MappingVUVNData(u_int *intpointer, HeaderSection *hs)
     case SVA_UNIQUE:
         //vp = ph->pUniqVertex;
         //np = ph->pUniqNormal;
-        vp = MikuPan_GetHostPointer(ph->pUniqVertex);
-        np = MikuPan_GetHostPointer(ph->pUniqNormal);
+        vp = (sceVu0FVECTOR *)MikuPan_GetHostPointer(ph->pUniqVertex);
+        np = (sceVu0FVECTOR *)MikuPan_GetHostPointer(ph->pUniqNormal);
 
         for (i = 0; i < vh->vnum; i++)
         {
@@ -99,8 +99,8 @@ void MappingVUVNData(u_int *intpointer, HeaderSection *hs)
         {
             //vp = ph->pWeightedVertex;
             //np = ph->pWeightedNormal;
-            vp = MikuPan_GetHostPointer(ph->pWeightedVertex);
-            np = MikuPan_GetHostPointer(ph->pWeightedNormal);
+            vp = (sceVu0FVECTOR *)MikuPan_GetHostPointer(ph->pWeightedVertex);
+            np = (sceVu0FVECTOR *)MikuPan_GetHostPointer(ph->pWeightedNormal);
 
             for (i = 0; i < vh->vnum; i++)
             {
@@ -303,7 +303,7 @@ void SgMapUnit(void *sgd_top)
     //hs->phead = (u_int *)((u_int)hs->phead + (int)sgd_top);
     hs->phead = MikuPan_GetPs2OffsetFromHostPointer(sgd_top) + hs->phead;
 
-    pk = (int *)&hs->primitives;
+    pk = (u_int *)&hs->primitives;
 
     for (i = 0; i < hs->blocks; i++)
     {

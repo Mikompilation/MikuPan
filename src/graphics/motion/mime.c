@@ -59,7 +59,7 @@ u_int* mimInitMimeCtrl(MIME_CTRL *m_ctrl, MIME_DAT *mdat, u_int *mim_p, u_int *m
         m_ctrl[i].stat = 0;
 
         parts_no = mimGetPartsNo(mim_p);
-        parts = GetFileInPak(mdl_p, parts_no);
+        parts = (u_int *)GetFileInPak(mdl_p, parts_no);
 
         parts_buf[i] = parts_no;
         parts_p[i] = tmp_p;
@@ -482,7 +482,7 @@ u_int* mimSetMimeDat(MIME_DAT *mdat, u_int *mim_p, u_int *tmp_buf, u_int *mdl_p)
 
     mdat->dat = mim_p;
     //mdat->pkt = ph->pUniqVertex;
-    mdat->pkt = MikuPan_GetHostPointer(ph->pUniqVertex);
+    mdat->pkt = (sceVu0FVECTOR *)MikuPan_GetHostPointer(ph->pUniqVertex);
     mdat->vtx = (sceVu0FVECTOR *)tmp_buf;
 
     // count how many `sceVu0FVECTOR` is `pUniqVertex` made of by subtracting it's start address

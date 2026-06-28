@@ -2800,7 +2800,7 @@ void SetOverRap(/* s0 16 */ EFFECT_CONT *ec)
     {
         LocalCopyBtoL(1,0x1a40);
         
-        sd = (SPRITE_DATA){
+        sd = SPRITE_DATA{
             .g_GsTex0 = {
                 .TBP0 = 0x1A40,
                 .TBW = 10,
@@ -2838,7 +2838,7 @@ void SetOverRap(/* s0 16 */ EFFECT_CONT *ec)
             .mask = 0,
         };
 
-        de = (DRAW_ENV){
+        de = DRAW_ENV{
             .tex1 = SCE_GS_SET_TEX1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0),
             .alpha = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_FIX, SCE_GS_ALPHA_CD, (u_char)alp),
             .zbuf = SCE_GS_SET_ZBUF_1(0x8c, SCE_GS_PSMCT24, 1),
@@ -3611,7 +3611,7 @@ void SetMAGATOKI(/* s0 16 */ EFFECT_CONT *ec)
     sec1_1 = ec->in;
     sec1_2 = ec->out;
 
-    flag = ec->pnt[0];
+    flag = (u_char *)ec->pnt[0];
 
     switch(ec->flow)
     {

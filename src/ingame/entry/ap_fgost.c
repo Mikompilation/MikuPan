@@ -289,7 +289,7 @@ int FloatGhostEscapeEnd()
 
 void FloatGhostLoadReq()
 {
-    fg_load_wrk = (FG_LOAD_WRK){0};
+    fg_load_wrk = {};
     fg_load_wrk.mode = FG_NO_REQ;
 }
 

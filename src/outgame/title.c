@@ -159,7 +159,7 @@ void TitleCtrl()
     switch(title_wrk.mode)
     {
     case TITLE_INIT:
-        ttl_dsp = (TTL_DSP_WRK){0};
+        ttl_dsp = {};
         exit_prompt_open = 0;
 
 #ifdef BUILD_EU_VERSION
@@ -768,12 +768,12 @@ static int TitleExitPromptButton(const char *label, int selected)
 
     if (selected)
     {
-        igPushStyleColor_Vec4(ImGuiCol_Button, (ImVec4){0.26f, 0.59f, 0.98f, 1.0f});
-        igPushStyleColor_Vec4(ImGuiCol_ButtonHovered, (ImVec4){0.31f, 0.64f, 1.00f, 1.0f});
-        igPushStyleColor_Vec4(ImGuiCol_ButtonActive, (ImVec4){0.20f, 0.50f, 0.90f, 1.0f});
+        igPushStyleColor_Vec4(ImGuiCol_Button, ImVec4{0.26f, 0.59f, 0.98f, 1.0f});
+        igPushStyleColor_Vec4(ImGuiCol_ButtonHovered, ImVec4{0.31f, 0.64f, 1.00f, 1.0f});
+        igPushStyleColor_Vec4(ImGuiCol_ButtonActive, ImVec4{0.20f, 0.50f, 0.90f, 1.0f});
     }
 
-    clicked = igButton(label, (ImVec2){110.0f, 0.0f}) ? 1 : 0;
+    clicked = igButton(label, ImVec2{110.0f, 0.0f}) ? 1 : 0;
 
     if (selected)
     {
@@ -798,13 +798,13 @@ static void TitleExitPrompt()
     int no_clicked;
 
     igSetNextWindowPos(
-        (ImVec2){io->DisplaySize.x * 0.5f, io->DisplaySize.y * 0.5f},
-        ImGuiCond_Always, (ImVec2){0.5f, 0.5f});
+        ImVec2{io->DisplaySize.x * 0.5f, io->DisplaySize.y * 0.5f},
+        ImGuiCond_Always, ImVec2{0.5f, 0.5f});
 
     igBegin("##title_exit_prompt", NULL, flags);
 
     igText("Exit the game?");
-    igDummy((ImVec2){0.0f, 6.0f});
+    igDummy(ImVec2{0.0f, 6.0f});
 
     yes_clicked = TitleExitPromptButton("Yes", exit_prompt_sel == 0);
     igSameLine(0.0f, 16.0f);
@@ -922,12 +922,12 @@ void TitleWaitMode()
 
 void TitleStartSlct()
 {    
-    char *str_o = "o";
-	/* s0 16 */ char *str1 = "ZERO HOUR";
-	/* s1 17 */ char *str2 = "NEW GAME";
-	/* s2 18 */ char *str3 = "LOAD GAME";
-	/* s3 19 */ char *str4 = "ALBUM";
-	/* s4 20 */ char *csr0 = "MISSION";
+    char *str_o = (char *)"o";
+	/* s0 16 */ char *str1 = (char *)"ZERO HOUR";
+	/* s1 17 */ char *str2 = (char *)"NEW GAME";
+	/* s2 18 */ char *str3 = (char *)"LOAD GAME";
+	/* s3 19 */ char *str4 = (char *)"ALBUM";
+	/* s4 20 */ char *csr0 = (char *)"MISSION";
 
     SetASCIIString(70.0f, 110.0f, str1);
 
@@ -1511,17 +1511,17 @@ void TitleSelectMode()
 {
     /* s1 17 */ int i;
     /* 0x0(sp) */ char *mode_str[9] = {
-        "STORY MODE",
-        "BATTLE MODE",
-        "OPTION",
-        "MAP DATA EDIT",
-        "SOUND TEST",
-        "SCENE TEST",
-        "MOTION TEST",
-        "ROOM SIZE CHECK",
-        "LAYOUT TEST",
+        (char *)"STORY MODE",
+        (char *)"BATTLE MODE",
+        (char *)"OPTION",
+        (char *)"MAP DATA EDIT",
+        (char *)"SOUND TEST",
+        (char *)"SCENE TEST",
+        (char *)"MOTION TEST",
+        (char *)"ROOM SIZE CHECK",
+        (char *)"LAYOUT TEST",
     };
-    /* s5 21 */ char *csr0 = "o";
+    /* s5 21 */ char *csr0 = (char *)"o";
 
     for (i = 0; i < 9; i++)
     {
@@ -2008,7 +2008,7 @@ void DispOutDither()
            .g_GsMiptbp2 = 0,
            .pos_x = -320.5f,
            .pos_y = -224.5f,
-           .pos_z = 0xFFFFF000,
+           .pos_z = -4096,
            .size_w = 640.0f,
            .size_h = 448.0f,
            .scale_w = 1.0f,

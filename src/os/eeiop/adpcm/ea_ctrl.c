@@ -21,6 +21,7 @@
 #include "os/eeiop/adpcm/ea_btlmode.h"
 #include "os/eeiop/eeiop.h"
 #include "iop/adpcm/iopadpcm.h"
+#include <string.h>
 
 ADPCM_MAP adpcm_map = {0};
 static u_char fout_flg;

@@ -3527,7 +3527,7 @@ static void EffectSubCopyGsPsmct32(int src_addr, int dst_addr)
 static void EffectSubDrawGsPsmct32ToMainFramebuffer(int src_addr)
 {
     sceGsTex0 tex = {
-        .TBP0 = src_addr,
+        .TBP0 = (u_long)src_addr,
         .TBW = SCR_WIDTH / 64,
         .PSM = SCE_GS_PSMCT32,
         .TW = 10,
@@ -3798,7 +3798,7 @@ void LocalCopyLtoBD(int addr, void *outbuf)
     if (!EffectSubIsMainFramebufferAddress(addr) ||
         !EffectSubReadMainFramebuffer((u_long128 *)outbuf))
     {
-        sceGsExecStoreImage(&gs_simage1, outbuf);
+        sceGsExecStoreImage(&gs_simage1, (u_long128 *)outbuf);
         sceGsExecStoreImage(&gs_simage2, (u_long128 *)((u_char*)outbuf + 0x7d000));
     }
     sceGsSyncPath(0, 0);

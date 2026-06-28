@@ -238,7 +238,7 @@ void MikuPan_UiInventoryCheatsMenu(void)
         const int count = (int) (sizeof(item_sort) / sizeof(item_sort[0]));
 
         igSliderInt("Value", &all_menu_item_value, 0, 99, "%d", 0);
-        if (igButton("Apply to Listed Items", (ImVec2) {0.0f, 0.0f}))
+        if (igButton("Apply to Listed Items", ImVec2{0.0f, 0.0f}))
         {
             MikuPan_CheatSetAllMenuItems(all_menu_item_value);
         }

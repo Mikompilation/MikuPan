@@ -23,7 +23,7 @@
 
 #include <stdlib.h>
 
-WANDER_SOUL_WRK wander_soul_wrk[1] = {0};
+WANDER_SOUL_WRK wander_soul_wrk[1] = {};
 
 static int ene_face_load_id;
 static void *ws_noise_buf;
@@ -122,7 +122,7 @@ void SetNewSpeed(WANDER_SOUL_WRK *wswrk)
 
 void NewMissionInitWanderSoul()
 {
-    *wander_soul_wrk = (WANDER_SOUL_WRK){0};
+    *wander_soul_wrk = {};
 }
 
 void ReviveWanderSoul()
@@ -172,7 +172,7 @@ void BSplinePos(sceVu0FVECTOR pos, sceVu0FMATRIX mat_point_array, float t1)
 
 void ClearWanderSoulOne(WANDER_SOUL_WRK *wswrk)
 {
-    *wswrk = (WANDER_SOUL_WRK){0};
+    *wswrk = {};
 }
 
 void CallWanderSoul(u_char data_id, sceVu0FVECTOR pos)

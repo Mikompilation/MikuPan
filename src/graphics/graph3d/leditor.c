@@ -121,7 +121,7 @@ static void LoadLightData(DEBUG_MENU **dbgmenu_tbl, int disp_room)
 
         if (psubmenu->name == NULL)
         {
-            psubmenu->name = malloc(sizeof("Infinite\0") + 20);
+            psubmenu->name = (char *)malloc(sizeof("Infinite\0") + 20);
             strcpy(psubmenu->name, "Infinite\0");
         }
 
@@ -154,7 +154,7 @@ static void LoadLightData(DEBUG_MENU **dbgmenu_tbl, int disp_room)
 
             if (psubmenu->name == NULL)
             {
-                psubmenu->name = malloc(sizeof("Point123456\0") + 20);
+                psubmenu->name = (char *)malloc(sizeof("Point123456\0") + 20);
             }
             
             sprintf(psubmenu->name, "Point%d", i);
@@ -176,7 +176,7 @@ static void LoadLightData(DEBUG_MENU **dbgmenu_tbl, int disp_room)
 
             if (psubmenu->name == NULL)
             {
-                psubmenu->name = malloc(sizeof("Point123456\0") + 20);
+                psubmenu->name = (char *)malloc(sizeof("Point123456\0") + 20);
             }
             
             sprintf(psubmenu->name, "Spot%d", i);
@@ -383,7 +383,7 @@ void ApplyLight(int room_no)
 
     if (mdl_addr != NULL)
     {
-        HeaderSection *h = mdl_addr;
+        HeaderSection *h = (HeaderSection *)mdl_addr;
 
         cp = GetCoordP(h);
         //cp = h->coordp;
@@ -400,7 +400,7 @@ void ApplyLight(int room_no)
     
     if (mdl_addr != NULL)
     {
-        HeaderSection *h = mdl_addr;
+        HeaderSection *h = (HeaderSection *)mdl_addr;
 
         cp = GetCoordP(h);
         //cp = h->coordp;

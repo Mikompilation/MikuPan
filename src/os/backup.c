@@ -20,7 +20,7 @@ void SaveDataSet(u_char *addr0)
     
     for (i = 0; i < mc_gamedata_str_num; i++)
     {
-        addr1 = mc_gamedata_str[i].addr;
+        addr1 = (u_char *)mc_gamedata_str[i].addr;
         for (j = 0; j < mc_gamedata_str[i].size; j++)
         {
             *addr0++ = *addr1++;
@@ -65,7 +65,7 @@ void LoadDataDevelop(u_char *addr0)
 
     for (i = 0; i < mc_gamedata_str_num; i++)
     {
-        addr1 = mc_gamedata_str[i].addr;
+        addr1 = (u_char *)mc_gamedata_str[i].addr;
         for (j = 0; j < mc_gamedata_str[i].size; j++)
         {
             *addr1++ = *addr0++;

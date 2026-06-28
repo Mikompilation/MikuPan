@@ -406,7 +406,7 @@ static void InitDoorOpenCtrl()
 
 void InitAreaReadWrk()
 {
-    area_read_wrk = (AREA_READ_WRK){0};
+    area_read_wrk = {};
 }
 
 void DoorDataInit()
@@ -1072,6 +1072,7 @@ static void DoorCtrlOpen()
     switch(door_open_ctrl.mode)
     {
     case DOCM_FREE:
+    {
         door_open_ctrl.spos[0] = plyr_wrk.move_box.pos[0];
         door_open_ctrl.spos[1] = plyr_wrk.move_box.pos[1];
         door_open_ctrl.spos[2] = plyr_wrk.move_box.pos[2];
@@ -1137,6 +1138,7 @@ static void DoorCtrlOpen()
         door_open_ctrl.mode = DOCM_LOAD_WAIT;
 
         OneRoomLoadReq();
+    }
     case DOCM_LOAD_WAIT:
         door_open_ctrl.move_flame = 40;
         door_open_ctrl.wait_flame = 5;
@@ -2401,7 +2403,7 @@ static u_char DoorOpenCheck(u_char chk_stat)
 
         return 0;
     break;
-    case 0xffffffff:
+    case -1:
         // negative case
     break;
     }

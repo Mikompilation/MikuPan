@@ -52,53 +52,53 @@ typedef struct {
 } EFFECT_DEBUG_ENTRY;
 
 static EFFECT_DEBUG_ENTRY effect_debug_entries[EFFECT_DEBUG_COUNT] = {
-    [EF_NULL] = {EF_NULL, "EF_NULL", "-", "No effect body.", 0, 0},
-    [EF_Z_DEP] = {EF_Z_DEP, "EF_Z_DEP", "SetForcusDepth", "", 1, 0},
-    [EF_DITHER] = {EF_DITHER, "EF_DITHER", "SetDither3", "", 1, 0},
-    [EF_BLUR_N] = {EF_BLUR_N, "EF_BLUR_N", "SetBlur", "", 1, 0},
-    [EF_BLUR_B] = {EF_BLUR_B, "EF_BLUR_B", "SetBlur", "", 1, 0},
-    [EF_BLUR_W] = {EF_BLUR_W, "EF_BLUR_W", "SetBlur", "", 1, 0},
-    [EF_DEFORM] = {EF_DEFORM, "EF_DEFORM", "SetDeform", "", 1, 0},
-    [EF_FOCUS] = {EF_FOCUS, "EF_FOCUS", "SetFocus1", "", 1, 0},
-    [EF_OVERLAP] = {EF_OVERLAP, "EF_OVERLAP", "SetOverRap", "", 1, 0},
-    [EF_FADEFRAME] = {EF_FADEFRAME, "EF_FADEFRAME", "SetFadeFrame", "", 1, 0},
-    [EF_RENZFLARE] = {EF_RENZFLARE, "EF_RENZFLARE", "SetRenzFlare", "", 1, 1},
-    [EF_BLACKFILTER] = {EF_BLACKFILTER, "EF_BLACKFILTER", "SetBlackFilter", "", 1, 0},
-    [EF_NEGA] = {EF_NEGA, "EF_NEGA", "SetNega", "", 1, 0},
-    [EF_NCONTRAST] = {EF_NCONTRAST, "EF_NCONTRAST", "SetContrast2", "", 1, 0},
-    [EF_NCONTRAST2] = {EF_NCONTRAST2, "EF_NCONTRAST2", "SetContrast2", "", 1, 0},
-    [EF_NCONTRAST3] = {EF_NCONTRAST3, "EF_NCONTRAST3", "SetContrast3", "", 1, 0},
-    [EF_MAGATOKI] = {EF_MAGATOKI, "EF_MAGATOKI", "SetMAGATOKI", "", 1, 1},
-    [EF_ENEDMG1] = {EF_ENEDMG1, "EF_ENEDMG1", "SetEneDmgEffect1_Sub", "Needs live enemy damage state.", 0, 0},
-    [EF_ENEDMG2] = {EF_ENEDMG2, "EF_ENEDMG2", "SetEneDmgEffect2_Sub", "Needs live enemy damage state.", 0, 0},
-    [EF_SPIRIT] = {EF_SPIRIT, "EF_SPIRIT", "SetSpirit", "Spawns nested flame buffers; use scene data path.", 0, 0},
-    [EF_HALO] = {EF_HALO, "EF_HALO", "SetHalo", "", 1, 1},
-    [EF_RIPPLE] = {EF_RIPPLE, "EF_RIPPLE", "SetRipple", "", 1, 0},
-    [EF_RIPPLE2] = {EF_RIPPLE2, "EF_RIPPLE2", "SetRipple", "", 1, 0},
-    [EF_FIRE] = {EF_FIRE, "EF_FIRE", "SetFire", "", 1, 1},
-    [EF_FIRE2] = {EF_FIRE2, "EF_FIRE2", "SetFire2", "", 1, 1},
-    [EF_TORCH] = {EF_TORCH, "EF_TORCH", "SetTorch", "", 1, 1},
-    [EF_SMOKE] = {EF_SMOKE, "EF_SMOKE", "SetSmoke", "", 1, 1},
-    [EF_PDEFORM] = {EF_PDEFORM, "EF_PDEFORM", "SetPartsDeform", "", 1, 1},
-    [EF_ENEFIRE] = {EF_ENEFIRE, "EF_ENEFIRE", "SetEneFire", "Needs live enemy pointers.", 0, 0},
-    [EF_DUST] = {EF_DUST, "EF_DUST", "SetDust", "", 1, 1},
-    [EF_WATERDROP] = {EF_WATERDROP, "EF_WATERDROP", "SetWaterdrop", "", 1, 1},
-    [EF_SUNSHINE] = {EF_SUNSHINE, "EF_SUNSHINE", "SetSunshine", "", 1, 1},
-    [EF_NEGACIRCLE] = {EF_NEGACIRCLE, "EF_NEGACIRCLE", "SetNegaCircle", "", 1, 0},
-    [EF_ENEFACE] = {EF_ENEFACE, "EF_ENEFACE", "SetEneFace", "", 1, 1},
-    [EF_FACESPIRIT] = {EF_FACESPIRIT, "EF_FACESPIRIT", "SetFaceSpirit", "Needs fly/facespirit runtime state.", 0, 0},
-    [EF_DITHER2] = {EF_DITHER2, "EF_DITHER2", "SetDither4", "", 1, 0},
-    [EF_Z_DEP2] = {EF_Z_DEP2, "EF_Z_DEP2", "SetForcusDepth2", "", 1, 0},
-    [EF_HAZE] = {EF_HAZE, "EF_HAZE", "SetHaze_Pond", "Only visible in haze-enabled rooms.", 1, 0},
-    [EF_PBLUR] = {EF_PBLUR, "EF_PBLUR", "pblur", "", 1, 0},
-    [EF_ENEIN] = {EF_ENEIN, "EF_ENEIN", "SetPartsDeform", "Needs enemy-specific position/state.", 0, 0},
-    [EF_ENEOUT] = {EF_ENEOUT, "EF_ENEOUT", "SetEneSeal", "Needs live enemy state.", 0, 0},
-    [EF_LUMINE] = {EF_LUMINE, "EF_LUMINE", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
-    [EF_STEALTH] = {EF_STEALTH, "EF_STEALTH", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
-    [EF_STEALTH2] = {EF_STEALTH2, "EF_STEALTH2", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
-    [EF_007] = {EF_007, "EF_007", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
-    [EF_MONO] = {EF_MONO, "EF_MONO", "ChangeMonochrome", "", 1, 0},
-    [EF_SEPIA] = {EF_SEPIA, "EF_SEPIA", "FOD_EFF_FRAME.sepia", "FOD parses this flag, but the port has no sepia renderer yet.", 0, 0},
+    {EF_NULL, "EF_NULL", "-", "No effect body.", 0, 0},
+    {EF_Z_DEP, "EF_Z_DEP", "SetForcusDepth", "", 1, 0},
+    {EF_DITHER, "EF_DITHER", "SetDither3", "", 1, 0},
+    {EF_BLUR_N, "EF_BLUR_N", "SetBlur", "", 1, 0},
+    {EF_BLUR_B, "EF_BLUR_B", "SetBlur", "", 1, 0},
+    {EF_BLUR_W, "EF_BLUR_W", "SetBlur", "", 1, 0},
+    {EF_DEFORM, "EF_DEFORM", "SetDeform", "", 1, 0},
+    {EF_FOCUS, "EF_FOCUS", "SetFocus1", "", 1, 0},
+    {EF_OVERLAP, "EF_OVERLAP", "SetOverRap", "", 1, 0},
+    {EF_FADEFRAME, "EF_FADEFRAME", "SetFadeFrame", "", 1, 0},
+    {EF_RENZFLARE, "EF_RENZFLARE", "SetRenzFlare", "", 1, 1},
+    {EF_BLACKFILTER, "EF_BLACKFILTER", "SetBlackFilter", "", 1, 0},
+    {EF_NEGA, "EF_NEGA", "SetNega", "", 1, 0},
+    {EF_NCONTRAST, "EF_NCONTRAST", "SetContrast2", "", 1, 0},
+    {EF_NCONTRAST2, "EF_NCONTRAST2", "SetContrast2", "", 1, 0},
+    {EF_NCONTRAST3, "EF_NCONTRAST3", "SetContrast3", "", 1, 0},
+    {EF_MAGATOKI, "EF_MAGATOKI", "SetMAGATOKI", "", 1, 1},
+    {EF_ENEDMG1, "EF_ENEDMG1", "SetEneDmgEffect1_Sub", "Needs live enemy damage state.", 0, 0},
+    {EF_ENEDMG2, "EF_ENEDMG2", "SetEneDmgEffect2_Sub", "Needs live enemy damage state.", 0, 0},
+    {EF_SPIRIT, "EF_SPIRIT", "SetSpirit", "Spawns nested flame buffers; use scene data path.", 0, 0},
+    {EF_HALO, "EF_HALO", "SetHalo", "", 1, 1},
+    {EF_RIPPLE, "EF_RIPPLE", "SetRipple", "", 1, 0},
+    {EF_RIPPLE2, "EF_RIPPLE2", "SetRipple", "", 1, 0},
+    {EF_FIRE, "EF_FIRE", "SetFire", "", 1, 1},
+    {EF_FIRE2, "EF_FIRE2", "SetFire2", "", 1, 1},
+    {EF_TORCH, "EF_TORCH", "SetTorch", "", 1, 1},
+    {EF_SMOKE, "EF_SMOKE", "SetSmoke", "", 1, 1},
+    {EF_PDEFORM, "EF_PDEFORM", "SetPartsDeform", "", 1, 1},
+    {EF_ENEFIRE, "EF_ENEFIRE", "SetEneFire", "Needs live enemy pointers.", 0, 0},
+    {EF_DUST, "EF_DUST", "SetDust", "", 1, 1},
+    {EF_WATERDROP, "EF_WATERDROP", "SetWaterdrop", "", 1, 1},
+    {EF_SUNSHINE, "EF_SUNSHINE", "SetSunshine", "", 1, 1},
+    {EF_NEGACIRCLE, "EF_NEGACIRCLE", "SetNegaCircle", "", 1, 0},
+    {EF_ENEFACE, "EF_ENEFACE", "SetEneFace", "", 1, 1},
+    {EF_FACESPIRIT, "EF_FACESPIRIT", "SetFaceSpirit", "Needs fly/facespirit runtime state.", 0, 0},
+    {EF_DITHER2, "EF_DITHER2", "SetDither4", "", 1, 0},
+    {EF_Z_DEP2, "EF_Z_DEP2", "SetForcusDepth2", "", 1, 0},
+    {EF_HAZE, "EF_HAZE", "SetHaze_Pond", "Only visible in haze-enabled rooms.", 1, 0},
+    {EF_PBLUR, "EF_PBLUR", "pblur", "", 1, 0},
+    {EF_ENEIN, "EF_ENEIN", "SetPartsDeform", "Needs enemy-specific position/state.", 0, 0},
+    {EF_ENEOUT, "EF_ENEOUT", "SetEneSeal", "Needs live enemy state.", 0, 0},
+    {EF_LUMINE, "EF_LUMINE", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
+    {EF_STEALTH, "EF_STEALTH", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
+    {EF_STEALTH2, "EF_STEALTH2", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
+    {EF_007, "EF_007", "-", "SetEffects has data setup, but no renderer consumes it.", 0, 0},
+    {EF_MONO, "EF_MONO", "ChangeMonochrome", "", 1, 0},
+    {EF_SEPIA, "EF_SEPIA", "FOD_EFF_FRAME.sepia", "FOD parses this flag, but the port has no sepia renderer yet.", 0, 0},
 };
 
 static int effect_debug_enabled[EFFECT_DEBUG_COUNT] = {0};
@@ -1327,7 +1327,7 @@ void EffectZSort()
         {
             if ((ecm[i].dat.uc8[1] & 0x80) != 0)
             {
-                v1 = ecm[i].pnt[0];
+                v1 = (float *)ecm[i].pnt[0];
 
                 // inlined from ../../graphics/graph3d/libsg.h
                 Vu0CopyVector(vpos, v1);
@@ -1462,7 +1462,7 @@ void EffectZSort2()
         {
             if ((ecm[i].dat.uc8[1] & 0x80) != 0)
             {
-                v1 = ecm[i].pnt[0];
+                v1 = (float *)ecm[i].pnt[0];
 
                 // inlined from ../../graphics/graph3d/libsg.h
                 Vu0CopyVector(vpos, v1);
@@ -1553,7 +1553,7 @@ void EffectZSort3()
         {
             if ((ecm[i].dat.uc8[1] & 0x80) != 0)
             {
-                v1 = ecm[i].pnt[0];
+                v1 = (float *)ecm[i].pnt[0];
 
                 // inlined from ../../graphics/graph3d/libsg.h
                 Vu0CopyVector(vpos, v1);
@@ -1877,7 +1877,7 @@ void pblur()
     {
         LocalCopyBtoL(1, 0x1a40);
 
-        sd = (SPRITE_DATA) {
+        sd = SPRITE_DATA{
             .g_GsTex0 =
                 {
                            .TBP0 = 0x1A40,
@@ -1916,7 +1916,7 @@ void pblur()
             .mask = 0
         };
 
-        de = (DRAW_ENV) {
+        de = DRAW_ENV{
             .tex1 = 0x161,
             .alpha = 0x44,
             .zbuf = 0x10100008c,

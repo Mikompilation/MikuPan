@@ -8,7 +8,7 @@
 
 void TimeCtrlInit()
 {
-    time_wrk = (TIME_WRK){0};
+    time_wrk = {};
 
     GetNowClock(&time_wrk.start);
     GetNowClock(&time_wrk.real);

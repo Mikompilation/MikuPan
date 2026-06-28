@@ -11,6 +11,7 @@ int sceDmaReset(int mode)
 
 sceDmaEnv* sceDmaGetEnv(sceDmaEnv* env)
 {
+    return env;
 }
 
 int sceDmaPutEnv(sceDmaEnv* env)

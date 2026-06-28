@@ -37,12 +37,12 @@ static FLSH_CORE flsh[2];
 
 void NewgameMenuOptionInit()
 {
-    menu_opt = (MENU_OPT){0};
+    menu_opt = {};
 }
 
 void LoadgameMenuOptionInit()
 {
-    menu_opt = (MENU_OPT){0};
+    menu_opt = {};
 }
 
 void StartOptionModeInit(u_char mode)

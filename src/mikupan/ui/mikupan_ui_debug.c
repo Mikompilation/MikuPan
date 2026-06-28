@@ -113,7 +113,7 @@ void MikuPan_UiDrawCallInspector(void)
         return;
     }
 
-    igSetNextWindowSize((ImVec2) {780.0f, 540.0f}, ImGuiCond_FirstUseEver);
+    igSetNextWindowSize(ImVec2{780.0f, 540.0f}, ImGuiCond_FirstUseEver);
     if (!igBegin("Draw Call Inspector", (bool*) &show_draw_inspector, 0))
     {
         igEnd();
@@ -130,10 +130,10 @@ void MikuPan_UiDrawCallInspector(void)
     int isolate = MikuPan_DrawCapGetIsolate();
     if (isolate >= 0)
     {
-        igTextColored((ImVec4) {1.0f, 0.7f, 0.2f, 1.0f}, "  ISOLATING #%d",
+        igTextColored(ImVec4{1.0f, 0.7f, 0.2f, 1.0f}, "  ISOLATING #%d",
                       isolate);
         igSameLine(0.0f, -1.0f);
-        if (igButton("Show All", (ImVec2) {0, 0}))
+        if (igButton("Show All", ImVec2{0, 0}))
         {
             MikuPan_DrawCapSetIsolate(-1);
         }
@@ -153,7 +153,7 @@ void MikuPan_UiDrawCallInspector(void)
     igText("%-4s %-6s %-16s %-26s %-7s %-7s %-9s %s", "#", "skip?", "primitive",
            "shader", "vao", "tex0", "ms", "");
 
-    igBeginChild_Str("##draw_list", (ImVec2) {0.0f, 0.0f}, 0, 0);
+    igBeginChild_Str("##draw_list", ImVec2{0.0f, 0.0f}, 0, 0);
 
     for (int i = 0; i < count; i++)
     {
@@ -166,8 +166,8 @@ void MikuPan_UiDrawCallInspector(void)
 
         igPushID_Int(i);
 
-        ImVec4 col = e->skipped ? (ImVec4) {0.6f, 0.6f, 0.6f, 1.0f}
-                                : (ImVec4) {0.9f, 0.9f, 0.9f, 1.0f};
+        ImVec4 col = e->skipped ? ImVec4{0.6f, 0.6f, 0.6f, 1.0f}
+                                : ImVec4{0.9f, 0.9f, 0.9f, 1.0f};
 
         igTextColored(col, "%-4d %-6s %-16s %-26s %-7u %-7u %7.3f  count=%d%s",
                       i, e->skipped ? "skip" : "draw", GlPrimName(e->mode),
@@ -180,14 +180,14 @@ void MikuPan_UiDrawCallInspector(void)
 
         if (isolate == i)
         {
-            if (igButton("Unsolo", (ImVec2) {70.0f, 0.0f}))
+            if (igButton("Unsolo", ImVec2{70.0f, 0.0f}))
             {
                 MikuPan_DrawCapSetIsolate(-1);
             }
         }
         else
         {
-            if (igButton("Solo", (ImVec2) {70.0f, 0.0f}))
+            if (igButton("Solo", ImVec2{70.0f, 0.0f}))
             {
                 MikuPan_DrawCapSetIsolate(i);
             }
@@ -238,7 +238,7 @@ void MikuPan_UiCameraDebugWindow(void)
         sqrtf(view_vec[0] * view_vec[0] + view_vec[1] * view_vec[1]
               + view_vec[2] * view_vec[2]);
 
-    igSetNextWindowSize((ImVec2) {360.0f, 0.0f}, ImGuiCond_FirstUseEver);
+    igSetNextWindowSize(ImVec2{360.0f, 0.0f}, ImGuiCond_FirstUseEver);
     if (!igBegin("Camera World Info", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
         igEnd();
@@ -260,25 +260,25 @@ void MikuPan_UiCameraDebugWindow(void)
     igSeparator();
 
     MikuPan_CameraDebugVec3("camera.p", camera.p,
-                            (ImVec4) {1.0f, 0.78f, 0.10f, 1.0f});
+                            ImVec4{1.0f, 0.78f, 0.10f, 1.0f});
     MikuPan_CameraDebugVec3("camera.i", camera.i,
-                            (ImVec4) {0.15f, 1.0f, 0.35f, 1.0f});
+                            ImVec4{0.15f, 1.0f, 0.35f, 1.0f});
     MikuPan_CameraDebugVec3("view line", view_vec,
-                            (ImVec4) {1.0f, 1.0f, 1.0f, 1.0f});
+                            ImVec4{1.0f, 1.0f, 1.0f, 1.0f});
 
     if (path->active)
     {
         igSeparator();
-        igTextColored((ImVec4) {1.0f, 0.42f, 0.08f, 1.0f},
+        igTextColored(ImVec4{1.0f, 0.42f, 0.08f, 1.0f},
                       "authored camera path points: %u",
                       path->camera_path_points);
-        igTextColored((ImVec4) {0.05f, 0.80f, 1.0f, 1.0f},
+        igTextColored(ImVec4{0.05f, 0.80f, 1.0f, 1.0f},
                       "authored interest path points: %u",
                       path->interest_path_points);
 
         if (path->change || path->no != path->no_old)
         {
-            igTextColored((ImVec4) {1.0f, 0.10f, 0.30f, 1.0f},
+            igTextColored(ImVec4{1.0f, 0.10f, 0.30f, 1.0f},
                           "transition target active");
         }
     }
@@ -293,7 +293,7 @@ void MikuPan_UiShaderReloadWindow(void)
         return;
     }
 
-    igSetNextWindowSize((ImVec2) {560.0f, 480.0f}, ImGuiCond_FirstUseEver);
+    igSetNextWindowSize(ImVec2{560.0f, 480.0f}, ImGuiCond_FirstUseEver);
     if (!igBegin("Shader Reload", (bool*) &show_shader_reload, 0))
     {
         igEnd();
@@ -306,7 +306,7 @@ void MikuPan_UiShaderReloadWindow(void)
         "Failed reloads keep the live program — no need to restart.");
     igSpacing();
 
-    if (igButton("Reload All  (F5)", (ImVec2) {160.0f, 0.0f}))
+    if (igButton("Reload All  (F5)", ImVec2{160.0f, 0.0f}))
     {
         last_reload_error[0] = '\0';
         MikuPan_ReloadAllShaders(last_reload_error,
@@ -323,7 +323,7 @@ void MikuPan_UiShaderReloadWindow(void)
     {
         igPushID_Int(i);
 
-        if (igButton("Reload", (ImVec2) {80.0f, 0.0f}))
+        if (igButton("Reload", ImVec2{80.0f, 0.0f}))
         {
             last_reload_error[0] = '\0';
             MikuPan_ReloadShader(i, last_reload_error,
@@ -359,9 +359,9 @@ void MikuPan_UiShaderReloadWindow(void)
     {
         igSpacing();
         igSeparator();
-        igTextColored((ImVec4) {1.0f, 0.4f, 0.4f, 1.0f}, "Last reload error:");
+        igTextColored(ImVec4{1.0f, 0.4f, 0.4f, 1.0f}, "Last reload error:");
         igTextWrapped("%s", last_reload_error);
-        if (igButton("Clear", (ImVec2) {0, 0}))
+        if (igButton("Clear", ImVec2{0, 0}))
         {
             last_reload_error[0] = '\0';
         }
@@ -377,7 +377,7 @@ void MikuPan_UiShadowDebugWindow(void)
         return;
     }
 
-    igSetNextWindowSize((ImVec2) {560.0f, 680.0f}, ImGuiCond_FirstUseEver);
+    igSetNextWindowSize(ImVec2{560.0f, 680.0f}, ImGuiCond_FirstUseEver);
     if (!igBegin("Shadow Debug", (bool*) &show_shadow_debug_window, 0))
     {
         igEnd();
@@ -451,30 +451,30 @@ void MikuPan_UiShadowDebugWindow(void)
     if (!shadow_debug->fbo_complete && shadow_debug->fbo_initialized)
     {
         igTextColored(
-            (ImVec4) {1.0f, 0.4f, 0.3f, 1.0f},
+            ImVec4{1.0f, 0.4f, 0.3f, 1.0f},
             "Shadow target is incomplete; caster rendering cannot write.");
     }
     else if (shadow_debug->caster_passes == 0)
     {
-        igTextColored((ImVec4) {1.0f, 0.7f, 0.2f, 1.0f},
+        igTextColored(ImVec4{1.0f, 0.7f, 0.2f, 1.0f},
                       "No caster pass this frame.");
     }
     else if (shadow_debug->caster_draws == 0)
     {
         igTextColored(
-            (ImVec4) {1.0f, 0.7f, 0.2f, 1.0f},
+            ImVec4{1.0f, 0.7f, 0.2f, 1.0f},
             "Caster meshes were found, but none reached a GL shadow draw.");
     }
     else if (shadow_debug->receiver_passes != 0
              && shadow_debug->receiver_draws == 0)
     {
         igTextColored(
-            (ImVec4) {1.0f, 0.7f, 0.2f, 1.0f},
+            ImVec4{1.0f, 0.7f, 0.2f, 1.0f},
             "Receiver traversal ran, but no receiver meshes were drawn.");
     }
 
     igSeparator();
-    if (igButton("Probe Shadow Map", (ImVec2) {0.0f, 0.0f}))
+    if (igButton("Probe Shadow Map", ImVec2{0.0f, 0.0f}))
     {
         MikuPan_ShadowDebugProbeTexture();
         shadow_debug = MikuPan_GetShadowDebugInfo();
@@ -494,7 +494,7 @@ void MikuPan_UiShadowDebugWindow(void)
             && shadow_debug->probe_nonzero_pixels == 0)
         {
             igTextColored(
-                (ImVec4) {1.0f, 0.7f, 0.2f, 1.0f},
+                ImVec4{1.0f, 0.7f, 0.2f, 1.0f},
                 "Caster draws happened, but the shadow map is empty.");
         }
     }
@@ -512,9 +512,9 @@ void MikuPan_UiShadowDebugWindow(void)
     if (shadow_debug->texture_id != 0)
     {
         ImVec2 uv0 =
-            shadow_debug_flip_y ? (ImVec2) {0.0f, 1.0f} : (ImVec2) {0.0f, 0.0f};
+            shadow_debug_flip_y ? ImVec2{0.0f, 1.0f} : ImVec2{0.0f, 0.0f};
         ImVec2 uv1 =
-            shadow_debug_flip_y ? (ImVec2) {1.0f, 0.0f} : (ImVec2) {1.0f, 1.0f};
+            shadow_debug_flip_y ? ImVec2{1.0f, 0.0f} : ImVec2{1.0f, 1.0f};
 
         // Draw on a mid-grey background with a visible frame so the 256x256
         // extent is obvious even when the map is empty (all-black). The R8
@@ -522,23 +522,23 @@ void MikuPan_UiShadowDebugWindow(void)
         // occlusion silhouette as proper grayscale rather than dark red.
         ImVec2 img_min = igGetCursorScreenPos();
         ImVec2 img_size =
-            (ImVec2) {shadow_debug_preview_size, shadow_debug_preview_size};
+            ImVec2{shadow_debug_preview_size, shadow_debug_preview_size};
 
         igImageWithBg(
-            (ImTextureRef_c) {
+            ImTextureRef_c{
                 ._TexID = (ImTextureID) (uintptr_t) MikuPan_GPUGetTextureHandle(
                     shadow_debug->texture_id)},
             img_size, uv0, uv1,
-            (ImVec4) {0.15f, 0.15f, 0.18f,
+            ImVec4{0.15f, 0.15f, 0.18f,
                       1.0f}, /* bg behind transparent/black */
-            (ImVec4) {1.0f, 1.0f, 1.0f, 1.0f}); /* tint */
+            ImVec4{1.0f, 1.0f, 1.0f, 1.0f}); /* tint */
 
         ImDrawList* draw_list = igGetWindowDrawList();
         ImVec2 img_max =
-            (ImVec2) {img_min.x + img_size.x, img_min.y + img_size.y};
+            ImVec2{img_min.x + img_size.x, img_min.y + img_size.y};
         ImDrawList_AddRect(
             draw_list, img_min, img_max,
-            igGetColorU32_Vec4((ImVec4) {0.55f, 0.85f, 1.0f, 0.9f}), 0.0f, 0,
+            igGetColorU32_Vec4(ImVec4{0.55f, 0.85f, 1.0f, 0.9f}), 0.0f, 0,
             0);
     }
     else
@@ -556,7 +556,7 @@ void MikuPan_UiPhotoDebugWindow(void)
         return;
     }
 
-    igSetNextWindowSize((ImVec2) {460.0f, 560.0f}, ImGuiCond_FirstUseEver);
+    igSetNextWindowSize(ImVec2{460.0f, 560.0f}, ImGuiCond_FirstUseEver);
     if (!igBegin("Photo Debug", (bool*) &show_photo_debug_window, 0))
     {
         igEnd();
@@ -672,16 +672,16 @@ void MikuPan_UiPhotoDebugWindow(void)
                      / (float) photo_debug->texture_height;
         }
 
-        ImVec2 img_size = (ImVec2) {photo_debug_preview_size,
+        ImVec2 img_size = ImVec2{photo_debug_preview_size,
                                     photo_debug_preview_size / aspect};
 
         igImageWithBg(
-            (ImTextureRef_c) {
+            ImTextureRef_c{
                 ._TexID = (ImTextureID) (uintptr_t) MikuPan_GPUGetTextureHandle(
                     photo_debug->texture_id)},
-            img_size, (ImVec2) {0.0f, 0.0f}, (ImVec2) {1.0f, 1.0f},
-            (ImVec4) {0.12f, 0.12f, 0.14f, 1.0f},
-            (ImVec4) {1.0f, 1.0f, 1.0f, 1.0f});
+            img_size, ImVec2{0.0f, 0.0f}, ImVec2{1.0f, 1.0f},
+            ImVec4{0.12f, 0.12f, 0.14f, 1.0f},
+            ImVec4{1.0f, 1.0f, 1.0f, 1.0f});
     }
     else
     {
@@ -771,11 +771,11 @@ void MikuPan_ShowTextureList(void)
                 igText("ndc: %.3f %.3f  ->  %.3f %.3f", debug->ndc_min[0],
                        debug->ndc_min[1], debug->ndc_max[0], debug->ndc_max[1]);
             }
-            igImage((ImTextureRef_c) {._TexID = (ImTextureID) (uintptr_t)
+            igImage(ImTextureRef_c{._TexID = (ImTextureID) (uintptr_t)
                                           MikuPan_GPUGetTextureHandle(
                                               screen_copy->id)},
-                    (ImVec2) {preview_w, preview_h}, (ImVec2) {0.0f, 0.0f},
-                    (ImVec2) {1.0f, 1.0f});
+                    ImVec2{preview_w, preview_h}, ImVec2{0.0f, 0.0f},
+                    ImVec2{1.0f, 1.0f});
         }
     }
     else
@@ -792,12 +792,12 @@ void MikuPan_ShowTextureList(void)
         {
             igText("%u: %d x %d", tex_list[i]->id, tex_list[i]->width,
                    tex_list[i]->height);
-            igImage((ImTextureRef_c) {._TexID = (ImTextureID) (uintptr_t)
+            igImage(ImTextureRef_c{._TexID = (ImTextureID) (uintptr_t)
                                           MikuPan_GPUGetTextureHandle(
                                               tex_list[i]->id)},
-                    (ImVec2) {(float) tex_list[i]->width,
+                    ImVec2{(float) tex_list[i]->width,
                               (float) tex_list[i]->height},
-                    (ImVec2) {0.0f, 0.0f}, (ImVec2) {1.0f, 1.0f});
+                    ImVec2{0.0f, 0.0f}, ImVec2{1.0f, 1.0f});
         }
     }
 
@@ -817,20 +817,20 @@ void MikuPan_UiEffectDebugWindow(void)
         return;
     }
 
-    igSetNextWindowSize((ImVec2) {720.0f, 560.0f}, ImGuiCond_FirstUseEver);
+    igSetNextWindowSize(ImVec2{720.0f, 560.0f}, ImGuiCond_FirstUseEver);
     if (!igBegin("Effect Debug", (bool*) &show_effect_debug_window, 0))
     {
         igEnd();
         return;
     }
 
-    if (igButton("Enable All", (ImVec2) {150.0f, 0.0f}))
+    if (igButton("Enable All", ImVec2{150.0f, 0.0f}))
     {
         MikuPan_EffectDebugSetAll(1);
     }
 
     igSameLine(0.0f, -1.0f);
-    if (igButton("Clear All", (ImVec2) {90.0f, 0.0f}))
+    if (igButton("Clear All", ImVec2{90.0f, 0.0f}))
     {
         MikuPan_EffectDebugSetAll(0);
     }
@@ -846,7 +846,7 @@ void MikuPan_UiEffectDebugWindow(void)
         | ImGuiTableFlags_ScrollY;
 
     if (igBeginTable("##effect_debug_table", 4, table_flags,
-                     (ImVec2) {0.0f, 0.0f}, 0.0f))
+                     ImVec2{0.0f, 0.0f}, 0.0f))
     {
         igTableSetupColumn("On", ImGuiTableColumnFlags_WidthFixed, 48.0f, 0);
         igTableSetupColumn("Enum", ImGuiTableColumnFlags_WidthStretch, 0.35f,
@@ -993,7 +993,7 @@ void MikuPan_UiDebugMenuRender(void)
                     MikuPan_MeshCache_SetEnabled(mesh_cache_on);
                 }
 
-                if (igButton("Clear Mesh Cache", (ImVec2) {0.0f, 0.0f}))
+                if (igButton("Clear Mesh Cache", ImVec2{0.0f, 0.0f}))
                 {
                     MikuPan_MeshCache_Flush();
                 }
@@ -1020,7 +1020,7 @@ void MikuPan_UiDebugMenuRender(void)
                 }
 
                 igCheckbox("Texture List", (bool*) &show_texture_list);
-                if (igButton("Clear Texture Cache", (ImVec2) {0.0f, 0.0f}))
+                if (igButton("Clear Texture Cache", ImVec2{0.0f, 0.0f}))
                 {
                     MikuPan_RequestFlushTextureCache();
                 }

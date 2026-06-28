@@ -1737,7 +1737,7 @@ static void BeginTargetPassIfNeeded(void)
     const int resolving_scene = g_target_resolve != NULL
                                 && g_scene_resolve_requested;
     color.texture = g_target_color;
-    color.clear_color = (SDL_FColor) {0.0f, 0.0f, 0.0f, 1.0f};
+    color.clear_color = SDL_FColor{0.0f, 0.0f, 0.0f, 1.0f};
     color.load_op = (!resolving_scene && g_target_clear)
                         ? SDL_GPU_LOADOP_CLEAR
                         : SDL_GPU_LOADOP_LOAD;
@@ -1986,7 +1986,7 @@ void MikuPan_GPUSetViewport(int x, int y, int w, int h)
 
 void MikuPan_GPUSetScissor(int x, int y, int w, int h)
 {
-    g_scissor = (SDL_Rect) {x, y, w, h};
+    g_scissor = SDL_Rect{x, y, w, h};
     g_scissor_enabled = 1;
 
     if (g_pass != NULL)

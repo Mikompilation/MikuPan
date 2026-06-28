@@ -41,13 +41,13 @@ static FLSH_CORE flsh;
 
 void NewgameMenuRankInit()
 {
-    menu_rank = (MENU_RANK){0};
-    save_rank = (SAVE_RANK){0};
+    menu_rank = {};
+    save_rank = {};
 }
 
 void LoadgameMenuRankInit()
 {
-    menu_rank = (MENU_RANK){0};
+    menu_rank = {};
 
     menu_rank.exist_s_rank = SrankCHK();
 }

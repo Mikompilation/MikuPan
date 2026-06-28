@@ -396,9 +396,9 @@ char* Tim2GetComment(TIM2_PICTUREHEADER *ph)
     return (char *)pUserSpace + sizeof(TIM2_EXHEADER) + pExHdr->UserDataSize;
 }
 
-void* Tim2GetImage(TIM2_PICTUREHEADER *ph, int mipmap)
+unsigned char* Tim2GetImage(TIM2_PICTUREHEADER *ph, int mipmap)
 {
-    void *pImage;
+    unsigned char *pImage;
     int i;
     TIM2_MIPMAPHEADER *pm;
 
@@ -407,7 +407,7 @@ void* Tim2GetImage(TIM2_PICTUREHEADER *ph, int mipmap)
         return NULL;
     }
 
-    pImage = (void *)((char *)ph + ph->HeaderSize);
+    pImage = (unsigned char *)ph + ph->HeaderSize;
 
     if (ph->MipMapTextures == 1)
     {
@@ -418,15 +418,15 @@ void* Tim2GetImage(TIM2_PICTUREHEADER *ph, int mipmap)
 
     for (i = 0; i < mipmap; i++)
     {
-        pImage = (void *)((char *)pImage + pm->MMImageSize[i]);
+        pImage = pImage + pm->MMImageSize[i];
     }
 
     return pImage;
 }
 
-void* Tim2GetClut(TIM2_PICTUREHEADER *ph)
+unsigned char* Tim2GetClut(TIM2_PICTUREHEADER *ph)
 {
-    void *pClut;
+    unsigned char *pClut;
 
     if (ph->ClutColors == 0)
     {
@@ -434,7 +434,7 @@ void* Tim2GetClut(TIM2_PICTUREHEADER *ph)
     }
     else
     {
-        pClut = (void *)((char *)ph + ph->HeaderSize + ph->ImageSize);
+        pClut = (unsigned char *)ph + ph->HeaderSize + ph->ImageSize;
     }
 
     return pClut;
@@ -1395,7 +1395,7 @@ void InitTIM2Files()
 
     InitTIM2Addr();
 
-    pbuf = MikuPan_GetHostPointer(PBUF_ADDRESS);
+    pbuf = (Q_WORDDATA *)MikuPan_GetHostPointer(PBUF_ADDRESS);
     mpbuf = mpbufw[0];
 
     mes_swap = 0;

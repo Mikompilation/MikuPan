@@ -183,7 +183,7 @@ EVENT_LOAD_WRK ev_load_wrk = {0};
 void MissionTitleInit(int msn_no)
 {
     DataLoadWrkInit();
-    memset(&mttl_wrk, 0, sizeof(mttl_wrk));
+    mttl_wrk = {};
     mttl_wrk.mode = 0;
     mttl_wrk.load_mode = 0;
     ingame_wrk.stts |= 0x28;
@@ -482,12 +482,12 @@ void MissionDataLoadAfterInit(MSN_LOAD_DAT* dat)
             break;
 
         case 8:
-            motInitEnemyMdl((void *)MikuPan_GetHostPointer(dat->addr), dat->file_no - M000_MIKU_MDL);
+            motInitEnemyMdl((u_int *)MikuPan_GetHostPointer(dat->addr), dat->file_no - M000_MIKU_MDL);
             break;
 
         case 9:
         case 10:
-            motInitEnemyAnm((void *)MikuPan_GetHostPointer(dat->addr), dat->tmp_no, dat->file_no -  M000_MIKU_ANM);
+            motInitEnemyAnm((u_int *)MikuPan_GetHostPointer(dat->addr), dat->tmp_no, dat->file_no -  M000_MIKU_ANM);
             break;
         
         case 11:
@@ -506,10 +506,9 @@ void DataLoadWrkInit()
 {	
     int i;
 
-    memset(&load_dat_wrk, 0, sizeof(load_dat_wrk));
-
     for (i = 0; i < 40; i++)
     {
+        load_dat_wrk[i] = {};
         load_dat_wrk[i].file_no = -1;
     }
 }
@@ -654,7 +653,7 @@ void StageTitleDisp(int msn_no)
 
 void EventLoadDataInit()
 {
-    memset(&ev_load_wrk, 0, 8);
+    ev_load_wrk = {};
 }
 
 int EventLoadData(u_char load_no)

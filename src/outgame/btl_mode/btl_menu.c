@@ -441,11 +441,11 @@ BTL_SAVE_STR btl_save_str[] = {
 
 void FreeModeMain()
 {
-    char *str0 = "FREE MODE";
-    char *str1 = "MSN NO";
-    char *str2 = "ROOM NO";
-    char *str3 = "START";
-    char *csr0 = "o";
+    char *str0 = (char *)"FREE MODE";
+    char *str1 = (char *)"MSN NO";
+    char *str2 = (char *)"ROOM NO";
+    char *str3 = (char *)"START";
+    char *csr0 = (char *)"o";
 
     SetASCIIString(60.0f, 50.0f, str0);
     SetASCIIString(120.0f, 110.0f, str1);
@@ -554,7 +554,7 @@ void FreeModePosSet()
 
 void BattleModeInit()
 {
-    btl_wrk = (BTL_MODE_WRK) {0};
+    btl_wrk = {};
 }
 
 void ClearStageWrk()
@@ -571,15 +571,15 @@ void ClearStageWrk()
 
 void BattleModeMain()
 {
-    char *str0 = "BATTLE MODE";
-    char *str1 = "STAGE 1";
-    char *str2 = "STAGE 2";
-    char *str3 = "STAGE 3";
-    char *str4 = "STAGE 4";
-    char *str7 = "STAGE 5";
-    char *str5 = "TIME";
-    char *str6 = "SCORE";
-    char *csr0 = "o";
+    char *str0 = (char *)"BATTLE MODE";
+    char *str1 = (char *)"STAGE 1";
+    char *str2 = (char *)"STAGE 2";
+    char *str3 = (char *)"STAGE 3";
+    char *str4 = (char *)"STAGE 4";
+    char *str7 = (char *)"STAGE 5";
+    char *str5 = (char *)"TIME";
+    char *str6 = (char *)"SCORE";
+    char *csr0 = (char *)"o";
 
     SetASCIIString(30.0f, 50.0f, str0);
     SetASCIIString(70.0f, 150.0f, str1);

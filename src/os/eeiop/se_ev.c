@@ -5,6 +5,7 @@
 
 #include "mikupan/mikupan_logging_c.h"
 #include "os/eeiop/eese.h"
+#include "os/eeiop/se_cmd.h"
 #include "os/eeiop/se_data.h"
 
 SE_EV_WRK se_ev_wrk[SE_EV_WRK_SIZE] = {0};
@@ -161,6 +162,8 @@ u_short SeEvGetPitch(int se_ev_pos)
     {
         return 0;
     }
+
+    return 0;
 }
 
 static SE_EV_WRK * SeEvGetSeEvWrk(u_char no)

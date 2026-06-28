@@ -1,11 +1,8 @@
 #include "mikupan_texture_manager.h"
 
-extern "C"
-{
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/gs/mikupan_gs_c.h"
 #include <stdlib.h>
-}
 
 std::unordered_map<uint64_t, MikuPan_TextureInfo*> mikupan_render_texture_atlas;
 

@@ -34,7 +34,7 @@ static int fnd_load_id;
 
 void SpdMenuInit()
 {
-    spd_mnu = (SPD_MNU) {0};
+    spd_mnu = {};
 
     smap_load_id = -1;
     sopt_load_id = -1;

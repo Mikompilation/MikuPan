@@ -73,7 +73,7 @@ void VoicesInit()
         voices[i].size = 0;
         voices[i].isPlaying = false;
         voices[i].endPending = false;
-        voices[i].buffer = malloc(VOICE_BUFFER_BYTES);
+        voices[i].buffer = (s16 *)malloc(VOICE_BUFFER_BYTES);
         voices[i].header = 0;
         voices[i].ssa = 0;
         voices[i].lsa = 0;

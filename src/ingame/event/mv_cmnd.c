@@ -11,7 +11,7 @@ MOVIE_CMD_WRK mvcmd_wrk = {0};
 
 void EventMovieCommandInit()
 {
-    mvcmd_wrk = (MOVIE_CMD_WRK){0};
+    mvcmd_wrk = {};
 
     mvcmd_wrk.msg_no = -1;
 }

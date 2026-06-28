@@ -1,5 +1,6 @@
 #include "mikupan_renderer_internal.h"
 #include "graphics/graph3d/sglib.h"
+#include "sce/libvu0.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_gpu.h"
 #include "mikupan_profiler.h"

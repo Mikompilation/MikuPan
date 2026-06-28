@@ -1104,7 +1104,7 @@ int EventSceneCtrl(short int scene_no)
 
                 if(SceneDecisionMovie(scene_no) == 0)
                 {
-                    if (SceneAllLoad(scene_no, MikuPan_GetHostPointer(SCENE_LOAD_ADDRESS)) != 0)
+                    if (SceneAllLoad(scene_no, (u_int *)MikuPan_GetHostPointer(SCENE_LOAD_ADDRESS)) != 0)
                     {
                         ev_wrk.movie_on = 4;
                         change_efbank = 0;
@@ -1133,7 +1133,7 @@ int EventSceneCtrl(short int scene_no)
             {
                 if (SceneDecisionMovie(scene_no) == 0)
                 {
-                    SceneDataLoadReq(scene_no, MikuPan_GetHostPointer(SCENE_LOAD_ADDRESS));
+                    SceneDataLoadReq(scene_no, (u_int *)MikuPan_GetHostPointer(SCENE_LOAD_ADDRESS));
 
                     change_efbank = 0;
                     ev_wrk.movie_on = 2;

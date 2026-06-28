@@ -111,7 +111,7 @@ static ST_F stf;
 
 void SoundTestForModeSlectInit()
 {
-    stf = (ST_F){0};
+    stf = {};
 
     stf.bgm_no_bak = 0;
     stf.bgm_no = 0;

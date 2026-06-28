@@ -102,7 +102,7 @@ static u_char *mcResolveDataAddress(const MC_DATA_STR *data_str)
     case MC_DATA_ADDR_HOST:
         return (u_char *)data_str->addr;
     case MC_DATA_ADDR_PS2:
-        return MikuPan_GetHostPointer((int)data_str->addr);
+        return (u_char *)MikuPan_GetHostPointer((int)data_str->addr);
     }
 
     return NULL;
@@ -926,7 +926,7 @@ void mcSetIconSys(sceMcIconSys *pSys)
     u_int i;
     char str[256];
 
-    *pSys = (sceMcIconSys){0};
+    *pSys = {};
 
     memcpy(pSys->Head, "PS2D", sizeof(pSys->Head)+1);
 

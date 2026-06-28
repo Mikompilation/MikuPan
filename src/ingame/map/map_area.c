@@ -35,7 +35,7 @@ void MapAreaInit()
 {
     int i;
 
-    area_wrk = (AREA_WRK){0};
+    area_wrk = {};
 
     for (i = 0; i <= 5; i++)
     {

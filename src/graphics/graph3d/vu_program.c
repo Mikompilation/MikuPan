@@ -20,18 +20,22 @@ void MULTI_PROLOGUE()
 
 SgSourceChainTag SgSu_dma_start()
 {
+    return {};
 }
 
 SgSourceChainTag SgSuP0_dma_start()
 {
+    return {};
 }
 
 SgSourceChainTag SgSuP2_dma_start()
 {
+    return {};
 }
 
 SgSourceChainTag SgSu_dma_starts()
 {
+    return {};
 }
 
 void DIVP0_PROLOGUE_and_DIVP2_PROLOGUE()

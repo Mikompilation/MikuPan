@@ -437,7 +437,7 @@ static void MikuPan_UiGpuBackendCombo(void)
             }
 
             if (igSelectable_Bool(gpu_driver_labels[i], is_selected, 0,
-                                  (ImVec2) {0, 0}))
+                                  ImVec2{0, 0}))
             {
                 gpu_driver_selected = i;
                 snprintf(mikupan_configuration.renderer.gpu_driver,
@@ -577,7 +577,7 @@ void MikuPan_UiSettingsRender(void)
                                  "%d", msaa_list[i]);
 
                         if (igSelectable_Bool(msaa_dropdown_list, is_selected, 0,
-                                              (ImVec2) {0, 0}))
+                                              ImVec2{0, 0}))
                         {
                             msaa_samples = i;
                         }
@@ -684,7 +684,7 @@ void MikuPan_UiSettingsRender(void)
                 MikuPan_ConfigurationValidate();
                 crt_settings = mikupan_configuration.crt;
 
-                if (igButton("Reset CRT", (ImVec2) {0.0f, 0.0f}))
+                if (igButton("Reset CRT", ImVec2{0.0f, 0.0f}))
                 {
                     crt_settings = crt_defaults;
                     mikupan_configuration.crt = crt_settings;
@@ -715,7 +715,7 @@ void MikuPan_UiSettingsRender(void)
         igSeparatorText("Game Data Folder");
         igInputText("Folder", mikupan_configuration.data_folder, sizeof(mikupan_configuration.data_folder), 0, NULL, NULL);
 
-        if (igButton("Browse...", (ImVec2) {0.0f, 0.0f}))
+        if (igButton("Browse...", ImVec2{0.0f, 0.0f}))
         {
             const char *start = mikupan_configuration.data_folder[0] != '\0'
                                     ? mikupan_configuration.data_folder

@@ -7,6 +7,9 @@
 #include "sce/libgraph.h"
 
 #include "graphics/graph2d/compress.h"
+#undef N
+#undef F
+#undef BUF_SIZE
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_scr.h"
 #include "graphics/graph2d/effect_sub.h"
@@ -1707,7 +1710,7 @@ static void CopyScreenSourceToBuffer(int addr, int szfl, int src_addr,
     onelo = (((mw - 1) / 64) + 1)
             * 64;// ceiling to a multiple of 64 (if mw > 0) => DMA alignment?
 
-    data_i = GetEmptyBuffer(0);
+    data_i = (int *)GetEmptyBuffer(0);
 
     if (szfl != 0)
     {
@@ -1780,10 +1783,10 @@ void DrawPhotoBuffer(u_int pri, int addr, int szfl, int x, int y, int szw,
     float yy;
     SPRITE_DATA sd = {
         .g_GsTex0 =
-            (sceGsTex0) {
-                         .TBP0 = 0,
-                         .TBW = 0,
-                         .PSM = 2,
+            {
+                          .TBP0 = 0,
+                          .TBW = 0,
+                          .PSM = 2,
                          .TW = 0,
                          .TH = 0,
                          .TCC = 0,
@@ -1793,7 +1796,7 @@ void DrawPhotoBuffer(u_int pri, int addr, int szfl, int x, int y, int szw,
                          .CSM = 0,
                          .CSA = 0,
                          .CLD = 1,
-                         },
+                          },
         .g_nTexSizeW = 0,
         .g_nTexSizeH = 0,
         .g_bMipmapLv = 0,
@@ -2544,7 +2547,7 @@ void DrawPhotoHinttex2(u_int sw, u_int pri, int num)
      */
     MikuPan_BeginLate2DOverlayQueue();
 
-    sq = (SQAR_DAT) {
+    sq = SQAR_DAT {
         .w = 640,
         .h = 448,
         .x = 0,

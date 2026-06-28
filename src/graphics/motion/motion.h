@@ -108,7 +108,7 @@ void ReqPlayerAnime(u_char flame);
 void ReqEnemyAnime(u_char work_no, u_char flame);
 void motSetAnime(ANI_CTRL *ani_ctrl, ANI_CODE **tbl, int req_no);
 void* GetFileInPak(void *pak_head, int num);
-void* GetPakTaleAddr(void *pak_head);
+u_int* GetPakTaleAddr(void *pak_head);
 void GetMdlNeckPos(sceVu0FVECTOR pos, ANI_CTRL *ani_ctrl, u_short mdl_no);
 u_int GetMdlBonePos(sceVu0FVECTOR *pos, u_char work_no);
 void GetMdlWaistPos(sceVu0FVECTOR pos, ANI_CTRL *ani_ctrl, u_short mdl_no);

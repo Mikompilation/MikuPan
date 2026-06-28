@@ -18,7 +18,7 @@ u_char able_to_light_tbl[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 POINT_LIGHT_WRK point_light_wrk[8] = {0};
-FSPE_LIGHT_WRK fspe_light_wrk[7] = {0};
+FSPE_LIGHT_WRK fspe_light_wrk[7] = {};
 
 FSPE_LIGHT_ANM* SetRandLightAnimEach(FSPE_LIGHT_ANM **ap)
 {

@@ -17,7 +17,7 @@ int sceSifBindRpc(sceSifClientData* client, unsigned int rpc_number, unsigned in
     /// Returns success otherwise program will loop forever
     if (client->serve == NULL)
     {
-        client->serve = malloc(sizeof(struct _sif_serve_data));
+        client->serve = (struct _sif_serve_data *)malloc(sizeof(struct _sif_serve_data));
     }
 
     return 1;

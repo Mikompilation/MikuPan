@@ -1280,7 +1280,7 @@ void SgReadLights(void *sgd_top, void *light_top, float *Ambient,
     if (sgd_top != NULL)
     {
         //cp = ((HeaderSection *)sgd_top)->coordp;
-        cp = GetCoordP(sgd_top);
+        cp = GetCoordP((HeaderSection *)sgd_top);
     }
 
     if (cp != NULL)

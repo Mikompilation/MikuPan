@@ -460,7 +460,7 @@ static void IAdpcmMvol(IOP_COMMAND* icp)
 
 static int AdpcmSpu2IntrHander(int core_bit, void* data)
 {
-    IOP_ADPCM* ia = data;
+    IOP_ADPCM* ia = (IOP_ADPCM *)data;
 
     if (iop_adpcm[0].stat == ADPCM_STAT_PLAY)
         sceSdSetCoreAttr(iop_adpcm[0].core | SD_C_IRQ_ENABLE, 0);

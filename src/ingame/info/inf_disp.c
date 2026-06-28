@@ -11428,9 +11428,9 @@ static u_char znz[12][6];
 
 void InformationDispInit()
 {
-    info_wrk = (INFO_WRK){0};
-    inf_dsp = (INF_DSP){0};
-    new_inf = (NEW_INF){0};
+    info_wrk = {};
+    inf_dsp = {};
+    new_inf = {};
 
     memset(&jet1, 0, sizeof(jet1));
     memset(&jet2, 0, sizeof(jet2));

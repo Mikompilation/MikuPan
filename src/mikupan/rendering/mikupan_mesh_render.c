@@ -4,6 +4,7 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/ui/mikupan_ui_debug.h"
 #include "mikupan_gpu.h"
 #include "mikupan_meshcache.h"
 #include "mikupan_pipeline.h"
@@ -170,7 +171,8 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
     SGDVUMESHSTDATA *sgdMeshData = (SGDVUMESHSTDATA *)((int64_t) pProcData + (pProcData->VUMeshData_Preset.sOffsetToST - 1) * 4);
     _SGDVUMESHCOLORDATA *pVMCD = (_SGDVUMESHCOLORDATA*) (&pPUHead->pNext + pProcData->VUMeshData_Preset.sOffsetToPrim);
 
-    int desired_pipeline = (mesh_type == 0x32) ? POSITION3_NORMAL3_UV2_SOA : POSITION3_NORMAL3_UV2;
+    enum MikuPan_PipelineType desired_pipeline =
+        (mesh_type == 0x32) ? POSITION3_NORMAL3_UV2_SOA : POSITION3_NORMAL3_UV2;
 
     MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(desired_pipeline);
     const int uv_buf_idx    = (mesh_type == 0x32) ? 2 : 1;

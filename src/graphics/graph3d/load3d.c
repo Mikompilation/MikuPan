@@ -336,7 +336,7 @@ void InitModelLoad()
 
     for (i = 0; i < 2; i++)
     {
-        room_load_block[i] = (ROOM_LOAD_BLOCK){0};
+        room_load_block[i] = {};
         room_load_block[i].block_no = -1;
     }
 
@@ -486,7 +486,7 @@ void ItemLoadAfterInit(int item_no, int64_t addr)
 {
     void *sgd_top = (void *)addr;
 
-    item_addr_tbl[item_no] = sgd_top;
+    item_addr_tbl[item_no] = (u_int *)sgd_top;
 
     SgMapUnit(sgd_top);
 }

@@ -772,7 +772,7 @@ void* GetFileInPak(void *pak_head, int num)
     return fp;
 }
 
-void* GetPakTaleAddr(void *pak_head)
+u_int* GetPakTaleAddr(void *pak_head)
 {
     int file_num;
     int file_size;

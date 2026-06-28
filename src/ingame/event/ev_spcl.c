@@ -191,7 +191,7 @@ static u_char zushi_alpha[3];
 
 void SpecialEventInit(u_char spev_no)
 {
-    spev_wrk = (SPECIAL_EVENT_WRK){0};
+    spev_wrk = {};
 
     spev_wrk.no = spev_no;
 

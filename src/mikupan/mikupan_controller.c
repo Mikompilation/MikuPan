@@ -258,7 +258,7 @@ void MikuPan_ControllerDrawDeviceSelectorUi(void)
         const bool auto_selected =
             !mikupan_input_view_keyboard &&
             mikupan_preferred_gamepad_index == MIKUPAN_CONTROLLER_AUTO_INDEX;
-        if (igSelectable_Bool("Auto (first available controller)", auto_selected, 0, (ImVec2){0, 0}))
+        if (igSelectable_Bool("Auto (first available controller)", auto_selected, 0, ImVec2{0, 0}))
         {
             mikupan_input_view_keyboard = 0;
             MikuPan_ControllerSetPreferredGamepadIndex(MIKUPAN_CONTROLLER_AUTO_INDEX);
@@ -269,7 +269,7 @@ void MikuPan_ControllerDrawDeviceSelectorUi(void)
         }
 
         const bool kbm_selected = mikupan_input_view_keyboard != 0;
-        if (igSelectable_Bool("Keyboard & Mouse", kbm_selected, 0, (ImVec2){0, 0}))
+        if (igSelectable_Bool("Keyboard & Mouse", kbm_selected, 0, ImVec2{0, 0}))
         {
             mikupan_input_view_keyboard = 1;
         }
@@ -286,7 +286,7 @@ void MikuPan_ControllerDrawDeviceSelectorUi(void)
 
             const bool is_selected =
                 !mikupan_input_view_keyboard && mikupan_preferred_gamepad_index == i;
-            if (igSelectable_Bool(label, is_selected, 0, (ImVec2){0, 0}))
+            if (igSelectable_Bool(label, is_selected, 0, ImVec2{0, 0}))
             {
                 mikupan_input_view_keyboard = 0;
                 MikuPan_ControllerSetPreferredGamepadIndex(i);
@@ -907,7 +907,7 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
     const float H = 270.0f;
 
     ImVec2 origin = igGetCursorScreenPos();
-    igInvisibleButton("##controller_remap_gp_canvas", (ImVec2){W, H}, 0);
+    igInvisibleButton("##controller_remap_gp_canvas", ImVec2{W, H}, 0);
 
     ImDrawList *dl = igGetWindowDrawList();
 
@@ -917,15 +917,15 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
     const ImU32 active_col   = 0xFF50C8FF;
 
     // -- Body & grips --
-    ImVec2 b_min = (ImVec2){origin.x + 70.0f,        origin.y + 50.0f};
-    ImVec2 b_max = (ImVec2){origin.x + W - 70.0f,    origin.y + H - 30.0f};
+    ImVec2 b_min = ImVec2{origin.x + 70.0f,        origin.y + 50.0f};
+    ImVec2 b_max = ImVec2{origin.x + W - 70.0f,    origin.y + H - 30.0f};
     ImDrawList_AddRectFilled(dl, b_min, b_max, body_col, 30.0f, 0);
     ImDrawList_AddRect      (dl, b_min, b_max, body_outline, 30.0f, 0, 0);
 
-    ImDrawList_AddCircleFilled(dl, (ImVec2){origin.x + 80,     origin.y + H - 60}, 50, body_col,     24);
-    ImDrawList_AddCircle      (dl, (ImVec2){origin.x + 80,     origin.y + H - 60}, 50, body_outline, 24, 2.0f);
-    ImDrawList_AddCircleFilled(dl, (ImVec2){origin.x + W - 80, origin.y + H - 60}, 50, body_col,     24);
-    ImDrawList_AddCircle      (dl, (ImVec2){origin.x + W - 80, origin.y + H - 60}, 50, body_outline, 24, 2.0f);
+    ImDrawList_AddCircleFilled(dl, ImVec2{origin.x + 80,     origin.y + H - 60}, 50, body_col,     24);
+    ImDrawList_AddCircle      (dl, ImVec2{origin.x + 80,     origin.y + H - 60}, 50, body_outline, 24, 2.0f);
+    ImDrawList_AddCircleFilled(dl, ImVec2{origin.x + W - 80, origin.y + H - 60}, 50, body_col,     24);
+    ImDrawList_AddCircle      (dl, ImVec2{origin.x + W - 80, origin.y + H - 60}, 50, body_outline, 24, 2.0f);
 
     // -- Shoulders & triggers --
     int lb = gp ? SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)         : 0;
@@ -933,23 +933,23 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
     int lt = gp ? (SDL_GetGamepadAxis(gp, SDL_GAMEPAD_AXIS_LEFT_TRIGGER)  > 8000)    : 0;
     int rt = gp ? (SDL_GetGamepadAxis(gp, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) > 8000)    : 0;
 
-    ImDrawList_AddRectFilled(dl, (ImVec2){origin.x + 60,  origin.y + 28},
-                                  (ImVec2){origin.x + 140, origin.y + 48},
+    ImDrawList_AddRectFilled(dl, ImVec2{origin.x + 60,  origin.y + 28},
+                                  ImVec2{origin.x + 140, origin.y + 48},
                                   col_if(lb, plate_col, active_col), 6.0f, 0);
-    ImDrawList_AddRectFilled(dl, (ImVec2){origin.x + 70,  origin.y + 8},
-                                  (ImVec2){origin.x + 130, origin.y + 26},
+    ImDrawList_AddRectFilled(dl, ImVec2{origin.x + 70,  origin.y + 8},
+                                  ImVec2{origin.x + 130, origin.y + 26},
                                   col_if(lt, plate_col, active_col), 6.0f, 0);
-    ImDrawList_AddRectFilled(dl, (ImVec2){origin.x + W - 140, origin.y + 28},
-                                  (ImVec2){origin.x + W - 60,  origin.y + 48},
+    ImDrawList_AddRectFilled(dl, ImVec2{origin.x + W - 140, origin.y + 28},
+                                  ImVec2{origin.x + W - 60,  origin.y + 48},
                                   col_if(rb, plate_col, active_col), 6.0f, 0);
-    ImDrawList_AddRectFilled(dl, (ImVec2){origin.x + W - 130, origin.y + 8},
-                                  (ImVec2){origin.x + W - 70,  origin.y + 26},
+    ImDrawList_AddRectFilled(dl, ImVec2{origin.x + W - 130, origin.y + 8},
+                                  ImVec2{origin.x + W - 70,  origin.y + 26},
                                   col_if(rt, plate_col, active_col), 6.0f, 0);
 
-    ImDrawList_AddText_Vec2(dl, (ImVec2){origin.x + 90,        origin.y + 31}, 0xFFFFFFFF, "L1", NULL);
-    ImDrawList_AddText_Vec2(dl, (ImVec2){origin.x + 90,        origin.y + 11}, 0xFFFFFFFF, "L2", NULL);
-    ImDrawList_AddText_Vec2(dl, (ImVec2){origin.x + W - 110,   origin.y + 31}, 0xFFFFFFFF, "R1", NULL);
-    ImDrawList_AddText_Vec2(dl, (ImVec2){origin.x + W - 110,   origin.y + 11}, 0xFFFFFFFF, "R2", NULL);
+    ImDrawList_AddText_Vec2(dl, ImVec2{origin.x + 90,        origin.y + 31}, 0xFFFFFFFF, "L1", NULL);
+    ImDrawList_AddText_Vec2(dl, ImVec2{origin.x + 90,        origin.y + 11}, 0xFFFFFFFF, "L2", NULL);
+    ImDrawList_AddText_Vec2(dl, ImVec2{origin.x + W - 110,   origin.y + 31}, 0xFFFFFFFF, "R1", NULL);
+    ImDrawList_AddText_Vec2(dl, ImVec2{origin.x + W - 110,   origin.y + 11}, 0xFFFFFFFF, "R2", NULL);
 
     // -- D-Pad (cross of 4 rectangles) --
     {
@@ -963,20 +963,20 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
         int left  = gp ? SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_LEFT)  : 0;
         int right = gp ? SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_RIGHT) : 0;
 
-        ImDrawList_AddRectFilled(dl, (ImVec2){dx - t/2, dy - a},
-                                      (ImVec2){dx + t/2, dy - t/2},
+        ImDrawList_AddRectFilled(dl, ImVec2{dx - t/2, dy - a},
+                                      ImVec2{dx + t/2, dy - t/2},
                                       col_if(up, plate_col, active_col), 3, 0);
-        ImDrawList_AddRectFilled(dl, (ImVec2){dx - t/2, dy + t/2},
-                                      (ImVec2){dx + t/2, dy + a},
+        ImDrawList_AddRectFilled(dl, ImVec2{dx - t/2, dy + t/2},
+                                      ImVec2{dx + t/2, dy + a},
                                       col_if(down, plate_col, active_col), 3, 0);
-        ImDrawList_AddRectFilled(dl, (ImVec2){dx - a,   dy - t/2},
-                                      (ImVec2){dx - t/2, dy + t/2},
+        ImDrawList_AddRectFilled(dl, ImVec2{dx - a,   dy - t/2},
+                                      ImVec2{dx - t/2, dy + t/2},
                                       col_if(left, plate_col, active_col), 3, 0);
-        ImDrawList_AddRectFilled(dl, (ImVec2){dx + t/2, dy - t/2},
-                                      (ImVec2){dx + a,   dy + t/2},
+        ImDrawList_AddRectFilled(dl, ImVec2{dx + t/2, dy - t/2},
+                                      ImVec2{dx + a,   dy + t/2},
                                       col_if(right, plate_col, active_col), 3, 0);
-        ImDrawList_AddRectFilled(dl, (ImVec2){dx - t/2, dy - t/2},
-                                      (ImVec2){dx + t/2, dy + t/2},
+        ImDrawList_AddRectFilled(dl, ImVec2{dx - t/2, dy - t/2},
+                                      ImVec2{dx + t/2, dy + t/2},
                                       plate_col, 0, 0);
     }
 
@@ -994,20 +994,20 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
 
         // North = Triangle (green); South = Cross (blue);
         // West  = Square   (pink ); East  = Circle (red ).
-        ImDrawList_AddCircleFilled(dl, (ImVec2){fx,     fy - d}, r, col_if(north, 0xFF306030, 0xFF60FF60), 0);
-        ImDrawList_AddCircleFilled(dl, (ImVec2){fx,     fy + d}, r, col_if(south, 0xFF303060, 0xFF6080FF), 0);
-        ImDrawList_AddCircleFilled(dl, (ImVec2){fx - d, fy    }, r, col_if(west,  0xFF603060, 0xFFFF60FF), 0);
-        ImDrawList_AddCircleFilled(dl, (ImVec2){fx + d, fy    }, r, col_if(east,  0xFF603030, 0xFFFF6060), 0);
+        ImDrawList_AddCircleFilled(dl, ImVec2{fx,     fy - d}, r, col_if(north, 0xFF306030, 0xFF60FF60), 0);
+        ImDrawList_AddCircleFilled(dl, ImVec2{fx,     fy + d}, r, col_if(south, 0xFF303060, 0xFF6080FF), 0);
+        ImDrawList_AddCircleFilled(dl, ImVec2{fx - d, fy    }, r, col_if(west,  0xFF603060, 0xFFFF60FF), 0);
+        ImDrawList_AddCircleFilled(dl, ImVec2{fx + d, fy    }, r, col_if(east,  0xFF603030, 0xFFFF6060), 0);
 
-        ImDrawList_AddCircle(dl, (ImVec2){fx,     fy - d}, r, 0xFFA0A0A0, 0, 1.5f);
-        ImDrawList_AddCircle(dl, (ImVec2){fx,     fy + d}, r, 0xFFA0A0A0, 0, 1.5f);
-        ImDrawList_AddCircle(dl, (ImVec2){fx - d, fy    }, r, 0xFFA0A0A0, 0, 1.5f);
-        ImDrawList_AddCircle(dl, (ImVec2){fx + d, fy    }, r, 0xFFA0A0A0, 0, 1.5f);
+        ImDrawList_AddCircle(dl, ImVec2{fx,     fy - d}, r, 0xFFA0A0A0, 0, 1.5f);
+        ImDrawList_AddCircle(dl, ImVec2{fx,     fy + d}, r, 0xFFA0A0A0, 0, 1.5f);
+        ImDrawList_AddCircle(dl, ImVec2{fx - d, fy    }, r, 0xFFA0A0A0, 0, 1.5f);
+        ImDrawList_AddCircle(dl, ImVec2{fx + d, fy    }, r, 0xFFA0A0A0, 0, 1.5f);
 
-        ImDrawList_AddText_Vec2(dl, (ImVec2){fx - 4,     fy - d - 7}, 0xFFFFFFFF, "Y", NULL);
-        ImDrawList_AddText_Vec2(dl, (ImVec2){fx - 4,     fy + d - 7}, 0xFFFFFFFF, "A", NULL);
-        ImDrawList_AddText_Vec2(dl, (ImVec2){fx - d - 4, fy - 7    }, 0xFFFFFFFF, "X", NULL);
-        ImDrawList_AddText_Vec2(dl, (ImVec2){fx + d - 4, fy - 7    }, 0xFFFFFFFF, "B", NULL);
+        ImDrawList_AddText_Vec2(dl, ImVec2{fx - 4,     fy - d - 7}, 0xFFFFFFFF, "Y", NULL);
+        ImDrawList_AddText_Vec2(dl, ImVec2{fx - 4,     fy + d - 7}, 0xFFFFFFFF, "A", NULL);
+        ImDrawList_AddText_Vec2(dl, ImVec2{fx - d - 4, fy - 7    }, 0xFFFFFFFF, "X", NULL);
+        ImDrawList_AddText_Vec2(dl, ImVec2{fx + d - 4, fy - 7    }, 0xFFFFFFFF, "B", NULL);
     }
 
     // -- Select / Start --
@@ -1015,14 +1015,14 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
         int back  = gp ? SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_BACK)  : 0;
         int start = gp ? SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_START) : 0;
 
-        ImDrawList_AddRectFilled(dl, (ImVec2){origin.x + W/2 - 38, origin.y + 105},
-                                      (ImVec2){origin.x + W/2 - 12, origin.y + 117},
+        ImDrawList_AddRectFilled(dl, ImVec2{origin.x + W/2 - 38, origin.y + 105},
+                                      ImVec2{origin.x + W/2 - 12, origin.y + 117},
                                       col_if(back, plate_col, active_col), 4, 0);
-        ImDrawList_AddRectFilled(dl, (ImVec2){origin.x + W/2 + 12, origin.y + 105},
-                                      (ImVec2){origin.x + W/2 + 38, origin.y + 117},
+        ImDrawList_AddRectFilled(dl, ImVec2{origin.x + W/2 + 12, origin.y + 105},
+                                      ImVec2{origin.x + W/2 + 38, origin.y + 117},
                                       col_if(start, plate_col, active_col), 4, 0);
-        ImDrawList_AddText_Vec2(dl, (ImVec2){origin.x + W/2 - 42, origin.y + 92}, 0xFFC0C0C0, "Select", NULL);
-        ImDrawList_AddText_Vec2(dl, (ImVec2){origin.x + W/2 + 14, origin.y + 92}, 0xFFC0C0C0, "Start",  NULL);
+        ImDrawList_AddText_Vec2(dl, ImVec2{origin.x + W/2 - 42, origin.y + 92}, 0xFFC0C0C0, "Select", NULL);
+        ImDrawList_AddText_Vec2(dl, ImVec2{origin.x + W/2 + 14, origin.y + 92}, 0xFFC0C0C0, "Start",  NULL);
     }
 
     // -- Analog sticks --
@@ -1040,14 +1040,14 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
         float rcx = origin.x + W - 215.0f;
         float rcy = origin.y + 190.0f;
 
-        ImDrawList_AddCircleFilled(dl, (ImVec2){lcx, lcy}, 26, 0xFF202028, 0);
-        ImDrawList_AddCircle      (dl, (ImVec2){lcx, lcy}, 26, body_outline, 0, 1.5f);
-        ImDrawList_AddCircleFilled(dl, (ImVec2){lcx + lsx*16, lcy + lsy*16}, 16,
+        ImDrawList_AddCircleFilled(dl, ImVec2{lcx, lcy}, 26, 0xFF202028, 0);
+        ImDrawList_AddCircle      (dl, ImVec2{lcx, lcy}, 26, body_outline, 0, 1.5f);
+        ImDrawList_AddCircleFilled(dl, ImVec2{lcx + lsx*16, lcy + lsy*16}, 16,
                                        col_if(lpress, plate_col, active_col), 0);
 
-        ImDrawList_AddCircleFilled(dl, (ImVec2){rcx, rcy}, 26, 0xFF202028, 0);
-        ImDrawList_AddCircle      (dl, (ImVec2){rcx, rcy}, 26, body_outline, 0, 1.5f);
-        ImDrawList_AddCircleFilled(dl, (ImVec2){rcx + rsx*16, rcy + rsy*16}, 16,
+        ImDrawList_AddCircleFilled(dl, ImVec2{rcx, rcy}, 26, 0xFF202028, 0);
+        ImDrawList_AddCircle      (dl, ImVec2{rcx, rcy}, 26, body_outline, 0, 1.5f);
+        ImDrawList_AddCircleFilled(dl, ImVec2{rcx + rsx*16, rcy + rsy*16}, 16,
                                        col_if(rpress, plate_col, active_col), 0);
     }
 }
@@ -1094,7 +1094,7 @@ static void MikuPan_ControllerDrawControllerBindingList(SDL_Gamepad *gp)
                       ? "Click a binding, then press a button on your controller. 'x' clears it."
                       : "No controller connected. Connect one to remap gamepad bindings.");
 
-    if (igBeginTable("##gp_buttons", 3, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
+    if (igBeginTable("##gp_buttons", 3, MIKUPAN_BIND_TABLE_FLAGS, ImVec2{0, 0}, 0.0f))
     {
         igTableSetupColumn("Action",  ImGuiTableColumnFlags_WidthStretch, 0.40f, 0);
         igTableSetupColumn("Binding", ImGuiTableColumnFlags_WidthStretch, 0.60f, 0);
@@ -1119,7 +1119,7 @@ static void MikuPan_ControllerDrawControllerBindingList(SDL_Gamepad *gp)
             }
 
             igTableNextColumn();
-            if (igButton("x", (ImVec2){24, 0}))
+            if (igButton("x", ImVec2{24, 0}))
             {
                 mikupan_controller_map[i].kind = MIKUPAN_CONTROLLER_BIND_NONE;
                 mikupan_controller_map[i].code = 0;
@@ -1152,7 +1152,7 @@ static void MikuPan_ControllerDrawKeyboardBindingList(void)
     igTextWrapped("Always active alongside the controller. Click a binding, then "
                   "press a key. 'x' clears it.");
 
-    if (igBeginTable("##kb_buttons", 3, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
+    if (igBeginTable("##kb_buttons", 3, MIKUPAN_BIND_TABLE_FLAGS, ImVec2{0, 0}, 0.0f))
     {
         igTableSetupColumn("Action",  ImGuiTableColumnFlags_WidthStretch, 0.40f, 0);
         igTableSetupColumn("Key",     ImGuiTableColumnFlags_WidthStretch, 0.60f, 0);
@@ -1177,7 +1177,7 @@ static void MikuPan_ControllerDrawKeyboardBindingList(void)
             }
 
             igTableNextColumn();
-            if (igButton("x", (ImVec2){24, 0}))
+            if (igButton("x", ImVec2{24, 0}))
             {
                 mikupan_keyboard_map[i] = 0;
             }
@@ -1211,7 +1211,7 @@ static void MikuPan_ControllerDrawStickGamepadList(SDL_Gamepad *gp)
                       ? "Click an axis, then move a stick on your controller. 'x' clears it."
                       : "No controller connected. Connect one to remap stick axes.");
 
-    if (igBeginTable("##gp_sticks", 4, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
+    if (igBeginTable("##gp_sticks", 4, MIKUPAN_BIND_TABLE_FLAGS, ImVec2{0, 0}, 0.0f))
     {
         igTableSetupColumn("Stick",    ImGuiTableColumnFlags_WidthStretch, 0.40f, 0);
         igTableSetupColumn("Axis",     ImGuiTableColumnFlags_WidthStretch, 0.60f, 0);
@@ -1245,7 +1245,7 @@ static void MikuPan_ControllerDrawStickGamepadList(SDL_Gamepad *gp)
             }
 
             igTableNextColumn();
-            if (igButton("x", (ImVec2){24, 0}))
+            if (igButton("x", ImVec2{24, 0}))
             {
                 mikupan_stick_controller_map[i].axis = -1;
             }
@@ -1277,7 +1277,7 @@ static void MikuPan_ControllerDrawStickKeyboardList(void)
                   "its extremes by a negative and a positive key. Click a key to "
                   "rebind it, 'x' clears it.");
 
-    if (igBeginTable("##kb_sticks", 5, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
+    if (igBeginTable("##kb_sticks", 5, MIKUPAN_BIND_TABLE_FLAGS, ImVec2{0, 0}, 0.0f))
     {
         igTableSetupColumn("Stick",     ImGuiTableColumnFlags_WidthStretch, 0.28f, 0);
         igTableSetupColumn("Negative",  ImGuiTableColumnFlags_WidthStretch, 0.36f, 0);
@@ -1307,7 +1307,7 @@ static void MikuPan_ControllerDrawStickKeyboardList(void)
             igPopID();
 
             igTableNextColumn();
-            if (igButton("x##neg", (ImVec2){24, 0}))
+            if (igButton("x##neg", ImVec2{24, 0}))
             {
                 mikupan_stick_keyboard_map[i].neg_scancode = 0;
             }
@@ -1325,7 +1325,7 @@ static void MikuPan_ControllerDrawStickKeyboardList(void)
             igPopID();
 
             igTableNextColumn();
-            if (igButton("x##pos", (ImVec2){24, 0}))
+            if (igButton("x##pos", ImVec2{24, 0}))
             {
                 mikupan_stick_keyboard_map[i].pos_scancode = 0;
             }
@@ -1366,7 +1366,7 @@ static void MikuPan_ControllerDrawActionTargetCombo(int mode, int action)
     if (igBeginCombo("##target", preview, 0))
     {
         const bool none_selected = target == MIKUPAN_ACTION_PROFILE_TARGET_NONE;
-        if (igSelectable_Bool("<unmapped>", none_selected, 0, (ImVec2){0, 0}))
+        if (igSelectable_Bool("<unmapped>", none_selected, 0, ImVec2{0, 0}))
         {
             MikuPan_SetCustomActionProfileTarget(
                 mode, action, MIKUPAN_ACTION_PROFILE_TARGET_NONE);
@@ -1380,7 +1380,7 @@ static void MikuPan_ControllerDrawActionTargetCombo(int mode, int action)
         {
             const bool selected = target == i;
             if (igSelectable_Bool(MikuPan_ActionProfileTargetLabel(i), selected,
-                                  0, (ImVec2){0, 0}))
+                                  0, ImVec2{0, 0}))
             {
                 MikuPan_SetCustomActionProfileTarget(mode, action, i);
             }
@@ -1396,7 +1396,7 @@ static void MikuPan_ControllerDrawActionTargetCombo(int mode, int action)
 
 static void MikuPan_ControllerDrawActionProfileList(int mode)
 {
-    if (igBeginTable("##action_list", 3, MIKUPAN_BIND_TABLE_FLAGS, (ImVec2){0, 0}, 0.0f))
+    if (igBeginTable("##action_list", 3, MIKUPAN_BIND_TABLE_FLAGS, ImVec2{0, 0}, 0.0f))
     {
         igTableSetupColumn("Action",   ImGuiTableColumnFlags_WidthStretch, 0.45f, 0);
         igTableSetupColumn("Target",   ImGuiTableColumnFlags_WidthStretch, 0.55f, 0);
@@ -1416,7 +1416,7 @@ static void MikuPan_ControllerDrawActionProfileList(int mode)
             MikuPan_ControllerDrawActionTargetCombo(mode, i);
 
             igTableNextColumn();
-            if (igButton("Default", (ImVec2){72, 0}))
+            if (igButton("Default", ImVec2{72, 0}))
             {
                 MikuPan_SetCustomActionProfileTarget(
                     mode, i, MikuPan_GetDefaultActionProfileTarget(i));
@@ -1437,7 +1437,7 @@ static void MikuPan_ControllerDrawMovementModeCombo(
     igSetNextItemWidth(150.0f);
     if (igBeginCombo(label, preview, 0))
     {
-        if (igSelectable_Bool("Objective", !subjective, 0, (ImVec2){0, 0}))
+        if (igSelectable_Bool("Objective", !subjective, 0, ImVec2{0, 0}))
         {
             setter(0);
         }
@@ -1446,7 +1446,7 @@ static void MikuPan_ControllerDrawMovementModeCombo(
             igSetItemDefaultFocus();
         }
 
-        if (igSelectable_Bool("Subjective", subjective, 0, (ImVec2){0, 0}))
+        if (igSelectable_Bool("Subjective", subjective, 0, ImVec2{0, 0}))
         {
             setter(1);
         }
@@ -1492,7 +1492,7 @@ static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
     igTextDisabled("On (default): left stick / WASD move, right stick / mouse "
                    "aim. Off: classic (left stick aims, right stick moves).");
 
-    if (igButton("Reset custom profile", (ImVec2){0, 0}))
+    if (igButton("Reset custom profile", ImVec2{0, 0}))
     {
         MikuPan_ResetCustomActionProfile();
     }
@@ -1544,7 +1544,7 @@ static void MikuPan_ControllerDrawActionProfileMapsUi(void)
  * forces the window taller than a small screen. */
 static void MikuPan_ControllerDrawBindingsTab(SDL_Gamepad *gp)
 {
-    if (igBeginChild_Str("##bindings_scroll", (ImVec2){0, 0}, 0, 0))
+    if (igBeginChild_Str("##bindings_scroll", ImVec2{0, 0}, 0, 0))
     {
         if (mikupan_input_view_keyboard)
         {
@@ -1584,7 +1584,7 @@ void MikuPan_ControllerDrawRemapWindow(void)
     }
     last_draw_frame = frame;
 
-    igSetNextWindowSize((ImVec2){560.0f, 600.0f}, ImGuiCond_FirstUseEver);
+    igSetNextWindowSize(ImVec2{560.0f, 600.0f}, ImGuiCond_FirstUseEver);
     igBegin("Controller Mapping", NULL, 0);
 
     SDL_Gamepad *gp = MikuPan_GetController();
@@ -1602,7 +1602,7 @@ void MikuPan_ControllerDrawRemapWindow(void)
         igTextDisabled("No controller connected.");
     }
 
-    if (igButton("Reset all input settings", (ImVec2){0, 0}))
+    if (igButton("Reset all input settings", ImVec2{0, 0}))
     {
         MikuPan_ControllerResetBindings();
         remap_target = -1;

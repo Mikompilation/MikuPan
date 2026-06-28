@@ -18,7 +18,7 @@ void InitAdjValGWrk()
 
 void InitAdjValGWrkOne(ADJ_VALG_WRK *avp)
 {
-    *avp = (ADJ_VALG_WRK){0};
+    *avp = {};
 }
 
 ADJ_VALG_WRK* SearchVacantAdjValGWrk()
@@ -40,7 +40,7 @@ void ReleaseAdjValGWrkVec(sceVu0FVECTOR ori)
 {
     ADJ_VALG_WRK *avp;
 
-    avp = adj_valg_wrk->next;
+    avp = (ADJ_VALG_WRK *)adj_valg_wrk->next;
 
     while (avp != NULL)
     {
@@ -75,7 +75,7 @@ void SameObjectWrkDelete(sceVu0FVECTOR ori)
 {
     ADJ_VALG_WRK *avp;
 
-    avp = adj_valg_wrk->next;
+    avp = (ADJ_VALG_WRK *)adj_valg_wrk->next;
 
     while (avp != NULL)
     {
@@ -134,7 +134,7 @@ void RegisterAdjValG(sceVu0FVECTOR ori, sceVu0FVECTOR des, u_int time)
 void AdjustValueG()
 {
     ADJ_VALG_WRK *avp;
-    avp = adj_valg_wrk->next;
+    avp = (ADJ_VALG_WRK *)adj_valg_wrk->next;
 
     while (avp != NULL)
     {

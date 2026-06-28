@@ -67,10 +67,10 @@ static FILE2D file2d;
 
 void ItemGet(u_char get_type, u_char get_no, u_char msg0_no, u_char msg1_no)
 {
-    get_ctrl = (FILE_GET_CTRL){0};
-    file_dsp = (FILE_GET_DSP){0};
-    fade_ctr = (FILE_GET_FADE){0};
-    file2d = (FILE2D){0};
+    get_ctrl = {};
+    file_dsp = {};
+    fade_ctr = {};
+    file2d = {};
 
     get_ctrl.type = get_type;
     get_ctrl.no = get_no;

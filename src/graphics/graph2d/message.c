@@ -78,7 +78,7 @@ void InitMessage()
 {
     FontInit();
     save_mes_addr = 0;
-    mesv22 = (MESV22){0};
+    mesv22 = {};
 }
 
 void InitMessageEF()
@@ -1494,7 +1494,7 @@ int SetMessageV2_2(DISP_STR *s)
 
     if (s->st & 0x20)
     {
-        sq = (SQAR_DAT){
+        sq = SQAR_DAT{
             .w = 0x64,
             .h = 0x64,
             .x = 0,
@@ -1834,7 +1834,7 @@ int SetMessageV2(DISP_STR *s)
 
     if (s->st & 0x20)
     {
-        sq = (SQAR_DAT){
+        sq = SQAR_DAT{
             .w = 0x64,
             .h = 0x64,
             .x = 0,
@@ -2323,7 +2323,7 @@ int SubMessageV3(u_char *s, int pri, int delflg)
 
     if ((msdat.sta & 0x20U) != 0)
     {
-        sq = (SQAR_DAT){
+        sq = SQAR_DAT{
             .w = 0x64,
             .h = 0x64,
             .x = 0,

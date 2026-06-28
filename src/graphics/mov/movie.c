@@ -172,11 +172,11 @@ static VoTag *voBufTag = (VoTag *) 0x006d8100;
 /// 0x00420000
 ReadBuf *readBuf = NULL;
 static u_char *audioBuff = (u_char *) 0x006c8100;
-static char *videoDecStack = (u_char *) 0x006d4100;
+static char *videoDecStack = (char *) 0x006d4100;
 u_int scene_bg_color = 0;
 int isWithAudio = 1;
 char *commandname = NULL;
-char *VERSION = "1.2";
+char *VERSION = (char *)"1.2";
 
 static u_char *mpegWork;
 static u_long128 *viBufData;
@@ -2382,7 +2382,7 @@ int strFileOpen(StrFile *file, char *filename)
             isStrFileInit = 1;
         }
 
-        file->iopBuf = sceSifAllocIopHeap(2048 * 80 + 16);
+        file->iopBuf = (u_char *)sceSifAllocIopHeap(2048 * 80 + 16);
 
         sceCdStInit(80, 5, bound((u_int) file->iopBuf, 16));
 
@@ -2505,7 +2505,7 @@ void scTag2(QWORD *q, void *addr, u_int id, u_int qwc)
 {
     return;
     addr = MikuPan_GetHostPointer((int) addr);
-    q = MikuPan_GetHostPointer((int) q);
+    q = (QWORD *)MikuPan_GetHostPointer((int) q);
     q->l[0] =
         (u_long) (u_int) addr << 32 | (u_long) id << 28 | (u_long) qwc << 0;
 }
@@ -2516,7 +2516,7 @@ int viBufCreate(ViBuf *f, u_long128 *data, u_long128 *tag, int size,
     SemaParam param;
 
     f->data = data;
-    f->tag = UncAddr(tag);
+    f->tag = (u_long128 *)UncAddr(tag);
     f->n = size;
     f->buffSize = size * VIBUF_ELM_SIZE;
     f->ts = ts;
@@ -3048,7 +3048,7 @@ void videoDecSetDecodeMode(VideoDec *vd, int ni, int np, int nb)
 int videoDecSetStream(VideoDec *vd, int strType, int ch, sceMpegCallback cb,
                       void *data)
 {
-    sceMpegAddStrCallback(&vd->mpeg, strType, ch, cb, data);
+    sceMpegAddStrCallback(&vd->mpeg, (sceMpegStrType)strType, ch, cb, data);
 
     return 1;
 }
