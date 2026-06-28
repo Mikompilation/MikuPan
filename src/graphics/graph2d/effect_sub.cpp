@@ -21,6 +21,7 @@
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/mikupan_effect_compat.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "os/pad.h"
 #include "os/system.h"
@@ -159,6 +160,12 @@ static int EffectSubIsMainFramebufferAddress(int addr)
     return addr == 0 || addr == SCR_HEIGHT * (SCR_WIDTH / 64);
 }
 
+static int EffectSubIsDisplayedFramebufferAddress(int addr)
+{
+    return EffectSubIsMainFramebufferAddress(addr) &&
+           addr == (int)((sys_wrk.count & 1) * (SCR_HEIGHT * (SCR_WIDTH / 64)));
+}
+
 static int g_effect_sub_live_framebuffer_copy_addr = -1;
 
 static void EffectSubRememberLiveFramebufferCopy(int addr)
@@ -221,19 +228,38 @@ static int EffectSubReadResolvedMainFramebuffer(u_long128 *outbuf)
         (unsigned char *)outbuf);
 }
 
-static int EffectSubUploadMainFramebufferToGs(int addr)
+static int EffectSubReadFramebufferAddress(int addr, u_long128 *outbuf)
+{
+    if (outbuf == NULL)
+    {
+        return 0;
+    }
+
+    if (EffectSubIsDisplayedFramebufferAddress(addr) &&
+        MikuPan_ReadSceneFeedbackFramebufferRGBA8TopLeft(
+            SCR_WIDTH,
+            SCR_HEIGHT,
+            (unsigned char *)outbuf))
+    {
+        return 1;
+    }
+
+    return EffectSubReadResolvedMainFramebuffer(outbuf);
+}
+
+static int EffectSubUploadMainFramebufferToGs(int source_addr, int dst_addr)
 {
     static u_long128 framebuffer_copy[(SCR_WIDTH * SCR_HEIGHT * 4) / sizeof(u_long128)];
     sceGsLoadImage gs_limage;
 
-    if (!EffectSubReadResolvedMainFramebuffer(framebuffer_copy))
+    if (!EffectSubReadFramebufferAddress(source_addr, framebuffer_copy))
     {
         return 0;
     }
 
     sceGsSetDefLoadImage(
         &gs_limage,
-        addr,
+        dst_addr,
         SCR_WIDTH / 64,
         SCE_GS_PSMCT32,
         0,
@@ -242,7 +268,7 @@ static int EffectSubUploadMainFramebufferToGs(int addr)
         SCR_HEIGHT);
     sceGsExecLoadImage(&gs_limage, framebuffer_copy);
     sceGsSyncPath(0, 0);
-    EffectSubRememberLiveFramebufferCopy(addr);
+    EffectSubRememberLiveFramebufferCopy(dst_addr);
 
     return 1;
 }
@@ -254,10 +280,21 @@ static int EffectSubMaterializeLiveFramebufferCopy(int addr)
         return 1;
     }
 
-    return EffectSubUploadMainFramebufferToGs(addr);
+    return EffectSubUploadMainFramebufferToGs(addr, addr);
 }
 
-static void EffectSubRenderTexturedSpriteVertices(sceGsTex0 *tex, float *vertices, int use_screen_pos)
+static int EffectSubTex1UsesNearest(u_long tex1)
+{
+    const sceGsTex1 *gs_tex1 = (const sceGsTex1 *)&tex1;
+    return gs_tex1->MMAG == SCE_GS_NEAREST;
+}
+
+static void EffectSubRenderTexturedSpriteVerticesGSAlpha(
+    sceGsTex0 *tex,
+    float *vertices,
+    int use_screen_pos,
+    u_long gs_alpha,
+    int nearest_sampler)
 {
     if (EffectSubIsLiveFramebufferTexture(tex))
     {
@@ -278,16 +315,31 @@ static void EffectSubRenderTexturedSpriteVertices(sceGsTex0 *tex, float *vertice
 
         if (use_screen_pos)
         {
-            MikuPan_RenderScreenCopyTriangles3DScreenPos(tex, &triangles[0][0], 6, 1);
+            MikuPan_RenderScreenCopyTriangles3DScreenPosGSAlpha(
+                tex, &triangles[0][0], 6, 1, gs_alpha);
         }
         else
         {
-            MikuPan_RenderScreenCopyTriangles3D(tex, &triangles[0][0], 6, 1, 0);
+            MikuPan_RenderScreenCopyTriangles3DGSAlpha(
+                tex, &triangles[0][0], 6, 1, gs_alpha);
         }
         return;
     }
 
-    MikuPan_RenderSprite2D(tex, vertices);
+    MikuPan_ApplyScreenDitherPresentationScale(tex, vertices, 4);
+    MikuPan_RenderSprite2DFilteredGSAlpha(tex, vertices, nearest_sampler, gs_alpha);
+}
+
+static void EffectSubRenderTexturedSpriteVertices(
+    sceGsTex0 *tex,
+    float *vertices,
+    int use_screen_pos)
+{
+    EffectSubRenderTexturedSpriteVerticesGSAlpha(
+        tex, vertices, use_screen_pos,
+        SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD,
+                           SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0),
+        0);
 }
 
 static void EffectSubRenderTexturedSpriteQuad(
@@ -350,7 +402,7 @@ static void EffectSubRenderPointGS(const sceVu0IVECTOR ivec, int r, int g, int b
     EffectSubWriteUntexturedNDCVertex(vertices[4], center[0] - px, center[1] + py, 0.0f, r, g, b, a);
     EffectSubWriteUntexturedNDCVertex(vertices[5], center[0] + px, center[1] + py, 0.0f, r, g, b, a);
 
-    MikuPan_RenderUntexturedTriangles3D(&vertices[0][0], 6, depth_always, 0);
+    MikuPan_RenderUntexturedTriangles3D(&vertices[0][0], 6, depth_always, MIKUPAN_GPU_BLEND_NORMAL);
 }
 
 static void EffectSubRenderLineGS(
@@ -397,7 +449,7 @@ static void EffectSubRenderLineGS(
     EffectSubWriteUntexturedNDCVertex(vertices[4], p0[0] + ox, p0[1] + oy, 0.0f, r0, g0, b0, a0);
     EffectSubWriteUntexturedNDCVertex(vertices[5], p1[0] + ox, p1[1] + oy, 0.0f, r1, g1, b1, a1);
 
-    MikuPan_RenderUntexturedTriangles3D(&vertices[0][0], 6, 0, 0);
+    MikuPan_RenderUntexturedTriangles3D(&vertices[0][0], 6, 0, MIKUPAN_GPU_BLEND_NORMAL);
 }
 
 void InitEffectSub()
@@ -899,7 +951,7 @@ void SetTriangle(int pri, float x1, float y1, float x2, float y2, float x3, floa
         EffectSubWriteUntextured2DVertex(vertices[1], x2, y2, 0.0f, r, g, b, a);
         EffectSubWriteUntextured2DVertex(vertices[2], x3, y3, 0.0f, r, g, b, a);
 
-        MikuPan_RenderUntexturedTriangles3D(&vertices[0][0], 3, 1, 0);
+        MikuPan_RenderUntexturedTriangles3D(&vertices[0][0], 3, 1, MIKUPAN_GPU_BLEND_NORMAL);
     }
 }
 
@@ -981,7 +1033,7 @@ void SetTriangleZ(int pri, float x1, float y1, float z1, float x2, float y2, flo
         EffectSubWriteUntextured2DVertex(vertices[1], x2, y2, 0.0f, r, g, b, a);
         EffectSubWriteUntextured2DVertex(vertices[2], x3, y3, 0.0f, r, g, b, a);
 
-        MikuPan_RenderUntexturedTriangles3D(&vertices[0][0], 3, 1, 0);
+        MikuPan_RenderUntexturedTriangles3D(&vertices[0][0], 3, 1, MIKUPAN_GPU_BLEND_NORMAL);
     }
 }
 
@@ -1527,9 +1579,7 @@ void Set3DPosTexure(sceVu0FMATRIX wlm, DRAW_ENV *de, int texno, float w, float h
             //pbuf[ndpkt++].ui32[3] = (i <= 1) ? 0x8000 : 0;
         }
 
-        int additive_blend = de->alpha == SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
-
-        MikuPan_RenderSprite3DWithState((sceGsTex0*) &tx0, render_buffer, additive_blend);
+        MikuPan_RenderSprite3DWithStateGSAlpha((sceGsTex0*) &tx0, render_buffer, de->alpha);
         
         pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
     }
@@ -2148,7 +2198,9 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
         buffer[i][11] = 1.0f;
     }
 
-    EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &buffer[0][0], 1);
+    EffectSubRenderTexturedSpriteVerticesGSAlpha(
+        mikupan_texture_load, &buffer[0][0], 1, alpha,
+        EffectSubTex1UsesNearest(tex1));
 
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
@@ -2393,7 +2445,9 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
         buffer[i][11] = 1.0f;
     }
 
-    EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &buffer[0][0], 1);
+    EffectSubRenderTexturedSpriteVerticesGSAlpha(
+        mikupan_texture_load, &buffer[0][0], 1, alpha,
+        EffectSubTex1UsesNearest(tex1));
 
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;
@@ -2878,7 +2932,12 @@ void SetScreenZ(int addr)
 
 void CaptureScreen(u_int addr)
 {
-    LocalCopyLtoB2(1, (sys_wrk.count & 1) * 224 * 10);
+    (void)addr; // We don't need this, it just shuts up warnings.
+
+    if (!EffectSubReadResolvedMainFramebuffer(buf2))
+    {
+        LocalCopyLtoB2(1, (sys_wrk.count & 1) * 224 * 10);
+    }
 }
 
 /// Draws the last 3D space as a texture on the screen
@@ -3105,7 +3164,7 @@ void CheckPointDepth(PP_JUDGE *ppj)
 	int n2;
 	u_int ui;
     
-    int n = ppj->num; // you sneaky bastard !!!!
+    int n = ppj->num;
     
     for (i = 0; i < n; i++)
     {
@@ -3342,7 +3401,7 @@ void LocalCopyLtoB_Sub(int no, int type, int addr) {
     }
 
     if (!EffectSubIsMainFramebufferAddress(addr) ||
-        !EffectSubReadMainFramebuffer(pbuf))
+        !EffectSubReadFramebufferAddress(addr, pbuf))
     {
         sceGsExecStoreImage(&gs_simage1, pbuf);
         sceGsExecStoreImage(&gs_simage2, &pbuf[32000]);
@@ -3659,7 +3718,7 @@ void LocalCopyLtoL(int addr1, int addr2)
     sceGsLoadImage load_image;
 
     if (EffectSubIsMainFramebufferAddress(addr1) &&
-        EffectSubUploadMainFramebufferToGs(addr2))
+        EffectSubUploadMainFramebufferToGs(addr1, addr2))
     {
         return;
     }

@@ -633,7 +633,7 @@ void SubRDFire(EFFECT_CONT *ec)
                 EffectRdrWriteTexturedVertex(&render_buffer[out++][0], 0.0f, v1, cr, cg, cb, ca, fvec[l1]);
             }
 
-            MikuPan_RenderTexturedTriangles3DWithState((sceGsTex0 *)&tx0, &render_buffer[0][0], out, 0, 1);
+            MikuPan_RenderTexturedTriangles3DWithState((sceGsTex0 *)&tx0, &render_buffer[0][0], out, 0, MIKUPAN_GPU_BLEND_ADDITIVE);
         }
 
         pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;

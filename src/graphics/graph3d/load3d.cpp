@@ -406,12 +406,18 @@ void SetPreRenderR022(int flg)
     SgLIGHT plights[16];
     SgLIGHT slights[16];
 
-    if (room_addr_tbl[22].near_sgd == NULL || room_addr_tbl[22].lit_data == NULL)
+    if (room_addr_tbl[R022_NAKASU].near_sgd == NULL
+        || room_addr_tbl[R022_NAKASU].lit_data == NULL)
     {
         return;
     }
 
-    SgReadLights(room_addr_tbl[22].near_sgd, room_addr_tbl[22].lit_data, ambient, ilights, 3, plights, 0x10, slights, 0x10);
+    SgReadLights(room_addr_tbl[R022_NAKASU].near_sgd,
+                 room_addr_tbl[R022_NAKASU].lit_data,
+                 ambient,
+                 ilights, 3,
+                 plights, 0x10,
+                 slights, 0x10);
 
     if (flg == 0)
     {

@@ -20,6 +20,9 @@
 #include "graphics/graph3d/sglib.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_logging_c.h"
+#include "mikupan/mikupan_photo_capture.h"
+#include "mikupan/mikupan_photo_hint.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 #include "ingame/map/furn_spe/furn_spe.h"
 #include "ingame/menu/ig_album.h"
 #include "ingame/menu/ig_glst.h"
@@ -28,7 +31,6 @@
 #include "ingame/photo/photo.h"
 #include "ingame/plyr/plyr_ctl.h" // FModeScreenEffect
 #include "main/glob.h"
-#include "mikupan/rendering/mikupan_renderer.h"
 
 #define INCLUDING_FROM_PHT_MAKE_C
 #include "ingame/map/furn_ctl.h"// SetFurnAttrEve
@@ -1993,271 +1995,11 @@ static u_short PhotoPackRgb555(int r, int g, int b)
                      ((g & 0x1f) << 5) | (r & 0x1f));
 }
 
-enum
-{
-    PHOTO_CAPTURE_SCREEN_W = 640,
-    PHOTO_CAPTURE_SCREEN_H = 224,
-    PHOTO_CAPTURE_X = 128,
-    PHOTO_CAPTURE_Y = 80,
-    PHOTO_CAPTURE_W = 384,
-    PHOTO_CAPTURE_H = 256,
-    PHOTO_CAPTURE_FIELD_H = PHOTO_CAPTURE_H / 2,
-    PHOTO_CAPTURE_PITCH = 384,
-    PHOTO_NEGATIVE_PROTECT_X = PHOTO_CAPTURE_X,
-    PHOTO_NEGATIVE_PROTECT_Y = PHOTO_CAPTURE_Y,
-    PHOTO_NEGATIVE_PROTECT_W = PHOTO_CAPTURE_W,
-    PHOTO_NEGATIVE_PROTECT_H = PHOTO_CAPTURE_H,
-};
-
-static u_short g_photo_capture_555[PHOTO_CAPTURE_PITCH * PHOTO_CAPTURE_FIELD_H];
-static unsigned char g_photo_preview_rgba[PHOTO_CAPTURE_W * PHOTO_CAPTURE_H * 4];
-static int g_photo_capture_valid = 0;
-static int g_photo_frame_overlay_active = 0;
-static int g_photo_preview_drawn_this_game_frame = 0;
-
-static void ActivateResolvedPhotoNegative(void);
-
-static int CaptureResolvedPhotoForLater(void)
-{
-    const int myy = PHOTO_CAPTURE_Y / 2;
-    unsigned char *rgba = (unsigned char *)GetEmptyBuffer(0);
-
-    g_photo_capture_valid = 0;
-    g_photo_frame_overlay_active = 0;
-
-    if (!MikuPan_ReadResolvedFramebufferRGBA8TopLeft(
-            PHOTO_CAPTURE_SCREEN_W,
-            PHOTO_CAPTURE_SCREEN_H,
-            rgba))
-    {
-        return 0;
-    }
-
-    MikuPan_UpdatePhotoNegativeSourceTextureRGBA(
-        PHOTO_CAPTURE_SCREEN_W,
-        PHOTO_CAPTURE_SCREEN_H,
-        rgba);
-
-    {
-        long long dbg_sum = 0;
-        int dbg_n = 0;
-        int dbg_min = 255;
-        int dbg_max = 0;
-
-        for (int dy = 0; dy < PHOTO_CAPTURE_FIELD_H; dy += 8)
-        {
-            for (int dx = 0; dx < PHOTO_CAPTURE_W; dx += 8)
-            {
-                const unsigned char *p =
-                    rgba + ((long long)((PHOTO_CAPTURE_X + dx) +
-                                   (myy + dy) * PHOTO_CAPTURE_SCREEN_W)) * 4;
-                const int lum = (p[0] + p[1] + p[2]) / 3;
-                dbg_sum += lum;
-                if (lum < dbg_min) dbg_min = lum;
-                if (lum > dbg_max) dbg_max = lum;
-                dbg_n++;
-            }
-        }
-
-        info_log("[DIAG] photo staged read: avg_rgb=%lld min=%d max=%d region=%d,%d %dx%d count=%d",
-                 dbg_n ? dbg_sum / dbg_n : -1,
-                 dbg_n ? dbg_min : -1,
-                 dbg_n ? dbg_max : -1,
-                 PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
-                 PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
-                 (int)sys_wrk.count);
-    }
-
-    for (int y = 0; y < PHOTO_CAPTURE_FIELD_H; y++)
-    {
-        for (int x = 0; x < PHOTO_CAPTURE_W; x++)
-        {
-            const unsigned char *p =
-                rgba + ((long long)((PHOTO_CAPTURE_X + x) +
-                               (myy + y) * PHOTO_CAPTURE_SCREEN_W)) * 4;
-            g_photo_capture_555[x + y * PHOTO_CAPTURE_PITCH] =
-                PhotoPackRgb555(p[0] >> 3, p[1] >> 3, p[2] >> 3);
-
-            for (int yy = 0; yy < 2; yy++)
-            {
-                unsigned char *preview =
-                    g_photo_preview_rgba +
-                    ((long long)(x + (y * 2 + yy) * PHOTO_CAPTURE_W)) * 4;
-                preview[0] = p[0];
-                preview[1] = p[1];
-                preview[2] = p[2];
-                preview[3] = 0xff;
-            }
-        }
-    }
-
-    g_photo_capture_valid = 1;
-    MikuPan_UpdatePhotoPreviewTextureRGBA(
-        PHOTO_CAPTURE_W,
-        PHOTO_CAPTURE_H,
-        g_photo_preview_rgba);
-    return 1;
-}
-
 void StagePhotoCaptureForSave(void)
 {
-    CaptureResolvedPhotoForLater();
+    MikuPan_StagePhotoCaptureForSave();
 }
 
-static void TakePhotoFromResolvedScreen(void)
-{
-    if (!g_photo_capture_valid && !CaptureResolvedPhotoForLater())
-    {
-        TakePhotoFromScreen();
-        return;
-    }
-
-    *(int *)MikuPan_GetHostAddress(EVENT_ADDRESS) = 0x18000;
-    memcpy((u_char *)MikuPan_GetHostAddress(EVENT_ADDRESS) + 16,
-           g_photo_capture_555,
-           sizeof(g_photo_capture_555));
-
-    MikuPan_UpdatePhotoPreviewTextureRGBA(
-        PHOTO_CAPTURE_W,
-        PHOTO_CAPTURE_H,
-        g_photo_preview_rgba);
-}
-
-static void QueueResolvedPhotoPreview(void)
-{
-    if (!g_photo_preview_drawn_this_game_frame)
-    {
-        MikuPan_SetPhotoPreviewOverlayActiveForFrame(
-            PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
-            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
-            0xff);
-        MikuPan_QueuePhotoPreviewTexture(
-            PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
-            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
-            0xff);
-        ActivateResolvedPhotoNegative();
-    }
-}
-
-static void ActivateResolvedPhotoPreview(void)
-{
-    if (g_photo_capture_valid)
-    {
-        MikuPan_SetPhotoPreviewOverlayActiveForFrame(
-            PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
-            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
-            0xff);
-    }
-}
-
-static void ActivateResolvedPhotoNegative(void)
-{
-    if (g_photo_capture_valid)
-    {
-        MikuPan_SetPhotoNegativeOverlayActiveForFrame(
-            PHOTO_NEGATIVE_PROTECT_X, PHOTO_NEGATIVE_PROTECT_Y,
-            PHOTO_NEGATIVE_PROTECT_W, PHOTO_NEGATIVE_PROTECT_H,
-            1.0f);
-    }
-}
-
-static void ActivatePhotoFrameModernOverlays(void)
-{
-    g_photo_preview_drawn_this_game_frame = 0;
-    g_photo_frame_overlay_active = g_photo_capture_valid != 0;
-    ActivateResolvedPhotoPreview();
-    ActivateResolvedPhotoNegative();
-}
-
-static void ClearResolvedPhotoFrameOverlay(void)
-{
-    g_photo_frame_overlay_active = 0;
-    g_photo_preview_drawn_this_game_frame = 0;
-    MikuPan_ClearPhotoPreviewOverlay();
-    MikuPan_ClearPhotoNegativeOverlay();
-}
-
-static void ResetResolvedPhotoFrameOverlay(void)
-{
-    g_photo_capture_valid = 0;
-    ClearResolvedPhotoFrameOverlay();
-}
-
-static void RenderResolvedPhotoPreviewInFrame(void)
-{
-    if (g_photo_preview_drawn_this_game_frame)
-    {
-        return;
-    }
-
-    DrawAll2D();
-
-    if (MikuPan_RenderPhotoPreviewOverlayForFrame())
-    {
-        g_photo_preview_drawn_this_game_frame = 1;
-    }
-}
-
-static void RenderResolvedPhotoNegativeInFrame(void)
-{
-    DrawAll2D();
-    MikuPan_RenderPhotoNegativePreviewOverlayForFrame();
-}
-
-static int UseResolvedPhotoFrameOverlay(void)
-{
-    return g_photo_capture_valid != 0 && g_photo_frame_overlay_active != 0;
-}
-
-static void ActivatePhotoNegativeFromSetNegaFilter(int type, float y12,
-                                                   float y22)
-{
-    float coverage;
-
-    if (type == 3)
-    {
-        MikuPan_SetPhotoNegativeOverlayActiveForFrame(
-            PHOTO_NEGATIVE_PROTECT_X, PHOTO_NEGATIVE_PROTECT_Y,
-            PHOTO_NEGATIVE_PROTECT_W, PHOTO_NEGATIVE_PROTECT_H,
-            1.0f);
-        return;
-    }
-
-    if (type != 1 && type != 2 && type != 4 && type != 5)
-    {
-        MikuPan_ClearPhotoNegativeOverlay();
-        return;
-    }
-
-    if (y12 < 0.0f)
-    {
-        y12 = -y12;
-    }
-
-    if (y22 < 0.0f)
-    {
-        y22 = -y22;
-    }
-
-    coverage = y12 > y22 ? y12 : y22;
-    coverage /= 128.0f;
-
-    if (coverage <= 0.0f)
-    {
-        MikuPan_ClearPhotoNegativeOverlay();
-        return;
-    }
-
-    if (coverage > 1.0f)
-    {
-        coverage = 1.0f;
-    }
-
-    MikuPan_SetPhotoNegativeOverlayActiveForFrame(
-        PHOTO_NEGATIVE_PROTECT_X, PHOTO_NEGATIVE_PROTECT_Y,
-        PHOTO_NEGATIVE_PROTECT_W, PHOTO_NEGATIVE_PROTECT_H,
-        coverage);
-}
 
 static void MakeSmallPhotoFromFullPhotoBuffer(int dst_addr, int src_addr,
                                               int src_has_size_header)
@@ -2482,8 +2224,6 @@ void DrawPhotoHinttex2(u_int sw, u_int pri, int num)
     SQAR_DAT sq;
     DISP_SQAR dq;
     int i;
-    float scale_w;
-    float scale_h;
 
     if (hint_rea != 0)
     {
@@ -2536,16 +2276,7 @@ void DrawPhotoHinttex2(u_int sw, u_int pri, int num)
         }
     }
 
-    /*
-     * The captured photo (preview) is composited again at frame end
-     * (MikuPan_RenderQueuedPhotoPreviewTexture) so the PS2 frame border and
-     * negative filter cannot cover it. That same redraw would also paint over
-     * this hint overlay if it were drawn immediately. Queue the darkening quad
-     * and the hint sprite into the late-2D overlay queue (the same mechanism
-     * the message box uses) so they are flushed after the preview redraw and
-     * land on top of the photo.
-     */
-    MikuPan_BeginLate2DOverlayQueue();
+    MikuPan_BeginPhotoHintOverlayQueue();
 
     sq = SQAR_DAT {
         .w = 640,
@@ -2615,40 +2346,28 @@ void DrawPhotoHinttex2(u_int sw, u_int pri, int num)
     ds.z = 0xfffffff - ds.pri;
 
     ds.alpha = alp;
-    scale_w = sd->w > 0 ? 384.0f / (float)sd->w : 1.0f;
-    scale_h = sd->h > 0 ? 256.0f / (float)sd->h : 1.0f;
-    ds.scw = scale_w;
-    ds.sch = scale_h;
 
-    ds.x = 128.0f - pos;
-    ds.y = 80.0f - pos;
-    ds.csx = ds.x;
-    ds.csy = ds.y;
+    ds.x = (int)((384 - sd->w) / 2) + 128 - pos;
+    ds.y = (int)((256 - sd->h) / 2) + 80 - pos;
 
     DispSprD(&ds);
 
-    ds.x = 128.0f - pos;
-    ds.y = 80.0f + pos;
-    ds.csx = ds.x;
-    ds.csy = ds.y;
+    ds.x = (int)((384 - sd->w) / 2) + 128 - pos;
+    ds.y = (int)((256 - sd->h) / 2) + 80 + pos;
 
     DispSprD(&ds);
 
-    ds.x = 128.0f + pos;
-    ds.y = 80.0f - pos;
-    ds.csx = ds.x;
-    ds.csy = ds.y;
+    ds.x = (int)((384 - sd->w) / 2) + 128 + pos;
+    ds.y = (int)((256 - sd->h) / 2) + 80 - pos;
 
     DispSprD(&ds);
 
-    ds.x = 128.0f + pos;
-    ds.y = 80.0f + pos;
-    ds.csx = ds.x;
-    ds.csy = ds.y;
+    ds.x = (int)((384 - sd->w) / 2) + 128 + pos;
+    ds.y = (int)((256 - sd->h) / 2) + 80 + pos;
 
     DispSprD(&ds);
 
-    MikuPan_EndLate2DOverlayQueue();
+    MikuPan_EndPhotoHintOverlayQueue();
 }
 
 void DrawPhotoEffect(u_int pri, int type)
@@ -3307,14 +3026,26 @@ int DispPhotoFrame1(int fl)
 
         ds.alpha = alp1;
 
-        DispSprD(&ds);
+        if (MikuPan_UsePhotoFrameOverlay())
+        {
+            MikuPan_ActivatePhotoPreviewWithAlpha(alp1);
+        }
+        else
+        {
+            DispSprD(&ds);
+        }
 
         alp1 = alp1 + 4 < 0x80 ? alp1 + 4 : 0x80;
     }
 
+    if (MikuPan_UsePhotoFrameOverlay() && (fl != 2 || hint_3d == 0))
+    {
+        MikuPan_ActivatePhotoFramePreview();
+    }
+
     ret = alp1 >= 0x80 ? 2 : ret;
 
-    if (!UseResolvedPhotoFrameOverlay())
+    if (!MikuPan_UsePhotoFrameOverlay())
     {
         {
             DISP_SPRT ds;
@@ -3415,19 +3146,19 @@ int DispPhotoFrame1(int fl)
 
             dq.alpha = 0xc8;
 
-            if (!UseResolvedPhotoFrameOverlay())
+            if (!MikuPan_UsePhotoFrameOverlay())
             {
                 DispSqrD(&dq);
             }
 
-            RenderResolvedPhotoPreviewInFrame();
+            MikuPan_RenderPhotoPreviewInFrame();
 
-            if (!UseResolvedPhotoFrameOverlay())
+            if (!MikuPan_UsePhotoFrameOverlay())
             {
                 SubFadeFrame(0x60, 0x400);
             }
 
-            if (!UseResolvedPhotoFrameOverlay())
+            if (!MikuPan_UsePhotoFrameOverlay())
             {
                 float fh;
                 float szw;
@@ -3512,7 +3243,7 @@ void DispPhotoFrame2()
 
     dq.alpha = 0x80;
 
-    if (!UseResolvedPhotoFrameOverlay())
+    if (!MikuPan_UsePhotoFrameOverlay())
     {
         dq.x[0] = 0;
         dq.x[2] = 0;
@@ -3571,9 +3302,9 @@ void DispPhotoFrame2()
         DispSqrD(&dq);
     }
 
-    RenderResolvedPhotoPreviewInFrame();
+    MikuPan_RenderPhotoPreviewInFrame();
 
-    if (!UseResolvedPhotoFrameOverlay())
+    if (!MikuPan_UsePhotoFrameOverlay())
     {
         SubFadeFrame(0x60, 0x400);
     }
@@ -3581,7 +3312,7 @@ void DispPhotoFrame2()
     f26 = 2.0f;
     f25 = 6.0f;
 
-    if (!UseResolvedPhotoFrameOverlay())
+    if (!MikuPan_UsePhotoFrameOverlay())
     {
         SetPanel(0x3c0, x - f25 + f26, y - f25 + 1.0f, x + 384 + f25 - f26,
                  y + 1.0f, 0xff, 0xff, 0xff, 0x80);
@@ -3638,7 +3369,7 @@ void DispPhotoFrame2_2(int type)
 
     dq.alpha = 0x80;
 
-    if (!UseResolvedPhotoFrameOverlay())
+    if (!MikuPan_UsePhotoFrameOverlay())
     {
         dq.x[0] = 0;
         dq.x[2] = 0;
@@ -3697,16 +3428,16 @@ void DispPhotoFrame2_2(int type)
         DispSqrD(&dq);
     }
 
-    RenderResolvedPhotoPreviewInFrame();
+    MikuPan_RenderPhotoPreviewInFrame();
 
     SetNegaFilter(type == 0 ? 0 : (type == 1 ? 3 : ers_type));
 
-    if (!UseResolvedPhotoFrameOverlay())
+    if (!MikuPan_UsePhotoFrameOverlay())
     {
         SubFadeFrame(0x60, 0x400);
     }
 
-    if (!UseResolvedPhotoFrameOverlay())
+    if (!MikuPan_UsePhotoFrameOverlay())
     {
         float szw;
         float szh;
@@ -3738,7 +3469,7 @@ void DispPhotoFrame2_3(int type)
     x = 128.0f;
     y = 80.0f;
 
-    if (!UseResolvedPhotoFrameOverlay())
+    if (!MikuPan_UsePhotoFrameOverlay())
     {
         {
             DISP_SPRT ds;
@@ -3888,7 +3619,7 @@ void DispPhotoFrame2_3(int type)
 
             dq.alpha = 0x80;
 
-            if (!UseResolvedPhotoFrameOverlay())
+            if (!MikuPan_UsePhotoFrameOverlay())
             {
                 dq.x[0] = 0;
                 dq.x[2] = 0;
@@ -3947,16 +3678,16 @@ void DispPhotoFrame2_3(int type)
                 DispSqrD(&dq);
             }
 
-            RenderResolvedPhotoPreviewInFrame();
+            MikuPan_RenderPhotoPreviewInFrame();
 
             SetNegaFilter(type == 0 ? 0 : (type == 1 ? 3 : ers_type));
 
-            if (!UseResolvedPhotoFrameOverlay())
+            if (!MikuPan_UsePhotoFrameOverlay())
             {
                 SubFadeFrame(0x60, 0x400);
             }
 
-            if (!UseResolvedPhotoFrameOverlay())
+            if (!MikuPan_UsePhotoFrameOverlay())
             {
                 float szw;
                 float szh;
@@ -4090,9 +3821,9 @@ void SetNegaFilter(int type)
     {
     }// HACK: fixes codegen
 
-    ActivatePhotoNegativeFromSetNegaFilter(type, y12, y22);
+    MikuPan_ActivatePhotoNegativeFromSetNegaFilter(type, y12, y22);
 
-    if (UseResolvedPhotoFrameOverlay())
+    if (MikuPan_UsePhotoFrameOverlay())
     {
         return;
     }
@@ -4233,7 +3964,7 @@ void SetNegaFilter(int type)
         break;
     }
 
-    RenderResolvedPhotoNegativeInFrame();
+    MikuPan_RenderPhotoNegativeInFrame();
 }
 
 void PhotoMake()
@@ -4242,24 +3973,24 @@ void PhotoMake()
 
     if (plyr_wrk.mode != 1)
     {
-        ResetResolvedPhotoFrameOverlay();
+        MikuPan_ResetPhotoFrameOverlay();
         return;
     }
 
     if (photo_wrk.mode >= PHOTO_MODE_MAKE_DISP &&
         photo_wrk.mode < PHOTO_MODE_END)
     {
-        ActivatePhotoFrameModernOverlays();
+        MikuPan_ActivatePhotoFrameOverlays();
     }
     else
     {
-        ClearResolvedPhotoFrameOverlay();
+        MikuPan_ClearPhotoFrameOverlay();
     }
 
     switch (photo_wrk.mode)
     {
         case 4:
-            ClearResolvedPhotoFrameOverlay();
+            MikuPan_ClearPhotoFrameOverlay();
             photo_wrk.adr_no = GetSavePhotoNo();
             break;
         case 5:
@@ -4267,10 +3998,10 @@ void PhotoMake()
             {
                 if (pic_save_flag != 0)
                 {
-                    if (pic_save_flag == 1 && !g_photo_capture_valid)
+                    if (pic_save_flag == 1 && !MikuPan_HasPhotoCapture())
                     {
-                        CaptureResolvedPhotoForLater();
-                        ActivatePhotoFrameModernOverlays();
+                        MikuPan_CapturePhotoForLater();
+                        MikuPan_ActivatePhotoFrameOverlays();
                     }
 
                     DispPhotoFrame0();
@@ -4308,10 +4039,10 @@ void PhotoMake()
             {
                 if (pic_save_flag == 1)
                 {
-                    if (!g_photo_capture_valid)
+                    if (!MikuPan_HasPhotoCapture())
                     {
-                        CaptureResolvedPhotoForLater();
-                        ActivatePhotoFrameModernOverlays();
+                        MikuPan_CapturePhotoForLater();
+                        MikuPan_ActivatePhotoFrameOverlays();
                     }
                     DispPhotoFrame0();
                     LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x2d00);
@@ -4478,8 +4209,8 @@ void PhotoMake()
             break;
         case 8:
             LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x1a40);
-            TakePhotoFromResolvedScreen();
-            ActivatePhotoFrameModernOverlays();
+            MikuPan_TakePhotoFromResolvedScreen();
+            MikuPan_ActivatePhotoFrameOverlays();
             CompPhotoFromWorkArea(photo_wrk.adr_no);
             WaitFrameTop(1);
             MakeSPhotoFromWorkArea(photo_wrk.adr_no);
@@ -4502,10 +4233,10 @@ void PhotoMake()
                 FurnActOffEve(hint_2d_num + 227);
             }
             DrawAll2D();
-            QueueResolvedPhotoPreview();
+            MikuPan_QueueResolvedPhotoPreview();
             break;
         case 9:
-            ClearResolvedPhotoFrameOverlay();
+            MikuPan_ResetPhotoFrameOverlay();
             break;
     }
 }
@@ -4526,24 +4257,24 @@ void PhotoMake_EneDead()
 
     if (plyr_wrk.mode != 1)
     {
-        ResetResolvedPhotoFrameOverlay();
+        MikuPan_ResetPhotoFrameOverlay();
         return;
     }
 
     if (photo_wrk.mode >= PHOTO_MODE_MAKE_DISP &&
         photo_wrk.mode < PHOTO_MODE_END)
     {
-        ActivatePhotoFrameModernOverlays();
+        MikuPan_ActivatePhotoFrameOverlays();
     }
     else
     {
-        ClearResolvedPhotoFrameOverlay();
+        MikuPan_ClearPhotoFrameOverlay();
     }
 
     switch (photo_wrk.mode)
     {
         case 4:
-            ClearResolvedPhotoFrameOverlay();
+            MikuPan_ClearPhotoFrameOverlay();
             photo_wrk.adr_no = GetSavePhotoNo();
 
             stop_effects = 1;
@@ -4553,10 +4284,10 @@ void PhotoMake_EneDead()
         case 5:
             if (pic_save_flag != 0)
             {
-                if (pic_save_flag == 1 && !g_photo_capture_valid)
+                if (pic_save_flag == 1 && !MikuPan_HasPhotoCapture())
                 {
-                    CaptureResolvedPhotoForLater();
-                    ActivatePhotoFrameModernOverlays();
+                    MikuPan_CapturePhotoForLater();
+                    MikuPan_ActivatePhotoFrameOverlays();
                 }
 
                 LocalCopyLtoB2(0, ((sys_wrk.count + 1) & 1) * 0x8c0);
@@ -4615,8 +4346,8 @@ void PhotoMake_EneDead()
         case 8:
             FModeScreenEffect();
             LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x1a40);
-            TakePhotoFromResolvedScreen();
-            ActivatePhotoFrameModernOverlays();
+            MikuPan_TakePhotoFromResolvedScreen();
+            MikuPan_ActivatePhotoFrameOverlays();
             CompPhotoFromWorkArea(photo_wrk.adr_no);
             MakeSPhotoFromWorkArea(photo_wrk.adr_no);
             LocalCopyLtoL(0x1a40, ((sys_wrk.count + 1) & 1) * 0x8c0);
@@ -4638,12 +4369,12 @@ void PhotoMake_EneDead()
             }
 
             DrawAll2D();
-            QueueResolvedPhotoPreview();
+            MikuPan_QueueResolvedPhotoPreview();
 
             SetBlurOff();
             break;
         case 9:
-            ClearResolvedPhotoFrameOverlay();
+            MikuPan_ClearPhotoFrameOverlay();
             stop_effects = 0;
             break;
     }
@@ -4652,7 +4383,7 @@ void PhotoMake_EneDead()
 void PhotoMakeSaveInit()
 {
     pic_save_flag = 0;
-    ResetResolvedPhotoFrameOverlay();
+    MikuPan_ResetPhotoFrameOverlay();
 }
 
 void DrawPicture(int pri, int addr, int n, float x, float y, float szw,
@@ -4691,7 +4422,7 @@ void PhotoMakeSave2()
                 ReSetGhostList(pfile_wrk.pic[pfile_wrk.pic_num - 1]);
                 break;
             case 9:
-                ClearResolvedPhotoFrameOverlay();
+                MikuPan_ClearPhotoFrameOverlay();
                 FModeScreenEffect();
                 DispPhotoFrame00(0);
                 DrawAll2D();

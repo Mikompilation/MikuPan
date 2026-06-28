@@ -281,6 +281,9 @@ set(MIKUPAN_SOURCES
         src/ingame/map/find_dat.cpp
         src/mikupan/rendering/mikupan_pipeline.cpp
         src/mikupan/rendering/mikupan_meshcache.cpp
+        src/mikupan/mikupan_graph3d_compat.cpp
+        src/mikupan/mikupan_effect_compat.cpp
+        src/mikupan/mikupan_photo_capture.cpp
         "src/mikupan/mikupan_utils.cpp"
         src/ingame/map/furn_spe/fsla_dat.cpp
         src/mikupan/mikupan_config.cpp

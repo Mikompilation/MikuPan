@@ -22,6 +22,7 @@ MikuPan_TextureInfo* MikuPan_LookupTextureByTex0(uint64_t tex0_value);
 void MikuPan_RegisterTextureForTex0(uint64_t tex0_value, sceGsTex0 *tex0,
                                     MikuPan_TextureInfo* info);
 void MikuPan_InvalidateTex0Cache(void);
+void MikuPan_TextureCache_InvalidateGsRange(int up_addr, int up_size);
 
 #ifdef __cplusplus
 }

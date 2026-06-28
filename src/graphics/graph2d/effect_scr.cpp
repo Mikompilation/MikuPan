@@ -26,7 +26,9 @@
 #include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_rng.h"
+#include "mikupan/mikupan_effect_compat.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
@@ -1061,7 +1063,7 @@ void MakeScrDeformPacket(/* s1 17 */ int pnumw, /* 0x0(sp) */ int pnumh, /* s2 1
         &render_buffer[0][0],
         render_vertices,
         1,
-        0);
+        MIKUPAN_GPU_BLEND_NORMAL);
 }
 
 void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp) */ u_char alp)
@@ -1314,7 +1316,7 @@ void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
 
     eff_deform.init = 1;
@@ -1682,7 +1684,7 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
     
     pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
@@ -1995,7 +1997,7 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
     
     eff_deform.pass = 1;
@@ -2589,6 +2591,14 @@ void SetContrast3(/* s0 16 */ EFFECT_CONT *ec)
 
 void SubNega(/* s0 16 */ u_char r, /* s1 17 */ u_char g, /* s3 19 */ u_char b, /* s4 20 */ u_char alp, /* s2 18 */ u_char alp2)
 {
+    if (MikuPan_TryScreenNegativeOverlay(r, g, b, alp, alp2))
+    {
+        return;
+    }
+
+    /* Original PS2 framebuffer-feedback path/fallback.
+     * This code is basically unused now, but I didn't want to remove it.
+    */
 	/* 0x0(sp) */ SPRITE_DATA sd = {
         .g_GsTex0 = {
             .TBP0 = 0x1a40,
@@ -2632,36 +2642,41 @@ void SubNega(/* s0 16 */ u_char r, /* s1 17 */ u_char g, /* s3 19 */ u_char b, /
         .zbuf = SCE_GS_SET_ZBUF_1(0x8c, SCE_GS_PSMCT24, 1),
         .test = SCE_GS_SET_TEST_1(SCE_GS_TRUE, SCE_GS_ALPHA_GREATER, SCE_GS_FALSE, SCE_GS_AFAIL_KEEP, SCE_GS_FALSE, SCE_GS_FALSE, SCE_GS_TRUE, SCE_GS_DEPTH_GEQUAL),
         .clamp = 0,
-        .prim = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_TRUE, 326, SCE_GIF_PACKED, 5),
+        .prim = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_TRUE, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 1, 0, 0), SCE_GIF_PACKED, 5),
     };
 
     LocalCopyLtoL((sys_wrk.count & 1) * 0x8c0, 0x1a40);
 
-    {
-        float eff_hw, eff_hh;
-        MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);
-        sd.pos_x = -eff_hw - 0.5f;
-        sd.pos_y = -eff_hh - 0.5f;
-        sd.size_w = eff_hw * 2.0f;
-        sd.size_h = eff_hh * 2.0f;
-    }
     sd.r = r;
     sd.g = g;
     sd.b = b;
+
     sd.alpha = alp;
+
     sd.g_GsTex0.TBP0 = 0;
-    sd.pos_z = 0xffffcdf;
+
+    sd.pos_x = -320.5f;
+    sd.pos_y = -224.5f;
+
+    sd.pos_z = 0x0fffffff - 0x320;
+
+    sd.size_w = 640.0f;
+    sd.size_h = 448.0f;
 
     SetTexDirectS2(0x320, &sd, &de, 1);
 
     sd.r = 0x80;
     sd.g = 0x80;
     sd.b = 0x80;
+
     sd.alpha = alp2 << 0x18 < 0 ? 0 : 0x80 - alp2;
+
     sd.g_GsTex0.TBP0 = 0x1a40;
-    sd.pos_z = 0xffffcef;
-    de.alpha = 0x44;
-    de.prim = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_TRUE, 342, SCE_GIF_PACKED, 5);
+
+    sd.pos_z = 0x0fffffff - 0x310;
+
+    de.alpha = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+    de.prim = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, SCE_GS_TRUE, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0), SCE_GIF_PACKED, 5);
 
     SetTexDirectS2(0x310, &sd, &de, 1);
 }
@@ -2962,6 +2977,7 @@ void MakeRDither3()
     sceGsExecLoadImage(&gs_limage2, (u_long128 *)pal);
     
     sceGsSyncPath(0, 0);
+    MikuPan_InvalidateTex0Cache();
 }
 
 void SubDither3(/* s0 16 */ int type, /* f27 65 */ float alp, /* f28 66 */ float spd, /* 0x4530(sp) */ u_char alpmx, /* 0x4534(sp) */ u_char colmx)
@@ -3161,6 +3177,7 @@ void SubDither3(/* s0 16 */ int type, /* f27 65 */ float alp, /* f28 66 */ float
             sceGsExecLoadImage(&gs_limage1, (u_long128 *)pat);
             sceGsExecLoadImage(&gs_limage2, (u_long128 *)pal);
             sceGsSyncPath(0,0);
+            MikuPan_InvalidateTex0Cache();
             WaitFrameTop(0);
         }
     }
@@ -3207,31 +3224,23 @@ void SubDither3(/* s0 16 */ int type, /* f27 65 */ float alp, /* f28 66 */ float
         while (cy <   0.0f) cy += 128.0f;
     }
     
-    {
-        float eff_hw, eff_hh;
-        MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);
-        float full_w = eff_hw * 2.0f;
-        sd2.pos_x = -eff_hw - 0.5f;
-        sd2.size_w = full_w;
+    sd2.clamp_u = (int)((cx + 640.0f) * 16.0f) << 16 | (int)(cx * 16.0f);
+    sd2.clamp_v = (int)((cy + 512.0f) * 16.0f) << 16 | (int)(cy * 16.0f);
+    sd2.alpha = (SgSinf((cnf * PI) / 180.0f) + 1.0f) * alp;
 
-        sd2.clamp_u = (int)((cx + full_w) * 16.0f) << 16 | (int)(cx * 16.0f);
-        sd2.clamp_v = (int)((cy + 512.0f) * 16.0f) << 16 | (int)(cy * 16.0f);
-        sd2.alpha = (SgSinf((cnf * PI) / 180.0f) + 1.0f) * alp;
+    SetTexDirectS2(-2, &sd2, &de2, 0);
 
-        SetTexDirectS2(-2, &sd2, &de2, 0);
+    sd2.clamp_u = (int)((cx + 704.0f) * 16.0f) << 16 | (int)((cx + 64.0f) * 16.0f);
+    sd2.clamp_v = (int)((cy + 512.0f) * 16.0f) << 16 | (int)(cy * 16.0f);
+    sd2.alpha = (SgSinf(((cnf + 120.0f) * PI) / 180.0f) + 1.0f) * alp;
 
-        sd2.clamp_u = (int)((cx + full_w + 64.0f) * 16.0f) << 16 | (int)((cx + 64.0f) * 16.0f);
-        sd2.clamp_v = (int)((cy + 512.0f) * 16.0f) << 16 | (int)(cy * 16.0f);
-        sd2.alpha = (SgSinf(((cnf + 120.0f) * PI) / 180.0f) + 1.0f) * alp;
+    SetTexDirectS2(-2, &sd2, &de2, 0);
 
-        SetTexDirectS2(-2, &sd2, &de2, 0);
+    sd2.clamp_u = (int)((cx + 640.0f) * 16.0f) << 16 | (int)(cx * 16.0f);
+    sd2.clamp_v = (int)((cy + 576.0f) * 16.0f) << 16 | (int)((cy + 64.0f) * 16.0f);
+    sd2.alpha = (SgSinf(((cnf + 240.0f) * PI) / 180.0f) + 1.0f) * alp;
 
-        sd2.clamp_u = (int)((cx + full_w) * 16.0f) << 16 | (int)(cx * 16.0f);
-        sd2.clamp_v = (int)((cy + 576.0f) * 16.0f) << 16 | (int)((cy + 64.0f) * 16.0f);
-        sd2.alpha = (SgSinf(((cnf + 240.0f) * PI) / 180.0f) + 1.0f) * alp;
-
-        SetTexDirectS2(-2, &sd2, &de2, 0);
-    }
+    SetTexDirectS2(-2, &sd2, &de2, 0);
     
     if (stop_effects == 0)
     {
@@ -3407,31 +3416,23 @@ void SubDither4(/* f27 65 */ float alp, /* f28 66 */ float spd)
     cx = ((cx + mvx) > 128.0f) ? (cx + mvx) - 128.0f : (((cx + mvx) < 0.0f) ? (cx + mvx) + 128.0f : (cx + mvx));
     cy = ((cy + mvy) > 128.0f) ? (cy + mvy) - 128.0f : (((cy + mvy) < 0.0f) ? (cy + mvy) + 128.0f : (cy + mvy));
 
-    {
-        float eff_hw, eff_hh;
-        MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);
-        float full_w = eff_hw * 2.0f;
-        sd.pos_x = -eff_hw - 0.5f;
-        sd.size_w = full_w;
+    sd.clamp_u = (int)((cx + 640.0f) * 16.0f) << 16 | (int)(cx * 16.0f);
+    sd.clamp_v = (int)((cy + 512.0f) * 16.0f) << 16 | (int)(cy * 16.0f);
+    sd.alpha = (SgSinf((cnf * PI) / 180.0f) + 1.0f) * alp;
 
-        sd.clamp_u = (int)((cx + full_w) * 16.0f) << 16 | (int)(cx * 16.0f);
-        sd.clamp_v = (int)((cy + 512.0f) * 16.0f) << 16 | (int)(cy * 16.0f);
-        sd.alpha = (SgSinf((cnf * PI) / 180.0f) + 1.0f) * alp;
+    SetTexDirectS2(-2, &sd, &de, 0);
 
-        SetTexDirectS2(-2, &sd, &de, 0);
+    sd.clamp_u = (int)((cx + 704.0f) * 16.0f) << 16 | (int)((cx + 64.0f) * 16.0f);
+    sd.clamp_v = (int)((cy + 512.0f) * 16.0f) << 16 | (int)(cy * 16.0f);
+    sd.alpha = (SgSinf(((cnf + 120.0f) * PI) / 180.0f) + 1.0f) * alp;
 
-        sd.clamp_u = (int)((cx + full_w + 64.0f) * 16.0f) << 16 | (int)((cx + 64.0f) * 16.0f);
-        sd.clamp_v = (int)((cy + 512.0f) * 16.0f) << 16 | (int)(cy * 16.0f);
-        sd.alpha = (SgSinf(((cnf + 120.0f) * PI) / 180.0f) + 1.0f) * alp;
+    SetTexDirectS2(-2, &sd, &de, 0);
 
-        SetTexDirectS2(-2, &sd, &de, 0);
+    sd.clamp_u = (int)((cx + 640.0f) * 16.0f) << 16 | (int)(cx * 16.0f);
+    sd.clamp_v = (int)((cy + 576.0f) * 16.0f) << 16 | (int)((cy + 64.0f) * 16.0f);
+    sd.alpha = (SgSinf(((cnf + 240.0f) * PI) / 180.0f) + 1.0f) * alp;
 
-        sd.clamp_u = (int)((cx + full_w) * 16.0f) << 16 | (int)(cx * 16.0f);
-        sd.clamp_v = (int)((cy + 576.0f) * 16.0f) << 16 | (int)((cy + 64.0f) * 16.0f);
-        sd.alpha = (SgSinf(((cnf + 240.0f) * PI) / 180.0f) + 1.0f) * alp;
-
-        SetTexDirectS2(-2, &sd, &de, 0);
-    }
+    SetTexDirectS2(-2, &sd, &de, 0);
     
     if (stop_effects == 0)
     {
@@ -3500,14 +3501,6 @@ void SubFadeFrame(/* t8 24 */ u_char alp, /* a1 5 */ u_int pri)
     sd.g_GsTex0 = *(sceGsTex0 *)&effdat[12].tex0;
     sd.g_nTexSizeW = effdat[12].w;
     sd.g_nTexSizeH = effdat[12].h;
-    {
-        float eff_hw, eff_hh;
-        MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);
-        sd.pos_x = -eff_hw - 0.5f;
-        sd.pos_y = -eff_hh - 0.5f;
-        sd.size_w = eff_hw * 2.0f;
-        sd.size_h = eff_hh * 2.0f;
-    }
     sd.pos_z = 0xfffffff - pri;
     sd.alpha = alp;
 
@@ -4153,7 +4146,7 @@ u_char SubNowLoading(/* a0 4 */ int fl, /* 0x3440(sp) */ int num, /* f12 50 */ f
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
 
     return pbuf[bak].ui32[0];
@@ -4560,7 +4553,7 @@ void SubGameOver(/* 0x11b60(sp) */ u_char alp, /* f20 58 */ float rate)
             &render_buffer[0][0],
             render_vertices,
             1,
-            0);
+            MIKUPAN_GPU_BLEND_NORMAL);
     }
 }
 
@@ -4861,6 +4854,12 @@ int SetGameOver()
     }
     
     // return ret;
+
+    /* Himuro leaves this path as a missing return. The only completed
+     * state returns 0xff above, so keep the C port deterministic here
+     * with an explicit non-complete value.
+     */
+    return 0;
 }
 
 void ChangeMonochrome(/* a0 4 */ int sw)

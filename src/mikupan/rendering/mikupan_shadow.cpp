@@ -27,6 +27,7 @@ static int    g_shadow_matrix_valid = 0;
 static int    g_shadow_pass_active = 0;
 static int    g_shadow_receiver_pass_active = 0;
 static int    g_shadow_receiver_debug_view = 0;
+static float  g_shadow_strength = 0x50 / 128.0f;
 
 /* Caster-model inspection: override the shadow projector with a free orbit
  * camera so the silhouette can be viewed from any angle in the preview. */
@@ -120,6 +121,20 @@ int MikuPan_IsShadowPassActive(void)
 int MikuPan_IsShadowReceiverPassActive(void)
 {
     return g_shadow_receiver_pass_active;
+}
+
+void MikuPan_SetShadowStrengthFromPs2Alpha(int alpha)
+{
+    if (alpha < 0)
+    {
+        alpha = 0;
+    }
+    else if (alpha > 0x80)
+    {
+        alpha = 0x80;
+    }
+
+    g_shadow_strength = (float) alpha / 128.0f;
 }
 
 static void MikuPan_EnsureShadowFbo(void)
@@ -301,10 +316,7 @@ void MikuPan_BeginShadowPass(float *world_clip_view)
         g_shadow_matrix_valid = 1;
     }
 
-    // Override every shader bind for the duration of the pass — the mesh
-    // renderers call MikuPan_SetCurrentShaderProgram(MESH_*_SHADER) and the
-    // override silently routes them to SHADOW_SILHOUETTE_SHADER. Cleared in
-    // MikuPan_EndShadowPass so subsequent main-pass draws are unaffected.
+    MikuPan_SetUniform1iToAllShaders(2, "uShadowEnabled");
     MikuPan_InvalidateModelTransformCache();
     MikuPan_SetShaderOverride(SHADOW_SILHOUETTE_SHADER);
     g_shadow_pass_active = 1;
@@ -329,7 +341,7 @@ void MikuPan_DrawShadowSilhouetteEllipse(void)
 
     // Need additive/normal blending so the ellipse alpha isn't clobbered.
     MikuPan_GPUSetDepthFunc(GL_ALWAYS);
-    MikuPan_GPUSetBlend(1, 0);
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
 
     MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     MikuPan_ResetRenderStateCache();
@@ -360,7 +372,7 @@ void MikuPan_EndShadowPass(void)
     // stays the diffuse path so uTexture continues to work without changes.
     MikuPan_SetUniform1iToAllShaders(0,                                                "uShadowEnabled");
     MikuPan_SetUniform1iToAllShaders(1,                                                "uShadowTex");
-    MikuPan_SetUniform1fToAllShaders(0.6f,                                             "uShadowStrength");
+    MikuPan_SetUniform1fToAllShaders(g_shadow_strength,                                "uShadowStrength");
     MikuPan_SetUniformMatrix4fvToAllShaders((float *)g_shadow_world_clip_view,         "uShadowMatrix");
 
     MikuPan_ActiveTextureCached(GL_TEXTURE1);

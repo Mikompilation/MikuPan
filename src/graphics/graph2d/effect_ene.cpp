@@ -1859,7 +1859,7 @@ void RunCamSlow2(int o, float hrt, float rrt, u_int alp)
 
         if (outn > 0)
         {
-            MikuPan_RenderUntexturedTriangles3D(&tri[0][0], outn, MIKUPAN_DEPTH_LEQUAL, 0);
+            MikuPan_RenderUntexturedTriangles3D(&tri[0][0], outn, MIKUPAN_DEPTH_LEQUAL, MIKUPAN_GPU_BLEND_NORMAL);
         }
     }
 }
@@ -2879,7 +2879,8 @@ void SetSwordLineSub(void *pos, int num, u_char r1, u_char g1, u_char b1, u_char
             swtex0 = SCE_GS_SET_TEX0_1(0, 10, SCE_GS_PSMCT32, 10, 8, 0,
                                        SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 0);
             MikuPan_RenderScreenCopyTriangles3DScreenPos(
-                (sceGsTex0 *)&swtex0, &sword_tri[0][0], outn, MIKUPAN_DEPTH_LEQUAL);
+                (sceGsTex0 *)&swtex0, &sword_tri[0][0], outn,
+                MIKUPAN_DEPTH_LEQUAL, MIKUPAN_GPU_BLEND_NORMAL);
         }
     }
 }
@@ -3569,10 +3570,10 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
                     0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 1);
 
                 MikuPan_RenderTexturedTriangles3DWithState(
-                    (sceGsTex0*)&deform_tex0, &grid_tex[0][0], outn, MIKUPAN_DEPTH_ALWAYS, 0);
+                    (sceGsTex0*)&deform_tex0, &grid_tex[0][0], outn, MIKUPAN_DEPTH_ALWAYS, MIKUPAN_GPU_BLEND_NORMAL);
 
                 MikuPan_RenderTexturedTriangles3DWithState(
-                    (sceGsTex0*)&overlay_tex0, &grid_ovl[0][0], outn, MIKUPAN_DEPTH_ALWAYS, 0);
+                    (sceGsTex0*)&overlay_tex0, &grid_ovl[0][0], outn, MIKUPAN_DEPTH_ALWAYS, MIKUPAN_GPU_BLEND_NORMAL);
             }
         }
     }

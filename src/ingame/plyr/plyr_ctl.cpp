@@ -28,6 +28,7 @@
 #include "ingame/map/furn_ctl.h"
 #include "ingame/map/furn_dat.h"
 #include "ingame/map/map_ctrl.h"
+#include "ingame/map/map_htck.h"
 #include "ingame/menu/gameover.h"
 #include "ingame/menu/item_get.h"
 #include "ingame/plyr/plyr_ctl.h"
@@ -37,6 +38,7 @@
 #include "ingame/plyr/unit_ctl.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_first_person.h"
+#include "mikupan/mikupan_point_depth.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_shader.h"
 #include "os/eeiop/eese.h"
@@ -2041,7 +2043,9 @@ void EneFrameHitChk()
 
                     sceVu0AddVector(ppj.p[0], ppj.p[0], tv);
 
-                    CheckPointDepth(&ppj);
+
+                    // CheckPointDepth(&ppj);
+                    MikuPan_CheckPointDepth(&ppj);
 
                     if (ppj.result[0] != 0 || dpe <= 300.f)
                     {
@@ -2278,7 +2282,8 @@ int FrameInsideChkFurn(FURN_WRK *fw, float *degree, u_int fsta)
                 ppj.p[0][2] = fpc[2];
                 ppj.p[0][3] = fpc[3];
 
-                CheckPointDepth(&ppj);
+                // CheckPointDepth(&ppj);
+                MikuPan_CheckPointDepth(&ppj);
 
                 if (ppj.result[0] != 0)
                 {
@@ -4899,7 +4904,8 @@ int SearchFurnHint()
                     ppj.p[0][2] = tv[2];
                     ppj.p[0][3] = tv[3];
 
-                    CheckPointDepth(&ppj);
+                    // CheckPointDepth(&ppj);
+                    MikuPan_CheckPointDepth(&ppj);
 
                     if (ppj.result[0] != 0)
                     {

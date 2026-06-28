@@ -15,6 +15,7 @@
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_profiler.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/mikupan_graph3d_compat.h"
 #include "mikupan/ui/mikupan_ui.h"
 
 #include <stdio.h>
@@ -322,90 +323,6 @@ void ClearMaterialCache(HeaderSection *hs)
     }
 }
 
-static void MikuPan_UploadMaterialLighting(SgMaterialC *pmatC,
-                                           SgVULightParallel *parallelp,
-                                           SgVULightPoint *pointp,
-                                           int point_group_count,
-                                           const int point_lnum[3],
-                                           SgVULightSpot *spotp,
-                                           int spot_group_count,
-                                           const int spot_lnum[3])
-{
-    const float *spot_intens = NULL;
-    const float *spot_intens_b = NULL;
-
-    if (pmatC == NULL || parallelp == NULL)
-    {
-        return;
-    }
-
-    if (SgLightCoordp != NULL)
-    {
-        spot_intens = SgLightCoordp->Spot_intens;
-        spot_intens_b = SgLightCoordp->Spot_intens_b;
-    }
-
-    MikuPan_SetMaterial(&pmatC->Ambient,
-                        &pmatC->Diffuse,
-                        &pmatC->Specular,
-                        &pmatC->Emission);
-
-    MikuPan_SetBakedLighting(SgInfiniteNum,
-                             parallelp->Parallel_Ambient,
-                             parallelp->Parallel_DColor,
-                             parallelp->Parallel_SColor,
-                             point_group_count,
-                             point_group_count != 0 ? point_lnum : NULL,
-                             pointp != NULL ? pointp->Point_DColor : NULL,
-                             pointp != NULL ? pointp->Point_SColor : NULL,
-                             pointp != NULL ? pointp->Point_btimes : NULL,
-                             spot_group_count,
-                             spot_group_count != 0 ? spot_lnum : NULL,
-                             spotp != NULL ? spotp->Spot_DColor : NULL,
-                             spotp != NULL ? spotp->Spot_SColor : NULL,
-                             spotp != NULL ? spotp->Spot_btimes : NULL,
-                             spot_intens,
-                             spot_intens_b);
-}
-
-static void MikuPan_UploadCachedMaterialLighting(SgMaterialC *pmatC)
-{
-    qword *base;
-    SgVULightSpot *spotp = NULL;
-    SgVULightPoint *pointp = NULL;
-    SgVULightParallel *parallelp;
-
-    if (pmatC == NULL)
-    {
-        return;
-    }
-
-    base = (qword *) MikuPan_GetHostPointer(pmatC->tagd_addr);
-
-    if (pmatC->Spot.num != 0)
-    {
-        spotp = (SgVULightSpot *) base;
-        base += 8;
-    }
-
-    if (pmatC->Point.num != 0)
-    {
-        pointp = (SgVULightPoint *) base;
-        base += 8;
-    }
-
-    parallelp = (SgVULightParallel *) base;
-
-    MikuPan_UploadMaterialLighting(pmatC,
-                                   parallelp,
-                                   pointp,
-                                   pmatC->Point.num,
-                                   pmatC->Point.lnum,
-                                   spotp,
-                                   pmatC->Spot.num,
-                                   pmatC->Spot.lnum);
-}
-
 void SetMaterialDataVU(u_int *prim)
 {
     static int old_tag_buf = -1;
@@ -452,13 +369,13 @@ void SetMaterialDataVU(u_int *prim)
 
             if (pmatC == old_pmatC)
             {
-                MikuPan_UploadCachedMaterialLighting(pmatC);
+                MikuPan_UploadCachedSgMaterialLighting(pmatC);
                 return;
             }
 
             old_pmatC = pmatC;
 
-            MikuPan_UploadCachedMaterialLighting(pmatC);
+            MikuPan_UploadCachedSgMaterialLighting(pmatC);
 
             AppendDmaTag(pmatC->tagd_addr, pmatC->qwc);
             FlushModel(0);
@@ -667,14 +584,14 @@ void SetMaterialData(u_int *prim)
         }
     }
 
-    MikuPan_UploadMaterialLighting(pmatC,
-                                   SgLightParallelp,
-                                   SgLightPointp,
-                                   SgPointGroupNum,
-                                   SgPointGroup[0].lnum,
-                                    SgLightSpotp,
-                                   SgSpotGroupNum,
-                                   SgSpotGroup[0].lnum);
+    MikuPan_UploadSgMaterialLighting(pmatC,
+                                      SgLightParallelp,
+                                      SgLightPointp,
+                                      SgPointGroupNum,
+                                      SgPointGroup[0].lnum,
+                                      SgLightSpotp,
+                                      SgSpotGroupNum,
+                                      SgSpotGroup[0].lnum);
 }
 
 static void _SetDLight(sceVu0FMATRIX m0)
@@ -986,6 +903,8 @@ void SgSetPointLights(SgLIGHT *lights, int num)
             lights[i].SEnable = 0;
         }
     }
+
+    MikuPan_OnSgSetPointLights(lights, num);
 }
 
 void SgSetSpotLights(SgLIGHT *lights, int num)
@@ -1006,6 +925,8 @@ void SgSetSpotLights(SgLIGHT *lights, int num)
             lights[i].SEnable = 0;
         }
     }
+
+    MikuPan_OnSgSetSpotLights(lights, num);
 }
 
 void PushLight()
@@ -1576,6 +1497,7 @@ void SetPreRenderTYPE0(int gloops, u_int *prim)
                 first[0] = ((float *) prim)[0];
                 first[1] = ((float *) prim)[1];
                 first[2] = ((float *) prim)[2];
+                MikuPan_ApplyBlackWhiteToBaseVertexColor(first);
 
                 Vu0LoadVectorRegisterVF18(first);
 
@@ -1649,6 +1571,7 @@ void SetPreRenderTYPE2(int gloops, u_int *prim)
                 first[0] = ((float *) prim)[0];
                 first[1] = ((float *) prim)[1];
                 first[2] = ((float *) prim)[2];
+                MikuPan_ApplyBlackWhiteToBaseVertexColor(first);
 
                 Vu0LoadVectorRegisterVF18(first);
 
@@ -1737,6 +1660,7 @@ void SetPreRenderTYPE2F(int gloops, u_int *prim)
                 first[0] = ((float *) prim)[0];
                 first[1] = ((float *) prim)[1];
                 first[2] = ((float *) prim)[2];
+                MikuPan_ApplyBlackWhiteToBaseVertexColor(first);
 
                 Vu0LoadVectorRegisterVF18(first);
 
@@ -2027,6 +1951,8 @@ void SgPreRender(void *sgd_top, int pnum)
     {
         return;
     }
+
+    MikuPan_OnSgPreRenderBegin(sgd_top);
 
     Set12Register();
 

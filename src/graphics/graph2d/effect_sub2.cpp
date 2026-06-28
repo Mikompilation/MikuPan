@@ -18,6 +18,7 @@
 #include "ingame/event/ev_main.h"
 #include "ingame/plyr/plyr_ctl.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_effect_compat.h"
 
 #include <string.h>
 
@@ -425,10 +426,11 @@ void FallenObjectsDraw()
         &fall_render_buffer[0][0],
         fall_render_vertices,
         MIKUPAN_DEPTH_LEQUAL,
-        0);
+        MIKUPAN_GPU_BLEND_NORMAL);
 
     fall_render_vertices = 0;
 }
+
 
 /* sdata 3563fc */ static u_char r_temp = 33;
 /* sdata 3563fd */ static u_char g_temp = 48;
@@ -1320,12 +1322,7 @@ void GusObjDraw(/* a0 4 */ int leaf_num, /* a1 5 */ int area, /* a2 6 */ int fal
 
     if (render_vertices > 0)
     {
-        MikuPan_RenderTexturedTriangles3DWithState(
-            (sceGsTex0 *)&tex0,
-            &render_buffer[0][0],
-            render_vertices,
-            0,
-            0);
+        MikuPan_QueueGusTriangles(tex0, &render_buffer[0][0], render_vertices);
     }
 }
 
@@ -1677,12 +1674,7 @@ void HoleGusDraw(/* s5 21 */ int leaf_no)
             MikuPan_ConvertScaleColor(94),
             MikuPan_ConvertScaleColor(EffectSub2ClampColor(hole_wrk.rgba[leaf_no][3] / 8)));
 
-        MikuPan_RenderTexturedTriangles3DWithState(
-            (sceGsTex0 *)&tex0,
-            &render_buffer[0][0],
-            6,
-            0,
-            0);
+        MikuPan_QueueGusTriangles(tex0, &render_buffer[0][0], 6);
     }
 }
 
@@ -2332,12 +2324,7 @@ void LineGusDraw(/* s6 22 */ int leaf_no, /* s5 21 */ int line_num)
             MikuPan_ConvertScaleColor(74),
             MikuPan_ConvertScaleColor(EffectSub2ClampColor(line_wrk[line_num].rgba[leaf_no][3] / 8)));
 
-        MikuPan_RenderTexturedTriangles3DWithState(
-            (sceGsTex0 *)&tex0,
-            &render_buffer[0][0],
-            6,
-            0,
-            0);
+        MikuPan_QueueGusTriangles(tex0, &render_buffer[0][0], 6);
     }
 }
 

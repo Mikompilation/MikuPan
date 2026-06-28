@@ -2,9 +2,13 @@
 #include "mikupan_pipeline.h"
 #include "mikupan_gpu.h"
 #include "mikupan/mikupan_types.h"
+#include "graphics/graph3d/sg_dat.h"
 #include <string.h>
 
+extern int loadbw_flg;
+
 #define MIKUPAN_MAX_LIGHTS 3
+#define MIKUPAN_MAX_SOURCE_LIGHTS 16
 
 static MikuPan_LightData mikupan_light_data = {0};
 static MikuPan_MaterialData mikupan_material_data = {
@@ -16,9 +20,10 @@ static MikuPan_MaterialData mikupan_material_data = {
 
 static int   g_raw_point_count = 0;
 static int   g_raw_spot_count  = 0;
-static float g_raw_point_pos[MIKUPAN_MAX_LIGHTS][4] = {0};
-static float g_raw_spot_pos[MIKUPAN_MAX_LIGHTS][4] = {0};
-static float g_raw_spot_dir[MIKUPAN_MAX_LIGHTS][4] = {0};
+static float g_raw_point_pos[MIKUPAN_MAX_SOURCE_LIGHTS][4] = {0};
+static float g_raw_spot_pos[MIKUPAN_MAX_SOURCE_LIGHTS][4] = {0};
+static float g_raw_spot_dir[MIKUPAN_MAX_SOURCE_LIGHTS][4] = {0};
+static float g_current_material_alpha = 1.0f;
 
 static int MikuPan_ClampLightCount(int count)
 {
@@ -28,6 +33,79 @@ static int MikuPan_ClampLightCount(int count)
     }
 
     return count > MIKUPAN_MAX_LIGHTS ? MIKUPAN_MAX_LIGHTS : count;
+}
+
+static int MikuPan_ClampSourceLightCount(int count)
+{
+    if (count < 0)
+    {
+        return 0;
+    }
+
+    return count > MIKUPAN_MAX_SOURCE_LIGHTS ? MIKUPAN_MAX_SOURCE_LIGHTS : count;
+}
+
+static int MikuPan_SgLightIsEnabled(const SgLIGHT *light)
+{
+    return light != NULL && light->Enable == 0 && light->SEnable == 0;
+}
+
+void MikuPan_OnSgSetPointLights(SgLIGHT *lights, int num)
+{
+    memset(g_raw_point_pos, 0, sizeof(g_raw_point_pos));
+    g_raw_point_count = MikuPan_ClampSourceLightCount(num);
+
+    if (lights == NULL || num <= 0)
+    {
+        return;
+    }
+
+    /* SgSetPointLights() may run before the renderer has the draw-time WorldView matrix
+     * for the object/material being uploaded. Geometry is transformed when baked lighting
+     * is sent to the native renderer instead!
+     */
+    for (int i = 0; i < g_raw_point_count; i++)
+    {
+        if (!MikuPan_SgLightIsEnabled(&lights[i]))
+        {
+            continue;
+        }
+
+        g_raw_point_pos[i][0] = lights[i].pos[0];
+        g_raw_point_pos[i][1] = lights[i].pos[1];
+        g_raw_point_pos[i][2] = lights[i].pos[2];
+        g_raw_point_pos[i][3] = 1.0f;
+    }
+}
+
+void MikuPan_OnSgSetSpotLights(SgLIGHT *lights, int num)
+{
+    memset(g_raw_spot_pos, 0, sizeof(g_raw_spot_pos));
+    memset(g_raw_spot_dir, 0, sizeof(g_raw_spot_dir));
+    g_raw_spot_count = MikuPan_ClampSourceLightCount(num);
+
+    if (lights == NULL || num <= 0)
+    {
+        return;
+    }
+
+    for (int i = 0; i < g_raw_spot_count; i++)
+    {
+        if (!MikuPan_SgLightIsEnabled(&lights[i]))
+        {
+            continue;
+        }
+
+        g_raw_spot_pos[i][0] = lights[i].pos[0];
+        g_raw_spot_pos[i][1] = lights[i].pos[1];
+        g_raw_spot_pos[i][2] = lights[i].pos[2];
+        g_raw_spot_pos[i][3] = 1.0f;
+
+        g_raw_spot_dir[i][0] = lights[i].direction[0];
+        g_raw_spot_dir[i][1] = lights[i].direction[1];
+        g_raw_spot_dir[i][2] = lights[i].direction[2];
+        g_raw_spot_dir[i][3] = 0.0f;
+    }
 }
 
 static float MikuPan_Ps2ColorToUnit(float color)
@@ -53,6 +131,16 @@ static float MikuPan_Ps2AlphaToUnit(float alpha)
     return alpha / 128.0f;
 }
 
+float MikuPan_GetCurrentMaterialAlpha(void)
+{
+    return g_current_material_alpha;
+}
+
+int MikuPan_IsCurrentMaterialFullyTransparent(void)
+{
+    return g_current_material_alpha <= (1.0f / 255.0f);
+}
+
 static void MikuPan_CopyVec4(float dst[4], const float src[4])
 {
     dst[0] = src[0];
@@ -61,12 +149,26 @@ static void MikuPan_CopyVec4(float dst[4], const float src[4])
     dst[3] = src[3];
 }
 
+static void MikuPan_ApplyBlackWhiteColor(float color[4])
+{
+    if (loadbw_flg == 0)
+    {
+        return;
+    }
+
+    const float gray = (color[0] + color[1] + color[2]) / 3.0f;
+    color[0] = gray;
+    color[1] = gray;
+    color[2] = gray;
+}
+
 static void MikuPan_CopyBakedColorVec4(float dst[4], const float src[4])
 {
     dst[0] = MikuPan_Ps2ColorToUnit(src[0]);
     dst[1] = MikuPan_Ps2ColorToUnit(src[1]);
     dst[2] = MikuPan_Ps2ColorToUnit(src[2]);
     dst[3] = MikuPan_Ps2ColorToUnit(src[3]);
+    MikuPan_ApplyBlackWhiteColor(dst);
 }
 
 static void MikuPan_CopyBakedColorMatrix(float dst[MIKUPAN_MAX_LIGHTS][4],
@@ -87,11 +189,11 @@ static void MikuPan_CopyBakedColorMatrix(float dst[MIKUPAN_MAX_LIGHTS][4],
     }
 }
 
-static void MikuPan_CopySelectedGeometry(float dst[MIKUPAN_MAX_LIGHTS][4],
-                                         const float src[MIKUPAN_MAX_LIGHTS][4],
-                                         int src_count,
-                                         const int lnum[MIKUPAN_MAX_LIGHTS],
-                                         int slot_count)
+static void MikuPan_CopySelectedPositionView(float dst[MIKUPAN_MAX_LIGHTS][4],
+                                             const float src[MIKUPAN_MAX_SOURCE_LIGHTS][4],
+                                             int src_count,
+                                             const int lnum[MIKUPAN_MAX_LIGHTS],
+                                             int slot_count)
 {
     memset(dst, 0, sizeof(float[MIKUPAN_MAX_LIGHTS][4]));
     slot_count = MikuPan_ClampLightCount(slot_count);
@@ -105,7 +207,41 @@ static void MikuPan_CopySelectedGeometry(float dst[MIKUPAN_MAX_LIGHTS][4],
             continue;
         }
 
-        MikuPan_CopyVec4(dst[i], src[src_idx]);
+        vec4 posWS = {src[src_idx][0], src[src_idx][1], src[src_idx][2], 1.0f};
+        vec4 posVS;
+        glm_mat4_mulv(WorldView, posWS, posVS);
+        MikuPan_CopyVec4(dst[i], posVS);
+        dst[i][3] = 1.0f;
+    }
+}
+
+static void MikuPan_CopySelectedDirectionView(float dst[MIKUPAN_MAX_LIGHTS][4],
+                                             const float src[MIKUPAN_MAX_SOURCE_LIGHTS][4],
+                                             int src_count,
+                                             const int lnum[MIKUPAN_MAX_LIGHTS],
+                                             int slot_count)
+{
+    mat3 view3;
+
+    memset(dst, 0, sizeof(float[MIKUPAN_MAX_LIGHTS][4]));
+    slot_count = MikuPan_ClampLightCount(slot_count);
+    glm_mat4_pick3(WorldView, view3);
+
+    for (int i = 0; i < slot_count; i++)
+    {
+        int src_idx = lnum != NULL ? lnum[i] : i;
+
+        if (src_idx < 0 || src_idx >= src_count)
+        {
+            continue;
+        }
+
+        vec4 dirWS = {src[src_idx][0], src[src_idx][1], src[src_idx][2], 0.0f};
+        vec4 dirVS;
+        glm_mat3_mulv(view3, dirWS, dirVS);
+        glm_vec3_normalize(dirVS);
+        MikuPan_CopyVec4(dst[i], dirVS);
+        dst[i][3] = 0.0f;
     }
 }
 
@@ -163,12 +299,14 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
     g_raw_point_count = 0;
     g_raw_spot_count = 0;
     mikupan_light_data.uMaterialAlpha[0] = 1.0f;
+    g_current_material_alpha = 1.0f;
 
     // Scene ambient.
     mikupan_light_data.uAmbient[0] = lp->ambient[0];
     mikupan_light_data.uAmbient[1] = lp->ambient[1];
     mikupan_light_data.uAmbient[2] = lp->ambient[2];
     mikupan_light_data.uAmbient[3] = lp->ambient[3];
+    MikuPan_ApplyBlackWhiteColor(mikupan_light_data.uAmbient);
 
     mat3 view3;
     glm_mat4_pick3(WorldView, view3);
@@ -207,6 +345,7 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
         mikupan_light_data.uParDiffuse[i][1] = lp->parallel[i].diffuse[1];
         mikupan_light_data.uParDiffuse[i][2] = lp->parallel[i].diffuse[2];
         mikupan_light_data.uParDiffuse[i][3] = lp->parallel[i].diffuse[3];
+        MikuPan_ApplyBlackWhiteColor(mikupan_light_data.uParDiffuse[i]);
 
         // light_pack carries no separate specular field for parallel lights;
         // gra3d.c:1083 mirrors specular = diffuse on the SgLIGHT side, so
@@ -215,6 +354,7 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
         mikupan_light_data.uParSpecular[i][1] = lp->parallel[i].diffuse[1];
         mikupan_light_data.uParSpecular[i][2] = lp->parallel[i].diffuse[2];
         mikupan_light_data.uParSpecular[i][3] = lp->parallel[i].diffuse[3];
+        MikuPan_ApplyBlackWhiteColor(mikupan_light_data.uParSpecular[i]);
 
         // Halfway vector for Blinn-Phong — matches sglight.c:118-120 exactly.
         vec3 halfway = {ieye_vs[0] + dirVSn[0], ieye_vs[1] + dirVSn[1],
@@ -242,18 +382,23 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
         mikupan_light_data.uPointPos[i][1] = posVS[1];
         mikupan_light_data.uPointPos[i][2] = posVS[2];
         mikupan_light_data.uPointPos[i][3] = 1.0f;
-        MikuPan_CopyVec4(g_raw_point_pos[i], mikupan_light_data.uPointPos[i]);
+        g_raw_point_pos[i][0] = posWS[0];
+        g_raw_point_pos[i][1] = posWS[1];
+        g_raw_point_pos[i][2] = posWS[2];
+        g_raw_point_pos[i][3] = 1.0f;
 
         mikupan_light_data.uPointDiffuse[i][0] = lp->point[i].diffuse[0];
         mikupan_light_data.uPointDiffuse[i][1] = lp->point[i].diffuse[1];
         mikupan_light_data.uPointDiffuse[i][2] = lp->point[i].diffuse[2];
         mikupan_light_data.uPointDiffuse[i][3] = lp->point[i].diffuse[3];
+        MikuPan_ApplyBlackWhiteColor(mikupan_light_data.uPointDiffuse[i]);
 
         // Specular = diffuse, mirroring gra3d.c:1101.
         mikupan_light_data.uPointSpecular[i][0] = lp->point[i].diffuse[0];
         mikupan_light_data.uPointSpecular[i][1] = lp->point[i].diffuse[1];
         mikupan_light_data.uPointSpecular[i][2] = lp->point[i].diffuse[2];
         mikupan_light_data.uPointSpecular[i][3] = lp->point[i].diffuse[3];
+        MikuPan_ApplyBlackWhiteColor(mikupan_light_data.uPointSpecular[i]);
 
         mikupan_light_data.uPointPower[i][0] = lp->point[i].power;
     }
@@ -274,7 +419,10 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
         mikupan_light_data.uSpotPos[i][1] = posVS[1];
         mikupan_light_data.uSpotPos[i][2] = posVS[2];
         mikupan_light_data.uSpotPos[i][3] = 1.0f;
-        MikuPan_CopyVec4(g_raw_spot_pos[i], mikupan_light_data.uSpotPos[i]);
+        g_raw_spot_pos[i][0] = posWS[0];
+        g_raw_spot_pos[i][1] = posWS[1];
+        g_raw_spot_pos[i][2] = posWS[2];
+        g_raw_spot_pos[i][3] = 1.0f;
 
         vec4 dirWS = {lp->spot[i].direction[0], lp->spot[i].direction[1],
                       lp->spot[i].direction[2], lp->spot[i].direction[3]};
@@ -286,18 +434,23 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
         mikupan_light_data.uSpotDir[i][1] = dirVS[1];
         mikupan_light_data.uSpotDir[i][2] = dirVS[2];
         mikupan_light_data.uSpotDir[i][3] = 1.0f;
-        MikuPan_CopyVec4(g_raw_spot_dir[i], mikupan_light_data.uSpotDir[i]);
+        g_raw_spot_dir[i][0] = dirWS[0];
+        g_raw_spot_dir[i][1] = dirWS[1];
+        g_raw_spot_dir[i][2] = dirWS[2];
+        g_raw_spot_dir[i][3] = 0.0f;
 
         mikupan_light_data.uSpotDiffuse[i][0] = lp->spot[i].diffuse[0];
         mikupan_light_data.uSpotDiffuse[i][1] = lp->spot[i].diffuse[1];
         mikupan_light_data.uSpotDiffuse[i][2] = lp->spot[i].diffuse[2];
         mikupan_light_data.uSpotDiffuse[i][3] = lp->spot[i].diffuse[3];
+        MikuPan_ApplyBlackWhiteColor(mikupan_light_data.uSpotDiffuse[i]);
 
         // Specular = diffuse, mirroring gra3d.c:1122.
         mikupan_light_data.uSpotSpecular[i][0] = lp->spot[i].diffuse[0];
         mikupan_light_data.uSpotSpecular[i][1] = lp->spot[i].diffuse[1];
         mikupan_light_data.uSpotSpecular[i][2] = lp->spot[i].diffuse[2];
         mikupan_light_data.uSpotSpecular[i][3] = lp->spot[i].diffuse[3];
+        MikuPan_ApplyBlackWhiteColor(mikupan_light_data.uSpotSpecular[i]);
 
         mikupan_light_data.uSpotPower[i][0] = lp->spot[i].power;//1250
 
@@ -358,11 +511,12 @@ void MikuPan_SetBakedLighting(int parallel_count,
         parallel_dcolor != NULL
             ? MikuPan_Ps2AlphaToUnit(parallel_dcolor[0][3])
             : 1.0f;
+    g_current_material_alpha = mikupan_light_data.uMaterialAlpha[0];
 
     mikupan_light_data.uPointCount[0] = pointSlots;
-    MikuPan_CopySelectedGeometry(mikupan_light_data.uPointPos,
-                                 g_raw_point_pos, g_raw_point_count,
-                                 point_lnum, pointSlots);
+    MikuPan_CopySelectedPositionView(mikupan_light_data.uPointPos,
+                                      g_raw_point_pos, g_raw_point_count,
+                                      point_lnum, pointSlots);
     MikuPan_CopyBakedColorMatrix(mikupan_light_data.uPointDiffuse,
                                  point_dcolor, pointSlots);
     MikuPan_CopyBakedColorMatrix(mikupan_light_data.uPointSpecular,
@@ -371,12 +525,12 @@ void MikuPan_SetBakedLighting(int parallel_count,
                            point_btimes, pointSlots);
 
     mikupan_light_data.uSpotCount[0] = spotSlots;
-    MikuPan_CopySelectedGeometry(mikupan_light_data.uSpotPos,
-                                 g_raw_spot_pos, g_raw_spot_count,
-                                 spot_lnum, spotSlots);
-    MikuPan_CopySelectedGeometry(mikupan_light_data.uSpotDir,
-                                 g_raw_spot_dir, g_raw_spot_count,
-                                 spot_lnum, spotSlots);
+    MikuPan_CopySelectedPositionView(mikupan_light_data.uSpotPos,
+                                      g_raw_spot_pos, g_raw_spot_count,
+                                      spot_lnum, spotSlots);
+    MikuPan_CopySelectedDirectionView(mikupan_light_data.uSpotDir,
+                                      g_raw_spot_dir, g_raw_spot_count,
+                                      spot_lnum, spotSlots);
     MikuPan_CopyBakedColorMatrix(mikupan_light_data.uSpotDiffuse,
                                  spot_dcolor, spotSlots);
     MikuPan_CopyBakedColorMatrix(mikupan_light_data.uSpotSpecular,

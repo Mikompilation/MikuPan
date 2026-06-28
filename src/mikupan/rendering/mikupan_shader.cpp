@@ -30,6 +30,8 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
      "resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
     {"resources/shaders/hlsl/sprite.vert.hlsl", NULL,
      "resources/shaders/hlsl/sprite.frag.hlsl"},
+    {"resources/shaders/hlsl/sprite.vert.hlsl", NULL,
+     "resources/shaders/hlsl/sprite_alpha_as_rgb.frag.hlsl"},
     {"resources/shaders/hlsl/normals_0x12.vert.hlsl", NULL,
      "resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
     {"resources/shaders/hlsl/normals_0x2.vert.hlsl", NULL,
@@ -55,7 +57,7 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
 static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
     "MESH_0x2", "MESH_0xA",
     "MESH_0x12", "UNTEXTURED_COLOURED_SPRITE",
-    "BOUNDING_BOX", "SPRITE",
+    "BOUNDING_BOX", "SPRITE", "SPRITE_ALPHA_AS_RGB",
     "NORMALS_0x12", "NORMALS_0x2",
     "POSTPROCESS", "SHADOW_BLOB",
     "SHADOW_SILHOUETTE", "SHADOW_RECEIVER",
@@ -423,7 +425,19 @@ u_int MikuPan_SetCurrentShaderProgram(int shader_program)
 {
     if (g_shader_override >= 0 && g_shader_override < MAX_SHADER_PROGRAMS)
     {
-        shader_program = g_shader_override;
+        if (g_shader_override == SHADOW_SILHOUETTE_SHADER &&
+            (shader_program == MESH_0x2_SHADER ||
+             shader_program == MESH_0xA_SHADER ||
+             shader_program == MESH_0x12_SHADER ||
+             shader_program == MESH_0x2_SKINNED_SHADER ||
+             shader_program == MESH_0xA_SKINNED_SHADER))
+        {
+            // Keep requested textured mesh shader c:
+        }
+        else
+        {
+            shader_program = g_shader_override;
+        }
     }
 
     if (shader_program < 0 || shader_program >= MAX_SHADER_PROGRAMS)
