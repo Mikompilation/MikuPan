@@ -6,6 +6,10 @@
 #include "sce/libgraph.h"
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void MikuPan_GsUpload(sceGsLoadImage* image_load, unsigned char* image);
 unsigned char* MikuPan_GsDownloadTexture(sceGsTex0* tex0, uint64_t* hash);
 uint64_t MikuPan_GetTextureHash(sceGsTex0 *tex0);
@@ -24,5 +28,9 @@ int  MikuPan_GsHasPendingUploads(void);
 void MikuPan_GsConsumePendingUploads(
     void (*cb)(int addr, int size, void *ud), void *ud);
 void MikuPan_GetTextureGsRegion(sceGsTex0 *tex0, int *out_addr, int *out_size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //MIKUPAN_GS_SERVER_C_H

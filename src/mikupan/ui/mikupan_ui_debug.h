@@ -20,6 +20,7 @@ int MikuPan_IsNormalsRendering(void);
 void MikuPan_UiDebugMenuRender(void);
 void MikuPan_UiDebugWindowsRender(void);
 int MikuPan_IsBoundingBoxRendering(void);
+int MikuPan_IsEventHitboxRendering(void);
 int MikuPan_ShowCameraDebug(void);
 int MikuPan_IsMesh0x82Rendering(void);
 int MikuPan_IsMesh0x32Rendering(void);

@@ -24,6 +24,10 @@ TYPEDEF_ALIGNED(64, struct
     unsigned char EntryName[32];
 } MikuPan_McTblGetDir);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void MikuPan_LoadImgHdFile();
 void MikuPan_ServiceMissingDataFolderDialog();
 void MikuPan_RequestDataFolderSelection(const char *missing_path);
@@ -44,5 +48,9 @@ u_char MikuPan_WriteFile(const char *filename, const void *buffer, int size);
 u_char MikuPan_CreateFolder(const char *folder);
 u_char MikuPan_FolderExists(const char *folder);
 int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table, int max_entries);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif//MIKUPAN_MIKUPAN_FILE_C_H

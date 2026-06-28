@@ -51,7 +51,7 @@ static inline ENE_DAT *MikuPan_EneEntryGetPendingDat(u_char no)
         return &fene_dat[ingame_wrk.msn_no][ene_wrk[no].dat_no];
     case 2:
         aie = &aene_info_dat[ingame_wrk.msn_no][ene_wrk[no].dat_no];
-        aene_tmp[no] = (ENE_DAT){0};
+        aene_tmp[no] = ENE_DAT{};
         aene_tmp[no].mdl_no = aie->mdl_no;
         aene_tmp[no].anm_no = aie->anm_no;
         aene_tmp[no].se_no = aie->se_no;
@@ -137,7 +137,7 @@ static inline int MikuPan_EneEntryBeginMissingEnemyLoad(u_char no, const ENE_DAT
             ene_wrk[no].dat_no,
             dat->mdl_no,
             dat->anm_no);
-        *load = (MIKUPAN_MISSING_ENEMY_LOAD){0};
+        *load = MIKUPAN_MISSING_ENEMY_LOAD{};
     }
 
     warn_log("Missing enemy resource; starting on-demand load slot=%u type=%u dat_no=%u mdl_no=%u anm_no=%u se_no=%u room=%u msn=%u",
@@ -161,7 +161,7 @@ static inline int MikuPan_EneEntryBeginMissingEnemyLoad(u_char no, const ENE_DAT
         DelDataLoadWrk((u_short)dat->se_no);
     }
 
-    *load = (MIKUPAN_MISSING_ENEMY_LOAD){0};
+    *load = MIKUPAN_MISSING_ENEMY_LOAD{};
     load->active = 1;
     load->mode = 1;
     load->type = ene_wrk[no].type;
@@ -174,7 +174,7 @@ static inline int MikuPan_EneEntryBeginMissingEnemyLoad(u_char no, const ENE_DAT
     if (load->load_id < 0)
     {
         critical_log("Missing enemy model LoadReq failed slot=%u mdl_no=%u file_no=%u", no, dat->mdl_no, dat->mdl_no + M000_MIKU_MDL);
-        *load = (MIKUPAN_MISSING_ENEMY_LOAD){0};
+        *load = MIKUPAN_MISSING_ENEMY_LOAD{};
         return 0;
     }
 
@@ -213,7 +213,7 @@ static inline int MikuPan_EneEntryMissingEnemyLoadMain(u_char no)
         if (load->load_id < 0)
         {
             critical_log("Missing enemy animation LoadReq failed slot=%u anm_no=%u file_no=%u", no, load->anm_no, load->anm_no + M000_MIKU_ANM);
-            *load = (MIKUPAN_MISSING_ENEMY_LOAD){0};
+            *load = MIKUPAN_MISSING_ENEMY_LOAD{};
             return 1;
         }
         load->mode = 2;
@@ -240,7 +240,7 @@ static inline int MikuPan_EneEntryMissingEnemyLoadMain(u_char no)
 
         critical_log("Missing enemy resource on-demand load finished slot=%u type=%u dat_no=%u mdl=%u anm=%u",
             no, load->type, load->dat_no, load->mdl_no, load->anm_no);
-        *load = (MIKUPAN_MISSING_ENEMY_LOAD){0};
+        *load = MIKUPAN_MISSING_ENEMY_LOAD{};
         return 1;
     case 3:
         if (IsLoadEnd(load->load_id) == 0)
@@ -250,10 +250,10 @@ static inline int MikuPan_EneEntryMissingEnemyLoadMain(u_char no)
 
         critical_log("Missing enemy resource on-demand load finished slot=%u type=%u dat_no=%u mdl=%u anm=%u se=%u",
             no, load->type, load->dat_no, load->mdl_no, load->anm_no, load->se_no);
-        *load = (MIKUPAN_MISSING_ENEMY_LOAD){0};
+        *load = MIKUPAN_MISSING_ENEMY_LOAD{};
         return 1;
     default:
-        *load = (MIKUPAN_MISSING_ENEMY_LOAD){0};
+        *load = MIKUPAN_MISSING_ENEMY_LOAD{};
         return 1;
     }
 }

@@ -29,6 +29,7 @@ void MapFloorChange(u_char new_floor);
 int64_t GetFloorTopAddr(u_char floor);
 void InitMap();
 void MapCtrlMain();
+void MikuPan_RenderMapEventHitboxes(void);
 void GetNewRoomData();
 u_char RoomWrkRenew();
 void CameraNoRenewEach(u_char cam_type);

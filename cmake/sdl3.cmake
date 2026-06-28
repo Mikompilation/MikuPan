@@ -15,6 +15,13 @@ else()
 endif()
 FetchContent_MakeAvailable(sdl3)
 
+foreach(sdl_target SDL3-static SDL3-shared SDL3_test)
+    if(TARGET ${sdl_target})
+        set_target_properties(${sdl_target} PROPERTIES
+                DISABLE_PRECOMPILE_HEADERS ON)
+    endif()
+endforeach()
+
 if(ANDROID)
     set(MIKUPAN_SDL_ACTIVITY_JAVA
             "${sdl3_SOURCE_DIR}/android-project/app/src/main/java/org/libsdl/app/SDLActivity.java")

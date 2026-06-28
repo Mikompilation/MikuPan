@@ -8,11 +8,9 @@
 #include <atomic>
 #include <cstring>
 
-extern "C" {
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/ui/mikupan_ui_debug.h"
-}
 
 GS::GSHelper gsHelper;
 std::vector<uint8_t> texture_buffer = std::vector<uint8_t>(4096 * 4096 * 8);
