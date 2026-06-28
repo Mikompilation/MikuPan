@@ -14,6 +14,7 @@
 #include "main/gamemain.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_logging_c.h"
+#include "mikupan/mikupan_enemy_motion.h"
 #include "mikupan/mikupan_memory.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
@@ -303,8 +304,19 @@ void SetEneTexture(u_int work_id)
     u_int num;
     u_int mdl_no;
 
+    if (!MikuPan_MotCheckSetEneTextureInputs(work_id))
+    {
+        return;
+    }
+
     mdl_no = ene_wrk[work_id].dat->mdl_no;
     ani = motGetAniMdl(work_id);
+
+    if (!MikuPan_MotValidateEnemyAniCtrl("SetEneTexture", work_id, ani))
+    {
+        return;
+    }
+
     mdl_p = ani->mdl_p;
 
     for (i = 0; i < 4; i++)
@@ -895,6 +907,7 @@ ANI_CTRL* motGetAniMdl(u_int work_no)
 
     return ani_ctrl;
 }
+
 
 void motInitPacketCtrl()
 {
