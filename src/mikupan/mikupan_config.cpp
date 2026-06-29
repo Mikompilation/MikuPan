@@ -53,6 +53,7 @@ MikuPan_Config mikupan_configuration = {
     1.0f,
     0,
     1,
+    1,
     {
         0,
         900.0f,
@@ -265,4 +266,6 @@ void MikuPan_ConfigurationValidate(void)
     mikupan_configuration.show_fps = mikupan_configuration.show_fps ? 1 : 0;
     mikupan_configuration.title_room_background =
         mikupan_configuration.title_room_background ? 1 : 0;
+    mikupan_configuration.title_dither =
+        mikupan_configuration.title_dither ? 1 : 0;
 }

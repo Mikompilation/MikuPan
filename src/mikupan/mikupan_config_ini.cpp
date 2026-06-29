@@ -208,6 +208,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
     ApplyValue(ini, "ui", "title_room_background",
                mikupan_configuration.title_room_background);
+    ApplyValue(ini, "ui", "title_dither",
+               mikupan_configuration.title_dither);
     ApplyValue(ini, "third_person_camera", "enabled",
                mikupan_configuration.third_person_camera.enabled);
     ApplyValue(ini, "third_person_camera", "distance",
@@ -363,6 +365,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
     SetValue(ini, "ui", "title_room_background",
              mikupan_configuration.title_room_background);
+    SetValue(ini, "ui", "title_dither",
+             mikupan_configuration.title_dither);
     SetValue(ini, "third_person_camera", "enabled",
              mikupan_configuration.third_person_camera.enabled);
     SetValue(ini, "third_person_camera", "distance",

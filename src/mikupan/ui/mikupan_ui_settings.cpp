@@ -641,6 +641,12 @@ void MikuPan_UiSettingsRender(void)
                 TitleSetUseRoomBackground(title_room_background);
             }
 
+            int title_dither = TitleUseDither();
+            if (igCheckbox("Title dithering", (bool*) &title_dither))
+            {
+                TitleSetUseDither(title_dither);
+            }
+
             igEndMenu();
         }
 

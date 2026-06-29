@@ -51,6 +51,8 @@ extern TITLE_WRK title_wrk;
 
 int TitleUseRoomBackground(void);
 void TitleSetUseRoomBackground(int enabled);
+int TitleUseDither(void);
+void TitleSetUseDither(int enabled);
 int TitleDebugWindowVisible(void);
 void TitleSetDebugWindowVisible(int enabled);
 void TitleCtrl();

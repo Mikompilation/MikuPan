@@ -7,7 +7,9 @@
 #include "data/room_name.h"
 #include "ee/kernel.h"
 #include "enums.h"
+#include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_obj.h"
+#include "graphics/graph2d/effect_sub2.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "graphics/graph2d/message.h"
 #include "graphics/graph2d/tim2.h"
@@ -24,6 +26,7 @@
 #include "ingame/ig_glob.h"
 #include "ingame/map/door_ctl.h"
 #include "ingame/map/furn_ctl.h"
+#include "ingame/map/furn_eff.h"
 #include "ingame/map/furn_spe/furn_spe.h"
 #include "ingame/map/map_ctrl.h"
 #include "ingame/menu/ig_album.h"
@@ -88,6 +91,7 @@ static int exit_prompt_sel = 1;
 
 typedef enum {
     TITLE_BG_ROOM_UNLOADED = 0,
+    TITLE_BG_ROOM_LOADING_EFFECT, /* EFF001 texture bank for room effects */
     TITLE_BG_ROOM_LOADING,      /* room model (PK2 + LIT) only */
     TITLE_BG_ROOM_LOADING_MAP,  /* mission map data (for furniture placement) */
     TITLE_BG_ROOM_LOADING_FURN, /* furniture + door models, one id at a time */
@@ -267,6 +271,30 @@ static const TITLE_BG_PRESET title_bg_presets[] = {
     },
     {
         .msn_no = 3,
+        .room_no = R022_NAKASU,
+        .audio_file_no = AB014_STR,
+        .cycle_seconds = 120,
+        .camera = {
+            .camera_p = {0.0f, 120.0f, -8000.0f},
+            .camera_i = {0.0f, 540.0f, 0.0f},
+            .fov_deg = 70.0f,
+        },
+        .lerp_enabled = 1,
+        .lerp_seconds = 120.0f,
+        .lerp_t = 0.0f,
+        .lerp_a = {
+            .camera_p = {-2000.0f, 120.0f, -8500.0f},
+            .camera_i = {0.0f, 540.0f, 0.0f},
+            .fov_deg = 78.0f,
+        },
+        .lerp_b = {
+            .camera_p = {2200.0f, 260.0f, -5800.0f},
+            .camera_i = {0.0f, 540.0f, 1000.0f},
+            .fov_deg = 62.0f,
+        },
+    },
+    {
+        .msn_no = 3,
         .room_no = R033,
         .audio_file_no = AB001_STR,
         .cycle_seconds = 120,
@@ -322,9 +350,12 @@ static int title_bg_camera_lerp_timer = 447;
 static int title_debug_window_visible = 0;
 static int title_bgm_file_no = TITLE_BGM_DEFAULT_FILE_NO;
 static int title_bgm_playing_file_no = -1;
+static int title_bg_effect_load_id = -1;
 static int title_bg_map_load_id = -1;
 static int title_bg_floor = 0;
 static int title_bg_map_room_no = 0xff;
+static int title_bg_room_world_pos_valid = 0;
+static sceVu0FVECTOR title_bg_room_world_pos = {0.0f, 0.0f, 0.0f, 1.0f};
 static u_int *title_bg_furn_load_addr = NULL;
 static int title_bg_model_load_id[TITLE_BG_MODEL_LOAD_MAX];
 static int title_bg_model_load_num = 0;
@@ -347,6 +378,11 @@ int TitleUseRoomBackground(void)
     }
 
     return mikupan_configuration.title_room_background != 0;
+}
+
+int TitleUseDither(void)
+{
+    return mikupan_configuration.title_dither != 0;
 }
 
 int TitleDebugWindowVisible(void)
@@ -508,6 +544,8 @@ static const char *TitleBgRoomStateName(void)
     {
     case TITLE_BG_ROOM_UNLOADED:
         return "unloaded";
+    case TITLE_BG_ROOM_LOADING_EFFECT:
+        return "loading effects";
     case TITLE_BG_ROOM_LOADING:
         return "loading model";
     case TITLE_BG_ROOM_LOADING_MAP:
@@ -593,11 +631,19 @@ void TitleSetUseRoomBackground(int enabled)
     }
 }
 
+void TitleSetUseDither(int enabled)
+{
+    mikupan_configuration.title_dither = enabled != 0;
+}
+
 static void TitleBgRequestRoomReload(void)
 {
     title_bg_room_state = TITLE_BG_ROOM_UNLOADED;
+    title_bg_effect_load_id = -1;
     title_bg_map_load_id = -1;
     title_bg_map_room_no = 0xff;
+    title_bg_room_world_pos_valid = 0;
+    TitleBgSetVector(title_bg_room_world_pos, 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 static void TitleBgPauseAutoCycle(void)
@@ -1009,59 +1055,6 @@ static void TitleBgLookY(float amount)
     TitleBgAddVector(title_bg_camera_i, 0.0f, amount, 0.0f);
 }
 
-static int TitleBgLightCount(SgLIGHT *lights, int max_lights)
-{
-    int count = lights[0].num;
-
-    if (count < 0)
-    {
-        return 0;
-    }
-
-    return count > max_lights ? max_lights : count;
-}
-
-static void TitleBgCopyRoomLights(void)
-{
-    LIGHT_PACK *light_pack = &room_wrk.mylight[TITLE_BG_ROOM_BLOCK];
-    int count;
-    int i;
-
-    *light_pack = LIGHT_PACK{0};
-    Vu0CopyVector(light_pack->ambient, room_ambient_light);
-
-    count = TitleBgLightCount(room_pararell_light, 3);
-    light_pack->parallel_num = count;
-
-    for (i = 0; i < count; i++)
-    {
-        Vu0CopyVector(light_pack->parallel[i].direction, room_pararell_light[i].direction);
-        Vu0CopyVector(light_pack->parallel[i].diffuse, room_pararell_light[i].diffuse);
-    }
-
-    count = TitleBgLightCount(room_point_light, 3);
-    light_pack->point_num = count;
-
-    for (i = 0; i < count; i++)
-    {
-        Vu0CopyVector(light_pack->point[i].pos, room_point_light[i].pos);
-        Vu0CopyVector(light_pack->point[i].diffuse, room_point_light[i].diffuse);
-        light_pack->point[i].power = room_point_light[i].power;
-    }
-
-    count = TitleBgLightCount(room_spot_light, 3);
-    light_pack->spot_num = count;
-
-    for (i = 0; i < count; i++)
-    {
-        Vu0CopyVector(light_pack->spot[i].pos, room_spot_light[i].pos);
-        Vu0CopyVector(light_pack->spot[i].direction, room_spot_light[i].direction);
-        Vu0CopyVector(light_pack->spot[i].diffuse, room_spot_light[i].diffuse);
-        light_pack->spot[i].intens = room_spot_light[i].intens;
-        light_pack->spot[i].power = room_spot_light[i].power;
-    }
-}
-
 static void TitleBgSetupRoomState(void)
 {
     room_wrk.room_no = title_bg_map_room_no;
@@ -1069,6 +1062,65 @@ static void TitleBgSetupRoomState(void)
     room_wrk.disp_no[1] = 0xff;
     TitleBgSetVector(room_wrk.pos[0], 0.0f, 0.0f, 0.0f, 1.0f);
     TitleBgSetVector(room_wrk.pos[1], 0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+static void TitleBgUpdateRoomWorldPos(void)
+{
+    title_bg_room_world_pos_valid = 0;
+    TitleBgSetVector(title_bg_room_world_pos, 0.0f, 0.0f, 0.0f, 1.0f);
+
+    if (title_bg_map_room_no == 0xff)
+    {
+        return;
+    }
+
+    if (GetRoomPos((u_char)title_bg_room_no, title_bg_room_world_pos) == 0)
+    {
+        title_bg_room_world_pos[3] = 1.0f;
+        title_bg_room_world_pos_valid = 1;
+    }
+}
+
+static void TitleBgApplyRoomWorldOffset(sceVu0FVECTOR pos)
+{
+    pos[0] -= title_bg_room_world_pos[0];
+    pos[1] -= title_bg_room_world_pos[1];
+    pos[2] -= title_bg_room_world_pos[2];
+}
+
+static void TitleBgLocalizeFurnitureWork(void)
+{
+    int i;
+
+    if (title_bg_room_world_pos_valid == 0)
+    {
+        return;
+    }
+
+    for (i = 0; i < 60; i++)
+    {
+        FURN_WRK *fwp = &furn_wrk[i];
+        int had_effect;
+
+        if (fwp->use == 5 || fwp->room_id != title_bg_room_no)
+        {
+            continue;
+        }
+
+        had_effect = fwp->fewrk_no != 0xff;
+
+        if (had_effect != 0)
+        {
+            FurnEfctFree(fwp);
+        }
+
+        TitleBgApplyRoomWorldOffset(fwp->pos);
+
+        if (had_effect != 0)
+        {
+            FurnEfctSet(fwp);
+        }
+    }
 }
 
 static int TitleBgResolveMapRoom(void)
@@ -1112,6 +1164,7 @@ static void TitleBgSetupMapWork(void)
     map_wrk.room_update_flg = 0;
     map_wrk.mirror_flg = 0;
 
+    TitleBgUpdateRoomWorldPos();
     TitleBgSetupRoomState();
 }
 
@@ -1145,6 +1198,7 @@ static void TitleBgSetupFurnitureWork(void)
     {
         FurnDataInit();
         DoorDataInit();
+        TitleBgLocalizeFurnitureWork();
         FurnSortFurnWrk(0);
     }
 
@@ -1363,14 +1417,8 @@ static void TitleBgSetupCamera(void)
     title_bg_camera.zmax = 16777215.0f;
 }
 
-static void TitleBgBeginRoomLoad(void)
+static void TitleBgBeginRoomModelLoad(void)
 {
-    InitModelLoad();
-
-    title_bg_load_timer = 0;
-    title_bg_load_failed = 0;
-    title_bg_model_load_num = 0;
-
     /*
      * Load the room model on its own, before any map data exists. RoomMdlLoadReq
      * calls GetRoomFurnID/GetRoomDoorID against MAP_DATA_ADDRESS; with the map
@@ -1386,6 +1434,30 @@ static void TitleBgBeginRoomLoad(void)
     title_bg_furn_load_addr =
         RoomMdlLoadReq(NULL, TITLE_BG_ROOM_BLOCK, title_bg_msn_no, title_bg_room_no, 0);
     title_bg_room_state = TITLE_BG_ROOM_LOADING;
+}
+
+static void TitleBgBeginRoomLoad(void)
+{
+    InitModelLoad();
+
+    title_bg_load_timer = 0;
+    title_bg_load_failed = 0;
+    title_bg_model_load_num = 0;
+
+    title_bg_effect_load_id = LoadReq(EFF001_PK2, EFFECT_ADDRESS);
+    title_bg_room_state = TITLE_BG_ROOM_LOADING_EFFECT;
+}
+
+static int TitleBgRoomMdlLoadWait(void)
+{
+    int old_msn_no = ingame_wrk.msn_no;
+    int ready;
+
+    ingame_wrk.msn_no = title_bg_msn_no;
+    ready = RoomMdlLoadWait();
+    ingame_wrk.msn_no = old_msn_no;
+
+    return ready;
 }
 
 static void TitleBgUpdateRoomLoad(void)
@@ -1425,11 +1497,27 @@ static void TitleBgUpdateRoomLoad(void)
         }
     }
 
+    /* Stage 0: room effects. Pond/water in room 22 uses EFF001 textures, so bind
+     * them before the gra3d background renderer starts calling room effects. */
+    if (title_bg_room_state == TITLE_BG_ROOM_LOADING_EFFECT)
+    {
+        if (title_bg_effect_load_id >= 0 && IsLoadEnd(title_bg_effect_load_id) == 0)
+        {
+            return;
+        }
+
+        SetETIM2File(EFFECT_ADDRESS);
+        InitEffects();
+        InitEffectSub2();
+        title_bg_load_timer = 0;
+        TitleBgBeginRoomModelLoad();
+    }
+
     /* Stage 1: room model. RoomMdlLoadWait runs InitializeRoom only once the PK2
      * is fully present, because no furniture loads were queued behind it. */
     if (title_bg_room_state == TITLE_BG_ROOM_LOADING)
     {
-        if (RoomMdlLoadWait() == 0)
+        if (TitleBgRoomMdlLoadWait() == 0)
         {
             return;
         }
@@ -1691,40 +1779,7 @@ static void TitleBgDrawRoom(void)
     TitleBgSetupCamera();
     TitleBgSetupRoomState();
 
-    SgSetRefCamera(&title_bg_camera);
-    ClearTextureCache();
-    SgTEXTransEnable();
-    SetEnvironment();
-    SgSetFog(
-        fog_param[room_no][0], fog_param[room_no][1],
-        fog_param[room_no][2], fog_param[room_no][3],
-        fog_rgb[room_no][0], fog_rgb[room_no][1], fog_rgb[room_no][2]);
-
-    SgReadLights(
-        room_addr_tbl[room_no].near_sgd,
-        room_addr_tbl[room_no].lit_data,
-        room_ambient_light,
-        room_pararell_light,
-        3,
-        room_point_light,
-        16,
-        room_spot_light,
-        16);
-
-    TitleBgCopyRoomLights();
-    FurnAplyAmbient();
-
-    CalcRoomCoord(room_addr_tbl[room_no].near_sgd, room_wrk.pos[0]);
-
-    if (room_addr_tbl[room_no].ss_sgd != NULL)
-    {
-        CalcRoomCoord(room_addr_tbl[room_no].ss_sgd, room_wrk.pos[0]);
-    }
-
-    search_num = 0;
-    search_num2 = 0;
-    DrawOneRoom(TITLE_BG_ROOM_BLOCK);
-    DrawFurnitureForced(room_no);
+    gra3dDrawRoomBackgroundLocal(&title_bg_camera, GRA3D_ROOM_BG_DEFAULT, title_bg_room_world_pos);
     ingame_wrk.msn_no = old_msn_no;
     TitleBgFadeUpdate(room_ready);
     TitleBgDrawFadeOverlay();
@@ -1745,6 +1800,7 @@ static void TitleBgDebugUi(void)
     int camera_lerp_enabled = title_bg_camera_lerp_enabled;
     int audio_file_no = title_bgm_file_no;
     int use_room_background = TitleUseRoomBackground();
+    int use_title_dither = TitleUseDither();
     char constants[512];
     char full_values[2048];
 
@@ -1772,6 +1828,11 @@ static void TitleBgDebugUi(void)
     if (igCheckbox("Use room background", (bool *)&use_room_background))
     {
         TitleSetUseRoomBackground(use_room_background);
+    }
+
+    if (igCheckbox("Use title dithering", (bool *)&use_title_dither))
+    {
+        TitleSetUseDither(use_title_dither);
     }
 
     igSeparator();
@@ -4217,6 +4278,11 @@ void MakeOutDither()
 
 void DispOutDither()
 {
+    if (TitleUseDither() == 0)
+    {
+        return;
+    }
+
     	/* 0x0(sp) */ SPRITE_DATA sd2 = {
         .g_GsTex0 = {
               .TBP0 = 0x37FC,

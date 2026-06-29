@@ -40,6 +40,7 @@ static int init_haze_pond;
 static void *amulet_fire_ret;
 static int amulet_fire_flow;
 static int amulet_fire_cnt;
+static sceVu0FVECTOR effect_room_offset = {0.0f, 0.0f, 0.0f, 0.0f};
 
 static RIPPLE_SUB rs[48];
 static EFF_LEAF eff_leaf[6];
@@ -59,6 +60,26 @@ static RIPPLE2 rip[8];
 #define VU0_CLIP_X_NEG (1 << 1)
 #define VU0_CLIP_Y_POS (1 << 2)
 #define VU0_CLIP_Y_NEG (1 << 3)
+
+void SetEffectRoomOffset(float x, float y, float z)
+{
+    effect_room_offset[0] = x;
+    effect_room_offset[1] = y;
+    effect_room_offset[2] = z;
+    effect_room_offset[3] = 0.0f;
+}
+
+void ClearEffectRoomOffset()
+{
+    SetEffectRoomOffset(0.0f, 0.0f, 0.0f);
+}
+
+static void AddEffectRoomOffset(sceVu0FVECTOR pos)
+{
+    pos[0] += effect_room_offset[0];
+    pos[1] += effect_room_offset[1];
+    pos[2] += effect_room_offset[2];
+}
 #define VU0_CLIP_Z_POS (1 << 4)
 #define VU0_CLIP_Z_NEG (1 << 5)
 
@@ -6165,6 +6186,7 @@ void SetFirefly()
     int i;
     float rate = 0.1f;
     sceVu0FVECTOR fpos;
+    sceVu0FVECTOR draw_pos;
     sceVu0FVECTOR bpos = { 19800.0f, 100.0f, 36500.0f, 1.0f };
     sceVu0FMATRIX mtx;
     FIREFLY *ffp;
@@ -6221,7 +6243,9 @@ void SetFirefly()
                     SetFireflySub(&ff[i]);
                 }
 
-                SetGlowOfAFirefly(ff[i].npos, 7.0f, 0xdc, 0xff, 0x80, 0x6a, 0xa0, 0x10, ff[i].alp);
+                Vu0CopyVector(draw_pos, ff[i].npos);
+                AddEffectRoomOffset(draw_pos);
+                SetGlowOfAFirefly(draw_pos, 7.0f, 0xdc, 0xff, 0x80, 0x6a, 0xa0, 0x10, ff[i].alp);
             }
         }
 
@@ -6543,6 +6567,7 @@ void SetPond()
     vnumh = 0x21;
 
     tsh = 625.0f;
+    AddEffectRoomOffset(bpos);
 
     sceVu0UnitMatrix(wlm);
     sceVu0TransMatrix(wlm, wlm, bpos);
@@ -6767,6 +6792,11 @@ void SetPond()
 void SetHaze_Pond_SW(int sw)
 {
     init_haze_pond = sw;
+}
+
+int GetHaze_Pond_SW()
+{
+    return init_haze_pond;
 }
 
 void SetHaze_Pond()
