@@ -9,6 +9,7 @@
 #include "SDL3/SDL_platform.h"
 #include "ingame/camera/camera.h"
 #include "mikupan/mikupan_config.h"
+#include "mikupan/mikupan_audio_bus.h"
 #include "mikupan/mikupan_controller.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_gpu.h"
@@ -147,19 +148,19 @@ static void MikuPan_UiStoreRuntimeConfiguration(void)
     MikuPan_UiSyncSettingsFromConfiguration();
 }
 
-static void MikuPan_UiSaveConfiguration(void)
+static int MikuPan_UiSaveConfiguration(void)
 {
     MikuPan_UiStoreRuntimeConfiguration();
     if (MikuPan_SaveConfiguration(NULL))
     {
         snprintf(config_save_status, sizeof(config_save_status),
                  "Saved configuration");
+        return 1;
     }
-    else
-    {
-        snprintf(config_save_status, sizeof(config_save_status),
-                 "Failed to save configuration");
-    }
+
+    snprintf(config_save_status, sizeof(config_save_status),
+             "Failed to save configuration");
+    return 0;
 }
 
 static int CompareResolutionDesc(const void* a, const void* b)
@@ -1013,6 +1014,77 @@ void MikuPan_ResetCrtSettings(void)
     mikupan_configuration.crt = crt_settings;
 }
 
+
+static float MikuPan_ClampAudioVolume(float value)
+{
+    return MikuPan_ClampFloat(value, 0.0f, 1.0f);
+}
+
+static void MikuPan_SetAudioVolumeField(float* field, float value)
+{
+    if (field == NULL)
+    {
+        return;
+    }
+
+    value = MikuPan_ClampAudioVolume(value);
+    if (*field != value)
+    {
+        *field = value;
+        MikuPan_AudioBumpRevision();
+    }
+}
+
+float MikuPan_GetAudioMasterVolume(void)
+{
+    return mikupan_configuration.audio.master;
+}
+
+void MikuPan_SetAudioMasterVolume(float value)
+{
+    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.master, value);
+}
+
+float MikuPan_GetAudioAmbientBgmVolume(void)
+{
+    return mikupan_configuration.audio.ambient_bgm;
+}
+
+void MikuPan_SetAudioAmbientBgmVolume(float value)
+{
+    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.ambient_bgm, value);
+}
+
+float MikuPan_GetAudioBattleBgmVolume(void)
+{
+    return mikupan_configuration.audio.battle_bgm;
+}
+
+void MikuPan_SetAudioBattleBgmVolume(float value)
+{
+    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.battle_bgm, value);
+}
+
+float MikuPan_GetAudioAmbientSeVolume(void)
+{
+    return mikupan_configuration.audio.ambient_se;
+}
+
+void MikuPan_SetAudioAmbientSeVolume(float value)
+{
+    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.ambient_se, value);
+}
+
+float MikuPan_GetAudioBattleSeVolume(void)
+{
+    return mikupan_configuration.audio.battle_se;
+}
+
+void MikuPan_SetAudioBattleSeVolume(float value)
+{
+    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.battle_se, value);
+}
+
 int MikuPan_IsFullScreen(void)
 {
     return is_fullscreen;
@@ -1268,9 +1340,9 @@ void MikuPan_BrowseDataFolderFromUi(void)
                              MikuPan_GetUiWindow(), start, false);
 }
 
-void MikuPan_SaveConfigurationFromUi(void)
+int MikuPan_SaveConfigurationFromUi(void)
 {
-    MikuPan_UiSaveConfiguration();
+    return MikuPan_UiSaveConfiguration();
 }
 
 const char* MikuPan_GetConfigSaveStatus(void)

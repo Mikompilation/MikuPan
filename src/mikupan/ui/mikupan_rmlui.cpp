@@ -1,10 +1,14 @@
 #include "mikupan/ui/mikupan_rmlui.h"
+#include "mikupan/ui/mikupan_rml_options.h"
+#include "mikupan/ui/mikupan_ui.h"
 
 #include "glad/gl.h"
 #include "mikupan/mikupan_file.h"
-#include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/mikupan_controller.h"
 
 extern "C" {
+int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max, unsigned short pitch, unsigned char menu);
+
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan/rendering/mikupan_pipeline.h"
 #include "mikupan/rendering/mikupan_profiler.h"
@@ -15,26 +19,19 @@ extern "C" {
 
 #include "SDL3/SDL.h"
 #include "RmlUi/Core.h"
-#include "RmlUi/Core/ElementDocument.h"
-#include "RmlUi/Core/EventListener.h"
 #include "RmlUi/Core/Input.h"
 #include "RmlUi/Core/SystemInterface.h"
-#include "RmlUi/Core/Elements/ElementFormControlInput.h"
-#include "RmlUi/Core/Elements/ElementFormControlSelect.h"
 
 #include <algorithm>
+#include <array>
 #include <climits>
 #include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <functional>
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace
 {
+
 struct MikuPanRmlGeometry
 {
     std::vector<Rml::Vertex> vertices;
@@ -140,11 +137,33 @@ private:
 class MikuPanRmlRenderInterface final : public Rml::RenderInterface
 {
 public:
-    void SetWindowSize(int width, int height)
+    ~MikuPanRmlRenderInterface() override
+    {
+        if (white_texture_id != 0)
+        {
+            MikuPan_GPUReleaseTexture(white_texture_id);
+            white_texture_id = 0;
+        }
+    }
+
+    void SetWindowMetrics(int width, int height,
+                          int viewport_x, int viewport_y,
+                          int viewport_w, int viewport_h)
     {
         window_width = std::max(width, 1);
         window_height = std::max(height, 1);
+        context_x = std::max(viewport_x, 0);
+        context_y = std::max(viewport_y, 0);
+        context_w = std::max(viewport_w, 1);
+        context_h = std::max(viewport_h, 1);
+        context_scale_x = 1.0f;
+        context_scale_y = 1.0f;
     }
+
+    int GetContextX(void) const { return context_x; }
+    int GetContextY(void) const { return context_y; }
+    int GetContextW(void) const { return context_w; }
+    int GetContextH(void) const { return context_h; }
 
     Rml::CompiledGeometryHandle
     CompileGeometry(Rml::Span<const Rml::Vertex> vertices,
@@ -172,8 +191,17 @@ public:
             return;
         }
 
-        const unsigned int texture_id =
+        unsigned int texture_id =
             static_cast<unsigned int>(static_cast<uintptr_t>(texture));
+        if (texture_id == 0)
+        {
+            texture_id = EnsureWhiteTexture();
+            if (texture_id == 0)
+            {
+                return;
+            }
+        }
+
         const size_t vertex_count = geometry->indices.size();
 
         scratch_vertices.clear();
@@ -188,8 +216,10 @@ public:
             }
 
             const Rml::Vertex& vertex = geometry->vertices[index];
-            const float x = vertex.position.x + translation.x;
-            const float y = vertex.position.y + translation.y;
+            const float x = static_cast<float>(context_x)
+                            + vertex.position.x + translation.x;
+            const float y = static_cast<float>(context_y)
+                            + vertex.position.y + translation.y;
             const float ndc_x = (x / static_cast<float>(window_width)) * 2.0f
                                 - 1.0f;
             const float ndc_y =
@@ -353,6 +383,23 @@ private:
         }
     }
 
+    unsigned int EnsureWhiteTexture(void)
+    {
+        if (white_texture_id != 0)
+        {
+            return white_texture_id;
+        }
+
+        static const unsigned char white_pixel[4] = {255, 255, 255, 255};
+        white_texture_id = MikuPan_GPUCreateTextureRGBA8(1,
+                                                         1,
+                                                         white_pixel,
+                                                         4,
+                                                         0,
+                                                         0);
+        return white_texture_id;
+    }
+
     void ApplyScissor(void) const
     {
         if (!scissor_enabled)
@@ -361,98 +408,47 @@ private:
             return;
         }
 
-        const int x = std::max(scissor_x, 0);
-        const int y = std::max(scissor_y, 0);
-        const int w = std::max(std::min(scissor_w, window_width - x), 0);
-        const int h = std::max(std::min(scissor_h, window_height - y), 0);
+        const int x = std::max(context_x + scissor_x, context_x);
+        const int y = std::max(context_y + scissor_y, context_y);
+        const int w = std::max(std::min(scissor_w, context_x + context_w - x), 0);
+        const int h = std::max(std::min(scissor_h, context_y + context_h - y), 0);
         MikuPan_GPUSetScissor(x, y, w, h);
     }
 
     int window_width = 1;
     int window_height = 1;
+    int context_x = 0;
+    int context_y = 0;
+    int context_w = 1;
+    int context_h = 1;
+    float context_scale_x = 1.0f;
+    float context_scale_y = 1.0f;
     bool scissor_enabled = false;
     int scissor_x = 0;
     int scissor_y = 0;
     int scissor_w = 1;
     int scissor_h = 1;
     std::vector<float> scratch_vertices;
+    unsigned int white_texture_id = 0;
 };
 
-class MikuPanSelectListener final : public Rml::EventListener
+
+enum MikuPanRmlPadAction
 {
-public:
-    explicit MikuPanSelectListener(std::function<void(int)> callback)
-        : on_change(std::move(callback))
-    {
-    }
-
-    void ProcessEvent(Rml::Event& event) override
-    {
-        auto* select = rmlui_dynamic_cast<Rml::ElementFormControlSelect*>(
-            event.GetCurrentElement());
-        if (select == nullptr)
-        {
-            select = rmlui_dynamic_cast<Rml::ElementFormControlSelect*>(
-                event.GetTargetElement());
-        }
-        if (select == nullptr)
-        {
-            return;
-        }
-
-        on_change(select->GetSelection());
-    }
-
-private:
-    std::function<void(int)> on_change;
+    MIKUPAN_RML_PAD_UP = 0,
+    MIKUPAN_RML_PAD_DOWN,
+    MIKUPAN_RML_PAD_LEFT,
+    MIKUPAN_RML_PAD_RIGHT,
+    MIKUPAN_RML_PAD_CONFIRM,
+    MIKUPAN_RML_PAD_ALT_CONFIRM,
+    MIKUPAN_RML_PAD_CANCEL,
+    MIKUPAN_RML_PAD_COUNT,
 };
 
-class MikuPanInputListener final : public Rml::EventListener
+struct MikuPanRmlPadActionState
 {
-public:
-    explicit MikuPanInputListener(
-        std::function<void(Rml::ElementFormControlInput*)> callback)
-        : on_change(std::move(callback))
-    {
-    }
-
-    void ProcessEvent(Rml::Event& event) override
-    {
-        auto* input = rmlui_dynamic_cast<Rml::ElementFormControlInput*>(
-            event.GetCurrentElement());
-        if (input == nullptr)
-        {
-            input = rmlui_dynamic_cast<Rml::ElementFormControlInput*>(
-                event.GetTargetElement());
-        }
-        if (input == nullptr)
-        {
-            return;
-        }
-
-        on_change(input);
-    }
-
-private:
-    std::function<void(Rml::ElementFormControlInput*)> on_change;
-};
-
-class MikuPanButtonListener final : public Rml::EventListener
-{
-public:
-    explicit MikuPanButtonListener(std::function<void()> callback)
-        : on_click(std::move(callback))
-    {
-    }
-
-    void ProcessEvent(Rml::Event& event) override
-    {
-        (void) event;
-        on_click();
-    }
-
-private:
-    std::function<void()> on_click;
+    bool down = false;
+    uint64_t next_repeat_ticks = 0;
 };
 
 struct MikuPanRmlState
@@ -460,35 +456,10 @@ struct MikuPanRmlState
     SDL_Window* window = nullptr;
     std::unique_ptr<MikuPanRmlSystemInterface> system_interface;
     std::unique_ptr<MikuPanRmlRenderInterface> render_interface;
-    std::vector<std::unique_ptr<Rml::EventListener>> listeners;
     Rml::Context* context = nullptr;
-    Rml::ElementDocument* hi_document = nullptr;
-    Rml::ElementFormControlSelect* window_mode_select = nullptr;
-    Rml::ElementFormControlSelect* resolution_select = nullptr;
-    Rml::ElementFormControlSelect* gpu_backend_select = nullptr;
-    Rml::ElementFormControlSelect* msaa_select = nullptr;
-    Rml::ElementFormControlSelect* shadow_resolution_select = nullptr;
-    Rml::ElementFormControlSelect* lighting_mode_select = nullptr;
-    Rml::ElementFormControlSelect* theme_select = nullptr;
-    Rml::ElementFormControlSelect* font_select = nullptr;
-    Rml::ElementFormControlInput* brightness_input = nullptr;
-    Rml::Element* brightness_value = nullptr;
-    Rml::ElementFormControlInput* gamma_input = nullptr;
-    Rml::Element* gamma_value = nullptr;
-    Rml::ElementFormControlInput* vsync_input = nullptr;
-    Rml::Element* active_gpu_label = nullptr;
-    Rml::Element* gpu_restart_note = nullptr;
-    Rml::ElementFormControlInput* font_scale_input = nullptr;
-    Rml::Element* font_scale_value = nullptr;
-    Rml::ElementFormControlInput* crt_enabled_input = nullptr;
-    std::vector<Rml::ElementFormControlInput*> crt_inputs;
-    std::vector<Rml::Element*> crt_values;
-    Rml::ElementFormControlInput* controller_remap_input = nullptr;
-    Rml::ElementFormControlInput* data_folder_input = nullptr;
-    Rml::Element* save_status = nullptr;
     std::vector<Rml::byte> font_data;
+    std::array<MikuPanRmlPadActionState, MIKUPAN_RML_PAD_COUNT> pad_actions;
     bool initialized = false;
-    bool hi_visible = false;
 };
 
 MikuPanRmlState g_rml;
@@ -506,12 +477,60 @@ void UpdateContextDimensions(void)
     width = std::max(width, 1);
     height = std::max(height, 1);
 
-    g_rml.render_interface->SetWindowSize(width, height);
-    const Rml::Vector2i dimensions(width, height);
+    int render_width = MikuPan_GetRenderResolutionWidth();
+    int render_height = MikuPan_GetRenderResolutionHeight();
+    render_width = std::max(render_width, 1);
+    render_height = std::max(render_height, 1);
+
+    const float target_aspect =
+        static_cast<float>(render_width) / static_cast<float>(render_height);
+    const float window_aspect =
+        static_cast<float>(width) / static_cast<float>(height);
+
+    int viewport_x = 0;
+    int viewport_y = 0;
+    int viewport_w = width;
+    int viewport_h = height;
+    if (window_aspect > target_aspect)
+    {
+        viewport_h = height;
+        viewport_w = static_cast<int>(static_cast<float>(height) * target_aspect);
+        viewport_x = (width - viewport_w) / 2;
+        viewport_y = 0;
+    }
+    else
+    {
+        viewport_w = width;
+        viewport_h = static_cast<int>(static_cast<float>(width) / target_aspect);
+        viewport_x = 0;
+        viewport_y = (height - viewport_h) / 2;
+    }
+
+    viewport_w = std::max(viewport_w, 1);
+    viewport_h = std::max(viewport_h, 1);
+
+    g_rml.render_interface->SetWindowMetrics(width,
+                                             height,
+                                             viewport_x,
+                                             viewport_y,
+                                             viewport_w,
+                                             viewport_h);
+    const Rml::Vector2i dimensions(viewport_w, viewport_h);
     if (g_rml.context->GetDimensions() != dimensions)
     {
         g_rml.context->SetDimensions(dimensions);
     }
+
+    /*
+     * Keep RML rendering at native viewport resolution for crisp text, but let
+     * the RCSS use dp units as a 640x448 design space. This avoids the blurry
+     * 640x448 render-then-scale path while still keeping the menu anchored to
+     * the original PS2-style options background.
+     */
+    const float scale_x = static_cast<float>(viewport_w) / 640.0f;
+    const float scale_y = static_cast<float>(viewport_h) / 448.0f;
+    const float dp_ratio = std::max(0.75f, std::min(scale_x, scale_y));
+    g_rml.context->SetDensityIndependentPixelRatio(dp_ratio);
 }
 
 bool LoadFont(void)
@@ -540,858 +559,6 @@ bool LoadFont(void)
         "MikuPanRml",
         Rml::Style::FontStyle::Normal,
         Rml::Style::FontWeight::Normal);
-}
-
-std::string FormatFloat(float value, int precision)
-{
-    char buffer[32];
-    std::snprintf(buffer, sizeof(buffer), "%.*f", precision, value);
-    return buffer;
-}
-
-float ParseFloat(const Rml::String& value, float fallback)
-{
-    char* end = nullptr;
-    const float parsed = std::strtof(value.c_str(), &end);
-    return end != value.c_str() ? parsed : fallback;
-}
-
-void SetElementText(Rml::Element* element, const std::string& text)
-{
-    if (element != nullptr)
-    {
-        element->SetInnerRML(text);
-    }
-}
-
-void SetInputValue(Rml::ElementFormControlInput* input,
-                   float value,
-                   int precision)
-{
-    if (input != nullptr)
-    {
-        input->SetValue(FormatFloat(value, precision));
-    }
-}
-
-void SetCheckbox(Rml::ElementFormControlInput* input, int enabled)
-{
-    if (input == nullptr)
-    {
-        return;
-    }
-
-    if (enabled)
-    {
-        input->SetAttribute("checked", "");
-    }
-    else
-    {
-        input->RemoveAttribute("checked");
-    }
-}
-
-int IsCheckboxChecked(Rml::ElementFormControlInput* input)
-{
-    return input != nullptr && input->HasAttribute("checked");
-}
-
-void AddListener(Rml::Element* element,
-                 Rml::EventId event_id,
-                 std::unique_ptr<Rml::EventListener> listener)
-{
-    if (element == nullptr || listener == nullptr)
-    {
-        return;
-    }
-
-    element->AddEventListener(event_id, listener.get());
-    g_rml.listeners.push_back(std::move(listener));
-}
-
-Rml::ElementFormControlSelect* GetSelect(const char* id)
-{
-    return rmlui_dynamic_cast<Rml::ElementFormControlSelect*>(
-        g_rml.hi_document->GetElementById(id));
-}
-
-Rml::ElementFormControlInput* GetInput(const char* id)
-{
-    return rmlui_dynamic_cast<Rml::ElementFormControlInput*>(
-        g_rml.hi_document->GetElementById(id));
-}
-
-Rml::Element* GetElement(const char* id)
-{
-    return g_rml.hi_document->GetElementById(id);
-}
-
-void PopulateIndexedSelect(Rml::ElementFormControlSelect* select,
-                           int count,
-                           const char* (*get_label)(int),
-                           int selected,
-                           std::function<void(int)> on_change,
-                           int (*is_enabled)(int) = nullptr)
-{
-    if (select == nullptr)
-    {
-        return;
-    }
-
-    for (int i = 0; i < count; i++)
-    {
-        const char* label = get_label != nullptr ? get_label(i) : nullptr;
-        const bool enabled = is_enabled == nullptr || is_enabled(i);
-        select->Add(label != nullptr ? label : "",
-                    std::to_string(i),
-                    -1,
-                    enabled);
-    }
-
-    if (count > 0)
-    {
-        select->SetSelection(std::max(0, std::min(selected, count - 1)));
-    }
-
-    AddListener(select,
-                Rml::EventId::Change,
-                std::make_unique<MikuPanSelectListener>(std::move(on_change)));
-}
-
-void PopulateStaticSelect(Rml::ElementFormControlSelect* select,
-                          const char* const* labels,
-                          int count,
-                          int selected,
-                          std::function<void(int)> on_change)
-{
-    if (select == nullptr)
-    {
-        return;
-    }
-
-    for (int i = 0; i < count; i++)
-    {
-        select->Add(labels[i], std::to_string(i));
-    }
-
-    if (count > 0)
-    {
-        select->SetSelection(std::max(0, std::min(selected, count - 1)));
-    }
-
-    AddListener(select,
-                Rml::EventId::Change,
-                std::make_unique<MikuPanSelectListener>(std::move(on_change)));
-}
-
-void SyncRmlSettingsValues(void)
-{
-    if (g_rml.hi_document == nullptr)
-    {
-        return;
-    }
-
-    if (g_rml.window_mode_select != nullptr)
-    {
-        g_rml.window_mode_select->SetSelection(MikuPan_GetWindowMode());
-    }
-    if (g_rml.resolution_select != nullptr)
-    {
-        g_rml.resolution_select->SetSelection(
-            MikuPan_GetSelectedRenderResolutionOption());
-    }
-    if (g_rml.gpu_backend_select != nullptr)
-    {
-        g_rml.gpu_backend_select->SetSelection(
-            MikuPan_GetSelectedGpuDriverOption());
-    }
-    if (g_rml.msaa_select != nullptr)
-    {
-        g_rml.msaa_select->SetSelection(MikuPan_GetSelectedMSAAOption());
-    }
-    if (g_rml.shadow_resolution_select != nullptr)
-    {
-        g_rml.shadow_resolution_select->SetSelection(
-            MikuPan_GetSelectedShadowResolutionOption());
-    }
-    if (g_rml.lighting_mode_select != nullptr)
-    {
-        g_rml.lighting_mode_select->SetSelection(MikuPan_GetLightingMode());
-    }
-    if (g_rml.theme_select != nullptr)
-    {
-        g_rml.theme_select->SetSelection(MikuPan_GetSelectedThemeOption());
-    }
-    if (g_rml.font_select != nullptr)
-    {
-        g_rml.font_select->SetSelection(MikuPan_GetSelectedFontOption());
-    }
-
-    SetInputValue(g_rml.brightness_input, MikuPan_GetBrightness(), 2);
-    SetElementText(g_rml.brightness_value,
-                   FormatFloat(MikuPan_GetBrightness(), 2));
-    SetInputValue(g_rml.gamma_input, MikuPan_GetGamma(), 2);
-    SetElementText(g_rml.gamma_value, FormatFloat(MikuPan_GetGamma(), 2));
-    SetCheckbox(g_rml.vsync_input, MikuPan_IsVsync());
-    SetElementText(g_rml.active_gpu_label,
-                   std::string("Active: ")
-                       + MikuPan_GetActiveGpuDriverLabel());
-    SetElementText(g_rml.gpu_restart_note,
-                   MikuPan_IsGpuDriverRestartPending()
-                       ? "Save Configuration and restart to apply"
-                       : "");
-    SetInputValue(g_rml.font_scale_input, MikuPan_GetUiFontScale(), 2);
-    SetElementText(g_rml.font_scale_value,
-                   FormatFloat(MikuPan_GetUiFontScale(), 2) + "x");
-
-    const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
-    SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
-    for (size_t i = 0; i < g_rml.crt_inputs.size(); i++)
-    {
-        const int index = static_cast<int>(i);
-        const float value = MikuPan_GetCrtFieldValue(index);
-        const int precision = MikuPan_GetCrtFieldStep(index) < 0.01f ? 3 : 2;
-        SetInputValue(g_rml.crt_inputs[i], value, precision);
-        SetElementText(g_rml.crt_values[i], FormatFloat(value, precision));
-    }
-
-    SetCheckbox(g_rml.controller_remap_input,
-                MikuPan_ShowControllerRemapWindow());
-
-    if (g_rml.data_folder_input != nullptr
-        && g_rml.context->GetFocusElement() != g_rml.data_folder_input)
-    {
-        g_rml.data_folder_input->SetValue(MikuPan_GetDataFolder());
-    }
-
-    SetElementText(g_rml.save_status, MikuPan_GetConfigSaveStatus());
-}
-
-bool LoadHiDocument(void)
-{
-    static constexpr const char* kHiDocument = R"(
-<rml>
-<head>
-    <style>
-        body {
-            font-family: MikuPanRml;
-            font-size: 15px;
-            color: #d8d0c1;
-        }
-        #window {
-            position: absolute;
-            left: 26px;
-            top: 48px;
-            width: 590px;
-            height: 700px;
-            padding: 16px;
-            background-color: #0a0908;
-            border: 1px #6c6254;
-            border-radius: 4dp;
-        }
-        #window:hover {
-            background-color: #100f0d;
-            border-color: #a19683;
-        }
-        #header {
-            margin: 0 0 14px 0;
-            padding: 0 0 10px 0;
-            border-bottom: 1px #39342e;
-            border-radius: 2dp;
-        }
-        #header:hover {
-            background-color: #14110e;
-        }
-        #eyebrow {
-            display: inline-block;
-            margin: 0 0 7px 0;
-            padding: 2px 7px;
-            color: #b9b0a0;
-            background-color: #1c1813;
-            border: 1px #554b3e;
-            border-radius: 3dp;
-            font-size: 12px;
-        }
-        #eyebrow:hover {
-            color: #eee5d3;
-            background-color: #2a231b;
-            border-color: #90826b;
-        }
-        h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #efe8d8;
-        }
-        h1:hover {
-            color: #fff6e4;
-        }
-        p {
-            margin: 3px 0 0 0;
-            color: #8f877c;
-            font-size: 13px;
-        }
-        p:hover {
-            color: #c7bca9;
-        }
-        #settings-scroll {
-            height: 620px;
-            overflow-y: auto;
-            padding-right: 6px;
-        }
-        .section {
-            margin: 0 0 12px 0;
-            padding: 12px;
-            background-color: #11100e;
-            border-radius: 3dp;
-        }
-        .section:hover {
-            background-color: #171512;
-        }
-        h2 {
-            margin: 0 0 10px 0;
-            padding: 0 0 5px 0;
-            color: #e6dcc8;
-            border-bottom: 1px #3a332b;
-            font-size: 16px;
-        }
-        h3 {
-            margin: 12px 0 8px 0;
-            color: #bfb39e;
-            font-size: 13px;
-        }
-        .row {
-            margin: 0 0 10px 0;
-        }
-        .row:hover {
-            background-color: #1a1713;
-        }
-        .slider-head {
-            margin: 0 0 5px 0;
-        }
-        .value {
-            float: right;
-            color: #a99779;
-        }
-        label {
-            display: block;
-            margin: 0 0 8px 0;
-            color: #c7bfb1;
-            font-size: 13px;
-        }
-        label:hover {
-            color: #eee5d3;
-        }
-        .inline-label {
-            display: inline-block;
-            margin: 0 0 0 8px;
-        }
-        .note {
-            margin: 6px 0 0 0;
-            color: #8d8374;
-            font-size: 12px;
-        }
-        #gpu-restart-note,
-        #save-status {
-            color: #c8ab77;
-        }
-        select {
-            width: 100%;
-            height: 34dp;
-            padding: 0;
-            margin: 0;
-            font-family: MikuPanRml;
-            font-size: 15px;
-            color: #ded6c7;
-            background-color: transparent;
-            border-width: 0;
-        }
-        select selectvalue {
-            width: auto;
-            height: 25dp;
-            margin-right: 30dp;
-            padding: 9dp 10dp 0dp 10dp;
-            color: #ded6c7;
-            background-color: #0b0b0a;
-            border: 1px #5b5246;
-            border-radius: 2dp;
-            white-space: nowrap;
-        }
-        select:hover selectvalue,
-        select:focus-visible selectvalue,
-        select selectvalue:checked {
-            color: #fff3d4;
-            background-color: #181510;
-            border-color: #a39170;
-        }
-        select selectarrow {
-            width: 30dp;
-            height: 34dp;
-            color: #b8aa90;
-            background-color: #16130f;
-            border: 1px #5b5246;
-            border-radius: 2dp;
-        }
-        select:hover selectarrow,
-        select:focus-visible selectarrow,
-        select selectarrow:checked {
-            color: #fff3d4;
-            background-color: #2a2218;
-            border-color: #a39170;
-        }
-        select selectbox {
-            margin-top: 3px;
-            padding: 2px;
-            width: auto;
-            max-height: 180px;
-            background-color: #090807;
-            border: 1px #7b6f5c;
-            border-radius: 2dp;
-        }
-        select selectbox option {
-            width: auto;
-            min-height: 24px;
-            padding: 6px 10px;
-            font-family: MikuPanRml;
-            font-size: 15px;
-            color: #d8d0c0;
-            background-color: #0d0c0a;
-            white-space: nowrap;
-        }
-        select selectbox option:nth-child(even) {
-            background-color: #12100d;
-        }
-        select selectbox option:hover {
-            color: #fff5d7;
-            background-color: #3a2d1e;
-        }
-        select selectbox option:checked {
-            color: #f4dec0;
-            background-color: #2b2117;
-        }
-        input.text {
-            width: 100%;
-            height: 29dp;
-            padding: 5dp 8dp 0dp 8dp;
-            color: #ded6c7;
-            background-color: #0b0b0a;
-            border: 1px #5b5246;
-            border-radius: 2dp;
-            font-family: MikuPanRml;
-            font-size: 14px;
-        }
-        input.text:hover,
-        input.text:focus-visible {
-            color: #fff3d4;
-            background-color: #181510;
-            border-color: #a39170;
-        }
-        input.checkbox {
-            width: 15dp;
-            height: 15dp;
-            background-color: #0b0b0a;
-            border: 1px #6c6254;
-            border-radius: 2dp;
-        }
-        input.checkbox:hover,
-        input.checkbox:focus-visible {
-            background-color: #211b14;
-            border-color: #a39170;
-        }
-        input.checkbox:checked {
-            background-color: #a39170;
-            border-color: #e3d0ad;
-        }
-        input.range {
-            width: 100%;
-            height: 18dp;
-        }
-        input.range slidertrack {
-            background-color: #080706;
-            border: 1px #51483b;
-        }
-        input.range sliderprogress {
-            background-color: #554530;
-        }
-        input.range sliderbar {
-            width: 14dp;
-            background-color: #9b8a70;
-            border: 1px #d8c9a8;
-            border-radius: 2dp;
-        }
-        input.range:hover sliderbar,
-        input.range:focus-visible sliderbar {
-            background-color: #d4bd92;
-        }
-        input.range sliderarrowdec,
-        input.range sliderarrowinc {
-            width: 12dp;
-            height: 18dp;
-            background-color: #15110d;
-            border: 1px #51483b;
-        }
-        input.range sliderarrowdec:hover,
-        input.range sliderarrowinc:hover {
-            background-color: #2b2117;
-            border-color: #a39170;
-        }
-        button {
-            margin: 0 8px 0 0;
-            padding: 7dp 12dp;
-            color: #ded6c7;
-            background-color: #16130f;
-            border: 1px #625746;
-            border-radius: 2dp;
-            font-family: MikuPanRml;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        button:hover,
-        button:focus-visible {
-            color: #fff3d4;
-            background-color: #2a2218;
-            border-color: #a39170;
-        }
-        scrollbarvertical {
-            width: 10dp;
-        }
-        scrollbarvertical slidertrack {
-            background-color: #080706;
-        }
-        scrollbarvertical sliderbar {
-            background-color: #4c4236;
-            border-radius: 2dp;
-        }
-        scrollbarvertical sliderbar:hover {
-            background-color: #8e7c62;
-        }
-    </style>
-</head>
-<body>
-    <div id="window">
-        <div id="header">
-            <div id="eyebrow">RmlUi</div>
-            <h1>Settings</h1>
-            <p>hi</p>
-        </div>
-        <div id="settings-scroll">
-            <div class="section">
-                <h2>Display</h2>
-                <div class="row">
-                    <label for="window-mode-select">Display Mode</label>
-                    <select id="window-mode-select"></select>
-                </div>
-                <div class="row">
-                    <label for="resolution-select">Resolution</label>
-                    <select id="resolution-select"></select>
-                </div>
-                <div class="row">
-                    <div class="slider-head">
-                        <label for="brightness-input">Brightness <span id="brightness-value" class="value"></span></label>
-                    </div>
-                    <input type="range" id="brightness-input" min="0" max="2" step="0.01" />
-                </div>
-                <div class="row">
-                    <div class="slider-head">
-                        <label for="gamma-input">Gamma <span id="gamma-value" class="value"></span></label>
-                    </div>
-                    <input type="range" id="gamma-input" min="0.1" max="3" step="0.01" />
-                </div>
-                <div class="row">
-                    <input type="checkbox" id="vsync-input" />
-                    <label for="vsync-input" class="inline-label">VSync</label>
-                </div>
-            </div>
-            <div class="section">
-                <h2>Graphics</h2>
-                <div class="row">
-                    <label for="gpu-backend-select">GPU Backend</label>
-                    <select id="gpu-backend-select"></select>
-                    <p id="active-gpu-label" class="note"></p>
-                    <p id="gpu-restart-note" class="note"></p>
-                </div>
-                <div class="row">
-                    <label for="msaa-select">MSAA</label>
-                    <select id="msaa-select"></select>
-                </div>
-                <div class="row">
-                    <label for="shadow-resolution-select">Shadow Resolution</label>
-                    <select id="shadow-resolution-select"></select>
-                </div>
-                <div class="row">
-                    <label for="lighting-mode-select">Lighting Mode</label>
-                    <select id="lighting-mode-select"></select>
-                </div>
-            </div>
-            <div class="section">
-                <h2>Theme</h2>
-                <div class="row">
-                    <label for="theme-select">Theme</label>
-                    <select id="theme-select"></select>
-                </div>
-                <div class="row">
-                    <label for="font-select">Font</label>
-                    <select id="font-select"></select>
-                </div>
-                <div class="row">
-                    <div class="slider-head">
-                        <label for="font-scale-input">Font Size <span id="font-scale-value" class="value"></span></label>
-                    </div>
-                    <input type="range" id="font-scale-input" min="0.5" max="3" step="0.05" />
-                </div>
-            </div>
-            <div class="section">
-                <h2>CRT</h2>
-                <div class="row">
-                    <input type="checkbox" id="crt-enabled-input" />
-                    <label for="crt-enabled-input" class="inline-label">Enabled</label>
-                </div>
-                <h3>Screen</h3>
-                <div class="row"><label for="crt-0-input">Strength <span id="crt-0-value" class="value"></span></label><input type="range" id="crt-0-input" min="0" max="1" step="0.01" /></div>
-                <div class="row"><label for="crt-1-input">Curvature <span id="crt-1-value" class="value"></span></label><input type="range" id="crt-1-input" min="0" max="0.3" step="0.001" /></div>
-                <div class="row"><label for="crt-2-input">Overscan <span id="crt-2-value" class="value"></span></label><input type="range" id="crt-2-input" min="0" max="0.12" step="0.001" /></div>
-                <h3>Scanlines</h3>
-                <div class="row"><label for="crt-3-input">Scanline Strength <span id="crt-3-value" class="value"></span></label><input type="range" id="crt-3-input" min="0" max="1" step="0.01" /></div>
-                <div class="row"><label for="crt-4-input">Scanline Scale <span id="crt-4-value" class="value"></span></label><input type="range" id="crt-4-input" min="0.25" max="3" step="0.01" /></div>
-                <div class="row"><label for="crt-5-input">Scanline Thickness <span id="crt-5-value" class="value"></span></label><input type="range" id="crt-5-input" min="0.5" max="4" step="0.01" /></div>
-                <h3>Mask</h3>
-                <div class="row"><label for="crt-6-input">Mask Strength <span id="crt-6-value" class="value"></span></label><input type="range" id="crt-6-input" min="0" max="1" step="0.01" /></div>
-                <div class="row"><label for="crt-7-input">Mask Scale <span id="crt-7-value" class="value"></span></label><input type="range" id="crt-7-input" min="0.5" max="4" step="0.01" /></div>
-                <h3>Image</h3>
-                <div class="row"><label for="crt-8-input">Vignette Strength <span id="crt-8-value" class="value"></span></label><input type="range" id="crt-8-input" min="0" max="1" step="0.01" /></div>
-                <div class="row"><label for="crt-9-input">Vignette Size <span id="crt-9-value" class="value"></span></label><input type="range" id="crt-9-input" min="0.25" max="1.25" step="0.01" /></div>
-                <div class="row"><label for="crt-10-input">Chroma Offset <span id="crt-10-value" class="value"></span></label><input type="range" id="crt-10-input" min="0" max="3" step="0.01" /></div>
-                <div class="row"><label for="crt-11-input">Blend Strength <span id="crt-11-value" class="value"></span></label><input type="range" id="crt-11-input" min="0" max="1" step="0.01" /></div>
-                <div class="row"><label for="crt-12-input">Blend Radius <span id="crt-12-value" class="value"></span></label><input type="range" id="crt-12-input" min="0" max="3" step="0.01" /></div>
-                <div class="row"><label for="crt-13-input">Noise <span id="crt-13-value" class="value"></span></label><input type="range" id="crt-13-input" min="0" max="0.15" step="0.001" /></div>
-                <div class="row"><label for="crt-14-input">Flicker <span id="crt-14-value" class="value"></span></label><input type="range" id="crt-14-input" min="0" max="0.10" step="0.001" /></div>
-                <div class="row"><label for="crt-15-input">Glow <span id="crt-15-value" class="value"></span></label><input type="range" id="crt-15-input" min="0" max="0.50" step="0.01" /></div>
-                <button id="reset-crt-button">Reset CRT</button>
-            </div>
-            <div class="section">
-                <h2>Input</h2>
-                <div class="row">
-                    <input type="checkbox" id="controller-remap-input" />
-                    <label for="controller-remap-input" class="inline-label">Controller / Joystick Mapping</label>
-                </div>
-                <button id="reset-bindings-button">Reset Bindings to Defaults</button>
-            </div>
-            <div class="section">
-                <h2>Game Data Folder</h2>
-                <div class="row">
-                    <label for="data-folder-input">Folder</label>
-                    <input type="text" id="data-folder-input" />
-                </div>
-                <button id="browse-folder-button">Browse...</button>
-                <button id="save-config-button">Save Configuration</button>
-                <p id="save-status" class="note"></p>
-            </div>
-        </div>
-    </div>
-</body>
-</rml>
-)";
-
-    g_rml.hi_document =
-        g_rml.context->LoadDocumentFromMemory(kHiDocument, "mikupan://hi");
-    if (g_rml.hi_document == nullptr)
-    {
-        return false;
-    }
-
-    static constexpr const char* kWindowModeLabels[] = {
-        "Windowed",
-        "Fullscreen",
-        "Borderless Fullscreen",
-    };
-    static constexpr const char* kLightingModeLabels[] = {
-        "Pixel (Modern)",
-        "Vertex (PS2)",
-    };
-
-    g_rml.window_mode_select = GetSelect("window-mode-select");
-    PopulateStaticSelect(g_rml.window_mode_select,
-                         kWindowModeLabels,
-                         3,
-                         MikuPan_GetWindowMode(),
-                         [](int index) { MikuPan_SetWindowMode(index); });
-
-    g_rml.resolution_select = GetSelect("resolution-select");
-    if (g_rml.resolution_select != nullptr)
-    {
-        const int resolution_count = MikuPan_GetRenderResolutionOptionCount();
-        if (resolution_count > 0)
-        {
-            PopulateIndexedSelect(
-                g_rml.resolution_select,
-                resolution_count,
-                MikuPan_GetRenderResolutionOptionLabel,
-                MikuPan_GetSelectedRenderResolutionOption(),
-                [](int index) { MikuPan_SelectRenderResolutionOption(index); });
-        }
-        else
-        {
-            g_rml.resolution_select->Add("No display modes available",
-                                         "-1",
-                                         -1,
-                                         false);
-            g_rml.resolution_select->SetSelection(0);
-        }
-    }
-
-    g_rml.brightness_input = GetInput("brightness-input");
-    g_rml.brightness_value = GetElement("brightness-value");
-    AddListener(
-        g_rml.brightness_input,
-        Rml::EventId::Change,
-        std::make_unique<MikuPanInputListener>(
-            [](Rml::ElementFormControlInput* input) {
-                MikuPan_SetBrightness(
-                    ParseFloat(input->GetValue(), MikuPan_GetBrightness()));
-            }));
-
-    g_rml.gamma_input = GetInput("gamma-input");
-    g_rml.gamma_value = GetElement("gamma-value");
-    AddListener(g_rml.gamma_input,
-                Rml::EventId::Change,
-                std::make_unique<MikuPanInputListener>(
-                    [](Rml::ElementFormControlInput* input) {
-                        MikuPan_SetGamma(
-                            ParseFloat(input->GetValue(), MikuPan_GetGamma()));
-                    }));
-
-    g_rml.vsync_input = GetInput("vsync-input");
-    AddListener(g_rml.vsync_input,
-                Rml::EventId::Change,
-                std::make_unique<MikuPanInputListener>(
-                    [](Rml::ElementFormControlInput* input) {
-                        MikuPan_SetVsync(IsCheckboxChecked(input));
-                    }));
-
-    g_rml.gpu_backend_select = GetSelect("gpu-backend-select");
-    PopulateIndexedSelect(g_rml.gpu_backend_select,
-                          MikuPan_GetGpuDriverOptionCount(),
-                          MikuPan_GetGpuDriverOptionLabel,
-                          MikuPan_GetSelectedGpuDriverOption(),
-                          [](int index) { MikuPan_SelectGpuDriverOption(index); },
-                          MikuPan_IsGpuDriverOptionSupported);
-    g_rml.active_gpu_label = GetElement("active-gpu-label");
-    g_rml.gpu_restart_note = GetElement("gpu-restart-note");
-
-    g_rml.msaa_select = GetSelect("msaa-select");
-    PopulateIndexedSelect(g_rml.msaa_select,
-                          MikuPan_GetMSAAOptionCount(),
-                          MikuPan_GetMSAAOptionLabel,
-                          MikuPan_GetSelectedMSAAOption(),
-                          [](int index) { MikuPan_SelectMSAAOption(index); });
-
-    g_rml.shadow_resolution_select = GetSelect("shadow-resolution-select");
-    PopulateIndexedSelect(g_rml.shadow_resolution_select,
-                          MikuPan_GetShadowResolutionOptionCount(),
-                          MikuPan_GetShadowResolutionOptionLabel,
-                          MikuPan_GetSelectedShadowResolutionOption(),
-                          [](int index) {
-                              MikuPan_SelectShadowResolutionOption(index);
-                          });
-
-    g_rml.lighting_mode_select = GetSelect("lighting-mode-select");
-    PopulateStaticSelect(g_rml.lighting_mode_select,
-                         kLightingModeLabels,
-                         2,
-                         MikuPan_GetLightingMode(),
-                         [](int index) { MikuPan_SetLightingMode(index); });
-
-    g_rml.theme_select = GetSelect("theme-select");
-    PopulateIndexedSelect(g_rml.theme_select,
-                          MikuPan_GetThemeOptionCount(),
-                          MikuPan_GetThemeOptionLabel,
-                          MikuPan_GetSelectedThemeOption(),
-                          [](int index) { MikuPan_SelectThemeOption(index); });
-
-    g_rml.font_select = GetSelect("font-select");
-    PopulateIndexedSelect(g_rml.font_select,
-                          MikuPan_GetFontOptionCount(),
-                          MikuPan_GetFontOptionLabel,
-                          MikuPan_GetSelectedFontOption(),
-                          [](int index) { MikuPan_SelectFontOption(index); });
-
-    g_rml.font_scale_input = GetInput("font-scale-input");
-    g_rml.font_scale_value = GetElement("font-scale-value");
-    AddListener(
-        g_rml.font_scale_input,
-        Rml::EventId::Change,
-        std::make_unique<MikuPanInputListener>(
-            [](Rml::ElementFormControlInput* input) {
-                MikuPan_SetUiFontScale(
-                    ParseFloat(input->GetValue(), MikuPan_GetUiFontScale()));
-            }));
-
-    g_rml.crt_enabled_input = GetInput("crt-enabled-input");
-    AddListener(g_rml.crt_enabled_input,
-                Rml::EventId::Change,
-                std::make_unique<MikuPanInputListener>(
-                    [](Rml::ElementFormControlInput* input) {
-                        MikuPan_SetCrtEnabled(IsCheckboxChecked(input));
-                    }));
-
-    const int crt_count = MikuPan_GetCrtFieldCount();
-    g_rml.crt_inputs.reserve(crt_count);
-    g_rml.crt_values.reserve(crt_count);
-    for (int i = 0; i < crt_count; i++)
-    {
-        const std::string input_id = "crt-" + std::to_string(i) + "-input";
-        const std::string value_id = "crt-" + std::to_string(i) + "-value";
-        auto* input = GetInput(input_id.c_str());
-        g_rml.crt_inputs.push_back(input);
-        g_rml.crt_values.push_back(GetElement(value_id.c_str()));
-        AddListener(input,
-                    Rml::EventId::Change,
-                    std::make_unique<MikuPanInputListener>(
-                        [i](Rml::ElementFormControlInput* control) {
-                            MikuPan_SetCrtFieldValue(
-                                i,
-                                ParseFloat(control->GetValue(),
-                                           MikuPan_GetCrtFieldValue(i)));
-                        }));
-    }
-
-    AddListener(GetElement("reset-crt-button"),
-                Rml::EventId::Click,
-                std::make_unique<MikuPanButtonListener>(
-                    []() { MikuPan_ResetCrtSettings(); }));
-
-    g_rml.controller_remap_input = GetInput("controller-remap-input");
-    AddListener(g_rml.controller_remap_input,
-                Rml::EventId::Change,
-                std::make_unique<MikuPanInputListener>(
-                    [](Rml::ElementFormControlInput* input) {
-                        MikuPan_SetControllerRemapWindowVisible(
-                            IsCheckboxChecked(input));
-                    }));
-    AddListener(GetElement("reset-bindings-button"),
-                Rml::EventId::Click,
-                std::make_unique<MikuPanButtonListener>(
-                    []() { MikuPan_ResetControllerBindingsFromUi(); }));
-
-    g_rml.data_folder_input = GetInput("data-folder-input");
-    AddListener(g_rml.data_folder_input,
-                Rml::EventId::Change,
-                std::make_unique<MikuPanInputListener>(
-                    [](Rml::ElementFormControlInput* input) {
-                        MikuPan_SetDataFolder(input->GetValue().c_str());
-                    }));
-    AddListener(GetElement("browse-folder-button"),
-                Rml::EventId::Click,
-                std::make_unique<MikuPanButtonListener>(
-                    []() { MikuPan_BrowseDataFolderFromUi(); }));
-    AddListener(GetElement("save-config-button"),
-                Rml::EventId::Click,
-                std::make_unique<MikuPanButtonListener>(
-                    []() { MikuPan_SaveConfigurationFromUi(); }));
-    g_rml.save_status = GetElement("save-status");
-
-    SyncRmlSettingsValues();
-    g_rml.hi_document->Hide();
-    return true;
 }
 
 int ConvertMouseButton(unsigned char button)
@@ -1428,7 +595,16 @@ Rml::Vector2i ConvertMousePosition(float x, float y)
     const float scale_y =
         window_h > 0 ? static_cast<float>(pixel_h) / window_h : 1.0f;
 
-    return {static_cast<int>(x * scale_x), static_cast<int>(y * scale_y)};
+    const int pixel_x = static_cast<int>(x * scale_x);
+    const int pixel_y = static_cast<int>(y * scale_y);
+
+    if (g_rml.render_interface == nullptr)
+    {
+        return {pixel_x, pixel_y};
+    }
+
+    return {pixel_x - g_rml.render_interface->GetContextX(),
+            pixel_y - g_rml.render_interface->GetContextY()};
 }
 
 int ConvertKeyModifiers(void)
@@ -1668,7 +844,266 @@ Rml::Input::KeyIdentifier ConvertKey(SDL_Keycode key)
             return Rml::Input::KI_UNKNOWN;
     }
 }
+
+void PulseKey(Rml::Input::KeyIdentifier key)
+{
+    if (g_rml.context == nullptr || key == Rml::Input::KI_UNKNOWN)
+    {
+        return;
+    }
+
+    g_rml.context->ProcessKeyDown(key, 0);
+    g_rml.context->ProcessKeyUp(key, 0);
+}
+
+SDL_Gamepad* GetRmlNavigationGamepad(void)
+{
+    SDL_Gamepad* gamepad = MikuPan_GetController();
+    if (gamepad != nullptr && SDL_GamepadConnected(gamepad))
+    {
+        return gamepad;
+    }
+
+    int gamepad_count = 0;
+    SDL_JoystickID* gamepad_ids = SDL_GetGamepads(&gamepad_count);
+    if (gamepad_ids == nullptr)
+    {
+        return nullptr;
+    }
+
+    for (int i = 0; i < gamepad_count; i++)
+    {
+        gamepad = SDL_GetGamepadFromID(gamepad_ids[i]);
+        if (gamepad != nullptr && SDL_GamepadConnected(gamepad))
+        {
+            SDL_free(gamepad_ids);
+            return gamepad;
+        }
+    }
+
+    SDL_free(gamepad_ids);
+    return nullptr;
+}
+
+bool AxisNegative(SDL_Gamepad* gamepad, SDL_GamepadAxis axis)
+{
+    static constexpr int kDeadZone = 16000;
+    return gamepad != nullptr && SDL_GetGamepadAxis(gamepad, axis) < -kDeadZone;
+}
+
+bool AxisPositive(SDL_Gamepad* gamepad, SDL_GamepadAxis axis)
+{
+    static constexpr int kDeadZone = 16000;
+    return gamepad != nullptr && SDL_GetGamepadAxis(gamepad, axis) > kDeadZone;
+}
+
+Rml::Element* GetCurrentFocusElement(void)
+{
+    return g_rml.context != nullptr ? g_rml.context->GetFocusElement() : nullptr;
+}
+
+// These are the stock menu SFX IDs from iop/se/iopse.h.
+static constexpr int kRmlSeCursor = 0; // SE_CSR0
+static constexpr int kRmlSeClick = 1;  // SE_CLIC
+static constexpr int kRmlSeCancel = 3; // SE_CANCEL
+
+void PlayRmlUiSound(int se_no)
+{
+    (void) SeStartFix(se_no, 0, 0x1000, 0x1000, 1);
+}
+
+void PlayRmlCursorSoundIfMoved(Rml::Element* previous_focus)
+{
+    const bool focus_changed = previous_focus != GetCurrentFocusElement();
+    const bool value_changed = MikuPan_RmlOptionsConsumeMoveSoundRequest() != 0;
+    if (focus_changed || value_changed)
+    {
+        PlayRmlUiSound(kRmlSeCursor);
+    }
+}
+
+void DispatchPadAction(MikuPanRmlPadAction action)
+{
+    switch (action)
+    {
+        case MIKUPAN_RML_PAD_UP:
+        {
+            Rml::Element* previous_focus = GetCurrentFocusElement();
+            const bool native_select_open = MikuPan_RmlOptionsAnySelectOpen() != 0;
+            if (!MikuPan_RmlOptionsHandleVerticalInput(-1))
+            {
+                PulseKey(Rml::Input::KI_UP);
+            }
+            MikuPan_RmlOptionsEnsureFocusedControlVisible();
+            if (native_select_open)
+            {
+                PlayRmlUiSound(kRmlSeCursor);
+            }
+            else
+            {
+                PlayRmlCursorSoundIfMoved(previous_focus);
+            }
+            break;
+        }
+        case MIKUPAN_RML_PAD_DOWN:
+        {
+            Rml::Element* previous_focus = GetCurrentFocusElement();
+            const bool native_select_open = MikuPan_RmlOptionsAnySelectOpen() != 0;
+            if (!MikuPan_RmlOptionsHandleVerticalInput(1))
+            {
+                PulseKey(Rml::Input::KI_DOWN);
+            }
+            MikuPan_RmlOptionsEnsureFocusedControlVisible();
+            if (native_select_open)
+            {
+                PlayRmlUiSound(kRmlSeCursor);
+            }
+            else
+            {
+                PlayRmlCursorSoundIfMoved(previous_focus);
+            }
+            break;
+        }
+        case MIKUPAN_RML_PAD_LEFT:
+        {
+            Rml::Element* previous_focus = GetCurrentFocusElement();
+            if (!MikuPan_RmlOptionsHandleHorizontalInput(-1))
+            {
+                PulseKey(Rml::Input::KI_LEFT);
+            }
+            MikuPan_RmlOptionsEnsureFocusedControlVisible();
+            PlayRmlCursorSoundIfMoved(previous_focus);
+            break;
+        }
+        case MIKUPAN_RML_PAD_RIGHT:
+        {
+            Rml::Element* previous_focus = GetCurrentFocusElement();
+            if (!MikuPan_RmlOptionsHandleHorizontalInput(1))
+            {
+                PulseKey(Rml::Input::KI_RIGHT);
+            }
+            MikuPan_RmlOptionsEnsureFocusedControlVisible();
+            PlayRmlCursorSoundIfMoved(previous_focus);
+            break;
+        }
+        case MIKUPAN_RML_PAD_CONFIRM:
+            if (!MikuPan_RmlOptionsActivateFocusedControl())
+            {
+                PulseKey(Rml::Input::KI_RETURN);
+            }
+            MikuPan_RmlOptionsEnsureFocusedControlVisible();
+            PlayRmlUiSound(kRmlSeClick);
+            break;
+        case MIKUPAN_RML_PAD_ALT_CONFIRM:
+            if (!MikuPan_RmlOptionsActivateFocusedControl())
+            {
+                PulseKey(Rml::Input::KI_SPACE);
+            }
+            MikuPan_RmlOptionsEnsureFocusedControlVisible();
+            PlayRmlUiSound(kRmlSeClick);
+            break;
+        case MIKUPAN_RML_PAD_CANCEL:
+            if (MikuPan_RmlOptionsAnySelectOpen())
+            {
+                PulseKey(Rml::Input::KI_ESCAPE);
+            }
+            else
+            {
+                MikuPan_RmlOptionsHandleCancel();
+            }
+            MikuPan_RmlOptionsEnsureFocusedControlVisible();
+            PlayRmlUiSound(kRmlSeCancel);
+            break;
+        default:
+            break;
+    }
+}
+
+void UpdatePadAction(MikuPanRmlPadAction action,
+                     bool down,
+                     bool repeat_enabled,
+                     uint64_t now)
+{
+    static constexpr uint64_t kInitialRepeatDelayMs = 320;
+    static constexpr uint64_t kRepeatDelayMs = 90;
+
+    MikuPanRmlPadActionState& state = g_rml.pad_actions[action];
+    if (!down)
+    {
+        state.down = false;
+        state.next_repeat_ticks = 0;
+        return;
+    }
+
+    bool pulse = false;
+    if (!state.down)
+    {
+        pulse = true;
+        state.next_repeat_ticks = now + kInitialRepeatDelayMs;
+    }
+    else if (repeat_enabled && now >= state.next_repeat_ticks)
+    {
+        pulse = true;
+        state.next_repeat_ticks = now + kRepeatDelayMs;
+    }
+
+    state.down = true;
+    if (pulse)
+    {
+        DispatchPadAction(action);
+    }
+}
+
+void ResetPadNavigationState(void)
+{
+    for (MikuPanRmlPadActionState& state : g_rml.pad_actions)
+    {
+        state = MikuPanRmlPadActionState();
+    }
+}
+
+void UpdateGamepadNavigation(void)
+{
+    if (!MikuPan_RmlOptionsIsOpen())
+    {
+        ResetPadNavigationState();
+        return;
+    }
+
+    SDL_Gamepad* gamepad = GetRmlNavigationGamepad();
+    if (gamepad == nullptr)
+    {
+        ResetPadNavigationState();
+        return;
+    }
+
+    const bool up = SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP)
+                    || AxisNegative(gamepad, SDL_GAMEPAD_AXIS_LEFTY);
+    const bool down = SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN)
+                      || AxisPositive(gamepad, SDL_GAMEPAD_AXIS_LEFTY);
+    const bool left = SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT)
+                      || AxisNegative(gamepad, SDL_GAMEPAD_AXIS_LEFTX);
+    const bool right = SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
+                       || AxisPositive(gamepad, SDL_GAMEPAD_AXIS_LEFTX);
+    const bool confirm = SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_SOUTH)
+                         || SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_START);
+    const bool alt_confirm = SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_WEST);
+    const bool cancel = SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_EAST)
+                        || SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_NORTH)
+                        || SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_BACK);
+
+    const uint64_t now = SDL_GetTicks();
+    UpdatePadAction(MIKUPAN_RML_PAD_UP, up, true, now);
+    UpdatePadAction(MIKUPAN_RML_PAD_DOWN, down, true, now);
+    UpdatePadAction(MIKUPAN_RML_PAD_LEFT, left, true, now);
+    UpdatePadAction(MIKUPAN_RML_PAD_RIGHT, right, true, now);
+    UpdatePadAction(MIKUPAN_RML_PAD_CONFIRM, confirm, false, now);
+    UpdatePadAction(MIKUPAN_RML_PAD_ALT_CONFIRM, alt_confirm, false, now);
+    UpdatePadAction(MIKUPAN_RML_PAD_CANCEL, cancel, false, now);
+}
+
 } // namespace
+
 
 extern "C" {
 
@@ -1697,13 +1132,54 @@ void MikuPan_RmlUiInit(SDL_Window* window)
     SDL_GetWindowSizeInPixels(window, &width, &height);
     width = std::max(width, 1);
     height = std::max(height, 1);
-    g_rml.render_interface->SetWindowSize(width, height);
+    int render_width = MikuPan_GetRenderResolutionWidth();
+    int render_height = MikuPan_GetRenderResolutionHeight();
+    render_width = std::max(render_width, 1);
+    render_height = std::max(render_height, 1);
 
-    g_rml.context =
-        Rml::CreateContext("mikupan", Rml::Vector2i(width, height));
-    if (g_rml.context == nullptr || !LoadFont() || !LoadHiDocument())
+    const float target_aspect =
+        static_cast<float>(render_width) / static_cast<float>(render_height);
+    const float window_aspect =
+        static_cast<float>(width) / static_cast<float>(height);
+    int viewport_x = 0;
+    int viewport_y = 0;
+    int viewport_w = width;
+    int viewport_h = height;
+    if (window_aspect > target_aspect)
+    {
+        viewport_h = height;
+        viewport_w = static_cast<int>(static_cast<float>(height) * target_aspect);
+        viewport_x = (width - viewport_w) / 2;
+    }
+    else
+    {
+        viewport_w = width;
+        viewport_h = static_cast<int>(static_cast<float>(width) / target_aspect);
+        viewport_y = (height - viewport_h) / 2;
+    }
+    viewport_w = std::max(viewport_w, 1);
+    viewport_h = std::max(viewport_h, 1);
+    g_rml.render_interface->SetWindowMetrics(width,
+                                             height,
+                                             viewport_x,
+                                             viewport_y,
+                                             viewport_w,
+                                             viewport_h);
+
+    g_rml.context = Rml::CreateContext(
+        "mikupan", Rml::Vector2i(viewport_w, viewport_h));
+    if (g_rml.context != nullptr)
+    {
+        const float scale_x = static_cast<float>(viewport_w) / 640.0f;
+        const float scale_y = static_cast<float>(viewport_h) / 448.0f;
+        const float dp_ratio = std::max(0.75f, std::min(scale_x, scale_y));
+        g_rml.context->SetDensityIndependentPixelRatio(dp_ratio);
+    }
+    if (g_rml.context == nullptr || !LoadFont()
+        || !MikuPan_RmlOptionsInit(g_rml.context))
     {
         Rml::Shutdown();
+        MikuPan_RmlOptionsShutdown();
         g_rml = MikuPanRmlState();
         return;
     }
@@ -1719,10 +1195,8 @@ void MikuPan_RmlUiStartFrame(void)
     }
 
     UpdateContextDimensions();
-    if (g_rml.hi_visible)
-    {
-        SyncRmlSettingsValues();
-    }
+    MikuPan_RmlOptionsStartFrame();
+    UpdateGamepadNavigation();
     g_rml.context->Update();
 }
 
@@ -1760,6 +1234,12 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
         }
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
         {
+            const Rml::Vector2i mouse =
+                ConvertMousePosition(event->button.x, event->button.y);
+            g_rml.context->ProcessMouseMove(mouse.x,
+                                            mouse.y,
+                                            ConvertKeyModifiers());
+
             const int button = ConvertMouseButton(event->button.button);
             if (button >= 0)
             {
@@ -1770,6 +1250,12 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
         }
         case SDL_EVENT_MOUSE_BUTTON_UP:
         {
+            const Rml::Vector2i mouse =
+                ConvertMousePosition(event->button.x, event->button.y);
+            g_rml.context->ProcessMouseMove(mouse.x,
+                                            mouse.y,
+                                            ConvertKeyModifiers());
+
             const int button = ConvertMouseButton(event->button.button);
             if (button >= 0)
             {
@@ -1779,19 +1265,53 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
             break;
         }
         case SDL_EVENT_MOUSE_WHEEL:
+        {
+            float mouse_x = 0.0f;
+            float mouse_y = 0.0f;
+            SDL_GetMouseState(&mouse_x, &mouse_y);
+            const Rml::Vector2i mouse = ConvertMousePosition(mouse_x, mouse_y);
+            g_rml.context->ProcessMouseMove(mouse.x,
+                                            mouse.y,
+                                            ConvertKeyModifiers());
             g_rml.context->ProcessMouseWheel(
                 Rml::Vector2f(-event->wheel.x, -event->wheel.y),
                 ConvertKeyModifiers());
             break;
+        }
         case SDL_EVENT_KEY_DOWN:
         {
             const Rml::Input::KeyIdentifier key = ConvertKey(event->key.key);
-            g_rml.context->ProcessKeyDown(key, ConvertKeyModifiers());
-            if (key == Rml::Input::KI_RETURN
-                || key == Rml::Input::KI_NUMPADENTER)
+            if (MikuPan_RmlOptionsIsOpen())
             {
-                g_rml.context->ProcessTextInput('\n');
+                if (key == Rml::Input::KI_UP
+                    && MikuPan_RmlOptionsHandleVerticalInput(-1))
+                {
+                    break;
+                }
+                if (key == Rml::Input::KI_DOWN
+                    && MikuPan_RmlOptionsHandleVerticalInput(1))
+                {
+                    break;
+                }
+                if (key == Rml::Input::KI_LEFT
+                    && MikuPan_RmlOptionsHandleHorizontalInput(-1))
+                {
+                    break;
+                }
+                if (key == Rml::Input::KI_RIGHT
+                    && MikuPan_RmlOptionsHandleHorizontalInput(1))
+                {
+                    break;
+                }
+                if (key == Rml::Input::KI_ESCAPE
+                    && !MikuPan_RmlOptionsAnySelectOpen())
+                {
+                    MikuPan_RmlOptionsHandleCancel();
+                    break;
+                }
             }
+
+            g_rml.context->ProcessKeyDown(key, ConvertKeyModifiers());
             break;
         }
         case SDL_EVENT_KEY_UP:
@@ -1811,20 +1331,7 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
 
 void MikuPan_RmlUiToggleHiWindow(void)
 {
-    if (!g_rml.initialized || g_rml.hi_document == nullptr)
-    {
-        return;
-    }
-
-    g_rml.hi_visible = !g_rml.hi_visible;
-    if (g_rml.hi_visible)
-    {
-        g_rml.hi_document->Show();
-    }
-    else
-    {
-        g_rml.hi_document->Hide();
-    }
+    MikuPan_RmlOptionsToggleDebug();
 }
 
 void MikuPan_RmlUiShutdown(void)
@@ -1835,6 +1342,7 @@ void MikuPan_RmlUiShutdown(void)
     }
 
     Rml::Shutdown();
+    MikuPan_RmlOptionsShutdown();
     g_rml = MikuPanRmlState();
 }
 }

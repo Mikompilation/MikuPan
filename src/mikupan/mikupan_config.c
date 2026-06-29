@@ -48,6 +48,13 @@ MikuPan_Config mikupan_configuration = {
         0.02f,
         0.08f
     },
+    {
+        1.0f,
+        1.0f,
+        1.0f,
+        1.0f,
+        1.0f
+    },
     2,
     1,
     1.0f,
@@ -179,6 +186,15 @@ static void MikuPan_ConfigurationValidateCrt(MikuPan_ConfigCrt* crt)
     crt->glow_strength = MikuPan_ClampFloat(crt->glow_strength, 0.0f, 0.50f);
 }
 
+static void MikuPan_ConfigurationValidateAudio(MikuPan_ConfigAudio* audio)
+{
+    audio->master = MikuPan_ClampFloat(audio->master, 0.0f, 1.0f);
+    audio->ambient_bgm = MikuPan_ClampFloat(audio->ambient_bgm, 0.0f, 1.0f);
+    audio->battle_bgm = MikuPan_ClampFloat(audio->battle_bgm, 0.0f, 1.0f);
+    audio->ambient_se = MikuPan_ClampFloat(audio->ambient_se, 0.0f, 1.0f);
+    audio->battle_se = MikuPan_ClampFloat(audio->battle_se, 0.0f, 1.0f);
+}
+
 static void MikuPan_ConfigurationValidateThirdPersonCamera(
     MikuPan_ConfigThirdPersonCamera* tps)
 {
@@ -219,6 +235,7 @@ void MikuPan_ConfigurationValidate(void)
 {
     MikuPan_ConfigurationValidateRenderer(&mikupan_configuration.renderer);
     MikuPan_ConfigurationValidateCrt(&mikupan_configuration.crt);
+    MikuPan_ConfigurationValidateAudio(&mikupan_configuration.audio);
     MikuPan_ConfigurationValidateThirdPersonCamera(
         &mikupan_configuration.third_person_camera);
     MikuPan_ConfigurationValidateInput(&mikupan_configuration.input);

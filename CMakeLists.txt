@@ -262,6 +262,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui.c
         src/mikupan/ui/mikupan_rmlui.cpp
+        src/mikupan/ui/mikupan_rml_options.cpp
+        src/mikupan/ui/mikupan_rml_options.h
         src/mikupan/rendering/mikupan_profiler.c
         src/mikupan/rendering/mikupan_gpu.c
         src/mikupan/rendering/mikupan_camera.c
@@ -283,6 +285,8 @@ set(MIKUPAN_SOURCES
         "src/mikupan/mikupan_utils.c"
         src/ingame/map/furn_spe/fsla_dat.c
         src/mikupan/mikupan_config.c
+        src/mikupan/mikupan_audio_bus.c
+        src/mikupan/mikupan_audio_bus.h
         src/mikupan/mikupan_config_ini.cpp
         src/mikupan/mikupan_config.h
         src/mikupan/mikupan_controller.c

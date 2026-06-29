@@ -48,6 +48,16 @@ float MikuPan_GetCrtFieldMax(int index);
 float MikuPan_GetCrtFieldStep(int index);
 void MikuPan_SetCrtFieldValue(int index, float value);
 void MikuPan_ResetCrtSettings(void);
+float MikuPan_GetAudioMasterVolume(void);
+void MikuPan_SetAudioMasterVolume(float value);
+float MikuPan_GetAudioAmbientBgmVolume(void);
+void MikuPan_SetAudioAmbientBgmVolume(float value);
+float MikuPan_GetAudioBattleBgmVolume(void);
+void MikuPan_SetAudioBattleBgmVolume(float value);
+float MikuPan_GetAudioAmbientSeVolume(void);
+void MikuPan_SetAudioAmbientSeVolume(float value);
+float MikuPan_GetAudioBattleSeVolume(void);
+void MikuPan_SetAudioBattleSeVolume(float value);
 int MikuPan_IsFullScreen(void);
 int MikuPan_GetWindowMode(void);
 void MikuPan_SetWindowMode(int mode);
@@ -79,7 +89,7 @@ void MikuPan_SetUiFontScale(float scale);
 const char *MikuPan_GetDataFolder(void);
 void MikuPan_SetDataFolder(const char *folder);
 void MikuPan_BrowseDataFolderFromUi(void);
-void MikuPan_SaveConfigurationFromUi(void);
+int MikuPan_SaveConfigurationFromUi(void);
 const char *MikuPan_GetConfigSaveStatus(void);
 
 #ifdef __cplusplus
