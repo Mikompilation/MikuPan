@@ -102,6 +102,9 @@ void MikuPan_MeshCache_Flush(void);
 /// data hasn't been reloaded in the meantime).
 void MikuPan_MeshCache_SetEnabled(int enabled);
 int  MikuPan_MeshCache_IsEnabled(void);
+void MikuPan_MeshCache_GetStats(unsigned long long* bytes,
+                                 unsigned int* buffers,
+                                 unsigned int* entries);
 
 #ifdef __cplusplus
 }

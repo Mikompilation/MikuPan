@@ -1,11 +1,8 @@
 #include "mikupan_texture_manager.h"
 
-extern "C"
-{
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/gs/mikupan_gs_c.h"
 #include <stdlib.h>
-}
 
 std::unordered_map<uint64_t, MikuPan_TextureInfo*> mikupan_render_texture_atlas;
 
@@ -160,4 +157,14 @@ void MikuPan_RegisterTextureForTex0(uint64_t tex0_value, sceGsTex0 *tex0,
 void MikuPan_InvalidateTex0Cache(void)
 {
     mikupan_tex0_to_info_cache.clear();
+}
+
+void MikuPan_TextureCache_InvalidateGsRange(int up_addr, int up_size)
+{
+    if (up_size <= 0)
+    {
+        return;
+    }
+
+    InvalidateOverlapping(up_addr, up_size, &mikupan_tex0_to_info_cache);
 }

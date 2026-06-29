@@ -61,7 +61,10 @@ typedef enum MikuPan_GSAlphaMode
 
     /* (Cd - 0) * As + Cd = destination boost */
     MIKUPAN_GS_ALPHA_DST_BOOST = 0x49,
+
 } MikuPan_GSAlphaMode;
+
+MikuPan_GPUBlendMode MikuPan_GPUBlendModeFromGSAlpha(u_long gs_alpha);
 
 typedef struct MikuPan_GPUUniformBlock
 {
@@ -96,6 +99,10 @@ typedef struct MikuPan_GPUUniformBlock
     float uCrt2[4];
     float uCrt3[4];
     float uParams1[4];
+    // x=strength, y=burn/darkness, z=saturation, w=previous-frame ghost
+    float uPs2Feedback[4];
+    // rgb=Himuro EF_NEGA colour, a=fade strength
+    float uScreenNegative[4];
 
     int uFlags0[4];
     int uFlags1[4];
@@ -138,6 +145,9 @@ unsigned int MikuPan_GPUCreateBuffer(unsigned int size,
                                      MikuPan_GPUBufferKind kind);
 unsigned int MikuPan_GPUCreateUniformCPUBuffer(unsigned int size);
 void MikuPan_GPUReleaseBuffer(unsigned int id);
+unsigned int MikuPan_GPUGetLiveBufferCount(void);
+unsigned int MikuPan_GPUGetFreeBufferSlotCount(void);
+unsigned int MikuPan_GPUGetMaxBufferCount(void);
 void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
                              const void *data);
 void MikuPan_GPUUpdateUniformCPUBuffer(unsigned int id, unsigned int size,
@@ -154,12 +164,23 @@ void MikuPan_GPUReleaseTexture(unsigned int id);
 /// Raw SDL_GPUTexture handle for a texture id, or NULL. Used as an ImGui
 /// ImTextureID (the SDL_GPU3 backend expects an SDL_GPUTexture*, not the id).
 SDL_GPUTexture *MikuPan_GPUGetTextureHandle(unsigned int id);
+void MikuPan_GPUSetSamplerNearestOverride(int enabled);
 void MikuPan_GPUUploadTextureRGBA8(unsigned int id, int width, int height,
                                    const void *pixels, int pitch);
 int MikuPan_GPUReadTextureRGBA8(unsigned int texture_id, int width, int height,
                                 unsigned char *out_rgba);
 int MikuPan_GPUReadTextureR8(unsigned int texture_id, int size,
                              unsigned char *out_r8);
+
+/* Render-depth point visibility test.
+ *   1 = visible
+ *   0 = occluded or clipped
+ *  -1 = unavailable
+ */
+int MikuPan_GPUDepthQueryPointVisibleWorld(const float world_pos[4]);
+int MikuPan_GPUDepthQueryPointVisibleWorldScreen(const float world_pos[4],
+                                                 float screen_x,
+                                                 float screen_y);
 void MikuPan_GPUCopyTexture(unsigned int src_texture_id,
                             unsigned int dst_texture_id,
                             int width,
@@ -192,8 +213,7 @@ void MikuPan_GPUSetRenderStateShadow(void);
 void MikuPan_GPUSetRenderStateShadowReceiver(void);
 void MikuPan_GPUSetDepthWrite(int enabled);
 void MikuPan_GPUSetDepthFunc(unsigned int gl_func);
-void MikuPan_GPUSetBlend(int enabled, int additive);
-void MikuPan_GPUSetBlendMode(int enabled, enum MikuPan_GPUBlendMode mode);
+void MikuPan_GPUSetBlendMode(int enabled, MikuPan_GPUBlendMode mode);
 void MikuPan_GPUSetCullBack(void);
 void MikuPan_GPUSetCullFront(void);
 void MikuPan_GPUSetCullNone(void);

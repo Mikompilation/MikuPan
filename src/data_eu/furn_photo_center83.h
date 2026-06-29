@@ -1,0 +1,1 @@
+sceVu0FVECTOR furn_photo_center83 = { 50.0f, 200.0f, 200.0f, 1.0f };

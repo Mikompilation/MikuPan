@@ -9,7 +9,7 @@ extern const int mc_bgcolor[4][4];
 extern const float mc_lightdir[3][4];
 extern const float mc_lightcol[3][4];
 extern const float mc_ambient[4];
-extern const u_char *mc_iconName[];
+extern const char *mc_iconName[];
 extern const int mc_iconFile[];
 extern const int mc_iconFileAlbum[];
 

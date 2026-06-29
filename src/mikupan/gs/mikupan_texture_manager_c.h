@@ -5,6 +5,10 @@
 #include "ee/eestruct.h"
 #include "sce/libgraph.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void MikuPan_AddTexture(uint64_t hash, MikuPan_TextureInfo* texture_info);
 MikuPan_TextureInfo* MikuPan_GetTex0TextureInfoAndCount(uint64_t tex0, int* count);
 MikuPan_TextureInfo* MikuPan_GetTextureInfo(uint64_t hash);
@@ -18,5 +22,10 @@ MikuPan_TextureInfo* MikuPan_LookupTextureByTex0(uint64_t tex0_value);
 void MikuPan_RegisterTextureForTex0(uint64_t tex0_value, sceGsTex0 *tex0,
                                     MikuPan_TextureInfo* info);
 void MikuPan_InvalidateTex0Cache(void);
+void MikuPan_TextureCache_InvalidateGsRange(int up_addr, int up_size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //MIKUPAN_TEXTURE_MANAGER_C_H

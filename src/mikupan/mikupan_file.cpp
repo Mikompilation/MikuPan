@@ -24,9 +24,7 @@
 #include <system_error>
 #include <vector>
 
-extern "C" {
 #include "mikupan_memory.h"
-}
 
 static inline std::vector<int> file_loaded_address;
 
@@ -1272,7 +1270,7 @@ int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table, int max
         }
 
         table[i].FileSizeByte = entry.file_size();
-        strncpy(reinterpret_cast<char *>(table[i].EntryName), entry.path().filename().generic_u8string().c_str(), sizeof(table[i].EntryName));
+        strncpy(reinterpret_cast<char *>(table[i].EntryName), entry.path().filename().generic_string().c_str(), sizeof(table[i].EntryName));
 
         if (++i > max_entries)
         {
@@ -1291,5 +1289,5 @@ std::string MikuPan_GetRelativePath(const char *path)
         return resolved_path;
     }
 
-    return std::filesystem::path(path).relative_path().generic_u8string();
+    return std::filesystem::path(path).relative_path().generic_string();
 }

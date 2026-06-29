@@ -18,6 +18,8 @@ float4 main(PSInput input) : SV_Target0
     float2 src_uv;
     float2 dst_uv;
     bool resolve_deform = false;
+    bool feedback_modulate = false;
+    bool screen_pos_modulate = false;
 
     if (uFlags2.w == 1)
     {
@@ -44,6 +46,24 @@ float4 main(PSInput input) : SV_Target0
         dst_uv = screen_uv;
         resolve_deform = true;
     }
+    else if (uFlags2.w == 3)
+    {
+        src_uv = clamp(
+            uFramebufferUvOffset.xy + input.vUVData.xy * uFramebufferUvScale.xy,
+            uFramebufferUvOffset.xy,
+            uFramebufferContentUvMax.xy);
+        dst_uv = src_uv;
+        feedback_modulate = true;
+    }
+    else if (uFlags2.w == 4)
+    {
+        float2 screen_uv = clamp(float2(input.position.x / uRenderSize.x,
+                                        input.position.y / uRenderSize.y),
+                                 0.0.xx, 1.0.xx);
+        src_uv = screen_uv;
+        dst_uv = screen_uv;
+        screen_pos_modulate = true;
+    }
     else
     {
         src_uv = clamp(
@@ -59,10 +79,19 @@ float4 main(PSInput input) : SV_Target0
     float3 src = uTexture.Sample(uTextureSampler, src_uv).rgb;
     float3 dst = uTexture.Sample(uTextureSampler, dst_uv).rgb;
 
-    float color_strength = max(max(input.uColor.r, input.uColor.g), input.uColor.b);
-    float refract_strength = clamp(color_strength, 0.0, 1.0);
-    float3 refracted = lerp(dst, src, refract_strength);
-    float3 out_rgb = resolve_deform ? lerp(dst, refracted, mask) : refracted;
+    float3 out_rgb;
+
+    if (feedback_modulate || screen_pos_modulate)
+    {
+        out_rgb = src * input.uColor.rgb;
+    }
+    else
+    {
+        float color_strength = max(max(input.uColor.r, input.uColor.g), input.uColor.b);
+        float refract_strength = clamp(color_strength, 0.0, 1.0);
+        float3 refracted = lerp(dst, src, refract_strength);
+        out_rgb = resolve_deform ? lerp(dst, refracted, mask) : refracted;
+    }
 
     if (uFlags2.x != 0)
     {

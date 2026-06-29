@@ -8,11 +8,9 @@
 #include <atomic>
 #include <cstring>
 
-extern "C" {
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/ui/mikupan_ui_debug.h"
-}
 
 GS::GSHelper gsHelper;
 std::vector<uint8_t> texture_buffer = std::vector<uint8_t>(4096 * 4096 * 8);
@@ -590,6 +588,7 @@ void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image)
 
         if (MikuPan_GetUploadRegion(image_load, &up_addr, &up_size))
         {
+            MikuPan_TextureCache_InvalidateGsRange(up_addr, up_size);
             g_pending_uploads.push_back({up_addr, up_size});
         }
     }
