@@ -1110,17 +1110,6 @@ static void EdogawaLamp(short int pos_x, short int pos_y, u_char out)
         }
     }
 
-#ifdef MATCHING_DECOMP
-    {
-        register int i asm("v1");
-
-        for (i = 4; i >= 0; i--) // HACK: fixes wrong register
-        {
-            // debug code?
-        }
-    }
-#endif
-
     if (ene_num != 0)
     {
         obj = 2;
