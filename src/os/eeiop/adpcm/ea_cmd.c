@@ -2,6 +2,8 @@
 #include "typedefs.h"
 #include "enums.h"
 #include "ea_cmd.h"
+#include "ea_ctrl.h"
+#include "mikupan/mikupan_audio_bus.h"
 
 #include "graphics/graph3d/sglib.h"
 #include "os/eeiop/eeiop.h"
@@ -17,6 +19,11 @@
 #define CALC_DELTA(X,Y) X - Y
 #define FLOAT_MAX_SOUND_DISTANCE 10000.0f
 #define CONCAT_USHORT(X, Y) (((X) << 16) | ((Y)))
+
+static u_short MikuPan_ScaleAdpcmCommandVolume(u_short vol)
+{
+    return MikuPan_AudioScaleAdpcmStreamVolume(vol, adpcm_map.mode, 0x3fff);
+}
 
 void EAdpcmCmdInit(u_int dev_init)
 {
@@ -41,6 +48,7 @@ void EAdpcmCmdPlay(u_char channel, u_char loop, int file_no, int start_flm, u_sh
         flg |= 1;
     }
     
+    vol = MikuPan_ScaleAdpcmCommandVolume(vol);
     SetIopCmdLg(IC_ADPCM_PLAY, file_no, iap->start, iap->size, flg, CONCAT_USHORT(pan, vol), CONCAT_USHORT(pitch, fin_flm), start_flm);
 }
 
@@ -69,6 +77,7 @@ void EAdpcmCmdPreEndPlay(u_char channel, u_char loop, int file_no, u_short vol, 
         flg |= 1;
     }
     
+    vol = MikuPan_ScaleAdpcmCommandVolume(vol);
     SetIopCmdLg(IC_ADPCM_LOADEND_PLAY, file_no, 0, 0, flg, CONCAT_USHORT(pan, vol), CONCAT_USHORT(pitch, fin_flm), 0);
 }
 
@@ -95,6 +104,7 @@ void EAdpcmCmdFadeVol(u_char channel, int file_no, u_short vol_percent, u_short 
 
 void EAdpcmCmdPos(u_char channel, int file_no, u_short vol, u_short pan, u_short pitch)
 {
+    vol = MikuPan_ScaleAdpcmCommandVolume(vol);
     SetIopCmdLg(IC_ADPCM_POS, file_no, 0, 0, 0, CONCAT_USHORT(pan,vol), pitch, 0);
 }
 

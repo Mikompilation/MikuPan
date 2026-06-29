@@ -41,6 +41,8 @@ struct tagSE_WRK {
 	u_char fade_mode;
 	u_char room_id;
 	u_char menu;
+	u_char mikupan_audio_bus;
+	u_int mikupan_audio_revision;
 };
 
 typedef struct tagSE_WRK SE_WRK;

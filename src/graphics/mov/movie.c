@@ -37,6 +37,7 @@
 #include "mikupan/mikupan_file_c.h"
 #include "mikupan/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_audio_bus.h"
 #include "mikupan/ui/mikupan_ui.h"
 
 #include <ctype.h>
@@ -1856,6 +1857,9 @@ static int sendToIOP(int64_t dst, u_char *src, int size)
 static void changeMasterVolume(u_int val)
 {
     int i;
+
+    val = MikuPan_AudioScaleAdpcmMasterVolume(
+        (u_short) val, ADPCM_MODE_MOVIE, VOLUME_MASTER_MAX);
 
     for (i = 0; i < 2; i++)
     {

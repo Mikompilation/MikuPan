@@ -10,6 +10,7 @@
 #include "os/eeiop/se_cmd.h"
 #include "main/glob.h"
 #include "ingame/plyr/unit_ctl.h"
+#include "mikupan/mikupan_audio_bus.h"
 
 
 #define SE_WRK_SIZE 24
@@ -48,6 +49,10 @@ void SeCtrlMain()
         
         if (swp->status != SEW_STAT_FREE)
         {
+            if (swp->mikupan_audio_revision != MikuPan_AudioGetRevision())
+            {
+                cmd_flg++;
+            }
             if (swp->fade_mode == SE_FADE_NONE)
             {
                 swp->fade_vol = swp->fade_tgt;
@@ -163,14 +168,21 @@ void SeCtrlMain()
         
         if (cmd_flg && !stop_flg) 
         {
+            u_short mikupan_se_volume;
             if (swp->menu) 
             {
-                SetIopCmdLg(IC_SE_POS, swp->v_p, swp->se_p, swp->now_pitch, swp->pan, swp->vol_rate, 0, 0);
+                mikupan_se_volume = swp->vol_rate;
             }
             else 
             {
-                SetIopCmdLg(IC_SE_POS, swp->v_p, swp->se_p, swp->now_pitch, swp->pan, (swp->vol_rate * sm_fade.mvol) / 0xfff, 0, 0);
+                mikupan_se_volume = (swp->vol_rate * sm_fade.mvol) / 0xfff;
             }
+
+            mikupan_se_volume = MikuPan_AudioScaleSeVolume(
+                mikupan_se_volume, swp->mikupan_audio_bus, 0x1000);
+            swp->mikupan_audio_revision = MikuPan_AudioGetRevision();
+            SetIopCmdLg(IC_SE_POS, swp->v_p, swp->se_p, swp->now_pitch,
+                        swp->pan, mikupan_se_volume, 0, 0);
         }
     }
 }

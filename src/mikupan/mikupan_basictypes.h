@@ -128,6 +128,16 @@ typedef struct
     float glow_strength;
 } MikuPan_ConfigCrt;
 
+
+typedef struct
+{
+    float master;
+    float ambient_bgm;
+    float battle_bgm;
+    float ambient_se;
+    float battle_se;
+} MikuPan_ConfigAudio;
+
 typedef struct
 {
     int selected_gamepad_index;
@@ -179,6 +189,7 @@ typedef struct
 {
     MikuPan_ConfigRenderer renderer;
     MikuPan_ConfigCrt crt;
+    MikuPan_ConfigAudio audio;
     int selected_theme;
     int selected_font;
     float font_scale;

@@ -3,6 +3,10 @@
 
 #include <SDL3/SDL_gamepad.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MIKUPAN_CONTROLLER_BIND_NONE   (0)
 #define MIKUPAN_CONTROLLER_BIND_BUTTON (1)
 #define MIKUPAN_CONTROLLER_BIND_AXIS   (2)
@@ -83,5 +87,9 @@ void MikuPan_SetFinderMouseLookEnabled(int enabled);
 float MikuPan_FinderMouseSensitivity(void);
 void MikuPan_SetFinderMouseSensitivity(float sensitivity);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif//MIKUPAN_MIKUPAN_CONTROLLER_H

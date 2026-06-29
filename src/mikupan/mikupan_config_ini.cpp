@@ -202,6 +202,11 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "crt", "noise_strength", mikupan_configuration.crt.noise_strength);
     ApplyValue(ini, "crt", "flicker_strength", mikupan_configuration.crt.flicker_strength);
     ApplyValue(ini, "crt", "glow_strength", mikupan_configuration.crt.glow_strength);
+    ApplyValue(ini, "audio", "master", mikupan_configuration.audio.master);
+    ApplyValue(ini, "audio", "ambient_bgm", mikupan_configuration.audio.ambient_bgm);
+    ApplyValue(ini, "audio", "battle_bgm", mikupan_configuration.audio.battle_bgm);
+    ApplyValue(ini, "audio", "ambient_se", mikupan_configuration.audio.ambient_se);
+    ApplyValue(ini, "audio", "battle_se", mikupan_configuration.audio.battle_se);
     ApplyValue(ini, "ui", "selected_theme", mikupan_configuration.selected_theme);
     ApplyValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     ApplyValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);
@@ -337,6 +342,11 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "crt", "noise_strength", mikupan_configuration.crt.noise_strength);
     SetValue(ini, "crt", "flicker_strength", mikupan_configuration.crt.flicker_strength);
     SetValue(ini, "crt", "glow_strength", mikupan_configuration.crt.glow_strength);
+    SetValue(ini, "audio", "master", mikupan_configuration.audio.master);
+    SetValue(ini, "audio", "ambient_bgm", mikupan_configuration.audio.ambient_bgm);
+    SetValue(ini, "audio", "battle_bgm", mikupan_configuration.audio.battle_bgm);
+    SetValue(ini, "audio", "ambient_se", mikupan_configuration.audio.ambient_se);
+    SetValue(ini, "audio", "battle_se", mikupan_configuration.audio.battle_se);
     SetValue(ini, "ui", "selected_theme", mikupan_configuration.selected_theme);
     SetValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     SetValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);

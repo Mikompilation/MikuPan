@@ -1,0 +1,149 @@
+<rml>
+<head>
+    <link type="text/rcss" href="options.rcss"/>
+</head>
+<body>
+    <div id="window">
+        <div id="side">
+            <div id="side-title">Options</div>
+            <div id="category-list">
+                <button id="cat-display" class="category-button selected" autofocus="autofocus">Display</button>
+                <button id="cat-graphics" class="category-button">Graphics</button>
+                <button id="cat-audio" class="category-button">Audio</button>
+                <button id="cat-advanced" class="category-button">Advanced</button>
+            </div>
+            <div id="side-actions">
+                <button id="save-return-button" class="side-action-button">Save and return</button>
+                <button id="cancel-options-button" class="side-action-button">Cancel</button>
+            </div>
+        </div>
+
+        <div id="content">
+            <div id="header">
+                <h1 id="panel-title">DISPLAY</h1>
+            </div>
+
+            <div id="page-area">
+                <div id="page-display" class="page active">
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="window-mode-picker">Display Mode</label><p class="setting-desc">Press confirm to choose, then keep or revert the change.</p></div>
+                        <div class="setting-control"><button id="window-mode-picker" class="choice-picker"><span id="window-mode-choice" class="choice-text"></span><span class="picker-arrow">v</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="resolution-picker">Resolution</label><p class="setting-desc">Press confirm to choose, then keep or revert the new output size.</p></div>
+                        <div class="setting-control"><button id="resolution-picker" class="choice-picker"><span id="resolution-choice" class="choice-text"></span><span class="picker-arrow">v</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="brightness-stepper">Brightness <span id="brightness-value" class="value"></span></label><p class="setting-desc">Raise or lower the final image brightness.</p></div>
+                        <div class="setting-control"><button id="brightness-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="brightness-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="gamma-stepper">Gamma <span id="gamma-value" class="value"></span></label><p class="setting-desc">Adjust mid-tone response without changing the renderer.</p></div>
+                        <div class="setting-control"><button id="gamma-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="gamma-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="vsync-input">VSync</label><p class="setting-desc">Synchronise presentation to the display refresh.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="vsync-input" class="checkbox" /></div>
+                    </div>
+                </div>
+
+                <div id="page-graphics" class="page hidden">
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="gpu-backend-select">GPU Backend</label><p class="setting-desc">Renderer backend selection. A restart may be required.</p><p id="active-gpu-label" class="note"></p><p id="gpu-restart-note" class="note"></p></div>
+                        <div class="setting-control"><select id="gpu-backend-select"></select></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="msaa-select">MSAA</label><p class="setting-desc">Smooth geometry edges using multisampling.</p></div>
+                        <div class="setting-control"><select id="msaa-select"></select></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="shadow-resolution-select">Shadow Resolution</label><p class="setting-desc">Higher values sharpen shadows at a performance cost.</p></div>
+                        <div class="setting-control"><select id="shadow-resolution-select"></select></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="lighting-mode-select">Lighting Mode</label><p class="setting-desc">Modern pixel lighting or PS2-style vertex lighting.</p></div>
+                        <div class="setting-control"><select id="lighting-mode-select"></select></div>
+                    </div>
+                </div>
+
+                <div id="page-audio" class="page hidden">
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="master-volume-stepper">Master Volume <span id="master-volume-value" class="value"></span></label><p class="setting-desc">Overall PC audio level for all buses.</p></div><div class="setting-control"><button id="master-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="master-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="ambient-bgm-volume-stepper">Ambient BGM <span id="ambient-bgm-volume-value" class="value"></span></label><p class="setting-desc">Room music, ambient streams, tapes, scenes, and menu/title streams.</p></div><div class="setting-control"><button id="ambient-bgm-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="ambient-bgm-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="battle-bgm-volume-stepper">Battle BGM <span id="battle-bgm-volume-value" class="value"></span></label><p class="setting-desc">Ghost, auto-ghost, hidden/special, and battle-mode streamed music.</p></div><div class="setting-control"><button id="battle-bgm-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="battle-bgm-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="ambient-se-volume-stepper">Ambient SE <span id="ambient-se-volume-value" class="value"></span></label><p class="setting-desc">UI, doors, footsteps, camera, puzzle, and room sound effects.</p></div><div class="setting-control"><button id="ambient-se-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="ambient-se-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="battle-se-volume-stepper">Battle SE <span id="battle-se-volume-value" class="value"></span></label><p class="setting-desc">Ghost/enemy sounds, attacks, hits, warps, purify, and enemy ambience.</p></div><div class="setting-control"><button id="battle-se-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="battle-se-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><span class="setting-title">Sound Mode</span><p class="setting-desc">Stereo / Mono from the original options menu.</p></div><div class="setting-control"><p class="note">Original option not wired to RML yet</p></div></div>
+                </div>
+
+                <div id="page-advanced" class="page hidden">
+                    <div class="subsection-title">Interface</div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="theme-select">Theme</label><p class="setting-desc">Menu presentation style.</p></div><div class="setting-control"><select id="theme-select"></select></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="font-select">Font</label><p class="setting-desc">Choose the UI font face.</p></div><div class="setting-control"><select id="font-select"></select></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="font-scale-stepper">Font Scale <span id="font-scale-value" class="value"></span></label><p class="setting-desc">Adjust RML UI text size.</p></div><div class="setting-control"><button id="font-scale-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="font-scale-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+
+                    <div class="subsection-title">CRT Filter</div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="crt-enabled-input">Enable CRT Filter</label><p class="setting-desc">Apply the post-process CRT look.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="crt-enabled-input" class="checkbox" /></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-0-stepper">CRT 0 <span id="crt-0-value" class="value"></span></label></div><div class="setting-control"><button id="crt-0-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-0-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-1-stepper">CRT 1 <span id="crt-1-value" class="value"></span></label></div><div class="setting-control"><button id="crt-1-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-1-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-2-stepper">CRT 2 <span id="crt-2-value" class="value"></span></label></div><div class="setting-control"><button id="crt-2-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-2-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-3-stepper">CRT 3 <span id="crt-3-value" class="value"></span></label></div><div class="setting-control"><button id="crt-3-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-3-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-4-stepper">CRT 4 <span id="crt-4-value" class="value"></span></label></div><div class="setting-control"><button id="crt-4-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-4-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-5-stepper">CRT 5 <span id="crt-5-value" class="value"></span></label></div><div class="setting-control"><button id="crt-5-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-5-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-6-stepper">CRT 6 <span id="crt-6-value" class="value"></span></label></div><div class="setting-control"><button id="crt-6-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-6-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-7-stepper">CRT 7 <span id="crt-7-value" class="value"></span></label></div><div class="setting-control"><button id="crt-7-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-7-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-8-stepper">CRT 8 <span id="crt-8-value" class="value"></span></label></div><div class="setting-control"><button id="crt-8-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-8-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-9-stepper">CRT 9 <span id="crt-9-value" class="value"></span></label></div><div class="setting-control"><button id="crt-9-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-9-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-10-stepper">CRT 10 <span id="crt-10-value" class="value"></span></label></div><div class="setting-control"><button id="crt-10-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-10-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-11-stepper">CRT 11 <span id="crt-11-value" class="value"></span></label></div><div class="setting-control"><button id="crt-11-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-11-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-12-stepper">CRT 12 <span id="crt-12-value" class="value"></span></label></div><div class="setting-control"><button id="crt-12-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-12-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-13-stepper">CRT 13 <span id="crt-13-value" class="value"></span></label></div><div class="setting-control"><button id="crt-13-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-13-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-14-stepper">CRT 14 <span id="crt-14-value" class="value"></span></label></div><div class="setting-control"><button id="crt-14-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-14-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="crt-15-stepper">CRT 15 <span id="crt-15-value" class="value"></span></label></div><div class="setting-control"><button id="crt-15-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="crt-15-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
+                    <button id="reset-crt-button">Reset CRT Filter</button>
+
+                    <div class="subsection-title">Controls / Files</div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="controller-remap-input">Show Controller Remap Window</label><p class="setting-desc">Open the controller remapping helper.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="controller-remap-input" class="checkbox" /></div></div>
+                    <div class="setting-row"><div class="setting-copy"><span class="setting-title">Bindings</span><p class="setting-desc">Restore default keyboard / controller binding state.</p></div><div class="setting-control"><button id="reset-bindings-button">Reset Bindings</button></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="data-folder-input">Data Folder</label><p class="setting-desc">Folder containing extracted MikuPan game data.</p></div><div class="setting-control wide-control"><input type="text" id="data-folder-input" class="text" /><button id="browse-folder-button">Browse</button></div></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="confirm-save-modal" class="modal hidden">
+            <div id="confirm-save-card">
+                <div id="confirm-save-title">Settings have changed</div>
+                <div id="confirm-save-text">Would you like to save?</div>
+                <div id="confirm-save-buttons">
+                    <button id="save-changes-yes-button">Yes</button>
+                    <button id="save-changes-no-button">No</button>
+                    <button id="save-changes-cancel-button">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="choice-picker-modal" class="modal hidden">
+            <div id="choice-picker-card">
+                <div id="choice-picker-title">Choose Setting</div>
+                <div id="choice-picker-list"></div>
+                <div id="choice-picker-help">Up / Down to choose. Confirm applies. Back cancels.</div>
+                <div id="choice-picker-buttons">
+                    <button id="choice-picker-apply-button">Apply</button>
+                    <button id="choice-picker-cancel-button">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="resolution-confirm-modal" class="modal hidden">
+            <div id="resolution-confirm-card">
+                <div id="resolution-confirm-title">Keep this display setting?</div>
+                <div id="resolution-confirm-text">Reverting in <span id="resolution-confirm-countdown">15</span> seconds</div>
+                <div id="resolution-confirm-buttons">
+                    <button id="resolution-keep-button">Yes</button>
+                    <button id="resolution-revert-button">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

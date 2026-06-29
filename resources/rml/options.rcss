@@ -1,0 +1,835 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    display: block;
+    nav: auto;
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+    font-family: MikuPanRml;
+    font-size: 9dp;
+    line-height: 12dp;
+    color: #d8d0c1;
+    background-color: transparent;
+}
+
+#window {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -268dp;
+    margin-top: -103dp;
+    width: 536dp;
+    height: 306dp;
+    display: flex;
+    flex-direction: row;
+    background-color: #080706d8;
+    border: 1dp #8b7b61;
+}
+
+#side {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    width: 136dp;
+    height: 100%;
+    padding: 12dp;
+    background-color: #050504cc;
+    border-right: 1dp #4b4033;
+}
+
+#side-title {
+    display: block;
+    margin: 0px 0px 14dp 0px;
+    color: #f0e6d2;
+    font-size: 17dp;
+    line-height: 20dp;
+    letter-spacing: 1dp;
+    white-space: nowrap;
+}
+
+#category-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.category-button {
+    display: block;
+    width: 100%;
+    height: 25dp;
+    margin: 0px 0px 7dp 0px;
+    padding: 0px 7dp;
+    text-align: left;
+    color: #cfc5b4;
+    background-color: #11100edd;
+    border: 1dp #4a4238;
+    font-family: MikuPanRml;
+    font-size: 8dp;
+    line-height: 23dp;
+    letter-spacing: 0.5dp;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.category-button:hover,
+.category-button.selected,
+.category-button:focus,
+.category-button:focus-visible {
+    color: #fff4d8;
+    background-color: #302719dd;
+    border-color: #b09b73;
+}
+
+#side-actions {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: auto;
+}
+
+.side-action-button {
+    width: 100%;
+    height: 23dp;
+    margin: 0px 0px 6dp 0px;
+    font-size: 8dp;
+    line-height: 21dp;
+}
+
+#cancel-options-button {
+    margin-bottom: 0px;
+}
+
+#content {
+    display: block;
+    flex: none;
+    width: 399dp;
+    height: 100%;
+    padding: 12dp 14dp;
+}
+
+#header {
+    display: block;
+    width: 371dp;
+    height: 32dp;
+    border-bottom: 1dp #4b4033;
+}
+
+h1,
+#panel-title {
+    display: block;
+    margin: 0px;
+    color: #efe8d8;
+    font-size: 20dp;
+    line-height: 25dp;
+    letter-spacing: 2dp;
+    white-space: nowrap;
+}
+
+#page-area {
+    display: block;
+    width: 371dp;
+    height: 196dp;
+    margin: 8dp 0px 8dp 0px;
+    padding-right: 10dp;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scrollbar-margin: 0dp;
+}
+
+.page {
+    display: block;
+    width: 100%;
+    padding-bottom: 14dp;
+}
+
+.page.hidden {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.subsection-title {
+    display: block;
+    margin: 0px 0px 7dp 0px;
+    padding: 0px 0px 5dp 0px;
+    color: #bda57c;
+    border-bottom: 1dp #352d25;
+    font-size: 8dp;
+    line-height: 10dp;
+    letter-spacing: 1dp;
+    text-transform: uppercase;
+}
+
+.setting-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 351dp;
+    min-height: 42dp;
+    margin: 0px 0px 6dp 0px;
+    padding: 7dp 8dp;
+    background-color: #0f0d0bdd;
+    border: 1dp #2f281f;
+}
+
+.setting-row:hover,
+.setting-row.controller-focus {
+    background-color: #17120eee;
+    border-color: #6c5d48;
+}
+
+.setting-row.compact {
+    min-height: 34dp;
+}
+
+.setting-copy {
+    display: block;
+    flex: none;
+    width: 188dp;
+    padding-right: 10dp;
+}
+
+.setting-title {
+    display: block;
+    color: #ddd2bd;
+    font-size: 8dp;
+    line-height: 10dp;
+    white-space: nowrap;
+}
+
+.setting-desc,
+p.setting-desc {
+    display: block;
+    margin: 2dp 0px 0px 0px;
+    color: #81786b;
+    font-size: 6.5dp;
+    line-height: 8dp;
+}
+
+.setting-control {
+    display: block;
+    flex: none;
+    width: 150dp;
+    text-align: center;
+}
+
+.wide-control {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.checkbox-control {
+    text-align: center;
+}
+
+.value {
+    color: #d0ad73;
+    font-size: 7dp;
+    line-height: 9dp;
+}
+
+.note,
+p.note {
+    display: block;
+    margin: 2dp 0px 0px 0px;
+    color: #8a7f6f;
+    font-size: 6.5dp;
+    line-height: 8dp;
+}
+
+#gpu-restart-note,
+#save-status {
+    color: #c8ab77;
+}
+
+.placeholder {
+    display: block;
+    width: 351dp;
+    margin: 0px 0px 6dp 0px;
+    padding: 8dp;
+    color: #928879;
+    background-color: #0f0d0bdd;
+    border: 1dp #2f281f;
+    font-size: 7dp;
+    line-height: 10dp;
+}
+
+scrollbarvertical {
+    width: 7dp;
+    margin-right: -9dp;
+}
+
+scrollbarvertical sliderarrowdec,
+scrollbarvertical sliderarrowinc {
+    width: 7dp;
+    height: 0dp;
+}
+
+scrollbarvertical slidertrack {
+    width: 7dp;
+    background-color: #15120fdd;
+    border: 1dp #352d25;
+}
+
+scrollbarvertical sliderbar {
+    width: 5dp;
+    min-height: 18dp;
+    margin-left: 1dp;
+    background-color: #8b7b61;
+}
+
+scrollbarvertical sliderbar:hover,
+scrollbarvertical sliderbar:active {
+    background-color: #b09b73;
+}
+
+select,
+input.text,
+input.checkbox,
+button {
+    font-family: MikuPanRml;
+    tab-index: auto;
+    nav: auto;
+}
+
+select,
+input.text {
+    display: block;
+    width: 150dp;
+    height: 20dp;
+    margin: 0px;
+    padding: 0px;
+    color: #f0e4cc;
+    background-color: transparent;
+    border: 0dp;
+    font-size: 8dp;
+    line-height: 18dp;
+    text-align: center;
+}
+
+/* RmlUi <select> generates selectvalue, selectarrow, and selectbox.
+ * Keep value + arrow visually attached so it reads as one dropdown control.
+ */
+select selectvalue {
+    width: auto;
+    height: 18dp;
+    margin-right: 18dp;
+    padding: 1dp 5dp 0px 5dp;
+    color: #f0e4cc;
+    background-color: #11100e;
+    border: 1dp #5b4f3e;
+    text-align: center;
+    line-height: 16dp;
+}
+
+select selectvalue:hover,
+select:focus selectvalue,
+select:focus-visible selectvalue,
+select.controller-focus selectvalue,
+select:checked selectvalue {
+    color: #fff4d8;
+    background-color: #221b12;
+    border-color: #b09b73;
+}
+
+select selectarrow {
+    width: 18dp;
+    height: 18dp;
+    margin-left: -1dp;
+    color: #e6d8bd;
+    background-color: #11100e;
+    border: 1dp #5b4f3e;
+    text-align: center;
+    line-height: 16dp;
+    font-size: 8dp;
+}
+
+select selectarrow:hover,
+select selectarrow:active,
+select:focus selectarrow,
+select:focus-visible selectarrow,
+select.controller-focus selectarrow,
+select:checked selectarrow {
+    color: #fff4d8;
+    background-color: #342817;
+    border-color: #b09b73;
+}
+
+select selectbox {
+    width: 150dp;
+    margin-top: 1dp;
+    padding: 2dp;
+    color: #f0e4cc;
+    background-color: #090807;
+    border: 1dp #8b7b61;
+}
+
+select selectbox option {
+    display: block;
+    width: auto;
+    min-height: 16dp;
+    padding: 2dp 5dp;
+    color: #d8d0c1;
+    background-color: #0e0d0b;
+    line-height: 12dp;
+    text-align: center;
+}
+
+select selectbox option:hover,
+select selectbox option:checked {
+    color: #fff4d8;
+    background-color: #302719;
+}
+
+input.text {
+    padding: 0px 5dp;
+    color: #f0e4cc;
+    background-color: #0d0c0a;
+    border: 1dp #5b4f3e;
+    line-height: 18dp;
+    text-align: center;
+}
+
+input.text:hover,
+input.text:focus,
+input.text:focus-visible,
+input.text.controller-focus {
+    color: #fff4d8;
+    background-color: #19150f;
+    border-color: #b09b73;
+}
+
+/* Console-style incremental controls. These replace RmlUi range sliders so
+ * controller left/right changes values deliberately instead of fighting the
+ * generated slider internals.
+ */
+.stepper-control,
+.choice-picker {
+    display: block;
+    width: 150dp;
+    height: 20dp;
+    margin: 0px;
+    padding: 0px 4dp;
+    color: #f0e4cc;
+    background-color: #0d0c0a;
+    border: 1dp #5b4f3e;
+    font-size: 8dp;
+    line-height: 18dp;
+    text-align: center;
+}
+
+.stepper-control:hover,
+.stepper-control:focus,
+.stepper-control:focus-visible,
+.stepper-control.controller-focus,
+.choice-picker:hover,
+.choice-picker:focus,
+.choice-picker:focus-visible,
+.choice-picker.controller-focus {
+    color: #fff4d8;
+    background-color: #19150f;
+    border-color: #b09b73;
+}
+
+.stepper-edge {
+    display: inline-block;
+    width: 12dp;
+    color: #c7a66e;
+    text-align: center;
+}
+
+.stepper-bars {
+    display: inline-block;
+    width: 112dp;
+    text-align: center;
+    letter-spacing: 1dp;
+}
+
+.stepper-segment {
+    color: #3e372e;
+}
+
+.stepper-segment.filled {
+    color: #d0ad73;
+}
+
+.stepper-control:focus .stepper-segment.filled,
+.stepper-control:focus-visible .stepper-segment.filled,
+.stepper-control.controller-focus .stepper-segment.filled {
+    color: #fff1be;
+}
+
+.choice-text {
+    display: inline-block;
+    width: 112dp;
+    color: #f0e4cc;
+    text-align: center;
+}
+
+.picker-arrow {
+    display: inline-block;
+    width: 12dp;
+    color: #c7a66e;
+    text-align: center;
+}
+
+input.checkbox {
+    display: inline-block;
+    width: 13dp;
+    height: 13dp;
+    margin: 0px;
+    padding: 0px;
+    color: #fff4d8;
+    background-color: #0d0c0a;
+    border: 1dp #6c5d48;
+    text-align: center;
+    line-height: 11dp;
+}
+
+input.checkbox:hover,
+input.checkbox:focus,
+input.checkbox:focus-visible,
+input.checkbox.controller-focus {
+    border-color: #b09b73;
+    background-color: #19150f;
+}
+
+input.checkbox:checked {
+    background-color: #b09b73;
+    border-color: #efe4cc;
+}
+
+button {
+    display: inline-block;
+    height: 20dp;
+    margin: 0px 5dp 0px 0px;
+    padding: 0px 8dp;
+    color: #e8dcc8;
+    background-color: #11100e;
+    border: 1dp #6c5d48;
+    font-size: 7.5dp;
+    line-height: 18dp;
+    text-align: center;
+    cursor: pointer;
+}
+
+button:hover,
+button:focus,
+button:focus-visible,
+button.controller-focus {
+    color: #fff4d8;
+    background-color: #302719;
+    border-color: #b09b73;
+}
+
+#browse-folder-button {
+    flex: none;
+    width: 48dp;
+    margin-left: 5dp;
+}
+
+#data-folder-input {
+    flex: none;
+    width: 97dp;
+}
+
+
+/* Controller / keyboard spatial navigation. RmlUi only navigates between
+ * tabbable elements, and automatic spatial navigation is intentionally scoped
+ * around scroll containers, so the sidebar-to-panel jumps are explicit.
+ */
+#cat-display {
+    nav-up: #cancel-options-button;
+    nav-down: #cat-graphics;
+}
+
+#cat-graphics {
+    nav-up: #cat-display;
+    nav-down: #cat-audio;
+}
+
+#cat-audio {
+    nav-up: #cat-graphics;
+    nav-down: #cat-advanced;
+}
+
+#cat-advanced {
+    nav-up: #cat-audio;
+    nav-down: #save-return-button;
+}
+
+#save-return-button {
+    nav-up: #cat-advanced;
+    nav-down: #cancel-options-button;
+}
+
+#cancel-options-button {
+    nav-up: #save-return-button;
+    nav-down: #cat-display;
+}
+
+#window-mode-picker,
+#resolution-picker,
+#brightness-stepper,
+#gamma-stepper,
+#vsync-input {
+    nav-left: #cat-display;
+}
+
+#master-volume-stepper,
+#ambient-bgm-volume-stepper,
+#battle-bgm-volume-stepper,
+#ambient-se-volume-stepper,
+#battle-se-volume-stepper {
+    nav-left: #cat-audio;
+}
+
+#gpu-backend-select,
+#msaa-select,
+#shadow-resolution-select,
+#lighting-mode-select {
+    nav-left: #cat-graphics;
+}
+
+#theme-select,
+#font-select,
+#font-scale-stepper,
+#crt-enabled-input,
+#crt-0-stepper,
+#crt-1-stepper,
+#crt-2-stepper,
+#crt-3-stepper,
+#crt-4-stepper,
+#crt-5-stepper,
+#crt-6-stepper,
+#crt-7-stepper,
+#crt-8-stepper,
+#crt-9-stepper,
+#crt-10-stepper,
+#crt-11-stepper,
+#crt-12-stepper,
+#crt-13-stepper,
+#crt-14-stepper,
+#crt-15-stepper,
+#reset-crt-button,
+#controller-remap-input,
+#reset-bindings-button,
+#data-folder-input,
+#browse-folder-button {
+    nav-left: #cat-advanced;
+}
+
+#save-changes-yes-button {
+    nav-left: #save-changes-cancel-button;
+    nav-right: #save-changes-no-button;
+}
+
+#save-changes-no-button {
+    nav-left: #save-changes-yes-button;
+    nav-right: #save-changes-cancel-button;
+}
+
+#save-changes-cancel-button {
+    nav-left: #save-changes-no-button;
+    nav-right: #save-changes-yes-button;
+}
+
+.modal {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 536dp;
+    height: 306dp;
+    background-color: #000000aa;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+#confirm-save-card {
+    position: absolute;
+    left: 147dp;
+    top: 94dp;
+    width: 242dp;
+    min-height: 104dp;
+    padding: 14dp;
+    background-color: #080706f2;
+    border: 1dp #8b7b61;
+}
+
+#confirm-save-title {
+    display: block;
+    margin: 0px 0px 6dp 0px;
+    color: #efe8d8;
+    font-size: 12dp;
+    line-height: 15dp;
+    letter-spacing: 1dp;
+}
+
+#confirm-save-text {
+    display: block;
+    margin: 0px 0px 12dp 0px;
+    color: #cfc5b4;
+    font-size: 8dp;
+    line-height: 11dp;
+}
+
+#confirm-save-buttons {
+    display: block;
+    text-align: right;
+}
+
+#save-changes-yes-button,
+#save-changes-no-button,
+#save-changes-cancel-button {
+    width: 48dp;
+}
+
+
+#choice-picker-card {
+    position: absolute;
+    left: 136dp;
+    top: 60dp;
+    width: 264dp;
+    min-height: 170dp;
+    padding: 14dp;
+    background-color: #080706f2;
+    border: 1dp #b09b73;
+    text-align: center;
+}
+
+#choice-picker-title {
+    color: #fff4d8;
+    font-size: 13dp;
+    line-height: 16dp;
+    margin-bottom: 8dp;
+    letter-spacing: 1dp;
+}
+
+#choice-picker-list {
+    display: block;
+    width: 236dp;
+    min-height: 84dp;
+    margin: 0dp auto 8dp auto;
+    padding: 3dp;
+    background-color: #0e0c0a;
+    border: 1dp #4b4033;
+}
+
+#choice-picker-list button {
+    font-family: MikuPanRml;
+    cursor: pointer;
+}
+
+.picker-option {
+    display: block;
+    width: 228dp;
+    min-height: 15dp;
+    margin: 0px;
+    padding: 2dp 4dp;
+    color: #766e62;
+    background-color: transparent;
+    border: 0dp transparent;
+    font-size: 7dp;
+    line-height: 11dp;
+    text-align: center;
+}
+
+.picker-option:hover,
+.picker-option:focus,
+.picker-option:focus-visible,
+.picker-option.controller-focus,
+.picker-option.selected {
+    color: #fff4d8;
+    background-color: #302719;
+}
+
+.picker-option.applied {
+    color: #d0ad73;
+}
+
+#choice-picker-help {
+    color: #9b9080;
+    font-size: 6.5dp;
+    line-height: 8dp;
+    margin-bottom: 10dp;
+}
+
+#choice-picker-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#choice-picker-buttons button {
+    width: 58dp;
+    height: 21dp;
+    margin: 0px 4dp;
+    line-height: 19dp;
+}
+
+#choice-picker-apply-button {
+    nav-right: #choice-picker-cancel-button;
+}
+
+#choice-picker-cancel-button {
+    nav-left: #choice-picker-apply-button;
+}
+
+#resolution-confirm-card {
+    position: absolute;
+    left: 163dp;
+    top: 94dp;
+    width: 210dp;
+    padding: 14dp;
+    background-color: #0b0907f2;
+    border: 1dp #b09b73;
+    text-align: center;
+}
+
+#resolution-confirm-title {
+    display: block;
+    width: 100%;
+    color: #fff4d8;
+    font-size: 13dp;
+    line-height: 16dp;
+    margin-bottom: 8dp;
+}
+
+#resolution-confirm-text {
+    display: block;
+    width: 100%;
+    color: #cfc5b4;
+    font-size: 8dp;
+    line-height: 11dp;
+    margin-bottom: 12dp;
+}
+
+#resolution-confirm-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#resolution-confirm-buttons button {
+    width: 52dp;
+    height: 21dp;
+    margin: 0px 4dp;
+    line-height: 19dp;
+}
+
+#resolution-keep-button {
+    nav-right: #resolution-revert-button;
+}
+
+#resolution-revert-button {
+    nav-left: #resolution-keep-button;
+}
