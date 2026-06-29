@@ -6,7 +6,11 @@
 #include "mikupan/mikupan_file.h"
 #include "mikupan/mikupan_controller.h"
 
-extern "C" {
+// These engine modules were converted from C to C++ by main's port, so their
+// functions now have C++ linkage. Reference them with normal C++ linkage (no
+// extern "C") so the symbol names match the now-mangled definitions. Headers
+// that still expose a C ABI (e.g. mikupan_gpu.h) carry their own extern "C"
+// guards internally.
 int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max, unsigned short pitch, unsigned char menu);
 
 #include "mikupan/rendering/mikupan_shader.h"
@@ -15,7 +19,6 @@ int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max, unsign
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_renderer_internal.h"
 #include "mikupan/rendering/mikupan_gpu.h"
-}
 
 #include "SDL3/SDL.h"
 #include "RmlUi/Core.h"

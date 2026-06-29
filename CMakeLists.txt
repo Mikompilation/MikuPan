@@ -291,7 +291,7 @@ set(MIKUPAN_SOURCES
         "src/mikupan/mikupan_utils.cpp"
         src/ingame/map/furn_spe/fsla_dat.cpp
         src/mikupan/mikupan_config.cpp
-        src/mikupan/mikupan_audio_bus.c
+        src/mikupan/mikupan_audio_bus.cpp
         src/mikupan/mikupan_audio_bus.h
         src/mikupan/mikupan_config_ini.cpp
         src/mikupan/mikupan_config.h
