@@ -196,6 +196,7 @@ typedef struct
     int selected_font;
     float font_scale;
     int show_fps;
+    int title_room_background;
     MikuPan_ConfigThirdPersonCamera third_person_camera;
     MikuPan_ConfigFirstPersonCamera first_person_camera;
     MikuPan_ConfigInput input;

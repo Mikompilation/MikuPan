@@ -4,7 +4,9 @@
 #include "SDL3/SDL_video.h"
 
 #define MIKUPAN_UI_THEME_COUNT 6
-#define MIKUPAN_UI_FONT_COUNT 2
+#define MIKUPAN_UI_FONT_COUNT 3
+
+typedef struct ImFont ImFont;
 
 extern const char* const MikuPan_UiThemeLabels[MIKUPAN_UI_THEME_COUNT];
 extern const char* const MikuPan_UiFontLabels[MIKUPAN_UI_FONT_COUNT];
@@ -17,5 +19,7 @@ int MikuPan_ClampFontIndex(int font);
 void MikuPan_ApplyUiFont(int font);
 void MikuPan_ApplyUiFontScale(void);
 void MikuPan_ApplyFatalFrameStyle(int theme);
+ImFont* MikuPan_GetTitleBlockFont(void);
+ImFont* MikuPan_GetTitleFont(void);
 
 #endif// MIKUPAN_MIKUPAN_UI_THEME_H

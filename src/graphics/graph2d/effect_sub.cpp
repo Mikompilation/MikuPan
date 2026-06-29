@@ -3490,7 +3490,7 @@ void LocalCopyBtoL_Sub(int no, int type, int addr) {
         ndpkt++;
         
         pbuf[ndpkt].ui32[0] = DMAref + nloop; // +? not |? probably a compiler opt. that will fix itself .
-        pbuf[ndpkt].ui32[1] = (u_int)&bbuf[((SCR_HEIGHT) - rline) * (SCR_WIDTH / 4)];
+        //pbuf[ndpkt].ui32[1] = (u_int)&bbuf[((SCR_HEIGHT) - rline) * (SCR_WIDTH / 4)];
         pbuf[ndpkt].ui32[2] = 0;
         pbuf[ndpkt].ui32[3] = DMAcall | nloop;
         ndpkt++;

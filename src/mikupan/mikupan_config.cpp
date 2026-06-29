@@ -2,7 +2,7 @@
 #include "mikupan_utils.h"
 
 #define MIKUPAN_CONFIG_THEME_COUNT 6
-#define MIKUPAN_CONFIG_FONT_COUNT 2
+#define MIKUPAN_CONFIG_FONT_COUNT 3
 #define MIKUPAN_CONFIG_DEFAULT_WINDOW_WIDTH 1280
 #define MIKUPAN_CONFIG_DEFAULT_WINDOW_HEIGHT 720
 #define MIKUPAN_CONFIG_MSAA_COUNT 6
@@ -52,6 +52,7 @@ MikuPan_Config mikupan_configuration = {
     1,
     1.0f,
     0,
+    1,
     {
         0,
         900.0f,
@@ -262,4 +263,6 @@ void MikuPan_ConfigurationValidate(void)
     mikupan_configuration.font_scale =
         MikuPan_ClampFloat(mikupan_configuration.font_scale, 0.5f, 3.0f);
     mikupan_configuration.show_fps = mikupan_configuration.show_fps ? 1 : 0;
+    mikupan_configuration.title_room_background =
+        mikupan_configuration.title_room_background ? 1 : 0;
 }

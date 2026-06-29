@@ -1952,6 +1952,15 @@ void DrawFurniture(int disp_room)
     old_frame_counter = disp_frame_counter;
 }
 
+void DrawFurnitureForced(int disp_room)
+{
+    int old_disp3d_furn = disp3d_furn;
+
+    disp3d_furn = 1;
+    DrawFurniture(disp_room);
+    disp3d_furn = old_disp3d_furn;
+}
+
 #include "data/girlbox.h" // static sceVu0FVECTOR girlbox[]; // 8
 #include "data/enebox.h"  // static sceVu0FVECTOR enebox[]; // 8
 sceVu0FMATRIX runit_mtx = {0};
