@@ -7,9 +7,11 @@
 #include "SDL3/SDL_dialog.h"
 #include "SDL3/SDL_hints.h"
 #include "SDL3/SDL_platform.h"
+#include "SDL3/SDL_video.h"
 #include "ingame/camera/camera.h"
 #include "mikupan/mikupan_config.h"
-#include "mikupan/mikupan_audio_bus.h"
+#include "main/glob.h"
+#include "os/eeiop/eese.h"
 #include "mikupan/mikupan_controller.h"
 #include "mikupan/mikupan_first_person.h"
 #include "mikupan/mikupan_utils.h"
@@ -21,8 +23,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-#define MIKUPAN_MAX_RESOLUTIONS 96
+#define MIKUPAN_MAX_RESOLUTIONS 32
+#define MIKUPAN_MAX_WINDOW_SIZES 32
 #define MIKUPAN_MAX_PS2_RESOLUTION_SCALE 6
 #define MIKUPAN_MAX_GPU_DRIVERS 8
 
@@ -39,6 +43,12 @@ static const char* resolution_label_ptrs[MIKUPAN_MAX_RESOLUTIONS];
 static int resolution_count = 0;
 static int resolution_selected = 0;
 
+static MikuPan_Resolution window_size_list[MIKUPAN_MAX_WINDOW_SIZES];
+static char window_size_labels[MIKUPAN_MAX_WINDOW_SIZES][48];
+static const char* window_size_label_ptrs[MIKUPAN_MAX_WINDOW_SIZES];
+static int window_size_count = 0;
+static int window_size_selected = 0;
+
 static char gpu_driver_names[MIKUPAN_MAX_GPU_DRIVERS + 1][32];
 static char gpu_driver_labels[MIKUPAN_MAX_GPU_DRIVERS + 1][64];
 static int gpu_driver_supported[MIKUPAN_MAX_GPU_DRIVERS + 1];
@@ -51,42 +61,67 @@ static int window_mode = 0; /* MikuPan_WindowMode: 0=windowed, 1=fullscreen, 2=b
 static float brightness = 1.0f;
 static float gamma_value = 1.0f;
 
+static int MikuPan_GetWindowDisplayBounds(SDL_Window* window, SDL_Rect* bounds)
+{
+    if (window == NULL || bounds == NULL)
+    {
+        return 0;
+    }
+
+    SDL_DisplayID display = SDL_GetDisplayForWindow(window);
+    if (display == 0)
+    {
+        display = SDL_GetPrimaryDisplay();
+    }
+
+    if (display != 0 && SDL_GetDisplayUsableBounds(display, bounds))
+    {
+        return 1;
+    }
+
+    if (display != 0 && SDL_GetDisplayBounds(display, bounds))
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+static void MikuPan_CenterWindowOnDisplay(SDL_Window* window, int width, int height)
+{
+    if (window == NULL || width <= 0 || height <= 0)
+    {
+        return;
+    }
+
+    SDL_Rect bounds;
+    if (!MikuPan_GetWindowDisplayBounds(window, &bounds))
+    {
+        return;
+    }
+
+    int x = bounds.x + (bounds.w - width) / 2;
+    int y = bounds.y + (bounds.h - height) / 2;
+
+    if (x < bounds.x)
+    {
+        x = bounds.x;
+    }
+
+    if (y < bounds.y)
+    {
+        y = bounds.y;
+    }
+
+    SDL_SetWindowPosition(window, x, y);
+}
+
 #define MIKUPAN_CRT_DEFAULTS                                                   \
     {0,     1.0f,  0.08f, 0.02f, 0.18f, 1.0f,  1.6f,  0.22f, 1.0f,             \
      0.25f, 0.78f, 0.75f, 0.15f, 0.75f, 0.02f, 0.02f, 0.08f}
 
 static const MikuPan_ConfigCrt crt_defaults = MIKUPAN_CRT_DEFAULTS;
 static MikuPan_ConfigCrt crt_settings = MIKUPAN_CRT_DEFAULTS;
-
-static int MikuPan_IsFitWindowResolution(int width, int height)
-{
-    return width == MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW
-           && height == MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW;
-}
-
-static void MikuPan_GetFitWindowResolution(int* width, int* height)
-{
-    SDL_Window* window = MikuPan_GetUiWindow();
-    *width = 0;
-    *height = 0;
-
-    if (window != NULL)
-    {
-        SDL_GetWindowSize(window, width, height);
-    }
-
-    if (*width <= 0 || *height <= 0)
-    {
-        *width = mikupan_configuration.renderer.window.width;
-        *height = mikupan_configuration.renderer.window.height;
-    }
-
-    if (*width <= 0 || *height <= 0)
-    {
-        *width = PS2_RESOLUTION_X_INT;
-        *height = PS2_RESOLUTION_Y_INT;
-    }
-}
 
 static void MikuPan_UiSyncSettingsFromConfiguration(void)
 {
@@ -200,13 +235,13 @@ static int MikuPan_UiSaveConfiguration(void)
     return 0;
 }
 
-static int CompareResolutionDesc(const void* a, const void* b)
+static int CompareResolutionAsc(const void* a, const void* b)
 {
     const MikuPan_Resolution* ra = (const MikuPan_Resolution*) a;
     const MikuPan_Resolution* rb = (const MikuPan_Resolution*) b;
     int area_a = ra->width * ra->height;
     int area_b = rb->width * rb->height;
-    return area_b - area_a;
+    return area_a - area_b;
 }
 
 static void MikuPan_AspectRatioStr(int w, int h, char* buf, int buf_size)
@@ -222,22 +257,43 @@ static void MikuPan_AspectRatioStr(int w, int h, char* buf, int buf_size)
     snprintf(buf, buf_size, "%d:%d", w / a, h / a);
 }
 
-static int MikuPan_GetPs2ResolutionScale(int w, int h)
+static float MikuPan_GetPs2ResolutionScale(int w, int h)
 {
     if (w <= 0 || h <= 0)
     {
-        return 0;
+        return 0.0f;
     }
 
-    if (w % PS2_RESOLUTION_X_INT != 0 || h % PS2_RESOLUTION_Y_INT != 0)
+    const float scale_x = (float)w / (float)PS2_RESOLUTION_X_INT;
+    const float scale_y = (float)h / (float)PS2_RESOLUTION_Y_INT;
+
+    return fabsf(scale_x - scale_y) < 0.001f ? scale_x : 0.0f;
+}
+
+static void MikuPan_FormatPs2ScaleLabel(char* buffer, int buffer_size,
+                                        int width, int height,
+                                        const char* suffix)
+{
+    const float scale = MikuPan_GetPs2ResolutionScale(width, height);
+    if (scale > 0.0f)
     {
-        return 0;
+        if (fabsf(scale - roundf(scale)) < 0.001f)
+        {
+            snprintf(buffer, buffer_size, "%.0fx (%d x %d)%s",
+                     scale, width, height, suffix != NULL ? suffix : "");
+        }
+        else
+        {
+            snprintf(buffer, buffer_size, "%.2gx (%d x %d)%s",
+                     scale, width, height, suffix != NULL ? suffix : "");
+        }
+        return;
     }
 
-    int scale_x = w / PS2_RESOLUTION_X_INT;
-    int scale_y = h / PS2_RESOLUTION_Y_INT;
-
-    return scale_x == scale_y ? scale_x : 0;
+    char aspect[12];
+    MikuPan_AspectRatioStr(width, height, aspect, sizeof(aspect));
+    snprintf(buffer, buffer_size, "%d x %d (%s)%s",
+             width, height, aspect, suffix != NULL ? suffix : "");
 }
 
 static void MikuPan_AddResolution(int w, int h)
@@ -260,105 +316,49 @@ static void MikuPan_AddResolution(int w, int h)
     resolution_count++;
 }
 
-static void MikuPan_AddFitWindowResolution(void)
+static void MikuPan_AddPs2ResolutionScale(float scale)
 {
-    if (resolution_count >= MIKUPAN_MAX_RESOLUTIONS)
-    {
-        return;
-    }
-
-    resolution_list[resolution_count].width =
-        MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW;
-    resolution_list[resolution_count].height =
-        MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW;
-    resolution_count++;
+    const int width = (int)roundf((float)PS2_RESOLUTION_X_INT * scale);
+    const int height = (int)roundf((float)PS2_RESOLUTION_Y_INT * scale);
+    MikuPan_AddResolution(width, height);
 }
 
-static void MikuPan_AddPs2ResolutionMultiples(void)
+static void MikuPan_AddPs2ResolutionScales(void)
 {
-    for (int scale = 1; scale <= MIKUPAN_MAX_PS2_RESOLUTION_SCALE; scale++)
+    const float scales[] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+    const int count = (int)(sizeof(scales) / sizeof(scales[0]));
+
+    for (int i = 0; i < count; i++)
     {
-        MikuPan_AddResolution(PS2_RESOLUTION_X_INT * scale,
-                              PS2_RESOLUTION_Y_INT * scale);
+        MikuPan_AddPs2ResolutionScale(scales[i]);
     }
 }
 
 static void MikuPan_PopulateResolutionList(SDL_DisplayID display,
                                            const SDL_DisplayMode* current_mode)
 {
+    (void)display;
+    (void)current_mode;
+
     resolution_count = 0;
     resolution_selected = 0;
 
-    MikuPan_AddFitWindowResolution();
-    MikuPan_AddPs2ResolutionMultiples();
+    MikuPan_AddPs2ResolutionScales();
     MikuPan_AddResolution(render_resolution_width, render_resolution_height);
-
-    int n = 0;
-    SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(display, &n);
-
-    if (modes != NULL)
-    {
-        for (int i = 0; i < n; i++)
-        {
-            MikuPan_AddResolution(modes[i]->w, modes[i]->h);
-        }
-
-        SDL_free(modes);
-    }
-
-    // Always include the current desktop mode; older SDL backends sometimes
-    // omit it from the fullscreen list.
-    if (current_mode != NULL && current_mode->w > 0 && current_mode->h > 0)
-    {
-        MikuPan_AddResolution(current_mode->w, current_mode->h);
-    }
 
     if (resolution_count > 1)
     {
-        qsort(&resolution_list[1], resolution_count - 1,
-              sizeof(MikuPan_Resolution), CompareResolutionDesc);
+        qsort(resolution_list, resolution_count,
+              sizeof(MikuPan_Resolution), CompareResolutionAsc);
     }
 
     for (int i = 0; i < resolution_count; i++)
     {
-        char aspect[12];
-        int ps2_scale;
-
-        if (MikuPan_IsFitWindowResolution(resolution_list[i].width,
-                                          resolution_list[i].height))
-        {
-            snprintf(resolution_labels[i], sizeof(resolution_labels[i]),
-                     "Fit Window");
-            resolution_label_ptrs[i] = resolution_labels[i];
-
-            if (MikuPan_IsFitWindowResolution(render_resolution_width,
-                                              render_resolution_height))
-            {
-                resolution_selected = i;
-            }
-
-            continue;
-        }
-
-        ps2_scale = MikuPan_GetPs2ResolutionScale(
-            resolution_list[i].width, resolution_list[i].height);
-
-        MikuPan_AspectRatioStr(resolution_list[i].width,
-                               resolution_list[i].height, aspect,
-                               sizeof(aspect));
-
-        if (ps2_scale > 0)
-        {
-            snprintf(resolution_labels[i], sizeof(resolution_labels[i]),
-                     "%d x %d (%s) [PS2 %dx]", resolution_list[i].width,
-                     resolution_list[i].height, aspect, ps2_scale);
-        }
-        else
-        {
-            snprintf(resolution_labels[i], sizeof(resolution_labels[i]),
-                     "%d x %d (%s)", resolution_list[i].width,
-                     resolution_list[i].height, aspect);
-        }
+        MikuPan_FormatPs2ScaleLabel(resolution_labels[i],
+                                    sizeof(resolution_labels[i]),
+                                    resolution_list[i].width,
+                                    resolution_list[i].height,
+                                    "");
 
         resolution_label_ptrs[i] = resolution_labels[i];
 
@@ -366,6 +366,158 @@ static void MikuPan_PopulateResolutionList(SDL_DisplayID display,
             && resolution_list[i].height == render_resolution_height)
         {
             resolution_selected = i;
+        }
+    }
+}
+
+static void MikuPan_AddWindowSize(int w, int h)
+{
+    if (w <= 0 || h <= 0 || window_size_count >= MIKUPAN_MAX_WINDOW_SIZES)
+    {
+        return;
+    }
+
+    for (int i = 0; i < window_size_count; i++)
+    {
+        if (window_size_list[i].width == w && window_size_list[i].height == h)
+        {
+            return;
+        }
+    }
+
+    window_size_list[window_size_count].width = w;
+    window_size_list[window_size_count].height = h;
+    window_size_count++;
+}
+
+static int MikuPan_IsStandardWindowSize(int width, int height)
+{
+    static const MikuPan_Resolution standard_sizes[] = {
+        {640, 480},
+        {800, 600},
+        {960, 540},
+        {1024, 576},
+        {1024, 768},
+        {1280, 720},
+        {1280, 800},
+        {1366, 768},
+        {1600, 900},
+        {1680, 1050},
+        {1920, 1080},
+        {1920, 1200},
+        {2560, 1440},
+        {2560, 1600},
+        {3840, 2160},
+    };
+
+    for (int i = 0; i < (int)(sizeof(standard_sizes) / sizeof(standard_sizes[0]));
+         i++)
+    {
+        if (standard_sizes[i].width == width
+            && standard_sizes[i].height == height)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static void MikuPan_AddStandardWindowSizes(int max_width, int max_height)
+{
+    static const MikuPan_Resolution standard_sizes[] = {
+        {640, 480},
+        {800, 600},
+        {960, 540},
+        {1024, 576},
+        {1024, 768},
+        {1280, 720},
+        {1280, 800},
+        {1366, 768},
+        {1600, 900},
+        {1680, 1050},
+        {1920, 1080},
+        {1920, 1200},
+        {2560, 1440},
+        {2560, 1600},
+        {3840, 2160},
+    };
+    const int count = (int)(sizeof(standard_sizes) / sizeof(standard_sizes[0]));
+
+    for (int i = 0; i < count; i++)
+    {
+        const int width = standard_sizes[i].width;
+        const int height = standard_sizes[i].height;
+        if ((max_width <= 0 || width <= max_width)
+            && (max_height <= 0 || height <= max_height))
+        {
+            MikuPan_AddWindowSize(width, height);
+        }
+    }
+}
+
+static void MikuPan_FormatWindowSizeLabel(char* buffer, int buffer_size,
+                                          int width, int height,
+                                          const char* suffix)
+{
+    char aspect[12];
+    MikuPan_AspectRatioStr(width, height, aspect, sizeof(aspect));
+    snprintf(buffer, buffer_size, "%d x %d (%s)%s",
+             width, height, aspect, suffix != NULL ? suffix : "");
+}
+
+static void MikuPan_PopulateWindowSizeList(SDL_DisplayID display,
+                                           const SDL_DisplayMode* current_mode)
+{
+    (void)display;
+    window_size_count = 0;
+    window_size_selected = 0;
+
+    int max_width = 0;
+    int max_height = 0;
+    if (current_mode != NULL)
+    {
+        max_width = current_mode->w;
+        max_height = current_mode->h;
+    }
+
+    MikuPan_AddStandardWindowSizes(max_width, max_height);
+    MikuPan_AddWindowSize(mikupan_configuration.renderer.window.width,
+                          mikupan_configuration.renderer.window.height);
+
+    if (current_mode != NULL && current_mode->w > 0 && current_mode->h > 0)
+    {
+        MikuPan_AddWindowSize(current_mode->w, current_mode->h);
+    }
+
+    if (window_size_count > 1)
+    {
+        qsort(window_size_list, window_size_count,
+              sizeof(MikuPan_Resolution), CompareResolutionAsc);
+    }
+
+    for (int i = 0; i < window_size_count; i++)
+    {
+        const int is_desktop = current_mode != NULL
+            && window_size_list[i].width == current_mode->w
+            && window_size_list[i].height == current_mode->h;
+        const int is_standard = MikuPan_IsStandardWindowSize(
+            window_size_list[i].width,
+            window_size_list[i].height);
+
+        const char* suffix = is_desktop ? " [Desktop]"
+                            : (!is_standard ? " [Custom]" : "");
+        MikuPan_FormatWindowSizeLabel(window_size_labels[i],
+                                      sizeof(window_size_labels[i]),
+                                      window_size_list[i].width,
+                                      window_size_list[i].height,
+                                      suffix);
+        window_size_label_ptrs[i] = window_size_labels[i];
+
+        if (window_size_list[i].width == mikupan_configuration.renderer.window.width
+            && window_size_list[i].height == mikupan_configuration.renderer.window.height)
+        {
+            window_size_selected = i;
         }
     }
 }
@@ -476,6 +628,26 @@ static void MikuPan_UiGpuBackendCombo(void)
     }
 }
 
+static void MikuPan_UiDitherModeCombo(void)
+{
+    enum { MIKUPAN_DITHER_OPTION_COUNT = 2 };
+    const char* labels[MIKUPAN_DITHER_OPTION_COUNT];
+    int selected = MikuPan_GetSelectedDitherModeOption();
+
+    for (int i = 0; i < MIKUPAN_DITHER_OPTION_COUNT; i++)
+    {
+        const char* label = MikuPan_GetDitherModeOptionLabel(i);
+        labels[i] = label != NULL ? label : "Unknown";
+    }
+
+    if (igCombo_Str_arr("Dither Filtering", &selected, labels,
+                        MIKUPAN_DITHER_OPTION_COUNT, -1))
+    {
+        MikuPan_SelectDitherModeOption(selected);
+        MikuPan_ConfigurationValidate();
+    }
+}
+
 static void MikuPan_DataFolderSelected(void* userdata,
                                        const char* const * filelist, int filter)
 {
@@ -503,6 +675,7 @@ void MikuPan_UiSettingsInit(void)
     {
         const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(primary);
         MikuPan_PopulateResolutionList(primary, mode);
+        MikuPan_PopulateWindowSizeList(primary, mode);
     }
 
     MikuPan_PopulateGpuDriverList();
@@ -534,9 +707,23 @@ void MikuPan_UiSettingsRender(void)
                 is_fullscreen = (window_mode != MIKUPAN_WINDOW_WINDOWED);
             }
 
+            if (window_size_count > 0)
+            {
+                if (igCombo_Str_arr("Window Size", &window_size_selected,
+                                    window_size_label_ptrs, window_size_count,
+                                    -1))
+                {
+                    MikuPan_SelectWindowSizeOption(window_size_selected);
+                }
+            }
+            else
+            {
+                igTextDisabled("Window Size: no modes available");
+            }
+
             if (resolution_count > 0)
             {
-                if (igCombo_Str_arr("Resolution", &resolution_selected,
+                if (igCombo_Str_arr("Render Scale", &resolution_selected,
                                     resolution_label_ptrs, resolution_count,
                                     -1))
                 {
@@ -548,7 +735,7 @@ void MikuPan_UiSettingsRender(void)
             }
             else
             {
-                igTextDisabled("Resolution: no display modes available");
+                igTextDisabled("Render Scale: no modes available");
             }
 
             igSliderFloat("Brightness", &brightness, 0.0f, 2.0f, "%.2f", 0);
@@ -601,6 +788,9 @@ void MikuPan_UiSettingsRender(void)
                                                     "Vertex (PS2)"};
             igCombo_Str_arr("Lighting Mode", &mikupan_configuration.renderer.lighting_mode,
                             display_lighting_modes, 2, -1);
+
+            MikuPan_UiDitherModeCombo();
+            igTextDisabled("Save Configuration to keep Dither Filtering after restart.");
 
             igEndMenu();
         }
@@ -744,32 +934,71 @@ void MikuPan_UiSettingsRender(void)
     }
 }
 
-int MikuPan_GetRenderResolutionWidth(void)
+int MikuPan_GetWindowSizeOptionCount(void)
 {
-    if (MikuPan_IsFitWindowResolution(render_resolution_width,
-                                      render_resolution_height))
+    return window_size_count;
+}
+
+int MikuPan_GetSelectedWindowSizeOption(void)
+{
+    for (int i = 0; i < window_size_count; i++)
     {
-        int width = 0;
-        int height = 0;
-        MikuPan_GetFitWindowResolution(&width, &height);
-        return width;
+        if (window_size_list[i].width == mikupan_configuration.renderer.window.width
+            && window_size_list[i].height == mikupan_configuration.renderer.window.height)
+        {
+            window_size_selected = i;
+            break;
+        }
+    }
+    return window_size_selected;
+}
+
+const char* MikuPan_GetWindowSizeOptionLabel(int index)
+{
+    if (index < 0 || index >= window_size_count)
+    {
+        return NULL;
     }
 
-    return render_resolution_width;
+    return window_size_label_ptrs[index];
+}
+
+int MikuPan_SelectWindowSizeOption(int index)
+{
+    if (index < 0 || index >= window_size_count)
+    {
+        return 0;
+    }
+
+    window_size_selected = index;
+    const int width = window_size_list[index].width;
+    const int height = window_size_list[index].height;
+
+    mikupan_configuration.renderer.window.width = width;
+    mikupan_configuration.renderer.window.height = height;
+
+#ifndef __ANDROID__
+    SDL_Window* window = MikuPan_GetUiWindow();
+    if (window != NULL && window_mode == MIKUPAN_WINDOW_WINDOWED)
+    {
+        SDL_SetWindowSize(window, width, height);
+        MikuPan_CenterWindowOnDisplay(window, width, height);
+    }
+#endif
+
+    return 1;
+}
+
+int MikuPan_GetRenderResolutionWidth(void)
+{
+    return render_resolution_width > 0 ? render_resolution_width
+                                       : PS2_RESOLUTION_X_INT;
 }
 
 int MikuPan_GetRenderResolutionHeight(void)
 {
-    if (MikuPan_IsFitWindowResolution(render_resolution_width,
-                                      render_resolution_height))
-    {
-        int width = 0;
-        int height = 0;
-        MikuPan_GetFitWindowResolution(&width, &height);
-        return height;
-    }
-
-    return render_resolution_height;
+    return render_resolution_height > 0 ? render_resolution_height
+                                        : PS2_RESOLUTION_Y_INT;
 }
 
 int MikuPan_GetRenderResolutionOptionCount(void)
@@ -1058,69 +1287,40 @@ static float MikuPan_ClampAudioVolume(float value)
     return MikuPan_ClampFloat(value, 0.0f, 1.0f);
 }
 
-static void MikuPan_SetAudioVolumeField(float* field, float value)
+static u_short MikuPan_AudioVolumeToOptionValue(float value)
 {
-    if (field == NULL)
-    {
-        return;
-    }
+    int scaled;
 
     value = MikuPan_ClampAudioVolume(value);
-    if (*field != value)
+    scaled = (int) (value * 0x1000 + 0.5f);
+    if (scaled < 0)
     {
-        *field = value;
-        MikuPan_AudioBumpRevision();
+        scaled = 0;
     }
+    else if (scaled > 0x1000)
+    {
+        scaled = 0x1000;
+    }
+
+    return (u_short) scaled;
 }
 
 float MikuPan_GetAudioMasterVolume(void)
 {
-    return mikupan_configuration.audio.master;
+    return MikuPan_ClampAudioVolume(mikupan_configuration.audio.master);
 }
 
 void MikuPan_SetAudioMasterVolume(float value)
 {
-    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.master, value);
-}
+    value = MikuPan_ClampAudioVolume(value);
+    mikupan_configuration.audio.master = value;
 
-float MikuPan_GetAudioAmbientBgmVolume(void)
-{
-    return mikupan_configuration.audio.ambient_bgm;
-}
-
-void MikuPan_SetAudioAmbientBgmVolume(float value)
-{
-    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.ambient_bgm, value);
-}
-
-float MikuPan_GetAudioBattleBgmVolume(void)
-{
-    return mikupan_configuration.audio.battle_bgm;
-}
-
-void MikuPan_SetAudioBattleBgmVolume(float value)
-{
-    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.battle_bgm, value);
-}
-
-float MikuPan_GetAudioAmbientSeVolume(void)
-{
-    return mikupan_configuration.audio.ambient_se;
-}
-
-void MikuPan_SetAudioAmbientSeVolume(float value)
-{
-    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.ambient_se, value);
-}
-
-float MikuPan_GetAudioBattleSeVolume(void)
-{
-    return mikupan_configuration.audio.battle_se;
-}
-
-void MikuPan_SetAudioBattleSeVolume(float value)
-{
-    MikuPan_SetAudioVolumeField(&mikupan_configuration.audio.battle_se, value);
+    /* Keep the RML slider on the original game volume path instead of the
+     * experimental split-bus mixer. The PS2 option uses bgm_vol for the ADPCM
+     * master and also feeds SeSetMVol for the SE master. */
+    opt_wrk.bgm_vol = MikuPan_AudioVolumeToOptionValue(value);
+    opt_wrk.se_vol = (u_short) ((value * 0x3fff) + 0.5f);
+    SeSetMVol(opt_wrk.bgm_vol);
 }
 
 int MikuPan_IsFullScreen(void)
@@ -1267,6 +1467,40 @@ int MikuPan_GetLightingMode(void)
 void MikuPan_SetLightingMode(int mode)
 {
     mikupan_configuration.renderer.lighting_mode = mode == 1 ? 1 : 0;
+}
+
+int MikuPan_GetDitherModeOptionCount(void)
+{
+    return 2;
+}
+
+int MikuPan_GetSelectedDitherModeOption(void)
+{
+    mikupan_configuration.renderer.dither_mode =
+        MikuPan_ClampInt(mikupan_configuration.renderer.dither_mode, 0, 1);
+    return mikupan_configuration.renderer.dither_mode;
+}
+
+const char* MikuPan_GetDitherModeOptionLabel(int index)
+{
+    static const char* labels[] = {"Native", "Soft"};
+    if (index < 0 || index >= MikuPan_GetDitherModeOptionCount())
+    {
+        return NULL;
+    }
+
+    return labels[index];
+}
+
+int MikuPan_SelectDitherModeOption(int index)
+{
+    if (index < 0 || index >= MikuPan_GetDitherModeOptionCount())
+    {
+        return 0;
+    }
+
+    mikupan_configuration.renderer.dither_mode = index;
+    return 1;
 }
 
 int MikuPan_GetThemeOptionCount(void)

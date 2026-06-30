@@ -3086,6 +3086,10 @@ void MikuPan_GPUSetInt(const char* name, int value)
     {
         g_uniforms.uPadFlags[1] = value;
     }
+    else if (strcmp(name, "uDitherSoftMode") == 0)
+    {
+        g_uniforms.uPadFlags[2] = value;
+    }
 
     (void) name;
     g_vertex_uniform_dirty = 1;

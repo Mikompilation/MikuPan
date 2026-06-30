@@ -124,10 +124,6 @@ enum MikuPanStepControlKind
     MIKUPAN_STEP_FONT_SCALE,
     MIKUPAN_STEP_CRT_FIELD,
     MIKUPAN_STEP_AUDIO_MASTER,
-    MIKUPAN_STEP_AUDIO_AMBIENT_BGM,
-    MIKUPAN_STEP_AUDIO_BATTLE_BGM,
-    MIKUPAN_STEP_AUDIO_AMBIENT_SE,
-    MIKUPAN_STEP_AUDIO_BATTLE_SE,
 };
 
 struct MikuPanStepControl
@@ -150,6 +146,7 @@ enum MikuPanChoicePickerKind
 {
     MIKUPAN_PICKER_NONE = 0,
     MIKUPAN_PICKER_WINDOW_MODE,
+    MIKUPAN_PICKER_WINDOW_SIZE,
     MIKUPAN_PICKER_RESOLUTION,
 };
 
@@ -157,6 +154,7 @@ enum MikuPanDisplayConfirmKind
 {
     MIKUPAN_DISPLAY_CONFIRM_NONE = 0,
     MIKUPAN_DISPLAY_CONFIRM_WINDOW_MODE,
+    MIKUPAN_DISPLAY_CONFIRM_WINDOW_SIZE,
     MIKUPAN_DISPLAY_CONFIRM_RESOLUTION,
 };
 
@@ -171,10 +169,15 @@ struct MikuPanRmlOptionsState
     Rml::Context* context = nullptr;
     std::vector<std::unique_ptr<Rml::EventListener>> listeners;
     Rml::ElementDocument* document = nullptr;
+    Rml::Element* window = nullptr;
     Rml::Element* window_mode_picker = nullptr;
     Rml::Element* window_mode_choice = nullptr;
     Rml::Element* window_mode_value = nullptr;
     Rml::Element* window_mode_pending_note = nullptr;
+    Rml::Element* window_size_picker = nullptr;
+    Rml::Element* window_size_choice = nullptr;
+    Rml::Element* window_size_value = nullptr;
+    Rml::Element* window_size_pending_note = nullptr;
     Rml::Element* resolution_picker = nullptr;
     Rml::Element* resolution_choice = nullptr;
     Rml::Element* resolution_value = nullptr;
@@ -189,6 +192,7 @@ struct MikuPanRmlOptionsState
     Rml::ElementFormControlSelect* msaa_select = nullptr;
     Rml::ElementFormControlSelect* shadow_resolution_select = nullptr;
     Rml::ElementFormControlSelect* lighting_mode_select = nullptr;
+    Rml::ElementFormControlSelect* dither_mode_select = nullptr;
     Rml::ElementFormControlSelect* theme_select = nullptr;
     Rml::ElementFormControlSelect* font_select = nullptr;
     Rml::ElementFormControlInput* vsync_input = nullptr;
@@ -209,10 +213,14 @@ struct MikuPanRmlOptionsState
     MikuPanDisplayConfirmKind display_confirm_kind = MIKUPAN_DISPLAY_CONFIRM_NONE;
     int pending_window_mode = 0;
     int original_window_mode = 0;
+    int pending_window_size_index = 0;
+    int original_window_size_index = 0;
     int pending_resolution_index = 0;
     int original_resolution_index = 0;
     bool window_mode_pending_dirty = false;
+    bool window_size_pending_dirty = false;
     bool resolution_pending_dirty = false;
+    uint64_t input_block_until_ticks = 0;
     bool resolution_confirm_visible = false;
     bool display_dirty_before_confirm = false;
     uint64_t resolution_confirm_deadline_ticks = 0;
@@ -336,7 +344,7 @@ static constexpr const char* kCategoryPageIds[] = {
 
 static constexpr const char* kCategoryFirstControlIds[] = {
     "window-mode-picker",
-    "gpu-backend-select",
+    "resolution-picker",
     "master-volume-stepper",
     "theme-select",
 };
@@ -364,6 +372,7 @@ void RequestOptionsExit(void);
 void UpdateDisplayPickers(void);
 void UpdateStepControlVisuals(void);
 void UpdateResolutionConfirmTimeout(void);
+bool IsOptionsInputBlocked(void);
 void OpenChoicePicker(MikuPanChoicePickerKind kind);
 void CloseChoicePicker(void);
 void ApplyChoicePicker(void);
@@ -372,6 +381,7 @@ void SelectCategory(int category);
 void RequestUiMoveSound(void);
 void UpdateControllerFocusVisual(void);
 void ClearControllerFocusVisual(void);
+void ClearControllerFocusReferences(void);
 
 void MarkSettingsDirty(void)
 {
@@ -384,6 +394,12 @@ void MarkSettingsDirty(void)
 void RequestUiMoveSound(void)
 {
     g_rml.ui_move_sound_requested = true;
+}
+
+bool IsOptionsInputBlocked(void)
+{
+    return g_rml.option_mode_open
+           && SDL_GetTicks() < g_rml.input_block_until_ticks;
 }
 
 void SetExitConfirmVisible(bool visible)
@@ -441,6 +457,12 @@ float StepRound(float value, float minimum, float step)
     return minimum + steps * step;
 }
 
+std::string WindowSizeLabel(int index)
+{
+    const char* label = MikuPan_GetWindowSizeOptionLabel(index);
+    return label != nullptr ? label : "Unavailable";
+}
+
 std::string ResolutionLabel(int index)
 {
     const char* label = MikuPan_GetRenderResolutionOptionLabel(index);
@@ -463,14 +485,6 @@ float GetStepValue(const MikuPanStepControl& control)
                        : 0.0f;
         case MIKUPAN_STEP_AUDIO_MASTER:
             return MikuPan_GetAudioMasterVolume();
-        case MIKUPAN_STEP_AUDIO_AMBIENT_BGM:
-            return MikuPan_GetAudioAmbientBgmVolume();
-        case MIKUPAN_STEP_AUDIO_BATTLE_BGM:
-            return MikuPan_GetAudioBattleBgmVolume();
-        case MIKUPAN_STEP_AUDIO_AMBIENT_SE:
-            return MikuPan_GetAudioAmbientSeVolume();
-        case MIKUPAN_STEP_AUDIO_BATTLE_SE:
-            return MikuPan_GetAudioBattleSeVolume();
         default:
             return 0.0f;
     }
@@ -502,18 +516,6 @@ void SetStepValue(const MikuPanStepControl& control, float value)
             break;
         case MIKUPAN_STEP_AUDIO_MASTER:
             MikuPan_SetAudioMasterVolume(clamped);
-            break;
-        case MIKUPAN_STEP_AUDIO_AMBIENT_BGM:
-            MikuPan_SetAudioAmbientBgmVolume(clamped);
-            break;
-        case MIKUPAN_STEP_AUDIO_BATTLE_BGM:
-            MikuPan_SetAudioBattleBgmVolume(clamped);
-            break;
-        case MIKUPAN_STEP_AUDIO_AMBIENT_SE:
-            MikuPan_SetAudioAmbientSeVolume(clamped);
-            break;
-        case MIKUPAN_STEP_AUDIO_BATTLE_SE:
-            MikuPan_SetAudioBattleSeVolume(clamped);
             break;
         default:
             break;
@@ -626,6 +628,7 @@ void AdjustStepControl(MikuPanStepControl& control, int direction)
 }
 
 bool ApplyPendingResolution(void);
+bool ApplyPendingWindowSize(void);
 bool ApplyPendingWindowMode(void);
 
 const char* WindowModeLabel(int index)
@@ -643,6 +646,8 @@ int GetPickerCount(MikuPanChoicePickerKind kind)
     {
         case MIKUPAN_PICKER_WINDOW_MODE:
             return kWindowModeCount;
+        case MIKUPAN_PICKER_WINDOW_SIZE:
+            return MikuPan_GetWindowSizeOptionCount();
         case MIKUPAN_PICKER_RESOLUTION:
             return MikuPan_GetRenderResolutionOptionCount();
         default:
@@ -656,6 +661,8 @@ int GetPickerPendingIndex(void)
     {
         case MIKUPAN_PICKER_WINDOW_MODE:
             return g_rml.pending_window_mode;
+        case MIKUPAN_PICKER_WINDOW_SIZE:
+            return g_rml.pending_window_size_index;
         case MIKUPAN_PICKER_RESOLUTION:
             return g_rml.pending_resolution_index;
         default:
@@ -669,6 +676,8 @@ int GetPickerAppliedIndex(MikuPanChoicePickerKind kind)
     {
         case MIKUPAN_PICKER_WINDOW_MODE:
             return MikuPan_GetWindowMode();
+        case MIKUPAN_PICKER_WINDOW_SIZE:
+            return MikuPan_GetSelectedWindowSizeOption();
         case MIKUPAN_PICKER_RESOLUTION:
             return MikuPan_GetSelectedRenderResolutionOption();
         default:
@@ -682,6 +691,8 @@ const char* GetPickerLabel(MikuPanChoicePickerKind kind, int index)
     {
         case MIKUPAN_PICKER_WINDOW_MODE:
             return WindowModeLabel(index);
+        case MIKUPAN_PICKER_WINDOW_SIZE:
+            return MikuPan_GetWindowSizeOptionLabel(index);
         case MIKUPAN_PICKER_RESOLUTION:
             return MikuPan_GetRenderResolutionOptionLabel(index);
         default:
@@ -708,6 +719,12 @@ void SetPickerPendingIndex(int index)
             g_rml.window_mode_pending_dirty =
                 g_rml.pending_window_mode != MikuPan_GetWindowMode();
             break;
+        case MIKUPAN_PICKER_WINDOW_SIZE:
+            g_rml.pending_window_size_index = index;
+            g_rml.window_size_pending_dirty =
+                g_rml.pending_window_size_index
+                != MikuPan_GetSelectedWindowSizeOption();
+            break;
         case MIKUPAN_PICKER_RESOLUTION:
             g_rml.pending_resolution_index = index;
             g_rml.resolution_pending_dirty =
@@ -733,10 +750,16 @@ void UpdateChoicePickerVisual(void)
                                  std::max(count - 1, 0));
     SetPickerPendingIndex(pending);
 
-    SetElementText(g_rml.choice_picker_title,
-                   g_rml.active_picker == MIKUPAN_PICKER_WINDOW_MODE
-                       ? "DISPLAY MODE"
-                       : "RESOLUTION");
+    const char* picker_title = "RENDER SCALE";
+    if (g_rml.active_picker == MIKUPAN_PICKER_WINDOW_MODE)
+    {
+        picker_title = "DISPLAY MODE";
+    }
+    else if (g_rml.active_picker == MIKUPAN_PICKER_WINDOW_SIZE)
+    {
+        picker_title = "WINDOW SIZE";
+    }
+    SetElementText(g_rml.choice_picker_title, picker_title);
 
     if (count <= 0)
     {
@@ -805,6 +828,41 @@ void UpdateWindowModePicker(void)
                        : "");
 }
 
+void UpdateWindowSizePicker(void)
+{
+    const int count = MikuPan_GetWindowSizeOptionCount();
+    if (count <= 0)
+    {
+        g_rml.pending_window_size_index = 0;
+        g_rml.window_size_pending_dirty = false;
+        SetElementText(g_rml.window_size_value, "Unavailable");
+        SetElementText(g_rml.window_size_choice, "No window sizes");
+        SetElementText(g_rml.window_size_pending_note, "");
+        return;
+    }
+
+    const int selected = ClampInt(MikuPan_GetSelectedWindowSizeOption(),
+                                  0,
+                                  count - 1);
+    if (!g_rml.window_size_pending_dirty
+        && g_rml.active_picker != MIKUPAN_PICKER_WINDOW_SIZE
+        && !g_rml.resolution_confirm_visible)
+    {
+        g_rml.pending_window_size_index = selected;
+    }
+    g_rml.pending_window_size_index = ClampInt(g_rml.pending_window_size_index,
+                                               0,
+                                               count - 1);
+
+    SetElementText(g_rml.window_size_value, WindowSizeLabel(selected));
+    SetElementText(g_rml.window_size_choice,
+                   WindowSizeLabel(g_rml.pending_window_size_index));
+    SetElementText(g_rml.window_size_pending_note,
+                   g_rml.pending_window_size_index != selected
+                       ? "Press confirm to apply"
+                       : "");
+}
+
 void UpdateResolutionPicker(void)
 {
     const int count = MikuPan_GetRenderResolutionOptionCount();
@@ -813,7 +871,7 @@ void UpdateResolutionPicker(void)
         g_rml.pending_resolution_index = 0;
         g_rml.resolution_pending_dirty = false;
         SetElementText(g_rml.resolution_value, "Unavailable");
-        SetElementText(g_rml.resolution_choice, "No display modes");
+        SetElementText(g_rml.resolution_choice, "No render scales");
         SetElementText(g_rml.resolution_pending_note, "");
         return;
     }
@@ -843,6 +901,7 @@ void UpdateResolutionPicker(void)
 void UpdateDisplayPickers(void)
 {
     UpdateWindowModePicker();
+    UpdateWindowSizePicker();
     UpdateResolutionPicker();
     UpdateChoicePickerVisual();
 }
@@ -863,6 +922,10 @@ void SetChoicePickerVisible(bool visible)
         else if (g_rml.active_picker == MIKUPAN_PICKER_WINDOW_MODE)
         {
             FocusElementById("window-mode-picker");
+        }
+        else if (g_rml.active_picker == MIKUPAN_PICKER_WINDOW_SIZE)
+        {
+            FocusElementById("window-size-picker");
         }
         else if (g_rml.active_picker == MIKUPAN_PICKER_RESOLUTION)
         {
@@ -885,6 +948,16 @@ void OpenChoicePicker(MikuPanChoicePickerKind kind)
                                              0,
                                              kWindowModeCount - 1);
         g_rml.window_mode_pending_dirty = false;
+    }
+    else if (kind == MIKUPAN_PICKER_WINDOW_SIZE)
+    {
+        const int count = MikuPan_GetWindowSizeOptionCount();
+        g_rml.pending_window_size_index =
+            count > 0 ? ClampInt(MikuPan_GetSelectedWindowSizeOption(),
+                                 0,
+                                 count - 1)
+                      : 0;
+        g_rml.window_size_pending_dirty = false;
     }
     else if (kind == MIKUPAN_PICKER_RESOLUTION)
     {
@@ -914,6 +987,17 @@ void CloseChoicePicker(void)
                                              kWindowModeCount - 1);
         g_rml.window_mode_pending_dirty = false;
         FocusElementById("window-mode-picker");
+    }
+    else if (old_picker == MIKUPAN_PICKER_WINDOW_SIZE)
+    {
+        const int count = MikuPan_GetWindowSizeOptionCount();
+        g_rml.pending_window_size_index =
+            count > 0 ? ClampInt(MikuPan_GetSelectedWindowSizeOption(),
+                                 0,
+                                 count - 1)
+                      : 0;
+        g_rml.window_size_pending_dirty = false;
+        FocusElementById("window-size-picker");
     }
     else if (old_picker == MIKUPAN_PICKER_RESOLUTION)
     {
@@ -1054,10 +1138,16 @@ void SetResolutionConfirmVisible(bool visible,
     if (visible)
     {
         g_rml.resolution_confirm_deadline_ticks = SDL_GetTicks() + 15000u;
-        SetElementText(g_rml.resolution_confirm_title,
-                       kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_MODE
-                           ? "Keep this display mode?"
-                           : "Keep this resolution?");
+        const char* title = "Keep this render scale?";
+        if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_MODE)
+        {
+            title = "Keep this display mode?";
+        }
+        else if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_SIZE)
+        {
+            title = "Keep this window size?";
+        }
+        SetElementText(g_rml.resolution_confirm_title, title);
     }
     else
     {
@@ -1066,10 +1156,16 @@ void SetResolutionConfirmVisible(bool visible,
 
     if (g_rml.visible)
     {
-        FocusElementById(visible ? "resolution-keep-button"
-                                 : (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_MODE
-                                        ? "window-mode-picker"
-                                        : "resolution-picker"));
+        const char* restore_focus = "resolution-picker";
+        if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_MODE)
+        {
+            restore_focus = "window-mode-picker";
+        }
+        else if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_SIZE)
+        {
+            restore_focus = "window-size-picker";
+        }
+        FocusElementById(visible ? "resolution-keep-button" : restore_focus);
     }
 }
 
@@ -1081,6 +1177,11 @@ void KeepResolutionChange(void)
     {
         g_rml.original_window_mode = MikuPan_GetWindowMode();
         g_rml.window_mode_pending_dirty = false;
+    }
+    else if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_SIZE)
+    {
+        g_rml.original_window_size_index = MikuPan_GetSelectedWindowSizeOption();
+        g_rml.window_size_pending_dirty = false;
     }
     else if (kind == MIKUPAN_DISPLAY_CONFIRM_RESOLUTION)
     {
@@ -1101,6 +1202,20 @@ void RevertResolutionChange(void)
         MikuPan_SetWindowMode(g_rml.original_window_mode);
         g_rml.pending_window_mode = g_rml.original_window_mode;
         g_rml.window_mode_pending_dirty = false;
+    }
+    else if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_SIZE)
+    {
+        const int count = MikuPan_GetWindowSizeOptionCount();
+        if (count > 0)
+        {
+            g_rml.original_window_size_index = ClampInt(
+                g_rml.original_window_size_index,
+                0,
+                count - 1);
+            MikuPan_SelectWindowSizeOption(g_rml.original_window_size_index);
+            g_rml.pending_window_size_index = g_rml.original_window_size_index;
+        }
+        g_rml.window_size_pending_dirty = false;
     }
     else if (kind == MIKUPAN_DISPLAY_CONFIRM_RESOLUTION)
     {
@@ -1166,6 +1281,40 @@ bool ApplyPendingWindowMode(void)
     return true;
 }
 
+bool ApplyPendingWindowSize(void)
+{
+    const int count = MikuPan_GetWindowSizeOptionCount();
+    if (count <= 0)
+    {
+        return true;
+    }
+
+    g_rml.pending_window_size_index = ClampInt(g_rml.pending_window_size_index,
+                                               0,
+                                               count - 1);
+    const int selected = MikuPan_GetSelectedWindowSizeOption();
+    if (g_rml.pending_window_size_index == selected)
+    {
+        g_rml.window_size_pending_dirty = false;
+        UpdateDisplayPickers();
+        return true;
+    }
+
+    g_rml.original_window_size_index = selected;
+    g_rml.display_dirty_before_confirm = g_rml.has_unsaved_changes;
+    if (!MikuPan_SelectWindowSizeOption(g_rml.pending_window_size_index))
+    {
+        UpdateDisplayPickers();
+        return false;
+    }
+
+    MarkSettingsDirty();
+    g_rml.window_size_pending_dirty = false;
+    UpdateDisplayPickers();
+    SetResolutionConfirmVisible(true, MIKUPAN_DISPLAY_CONFIRM_WINDOW_SIZE);
+    return true;
+}
+
 bool ApplyPendingResolution(void)
 {
     const int count = MikuPan_GetRenderResolutionOptionCount();
@@ -1213,6 +1362,10 @@ void ApplyChoicePicker(void)
     if (kind == MIKUPAN_PICKER_WINDOW_MODE)
     {
         (void) ApplyPendingWindowMode();
+    }
+    else if (kind == MIKUPAN_PICKER_WINDOW_SIZE)
+    {
+        (void) ApplyPendingWindowSize();
     }
     else if (kind == MIKUPAN_PICKER_RESOLUTION)
     {
@@ -1289,18 +1442,26 @@ Rml::Element* FindSettingRowAncestor(Rml::Element* element)
     return nullptr;
 }
 
+void ClearControllerFocusReferences(void)
+{
+    g_rml.controller_focus_element = nullptr;
+    g_rml.controller_focus_row = nullptr;
+}
+
 void ClearControllerFocusVisual(void)
 {
-    if (g_rml.controller_focus_element != nullptr)
+    Rml::Element* focus_element = g_rml.controller_focus_element;
+    Rml::Element* focus_row = g_rml.controller_focus_row;
+    ClearControllerFocusReferences();
+
+    if (focus_element != nullptr)
     {
-        g_rml.controller_focus_element->SetClass("controller-focus", false);
-        g_rml.controller_focus_element = nullptr;
+        focus_element->SetClass("controller-focus", false);
     }
 
-    if (g_rml.controller_focus_row != nullptr)
+    if (focus_row != nullptr && focus_row != focus_element)
     {
-        g_rml.controller_focus_row->SetClass("controller-focus", false);
-        g_rml.controller_focus_row = nullptr;
+        focus_row->SetClass("controller-focus", false);
     }
 }
 
@@ -1446,6 +1607,7 @@ bool AnySelectOpen(void)
         g_rml.msaa_select,
         g_rml.shadow_resolution_select,
         g_rml.lighting_mode_select,
+        g_rml.dither_mode_select,
         g_rml.theme_select,
         g_rml.font_select,
     };
@@ -1568,6 +1730,12 @@ bool ActivateFocusedControl(void)
         return true;
     }
 
+    if (focus == g_rml.window_size_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_WINDOW_SIZE);
+        return true;
+    }
+
     if (focus == g_rml.resolution_picker)
     {
         OpenChoicePicker(MIKUPAN_PICKER_RESOLUTION);
@@ -1668,6 +1836,7 @@ void UpdateSelectArrows(void)
     SetSelectArrow(g_rml.msaa_select);
     SetSelectArrow(g_rml.shadow_resolution_select);
     SetSelectArrow(g_rml.lighting_mode_select);
+    SetSelectArrow(g_rml.dither_mode_select);
     SetSelectArrow(g_rml.theme_select);
     SetSelectArrow(g_rml.font_select);
 }
@@ -1799,6 +1968,11 @@ void SyncRmlSettingsValues(void)
     {
         g_rml.lighting_mode_select->SetSelection(MikuPan_GetLightingMode());
     }
+    if (g_rml.dither_mode_select != nullptr)
+    {
+        g_rml.dither_mode_select->SetSelection(
+            MikuPan_GetSelectedDitherModeOption());
+    }
     if (g_rml.theme_select != nullptr)
     {
         g_rml.theme_select->SetSelection(MikuPan_GetSelectedThemeOption());
@@ -1865,6 +2039,17 @@ bool LoadOptionsDocument(void)
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>(
                     []() { OpenChoicePicker(MIKUPAN_PICKER_WINDOW_MODE); }));
+
+    g_rml.window_size_picker = GetElement("window-size-picker");
+    g_rml.window_size_choice = GetElement("window-size-choice");
+    g_rml.window_size_value = GetElement("window-size-value");
+    g_rml.window_size_pending_note = GetElement("window-size-pending-note");
+    g_rml.pending_window_size_index = MikuPan_GetSelectedWindowSizeOption();
+    g_rml.original_window_size_index = g_rml.pending_window_size_index;
+    AddListener(g_rml.window_size_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenChoicePicker(MIKUPAN_PICKER_WINDOW_SIZE); }));
 
     g_rml.resolution_picker = GetElement("resolution-picker");
     g_rml.resolution_choice = GetElement("resolution-choice");
@@ -1938,54 +2123,17 @@ bool LoadOptionsDocument(void)
                          MikuPan_GetLightingMode(),
                          [](int index) { MikuPan_SetLightingMode(index); });
 
+    g_rml.dither_mode_select = GetSelect("dither-mode-select");
+    PopulateIndexedSelect(g_rml.dither_mode_select,
+                          MikuPan_GetDitherModeOptionCount(),
+                          MikuPan_GetDitherModeOptionLabel,
+                          MikuPan_GetSelectedDitherModeOption(),
+                          [](int index) { MikuPan_SelectDitherModeOption(index); });
+
     AddStepControl("master-volume-stepper",
                    "master-volume-bars",
                    "master-volume-value",
                    MIKUPAN_STEP_AUDIO_MASTER,
-                   -1,
-                   0.0f,
-                   1.0f,
-                   0.05f,
-                   0,
-                   false,
-                   true);
-    AddStepControl("ambient-bgm-volume-stepper",
-                   "ambient-bgm-volume-bars",
-                   "ambient-bgm-volume-value",
-                   MIKUPAN_STEP_AUDIO_AMBIENT_BGM,
-                   -1,
-                   0.0f,
-                   1.0f,
-                   0.05f,
-                   0,
-                   false,
-                   true);
-    AddStepControl("battle-bgm-volume-stepper",
-                   "battle-bgm-volume-bars",
-                   "battle-bgm-volume-value",
-                   MIKUPAN_STEP_AUDIO_BATTLE_BGM,
-                   -1,
-                   0.0f,
-                   1.0f,
-                   0.05f,
-                   0,
-                   false,
-                   true);
-    AddStepControl("ambient-se-volume-stepper",
-                   "ambient-se-volume-bars",
-                   "ambient-se-volume-value",
-                   MIKUPAN_STEP_AUDIO_AMBIENT_SE,
-                   -1,
-                   0.0f,
-                   1.0f,
-                   0.05f,
-                   0,
-                   false,
-                   true);
-    AddStepControl("battle-se-volume-stepper",
-                   "battle-se-volume-bars",
-                   "battle-se-volume-value",
-                   MIKUPAN_STEP_AUDIO_BATTLE_SE,
                    -1,
                    0.0f,
                    1.0f,
@@ -2114,6 +2262,7 @@ bool LoadOptionsDocument(void)
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>(
                     []() { SetExitConfirmVisible(false); }));
+    g_rml.window = GetElement("window");
     g_rml.save_status = GetElement("save-status");
     g_rml.panel_title = GetElement("panel-title");
     g_rml.confirm_save_modal = GetElement("confirm-save-modal");
@@ -2199,15 +2348,31 @@ void MikuPan_RmlOptionsStartFrame(void)
     }
 }
 
+void MikuPan_RmlOptionsPrepareShutdown(void)
+{
+    // The OS window-close path may enter Rml::Shutdown() while the options
+    // document is still open. Cached Rml::Element pointers become invalid as
+    // the document tree is destroyed, so only drop our references here.
+    //
+    // Keep g_rml.listeners alive until after Rml::Shutdown(). RmlUi calls
+    // EventListener::OnDetach() while destroying elements, so deleting our
+    // listener objects before that point leaves dangling listener pointers in
+    // RmlUi's EventDispatcher.
+    ClearControllerFocusReferences();
+    g_rml.visible = false;
+    g_rml.option_mode_open = false;
+    g_rml.option_exit_requested = false;
+    g_rml.active_picker = MIKUPAN_PICKER_NONE;
+    g_rml.resolution_confirm_visible = false;
+}
+
 void MikuPan_RmlOptionsShutdown(void)
 {
-    ClearControllerFocusVisual();
+    ClearControllerFocusReferences();
     g_rml = MikuPanRmlOptionsState();
 }
 
-extern "C" {
-
-void MikuPan_RmlOptionsOpen(void)
+static void MikuPan_RmlOptionsOpenInternal(bool in_game)
 {
     if (!g_rml.initialized || g_rml.document == nullptr)
     {
@@ -2215,21 +2380,29 @@ void MikuPan_RmlOptionsOpen(void)
     }
 
     g_rml.option_mode_open = true;
+    g_rml.input_block_until_ticks = SDL_GetTicks() + 250u;
     g_rml.option_exit_requested = false;
     g_rml.has_unsaved_changes = false;
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
     g_rml.control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
     g_rml.window_mode_pending_dirty = false;
+    g_rml.window_size_pending_dirty = false;
     g_rml.resolution_pending_dirty = false;
     g_rml.resolution_confirm_visible = false;
     g_rml.selected_category = 0;
     g_rml.pending_window_mode = MikuPan_GetWindowMode();
     g_rml.original_window_mode = g_rml.pending_window_mode;
+    g_rml.pending_window_size_index = MikuPan_GetSelectedWindowSizeOption();
+    g_rml.original_window_size_index = g_rml.pending_window_size_index;
     g_rml.pending_resolution_index = MikuPan_GetSelectedRenderResolutionOption();
     g_rml.original_resolution_index = g_rml.pending_resolution_index;
     SetExitConfirmVisible(false);
     SetChoicePickerVisible(false);
     SetResolutionConfirmVisible(false);
+    if (g_rml.window != nullptr)
+    {
+        g_rml.window->SetClass("ingame", in_game);
+    }
     SelectCategory(0);
     g_rml.control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
     g_rml.visible = true;
@@ -2237,6 +2410,8 @@ void MikuPan_RmlOptionsOpen(void)
     g_rml.document->Show(Rml::ModalFlag::None, Rml::FocusFlag::Auto);
     EnterSidebarScope();
 }
+
+extern "C" {
 
 void MikuPan_RmlOptionsClose(void)
 {
@@ -2251,13 +2426,28 @@ void MikuPan_RmlOptionsClose(void)
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
     g_rml.control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
     g_rml.window_mode_pending_dirty = false;
+    g_rml.window_size_pending_dirty = false;
     g_rml.resolution_pending_dirty = false;
     SetExitConfirmVisible(false);
     SetChoicePickerVisible(false);
     SetResolutionConfirmVisible(false);
     ClearControllerFocusVisual();
     g_rml.visible = false;
+    if (g_rml.window != nullptr)
+    {
+        g_rml.window->SetClass("ingame", false);
+    }
     g_rml.document->Hide();
+}
+
+void MikuPan_RmlOptionsOpen(void)
+{
+    MikuPan_RmlOptionsOpenInternal(false);
+}
+
+void MikuPan_RmlOptionsOpenInGame(void)
+{
+    MikuPan_RmlOptionsOpenInternal(true);
 }
 
 int MikuPan_RmlOptionsConsumeExitRequest(void)
@@ -2282,6 +2472,10 @@ void MikuPan_RmlOptionsRequestExit(void)
 
 void MikuPan_RmlOptionsHandleCancel(void)
 {
+    if (IsOptionsInputBlocked())
+    {
+        return;
+    }
     HandleOptionsCancel();
 }
 
@@ -2300,16 +2494,28 @@ int MikuPan_RmlOptionsAnySelectOpen(void)
 
 int MikuPan_RmlOptionsActivateFocusedControl(void)
 {
+    if (IsOptionsInputBlocked())
+    {
+        return 1;
+    }
     return ActivateFocusedControl() ? 1 : 0;
 }
 
 int MikuPan_RmlOptionsHandleHorizontalInput(int direction)
 {
+    if (IsOptionsInputBlocked())
+    {
+        return 1;
+    }
     return HandleHorizontalInput(direction) ? 1 : 0;
 }
 
 int MikuPan_RmlOptionsHandleVerticalInput(int direction)
 {
+    if (IsOptionsInputBlocked())
+    {
+        return 1;
+    }
     return HandleVerticalInput(direction) ? 1 : 0;
 }
 
@@ -2317,6 +2523,11 @@ void MikuPan_RmlOptionsEnsureFocusedControlVisible(void)
 {
     UpdateControllerFocusVisual();
     ScrollFocusedContentRowIntoView();
+}
+
+int MikuPan_RmlOptionsInputBlocked(void)
+{
+    return IsOptionsInputBlocked() ? 1 : 0;
 }
 
 int MikuPan_RmlOptionsConsumeMoveSoundRequest(void)

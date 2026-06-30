@@ -71,13 +71,11 @@ typedef struct
     int height;
 } MikuPan_Resolution;
 
-#define MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW (-1)
-
 typedef struct
 {
     MikuPan_Resolution window;
-    /* Use MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW for both render dimensions to
-     * follow the current window size. */
+    /* Internal render resolution. This is intentionally independent from the
+     * SDL window size so render scale and display size do not fight each other. */
     MikuPan_Resolution render;
     int is_fullscreen;   /* legacy; kept in sync with window_mode != windowed */
     int window_mode;     /* 0 = windowed, 1 = fullscreen, 2 = borderless */
@@ -87,6 +85,7 @@ typedef struct
     int shadow_resolution;
     float brightness;
     float gamma;
+    int dither_mode; /* 0=native, 1=soft */
     /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
      * Empty = let SDL pick. The device is created once, so a change only
      * applies on the next launch. */
@@ -132,10 +131,6 @@ typedef struct
 typedef struct
 {
     float master;
-    float ambient_bgm;
-    float battle_bgm;
-    float ambient_se;
-    float battle_se;
 } MikuPan_ConfigAudio;
 
 typedef struct

@@ -26,6 +26,7 @@ MikuPan_Config mikupan_configuration = {
         256,
         1.0f,
         1.0f,
+        0,
         "",
         0
     },
@@ -49,11 +50,7 @@ MikuPan_Config mikupan_configuration = {
         0.08f
     },
     {
-        1.0f,
-        1.0f,
-        1.0f,
-        1.0f,
-        1.0f
+        0.8f
     },
     2,
     1,
@@ -95,13 +92,6 @@ static int MikuPan_ConfigClampIndex(int value, int count, int fallback)
     return value;
 }
 
-static int MikuPan_ConfigIsFitWindowResolution(
-    const MikuPan_Resolution* resolution)
-{
-    return resolution->width == MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW
-           && resolution->height == MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW;
-}
-
 static void MikuPan_ConfigurationValidateRenderer(
     MikuPan_ConfigRenderer* renderer)
 {
@@ -115,14 +105,12 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->window.height = MIKUPAN_CONFIG_DEFAULT_WINDOW_HEIGHT;
     }
 
-    if (!MikuPan_ConfigIsFitWindowResolution(&renderer->render)
-        && renderer->render.width <= 0)
+    if (renderer->render.width <= 0)
     {
         renderer->render.width = PS2_RESOLUTION_X_INT;
     }
 
-    if (!MikuPan_ConfigIsFitWindowResolution(&renderer->render)
-        && renderer->render.height <= 0)
+    if (renderer->render.height <= 0)
     {
         renderer->render.height = PS2_RESOLUTION_Y_INT;
     }
@@ -169,6 +157,9 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->gamma = 1.0f;
     }
 
+    /* Older test builds used 1=Linear and 2=Soft. Both now collapse to Soft. */
+    renderer->dither_mode = renderer->dither_mode <= 0 ? 0 : 1;
+
     renderer->gpu_debug = renderer->gpu_debug ? 1 : 0;
 }
 
@@ -200,10 +191,6 @@ static void MikuPan_ConfigurationValidateCrt(MikuPan_ConfigCrt* crt)
 static void MikuPan_ConfigurationValidateAudio(MikuPan_ConfigAudio* audio)
 {
     audio->master = MikuPan_ClampFloat(audio->master, 0.0f, 1.0f);
-    audio->ambient_bgm = MikuPan_ClampFloat(audio->ambient_bgm, 0.0f, 1.0f);
-    audio->battle_bgm = MikuPan_ClampFloat(audio->battle_bgm, 0.0f, 1.0f);
-    audio->ambient_se = MikuPan_ClampFloat(audio->ambient_se, 0.0f, 1.0f);
-    audio->battle_se = MikuPan_ClampFloat(audio->battle_se, 0.0f, 1.0f);
 }
 
 static void MikuPan_ConfigurationValidateThirdPersonCamera(

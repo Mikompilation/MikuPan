@@ -6,13 +6,6 @@
 #include "mikupan/mikupan_file.h"
 #include "mikupan/mikupan_controller.h"
 
-// These engine modules were converted from C to C++ by main's port, so their
-// functions now have C++ linkage. Reference them with normal C++ linkage (no
-// extern "C") so the symbol names match the now-mangled definitions. Headers
-// that still expose a C ABI (e.g. mikupan_gpu.h) carry their own extern "C"
-// guards internally.
-int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max, unsigned short pitch, unsigned char menu);
-
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan/rendering/mikupan_pipeline.h"
 #include "mikupan/rendering/mikupan_profiler.h"
@@ -31,6 +24,9 @@ int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max, unsign
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max,
+               unsigned short pitch, unsigned char menu);
 
 namespace
 {
@@ -927,6 +923,11 @@ void PlayRmlCursorSoundIfMoved(Rml::Element* previous_focus)
 
 void DispatchPadAction(MikuPanRmlPadAction action)
 {
+    if (MikuPan_RmlOptionsInputBlocked())
+    {
+        return;
+    }
+
     switch (action)
     {
         case MIKUPAN_RML_PAD_UP:
@@ -1181,6 +1182,7 @@ void MikuPan_RmlUiInit(SDL_Window* window)
     if (g_rml.context == nullptr || !LoadFont()
         || !MikuPan_RmlOptionsInit(g_rml.context))
     {
+        MikuPan_RmlOptionsPrepareShutdown();
         Rml::Shutdown();
         MikuPan_RmlOptionsShutdown();
         g_rml = MikuPanRmlState();
@@ -1286,6 +1288,10 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
             const Rml::Input::KeyIdentifier key = ConvertKey(event->key.key);
             if (MikuPan_RmlOptionsIsOpen())
             {
+                if (MikuPan_RmlOptionsInputBlocked())
+                {
+                    break;
+                }
                 if (key == Rml::Input::KI_UP
                     && MikuPan_RmlOptionsHandleVerticalInput(-1))
                 {
@@ -1344,6 +1350,7 @@ void MikuPan_RmlUiShutdown(void)
         return;
     }
 
+    MikuPan_RmlOptionsPrepareShutdown();
     Rml::Shutdown();
     MikuPan_RmlOptionsShutdown();
     g_rml = MikuPanRmlState();

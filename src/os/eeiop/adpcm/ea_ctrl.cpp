@@ -21,14 +21,12 @@
 #include "os/eeiop/adpcm/ea_btlmode.h"
 #include "os/eeiop/eeiop.h"
 #include "iop/adpcm/iopadpcm.h"
-#include "mikupan/mikupan_audio_bus.h"
 #include <string.h>
 
 ADPCM_MAP adpcm_map = {0};
 static u_char fout_flg;
 
 static u_char UpdateAdpcmMenuFade();
-static void MikuPan_UpdateAdpcmMasterVolume(u_char force);
 
 #define SPU2_MAX_VOL 0x3fff
 
@@ -55,7 +53,7 @@ void AdpcmMapCtrlInit()
     adpcm_map.deg = 128;
     // scale volume to SPU2 range of 0...0x3fff.
     // volume is stored in range of 0...0x1000.
-    MikuPan_UpdateAdpcmMasterVolume(1);
+    SetIopCmdSm(35, opt_wrk.bgm_vol * SPU2_MAX_VOL / 0x1000, 0, 0);
 }
 
 void AdpcmMapUse()
@@ -150,42 +148,22 @@ void AdpcmMapCtrl()
         }
     }
 
-    MikuPan_UpdateAdpcmMasterVolume(UpdateAdpcmMenuFade());
-}
-
-static void MikuPan_UpdateAdpcmMasterVolume(u_char force)
-{
-    static u_int last_revision = 0;
-    static int last_mode = -1;
-    static int last_master_volume = -1;
-    u_int vol;
-    int scaled_vol;
-    const u_int revision = MikuPan_AudioGetRevision();
-
-    vol = opt_wrk.bgm_vol * 0x3fff / 0x1000;
-
-    if (adpcm_map.m_flg == 1)
+    if (UpdateAdpcmMenuFade() && adpcm_map.m_flg == 1)
     {
-        vol = (vol * adpcm_map.mvol) / 0xfff;
+        u_int vol;
+
+        vol = ((opt_wrk.bgm_vol * SPU2_MAX_VOL / 0x1000) * adpcm_map.mvol) / 0xfff & 0xffff;
+
+        if (SPU2_MAX_VOL < vol)
+        {
+            vol = SPU2_MAX_VOL;
+        }
+
+        SetIopCmdSm(35, vol, 0, 0);
     }
-
-    if (vol > 0x3fff)
+    else if (adpcm_map.m_flg == 2)
     {
-        vol = 0x3fff;
-    }
-
-    scaled_vol = MikuPan_AudioScaleAdpcmMasterVolume(
-        (u_short) vol, adpcm_map.mode, 0x3fff);
-
-    if (force
-        || revision != last_revision
-        || adpcm_map.mode != last_mode
-        || scaled_vol != last_master_volume)
-    {
-        SetIopCmdSm(35, scaled_vol, 0, 0);
-        last_revision = revision;
-        last_mode = adpcm_map.mode;
-        last_master_volume = scaled_vol;
+        SetIopCmdSm(35, opt_wrk.bgm_vol * SPU2_MAX_VOL / 0x1000, 0, 0);
     }
 }
 
