@@ -30,6 +30,10 @@ body {
     border: 1dp #8b7b61;
 }
 
+#window.ingame {
+    margin-top: -126dp;
+}
+
 #side {
     display: flex;
     flex-direction: column;
@@ -583,18 +587,15 @@ button.controller-focus {
     nav-left: #cat-display;
 }
 
-#master-volume-stepper,
-#ambient-bgm-volume-stepper,
-#battle-bgm-volume-stepper,
-#ambient-se-volume-stepper,
-#battle-se-volume-stepper {
+#master-volume-stepper {
     nav-left: #cat-audio;
 }
 
 #gpu-backend-select,
 #msaa-select,
 #shadow-resolution-select,
-#lighting-mode-select {
+#lighting-mode-select,
+#dither-mode-select {
     nav-left: #cat-graphics;
 }
 

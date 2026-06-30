@@ -263,6 +263,11 @@ void MikuPan_RenderScreenCopyTriangles3DGSAlpha(sceGsTex0 *tex,
                                                 int vertex_count,
                                                 int depth_mode,
                                                 unsigned long gs_alpha);
+void MikuPan_RenderScreenCopyTriangles3DDirectUvGSAlpha(sceGsTex0 *tex,
+                                                        float *buffer,
+                                                        int vertex_count,
+                                                        int depth_mode,
+                                                        unsigned long gs_alpha);
 void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex,
                                                    float *buffer,
                                                    int vertex_count,

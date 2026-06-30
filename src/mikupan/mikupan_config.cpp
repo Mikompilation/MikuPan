@@ -5,8 +5,8 @@
 #define MIKUPAN_CONFIG_FONT_COUNT 2
 #define MIKUPAN_CONFIG_DEFAULT_WINDOW_WIDTH 1280
 #define MIKUPAN_CONFIG_DEFAULT_WINDOW_HEIGHT 720
-#define MIKUPAN_CONFIG_MSAA_COUNT 6
-#define MIKUPAN_CONFIG_DEFAULT_MSAA_INDEX 4
+#define MIKUPAN_CONFIG_MSAA_COUNT 4
+#define MIKUPAN_CONFIG_DEFAULT_MSAA_INDEX 3
 
 MikuPan_Config mikupan_configuration = {
     {
@@ -18,6 +18,8 @@ MikuPan_Config mikupan_configuration = {
             640,
             448
         },
+        MIKUPAN_RENDER_RESOLUTION_FIXED,
+        100,
         0,
         0,
         1,
@@ -26,6 +28,7 @@ MikuPan_Config mikupan_configuration = {
         256,
         1.0f,
         1.0f,
+        0,
         "",
         0
     },
@@ -49,11 +52,7 @@ MikuPan_Config mikupan_configuration = {
         0.08f
     },
     {
-        1.0f,
-        1.0f,
-        1.0f,
-        1.0f,
-        1.0f
+        0.8f
     },
     2,
     1,
@@ -95,13 +94,6 @@ static int MikuPan_ConfigClampIndex(int value, int count, int fallback)
     return value;
 }
 
-static int MikuPan_ConfigIsFitWindowResolution(
-    const MikuPan_Resolution* resolution)
-{
-    return resolution->width == MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW
-           && resolution->height == MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW;
-}
-
 static void MikuPan_ConfigurationValidateRenderer(
     MikuPan_ConfigRenderer* renderer)
 {
@@ -115,26 +107,42 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->window.height = MIKUPAN_CONFIG_DEFAULT_WINDOW_HEIGHT;
     }
 
-    if (!MikuPan_ConfigIsFitWindowResolution(&renderer->render)
-        && renderer->render.width <= 0)
+    if (renderer->render.width <= 0)
     {
         renderer->render.width = PS2_RESOLUTION_X_INT;
     }
 
-    if (!MikuPan_ConfigIsFitWindowResolution(&renderer->render)
-        && renderer->render.height <= 0)
+    if (renderer->render.height <= 0)
     {
         renderer->render.height = PS2_RESOLUTION_Y_INT;
     }
 
+    if (renderer->render_mode < MIKUPAN_RENDER_RESOLUTION_FIXED
+        || renderer->render_mode > MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+    {
+        renderer->render_mode = MIKUPAN_RENDER_RESOLUTION_FIXED;
+    }
+
+    renderer->render_scale_percent =
+        MikuPan_ClampInt(renderer->render_scale_percent, 25, 200);
+
+
     if (renderer->window_mode == MIKUPAN_WINDOW_WINDOWED
         && renderer->is_fullscreen)
     {
-        renderer->window_mode = MIKUPAN_WINDOW_FULLSCREEN;
+        renderer->window_mode = MIKUPAN_WINDOW_BORDERLESS;
     }
 
-    if (renderer->window_mode < MIKUPAN_WINDOW_WINDOWED
-        || renderer->window_mode > MIKUPAN_WINDOW_BORDERLESS)
+    /* Exclusive fullscreen was removed from the options. 
+    * Keep accepting the old config value, but migrate it
+    * to borderless fullscreen. */
+    if (renderer->window_mode == MIKUPAN_WINDOW_FULLSCREEN)
+    {
+        renderer->window_mode = MIKUPAN_WINDOW_BORDERLESS;
+    }
+
+    if (renderer->window_mode != MIKUPAN_WINDOW_WINDOWED
+        && renderer->window_mode != MIKUPAN_WINDOW_BORDERLESS)
     {
         renderer->window_mode = MIKUPAN_WINDOW_WINDOWED;
     }
@@ -169,6 +177,9 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->gamma = 1.0f;
     }
 
+    /* Older test builds used 1=Linear and 2=Soft. Both now collapse to Soft. */
+    renderer->dither_mode = renderer->dither_mode <= 0 ? 0 : 1;
+
     renderer->gpu_debug = renderer->gpu_debug ? 1 : 0;
 }
 
@@ -200,10 +211,6 @@ static void MikuPan_ConfigurationValidateCrt(MikuPan_ConfigCrt* crt)
 static void MikuPan_ConfigurationValidateAudio(MikuPan_ConfigAudio* audio)
 {
     audio->master = MikuPan_ClampFloat(audio->master, 0.0f, 1.0f);
-    audio->ambient_bgm = MikuPan_ClampFloat(audio->ambient_bgm, 0.0f, 1.0f);
-    audio->battle_bgm = MikuPan_ClampFloat(audio->battle_bgm, 0.0f, 1.0f);
-    audio->ambient_se = MikuPan_ClampFloat(audio->ambient_se, 0.0f, 1.0f);
-    audio->battle_se = MikuPan_ClampFloat(audio->battle_se, 0.0f, 1.0f);
 }
 
 static void MikuPan_ConfigurationValidateThirdPersonCamera(

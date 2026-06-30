@@ -2,7 +2,6 @@
 #include "common.h"
 #include "enums.h"
 #include "mikupan/mikupan_logging_c.h"
-#include "mikupan/mikupan_audio_bus.h"
 #include "typedefs.h"
 
 #include "common/ul_math.h"
@@ -44,7 +43,6 @@ static void SeInitSeWrkP(SE_WRK *swp);
 static void SeStartVp(SE_REQ_TMP_STR *tmp_str);
 static int SeGetFreeVoice(int start_no, int get);
 static int SeChkReqMode(float *pos, float *mb);
-static u_short MikuPan_ScaleSeCommandVolume(SE_WRK* swp, u_short volume);
 
 void InitSe(void)
 {
@@ -166,8 +164,6 @@ static void SeInitSeWrkP(SE_WRK *swp)
         swp->pan = DEFAULT_PAN;
         swp->vol_phase = 0;
         swp->menu = 0;
-        swp->mikupan_audio_bus = MIKUPAN_AUDIO_BUS_AMBIENT_SE;
-        swp->mikupan_audio_revision = MikuPan_AudioGetRevision();
     }
 }
 
@@ -620,8 +616,6 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
     swp->pitch = tmp_str->pitch;
     swp->room_id = tmp_str->room_id;
     swp->menu = tmp_str->menu;
-    swp->mikupan_audio_bus = MikuPan_AudioBusForSe(tmp_str->se_no, tmp_str->mode);
-    swp->mikupan_audio_revision = MikuPan_AudioGetRevision();
 
     if (swp->fade_spd == 0)
     {
@@ -734,25 +728,15 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
     if (swp->menu != 0)
     {
         SetIopCmdLg(IC_SE_PLAY, tmp_str->vpos, swp->se_p, swp->pitch, swp->pan,
-                    MikuPan_ScaleSeCommandVolume(swp, swp->vol_rate), 0, 0);
+                    swp->vol_rate, 0, 0);
     }
     else
     {
         SetIopCmdLg(IC_SE_PLAY, tmp_str->vpos, swp->se_p, swp->pitch, swp->pan,
-                    MikuPan_ScaleSeCommandVolume(
-                        swp, (swp->vol_rate * sm_fade.mvol) / 0xfff), 0, 0);
+                    (swp->vol_rate * sm_fade.mvol) / 0xfff, 0, 0);
     }
 }
 
-static u_short MikuPan_ScaleSeCommandVolume(SE_WRK* swp, u_short volume)
-{
-    if (swp == NULL)
-    {
-        return volume;
-    }
-
-    return MikuPan_AudioScaleSeVolume(volume, swp->mikupan_audio_bus, 0x1000);
-}
 
 int SeStartPosSrundFlame(u_char room_id, float *pos, u_short flame,
                          u_short vol_max, u_short pitch)

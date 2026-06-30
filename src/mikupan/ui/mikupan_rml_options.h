@@ -9,14 +9,17 @@ class Context;
 
 bool MikuPan_RmlOptionsInit(Rml::Context* context);
 void MikuPan_RmlOptionsStartFrame(void);
+void MikuPan_RmlOptionsPrepareShutdown(void);
 void MikuPan_RmlOptionsShutdown(void);
 extern "C" {
 #endif
 
 void MikuPan_RmlOptionsOpen(void);
+void MikuPan_RmlOptionsOpenInGame(void);
 void MikuPan_RmlOptionsClose(void);
 int MikuPan_RmlOptionsConsumeExitRequest(void);
 int MikuPan_RmlOptionsIsOpen(void);
+int MikuPan_RmlOptionsInputBlocked(void);
 void MikuPan_RmlOptionsRequestExit(void);
 void MikuPan_RmlOptionsHandleCancel(void);
 int MikuPan_RmlOptionsAnySelectOpen(void);

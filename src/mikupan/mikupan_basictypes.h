@@ -71,22 +71,23 @@ typedef struct
     int height;
 } MikuPan_Resolution;
 
-#define MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW (-1)
-
 typedef struct
 {
     MikuPan_Resolution window;
-    /* Use MIKUPAN_RENDER_RESOLUTION_FIT_WINDOW for both render dimensions to
-     * follow the current window size. */
+    /* Internal render resolution. This is intentionally independent from the
+     * SDL window size so render scale and display size do not fight each other. */
     MikuPan_Resolution render;
-    int is_fullscreen;   /* legacy; kept in sync with window_mode != windowed */
-    int window_mode;     /* 0 = windowed, 1 = fullscreen, 2 = borderless */
+    int render_mode;          /* MikuPan_RenderResolutionMode */
+    int render_scale_percent; /* used when render_mode is WINDOW_SCALE */
+    int is_fullscreen;        /* legacy; kept in sync with window_mode != windowed */
+    int window_mode;          /* 0 = windowed, 2 = borderless fullscreen */
     int vsync;
     int lighting_mode;
     int msaa_index;
     int shadow_resolution;
     float brightness;
     float gamma;
+    int dither_mode; /* 0=native, 1=soft */
     /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
      * Empty = let SDL pick. The device is created once, so a change only
      * applies on the next launch. */
@@ -96,16 +97,23 @@ typedef struct
 
 /* Apply a window display mode to the SDL window.
  *   Windowed   - leave fullscreen, restore the window border.
- *   Fullscreen - exclusive fullscreen using the display's desktop mode.
- *   Borderless - a normal borderless WINDOW sized to fill the display (NOT SDL
- *                fullscreen), so alt-tab stays instant and other windows can
- *                overlap. */
+ *   Fullscreen - borderless fullscreen sized to the current display. The old
+ *                exclusive fullscreen enum value is kept only for config
+ *                migration and is remapped to borderless fullscreen. */
 enum MikuPan_WindowMode
 {
     MIKUPAN_WINDOW_WINDOWED = 0,
     MIKUPAN_WINDOW_FULLSCREEN = 1,
     MIKUPAN_WINDOW_BORDERLESS = 2,
 };
+
+enum MikuPan_RenderResolutionMode
+{
+    MIKUPAN_RENDER_RESOLUTION_FIXED = 0,
+    MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW = 1,
+    MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE = 2,
+};
+
 
 typedef struct
 {
@@ -132,10 +140,6 @@ typedef struct
 typedef struct
 {
     float master;
-    float ambient_bgm;
-    float battle_bgm;
-    float ambient_se;
-    float battle_se;
 } MikuPan_ConfigAudio;
 
 typedef struct

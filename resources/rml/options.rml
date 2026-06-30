@@ -26,12 +26,12 @@
             <div id="page-area">
                 <div id="page-display" class="page active">
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="window-mode-picker">Display Mode</label><p class="setting-desc">Press confirm to choose, then keep or revert the change.</p></div>
+                        <div class="setting-copy"><label class="setting-title" for="window-mode-picker">Display Mode</label><p class="setting-desc">Windowed or borderless fullscreen.</p></div>
                         <div class="setting-control"><button id="window-mode-picker" class="choice-picker"><span id="window-mode-choice" class="choice-text"></span><span class="picker-arrow">v</span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="resolution-picker">Resolution</label><p class="setting-desc">Press confirm to choose, then keep or revert the new output size.</p></div>
-                        <div class="setting-control"><button id="resolution-picker" class="choice-picker"><span id="resolution-choice" class="choice-text"></span><span class="picker-arrow">v</span></button></div>
+                        <div class="setting-copy"><label class="setting-title" for="window-size-picker">Windowed Resolution</label><p class="setting-desc">Window size used in Windowed mode. Fullscreen uses borderless desktop size.</p></div>
+                        <div class="setting-control"><button id="window-size-picker" class="choice-picker"><span id="window-size-choice" class="choice-text"></span><span class="picker-arrow">v</span></button></div>
                     </div>
                     <div class="setting-row">
                         <div class="setting-copy"><label class="setting-title" for="brightness-stepper">Brightness <span id="brightness-value" class="value"></span></label><p class="setting-desc">Raise or lower the final image brightness.</p></div>
@@ -49,6 +49,10 @@
 
                 <div id="page-graphics" class="page hidden">
                     <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="resolution-picker">Render Resolution</label><p class="setting-desc">Match the window, scale from it, or use exact PS2 multiples.</p></div>
+                        <div class="setting-control"><button id="resolution-picker" class="choice-picker"><span id="resolution-choice" class="choice-text"></span><span class="picker-arrow">v</span></button></div>
+                    </div>
+                    <div class="setting-row">
                         <div class="setting-copy"><label class="setting-title" for="gpu-backend-select">GPU Backend</label><p class="setting-desc">Renderer backend selection. A restart may be required.</p><p id="active-gpu-label" class="note"></p><p id="gpu-restart-note" class="note"></p></div>
                         <div class="setting-control"><select id="gpu-backend-select"></select></div>
                     </div>
@@ -64,17 +68,15 @@
                         <div class="setting-copy"><label class="setting-title" for="lighting-mode-select">Lighting Mode</label><p class="setting-desc">Modern pixel lighting or PS2-style vertex lighting.</p></div>
                         <div class="setting-control"><select id="lighting-mode-select"></select></div>
                     </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="dither-mode-select">Dither Filtering</label><p class="setting-desc">Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays.</p></div>
+                        <div class="setting-control"><select id="dither-mode-select"></select></div>
+                    </div>
                 </div>
 
                 <div id="page-audio" class="page hidden">
-                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="master-volume-stepper">Master Volume <span id="master-volume-value" class="value"></span></label><p class="setting-desc">Overall PC audio level for all buses.</p></div><div class="setting-control"><button id="master-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="master-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
-                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="ambient-bgm-volume-stepper">Ambient BGM <span id="ambient-bgm-volume-value" class="value"></span></label><p class="setting-desc">Room music, ambient streams, tapes, scenes, and menu/title streams.</p></div><div class="setting-control"><button id="ambient-bgm-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="ambient-bgm-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
-                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="battle-bgm-volume-stepper">Battle BGM <span id="battle-bgm-volume-value" class="value"></span></label><p class="setting-desc">Ghost, auto-ghost, hidden/special, and battle-mode streamed music.</p></div><div class="setting-control"><button id="battle-bgm-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="battle-bgm-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
-                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="ambient-se-volume-stepper">Ambient SE <span id="ambient-se-volume-value" class="value"></span></label><p class="setting-desc">UI, doors, footsteps, camera, puzzle, and room sound effects.</p></div><div class="setting-control"><button id="ambient-se-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="ambient-se-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
-                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="battle-se-volume-stepper">Battle SE <span id="battle-se-volume-value" class="value"></span></label><p class="setting-desc">Ghost/enemy sounds, attacks, hits, warps, purify, and enemy ambience.</p></div><div class="setting-control"><button id="battle-se-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="battle-se-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
-                    <div class="setting-row"><div class="setting-copy"><span class="setting-title">Sound Mode</span><p class="setting-desc">Stereo / Mono from the original options menu.</p></div><div class="setting-control"><p class="note">Original option not wired to RML yet</p></div></div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="master-volume-stepper">Master Volume <span id="master-volume-value" class="value"></span></label><p class="setting-desc">Set the overall game volume.</p></div><div class="setting-control"><button id="master-volume-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="master-volume-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div></div>
                 </div>
-
                 <div id="page-advanced" class="page hidden">
                     <div class="subsection-title">Interface</div>
                     <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="theme-select">Theme</label><p class="setting-desc">Menu presentation style.</p></div><div class="setting-control"><select id="theme-select"></select></div></div>

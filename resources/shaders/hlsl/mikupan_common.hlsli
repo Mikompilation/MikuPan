@@ -46,7 +46,7 @@ cbuffer MikuPanUniforms : register(b0, MIKUPAN_UNIFORM_SPACE)
     int4 uFlags0; // x=renderNormals, y=disableLighting, z=staticLighting, w=meshLightingMode
     int4 uFlags1; // x=mirrorSurfacePass, y=shadowEnabled, z=shadowDebugView, w=crtEnabled
     int4 uFlags2; // x=blackWhiteMode, y=photoNegativeEnabled, z=photoNegativeSourceEnabled, w=screenCopyMode
-    int4 uPadFlags; // x=ps2FeedbackEnabled, y=ps2FeedbackPreviousEnabled
+    int4 uPadFlags; // x=ps2FeedbackEnabled, y=ps2FeedbackPreviousEnabled, z=ditherSoftMode
 };
 
 cbuffer LightBlock : register(b1, MIKUPAN_UNIFORM_SPACE)

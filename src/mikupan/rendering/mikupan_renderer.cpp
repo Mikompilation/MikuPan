@@ -142,6 +142,12 @@ SDL_AppResult MikuPan_Init()
 #endif
 
     int startup_window_mode = mikupan_configuration.renderer.window_mode;
+#ifndef __ANDROID__
+    if (startup_window_mode == MIKUPAN_WINDOW_FULLSCREEN)
+    {
+        startup_window_mode = MIKUPAN_WINDOW_BORDERLESS;
+    }
+#endif
 #ifdef __ANDROID__
     startup_window_mode = MIKUPAN_WINDOW_FULLSCREEN;
 #endif
@@ -176,8 +182,11 @@ SDL_AppResult MikuPan_Init()
 #endif
 
     SDL_GetWindowSize(mikupan_render.window, &mikupan_render.width, &mikupan_render.height);
-    mikupan_configuration.renderer.window.width = mikupan_render.width;
-    mikupan_configuration.renderer.window.height = mikupan_render.height;
+    if (startup_window_mode == MIKUPAN_WINDOW_WINDOWED)
+    {
+        mikupan_configuration.renderer.window.width = mikupan_render.width;
+        mikupan_configuration.renderer.window.height = mikupan_render.height;
+    }
 
 #ifndef __ANDROID__
     char icon_path[1024];
@@ -207,7 +216,13 @@ SDL_AppResult MikuPan_Init()
     int desired_msaa = mikupan_configuration.renderer.msaa_index;
     int desired_vsync = mikupan_configuration.renderer.vsync;
 
-    const int msaa_list[] = {0, 2, 4, 8, 16, 32};
+    const int msaa_list[] = {0, 2, 4, 8};
+    if (desired_msaa < 0
+        || desired_msaa >= (int)(sizeof(msaa_list) / sizeof(msaa_list[0])))
+    {
+        desired_msaa = 0;
+        mikupan_configuration.renderer.msaa_index = desired_msaa;
+    }
 
 #ifdef __ANDROID__
     desired_msaa = 0;
@@ -648,8 +663,70 @@ void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
 static int g_applied_window_mode = MIKUPAN_WINDOW_WINDOWED;
 static int g_saved_win_w = 0, g_saved_win_h = 0, g_saved_win_x = 0, g_saved_win_y = 0;
 
+static int MikuPan_GetWindowDisplayBounds(SDL_Window* window, SDL_Rect* bounds)
+{
+    if (window == NULL || bounds == NULL)
+    {
+        return 0;
+    }
+
+    SDL_DisplayID display = SDL_GetDisplayForWindow(window);
+    if (display == 0)
+    {
+        display = SDL_GetPrimaryDisplay();
+    }
+
+    if (display != 0 && SDL_GetDisplayUsableBounds(display, bounds))
+    {
+        return 1;
+    }
+
+    if (display != 0 && SDL_GetDisplayBounds(display, bounds))
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+static void MikuPan_CenterWindowOnDisplay(SDL_Window* window, int width, int height)
+{
+    if (window == NULL || width <= 0 || height <= 0)
+    {
+        return;
+    }
+
+    SDL_Rect bounds;
+    if (!MikuPan_GetWindowDisplayBounds(window, &bounds))
+    {
+        return;
+    }
+
+    int x = bounds.x + (bounds.w - width) / 2;
+    int y = bounds.y + (bounds.h - height) / 2;
+
+    if (x < bounds.x)
+    {
+        x = bounds.x;
+    }
+
+    if (y < bounds.y)
+    {
+        y = bounds.y;
+    }
+
+    SDL_SetWindowPosition(window, x, y);
+}
+
 static void MikuPan_ApplyWindowMode(int mode)
 {
+#ifndef __ANDROID__
+    if (mode == MIKUPAN_WINDOW_FULLSCREEN)
+    {
+        mode = MIKUPAN_WINDOW_BORDERLESS;
+    }
+#endif
+
     SDL_Window *win = mikupan_render.window;
     if (win == NULL)
     {
@@ -675,29 +752,43 @@ static void MikuPan_ApplyWindowMode(int mode)
         }
         case MIKUPAN_WINDOW_BORDERLESS:
         {
-            SDL_SetWindowFullscreen(win, false);
-            SDL_SetWindowBordered(win, false);
-
-            SDL_DisplayID disp = SDL_GetDisplayForWindow(win);
-            SDL_Rect bounds;
-            if (SDL_GetDisplayBounds(disp, &bounds))
-            {
-                SDL_SetWindowPosition(win, bounds.x, bounds.y);
-                SDL_SetWindowSize(win, bounds.w, bounds.h + 1);
-            }
+            SDL_SetWindowFullscreenMode(win, NULL);
+            SDL_SetWindowFullscreen(win, true);
             break;
         }
 
         case MIKUPAN_WINDOW_WINDOWED:
         default:
+        {
             SDL_SetWindowFullscreen(win, false);
             SDL_SetWindowBordered(win, true);
-            if (g_saved_win_w > 0 && g_saved_win_h > 0)
+
+            int restore_w = mikupan_configuration.renderer.window.width;
+            int restore_h = mikupan_configuration.renderer.window.height;
+            if (restore_w <= 0 || restore_h <= 0)
             {
-                SDL_SetWindowSize(win, g_saved_win_w, g_saved_win_h);
+                restore_w = g_saved_win_w;
+                restore_h = g_saved_win_h;
+            }
+
+            const int restore_size_changed =
+                (restore_w != g_saved_win_w || restore_h != g_saved_win_h);
+
+            if (restore_w > 0 && restore_h > 0)
+            {
+                SDL_SetWindowSize(win, restore_w, restore_h);
+            }
+
+            if (!restore_size_changed && (g_saved_win_x != 0 || g_saved_win_y != 0))
+            {
                 SDL_SetWindowPosition(win, g_saved_win_x, g_saved_win_y);
             }
+            else
+            {
+                MikuPan_CenterWindowOnDisplay(win, restore_w, restore_h);
+            }
             break;
+        }
     }
 
     g_applied_window_mode = mode;
@@ -737,7 +828,7 @@ void MikuPan_Clear()
     MikuPan_GPUSetTarget(MIKUPAN_GPU_TARGET_SCENE, 1);
     MikuPan_GPUBeginRenderPass();
 
-    if (mikupan_configuration.renderer.window_mode != MikuPan_GetWindowMode())
+    if (g_applied_window_mode != MikuPan_GetWindowMode())
     {
         MikuPan_ApplyWindowMode(MikuPan_GetWindowMode());
         mikupan_configuration.renderer.window_mode = MikuPan_GetWindowMode();
@@ -806,7 +897,6 @@ void MikuPan_EndFrame()
     };
 
     int offset_output[4];
-
     MikuPan_ConvertScreenToNDCCoord(
         offset_output,
         (float)mikupan_render.width, (float)mikupan_render.height,
@@ -979,14 +1069,20 @@ void MikuPan_UpdateWindowSize(int width, int height)
     mikupan_render.width = width;
     mikupan_render.height = height;
 
-    if (width > 0)
+    /* Store only real windowed sizes. Fullscreen and borderless resize events
+     * report desktop-sized viewports, and saving those here makes the Window
+     * Size option drift into whatever mode was last used. */
+    if (MikuPan_GetWindowMode() == MIKUPAN_WINDOW_WINDOWED)
     {
-        mikupan_configuration.renderer.window.width = width;
-    }
+        if (width > 0)
+        {
+            mikupan_configuration.renderer.window.width = width;
+        }
 
-    if (height > 0)
-    {
-        mikupan_configuration.renderer.window.height = height;
+        if (height > 0)
+        {
+            mikupan_configuration.renderer.window.height = height;
+        }
     }
 }
 

@@ -173,6 +173,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer.window", "height", mikupan_configuration.renderer.window.height);
     ApplyValue(ini, "renderer.render", "width", mikupan_configuration.renderer.render.width);
     ApplyValue(ini, "renderer.render", "height", mikupan_configuration.renderer.render.height);
+    ApplyValue(ini, "renderer.render", "mode", mikupan_configuration.renderer.render_mode);
+    ApplyValue(ini, "renderer.render", "scale_percent", mikupan_configuration.renderer.render_scale_percent);
     ApplyValue(ini, "renderer", "is_fullscreen", mikupan_configuration.renderer.is_fullscreen);
     ApplyValue(ini, "renderer", "window_mode", mikupan_configuration.renderer.window_mode);
     ApplyValue(ini, "renderer", "vsync", mikupan_configuration.renderer.vsync);
@@ -181,6 +183,7 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
     ApplyValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     ApplyValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    ApplyValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     ApplyString(ini, "renderer", "gpu_driver",
                 mikupan_configuration.renderer.gpu_driver,
                 sizeof(mikupan_configuration.renderer.gpu_driver));
@@ -203,10 +206,6 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "crt", "flicker_strength", mikupan_configuration.crt.flicker_strength);
     ApplyValue(ini, "crt", "glow_strength", mikupan_configuration.crt.glow_strength);
     ApplyValue(ini, "audio", "master", mikupan_configuration.audio.master);
-    ApplyValue(ini, "audio", "ambient_bgm", mikupan_configuration.audio.ambient_bgm);
-    ApplyValue(ini, "audio", "battle_bgm", mikupan_configuration.audio.battle_bgm);
-    ApplyValue(ini, "audio", "ambient_se", mikupan_configuration.audio.ambient_se);
-    ApplyValue(ini, "audio", "battle_se", mikupan_configuration.audio.battle_se);
     ApplyValue(ini, "ui", "selected_theme", mikupan_configuration.selected_theme);
     ApplyValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     ApplyValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);
@@ -332,6 +331,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer.window", "height", mikupan_configuration.renderer.window.height);
     SetValue(ini, "renderer.render", "width", mikupan_configuration.renderer.render.width);
     SetValue(ini, "renderer.render", "height", mikupan_configuration.renderer.render.height);
+    SetValue(ini, "renderer.render", "mode", mikupan_configuration.renderer.render_mode);
+    SetValue(ini, "renderer.render", "scale_percent", mikupan_configuration.renderer.render_scale_percent);
     SetValue(ini, "renderer", "is_fullscreen", mikupan_configuration.renderer.is_fullscreen);
     SetValue(ini, "renderer", "window_mode", mikupan_configuration.renderer.window_mode);
     SetValue(ini, "renderer", "vsync", mikupan_configuration.renderer.vsync);
@@ -340,6 +341,7 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
     SetValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     SetValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    SetValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;
     SetValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);
@@ -361,10 +363,6 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "crt", "flicker_strength", mikupan_configuration.crt.flicker_strength);
     SetValue(ini, "crt", "glow_strength", mikupan_configuration.crt.glow_strength);
     SetValue(ini, "audio", "master", mikupan_configuration.audio.master);
-    SetValue(ini, "audio", "ambient_bgm", mikupan_configuration.audio.ambient_bgm);
-    SetValue(ini, "audio", "battle_bgm", mikupan_configuration.audio.battle_bgm);
-    SetValue(ini, "audio", "ambient_se", mikupan_configuration.audio.ambient_se);
-    SetValue(ini, "audio", "battle_se", mikupan_configuration.audio.battle_se);
     SetValue(ini, "ui", "selected_theme", mikupan_configuration.selected_theme);
     SetValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     SetValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);
