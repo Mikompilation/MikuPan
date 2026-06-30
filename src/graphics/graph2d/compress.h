@@ -13,9 +13,9 @@ typedef struct {
     char col;
 } DCT_ROOT;
 
-#define N           8
-#define BUF_SIZE 2048	// tmp of ring buffer
-#define F		   18	// upper limit for match_length
+#define N				8
+#define BUF_SIZE		2048	// tmp of ring buffer
+#define F				18	// upper limit for match_length
 
 extern DCT_ROOT ZigZag[N * N];
 extern PHOTO_EXPAND photo_expand;

@@ -16,6 +16,12 @@
 
 #define KEYCODE "BA"
 #define PRODUCT_CODE "SLUS-20388"
+#define ICON_SYS_FILE_SIZE 0x3c4
+#define ICON_OBJ_FILE_SIZE 0xf850
+#define ICON2_OBJ_FILE_SIZE 0x104b0
+#define MIMUM_MEM_BLOCK_SAVE_ALBUM_DATA_REQUIRED                               \
+    ((1360464 + ICON_SYS_FILE_SIZE + ICON2_OBJ_FILE_SIZE) + 1023) / (512 * 2)  \
+        + (5 / 2 + 5 % 2) + 1
 
 char mcAlbumSaveMain()
 {
@@ -263,7 +269,7 @@ char mcAlbumSaveMain()
 #else
             mcSetStep(MC_MAKE_DIR, MC_MSG_MAKE_DIR);
 
-            mc_ctrl.card[0].free = 0x578; // sizeof ??
+            mc_ctrl.card[0].free = MIMUM_MEM_BLOCK_SAVE_ALBUM_DATA_REQUIRED;
             mc_ctrl.album.type = 0;
 #endif
         break;
@@ -355,7 +361,7 @@ char mcAlbumSaveMain()
         {
             mcSetStep(MC_MAKE_DIR, MC_MSG_MAKE_DIR);
 
-            mc_ctrl.card[0].free = 0x578;
+            mc_ctrl.card[0].free = MIMUM_MEM_BLOCK_SAVE_ALBUM_DATA_REQUIRED;
             mc_ctrl.album.type = 0;
         }
     break;

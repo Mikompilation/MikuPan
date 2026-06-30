@@ -139,18 +139,24 @@ void FodSetFrame(FOD_CTRL *fc, u_int frame)
     {
         if (fc->cam_file_hdr->frame != 0)
         {
-            fod_cam_addr = fod_cam_addr + ((FOD_CAM_FRAME *)fod_cam_addr)->size / 4; // sizeof(u_int) ?
+            fod_cam_addr = fod_cam_addr
+                           + ((FOD_CAM_FRAME*) fod_cam_addr)->size
+                                 / sizeof(u_int);
             fod_cam_addr += 4;
         }
 
         if (fc->lit_file_hdr->frame != 0)
         {
-            fod_lit_addr = fod_lit_addr + ((FOD_LIT_FRAME *)fod_lit_addr)->size / 4; // sizeof(u_int) ?
+            fod_lit_addr =
+                fod_lit_addr
+                + ((FOD_LIT_FRAME*) fod_lit_addr)->size / sizeof(u_int);
         }
 
         if (fc->eff_file_hdr->frame != 0)
         {
-            fod_eff_addr = fod_eff_addr + ((FOD_EFF_FRAME *)fod_eff_addr)->size / 4; // sizeof(u_int) ?
+            fod_eff_addr = fod_eff_addr
+                           + ((FOD_EFF_FRAME*) fod_eff_addr)->size
+                                 / sizeof(u_int);
         }
     }
 

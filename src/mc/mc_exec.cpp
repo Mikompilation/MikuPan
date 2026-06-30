@@ -27,6 +27,20 @@
 #define PRODUCT_CODE "SLUS-20388"
 #endif
 
+#define ICON_SYS_FILE_SIZE 0x3c4
+#define ICON_OBJ_FILE_SIZE 0xf850
+#define ICON2_OBJ_FILE_SIZE 0x104b0
+#define GAME_SAVE_FILE_SIZE 586400
+#define MIMUM_MEM_BLOCK_SAVE_GAME_DATA_REQUIRED                                          \
+    ((GAME_SAVE_FILE_SIZE * 3 + ICON_SYS_FILE_SIZE + ICON2_OBJ_FILE_SIZE)      \
+     + 1023) / (512 * 2)                                                       \
+        + (5 / 2 + 5 % 2) + 1
+
+#define MIMUM_MEM_BLOCK_SAVE_ALBUM_DATA_REQUIRED                                \
+    ((1360464 + ICON_SYS_FILE_SIZE + ICON2_OBJ_FILE_SIZE)      \
+     + 1023) / (512 * 2)                                                       \
+        + (5 / 2 + 5 % 2) + 1
+
 typedef struct
 {
     u_char rank;
@@ -163,11 +177,11 @@ char mcCheckEmpty(u_int offset)
 
     if (mc_ctrl.mode == MC_INIT || mc_ctrl.mode == MC_CHECK || mc_ctrl.mode == MC_SEL_LOAD)
     {
-        size = 0x6fd; // sizeof ??
+        size = MIMUM_MEM_BLOCK_SAVE_GAME_DATA_REQUIRED;
     }
     else
     {
-        size = 0x578; // sizeof ??
+        size = MIMUM_MEM_BLOCK_SAVE_ALBUM_DATA_REQUIRED;
     }
 
     if (size < offset)
@@ -194,7 +208,7 @@ void mcAcsFileReq(char type, int mode, int header)
         mc_ctrl.rw.step = 0;
         mc_ctrl.rw.mode = mode;
         mc_ctrl.rw.buf = (char *)&mc_ctrl;
-        mc_ctrl.rw.size = 0x3c4; // sizeof ??
+        mc_ctrl.rw.size = ICON_SYS_FILE_SIZE;
     break;
     case MC_FILE_ICONDATA1:
     case MC_FILE_ICONDATA2:
@@ -207,11 +221,11 @@ void mcAcsFileReq(char type, int mode, int header)
 
         if (mc_ctrl.mode == MC_INIT || mc_ctrl.mode == MC_CHECK || mc_ctrl.mode == MC_SEL_LOAD)
         {
-            mc_ctrl.rw.size = 0xf850; // sizeof ??
+            mc_ctrl.rw.size = ICON_OBJ_FILE_SIZE;
         }
         else
         {
-            mc_ctrl.rw.size = 0x104b0; // sizeof ??
+            mc_ctrl.rw.size = ICON2_OBJ_FILE_SIZE;
         }
     break;
     case MC_FILE_GAMEDATA1:
@@ -226,7 +240,7 @@ void mcAcsFileReq(char type, int mode, int header)
 
         if (header != 0)
         {
-            mc_ctrl.rw.size = 0x30; // sizeof(MC_HEADER) is just 0x20 ...
+            mc_ctrl.rw.size = sizeof(mc_header) + sizeof(opt_wrk);
         }
         else
         {
@@ -255,7 +269,7 @@ void mcAcsFileReq(char type, int mode, int header)
 
         if (header != 0)
         {
-            mc_ctrl.rw.size = 0x30; // sizeof(MC_HEADER) is just 0x20 ...
+            mc_ctrl.rw.size = sizeof(MC_ALBUM_HEADER) + sizeof(MC_DATA_STR);
         }
         else
         {
@@ -456,7 +470,7 @@ char mcCheckFileList()
 
             size = mc_ctrl.dir.table[i].FileSizeByte;
 
-            if (size != 0x3c4)
+            if (size != ICON_SYS_FILE_SIZE)
             {
                 return 3;
             }
@@ -480,14 +494,14 @@ char mcCheckFileList()
 
             if (mc_ctrl.mode == MC_INIT || mc_ctrl.mode == MC_CHECK || mc_ctrl.mode == MC_SEL_LOAD)
             {
-                if (size != 0xf850)
+                if (size != ICON_OBJ_FILE_SIZE)
                 {
                     return 4;
                 }
             }
             else
             {
-                if (size != 0x104b0)
+                if (size != ICON2_OBJ_FILE_SIZE)
                 {
                     return 4;
                 }

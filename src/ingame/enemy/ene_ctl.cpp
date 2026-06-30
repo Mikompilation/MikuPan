@@ -598,6 +598,7 @@ int EneWrkReleaseChk(ENE_WRK *ew)
             case 0:
                 BattleEndEventOpenJudge(ew->dat_no);
                 AdpcmStopGhost(0x14);
+
                 if (ingame_wrk.msn_no == 1 && ew->dat_no == 0)
                 {
                     OpenCameraMenu();
@@ -626,52 +627,66 @@ int EneWrkReleaseChk(ENE_WRK *ew)
                         FloatGhostBattleEnd();
                     }
                 }
+
                 AdpcmStopGhost(0x14);
                 break;
             case 2:
                 BattleEndEventOpenJudge(ew->dat_no);
+
                 if (ew->aie->soul_no != 0xFF)
                 {
                     CallWanderSoul(ew->aie->soul_no, ew->mpos.p1);
                 }
+
                 es_adpcm_tm = 0;
                 AdpcmStopAutoGhost(0xA);
                 break;
         }
+
         if (ew->nee != NULL)
         {
             ResetEffects(ew->nee);
         }
+
         if (ew->pdf != NULL)
         {
             ResetEffects(ew->pdf);
         }
+
         if (ew->pdf2 != NULL)
         {
             ResetEffects(ew->pdf2);
         }
+
         if (ew->plight_svm != NULL)
         {
             room_wrk.mylight[0].point_num -= 1;
         }
+
         EneSeOmenChk(ew, 0);
+
         if (ew->hp != 0)
         {
             RequestSpirit(ew->move_box.idx, 0);
             ReleaseEneTexture(ew->move_box.idx);
             motReleaseAnmPacket(ew->move_box.idx);
         }
-        memset(ew, 0, 0x430);
+
+        memset(ew, 0, sizeof(ENE_WRK));
+
         if (ap_wrk.zh_mode != 0)
         {
             ZeroHourOutReq();
         }
+
         DoorLockBattleAfter();
+
         if (ingame_wrk.game == 1)
         {
             BattleModeClear();
         }
     }
+
     return result;
 }
 

@@ -19,6 +19,15 @@ MC_START_CHECK mc_start_check[] = {
     {0}, {0},
 };
 
+#define ICON_SYS_FILE_SIZE 0x3c4
+#define ICON_OBJ_FILE_SIZE 0xf850
+#define ICON2_OBJ_FILE_SIZE 0x104b0
+#define GAME_SAVE_FILE_SIZE 586400
+#define MIMUM_MEM_BLOCK_SAVE_GAME_DATA_REQUIRED                                \
+    ((GAME_SAVE_FILE_SIZE * 3 + ICON_SYS_FILE_SIZE + ICON2_OBJ_FILE_SIZE)      \
+     + 1023) / (512 * 2)                                                       \
+        + (5 / 2 + 5 % 2) + 1
+
 char mcStartCheckMain()
 {
     static char err_flg = 0;
@@ -154,7 +163,7 @@ char mcStartCheckResult()
             return 2;
         }
 
-        if (mc_start_check[i].free > 0x6fc) // sizeof / sum of sizeofs ??
+        if (mc_start_check[i].free> MIMUM_MEM_BLOCK_SAVE_GAME_DATA_REQUIRED - 1)
         {
             return 2;
         }
@@ -171,7 +180,8 @@ char mcStartCheckResult()
 
     if (mc_start_check[0].type == 2 && mc_start_check[1].type == 2)
     {
-        if (mc_start_check[0].free < 0x6fd && mc_start_check[1].free < 0x6fd) // sizeof / sum of sizeofs ??
+        if (mc_start_check[0].free < MIMUM_MEM_BLOCK_SAVE_GAME_DATA_REQUIRED
+            && mc_start_check[1].free < MIMUM_MEM_BLOCK_SAVE_GAME_DATA_REQUIRED)
         {
             return 3;
         }
