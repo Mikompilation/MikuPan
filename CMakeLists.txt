@@ -3,9 +3,7 @@ project(MikuPan LANGUAGES C CXX)
 
 if (NOT MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-implicit-function-declaration -fno-fast-math -fno-trapping-math -Wno-int-conversion")
-    if(UNIX AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
-    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 endif()
 
 if(WIN32)
@@ -13,7 +11,7 @@ if(WIN32)
     set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/extern/icon.rc")
 endif()
 
-#add_compile_definitions(BUILD_EU_VERSION)
+option(BUILD_EU_VERSION "Build the PAL/EU version data and code paths." OFF)
 
 if(ANDROID)
     set(MIKUPAN_ANDROID_PAGE_SIZE "16384"
@@ -357,6 +355,45 @@ set(MIKUPAN_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated)
 set(MIKUPAN_VERSION_HEADER ${MIKUPAN_GENERATED_DIR}/mikupan_version.h)
 file(MAKE_DIRECTORY ${MIKUPAN_GENERATED_DIR})
 
+if(BUILD_EU_VERSION)
+    set(MIKUPAN_DATA_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/data_eu")
+else()
+    set(MIKUPAN_DATA_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/data")
+endif()
+
+set(MIKUPAN_DATA_INCLUDE_DIR "${MIKUPAN_GENERATED_DIR}/data_include")
+set(MIKUPAN_DATA_OUTPUT_DIR "${MIKUPAN_DATA_INCLUDE_DIR}/data")
+file(REMOVE_RECURSE "${MIKUPAN_DATA_OUTPUT_DIR}")
+file(MAKE_DIRECTORY "${MIKUPAN_DATA_OUTPUT_DIR}")
+file(GLOB_RECURSE MIKUPAN_DATA_HEADERS CONFIGURE_DEPENDS
+        "${MIKUPAN_DATA_SOURCE_DIR}/*.h"
+)
+set(MIKUPAN_DATA_HEADER_OUTPUTS)
+foreach(mikupan_data_header IN LISTS MIKUPAN_DATA_HEADERS)
+    file(RELATIVE_PATH mikupan_data_header_rel
+            "${MIKUPAN_DATA_SOURCE_DIR}"
+            "${mikupan_data_header}")
+    set(mikupan_data_header_out
+            "${MIKUPAN_DATA_OUTPUT_DIR}/${mikupan_data_header_rel}")
+    get_filename_component(mikupan_data_header_out_dir
+            "${mikupan_data_header_out}" DIRECTORY)
+    add_custom_command(
+            OUTPUT "${mikupan_data_header_out}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+                    "${mikupan_data_header_out_dir}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${mikupan_data_header}"
+                    "${mikupan_data_header_out}"
+            DEPENDS "${mikupan_data_header}"
+            VERBATIM
+    )
+    list(APPEND MIKUPAN_DATA_HEADER_OUTPUTS "${mikupan_data_header_out}")
+endforeach()
+add_custom_target(mikupan_data_headers
+        DEPENDS ${MIKUPAN_DATA_HEADER_OUTPUTS}
+)
+message(STATUS "MikuPan data headers: ${MIKUPAN_DATA_SOURCE_DIR}")
+
 # Generate once at configure time so the header always exists for compilation.
 execute_process(
         COMMAND ${CMAKE_COMMAND}
@@ -385,12 +422,18 @@ else()
     add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
 endif()
 add_dependencies(MikuPan mikupan_version)
+add_dependencies(MikuPan mikupan_data_headers)
 add_dependencies(MikuPan compile_shaders)
 if(TARGET ffmpeg_build)
     add_dependencies(MikuPan ffmpeg_build)
 endif()
 
+if(BUILD_EU_VERSION)
+    target_compile_definitions(MikuPan PRIVATE BUILD_EU_VERSION=1)
+endif()
+
 target_include_directories(MikuPan PRIVATE
+        ${MIKUPAN_DATA_INCLUDE_DIR}
         "sdk/"
         "src"
         "src/iop"
