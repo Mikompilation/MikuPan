@@ -459,6 +459,315 @@ void MikuPan_EffectDebugApply(void)
     }
 }
 
+static u_char MikuPan_ClampLegacyDebugByte(int value)
+{
+    if (value < 0)
+    {
+        return 0;
+    }
+
+    if (value > 0xff)
+    {
+        return 0xff;
+    }
+
+    return (u_char)value;
+}
+
+static int MikuPan_LegacyDebugPartsDeformType(void)
+{
+    switch (dbg_wrk.eff_pdef_p)
+    {
+        case 0:
+            if (dbg_wrk.eff_pdef1 != 0)
+            {
+                return dbg_wrk.eff_pdef1;
+            }
+            break;
+        case 1:
+            if (dbg_wrk.eff_pdef2 != 0)
+            {
+                return 10 + dbg_wrk.eff_pdef2;
+            }
+            break;
+        case 2:
+            if (dbg_wrk.eff_pdef3 != 0)
+            {
+                return 20 + dbg_wrk.eff_pdef3;
+            }
+            break;
+    }
+
+    if (dbg_wrk.eff_pdef1 != 0)
+    {
+        return dbg_wrk.eff_pdef1;
+    }
+
+    if (dbg_wrk.eff_pdef2 != 0)
+    {
+        return 10 + dbg_wrk.eff_pdef2;
+    }
+
+    if (dbg_wrk.eff_pdef3 != 0)
+    {
+        return 20 + dbg_wrk.eff_pdef3;
+    }
+
+    return 0;
+}
+
+static void MikuPan_ApplyLegacyDebugMenuEffects(void)
+{
+    static u_char legacy_blur_alpha = 0;
+    static u_char legacy_nega_alpha2 = 0;
+    static int legacy_mono_active = 0;
+    static void *legacy_ripple_handle = NULL;
+    static int legacy_ripple_mode = 0;
+    static int legacy_ripple_span = 0;
+    static void *legacy_pdeform_handle = NULL;
+    static int legacy_pdeform_type = 0;
+    int active;
+    int blur_id;
+    int contrast_type;
+    int pdeform_type;
+    EFFECT_CONT *ripple;
+    EFFECT_CONT *pdeform;
+
+    active = dbg_wrk.mode_on == 1 && look_debugmenu != 0;
+
+    ripple = (EFFECT_CONT *)legacy_ripple_handle;
+    if (ripple != NULL && ripple->dat.uc8[0] == 0)
+    {
+        legacy_ripple_handle = NULL;
+        legacy_ripple_mode = 0;
+        legacy_ripple_span = 0;
+        ripple = NULL;
+    }
+
+    pdeform = (EFFECT_CONT *)legacy_pdeform_handle;
+    if (pdeform != NULL && pdeform->dat.uc8[0] == 0)
+    {
+        legacy_pdeform_handle = NULL;
+        legacy_pdeform_type = 0;
+        pdeform = NULL;
+    }
+
+    if (!active)
+    {
+        if (legacy_ripple_handle != NULL)
+        {
+            ResetEffects(legacy_ripple_handle);
+            legacy_ripple_handle = NULL;
+            legacy_ripple_mode = 0;
+            legacy_ripple_span = 0;
+        }
+
+        if (legacy_pdeform_handle != NULL)
+        {
+            ResetEffects(legacy_pdeform_handle);
+            legacy_pdeform_handle = NULL;
+            legacy_pdeform_type = 0;
+        }
+
+        if (legacy_mono_active)
+        {
+            if (shibata_set_off == 0 && look_debugmenu != 0
+                && msbtset.mn.sw != 0)
+            {
+                ChangeMonochrome(1);
+            }
+            else
+            {
+                ChangeMonochrome(0);
+            }
+
+            legacy_mono_active = 0;
+        }
+
+        return;
+    }
+
+    MikuPan_EffectDebugUpdateAnchor();
+
+    if (dbg_wrk.eff_z_dep != 0)
+    {
+        SetEffects(EF_Z_DEP, 1);
+    }
+
+    if (dbg_wrk.eff_dither != 0)
+    {
+        SetEffects(EF_DITHER, 1, dbg_wrk.eff_dither,
+                   (float)dbg_wrk.eff_dithal, (float)dbg_wrk.eff_dithsp,
+                   MikuPan_ClampLegacyDebugByte(dither_alp),
+                   MikuPan_ClampLegacyDebugByte(dither_col));
+    }
+
+    blur_id = 0;
+    switch (dbg_wrk.eff_blur)
+    {
+        case 1:
+            blur_id = EF_BLUR_N;
+            break;
+        case 2:
+            blur_id = EF_BLUR_B;
+            break;
+        case 3:
+            blur_id = EF_BLUR_W;
+            break;
+    }
+
+    if (blur_id != 0)
+    {
+        legacy_blur_alpha = MikuPan_ClampLegacyDebugByte(dbg_wrk.eff_blra);
+        SetEffects(blur_id, 1, &legacy_blur_alpha, dbg_wrk.eff_blrs,
+                   dbg_wrk.eff_blrr, 320.0f, 112.0f);
+    }
+
+    if (dbg_wrk.eff_dfm != 0)
+    {
+        SetEffects(EF_DEFORM, 1, dbg_wrk.eff_dfm, dbg_wrk.eff_dfmr);
+    }
+
+    if (dbg_wrk.eff_focus != 0)
+    {
+        SetEffects(EF_FOCUS, 1, dbg_wrk.eff_focus);
+    }
+
+    if (dbg_wrk.eff_ffr != 0)
+    {
+        SetEffects(EF_FADEFRAME, 1, dbg_wrk.eff_ffra, 0x80000);
+    }
+
+    if (dbg_wrk.eff_renz != 0)
+    {
+        SetEffects(EF_RENZFLARE, 1, dbg_wrk.eff_renzs, effect_debug_pos,
+                   effect_debug_rot);
+    }
+
+    if (dbg_wrk.eff_rip != 0)
+    {
+        if ((legacy_ripple_mode != dbg_wrk.eff_rip
+             || legacy_ripple_span != dbg_wrk.eff_rips)
+            && legacy_ripple_handle != NULL)
+        {
+            ResetEffects(legacy_ripple_handle);
+            legacy_ripple_handle = NULL;
+        }
+
+        if (legacy_ripple_handle == NULL)
+        {
+            legacy_ripple_handle =
+                SetEffects(EF_RIPPLE, 2, dbg_wrk.eff_rip, dbg_wrk.eff_rips,
+                           effect_debug_pos);
+        }
+
+        legacy_ripple_mode = dbg_wrk.eff_rip;
+        legacy_ripple_span = dbg_wrk.eff_rips;
+    }
+    else if (legacy_ripple_handle != NULL)
+    {
+        ResetEffects(legacy_ripple_handle);
+        legacy_ripple_handle = NULL;
+        legacy_ripple_mode = 0;
+        legacy_ripple_span = 0;
+    }
+
+    pdeform_type = MikuPan_LegacyDebugPartsDeformType();
+    if (pdeform_type != 0)
+    {
+        if (legacy_pdeform_type != pdeform_type
+            && legacy_pdeform_handle != NULL)
+        {
+            ResetEffects(legacy_pdeform_handle);
+            legacy_pdeform_handle = NULL;
+        }
+
+        if (legacy_pdeform_handle == NULL)
+        {
+            legacy_pdeform_handle = SetEffects(
+                EF_PDEFORM, 2, pdeform_type, 0x80, 0.8f, 0.8f,
+                effect_debug_pos, 0, 0, 0, (void *)0, (void *)0, (void *)0,
+                (void *)0);
+        }
+
+        legacy_pdeform_type = pdeform_type;
+    }
+    else if (legacy_pdeform_handle != NULL)
+    {
+        ResetEffects(legacy_pdeform_handle);
+        legacy_pdeform_handle = NULL;
+        legacy_pdeform_type = 0;
+    }
+
+    if (dbg_wrk.eff_sccol_over != 0)
+    {
+        SetEffects(EF_OVERLAP, 1, dbg_wrk.eff_sccol_cont_alp);
+    }
+
+    if (dbg_wrk.eff_sccol_blk != 0 || dbg_wrk.eff_sccol_tp1 == 3)
+    {
+        SetEffects(EF_BLACKFILTER, 1, dbg_wrk.eff_sccol_blk);
+    }
+
+    contrast_type = 0;
+    switch (dbg_wrk.eff_sccol_tp2)
+    {
+        case 1:
+        case 2:
+            contrast_type = EF_NCONTRAST;
+            break;
+        case 3:
+            contrast_type = EF_NCONTRAST2;
+            break;
+        case 4:
+            contrast_type = EF_NCONTRAST3;
+            break;
+    }
+
+    if (contrast_type != 0)
+    {
+        SetEffects(contrast_type, 1, dbg_wrk.eff_sccol_cont_col,
+                   dbg_wrk.eff_sccol_cont_alp);
+    }
+
+    if (dbg_wrk.eff_sccol_tp2 == 5)
+    {
+        legacy_nega_alpha2 =
+            MikuPan_ClampLegacyDebugByte(dbg_wrk.eff_sccol_cont_alp2);
+        SetEffects(EF_NEGA, 1, dbg_wrk.eff_sccol_cont_col,
+                   dbg_wrk.eff_sccol_cont_alp, &legacy_nega_alpha2);
+    }
+
+    if (dbg_wrk.eff_leaf == 1 && (sys_wrk.count & 0xf) == 0)
+    {
+        SetLeaf(effect_debug_pos);
+    }
+    else if (dbg_wrk.eff_leaf == 2 && (sys_wrk.count & 0xf) == 0)
+    {
+        SetDust2(effect_debug_pos);
+    }
+
+    if (dbg_wrk.eff_colmono != 0 || dbg_wrk.eff_sccol_tp1 == 1)
+    {
+        ChangeMonochrome(1);
+        legacy_mono_active = 1;
+    }
+    else if (legacy_mono_active)
+    {
+        if (shibata_set_off == 0 && look_debugmenu != 0
+            && msbtset.mn.sw != 0)
+        {
+            ChangeMonochrome(1);
+        }
+        else
+        {
+            ChangeMonochrome(0);
+        }
+
+        legacy_mono_active = 0;
+    }
+}
+
 void InitEffects()
 {
     eff_blur_off = 1;
@@ -517,7 +826,8 @@ void InitEffectsEF()
     set_buffer[0] = now_buffer[0];
     set_buffer[1] = now_buffer[1];
 
-    effect_disp_flg = (ingame_wrk.stts & 0x20) == 0 ? effect_disp_flg : 0;
+    effect_disp_flg =
+        (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF) == 0 ? effect_disp_flg : 0;
 
     now_buffer[0] = 0;
     now_buffer[1] = 0;
@@ -592,6 +902,8 @@ void InitEffectsEF()
             ChangeMonochrome(1);
         }
     }
+
+    MikuPan_ApplyLegacyDebugMenuEffects();
 
     MikuPan_EffectDebugApply();
 
@@ -688,7 +1000,7 @@ void *SetEffects(int id, int fl, ...)
     int ret;
     EFFECT_CONT *ec;
 
-    if ((ingame_wrk.stts & 0x20) && ev_wrk.movie_on != 4
+    if ((ingame_wrk.stts & INGAME_STTS_DSP3D_OFF) && ev_wrk.movie_on != 4
         && effect_disp_flg == 0)
     {
         return NULL;
@@ -1702,7 +2014,8 @@ void EffectControl(int no)
             SetSaveCameraLamp();
 
             if (sys_wrk.game_mode != GAME_MODE_OUTGAME && tmp_effect_off == 0
-                && ingame_wrk.mode != INGAME_MODE_WANDER_SOUL && ingame_wrk.game != 1)
+                && ingame_wrk.mode != INGAME_MODE_WANDER_SOUL
+                && ingame_wrk.game != 1 && dbg_wrk.eff_itemfire != 0)
             {
                 CheckItemEffect();
             }

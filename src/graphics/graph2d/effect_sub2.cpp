@@ -2349,7 +2349,7 @@ int CallReadyGo()
     
     ret_num = 0;
     
-    if (ingame_wrk.stts & 0x20)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF)
     {
         DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
     }
@@ -2387,7 +2387,7 @@ int CallReadyGo()
         
         anm_init = 5;
         
-        ingame_wrk.stts |= 0x20;
+        ingame_wrk.stts |= INGAME_STTS_DSP3D_OFF;
         
         CaptureScreen(0x1a40);
     case 5:
@@ -2397,7 +2397,7 @@ int CallReadyGo()
             
             plyr_wrk.sta &= 0xfffffffd;
             
-            ingame_wrk.stts &= 0xdf;
+            ingame_wrk.stts &= ~INGAME_STTS_DSP3D_OFF;
             
             ret_num = 1;
         }

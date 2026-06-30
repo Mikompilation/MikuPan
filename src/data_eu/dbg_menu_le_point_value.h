@@ -23,6 +23,11 @@ DEBUG_MENU dbg_menu_le_point_value =     {
         .nmax = 3000,
     },
             {
+        .name = "Power",
+        .subnum = 32803,
+        .nmax = 3000,
+    },
+            {
         .name = "Len",
         .subnum = 32866,
         .nmax = 3000,

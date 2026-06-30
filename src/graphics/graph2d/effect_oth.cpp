@@ -2943,7 +2943,7 @@ void SetEneFire(EFFECT_CONT *ec)
     sceVu0FVECTOR pos1;
     sceVu0FVECTOR pos2;
 
-    if (ingame_wrk.stts & 0x20)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF)
     {
         return;
     }

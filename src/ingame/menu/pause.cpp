@@ -56,7 +56,7 @@ int PauseMain()
                 pause_wrk.csr[0] = 0;
                 pause_wrk.timer = 0;
 
-                ingame_wrk.stts |= 0x80;
+                ingame_wrk.stts |= INGAME_STTS_GAMEPLAY_LOCK;
 
                 pause_wrk.mode = PAUSE_MODE_MENU;
 
@@ -78,7 +78,7 @@ int PauseMain()
     {
         if (in_pause == 0)
         {
-            ingame_wrk.stts &= 0x40 | 0x10 | 0x8 | 0x4 | 0x2 | 0x1;
+            ingame_wrk.stts &= ~(INGAME_STTS_DSP3D_OFF | INGAME_STTS_GAMEPLAY_LOCK);
 
             SetTargetVolSeMenuFade(0xfff);
             SetTargetVolAdpcmMenuFade(0xfff);
@@ -96,7 +96,7 @@ int PauseMain()
     {
         if (pause_wrk.timer == 0)
         {
-            ingame_wrk.stts |= 0x20;
+            ingame_wrk.stts |= INGAME_STTS_DSP3D_OFF;
         }
 
         if (ps_dsp.yn_mode == 0)

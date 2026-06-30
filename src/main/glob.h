@@ -6,6 +6,12 @@
 #include "glob_types.h"
 #include "ingame/camera/camera_types.h"
 
+
+#define INGAME_STTS_CAMERA_LOCK		0x08
+#define INGAME_STTS_UPDATE_PAUSE	0x10
+#define INGAME_STTS_DSP3D_OFF		0x20
+#define INGAME_STTS_GAMEPLAY_LOCK	0x80
+
 #define DPAD_UP_PRESSED() *key_now[0]
 #define DPAD_DOWN_PRESSED() *key_now[1]
 #define DPAD_LEFT_PRESSED() *key_now[2]

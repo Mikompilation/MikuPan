@@ -722,7 +722,7 @@ void RunCamSearch()
 
     alp = 80;
 
-    if (ingame_wrk.stts & 0x20)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF)
     {
         return;
     }
@@ -1064,7 +1064,7 @@ void RunCamView()
 
     rot_r = PI / 180.0f;
 
-    if (ingame_wrk.stts & 0x20)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF)
     {
         return;
     }
@@ -1412,7 +1412,7 @@ void RunCamPush()
 
     rot_r = (PI * 6) / 180.0f;
 
-    if (ingame_wrk.stts & 0x20)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF)
     {
         return;
     }
@@ -1936,7 +1936,7 @@ void RunCamSlow()
 
     rot_ry = (PI * 9) / 180.0f;
 
-    if (ingame_wrk.stts & 0x20)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF)
     {
         return;
     }
@@ -2293,7 +2293,7 @@ void RunCamStop()
     float rot_x;
     float rot_y;
 
-    if (ingame_wrk.stts & 0x20)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF)
     {
         return;
     }
@@ -4382,7 +4382,7 @@ void SetEneDmgEffect1_Sub2(int num)
     clpy2 = 0xfd00;
     clpz2 = 0xffffff;
 
-    if (ingame_wrk.stts & 0x20)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF)
     {
         return;
     }
@@ -4960,7 +4960,7 @@ void SetEneDmgEffect2_Sub()
     r1r = 1.0f;
     r2r = 5.0f;
 
-    if (ingame_wrk.stts & 0x20 || enedmg2.enedmg2_flg == 0)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF || enedmg2.enedmg2_flg == 0)
     {
         return;
     }

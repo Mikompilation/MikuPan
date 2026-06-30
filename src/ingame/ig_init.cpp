@@ -121,7 +121,7 @@ void LoadStartDataInit()
 {
     load_start_wrk = {};
 
-    ingame_wrk.stts |= 0x28;
+    ingame_wrk.stts |= (INGAME_STTS_DSP3D_OFF | INGAME_STTS_CAMERA_LOCK);
 
     SortLoadDataAddr();
 

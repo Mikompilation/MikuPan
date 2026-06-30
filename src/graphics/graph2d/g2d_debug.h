@@ -18,11 +18,11 @@ typedef struct {
 	int max;
 	int pos;
 	char *title;
-	DEBUG_SUB_MENU submenu[10];
+	DEBUG_SUB_MENU submenu[12];
 } DEBUG_MENU;
 
-// extern int dither_alp;
-// extern int dither_col;
+extern int dither_alp;
+extern int dither_col;
 extern int hint_test_sw;
 extern int hint_test_posx;
 

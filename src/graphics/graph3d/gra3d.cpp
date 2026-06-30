@@ -89,6 +89,7 @@ static int disp3d_room;
 static int disp3d_room_shadow;
 static int disp3d_furn;
 static int disp3d_girl;
+static int disp3d_girl_shadow;
 static int disp3d_enemy;
 static int disp3d_mirror;
 static int disp3d_2ddraw;
@@ -1523,6 +1524,7 @@ void MakeDebugValue()
     disp3d_furn = dbg_wrk.disp_3d_furn != 0 && disp3d_furn_req != 0;
     disp3d_girl = dbg_wrk.disp_3d_girl;
     disp3d_enemy = dbg_wrk.disp_3d_enemy;
+    disp3d_girl_shadow = dbg_wrk.disp_3d_girl_shadow;
     disp3d_room_shadow = dbg_wrk.disp_3d_room_shadow;
     disp3d_mirror = dbg_wrk.disp_3d_mirror;
     disp3d_2ddraw = dbg_wrk.disp_3d_2ddraw;
@@ -2586,7 +2588,8 @@ void CalcGirlCoord()
     hs = (HeaderSection *)pgirlbase;
     cp = GetCoordP(hs);
 
-    if ((ingame_wrk.stts & 0x10 || ingame_wrk.stts & 0x80) == 0)
+    if ((ingame_wrk.stts & INGAME_STTS_UPDATE_PAUSE || ingame_wrk.stts & INGAME_STTS_GAMEPLAY_LOCK)
+        == 0)
     {
         movGetMoveval(ani_mdl, motGetNowFrame(&ani_mdl[0].mot) / 2);
 
@@ -2927,7 +2930,7 @@ void DrawGirl(int in_mirror)
         DispPlyrAcs(pgirlbase, pgirlacs[1], &plyracs_ctrl[1], 5);
     }
 
-    if (disp3d_girl == 0 || hide_player_model || in_mirror != 0
+    if (disp3d_girl == 0 || disp3d_girl_shadow == 0 || hide_player_model || in_mirror != 0
         || (plyr_wrk.sta & 0x1 && map_wrk.mirror_flg != 0x0))
     {
         return;
@@ -3044,9 +3047,9 @@ int DrawEnemy(int no)
     tmpModelp = ani_ctrl->base_p;
 
     if (
-        disp_frame_counter != old_frame_counter[j] &&
-        (ingame_wrk.stts & 0x10) == 0 &&
-        (ingame_wrk.stts & 0x80) == 0
+        disp_frame_counter != old_frame_counter[j] && 
+        (ingame_wrk.stts & INGAME_STTS_UPDATE_PAUSE) == 0 && 
+        (ingame_wrk.stts & INGAME_STTS_GAMEPLAY_LOCK) == 0
     )
     {
         ani_ctrl->mot.reso = ene_wrk[j].ani_reso;

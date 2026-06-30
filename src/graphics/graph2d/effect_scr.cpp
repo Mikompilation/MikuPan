@@ -1507,14 +1507,10 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
         
         eff_deform.init = 0;
     }
-    
-    if (lll[0]) {}; // debug code ?? seems that addressing lll is enough ...
 
     
     for (i = 0; i < vnumw*vnumh; i++)
     {
-        if (((i % vnumw) != (pnumw/2) % i)) {} // debug code ??
-
         fx = lll[i];
         fy = SgSinf(mm1[i] - r) * fw * mm2[i];
         
@@ -1531,9 +1527,7 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
 
     
     for (i = 0; i < vnumw*vnumh; i++)
-    {
-        if (((i % vnumw) != (pnumw/2) % i)) {} // debug code ?? 
-        
+    {        
         sceVu0ApplyMatrix(vtw[i], slm, vt[i]);
         sceVu0DivVector(vtw[i], vtw[i], vtw[i][3]);
         
@@ -5102,7 +5096,7 @@ void SetScreenSaver()
         .alpha = 0x80,
     };
 
-    if (ingame_wrk.stts & 0x20)
+    if (ingame_wrk.stts & INGAME_STTS_DSP3D_OFF)
     {
         hand_wrk.count = 0;
     }

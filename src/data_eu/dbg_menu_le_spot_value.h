@@ -23,6 +23,11 @@ DEBUG_MENU dbg_menu_le_spot_value =     {
         .nmax = 3000,
     },
             {
+        .name = "Power",
+        .subnum = 32803,
+        .nmax = 3000,
+    },
+            {
         .name = "Cone",
         .subnum = 32804,
         .nmax = 89,

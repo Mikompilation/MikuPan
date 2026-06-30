@@ -18,6 +18,11 @@ DEBUG_MENU dbg_menu_lt =     {
         .nmax = 1,
     },
             {
+        .name = "SPOT LIGHT",
+        .subnum = 8193,
+        .nmax = 1,
+    },
+            {
         .name = "LIGHT EDITOR",
         .subnum = 4114,
         .nmax = 0,
