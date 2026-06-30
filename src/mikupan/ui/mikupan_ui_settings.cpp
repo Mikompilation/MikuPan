@@ -1215,7 +1215,7 @@ int MikuPan_GetRenderResolutionWidth(void)
                                 / 100.0f);
         }
 
-        return MikuPan_ClampInt(width, PS2_RESOLUTION_X_INT / 2, 8192);
+        return MikuPan_ClampInt(width, PS2_RESOLUTION_X_INT / 2, 16384);
     }
 
     return render_resolution_width > 0 ? render_resolution_width
@@ -1241,7 +1241,7 @@ int MikuPan_GetRenderResolutionHeight(void)
                                  / 100.0f);
         }
 
-        return MikuPan_ClampInt(height, PS2_RESOLUTION_Y_INT / 2, 8192);
+        return MikuPan_ClampInt(height, PS2_RESOLUTION_Y_INT / 2, 16384);
     }
 
     return render_resolution_height > 0 ? render_resolution_height
