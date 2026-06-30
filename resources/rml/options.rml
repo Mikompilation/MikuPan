@@ -26,11 +26,11 @@
             <div id="page-area">
                 <div id="page-display" class="page active">
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="window-mode-picker">Display Mode</label><p class="setting-desc">Press confirm to choose, then keep or revert the change.</p></div>
+                        <div class="setting-copy"><label class="setting-title" for="window-mode-picker">Display Mode</label><p class="setting-desc">Windowed or borderless fullscreen.</p></div>
                         <div class="setting-control"><button id="window-mode-picker" class="choice-picker"><span id="window-mode-choice" class="choice-text"></span><span class="picker-arrow">v</span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="window-size-picker">Window Size</label><p class="setting-desc">Standard desktop window size, independent from internal render scale.</p></div>
+                        <div class="setting-copy"><label class="setting-title" for="window-size-picker">Windowed Resolution</label><p class="setting-desc">Window size used in Windowed mode. Fullscreen uses borderless desktop size.</p></div>
                         <div class="setting-control"><button id="window-size-picker" class="choice-picker"><span id="window-size-choice" class="choice-text"></span><span class="picker-arrow">v</span></button></div>
                     </div>
                     <div class="setting-row">
@@ -49,7 +49,7 @@
 
                 <div id="page-graphics" class="page hidden">
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="resolution-picker">Render Scale</label><p class="setting-desc">Internal resolution scaling.</p></div>
+                        <div class="setting-copy"><label class="setting-title" for="resolution-picker">Render Resolution</label><p class="setting-desc">Match the window, scale from it, or use exact PS2 multiples.</p></div>
                         <div class="setting-control"><button id="resolution-picker" class="choice-picker"><span id="resolution-choice" class="choice-text"></span><span class="picker-arrow">v</span></button></div>
                     </div>
                     <div class="setting-row">

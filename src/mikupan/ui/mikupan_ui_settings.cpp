@@ -7,6 +7,8 @@
 #include "SDL3/SDL_dialog.h"
 #include "SDL3/SDL_hints.h"
 #include "SDL3/SDL_platform.h"
+#include "SDL3/SDL_stdinc.h"
+#include "SDL3/SDL_timer.h"
 #include "SDL3/SDL_video.h"
 #include "ingame/camera/camera.h"
 #include "mikupan/mikupan_config.h"
@@ -25,12 +27,12 @@
 #include <string.h>
 #include <math.h>
 
-#define MIKUPAN_MAX_RESOLUTIONS 32
-#define MIKUPAN_MAX_WINDOW_SIZES 32
+#define MIKUPAN_MAX_RESOLUTIONS 64
+#define MIKUPAN_MAX_WINDOW_SIZES 128
 #define MIKUPAN_MAX_PS2_RESOLUTION_SCALE 6
 #define MIKUPAN_MAX_GPU_DRIVERS 8
 
-static const int msaa_list[] = {0, 2, 4, 8, 16, 32};
+static const int msaa_list[] = {0, 2, 4, 8};
 
 static int show_controller_remap = 0;
 static int msaa_samples = 0;
@@ -38,7 +40,9 @@ static int render_resolution_width = 1920;
 static int render_resolution_height = 1080;
 
 static MikuPan_Resolution resolution_list[MIKUPAN_MAX_RESOLUTIONS];
-static char resolution_labels[MIKUPAN_MAX_RESOLUTIONS][48];
+static int resolution_mode_list[MIKUPAN_MAX_RESOLUTIONS];
+static int resolution_scale_percent_list[MIKUPAN_MAX_RESOLUTIONS];
+static char resolution_labels[MIKUPAN_MAX_RESOLUTIONS][64];
 static const char* resolution_label_ptrs[MIKUPAN_MAX_RESOLUTIONS];
 static int resolution_count = 0;
 static int resolution_selected = 0;
@@ -57,9 +61,12 @@ static int gpu_driver_selected = 0;
 
 static char config_save_status[128] = {0};
 static int is_fullscreen = 0;
-static int window_mode = 0; /* MikuPan_WindowMode: 0=windowed, 1=fullscreen, 2=borderless */
+static int window_mode = 0; /* MikuPan_WindowMode: 0=windowed, 2=borderless fullscreen */
 static float brightness = 1.0f;
 static float gamma_value = 1.0f;
+
+static void MikuPan_RefreshWindowBackedRenderResolution(void);
+
 
 static int MikuPan_GetWindowDisplayBounds(SDL_Window* window, SDL_Rect* bounds)
 {
@@ -114,6 +121,52 @@ static void MikuPan_CenterWindowOnDisplay(SDL_Window* window, int width, int hei
     }
 
     SDL_SetWindowPosition(window, x, y);
+}
+
+static int MikuPan_WaitForWindowPixelSize(SDL_Window* window,
+                                          int desired_width,
+                                          int desired_height)
+{
+    if (window == NULL || desired_width <= 0 || desired_height <= 0)
+    {
+        return 0;
+    }
+
+    for (int i = 0; i < 8; i++)
+    {
+        int width = 0;
+        int height = 0;
+        SDL_GetWindowSize(window, &width, &height);
+        if (width == desired_width && height == desired_height)
+        {
+            return 1;
+        }
+
+        SDL_Delay(1);
+    }
+
+    return 0;
+}
+
+static void MikuPan_ApplyWindowedSizeNow(int width, int height)
+{
+#ifndef __ANDROID__
+    SDL_Window* window = MikuPan_GetUiWindow();
+    if (window == NULL || width <= 0 || height <= 0)
+    {
+        return;
+    }
+
+    SDL_SetWindowFullscreen(window, false);
+    SDL_SetWindowBordered(window, true);
+    SDL_RestoreWindow(window);
+    SDL_SetWindowSize(window, width, height);
+    MikuPan_WaitForWindowPixelSize(window, width, height);
+    MikuPan_CenterWindowOnDisplay(window, width, height);
+#else
+    (void)width;
+    (void)height;
+#endif
 }
 
 #define MIKUPAN_CRT_DEFAULTS                                                   \
@@ -257,81 +310,164 @@ static void MikuPan_AspectRatioStr(int w, int h, char* buf, int buf_size)
     snprintf(buf, buf_size, "%d:%d", w / a, h / a);
 }
 
-static float MikuPan_GetPs2ResolutionScale(int w, int h)
+static void MikuPan_GetWindowPixelSize(int* out_width, int* out_height)
 {
-    if (w <= 0 || h <= 0)
+    int width = 0;
+    int height = 0;
+
+#ifndef __ANDROID__
+    SDL_Window* window = MikuPan_GetUiWindow();
+    if (window != NULL)
     {
-        return 0.0f;
+        SDL_GetWindowSizeInPixels(window, &width, &height);
+        if (width <= 0 || height <= 0)
+        {
+            SDL_GetWindowSize(window, &width, &height);
+        }
+    }
+#endif
+
+    if (width <= 0)
+    {
+        width = mikupan_configuration.renderer.window.width;
     }
 
-    const float scale_x = (float)w / (float)PS2_RESOLUTION_X_INT;
-    const float scale_y = (float)h / (float)PS2_RESOLUTION_Y_INT;
+    if (height <= 0)
+    {
+        height = mikupan_configuration.renderer.window.height;
+    }
 
-    return fabsf(scale_x - scale_y) < 0.001f ? scale_x : 0.0f;
+    if (width <= 0)
+    {
+        width = PS2_RESOLUTION_X_INT;
+    }
+
+    if (height <= 0)
+    {
+        height = PS2_RESOLUTION_Y_INT;
+    }
+
+    if (out_width != NULL)
+    {
+        *out_width = width;
+    }
+
+    if (out_height != NULL)
+    {
+        *out_height = height;
+    }
 }
 
-static void MikuPan_FormatPs2ScaleLabel(char* buffer, int buffer_size,
-                                        int width, int height,
-                                        const char* suffix)
+static void MikuPan_RefreshWindowBackedRenderResolution(void)
 {
-    const float scale = MikuPan_GetPs2ResolutionScale(width, height);
-    if (scale > 0.0f)
+    if (mikupan_configuration.renderer.render_mode
+            == MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW
+        || mikupan_configuration.renderer.render_mode
+               == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
     {
-        if (fabsf(scale - roundf(scale)) < 0.001f)
+        render_resolution_width = MikuPan_GetRenderResolutionWidth();
+        render_resolution_height = MikuPan_GetRenderResolutionHeight();
+    }
+}
+
+static int MikuPan_IsPs2ScaleResolution(int width, int height)
+{
+    if (width <= 0 || height <= 0)
+    {
+        return 0;
+    }
+
+    for (int scale = 1; scale <= MIKUPAN_MAX_PS2_RESOLUTION_SCALE; scale++)
+    {
+        if (width == PS2_RESOLUTION_X_INT * scale
+            && height == PS2_RESOLUTION_Y_INT * scale)
         {
-            snprintf(buffer, buffer_size, "%.0fx (%d x %d)%s",
-                     scale, width, height, suffix != NULL ? suffix : "");
+            return 1;
         }
-        else
-        {
-            snprintf(buffer, buffer_size, "%.2gx (%d x %d)%s",
-                     scale, width, height, suffix != NULL ? suffix : "");
-        }
+    }
+
+    return 0;
+}
+
+static void MikuPan_AddRenderResolutionOption(int mode, int width, int height,
+                                              int percent,
+                                              const char* label)
+{
+    if (resolution_count >= MIKUPAN_MAX_RESOLUTIONS)
+    {
         return;
     }
 
-    char aspect[12];
-    MikuPan_AspectRatioStr(width, height, aspect, sizeof(aspect));
-    snprintf(buffer, buffer_size, "%d x %d (%s)%s",
-             width, height, aspect, suffix != NULL ? suffix : "");
-}
-
-static void MikuPan_AddResolution(int w, int h)
-{
-    if (w <= 0 || h <= 0 || resolution_count >= MIKUPAN_MAX_RESOLUTIONS)
+    if (mode == MIKUPAN_RENDER_RESOLUTION_FIXED
+        && (width <= 0 || height <= 0))
     {
         return;
     }
 
     for (int i = 0; i < resolution_count; i++)
     {
-        if (resolution_list[i].width == w && resolution_list[i].height == h)
+        if (resolution_mode_list[i] == mode
+            && resolution_list[i].width == width
+            && resolution_list[i].height == height
+            && resolution_scale_percent_list[i] == percent)
         {
             return;
         }
     }
 
-    resolution_list[resolution_count].width = w;
-    resolution_list[resolution_count].height = h;
-    resolution_count++;
+    const int index = resolution_count++;
+    resolution_list[index].width = width;
+    resolution_list[index].height = height;
+    resolution_mode_list[index] = mode;
+    resolution_scale_percent_list[index] = percent;
+
+    snprintf(resolution_labels[index], sizeof(resolution_labels[index]), "%s",
+             label != NULL ? label : "Custom");
+    resolution_label_ptrs[index] = resolution_labels[index];
 }
 
-static void MikuPan_AddPs2ResolutionScale(float scale)
+static void MikuPan_AddWindowScaleResolution(int percent)
 {
-    const int width = (int)roundf((float)PS2_RESOLUTION_X_INT * scale);
-    const int height = (int)roundf((float)PS2_RESOLUTION_Y_INT * scale);
-    MikuPan_AddResolution(width, height);
-}
-
-static void MikuPan_AddPs2ResolutionScales(void)
-{
-    const float scales[] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
-    const int count = (int)(sizeof(scales) / sizeof(scales[0]));
-
-    for (int i = 0; i < count; i++)
+    char label[64];
+    if (percent == 100)
     {
-        MikuPan_AddPs2ResolutionScale(scales[i]);
+        snprintf(label, sizeof(label), "Match Window (100%%)");
     }
+    else
+    {
+        snprintf(label, sizeof(label), "%d%% of Window", percent);
+    }
+
+    MikuPan_AddRenderResolutionOption(
+        percent == 100 ? MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW
+                       : MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE,
+        0,
+        0,
+        percent,
+        label);
+}
+
+static void MikuPan_AddPs2ResolutionScale(int scale)
+{
+    const int width = PS2_RESOLUTION_X_INT * scale;
+    const int height = PS2_RESOLUTION_Y_INT * scale;
+    char label[64];
+
+    if (scale == 1)
+    {
+        snprintf(label, sizeof(label), "PS2 Native (%d x %d)", width, height);
+    }
+    else
+    {
+        snprintf(label, sizeof(label), "PS2 %dx (%d x %d)", scale, width, height);
+    }
+
+    MikuPan_AddRenderResolutionOption(
+        MIKUPAN_RENDER_RESOLUTION_FIXED,
+        width,
+        height,
+        100,
+        label);
 }
 
 static void MikuPan_PopulateResolutionList(SDL_DisplayID display,
@@ -343,27 +479,62 @@ static void MikuPan_PopulateResolutionList(SDL_DisplayID display,
     resolution_count = 0;
     resolution_selected = 0;
 
-    MikuPan_AddPs2ResolutionScales();
-    MikuPan_AddResolution(render_resolution_width, render_resolution_height);
+    static const int window_scales[] = {
+        50, 75, 90, 100, 110, 120, 125, 150, 175, 200,
+    };
 
-    if (resolution_count > 1)
+    for (int i = 0; i < (int)(sizeof(window_scales) / sizeof(window_scales[0])); i++)
     {
-        qsort(resolution_list, resolution_count,
-              sizeof(MikuPan_Resolution), CompareResolutionAsc);
+        MikuPan_AddWindowScaleResolution(window_scales[i]);
+    }
+
+    for (int scale = 1; scale <= MIKUPAN_MAX_PS2_RESOLUTION_SCALE; scale++)
+    {
+        MikuPan_AddPs2ResolutionScale(scale);
+    }
+
+    if (mikupan_configuration.renderer.render_mode == MIKUPAN_RENDER_RESOLUTION_FIXED
+        && !MikuPan_IsPs2ScaleResolution(render_resolution_width,
+                                         render_resolution_height))
+    {
+        char aspect[12];
+        char label[64];
+        MikuPan_AspectRatioStr(render_resolution_width, render_resolution_height,
+                               aspect, sizeof(aspect));
+        snprintf(label, sizeof(label), "Custom (%d x %d, %s)",
+                 render_resolution_width, render_resolution_height, aspect);
+        MikuPan_AddRenderResolutionOption(MIKUPAN_RENDER_RESOLUTION_FIXED,
+                                          render_resolution_width,
+                                          render_resolution_height,
+                                          100,
+                                          label);
     }
 
     for (int i = 0; i < resolution_count; i++)
     {
-        MikuPan_FormatPs2ScaleLabel(resolution_labels[i],
-                                    sizeof(resolution_labels[i]),
-                                    resolution_list[i].width,
-                                    resolution_list[i].height,
-                                    "");
+        const int mode = resolution_mode_list[i];
+        int selected = 0;
+        if (mode == MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW)
+        {
+            selected = mikupan_configuration.renderer.render_mode
+                       == MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW;
+        }
+        else if (mode == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+        {
+            selected = mikupan_configuration.renderer.render_mode
+                       == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE
+                       && mikupan_configuration.renderer.render_scale_percent
+                              == resolution_scale_percent_list[i];
+        }
+        else
+        {
+            selected = mikupan_configuration.renderer.render_mode
+                       == MIKUPAN_RENDER_RESOLUTION_FIXED
+                       && resolution_list[i].width == render_resolution_width
+                       && resolution_list[i].height == render_resolution_height;
+        }
 
-        resolution_label_ptrs[i] = resolution_labels[i];
-
-        if (resolution_list[i].width == render_resolution_width
-            && resolution_list[i].height == render_resolution_height)
+        if (selected)
         {
             resolution_selected = i;
         }
@@ -456,6 +627,35 @@ static void MikuPan_AddStandardWindowSizes(int max_width, int max_height)
     }
 }
 
+static void MikuPan_AddDisplayModeWindowSizes(SDL_DisplayID display)
+{
+#ifndef __ANDROID__
+    if (display == 0)
+    {
+        return;
+    }
+
+    int count = 0;
+    SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(display, &count);
+    if (modes == NULL)
+    {
+        return;
+    }
+
+    for (int i = 0; i < count; i++)
+    {
+        if (modes[i] != NULL)
+        {
+            MikuPan_AddWindowSize(modes[i]->w, modes[i]->h);
+        }
+    }
+
+    SDL_free(modes);
+#else
+    (void)display;
+#endif
+}
+
 static void MikuPan_FormatWindowSizeLabel(char* buffer, int buffer_size,
                                           int width, int height,
                                           const char* suffix)
@@ -481,6 +681,7 @@ static void MikuPan_PopulateWindowSizeList(SDL_DisplayID display,
         max_height = current_mode->h;
     }
 
+    MikuPan_AddDisplayModeWindowSizes(display);
     MikuPan_AddStandardWindowSizes(max_width, max_height);
     MikuPan_AddWindowSize(mikupan_configuration.renderer.window.width,
                           mikupan_configuration.renderer.window.height);
@@ -694,22 +895,20 @@ void MikuPan_UiSettingsRender(void)
     {
         if (igBeginMenu("Display", 1))
         {
-            const char* window_modes[] = {"Windowed", "Fullscreen",
-                                          "Borderless Fullscreen"};
-            if (igCombo_Str_arr("Display Mode", &window_mode, window_modes, 3,
+            const char* window_modes[] = {"Windowed", "Fullscreen"};
+            int display_mode =
+                window_mode == MIKUPAN_WINDOW_BORDERLESS ? 1 : 0;
+            if (igCombo_Str_arr("Display Mode", &display_mode, window_modes, 2,
                                 -1))
             {
-                if (window_mode < MIKUPAN_WINDOW_WINDOWED
-                    || window_mode > MIKUPAN_WINDOW_BORDERLESS)
-                {
-                    window_mode = MIKUPAN_WINDOW_WINDOWED;
-                }
+                window_mode = display_mode == 1 ? MIKUPAN_WINDOW_BORDERLESS
+                                                : MIKUPAN_WINDOW_WINDOWED;
                 is_fullscreen = (window_mode != MIKUPAN_WINDOW_WINDOWED);
             }
 
             if (window_size_count > 0)
             {
-                if (igCombo_Str_arr("Window Size", &window_size_selected,
+                if (igCombo_Str_arr("Windowed Resolution", &window_size_selected,
                                     window_size_label_ptrs, window_size_count,
                                     -1))
                 {
@@ -718,24 +917,21 @@ void MikuPan_UiSettingsRender(void)
             }
             else
             {
-                igTextDisabled("Window Size: no modes available");
+                igTextDisabled("Windowed Resolution: no modes available");
             }
 
             if (resolution_count > 0)
             {
-                if (igCombo_Str_arr("Render Scale", &resolution_selected,
+                if (igCombo_Str_arr("Render Resolution", &resolution_selected,
                                     resolution_label_ptrs, resolution_count,
                                     -1))
                 {
-                    render_resolution_width =
-                        resolution_list[resolution_selected].width;
-                    render_resolution_height =
-                        resolution_list[resolution_selected].height;
+                    MikuPan_SelectRenderResolutionOption(resolution_selected);
                 }
             }
             else
             {
-                igTextDisabled("Render Scale: no modes available");
+                igTextDisabled("Render Resolution: no modes available");
             }
 
             igSliderFloat("Brightness", &brightness, 0.0f, 2.0f, "%.2f", 0);
@@ -753,16 +949,29 @@ void MikuPan_UiSettingsRender(void)
             else
             {
                 char msaa_dropdown_list[32];
-                snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%d",
-                         msaa_list[msaa_samples]);
+                snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%s",
+                         msaa_list[msaa_samples] == 0 ? "Off" : "");
+                if (msaa_list[msaa_samples] != 0)
+                {
+                    snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list), "%dx",
+                             msaa_list[msaa_samples]);
+                }
 
                 if (igBeginCombo("MSAA", msaa_dropdown_list, 0))
                 {
                     for (int i = 0; i < sizeof(msaa_list)/sizeof(msaa_list[0]); i++)
                     {
                         bool is_selected = (msaa_samples == i);
-                        snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list),
-                                 "%d", msaa_list[i]);
+                        if (msaa_list[i] == 0)
+                        {
+                            snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list),
+                                     "Off");
+                        }
+                        else
+                        {
+                            snprintf(msaa_dropdown_list, sizeof(msaa_dropdown_list),
+                                     "%dx", msaa_list[i]);
+                        }
 
                         if (igSelectable_Bool(msaa_dropdown_list, is_selected, 0,
                                               ImVec2{0, 0}))
@@ -977,26 +1186,64 @@ int MikuPan_SelectWindowSizeOption(int index)
     mikupan_configuration.renderer.window.width = width;
     mikupan_configuration.renderer.window.height = height;
 
-#ifndef __ANDROID__
-    SDL_Window* window = MikuPan_GetUiWindow();
-    if (window != NULL && window_mode == MIKUPAN_WINDOW_WINDOWED)
+    if (window_mode == MIKUPAN_WINDOW_WINDOWED)
     {
-        SDL_SetWindowSize(window, width, height);
-        MikuPan_CenterWindowOnDisplay(window, width, height);
+        MikuPan_ApplyWindowedSizeNow(width, height);
     }
-#endif
+
+    MikuPan_RefreshWindowBackedRenderResolution();
 
     return 1;
 }
 
 int MikuPan_GetRenderResolutionWidth(void)
 {
+    if (mikupan_configuration.renderer.render_mode
+        == MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW
+        || mikupan_configuration.renderer.render_mode
+               == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+    {
+        int width = 0;
+        int height = 0;
+        MikuPan_GetWindowPixelSize(&width, &height);
+
+        if (mikupan_configuration.renderer.render_mode
+            == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+        {
+            width = (int)roundf((float)width
+                                * (float)mikupan_configuration.renderer.render_scale_percent
+                                / 100.0f);
+        }
+
+        return MikuPan_ClampInt(width, PS2_RESOLUTION_X_INT / 2, 8192);
+    }
+
     return render_resolution_width > 0 ? render_resolution_width
                                        : PS2_RESOLUTION_X_INT;
 }
 
 int MikuPan_GetRenderResolutionHeight(void)
 {
+    if (mikupan_configuration.renderer.render_mode
+        == MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW
+        || mikupan_configuration.renderer.render_mode
+               == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+    {
+        int width = 0;
+        int height = 0;
+        MikuPan_GetWindowPixelSize(&width, &height);
+
+        if (mikupan_configuration.renderer.render_mode
+            == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+        {
+            height = (int)roundf((float)height
+                                 * (float)mikupan_configuration.renderer.render_scale_percent
+                                 / 100.0f);
+        }
+
+        return MikuPan_ClampInt(height, PS2_RESOLUTION_Y_INT / 2, 8192);
+    }
+
     return render_resolution_height > 0 ? render_resolution_height
                                         : PS2_RESOLUTION_Y_INT;
 }
@@ -1029,8 +1276,32 @@ int MikuPan_SelectRenderResolutionOption(int index)
     }
 
     resolution_selected = index;
-    render_resolution_width = resolution_list[index].width;
-    render_resolution_height = resolution_list[index].height;
+    const int mode = resolution_mode_list[index];
+    mikupan_configuration.renderer.render_mode = mode;
+
+    if (mode == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+    {
+        mikupan_configuration.renderer.render_scale_percent =
+            resolution_scale_percent_list[index];
+        render_resolution_width = MikuPan_GetRenderResolutionWidth();
+        render_resolution_height = MikuPan_GetRenderResolutionHeight();
+    }
+    else if (mode == MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW)
+    {
+        mikupan_configuration.renderer.render_scale_percent = 100;
+        render_resolution_width = MikuPan_GetRenderResolutionWidth();
+        render_resolution_height = MikuPan_GetRenderResolutionHeight();
+    }
+    else
+    {
+        render_resolution_width = resolution_list[index].width;
+        render_resolution_height = resolution_list[index].height;
+        mikupan_configuration.renderer.render.width = render_resolution_width;
+        mikupan_configuration.renderer.render.height = render_resolution_height;
+        mikupan_configuration.renderer.render_scale_percent = 100;
+    }
+
+    MikuPan_ConfigurationValidate();
     return 1;
 }
 
@@ -1057,7 +1328,14 @@ const char* MikuPan_GetMSAAOptionLabel(int index)
         return NULL;
     }
 
-    snprintf(labels[index], sizeof(labels[index]), "%d", msaa_list[index]);
+    if (msaa_list[index] == 0)
+    {
+        snprintf(labels[index], sizeof(labels[index]), "Off");
+    }
+    else
+    {
+        snprintf(labels[index], sizeof(labels[index]), "%dx", msaa_list[index]);
+    }
     return labels[index];
 }
 
@@ -1335,13 +1613,19 @@ int MikuPan_GetWindowMode(void)
 
 void MikuPan_SetWindowMode(int mode)
 {
-    if (mode < MIKUPAN_WINDOW_WINDOWED || mode > MIKUPAN_WINDOW_BORDERLESS)
+    if (mode == MIKUPAN_WINDOW_FULLSCREEN)
+    {
+        mode = MIKUPAN_WINDOW_BORDERLESS;
+    }
+
+    if (mode != MIKUPAN_WINDOW_WINDOWED && mode != MIKUPAN_WINDOW_BORDERLESS)
     {
         mode = MIKUPAN_WINDOW_WINDOWED;
     }
 
     window_mode = mode;
     is_fullscreen = (window_mode != MIKUPAN_WINDOW_WINDOWED);
+    MikuPan_RefreshWindowBackedRenderResolution();
 }
 
 int MikuPan_IsVsync(void)

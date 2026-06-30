@@ -173,6 +173,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer.window", "height", mikupan_configuration.renderer.window.height);
     ApplyValue(ini, "renderer.render", "width", mikupan_configuration.renderer.render.width);
     ApplyValue(ini, "renderer.render", "height", mikupan_configuration.renderer.render.height);
+    ApplyValue(ini, "renderer.render", "mode", mikupan_configuration.renderer.render_mode);
+    ApplyValue(ini, "renderer.render", "scale_percent", mikupan_configuration.renderer.render_scale_percent);
     ApplyValue(ini, "renderer", "is_fullscreen", mikupan_configuration.renderer.is_fullscreen);
     ApplyValue(ini, "renderer", "window_mode", mikupan_configuration.renderer.window_mode);
     ApplyValue(ini, "renderer", "vsync", mikupan_configuration.renderer.vsync);
@@ -329,6 +331,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer.window", "height", mikupan_configuration.renderer.window.height);
     SetValue(ini, "renderer.render", "width", mikupan_configuration.renderer.render.width);
     SetValue(ini, "renderer.render", "height", mikupan_configuration.renderer.render.height);
+    SetValue(ini, "renderer.render", "mode", mikupan_configuration.renderer.render_mode);
+    SetValue(ini, "renderer.render", "scale_percent", mikupan_configuration.renderer.render_scale_percent);
     SetValue(ini, "renderer", "is_fullscreen", mikupan_configuration.renderer.is_fullscreen);
     SetValue(ini, "renderer", "window_mode", mikupan_configuration.renderer.window_mode);
     SetValue(ini, "renderer", "vsync", mikupan_configuration.renderer.vsync);

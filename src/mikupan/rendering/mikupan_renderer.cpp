@@ -142,6 +142,12 @@ SDL_AppResult MikuPan_Init()
 #endif
 
     int startup_window_mode = mikupan_configuration.renderer.window_mode;
+#ifndef __ANDROID__
+    if (startup_window_mode == MIKUPAN_WINDOW_FULLSCREEN)
+    {
+        startup_window_mode = MIKUPAN_WINDOW_BORDERLESS;
+    }
+#endif
 #ifdef __ANDROID__
     startup_window_mode = MIKUPAN_WINDOW_FULLSCREEN;
 #endif
@@ -210,7 +216,13 @@ SDL_AppResult MikuPan_Init()
     int desired_msaa = mikupan_configuration.renderer.msaa_index;
     int desired_vsync = mikupan_configuration.renderer.vsync;
 
-    const int msaa_list[] = {0, 2, 4, 8, 16, 32};
+    const int msaa_list[] = {0, 2, 4, 8};
+    if (desired_msaa < 0
+        || desired_msaa >= (int)(sizeof(msaa_list) / sizeof(msaa_list[0])))
+    {
+        desired_msaa = 0;
+        mikupan_configuration.renderer.msaa_index = desired_msaa;
+    }
 
 #ifdef __ANDROID__
     desired_msaa = 0;
@@ -708,6 +720,13 @@ static void MikuPan_CenterWindowOnDisplay(SDL_Window* window, int width, int hei
 
 static void MikuPan_ApplyWindowMode(int mode)
 {
+#ifndef __ANDROID__
+    if (mode == MIKUPAN_WINDOW_FULLSCREEN)
+    {
+        mode = MIKUPAN_WINDOW_BORDERLESS;
+    }
+#endif
+
     SDL_Window *win = mikupan_render.window;
     if (win == NULL)
     {
@@ -733,16 +752,8 @@ static void MikuPan_ApplyWindowMode(int mode)
         }
         case MIKUPAN_WINDOW_BORDERLESS:
         {
-            SDL_SetWindowFullscreen(win, false);
-            SDL_SetWindowBordered(win, false);
-
-            SDL_DisplayID disp = SDL_GetDisplayForWindow(win);
-            SDL_Rect bounds;
-            if (SDL_GetDisplayBounds(disp, &bounds))
-            {
-                SDL_SetWindowPosition(win, bounds.x, bounds.y);
-                SDL_SetWindowSize(win, bounds.w, bounds.h + 1);
-            }
+            SDL_SetWindowFullscreenMode(win, NULL);
+            SDL_SetWindowFullscreen(win, true);
             break;
         }
 
@@ -817,7 +828,7 @@ void MikuPan_Clear()
     MikuPan_GPUSetTarget(MIKUPAN_GPU_TARGET_SCENE, 1);
     MikuPan_GPUBeginRenderPass();
 
-    if (mikupan_configuration.renderer.window_mode != MikuPan_GetWindowMode())
+    if (g_applied_window_mode != MikuPan_GetWindowMode())
     {
         MikuPan_ApplyWindowMode(MikuPan_GetWindowMode());
         mikupan_configuration.renderer.window_mode = MikuPan_GetWindowMode();
@@ -886,7 +897,6 @@ void MikuPan_EndFrame()
     };
 
     int offset_output[4];
-
     MikuPan_ConvertScreenToNDCCoord(
         offset_output,
         (float)mikupan_render.width, (float)mikupan_render.height,

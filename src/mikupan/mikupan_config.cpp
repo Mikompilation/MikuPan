@@ -5,8 +5,8 @@
 #define MIKUPAN_CONFIG_FONT_COUNT 2
 #define MIKUPAN_CONFIG_DEFAULT_WINDOW_WIDTH 1280
 #define MIKUPAN_CONFIG_DEFAULT_WINDOW_HEIGHT 720
-#define MIKUPAN_CONFIG_MSAA_COUNT 6
-#define MIKUPAN_CONFIG_DEFAULT_MSAA_INDEX 4
+#define MIKUPAN_CONFIG_MSAA_COUNT 4
+#define MIKUPAN_CONFIG_DEFAULT_MSAA_INDEX 3
 
 MikuPan_Config mikupan_configuration = {
     {
@@ -18,6 +18,8 @@ MikuPan_Config mikupan_configuration = {
             640,
             448
         },
+        MIKUPAN_RENDER_RESOLUTION_FIXED,
+        100,
         0,
         0,
         1,
@@ -115,14 +117,32 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->render.height = PS2_RESOLUTION_Y_INT;
     }
 
+    if (renderer->render_mode < MIKUPAN_RENDER_RESOLUTION_FIXED
+        || renderer->render_mode > MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+    {
+        renderer->render_mode = MIKUPAN_RENDER_RESOLUTION_FIXED;
+    }
+
+    renderer->render_scale_percent =
+        MikuPan_ClampInt(renderer->render_scale_percent, 25, 200);
+
+
     if (renderer->window_mode == MIKUPAN_WINDOW_WINDOWED
         && renderer->is_fullscreen)
     {
-        renderer->window_mode = MIKUPAN_WINDOW_FULLSCREEN;
+        renderer->window_mode = MIKUPAN_WINDOW_BORDERLESS;
     }
 
-    if (renderer->window_mode < MIKUPAN_WINDOW_WINDOWED
-        || renderer->window_mode > MIKUPAN_WINDOW_BORDERLESS)
+    /* Exclusive fullscreen was removed from the options. 
+    * Keep accepting the old config value, but migrate it
+    * to borderless fullscreen. */
+    if (renderer->window_mode == MIKUPAN_WINDOW_FULLSCREEN)
+    {
+        renderer->window_mode = MIKUPAN_WINDOW_BORDERLESS;
+    }
+
+    if (renderer->window_mode != MIKUPAN_WINDOW_WINDOWED
+        && renderer->window_mode != MIKUPAN_WINDOW_BORDERLESS)
     {
         renderer->window_mode = MIKUPAN_WINDOW_WINDOWED;
     }

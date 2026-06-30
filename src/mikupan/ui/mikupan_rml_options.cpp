@@ -352,7 +352,11 @@ static constexpr const char* kCategoryFirstControlIds[] = {
 static constexpr const char* kWindowModeLabels[] = {
     "Windowed",
     "Fullscreen",
-    "Borderless Fullscreen",
+};
+
+static constexpr int kWindowModeValues[] = {
+    MIKUPAN_WINDOW_WINDOWED,
+    MIKUPAN_WINDOW_BORDERLESS,
 };
 
 static constexpr int kWindowModeCount =
@@ -631,6 +635,29 @@ bool ApplyPendingResolution(void);
 bool ApplyPendingWindowSize(void);
 bool ApplyPendingWindowMode(void);
 
+int WindowModeOptionFromValue(int mode)
+{
+    for (int i = 0; i < kWindowModeCount; i++)
+    {
+        if (kWindowModeValues[i] == mode)
+        {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+int WindowModeValueFromOption(int index)
+{
+    if (index < 0 || index >= kWindowModeCount)
+    {
+        return MIKUPAN_WINDOW_WINDOWED;
+    }
+
+    return kWindowModeValues[index];
+}
+
 const char* WindowModeLabel(int index)
 {
     if (index < 0 || index >= kWindowModeCount)
@@ -675,7 +702,7 @@ int GetPickerAppliedIndex(MikuPanChoicePickerKind kind)
     switch (kind)
     {
         case MIKUPAN_PICKER_WINDOW_MODE:
-            return MikuPan_GetWindowMode();
+            return WindowModeOptionFromValue(MikuPan_GetWindowMode());
         case MIKUPAN_PICKER_WINDOW_SIZE:
             return MikuPan_GetSelectedWindowSizeOption();
         case MIKUPAN_PICKER_RESOLUTION:
@@ -717,7 +744,8 @@ void SetPickerPendingIndex(int index)
         case MIKUPAN_PICKER_WINDOW_MODE:
             g_rml.pending_window_mode = index;
             g_rml.window_mode_pending_dirty =
-                g_rml.pending_window_mode != MikuPan_GetWindowMode();
+                g_rml.pending_window_mode
+                != WindowModeOptionFromValue(MikuPan_GetWindowMode());
             break;
         case MIKUPAN_PICKER_WINDOW_SIZE:
             g_rml.pending_window_size_index = index;
@@ -808,7 +836,7 @@ void UpdateChoicePickerVisual(void)
 
 void UpdateWindowModePicker(void)
 {
-    const int selected = ClampInt(MikuPan_GetWindowMode(), 0, kWindowModeCount - 1);
+    const int selected = WindowModeOptionFromValue(MikuPan_GetWindowMode());
     if (!g_rml.window_mode_pending_dirty
         && g_rml.active_picker != MIKUPAN_PICKER_WINDOW_MODE
         && !g_rml.resolution_confirm_visible)
@@ -944,9 +972,8 @@ void OpenChoicePicker(MikuPanChoicePickerKind kind)
     g_rml.active_picker = kind;
     if (kind == MIKUPAN_PICKER_WINDOW_MODE)
     {
-        g_rml.pending_window_mode = ClampInt(MikuPan_GetWindowMode(),
-                                             0,
-                                             kWindowModeCount - 1);
+        g_rml.pending_window_mode =
+            WindowModeOptionFromValue(MikuPan_GetWindowMode());
         g_rml.window_mode_pending_dirty = false;
     }
     else if (kind == MIKUPAN_PICKER_WINDOW_SIZE)
@@ -982,9 +1009,8 @@ void CloseChoicePicker(void)
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
     if (old_picker == MIKUPAN_PICKER_WINDOW_MODE)
     {
-        g_rml.pending_window_mode = ClampInt(MikuPan_GetWindowMode(),
-                                             0,
-                                             kWindowModeCount - 1);
+        g_rml.pending_window_mode =
+            WindowModeOptionFromValue(MikuPan_GetWindowMode());
         g_rml.window_mode_pending_dirty = false;
         FocusElementById("window-mode-picker");
     }
@@ -1196,11 +1222,9 @@ void RevertResolutionChange(void)
     const MikuPanDisplayConfirmKind kind = g_rml.display_confirm_kind;
     if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_MODE)
     {
-        g_rml.original_window_mode = ClampInt(g_rml.original_window_mode,
-                                             0,
-                                             kWindowModeCount - 1);
         MikuPan_SetWindowMode(g_rml.original_window_mode);
-        g_rml.pending_window_mode = g_rml.original_window_mode;
+        g_rml.pending_window_mode =
+            WindowModeOptionFromValue(g_rml.original_window_mode);
         g_rml.window_mode_pending_dirty = false;
     }
     else if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_SIZE)
@@ -1263,7 +1287,7 @@ bool ApplyPendingWindowMode(void)
     g_rml.pending_window_mode = ClampInt(g_rml.pending_window_mode,
                                          0,
                                          kWindowModeCount - 1);
-    const int selected = ClampInt(MikuPan_GetWindowMode(), 0, kWindowModeCount - 1);
+    const int selected = WindowModeOptionFromValue(MikuPan_GetWindowMode());
     if (g_rml.pending_window_mode == selected)
     {
         g_rml.window_mode_pending_dirty = false;
@@ -1271,9 +1295,9 @@ bool ApplyPendingWindowMode(void)
         return true;
     }
 
-    g_rml.original_window_mode = selected;
+    g_rml.original_window_mode = MikuPan_GetWindowMode();
     g_rml.display_dirty_before_confirm = g_rml.has_unsaved_changes;
-    MikuPan_SetWindowMode(g_rml.pending_window_mode);
+    MikuPan_SetWindowMode(WindowModeValueFromOption(g_rml.pending_window_mode));
     MarkSettingsDirty();
     g_rml.window_mode_pending_dirty = false;
     UpdateDisplayPickers();
@@ -2033,8 +2057,9 @@ bool LoadOptionsDocument(void)
     g_rml.window_mode_choice = GetElement("window-mode-choice");
     g_rml.window_mode_value = GetElement("window-mode-value");
     g_rml.window_mode_pending_note = GetElement("window-mode-pending-note");
-    g_rml.pending_window_mode = MikuPan_GetWindowMode();
-    g_rml.original_window_mode = g_rml.pending_window_mode;
+    g_rml.pending_window_mode =
+        WindowModeOptionFromValue(MikuPan_GetWindowMode());
+    g_rml.original_window_mode = MikuPan_GetWindowMode();
     AddListener(g_rml.window_mode_picker,
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>(
@@ -2390,8 +2415,9 @@ static void MikuPan_RmlOptionsOpenInternal(bool in_game)
     g_rml.resolution_pending_dirty = false;
     g_rml.resolution_confirm_visible = false;
     g_rml.selected_category = 0;
-    g_rml.pending_window_mode = MikuPan_GetWindowMode();
-    g_rml.original_window_mode = g_rml.pending_window_mode;
+    g_rml.pending_window_mode =
+        WindowModeOptionFromValue(MikuPan_GetWindowMode());
+    g_rml.original_window_mode = MikuPan_GetWindowMode();
     g_rml.pending_window_size_index = MikuPan_GetSelectedWindowSizeOption();
     g_rml.original_window_size_index = g_rml.pending_window_size_index;
     g_rml.pending_resolution_index = MikuPan_GetSelectedRenderResolutionOption();
