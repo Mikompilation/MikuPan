@@ -94,7 +94,7 @@ static void FlushBuffer()
     dvif1 = sceDmaGetChan(1);
 
     ((int *)&cachetag[vu1tag_num])[0] = 1;
-    ((int *)&cachetag[vu1tag_num])[1] = (int)DummyFlushData;
+    ((int *)&cachetag[vu1tag_num])[1] = *(int *)DummyFlushData;
 
     cachetag[vu1tag_num].pad[0] = cachetag[vu1tag_num].pad[1] = 0;
 
@@ -278,7 +278,7 @@ void InitialDmaBuffer()
 
 void GsImageProcess(u_int *prim)
 {
-    AppendDmaTag((u_int)&prim[4], prim[2]);
+    AppendDmaTag(*(u_int*)&prim[4], prim[2]);
 }
 
 void SgTEXTransEnable()
@@ -390,7 +390,7 @@ void RebuildTRI2Files(u_int *prim)
     {
         tri2size = *(u_short *)&prim[3];
 
-        AppendDmaTag((u_int)prim, tri2size + 1);
+        AppendDmaTag(*(u_int*)prim, tri2size + 1);
         FlushModel(0);
 
         search_addr = prim + 4;
@@ -591,7 +591,7 @@ void LoadTextureAnimation(u_int *prim)
 
     prim[2] = 0x11000000;
 
-    AppendDmaTag((u_int)prim, tri2size + 1);
+    AppendDmaTag(*(u_int*)prim, tri2size + 1);
     FlushModel(0);
 
     data_p = (u_int *)getObjWrk();

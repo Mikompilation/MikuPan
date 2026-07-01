@@ -53,9 +53,9 @@ void DispMicroMemory()
 
     read_p = (u_int *) VU1_MICRO_ADDR;
 
-    while ((u_int) read_p <= (u_int) (VU1_MICRO_ADDR + 1968 * 4 * 4))
+    while (*(u_int*) read_p <= *(u_int*) (VU1_MICRO_ADDR + 1968 * 4 * 4))
     {
-        info_log("%x:%x %x %x %x", (u_int) read_p, read_p[0], read_p[1],
+        info_log("%x:%x %x %x %x", *(u_int*) read_p, read_p[0], read_p[1],
                read_p[2], read_p[3]);
 
         read_p += 4;
@@ -76,24 +76,24 @@ void DispVUMemory()
 
     read_p = (u_int *) (VU1_MEM_ADDR);
 
-    while ((u_int) read_p <= (u_int) (VU1_MEM_ADDR + 1023 * 4 * 4))
+    while (*(u_int*) read_p <= *(u_int*) (VU1_MEM_ADDR + 1023 * 4 * 4))
     {
         if (((u_int *) read_p)[3] == 0x3f800000
             || read_p == (u_int *) (VU1_MEM_ADDR + 75 * 4 * 4)
             || read_p == (u_int *) (VU1_MEM_ADDR + 80 * 4 * 4)
             || read_p == (u_int *) (VU1_MEM_ADDR + 85 * 4 * 4)
-            || ((u_int) read_p >= (VU1_MEM_ADDR + 8 * 4 * 4)
-                && (u_int) read_p <= (VU1_MEM_ADDR + 960 + 8 * 4 * 4)))
+            || (*(u_int*) read_p >= (VU1_MEM_ADDR + 8 * 4 * 4)
+                && *(u_int*) read_p <= (VU1_MEM_ADDR + 960 + 8 * 4 * 4)))
         {
-            info_log("%x(%3d):%f %f %f %f", (u_int) read_p,
-                   (u_int) ((u_int) read_p - VU1_MEM_ADDR) / (4 * 4),
+            info_log("%x(%3d):%f %f %f %f", *(u_int*) read_p,
+                   *(u_int*) (*(u_int*) read_p - VU1_MEM_ADDR) / (4 * 4),
                    ((float *) read_p)[0], ((float *) read_p)[1],
                    ((float *) read_p)[2], ((float *) read_p)[3]);
         }
         else
         {
-            info_log("%x(%3d):%8x %8x %8x %8x", (u_int) read_p,
-                   (u_int) ((u_int) read_p - VU1_MEM_ADDR) / (4 * 4), read_p[0],
+            info_log("%x(%3d):%8x %8x %8x %8x", *(u_int*) read_p,
+                   *(u_int*) (*(u_int*) read_p - VU1_MEM_ADDR) / (4 * 4), read_p[0],
                    read_p[1], read_p[2], read_p[3]);
         }
 
@@ -118,7 +118,7 @@ void DrawBoundingBox(sceVu0FVECTOR *box)
 
     datap = (u_int *) getObjWrk();
 
-    datap[0] = (u_int) 0x11000000;
+    datap[0] = *(u_int*) 0x11000000;
     datap[1] = 0;
     datap[2] = 0;
     datap[3] = 0x6c010005;
@@ -234,13 +234,13 @@ void DrawBoundingBox(sceVu0FVECTOR *box)
     }
 
     datap[0] = 0x11000000;
-    datap[1] = 0x14000000 | ((u_int) DIVP0_PROLOGUE_and_DIVP2_PROLOGUE >> 3);
+    datap[1] = 0x14000000 | (*(u_int*) DIVP0_PROLOGUE_and_DIVP2_PROLOGUE >> 3);
     datap[2] = 0x11000000;
     datap[3] = 0x17000000;
 
     datap += 4;
 
-    qwc = (u_int) ((u_int) datap - (u_int) startp) >> 4;
+    qwc = *(u_int*) (*(u_int*) datap - *(u_int*) startp) >> 4;
 
     startp[0] = 0;
     startp[1] = 0;
@@ -264,9 +264,9 @@ void SetVUMeshDataP(u_int *prim)
         case 0x10:
             LoadSgProg(VUPROG_SG_PRESET0);
 
-            AppendDmaTag((u_int) &prim[8], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[8], prim[2]);
 
-            addr = (u_int) &vuvnprim[4];
+            addr = *(u_int*) &vuvnprim[4];
             AppendDmaTag(addr, *(u_char *) &vuvnprim[3]);
 
             datap = (u_int *) getObjWrk();
@@ -275,13 +275,13 @@ void SetVUMeshDataP(u_int *prim)
             {
                 datap[0] = 0x11000000;
                 datap[1] = 0x14000000
-                           | ((u_int) DIVP0_PROLOGUE_and_DIVP2_PROLOGUE >> 3);
+                           | (*(u_int*) DIVP0_PROLOGUE_and_DIVP2_PROLOGUE >> 3);
                 datap[2] = 0x11000000;
                 datap[3] = 0x17000000;
             }
             else
             {
-                datap[0] = 0x14000000 | ((u_int) DP0_PROLOGUE >> 3);
+                datap[0] = 0x14000000 | (*(u_int*) DP0_PROLOGUE >> 3);
                 datap[1] = 0x17000000;
                 datap[2] = 0x11000000;
                 datap[3] = 0x17000000;
@@ -296,9 +296,9 @@ void SetVUMeshDataP(u_int *prim)
         case 0x32:
             LoadSgProg(VUPROG_SG_PRESET2);
 
-            addr = (u_int) &vuvnprim[4];
+            addr = *(u_int*) &vuvnprim[4];
             AppendDmaTag(addr, *(u_char *) &vuvnprim[3]);
-            AppendDmaTag((u_int) &prim[8], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[8], prim[2]);
 
             datap = (u_int *) getObjWrk();
 
@@ -309,13 +309,13 @@ void SetVUMeshDataP(u_int *prim)
             {
                 datap[0] = 0x11000000;
                 datap[1] = 0x14000000
-                           | ((u_int) DIVP0_PROLOGUE_and_DIVP2_PROLOGUE >> 3);
+                           | (*(u_int*) DIVP0_PROLOGUE_and_DIVP2_PROLOGUE >> 3);
                 datap[2] = 0x11000000;
                 datap[3] = 0x17000000;
             }
             else
             {
-                datap[0] = 0x14000000 | ((u_int) DP2_PROLOGUE >> 3);
+                datap[0] = 0x14000000 | (*(u_int*) DP2_PROLOGUE >> 3);
                 datap[1] = 0x17000000;
                 datap[2] = 0x11000000;
                 datap[3] = 0x17000000;
@@ -328,11 +328,11 @@ void SetVUMeshDataP(u_int *prim)
         case 0x72:
             if (edge_check == 0)
             {
-                AppendDmaTag((u_int) &prim[4], prim[2]);
+                AppendDmaTag(*(u_int*) &prim[4], prim[2]);
 
                 datap = (u_int *) getObjWrk();
 
-                datap[0] = 0x14000000 | ((u_int) MULTIP_PROLOGUE >> 3);
+                datap[0] = 0x14000000 | (*(u_int*) MULTIP_PROLOGUE >> 3);
                 datap[1] = 0x17000000;
                 datap[2] = 0x11000000;
                 datap[3] = 0x17000000;

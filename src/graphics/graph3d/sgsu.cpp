@@ -658,12 +658,12 @@ void SetVUMeshData(u_int *prim)
         case 0:
             read_p = SetVUVNData(vuvnprim);
 
-            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE0 >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) DRAWTYPE0 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
 
-            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
             AppendDmaBuffer(((u_char *) vuvnprim)[12]);
             FlushModel(0);
             break;
@@ -671,24 +671,24 @@ void SetVUMeshData(u_int *prim)
             read_p = SetVUVNData(vuvnprim);
             MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER*)vuvnprim, (SGDPROCUNITHEADER*)prim, (float*)read_p);
 
-            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE2 >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) DRAWTYPE2 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
 
-            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
             AppendDmaBuffer(((u_char *) vuvnprim)[12]);
             FlushModel(0);
             break;
         case 0x80:
             //MikuPan_RenderMeshType0x82(vuvnprim, prim);
-            AppendDmaTag((u_int) &prim[4], prim[2]);
-            AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
 
             read_p = (u_int *) getObjWrk();
 
-            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE0 >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) DRAWTYPE0 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
@@ -699,13 +699,13 @@ void SetVUMeshData(u_int *prim)
         case 0x82:
             MikuPan_RenderMeshType0x82(vuvnprim, prim);
 
-            AppendDmaTag((u_int) &prim[4], prim[2]);
-            AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
 
             read_p = (u_int *) getObjWrk();
 
-            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE2 >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) DRAWTYPE2 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
@@ -714,11 +714,11 @@ void SetVUMeshData(u_int *prim)
             FlushModel(0);
             break;
         case 0x42:
-            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
 
             read_p = (u_int *) getObjWrk();
 
-            read_p[0] = 0x14000000 | ((u_int) MULTI_PROLOGUE >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) MULTI_PROLOGUE >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
@@ -747,12 +747,12 @@ void SetVUMeshDataPost(u_int *prim)
 
             //MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER*)vuvnprim, (SGDPROCUNITHEADER*)prim, (float*)read_p);
 
-            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE0 >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) DRAWTYPE0 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
 
-            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
             AppendDmaBuffer(((u_char *) vuvnprim)[12]);
             FlushModel(0);
             break;
@@ -762,21 +762,21 @@ void SetVUMeshDataPost(u_int *prim)
             /// Needs to be its own function since the actual type is 0x10
             MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER *)vuvnprim, (SGDPROCUNITHEADER *)prim, (float *)read_p);
 
-            read_p[0] = 0x14000000 | ((u_int) DRAWTYPE2W >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) DRAWTYPE2W >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
 
-            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
             AppendDmaBuffer(((u_char *) vuvnprim)[12]);
             FlushModel(0);
             break;
         case 0x42:
-            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
 
             read_p = (u_int *) getObjWrk();
 
-            read_p[0] = 0x14000000 | ((u_int) MULTI_PROLOGUE >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) MULTI_PROLOGUE >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
@@ -957,7 +957,7 @@ void AppendVUProgTag(u_int *prog)
     while (((SgSourceChainTag *) prog)->ID
            != 7) /* so long as it's not DmaEnd */
     {
-        AppendDmaTag((u_int) (((SgSourceChainTag *) prog) + 1),
+        AppendDmaTag(*(u_int*) (((SgSourceChainTag *) prog) + 1),
                      ((SgSourceChainTag *) prog)->QWC);
         prog = (u_int *) &(
             ((u_long *) prog)[((SgSourceChainTag *) prog)->QWC * 2 + 2]);
@@ -996,7 +996,7 @@ void LoadSgProg(int load_prog)
             break;
     }
 
-    AppendDmaTag((u_int) pk, 1);
+    AppendDmaTag(*(u_int*) pk, 1);
 
     vu_prog_num = load_prog;
 
@@ -1092,7 +1092,7 @@ void SgSortUnit(void *sgd_top, int pnum)
     wscissor_flg = 0;
     lcp = GetCoordP(hs);
 
-    if (((u_int) lcp & 0xf) != 0)
+    if ((*(u_int*) lcp & 0xf) != 0)
     {
         info_log("SgSortUnit Data broken. %x lcp %x", sgd_top, lcp);
         return;

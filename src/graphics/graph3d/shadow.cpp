@@ -133,7 +133,7 @@ void TransShadowClut()
     *(u_long *) &shadow_pal[6][0] =
         SCE_GIF_SET_TAG(64, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 0);
 
-    AppendDmaTag((u_int) shadow_pal,
+    AppendDmaTag(*(u_int*) shadow_pal,
                  sizeof(shadow_pal)
                      / sizeof(qword));// could also be a defined value
 }
@@ -490,12 +490,12 @@ void ShadowModelMesh(u_int *prim)
 
             MikuPan_RenderShadowSilhouettePrepared(vuvnprim, prim, GetPreparedShadowPositions(vuvnprim, read_p));
 
-            read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE0 >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) SHADOWDRAWTYPE0 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
 
-            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
             AppendDmaBuffer(tmp[4] + 3);
             FlushModel(0);
             break;
@@ -512,24 +512,24 @@ void ShadowModelMesh(u_int *prim)
                 (SGDPROCUNITHEADER *) prim,
                 GetPreparedShadowPositions(vuvnprim, read_p));
 
-            read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE2 >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) SHADOWDRAWTYPE2 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
 
-            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
             AppendDmaBuffer(tmp[4] + 3);
             FlushModel(0);
             break;
         case 0x80:
             MikuPan_RenderShadowSilhouette0x80(vuvnprim, prim);
 
-            AppendDmaTag((u_int) &prim[4], prim[2]);
-            AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
             
             read_p = (u_int *) getObjWrk();
-            read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE0 >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) SHADOWDRAWTYPE0 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
@@ -540,13 +540,13 @@ void ShadowModelMesh(u_int *prim)
         case 0x82:
             MikuPan_RenderMeshType0x82(vuvnprim, prim);
 
-            AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
+            AppendDmaTag(*(u_int*) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
-            AppendDmaTag((u_int) &prim[4], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[4], prim[2]);
 
             read_p = (u_int *) getObjWrk();
 
-            read_p[0] = 0x14000000 | ((u_int) SHADOWDRAWTYPE2 >> 3);
+            read_p[0] = 0x14000000 | (*(u_int*) SHADOWDRAWTYPE2 >> 3);
             read_p[1] = 0x17000000;
             read_p[2] = 0x11000000;
             read_p[3] = 0x17000000;
@@ -736,22 +736,22 @@ void ShadowMeshDataVU(u_int *prim)
                                            (SGDPROCUNITHEADER *)prim);
             }
 
-            AppendDmaTag((u_int) & ((u_char *) vuvnprim)[16],
+            AppendDmaTag(*(u_int*) & ((u_char *) vuvnprim)[16],
                          ((u_char *) vuvnprim)[12]);
-            AppendDmaTag((u_int) &prim[8], prim[2]);
+            AppendDmaTag(*(u_int*) &prim[8], prim[2]);
 
             datap = (u_int *) getObjWrk();
 
             if (edge_check != 0)
             {
-                datap[0] = 0x15000000 | ((u_int) DIVPS_PROLOGUE >> 3);
+                datap[0] = 0x15000000 | (*(u_int*) DIVPS_PROLOGUE >> 3);
                 datap[2] = 0x17000000;
                 datap[1] = 0x11000000;
                 datap[3] = 0x17000000;
             }
             else
             {
-                datap[0] = 0x14000000 | ((u_int) DPS_PROLOGUE >> 3);
+                datap[0] = 0x14000000 | (*(u_int*) DPS_PROLOGUE >> 3);
                 datap[1] = 0x17000000;
                 datap[2] = 0x11000000;
                 datap[3] = 0x17000000;

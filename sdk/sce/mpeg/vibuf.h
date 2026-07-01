@@ -13,9 +13,9 @@
 #define VIBUF_SIZE 256
 #define VIBUF_TS_SIZE (VIBUF_SIZE*2)
 
-#define TAG_ADDR(i)	((u_int)DmaAddr(f->tag + i))
-#define DATA_ADDR(i)	((u_int)f->data + VIBUF_ELM_SIZE * (i))
-#define WRAP_ADDR(addr) ((u_int)(f->data)     + (((u_int)(addr) - (u_int)(f->data)) % (VIBUF_ELM_SIZE * f->n)))
+#define TAG_ADDR(i)	(*(u_int*)DmaAddr(f->tag + i))
+#define DATA_ADDR(i)	(*(u_int*)f->data + VIBUF_ELM_SIZE * (i))
+#define WRAP_ADDR(addr) (*(u_int*)(f->data)     + (((u_int)(addr) - *(u_int*)(f->data)) % (VIBUF_ELM_SIZE * f->n)))
 #define IsInRegion(i,start,len,n)  (     (0 <= (((i) + (n) - (start)) % (n))) &&     ((((i) + (n) - (start)) % (n)) < (len)))
 
 //extern inline int IsPtsInRegion(int tgt, int pos, int len, int size)

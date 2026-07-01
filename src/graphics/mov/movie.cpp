@@ -1026,7 +1026,7 @@ void initMov(char *bsfilename)
             info_log("[AUDIO] %d Hz %d ch", g_audio_state.rate,
                      g_audio_state.channels);
 
-            SDL_AudioSpec spec = {0};
+            SDL_AudioSpec spec = SDL_AudioSpec();
             spec.freq = g_audio_state.rate;
             spec.format = SDL_AUDIO_S16;
             spec.channels = g_audio_state.channels;
@@ -2325,7 +2325,7 @@ int strFileOpen(StrFile *file, char *filename)
     int dlen;
     int i;
     int len;
-    char *tail;
+    const char *tail;
     sceCdRMode mode;
     int ret;
 
@@ -2384,7 +2384,7 @@ int strFileOpen(StrFile *file, char *filename)
 
         file->iopBuf = (u_char *)sceSifAllocIopHeap(2048 * 80 + 16);
 
-        sceCdStInit(80, 5, bound((u_int) file->iopBuf, 16));
+        sceCdStInit(80, 5, bound(*(u_int*) file->iopBuf, 16));
 
         if (sceCdSearchFile(&file->fp, fn) == 0)
         {
@@ -2471,7 +2471,7 @@ int getFIFOindex(ViBuf *f, void *addr)
     }
     else
     {
-        return ((u_int) addr - (u_int) f->data) / VIBUF_ELM_SIZE;
+        return (*(u_int*) addr - *(u_int*) f->data) / VIBUF_ELM_SIZE;
     }
 }
 
@@ -2504,10 +2504,10 @@ void setD4_CHCR(u_int val)
 void scTag2(QWORD *q, void *addr, u_int id, u_int qwc)
 {
     return;
-    addr = MikuPan_GetHostPointer((int) addr);
-    q = (QWORD *)MikuPan_GetHostPointer((int) q);
+    addr = MikuPan_GetHostPointer(*(int*) addr);
+    q = (QWORD *)MikuPan_GetHostPointer(*(int*) q);
     q->l[0] =
-        (u_long) (u_int) addr << 32 | (u_long) id << 28 | (u_long) qwc << 0;
+        (u_long) *(u_int*) addr << 32 | (u_long) id << 28 | (u_long) qwc << 0;
 }
 
 int viBufCreate(ViBuf *f, u_long128 *data, u_long128 *tag, int size,
@@ -2743,10 +2743,10 @@ int viBufRestartDMA(ViBuf *f)
 
     WaitSema(f->sema);
 
-    if (d4madr_next < (u_int) f->data)
+    if (d4madr_next < *(u_int*) f->data)
     {
         d4qwc_next = (DATA_ADDR(0) - d4madr_next) >> 4;
-        d4madr_next += (u_int) (f->n * VIBUF_ELM_SIZE);
+        d4madr_next += *(u_int*) (f->n * VIBUF_ELM_SIZE);
         d4tadr_next = TAG_ADDR(0);
 
         id = (f->env.d4madr == DATA_ADDR(0) || f->env.d4madr == DATA_ADDR(f->n))
@@ -2990,7 +2990,7 @@ int viBufGetTs(ViBuf *f, TimeStamp *ts)
     ts->pts = TS_NONE;
     ts->dts = TS_NONE;
 
-    stop = (d4madr_next + (bp >> 3) + datasize - (u_int) f->data) % datasize;
+    stop = (d4madr_next + (bp >> 3) + datasize - *(u_int*) f->data) % datasize;
 
     tscount = f->count_ts;
 

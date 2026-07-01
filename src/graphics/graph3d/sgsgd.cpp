@@ -229,11 +229,11 @@ void SgMapRebuld(void *sgd_top)
         return;
     }
 
-    prim = (u_int *)((int)hs->primitives + (int)sgd_top);
+    prim = (u_int *)(*(int*)hs->primitives + *(int*)sgd_top);
 
     while (prim[0] != 0)
     {
-        nextprim = (u_int *)(prim[0] + (int)prim);
+        nextprim = (u_int *)(prim[0] + *(int*)prim);
 
         // check that always evaluates to false ???
         // most likely `prim == 0` that got optimized out
@@ -507,7 +507,7 @@ u_int* GetEndPacketAddr(void *sgd_top, int num)
 
     pk = GetPrimitiveAddr(sgd_top, num);
 
-    if ((u_int)pk == 0xFFFFFFFF || pk == NULL)
+    if (*(u_int*)pk == 0xFFFFFFFF || pk == NULL)
     {
         return pk;
     }
@@ -526,7 +526,7 @@ u_int* GetEndPacketAddr(void *sgd_top, int num)
 void PostChainPacket(u_int *dest, u_int *source)
 {
     *source = *dest;
-    *dest = (u_int)source;
+    *dest = *(u_int*)source;
 }
 
 int GetModelKind(void *sgd_top)
