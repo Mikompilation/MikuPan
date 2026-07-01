@@ -14,6 +14,7 @@ void MikuPan_UiShadowDebugWindow(void);
 void MikuPan_UiPhotoDebugWindow(void);
 void MikuPan_UiShadowResolutionCombo(const char* label);
 void MikuPan_ShowTextureList(void);
+void MikuPan_UiDebugHandleShortcuts(void);
 float MikuPan_GetFrameRate(void);
 int MikuPan_IsWireframeRendering(void);
 int MikuPan_IsNormalsRendering(void);

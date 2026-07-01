@@ -155,6 +155,48 @@ static void EffectSubWriteTextured2DVertex(
     dst[11] = 1.0f;
 }
 
+static void EffectSubWriteNativeScreenCopyVertex(
+    float *dst,
+    float u,
+    float v,
+    float x,
+    float y,
+    float z,
+    int r,
+    int g,
+    int b,
+    int a)
+{
+    float ndc[2];
+
+    MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(
+        ndc,
+        (float)MikuPan_GetWindowWidth(),
+        (float)MikuPan_GetWindowHeight(),
+        x,
+        y);
+
+    /*
+     * Framebuffer feedback effects such as EF_FOCUS draw shifted copies of the
+     * live scene. The destination position is the shifted quad, but the source
+     * UV must stay local to that quad. If the source UV is derived from the
+     * destination screen position, source == destination and the effect becomes
+     * invisible.
+     */
+    dst[0] = u;
+    dst[1] = v;
+    dst[2] = 0.0f;
+    dst[3] = 0.0f;
+    dst[4] = MikuPan_ConvertScaleColor(EffectSubClampColor(r));
+    dst[5] = MikuPan_ConvertScaleColor(EffectSubClampColor(g));
+    dst[6] = MikuPan_ConvertScaleColor(EffectSubClampColor(b));
+    dst[7] = MikuPan_ConvertScaleColor(EffectSubClampColor(a));
+    dst[8] = ndc[0];
+    dst[9] = ndc[1];
+    dst[10] = z;
+    dst[11] = 1.0f;
+}
+
 static int EffectSubIsMainFramebufferAddress(int addr)
 {
     return addr == 0 || addr == SCR_HEIGHT * (SCR_WIDTH / 64);
@@ -289,6 +331,35 @@ static int EffectSubTex1UsesNearest(u_long tex1)
     return gs_tex1->MMAG == SCE_GS_NEAREST;
 }
 
+
+static int EffectSubIsNominalFullscreenRect(float x0, float y0, float x1, float y1)
+{
+    const float epsilon = 2.0f;
+    const float left = x0 < x1 ? x0 : x1;
+    const float right = x0 > x1 ? x0 : x1;
+    const float top = y0 < y1 ? y0 : y1;
+    const float bottom = y0 > y1 ? y0 : y1;
+
+    return fabsf(left + PS2_CENTER_X) <= epsilon &&
+           fabsf(right - PS2_CENTER_X) <= epsilon &&
+           fabsf(top + PS2_CENTER_Y) <= epsilon &&
+           fabsf(bottom - PS2_CENTER_Y) <= epsilon;
+}
+
+static void EffectSubApplyScreenEffectPresentationFixes(
+    const sceGsTex0 *tex,
+    float *vertices,
+    int vertex_count,
+    int expand_to_full_render_target)
+{
+    MikuPan_ApplyScreenDitherPresentationScale(tex, vertices, vertex_count);
+
+    if (expand_to_full_render_target)
+    {
+        MikuPan_ExpandScreenEffectQuadNoStretch(vertices, vertex_count);
+    }
+}
+
 static void EffectSubRenderTexturedSpriteVerticesGSAlpha(
     sceGsTex0 *tex,
     float *vertices,
@@ -326,7 +397,7 @@ static void EffectSubRenderTexturedSpriteVerticesGSAlpha(
         return;
     }
 
-    MikuPan_ApplyScreenDitherPresentationScale(tex, vertices, 4);
+    nearest_sampler = MikuPan_GetScreenDitherNearestSampler(tex, nearest_sampler);
     MikuPan_RenderSprite2DFilteredGSAlpha(tex, vertices, nearest_sampler, gs_alpha);
 }
 
@@ -365,7 +436,48 @@ static void EffectSubRenderTexturedSpriteQuad(
     EffectSubWriteTextured2DVertex(vertices[2], u0, v1, x0, y1, z, r, g, b, a);
     EffectSubWriteTextured2DVertex(vertices[3], u1, v1, x1, y1, z, r, g, b, a);
 
+    EffectSubApplyScreenEffectPresentationFixes(
+        tex, &vertices[0][0], 4,
+        EffectSubIsNominalFullscreenRect(x0, y0, x1, y1));
+
     EffectSubRenderTexturedSpriteVertices(tex, &vertices[0][0], 0);
+}
+
+static void EffectSubRenderNativeScreenCopyQuadGSAlpha(
+    sceGsTex0 *tex,
+    float x0,
+    float y0,
+    float x1,
+    float y1,
+    float z,
+    int r,
+    int g,
+    int b,
+    int a,
+    u_long gs_alpha)
+{
+    static const int indices[6] = {0, 1, 2, 2, 1, 3};
+    float quad[4][12];
+    float triangles[6][12];
+    int i;
+    int j;
+
+    EffectSubWriteNativeScreenCopyVertex(quad[0], 0.0f, 0.0f, x0, y0, z, r, g, b, a);
+    EffectSubWriteNativeScreenCopyVertex(quad[1], 1.0f, 0.0f, x1, y0, z, r, g, b, a);
+    EffectSubWriteNativeScreenCopyVertex(quad[2], 0.0f, 1.0f, x0, y1, z, r, g, b, a);
+    EffectSubWriteNativeScreenCopyVertex(quad[3], 1.0f, 1.0f, x1, y1, z, r, g, b, a);
+
+    for (i = 0; i < 6; i++)
+    {
+        const float *src = quad[indices[i]];
+        for (j = 0; j < 12; j++)
+        {
+            triangles[i][j] = src[j];
+        }
+    }
+
+    MikuPan_RenderScreenCopyTriangles3DDirectUvGSAlpha(
+        tex, &triangles[0][0], 6, 1, gs_alpha);
 }
 
 static void EffectSubConvertGSPointToNDC(const sceVu0IVECTOR ivec, float ndc[2])
@@ -1779,13 +1891,8 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
 	int mz;
 	u_int th;
 	float div;
-	int u[14];
 	int v;
-	int x[14];
-	int i;
-	int n;
 	int mtw;
-	float wx;
 	float mx;
 	float my;
 	float mscw;
@@ -1827,27 +1934,19 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
     yy[0] = py;
     yy[3] = py + ph;
 
-    u[0] = 0;
-    x[0] = px * 16.0f;
-    
-    wx = 0.0f;
-    n = 1;
-    while (wx < mszw)
+    /*
+     * The original game only reached the native 640-wide case here.
+     * The old 14-entry temporary u/x arrays were enough for 64-pixel strips.
+     * MikuPan can now expand fullscreen effects wider at non-default resolutions,
+     * so compute the required strip count up fron instead of using a fixed-size array!
+     */
+    if (mszw <= 0.0f || mszh <= 0.0f)
     {
-        if (wx + 64.0f <= mszw)
-        {
-            wx = wx + 64.0f;
-        }
-        else
-        {
-            wx = mszw;
-        }
-        
-        x[n] = (px + wx) * 16.0f;
-        u[n] = ((wx * mtw) / mszw) * 16.0f;
-
-        n++;
+        return;
     }
+
+    constexpr float kStripWidth = 64.0f;
+    const int strip_points = (int)ceilf(mszw / kStripWidth) + 1;
     
     if (sd->g_GsTex0.PSM == SCE_GS_PSMT4)
     {
@@ -1867,7 +1966,7 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
     
     pbuf[ndpkt].ul128 = u_long128_from_u64(0);
 
-    pbuf[ndpkt++].ui32[0] = DMAend + 10 + n * 5;
+    pbuf[ndpkt++].ui32[0] = DMAend + 10 + strip_points * 5;
     
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(8, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
@@ -1895,14 +1994,17 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TEX1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEX1_1;
     
+    u_long gs_alpha;
+
     if (atype != 0)
     {
-        pbuf[ndpkt].ul64[0] = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_FIX, SCE_GS_ALPHA_CD, malp);
+        gs_alpha = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_FIX, SCE_GS_ALPHA_CD, malp);
     }
     else
     {
-        pbuf[ndpkt].ul64[0] = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 128);
+        gs_alpha = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 128);
     }
+    pbuf[ndpkt].ul64[0] = gs_alpha;
     pbuf[ndpkt++].ul64[1] = SCE_GS_ALPHA_1;
     
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_CLAMP(0, 0, 0, 0, 0, 0);
@@ -1914,7 +2016,7 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TEST_1(SCE_GS_TRUE, SCE_GS_ALPHA_GREATER, SCE_GS_FALSE, SCE_GS_AFAIL_KEEP, SCE_GS_FALSE, SCE_GS_FALSE, SCE_GS_TRUE, SCE_GS_DEPTH_ALWAYS);
     pbuf[ndpkt++].ul64[1] = SCE_GS_TEST_1;
     
-    pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(n, SCE_GS_TRUE, SCE_GS_TRUE, 340, SCE_GIF_PACKED, 5);
+    pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(strip_points, SCE_GS_TRUE, SCE_GS_TRUE, 340, SCE_GIF_PACKED, 5);
     pbuf[ndpkt++].ul64[1] = 0 \
         | SCE_GS_RGBAQ << (4 * 0) 
         | SCE_GS_UV    << (4 * 1) 
@@ -1922,8 +2024,12 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
         | SCE_GS_UV    << (4 * 3) 
         | SCE_GS_XYZF2 << (4 * 4);
     
-    for (i = 0; i < n; i++)
+    for (int i = 0; i < strip_points; i++)
     {
+        const float wx = MIN((float)i * kStripWidth, mszw);
+        const int cur_x = (int)((px + wx) * 16.0f);
+        const int cur_u = (int)(((wx * (float)mtw) / mszw) * 16.0f);
+
         pbuf[ndpkt].ui32[0] = 128;
         pbuf[ndpkt].ui32[1] = 128;
         pbuf[ndpkt].ui32[2] = 128;
@@ -1936,22 +2042,22 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
             pbuf[ndpkt++].ui32[3] = malp;
         }
         
-        pbuf[ndpkt].ui32[0] = u[i];
+        pbuf[ndpkt].ui32[0] = cur_u;
         pbuf[ndpkt].ui32[1] = 0;
         pbuf[ndpkt].ui32[2] = 0;
         pbuf[ndpkt++].ui32[3] = 0;
         
-        pbuf[ndpkt].ui32[0] = x[i];
+        pbuf[ndpkt].ui32[0] = cur_x;
         pbuf[ndpkt].ui32[1] = yy[0];
         pbuf[ndpkt].ui32[2] = mz;
         pbuf[ndpkt++].ui32[3] = (i > 0) ? 0 : 0x8000;
         
-        pbuf[ndpkt].ui32[0] = u[i];
+        pbuf[ndpkt].ui32[0] = cur_u;
         pbuf[ndpkt].ui32[1] = v;
         pbuf[ndpkt].ui32[2] = 0;
         pbuf[ndpkt++].ui32[3] = 0;
         
-        pbuf[ndpkt].ui32[0] = x[i];
+        pbuf[ndpkt].ui32[0] = cur_x;
         pbuf[ndpkt].ui32[1] = yy[3];
         pbuf[ndpkt].ui32[2] = mz;
         pbuf[ndpkt++].ui32[3] = (i > 0) ? 0 : 0x8000;
@@ -1962,21 +2068,39 @@ void SetTexDirectS(int pri, SPRITE_DATA *sd, int atype) {
         float tex_w = (float)(1 << render_tex.TW);
         float tex_h = (float)(1 << render_tex.TH);
 
-        EffectSubRenderTexturedSpriteQuad(
-            &render_tex,
-            mx,
-            my,
-            mx + mszw,
-            my + mszh,
-            0.0f,
-            0.0f,
-            ((float)mtw * 16.0f) / (tex_w * 16.0f),
-            (float)v / (tex_h * 16.0f),
-            EffectSubConvertSpriteDepthToNDC(mz),
-            0x80,
-            0x80,
-            0x80,
-            malp);
+        if (atype == 0 && EffectSubIsLiveFramebufferTexture(&render_tex))
+        {
+            EffectSubRenderNativeScreenCopyQuadGSAlpha(
+                &render_tex,
+                mx,
+                my,
+                mx + mszw,
+                my + mszh,
+                EffectSubConvertSpriteDepthToNDC(mz),
+                0x80,
+                0x80,
+                0x80,
+                malp,
+                gs_alpha);
+        }
+        else
+        {
+            EffectSubRenderTexturedSpriteQuad(
+                &render_tex,
+                mx,
+                my,
+                mx + mszw,
+                my + mszh,
+                0.0f,
+                0.0f,
+                ((float)mtw * 16.0f) / (tex_w * 16.0f),
+                (float)v / (tex_h * 16.0f),
+                EffectSubConvertSpriteDepthToNDC(mz),
+                0x80,
+                0x80,
+                0x80,
+                malp);
+        }
     }
 }
 
@@ -2197,6 +2321,10 @@ void SetTexDirectS2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, int type)
         buffer[i][10] = gl_z;
         buffer[i][11] = 1.0f;
     }
+
+    EffectSubApplyScreenEffectPresentationFixes(
+        mikupan_texture_load, &buffer[0][0], 4,
+        EffectSubIsNominalFullscreenRect(x0, y0, x1, y1));
 
     EffectSubRenderTexturedSpriteVerticesGSAlpha(
         mikupan_texture_load, &buffer[0][0], 1, alpha,
@@ -2444,6 +2572,10 @@ void SetTexDirect2(int pri, SPRITE_DATA *sd, DRAW_ENV *de, sceVu0FVECTOR *v)
         buffer[i][10] = gl_z;
         buffer[i][11] = 1.0f;
     }
+
+    EffectSubApplyScreenEffectPresentationFixes(
+        mikupan_texture_load, &buffer[0][0], 4,
+        EffectSubIsNominalFullscreenRect(x0, y0, x1, y1));
 
     EffectSubRenderTexturedSpriteVerticesGSAlpha(
         mikupan_texture_load, &buffer[0][0], 1, alpha,
@@ -2746,6 +2878,10 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
             (float)MikuPan_GetWindowWidth(), (float)MikuPan_GetWindowHeight(),
             vertices[i][8], vertices[i][9]);
     }
+
+    EffectSubApplyScreenEffectPresentationFixes(
+        mikupan_texture_load, &vertices[0][0], 4,
+        EffectSubIsNominalFullscreenRect(x0, y0, x1, y1));
 
     EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &vertices[0][0], 1);
 

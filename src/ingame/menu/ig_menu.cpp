@@ -4,6 +4,7 @@
 #include "ig_menu.h"
 
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/ui/mikupan_rml_options.h"
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_sub.h"
 // #include "graphics/graph2d/tim2.h"
@@ -30,6 +31,7 @@
 
 static void IngameMenuOpenInit();
 static u_char MenuInOut();
+static void IngameMenuRmlOption();
 static void TimeZone(short int pos_x, short int pos_y, float alp);
 static void ClockHari(u_short char_lbl, short int pos_x, short int pos_y, float rot, short int rot_x, short int rot_y, float alp);
 static void ComingOut(short int pos_x, short int pos_y, float alp, u_char shadow);
@@ -53,6 +55,7 @@ static FLSH_CORE flsh;
 static int menu_load_id;
 static int fndr_load_id;
 static int mode_load_id;
+static int option_uses_rml;
 
 #ifdef BUILD_EU_VERSION
 #define SPR_ADDRESS_1 0x1ce0000
@@ -96,6 +99,7 @@ void IngameMenuInit()
     menu_load_id = -1;
     fndr_load_id = -1;
     mode_load_id = -1;
+    option_uses_rml = 0;
 }
 
 void IngameMenuOpenStart()
@@ -219,9 +223,15 @@ void IngameMenuMain()
         CameraCustomMain();
     break;
     case IGMENU_MODE_OPTN:
-        SetSprFile(MikuPan_GetHostAddress(SPR_ADDRESS_5));
-
-        IngameMenuOption();
+        if (option_uses_rml != 0)
+        {
+            IngameMenuRmlOption();
+        }
+        else
+        {
+            SetSprFile(MikuPan_GetHostAddress(SPR_ADDRESS_5));
+            IngameMenuOption();
+        }
     break;
     case IGMENU_MODE_ITEM_USE_SLCT:
         IngameMenuItemUseSlct();
@@ -375,15 +385,32 @@ void IngameMenuModeSlct()
             case 12:
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
-                ig_menu_wrk.mode = IGMENU_MODE_OPTN;
+                MikuPan_RmlOptionsOpenInGame();
+
+                if (MikuPan_RmlOptionsIsOpen())
+                {
+                    ig_menu_wrk.mode = IGMENU_MODE_OPTN;
+                    mode_load_id = -1;
+                    option_uses_rml = 1;
+                    yw2d.pad_lock = 1;
+                }
+                else
+                {
+                    /* If RmlUi failed to initialize for some reason, fall back
+                     * to the original in-game options page instead of trapping
+                     * the player in an empty menu state.
+                     */
+                    ig_menu_wrk.mode = IGMENU_MODE_OPTN;
+                    option_uses_rml = 0;
 
 #ifdef BUILD_EU_VERSION
-                mode_load_id = LoadReqLanguage(PL_OPTI_E_PK2, SPR_ADDRESS_5);
+                    mode_load_id = LoadReqLanguage(PL_OPTI_E_PK2, SPR_ADDRESS_5);
 #else
-                mode_load_id = LoadReq(PL_OPTI_PK2, SPR_ADDRESS_5);
+                    mode_load_id = LoadReq(PL_OPTI_PK2, SPR_ADDRESS_5);
 #endif
 
-                StartOptionModeInit(0);
+                    StartOptionModeInit(0);
+                }
             break;
             }
         }
@@ -423,6 +450,37 @@ void IngameMenuModeSlct()
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
         }
+    }
+}
+
+static void IngameMenuRmlOption()
+{
+    /* The PC options menu lives in RmlUi now. Keep the in-game menu
+     * background/selection page alive underneath it, but do not load or draw
+     * the original PS2 option page.
+     */
+    IngameMenuModeSlctDisp();
+
+    if (MikuPan_RmlOptionsConsumeExitRequest())
+    {
+        MikuPan_RmlOptionsClose();
+        SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
+
+        ig_menu_wrk.mode = IGMENU_MODE_SLCT;
+        option_uses_rml = 0;
+        IngameMenuModeSlctDispInit();
+        yw2d.menu_io_flg = 0;
+        yw2d.pad_lock = 0;
+        return;
+    }
+
+    if (!MikuPan_RmlOptionsIsOpen())
+    {
+        ig_menu_wrk.mode = IGMENU_MODE_SLCT;
+        option_uses_rml = 0;
+        IngameMenuModeSlctDispInit();
+        yw2d.menu_io_flg = 0;
+        yw2d.pad_lock = 0;
     }
 }
 

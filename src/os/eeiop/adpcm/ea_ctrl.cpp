@@ -152,18 +152,18 @@ void AdpcmMapCtrl()
     {
         u_int vol;
 
-        vol = ((opt_wrk.bgm_vol * 0x3fff / 0x1000) * adpcm_map.mvol) / 0xfff & 0xffff;
+        vol = ((opt_wrk.bgm_vol * SPU2_MAX_VOL / 0x1000) * adpcm_map.mvol) / 0xfff & 0xffff;
 
-        if (0x3fff < vol)
+        if (SPU2_MAX_VOL < vol)
         {
-            vol = 0x3fff;
+            vol = SPU2_MAX_VOL;
         }
 
         SetIopCmdSm(35, vol, 0, 0);
     }
     else if (adpcm_map.m_flg == 2)
     {
-        SetIopCmdSm(35, opt_wrk.bgm_vol * 0x3fff / 0x1000, 0, 0);
+        SetIopCmdSm(35, opt_wrk.bgm_vol * SPU2_MAX_VOL / 0x1000, 0, 0);
     }
 }
 

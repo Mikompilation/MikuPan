@@ -737,6 +737,7 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
     }
 }
 
+
 int SeStartPosSrundFlame(u_char room_id, float *pos, u_short flame,
                          u_short vol_max, u_short pitch)
 {

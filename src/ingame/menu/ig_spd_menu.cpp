@@ -16,6 +16,7 @@
 #include "ingame/menu/pause.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/ui/mikupan_rml_options.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
@@ -31,6 +32,7 @@ SPD_MNU spd_mnu = {0};
 static int smap_load_id;
 static int sopt_load_id;
 static int fnd_load_id;
+static int sopt_uses_rml;
 
 void SpdMenuInit()
 {
@@ -39,6 +41,7 @@ void SpdMenuInit()
     smap_load_id = -1;
     sopt_load_id = -1;
     fnd_load_id = -1;
+    sopt_uses_rml = 0;
 }
 
 char SpdMenuCtrl()
@@ -259,11 +262,20 @@ void SpdOptStart()
 
     SpdOptInit();
 
+    sopt_load_id = -1;
+    MikuPan_RmlOptionsOpenInGame();
+
+    sopt_uses_rml = MikuPan_RmlOptionsIsOpen() ? 1 : 0;
+
+    if (sopt_uses_rml == 0)
+    {
+        /* Fallback for broken/disabled RmlUi initialization. */
 #ifdef BUILD_EU_VERSION
-    sopt_load_id = LoadReqLanguage(PL_OPTI_E_PK2, EVENT_ADDRESS);
+        sopt_load_id = LoadReqLanguage(PL_OPTI_E_PK2, EVENT_ADDRESS);
 #else
-    sopt_load_id = LoadReq(PL_OPTI_PK2, EVENT_ADDRESS);
+        sopt_load_id = LoadReq(PL_OPTI_PK2, EVENT_ADDRESS);
 #endif
+    }
 
     ingame_wrk.mode = INGAME_MODE_SPD_OPT;
 }
@@ -305,7 +317,27 @@ void SpdOptMain()
 
     if (spd_mnu.sopt != 0x0)
     {
-        IngameMenuOption();
+        if (sopt_uses_rml != 0)
+        {
+            if (MikuPan_RmlOptionsConsumeExitRequest())
+            {
+                MikuPan_RmlOptionsClose();
+                SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 1);
+                yw2d.menu_io_flg = 2;
+                yw2d.menu_io_cnt = 10;
+                yw2d.pad_lock = 1;
+            }
+            else if (!MikuPan_RmlOptionsIsOpen() && yw2d.menu_io_flg != 2)
+            {
+                yw2d.menu_io_flg = 2;
+                yw2d.menu_io_cnt = 10;
+                yw2d.pad_lock = 1;
+            }
+        }
+        else if (sopt_load_id == -1)
+        {
+            IngameMenuOption();
+        }
     }
 }
 
@@ -318,7 +350,10 @@ static void SpdOptInOut()
     {
         sopt_load_id = -1;
 
-        StartOptionModeInit(0);
+        if (!MikuPan_RmlOptionsIsOpen())
+        {
+            StartOptionModeInit(0);
+        }
     }
 
     if (fnd_load_id != -1 && IsLoadEnd(fnd_load_id) != 0)
@@ -390,6 +425,7 @@ static void SpdOptInOut()
                     SendManMdlTex();
 
                     spd_mnu.sopt = 0;
+                    sopt_uses_rml = 0;
                     ingame_wrk.mode = INGAME_MODE_NOMAL;
                     pause_wrk.mode = 1;
                 }

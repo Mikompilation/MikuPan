@@ -2,8 +2,8 @@
 #include "typedefs.h"
 #include "enums.h"
 #include "ea_cmd.h"
-
 #include "graphics/graph3d/sglib.h"
+#include "iop/adpcm/iopadpcm.h"
 #include "os/eeiop/eeiop.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 
@@ -36,11 +36,11 @@ void EAdpcmCmdPlay(u_char channel, u_char loop, int file_no, int start_flm, u_sh
         flg = 0xe;
     }
 
-    if (channel) 
+    if (channel)
     {
         flg |= 1;
     }
-    
+
     SetIopCmdLg(IC_ADPCM_PLAY, file_no, iap->start, iap->size, flg, CONCAT_USHORT(pan, vol), CONCAT_USHORT(pitch, fin_flm), start_flm);
 }
 
@@ -56,7 +56,7 @@ void EAdpcmCmdPreload(u_char channel,int file_no,int start_flm,u_short fin_flm)
 void EAdpcmCmdPreEndPlay(u_char channel, u_char loop, int file_no, u_short vol, u_short pan, u_short pitch, u_short fin_flm)
 {
     int flg;
-    
+
     flg = 0xc;
 
     if (loop)
@@ -64,11 +64,11 @@ void EAdpcmCmdPreEndPlay(u_char channel, u_char loop, int file_no, u_short vol, 
         flg = 0xe;
     }
 
-    if (channel) 
+    if (channel)
     {
         flg |= 1;
     }
-    
+
     SetIopCmdLg(IC_ADPCM_LOADEND_PLAY, file_no, 0, 0, flg, CONCAT_USHORT(pan, vol), CONCAT_USHORT(pitch, fin_flm), 0);
 }
 

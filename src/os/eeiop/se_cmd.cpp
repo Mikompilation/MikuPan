@@ -163,14 +163,17 @@ void SeCtrlMain()
         
         if (cmd_flg && !stop_flg) 
         {
+            u_short mikupan_se_volume;
             if (swp->menu) 
             {
-                SetIopCmdLg(IC_SE_POS, swp->v_p, swp->se_p, swp->now_pitch, swp->pan, swp->vol_rate, 0, 0);
+                mikupan_se_volume = swp->vol_rate;
             }
             else 
             {
-                SetIopCmdLg(IC_SE_POS, swp->v_p, swp->se_p, swp->now_pitch, swp->pan, (swp->vol_rate * sm_fade.mvol) / 0xfff, 0, 0);
+                mikupan_se_volume = (swp->vol_rate * sm_fade.mvol) / 0xfff;
             }
+            SetIopCmdLg(IC_SE_POS, swp->v_p, swp->se_p, swp->now_pitch,
+                        swp->pan, mikupan_se_volume, 0, 0);
         }
     }
 }

@@ -828,6 +828,20 @@ float MikuPan_GetFrameRate(void)
     return io->Framerate;
 }
 
+void MikuPan_UiDebugHandleShortcuts(void)
+{
+    if (igIsKeyPressed_Bool(ImGuiKey_F5, 0))
+    {
+        last_reload_error[0] = '\0';
+        MikuPan_ReloadAllShaders(last_reload_error,
+                                 (int) sizeof(last_reload_error));
+        if (last_reload_error[0] != '\0')
+        {
+            show_shader_reload = 1;
+        }
+    }
+}
+
 void MikuPan_UiEffectDebugWindow(void)
 {
     if (!show_effect_debug_window)

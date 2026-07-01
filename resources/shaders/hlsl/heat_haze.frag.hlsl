@@ -64,6 +64,14 @@ float4 main(PSInput input) : SV_Target0
         dst_uv = screen_uv;
         screen_pos_modulate = true;
     }
+    else if (uFlags2.w == 5)
+    {
+        float2 screen_uv = clamp(float2(input.position.x / uRenderSize.x,
+                                        input.position.y / uRenderSize.y),
+                                 0.0.xx, 1.0.xx);
+        src_uv = clamp(input.vUVData.xy, 0.0.xx, 1.0.xx);
+        dst_uv = screen_uv;
+    }
     else
     {
         src_uv = clamp(

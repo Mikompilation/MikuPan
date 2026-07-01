@@ -724,7 +724,7 @@ char ModeSlctPad(u_char mode)
         cribo.costume = dsp_ms.bm_slct[0];
     break;
     case 3:
-        if (MikuPan_RmlOptionsConsumeExitRequest())
+        if (TRIANGLE_PRESSED() == 1 || MikuPan_RmlOptionsConsumeExitRequest())
         {
             MikuPan_RmlOptionsClose();
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
@@ -988,9 +988,6 @@ void ModeSlctDspChr(u_char alp, u_char mode)
             /* RmlUi owns the PC options menu. Keep the mode-select
              * background/frame, but do not draw the original PS2 option page.
              */
-            //SetSprFile(MikuPan_GetHostAddress(PL_STTS_PK2_ADDRESS));
-            //SetSprFile(MikuPan_GetHostAddress(PL_OPTI_PK2_ADDRESS));
-            //DspOptCtrl(dsp_ms.csr[2], dsp_ms.opt_mode, alp, 0x0);
         break;
         case 4:
             SoundTestForModeSlectDisp(alp, flsh);
