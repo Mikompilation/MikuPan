@@ -3,8 +3,8 @@
 #include "mikupan/ui/mikupan_ui.h"
 
 #include "glad/gl.h"
-#include "mikupan/mikupan_file.h"
-#include "mikupan/mikupan_controller.h"
+#include "mikupan/io/mikupan_file.h"
+#include "mikupan/io/mikupan_controller.h"
 
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan/rendering/mikupan_pipeline.h"
