@@ -49,6 +49,12 @@ extern TITLE_WRK title_wrk;
 /* sbss 357be8 */ extern /*static*/ TTL_DSP_WRK ttl_dsp;
 /* bss 402e40 */ extern /*static*/ OUT_DITHER_STR out_dither;
 
+int TitleUseRoomBackground(void);
+void TitleSetUseRoomBackground(int enabled);
+int TitleUseDither(void);
+void TitleSetUseDither(int enabled);
+int TitleDebugWindowVisible(void);
+void TitleSetDebugWindowVisible(int enabled);
 void TitleCtrl();
 void TitleWaitMode();
 void TitleStartSlct();

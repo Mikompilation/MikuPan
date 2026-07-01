@@ -1,6 +1,6 @@
 #include "libpad.h"
 
-#include "mikupan/mikupan_controller.h"
+#include "mikupan/io/mikupan_controller.h"
 
 
 int scePadPortOpen(int port, int slot, void* addr)

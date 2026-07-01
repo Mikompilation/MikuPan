@@ -3,7 +3,7 @@
 #include "enums.h"
 #include "se_ev.h"
 
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "os/eeiop/eese.h"
 #include "os/eeiop/se_cmd.h"
 #include "os/eeiop/se_data.h"

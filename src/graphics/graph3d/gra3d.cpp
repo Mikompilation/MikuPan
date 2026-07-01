@@ -15,6 +15,8 @@
 #include "sce/sifdev.h"
 
 #include "graphics/graph2d/effect_ene.h"
+#include "graphics/graph2d/effect_oth.h"
+#include "graphics/graph2d/effect_sub2.h"
 #include "graphics/graph2d/g2d_main.h"
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph3d/libsg.h"
@@ -39,11 +41,12 @@
 #include "graphics/scene/scene.h"
 #include "ingame/ig_glob.h"
 #include "ingame/map/door_ctl.h"
+#include "ingame/map/furn_ctl.h"
 #include "ingame/map/furn_dat.h"
 #include "ingame/map/map_ctrl.h"
 #include "ingame/camera/camera.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_first_person.h"
+#include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/ui/mikupan_ui_cheats.h"
@@ -86,6 +89,7 @@ static int disp3d_room;
 static int disp3d_room_shadow;
 static int disp3d_furn;
 static int disp3d_girl;
+static int disp3d_girl_shadow;
 static int disp3d_enemy;
 static int disp3d_mirror;
 static int disp3d_2ddraw;
@@ -1405,6 +1409,72 @@ void SceneSortUnit()
     SetMyLight(room_wrk.mylight, GetCurrentCameraZDir());
 }
 
+static void SceneSortRoomBackgroundUnit()
+{
+    search_num2 = 0;
+    search_num = 0;
+
+    CalcReflectLight();
+    DrawRoom(mir_room_workno);
+    DrawFurniture(room_wrk.disp_no[mir_room_workno]);
+
+    SetMyLight(room_wrk.mylight, GetCurrentCameraZDir());
+}
+
+static void Gra3dDrawMirrorRooms(SgCAMERA *render_camera, void (*render_func)())
+{
+    int disp_room;
+
+    if (render_camera == NULL || render_func == NULL)
+    {
+        return;
+    }
+
+    map_wrk.mirror_flg = 0;
+    mir_reflect_flg = 0;
+
+    disp_room = room_wrk.disp_no[0];
+
+    if (
+        disp_room != 0xff &&
+        room_addr_tbl[disp_room].near_sgd != NULL &&
+        ((HeaderSection *)room_addr_tbl[disp_room].near_sgd)->kind & 2 &&
+        disp3d_mirror != 0
+    )
+    {
+        SetWScissorBox(disp_room);
+
+        if (disp_room != R008_KAIROU || !(plyr_wrk.move_box.pos[1] > -300.0f))
+        {
+            mir_room_workno = 0;
+            MirrorDraw(render_camera, room_addr_tbl[disp_room].near_sgd, render_func);
+
+            map_wrk.mirror_flg = 1;
+
+            CalcReflectLight();
+        }
+
+        ReSetWScissorBox();
+    }
+
+    disp_room = room_wrk.disp_no[1];
+
+    if (
+        disp_room != 0xff &&
+        room_addr_tbl[disp_room].near_sgd != NULL &&
+        ((HeaderSection *)room_addr_tbl[disp_room].near_sgd)->kind & 2 &&
+        disp_room != RO26_OYASHIRO &&
+        disp3d_mirror != 0
+    )
+    {
+        MirrorDraw(render_camera, room_addr_tbl[disp_room].near_sgd, render_func);
+
+        map_wrk.mirror_flg = 1;
+
+        CalcReflectLight();
+    }
+}
+
 void Kagu027Control(void *sgd_top)
 {
     static float trans_rate = 128.0f;
@@ -1454,6 +1524,7 @@ void MakeDebugValue()
     disp3d_furn = dbg_wrk.disp_3d_furn != 0 && disp3d_furn_req != 0;
     disp3d_girl = dbg_wrk.disp_3d_girl;
     disp3d_enemy = dbg_wrk.disp_3d_enemy;
+    disp3d_girl_shadow = dbg_wrk.disp_3d_girl_shadow;
     disp3d_room_shadow = dbg_wrk.disp_3d_room_shadow;
     disp3d_mirror = dbg_wrk.disp_3d_mirror;
     disp3d_2ddraw = dbg_wrk.disp_3d_2ddraw;
@@ -1883,7 +1954,12 @@ void DrawFurniture(int disp_room)
 
                                     ghs = (HeaderSection *)pgirlbase;
 
-                                    acsMoveRope(&rope_ctrl[i], GetCoordP(ghs), m000_collision, cp->matrix);
+                                    if (ghs != NULL)
+                                    {
+                                        acsMoveRope(&rope_ctrl[i],
+                                                    GetCoordP(ghs),
+                                                    m000_collision, cp->matrix);
+                                    }     
                                 }
 
                                 acsCalcCoordinate(cp, hs->blocks - 1, &furn_wrk[j], &rope_ctrl[i]);
@@ -1950,6 +2026,15 @@ void DrawFurniture(int disp_room)
     }
 
     old_frame_counter = disp_frame_counter;
+}
+
+void DrawFurnitureForced(int disp_room)
+{
+    int old_disp3d_furn = disp3d_furn;
+
+    disp3d_furn = 1;
+    DrawFurniture(disp_room);
+    disp3d_furn = old_disp3d_furn;
 }
 
 #include "data/girlbox.h" // static sceVu0FVECTOR girlbox[]; // 8
@@ -2035,6 +2120,258 @@ void FogSelection(int disp_room)
     bak_cam_door_or = now_cam_door_or;
 }
 
+static int Gra3dRoomBackgroundLightCount(SgLIGHT *light, int max_lights)
+{
+    int count = light[0].num;
+
+    if (count < 0)
+    {
+        return 0;
+    }
+
+    return count > max_lights ? max_lights : count;
+}
+
+static void Gra3dCopyReadLightsToRoomWork(int room_work_no)
+{
+    LIGHT_PACK *light_pack = &room_wrk.mylight[room_work_no];
+    int count;
+    int i;
+
+    *light_pack = LIGHT_PACK{0};
+    Vu0CopyVector(light_pack->ambient, room_ambient_light);
+
+    count = Gra3dRoomBackgroundLightCount(room_pararell_light, 3);
+    light_pack->parallel_num = count;
+
+    for (i = 0; i < count; i++)
+    {
+        Vu0CopyVector(light_pack->parallel[i].direction, room_pararell_light[i].direction);
+        Vu0CopyVector(light_pack->parallel[i].diffuse, room_pararell_light[i].diffuse);
+    }
+
+    count = Gra3dRoomBackgroundLightCount(room_point_light, 3);
+    light_pack->point_num = count;
+
+    for (i = 0; i < count; i++)
+    {
+        Vu0CopyVector(light_pack->point[i].pos, room_point_light[i].pos);
+        Vu0CopyVector(light_pack->point[i].diffuse, room_point_light[i].diffuse);
+        light_pack->point[i].power = room_point_light[i].power;
+    }
+
+    count = Gra3dRoomBackgroundLightCount(room_spot_light, 3);
+    light_pack->spot_num = count;
+
+    for (i = 0; i < count; i++)
+    {
+        Vu0CopyVector(light_pack->spot[i].pos, room_spot_light[i].pos);
+        Vu0CopyVector(light_pack->spot[i].direction, room_spot_light[i].direction);
+        Vu0CopyVector(light_pack->spot[i].diffuse, room_spot_light[i].diffuse);
+        light_pack->spot[i].intens = room_spot_light[i].intens;
+        light_pack->spot[i].power = room_spot_light[i].power;
+    }
+}
+
+static void Gra3dReadRoomLightsToWork(int room_work_no, int disp_room)
+{
+    SgReadLights(
+        room_addr_tbl[disp_room].near_sgd,
+        room_addr_tbl[disp_room].lit_data,
+        room_ambient_light,
+        room_pararell_light,
+        3,
+        room_point_light,
+        16,
+        room_spot_light,
+        16);
+
+    Gra3dCopyReadLightsToRoomWork(room_work_no);
+}
+
+static void Gra3dSetRoomBackgroundFog(int disp_room)
+{
+    SgSetFog(
+        fog_param[disp_room][0], fog_param[disp_room][1],
+        fog_param[disp_room][2], fog_param[disp_room][3],
+        fog_rgb[disp_room][0], fog_rgb[disp_room][1], fog_rgb[disp_room][2]);
+}
+
+static void Gra3dSetRoomBackgroundEffectOffset(const sceVu0FVECTOR room_world_pos)
+{
+    SetEffectRoomOffset(
+        room_wrk.pos[0][0] - room_world_pos[0],
+        room_wrk.pos[0][1] - room_world_pos[1],
+        room_wrk.pos[0][2] - room_world_pos[2]);
+}
+
+static void Gra3dDrawRoomBackground(SgCAMERA *render_camera, int flags, const sceVu0FVECTOR room_world_pos)
+{
+    int disp_room;
+    int old_disp3d_room;
+    int old_disp3d_room_shadow;
+    int old_disp3d_furn;
+    int old_disp3d_mirror;
+    int old_disp3d_2ddraw;
+    SgCAMERA *old_ref_camera;
+    SgCAMERA old_game_camera;
+    u_char old_player_room_no;
+    u_int old_ene_sta[4];
+    int old_haze_pond_sw;
+    int force_haze_pond;
+    int i;
+
+    if (render_camera == NULL)
+    {
+        return;
+    }
+
+    disp_room = room_wrk.disp_no[0];
+
+    if (
+        disp_room == 0xff ||
+        room_addr_tbl[disp_room].near_sgd == NULL ||
+        room_addr_tbl[disp_room].lit_data == NULL
+    )
+    {
+        return;
+    }
+
+    old_disp3d_room = disp3d_room;
+    old_disp3d_room_shadow = disp3d_room_shadow;
+    old_disp3d_furn = disp3d_furn;
+    old_disp3d_mirror = disp3d_mirror;
+    old_disp3d_2ddraw = disp3d_2ddraw;
+    old_ref_camera = nowcamera;
+    old_game_camera = camera;
+    old_player_room_no = plyr_wrk.pr_info.room_no;
+    old_haze_pond_sw = 0;
+    force_haze_pond = 0;
+
+    disp_frame_counter++;
+    disp3d_room = 1;
+    disp3d_room_shadow = (flags & GRA3D_ROOM_BG_SHADOWS) != 0;
+    disp3d_furn = 1;
+    disp3d_mirror = (flags & GRA3D_ROOM_BG_MIRRORS) != 0;
+    disp3d_2ddraw = (flags & GRA3D_ROOM_BG_EFFECTS) != 0;
+
+    camera = *render_camera;
+    plyr_wrk.pr_info.room_no = (u_char)disp_room;
+
+    if ((flags & GRA3D_ROOM_BG_EFFECTS) != 0)
+    {
+        old_haze_pond_sw = GetHaze_Pond_SW();
+        force_haze_pond = disp_room == R022_NAKASU;
+        Gra3dSetRoomBackgroundEffectOffset(room_world_pos);
+
+        if (force_haze_pond != 0)
+        {
+            SetHaze_Pond_SW(1);
+        }
+
+        for (i = 0; i < 4; i++)
+        {
+            old_ene_sta[i] = ene_wrk[i].sta;
+            ene_wrk[i].sta &= ~0x1;
+        }
+    }
+
+    SgSetRefCamera(render_camera);
+    ClearTextureCache();
+
+    if ((flags & GRA3D_ROOM_BG_TEXTURE_TRANS) != 0)
+    {
+        SgTEXTransEnable();
+    }
+    else
+    {
+        SgTEXTransDisenable();
+    }
+
+    SetEnvironment();
+    Gra3dSetRoomBackgroundFog(disp_room);
+    Gra3dReadRoomLightsToWork(0, disp_room);
+    FurnCtrlMain();
+
+    if ((flags & GRA3D_ROOM_BG_EFFECTS) != 0)
+    {
+        FActWrkMain();
+        NakasuHazeSet();
+    }
+
+    CalcRoomCoord(room_addr_tbl[disp_room].near_sgd, room_wrk.pos[0]);
+
+    if (room_addr_tbl[disp_room].ss_sgd != NULL)
+    {
+        CalcRoomCoord(room_addr_tbl[disp_room].ss_sgd, room_wrk.pos[0]);
+    }
+
+    Gra3dDrawMirrorRooms(render_camera, SceneSortRoomBackgroundUnit);
+
+    search_num2 = 0;
+    search_num = 0;
+
+    DrawRoom(-1);
+    DrawFurniture(-1);
+    CheckDMATrans();
+
+    if ((flags & GRA3D_ROOM_BG_SHADOWS) != 0)
+    {
+        SetEnvironment();
+        DrawRoomShadow();
+        CheckDMATrans();
+    }
+
+    if ((flags & GRA3D_ROOM_BG_EFFECTS) != 0)
+    {
+        SetEnvironment();
+        FallenObjectsDraw();
+        gra2dDraw(GRA2D_CALL_IG2);
+    }
+
+    disp3d_room = old_disp3d_room;
+    disp3d_room_shadow = old_disp3d_room_shadow;
+    disp3d_furn = old_disp3d_furn;
+    disp3d_mirror = old_disp3d_mirror;
+    disp3d_2ddraw = old_disp3d_2ddraw;
+    camera = old_game_camera;
+    plyr_wrk.pr_info.room_no = old_player_room_no;
+
+    if ((flags & GRA3D_ROOM_BG_EFFECTS) != 0)
+    {
+        if (force_haze_pond != 0)
+        {
+            SetHaze_Pond_SW(old_haze_pond_sw);
+        }
+
+        ClearEffectRoomOffset();
+
+        for (i = 0; i < 4; i++)
+        {
+            ene_wrk[i].sta = old_ene_sta[i];
+        }
+    }
+
+    if (old_ref_camera != NULL)
+    {
+        SgSetRefCamera(old_ref_camera);
+    }
+    else
+    {
+        nowcamera = NULL;
+    }
+}
+
+void gra3dDrawRoomBackground(SgCAMERA *render_camera, int flags)
+{
+    Gra3dDrawRoomBackground(render_camera, flags, room_wrk.pos[0]);
+}
+
+void gra3dDrawRoomBackgroundLocal(SgCAMERA *render_camera, int flags, const sceVu0FVECTOR room_world_pos)
+{
+    Gra3dDrawRoomBackground(render_camera, flags, room_world_pos);
+}
+
 void gra3dDraw()
 {
     int i;
@@ -2082,44 +2419,7 @@ void gra3dDraw()
             16
             );
 
-        map_wrk.mirror_flg = 0;
-        mir_reflect_flg = 0;
-
-        if (
-            ((HeaderSection *)room_addr_tbl[disp_room].near_sgd)->kind & 2 &&
-            disp3d_mirror != 0
-        )
-        {
-            SetWScissorBox(disp_room);
-
-            if (disp_room != R008_KAIROU || !(plyr_wrk.move_box.pos[1] > -300.0f))
-            {
-                MirrorDraw(&camera, room_addr_tbl[disp_room].near_sgd, SceneSortUnit);
-
-                map_wrk.mirror_flg = 1;
-
-                CalcReflectLight();
-            }
-
-            ReSetWScissorBox();
-        }
-
-        disp_room = room_wrk.disp_no[1];
-
-        if (disp_room != 0xff && room_addr_tbl[disp_room].near_sgd != NULL)
-        {
-            if (
-                ((HeaderSection *)room_addr_tbl[disp_room].near_sgd)->kind & 2 &&
-                disp_room != RO26_OYASHIRO && disp3d_mirror != 0
-            )
-            {
-                MirrorDraw(&camera, room_addr_tbl[disp_room].near_sgd, SceneSortUnit);
-
-                map_wrk.mirror_flg = 1;
-
-                CalcReflectLight();
-            }
-        }
+        Gra3dDrawMirrorRooms(&camera, SceneSortUnit);
     }
 
     search_num2 = 0;
@@ -2288,7 +2588,8 @@ void CalcGirlCoord()
     hs = (HeaderSection *)pgirlbase;
     cp = GetCoordP(hs);
 
-    if ((ingame_wrk.stts & 0x10 || ingame_wrk.stts & 0x80) == 0)
+    if ((ingame_wrk.stts & INGAME_STTS_UPDATE_PAUSE || ingame_wrk.stts & INGAME_STTS_GAMEPLAY_LOCK)
+        == 0)
     {
         movGetMoveval(ani_mdl, motGetNowFrame(&ani_mdl[0].mot) / 2);
 
@@ -2629,7 +2930,7 @@ void DrawGirl(int in_mirror)
         DispPlyrAcs(pgirlbase, pgirlacs[1], &plyracs_ctrl[1], 5);
     }
 
-    if (disp3d_girl == 0 || hide_player_model || in_mirror != 0
+    if (disp3d_girl == 0 || disp3d_girl_shadow == 0 || hide_player_model || in_mirror != 0
         || (plyr_wrk.sta & 0x1 && map_wrk.mirror_flg != 0x0))
     {
         return;
@@ -2746,9 +3047,9 @@ int DrawEnemy(int no)
     tmpModelp = ani_ctrl->base_p;
 
     if (
-        disp_frame_counter != old_frame_counter[j] &&
-        (ingame_wrk.stts & 0x10) == 0 &&
-        (ingame_wrk.stts & 0x80) == 0
+        disp_frame_counter != old_frame_counter[j] && 
+        (ingame_wrk.stts & INGAME_STTS_UPDATE_PAUSE) == 0 && 
+        (ingame_wrk.stts & INGAME_STTS_GAMEPLAY_LOCK) == 0
     )
     {
         ani_ctrl->mot.reso = ene_wrk[j].ani_reso;

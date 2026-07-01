@@ -38,6 +38,11 @@ DEBUG_MENU dbg_menu_3ddisp_menu =     {
         .nmax = 1,
     },
             {
+        .name = "GIRLSHADOW",
+        .subnum = 8287,
+        .nmax = 1,
+    },
+            {
         .name = "ROOMSHADOW",
         .subnum = 8288,
         .nmax = 1,

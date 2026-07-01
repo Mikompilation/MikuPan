@@ -1,6 +1,6 @@
 #include "mikupan_gpu.h"
 
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_shader.h"

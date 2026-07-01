@@ -2,7 +2,7 @@
 #include "common.h"
 #include "enums.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "os/eeiop/eeiop.h"
 #include "typedefs.h"
@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "fnameee.h"
 
 typedef struct {
     u_char start_pos;
@@ -29,6 +30,9 @@ static void CdvdInitIop();
 static void CdvdInitResetIop();
 static int IsLoadEndIop(int id);
 static int GetFreeId();
+static int IsActiveLoadId(int id);
+static void RetireFinishedLoadIds();
+static void RetireLoadIdsThrough(int id);
 
 void CdvdInit()
 {
@@ -70,7 +74,7 @@ int LoadReq(int file_no, uint64_t ps2_addr)
 {
     IMG_ARRANGEMENT *img_arng;
     
-    info_log("File No: %d", file_no);
+    info_log("File No: %d %s", file_no, file_name[file_no]);
    
     img_arng = GetImgArrangementP(file_no);
 
@@ -81,7 +85,7 @@ int LoadReqToHostPointer(int file_no, void *host_addr)
 {
     IMG_ARRANGEMENT *img_arng;
 
-    info_log("File No: %d", file_no);
+    info_log("File No: %d %s", file_no, file_name[file_no]);
 
     img_arng = GetImgArrangementP(file_no);
 
@@ -190,42 +194,26 @@ int IsLoadEnd(int id)
 
 static int IsLoadEndIop(int id)
 {
-    int i;
-    u_char pos;
-    
-    if (id >= 32U) // this should be just `32`, but with `32` the `4: sltiu` becomes a stli ...
+    if (id < 0 || id >= 32U)
     {
         return 0;
     }
-    
-    if (id >= cdvd_rstat.req_pos && id < cdvd_rstat.start_pos)
-    {
-        return 0;
-    }
-    
+
+    RetireFinishedLoadIds();
+
     if (cdvd_rstat.com_num == 0)
     {
         return 1;
     }
-    
+
+    if (!IsActiveLoadId(id))
+    {
+        return load_finish[id].stat == 0;
+    }
+
     if (cdvd_rstat.com_num != 0 && load_finish[id].stat == 0)
     {
-        pos = cdvd_rstat.start_pos;
-        for (i = 0; i < cdvd_rstat.com_num; i++)
-        {
-            if (pos >= 32) //
-            {              // maybe a compiler optimization
-                pos -= 32; // artifact for a % 32 increment?
-            }              //
-            load_finish[pos].stat = 0;
-            cdvd_rstat.start_pos = (cdvd_rstat.start_pos + 1) % 32;
-            if (pos == id) {
-                cdvd_rstat.com_num -= (i + 1);
-                break;
-            }
-            pos++;
-        }
-        
+        RetireLoadIdsThrough(id);
         return 1;
     }
     
@@ -254,19 +242,25 @@ void LoadEndFlgRenew()
         break;
         }
     }
+
+    RetireFinishedLoadIds();
 }
 
 u_char IsExistLoadReq()
 {
+    RetireFinishedLoadIds();
     return cdvd_rstat.com_num != 0;
 }
 
 static int GetFreeId()
 {
     int ret;
-    
+
+    RetireFinishedLoadIds();
+
     if (cdvd_rstat.com_num >= 32)
     {
+        info_log("Load request buffer is full, cannot add more requests");
         return -1;
     }
     
@@ -276,6 +270,57 @@ static int GetFreeId()
     cdvd_rstat.com_num++;
 
     return ret;
+}
+
+static int IsActiveLoadId(int id)
+{
+    if (cdvd_rstat.com_num == 0)
+    {
+        return 0;
+    }
+
+    if (cdvd_rstat.com_num >= 32)
+    {
+        return 1;
+    }
+
+    if (cdvd_rstat.start_pos < cdvd_rstat.req_pos)
+    {
+        return id >= cdvd_rstat.start_pos && id < cdvd_rstat.req_pos;
+    }
+
+    if (cdvd_rstat.start_pos > cdvd_rstat.req_pos)
+    {
+        return id >= cdvd_rstat.start_pos || id < cdvd_rstat.req_pos;
+    }
+
+    return 0;
+}
+
+static void RetireFinishedLoadIds()
+{
+    while (cdvd_rstat.com_num != 0 && load_finish[cdvd_rstat.start_pos].stat == 0)
+    {
+        cdvd_rstat.start_pos = (cdvd_rstat.start_pos + 1) % 32;
+        cdvd_rstat.com_num--;
+    }
+}
+
+static void RetireLoadIdsThrough(int id)
+{
+    while (cdvd_rstat.com_num != 0)
+    {
+        int pos = cdvd_rstat.start_pos;
+
+        load_finish[pos].stat = 0;
+        cdvd_rstat.start_pos = (cdvd_rstat.start_pos + 1) % 32;
+        cdvd_rstat.com_num--;
+
+        if (pos == id)
+        {
+            break;
+        }
+    }
 }
 
 unsigned char* LoadImgHdFile();

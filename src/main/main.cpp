@@ -20,8 +20,8 @@
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include "iop/adpcm/iopadpcm.h"
 #include "iop/iopmain.h"
-#include "mikupan/mikupan_controller.h"
-#include "mikupan/mikupan_file_c.h"
+#include "mikupan/io/mikupan_controller.h"
+#include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "os/eeiop/se_cmd.h"

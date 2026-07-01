@@ -416,8 +416,8 @@ SCN_ENE_EFCT scn_ene_efct[] = {
         .mdl_alpha = 128,
     },
     {
-        .scene_no = -1,
-        .mdl_no = -1,
+     .scene_no = (u_short) -1,
+     .mdl_no = (u_short) - 1,
         .aura_size = 0.0,
         .aura_rate = 0.0,
         .aura_rgba = 0,

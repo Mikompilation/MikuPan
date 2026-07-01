@@ -18,6 +18,11 @@ DEBUG_MENU dbg_menu_t =     {
         .nmax = 0,
     },
             {
+        .name = "EFFECT",
+        .subnum = 4100,
+        .nmax = 0,
+    },
+            {
         .name = "OTHER",
         .subnum = 4103,
         .nmax = 0,
@@ -38,22 +43,17 @@ DEBUG_MENU dbg_menu_t =     {
         .nmax = 0,
     },
             {
+        .name = "SHIBATA SET",
+        .subnum = 4142,
+        .nmax = 0,
+    },
+            {
         .name = "EXIT",
         .subnum = 0,
         .nmax = 0,
     },
             {
         .name = "_end_",
-        .subnum = 0,
-        .nmax = 0,
-    },
-            {
-        .name = "",
-        .subnum = 0,
-        .nmax = 0,
-    },
-            {
-        .name = "",
         .subnum = 0,
         .nmax = 0,
     },

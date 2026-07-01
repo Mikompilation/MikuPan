@@ -12,10 +12,10 @@
 #include "cglm/mat4.h"
 #include "graphics/graph3d/sgsu.h"
 
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_profiler.h"
 #include "mikupan/rendering/mikupan_renderer.h"
-#include "mikupan/mikupan_graph3d_compat.h"
+#include "mikupan/gameplay/mikupan_graph3d_compat.h"
 #include "mikupan/ui/mikupan_ui.h"
 
 #include <stdio.h>

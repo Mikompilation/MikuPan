@@ -40,6 +40,12 @@ extern SgLIGHT room_pararell_light[12];
 extern SgLIGHT room_point_light[16];
 extern SgLIGHT room_spot_light[16];
 
+#define GRA3D_ROOM_BG_MIRRORS       0x01
+#define GRA3D_ROOM_BG_SHADOWS       0x02
+#define GRA3D_ROOM_BG_EFFECTS       0x04
+#define GRA3D_ROOM_BG_TEXTURE_TRANS 0x08
+#define GRA3D_ROOM_BG_DEFAULT       (GRA3D_ROOM_BG_MIRRORS | GRA3D_ROOM_BG_SHADOWS | GRA3D_ROOM_BG_EFFECTS | GRA3D_ROOM_BG_TEXTURE_TRANS)
+
 u_int* LoadDataFromDVD(u_char *fname);
 u_int* LoadDataFromDVD2(u_char *fname, u_int *addr);
 void LoadPackedTextureFromMemory(u_int *pointer);
@@ -90,11 +96,14 @@ int CalcShadowDirecion(ShadowHandle *shandle);
 u_int* SearchBoundingBoxPacket(u_int *prim);
 void DrawRoomShadow();
 void DrawFurniture(int disp_room);
+void DrawFurnitureForced(int disp_room);
 void SetWScissorBox(int disp_room);
 void ReSetWScissorBox();
 void InitFogSelection();
 void FogSelection(int disp_room);
 void gra3dDraw();
+void gra3dDrawRoomBackground(SgCAMERA *render_camera, int flags);
+void gra3dDrawRoomBackgroundLocal(SgCAMERA *render_camera, int flags, const sceVu0FVECTOR room_world_pos);
 int CheckModelBoundingBox(sceVu0FMATRIX lwmtx, sceVu0FVECTOR *bbox);
 void CalcGirlCoord();
 void DrawGirl(int in_mirror);

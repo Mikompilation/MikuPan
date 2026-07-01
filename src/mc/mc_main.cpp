@@ -1067,7 +1067,7 @@ char mcCtrlMakeDir()
         else
         {
             memset(mc_ctrl.work_addr, 0xff, mc_game_size);
-            memset(mc_ctrl.work_addr, 0, 0x30); // 0x30 = ??
+            memset(mc_ctrl.work_addr, 0, sizeof(mc_header) + sizeof(opt_wrk));
         }
 
         mcAcsFileReq(loop + 5, SCE_CREAT | SCE_RDWR, 0);

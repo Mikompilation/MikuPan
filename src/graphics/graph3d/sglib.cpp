@@ -15,7 +15,7 @@
 #include "graphics/graph3d/sgcam.h"
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/shadow.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 
 #define PI 3.1415925f
 #define POW2(x) ((x) * (x))

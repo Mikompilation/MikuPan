@@ -1,7 +1,7 @@
 #include "eese.h"
 #include "common.h"
 #include "enums.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "typedefs.h"
 
 #include "common/ul_math.h"

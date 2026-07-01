@@ -1,8 +1,8 @@
 #include "typedefs.h"
 #include "mikupan_file.h"
-#include "mikupan_config.h"
-#include "gs/mikupan_texture_manager.h"
-#include "mikupan_logging.h"
+#include "mikupan/mikupan_config.h"
+#include "mikupan/gs/mikupan_texture_manager.h"
+#include "mikupan/debug/mikupan_logging.h"
 #include "spdlog/spdlog.h"
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_events.h>
@@ -24,7 +24,7 @@
 #include <system_error>
 #include <vector>
 
-#include "mikupan_memory.h"
+#include "mikupan/mikupan_memory.h"
 
 static inline std::vector<int> file_loaded_address;
 
@@ -328,13 +328,19 @@ static bool MikuPan_IsPathInsideDataRoot(const std::filesystem::path& path)
     return target.rfind(root, 0) == 0;
 }
 
-static bool MikuPan_ShouldPromptForMissingDataFile(
+static bool MikuPan_IsRequiredArchiveDataFile(
     const std::filesystem::path& path)
 {
     const std::string filename =
         MikuPan_ToLowerPathString(path.filename());
 
-    if (filename == "img_hd.bin" || filename == "img_bd.bin")
+    return filename == "img_hd.bin" || filename == "img_bd.bin";
+}
+
+static bool MikuPan_ShouldPromptForMissingDataFile(
+    const std::filesystem::path& path)
+{
+    if (MikuPan_IsRequiredArchiveDataFile(path))
     {
         return true;
     }
@@ -410,9 +416,7 @@ static std::filesystem::path MikuPan_RebasePathAfterDataFolderSelection(
     const std::filesystem::path& path,
     const std::filesystem::path& old_root)
 {
-    const std::string filename =
-        MikuPan_ToLowerPathString(path.filename());
-    if (filename == "img_hd.bin" || filename == "img_bd.bin")
+    if (MikuPan_IsRequiredArchiveDataFile(path))
     {
         return MikuPan_GetDataRoot() / path.filename();
     }
@@ -1090,16 +1094,28 @@ bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size)
 
     if (!s.empty()) {
 #ifdef __ANDROID__
+        const std::filesystem::path relative_data_path(s);
+        const bool required_archive =
+            MikuPan_IsRequiredArchiveDataFile(relative_data_path);
         const char *folder = mikupan_configuration.data_folder;
         if (folder != nullptr && MikuPan_IsAndroidTreeUriString(folder))
         {
             std::string resolved_path = MikuPan_GetDataPathString(s);
             if (MikuPan_GetSdlFileSize(resolved_path.c_str()) == 0)
             {
-                if (MikuPan_RequestMissingDataFolderDialog(
-                        std::filesystem::path(s)))
+                if (!required_archive)
+                {
+                    return false;
+                }
+
+                if (MikuPan_RequestMissingDataFolderDialog(relative_data_path))
                 {
                     resolved_path = MikuPan_GetDataPathString(s);
+                }
+
+                if (MikuPan_GetSdlFileSize(resolved_path.c_str()) == 0)
+                {
+                    return false;
                 }
             }
             s = resolved_path;
@@ -1111,8 +1127,18 @@ bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size)
         std::filesystem::path resolved_path =
             MikuPan_GetDataRoot() / relative_data_path;
         if (!std::filesystem::exists(resolved_path)) {
+            if (!MikuPan_IsRequiredArchiveDataFile(relative_data_path))
+            {
+                return false;
+            }
+
             if (MikuPan_RequestMissingDataFolderDialog(resolved_path)) {
                 resolved_path = MikuPan_GetDataRoot() / relative_data_path;
+            }
+
+            if (!std::filesystem::exists(resolved_path))
+            {
+                return false;
             }
         }
         s = resolved_path.generic_string();

@@ -18,9 +18,9 @@
 #define SCRATCHPAD ((u_char *) ps2_virtual_scratchpad)
 
 #include "data/scamera.h"// SgCAMERA scamera;
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
-#include "mikupan/mikupan_graph3d_compat.h"
+#include "mikupan/gameplay/mikupan_graph3d_compat.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #include <math.h>

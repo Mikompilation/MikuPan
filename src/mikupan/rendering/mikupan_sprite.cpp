@@ -1,6 +1,6 @@
 #include "mikupan_renderer_internal.h"
 #include "graphics/graph2d/message.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/mikupan_effect_compat.h"
 #include "mikupan/ui/mikupan_ui.h"

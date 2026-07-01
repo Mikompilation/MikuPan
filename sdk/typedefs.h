@@ -4,6 +4,7 @@
 #ifdef _WIN32
 #define __u_char_defined
 #else
+#include <cstddef>
 #include <sys/types.h>
 #endif
 #include <stdint.h>

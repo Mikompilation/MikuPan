@@ -35,8 +35,8 @@
 // #include "ingame/map/map_area.h"
 #include "SDL3/SDL_timer.h"
 #include "graphics/graph2d/subtitles.h"
-#include "mikupan/mikupan_file_c.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/ui/mikupan_ui.h"
 

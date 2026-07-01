@@ -1,4 +1,4 @@
-#include "mikupan/mikupan_photo_capture.h"
+#include "mikupan/gameplay/mikupan_photo_capture.h"
 
 #include "common.h"
 #include "typedefs.h"
@@ -8,7 +8,7 @@
 #include "ingame/photo/pht_make.h"
 #include "main/glob.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 

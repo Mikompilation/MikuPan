@@ -1,7 +1,7 @@
 #include "mikupan_renderer_internal.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_gpu.h"
-#include "mikupan/mikupan_graph3d_compat.h"
+#include "mikupan/gameplay/mikupan_graph3d_compat.h"
 #include "mikupan/mikupan_types.h"
 #include "graphics/graph3d/sg_dat.h"
 #include <string.h>

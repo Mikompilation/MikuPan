@@ -19,7 +19,7 @@
 #include "ingame/photo/pht_make.h"
 #include "ingame/plyr/plyr_ctl.h" // FModeScreenEffect
 #include "main/glob.h"
-#include "mikupan/mikupan_photo_capture.h"
+#include "mikupan/gameplay/mikupan_photo_capture.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 

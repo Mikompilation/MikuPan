@@ -6,7 +6,7 @@
 #include "sce/libvu0.h"
 #include "mikupan/mikupan_rng.h"
 #include "sce/libvu0.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "common/ul_math.h"
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_rdr.h"

@@ -16,7 +16,7 @@
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sglight.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_profiler.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 

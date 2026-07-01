@@ -2,7 +2,7 @@
 #include "common.h"
 #include "typedefs.h"
 
-#include "../../mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_meshcache.h"
 
 #include <stdio.h>

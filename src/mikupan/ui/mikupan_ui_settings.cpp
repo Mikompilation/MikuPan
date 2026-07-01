@@ -14,14 +14,15 @@
 #include "mikupan/mikupan_config.h"
 #include "main/glob.h"
 #include "os/eeiop/eese.h"
-#include "mikupan/mikupan_controller.h"
-#include "mikupan/mikupan_first_person.h"
+#include "mikupan/io/mikupan_controller.h"
+#include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_ui_debug.h"
 #include "mikupan_ui_theme.h"
+#include "outgame/title.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1030,6 +1031,20 @@ void MikuPan_UiSettingsRender(void)
             {
                 mikupan_configuration.font_scale = font_scale;
                 MikuPan_ApplyUiFontScale();
+            }
+
+            igSeparator();
+            int title_room_background = TitleUseRoomBackground();
+            if (igCheckbox("Room title background",
+                           (bool*) &title_room_background))
+            {
+                TitleSetUseRoomBackground(title_room_background);
+            }
+
+            int title_dither = TitleUseDither();
+            if (igCheckbox("Title dithering", (bool*) &title_dither))
+            {
+                TitleSetUseDither(title_dither);
             }
 
             igEndMenu();

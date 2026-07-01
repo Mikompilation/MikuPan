@@ -7,8 +7,8 @@
 #include "graphics/motion/ani_dat.h"
 #include "graphics/motion/motion.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_assert.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_assert.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 
 static inline int MikuPan_MotEnemyModelResident(u_int mdl_no)
 {

@@ -26,6 +26,7 @@ static void IAdpcmMvol(IOP_COMMAND*);
 static int AdpcmSpu2IntrHander(int core_bit, void* data);
 static int AdpcmTransCB(int channel, void* common);
 static void SetLoopFlgAll(u_short core);
+static int IAdpcmReadOffset(u_char channel, int start);
 
 void IAdpcmCmd(IOP_COMMAND* icp)
 {
@@ -332,7 +333,9 @@ void IAdpcmPreLoad(ADPCM_CMD* acp)
     }
 
     ICdvdLoadReqAdpcm(
+        iop_adpcm[channel].tune_no,
         iop_adpcm[channel].start,
+        IAdpcmReadOffset(channel, iop_adpcm[channel].start),
         iop_adpcm[channel].lreq_size,
         (u_int*)AdpcmIopBuf[channel],
         channel,
@@ -458,6 +461,16 @@ static void IAdpcmMvol(IOP_COMMAND* icp)
     IaSetMasterVol(mvol);
 }
 
+static int IAdpcmReadOffset(u_char channel, int start)
+{
+    if (start <= iop_adpcm[channel].first)
+    {
+        return 0;
+    }
+
+    return (start - iop_adpcm[channel].first) * 2048;
+}
+
 static int AdpcmSpu2IntrHander(int core_bit, void* data)
 {
     IOP_ADPCM* ia = (IOP_ADPCM *)data;
@@ -536,7 +549,9 @@ void IAdpcmReadCh0()
                     if (remain_l > 0x20000) {
                         iop_adpcm[0].lreq_size = 0x20000;
                         ICdvdLoadReqAdpcm(
+                            iop_adpcm[0].tune_no,
                             start,
+                            IAdpcmReadOffset(0, start),
                             iop_adpcm[0].lreq_size,
                             (u_int*)&AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi],
                             0,
@@ -545,7 +560,9 @@ void IAdpcmReadCh0()
                     } else if (remain_l) {
                         iop_adpcm[0].lreq_size = remain_l;
                         ICdvdLoadReqAdpcm(
+                            iop_adpcm[0].tune_no,
                             start,
+                            IAdpcmReadOffset(0, start),
                             iop_adpcm[0].lreq_size,
                             (u_int*)&AdpcmIopBuf[0][0x20000 * iop_adpcm[0].dbidi],
                             0,
@@ -701,7 +718,9 @@ void IAdpcmReadCh1()
                     if (remain_l > 0x20000) {
                         iop_adpcm[1].lreq_size = 0x20000;
                         ICdvdLoadReqAdpcm(
+                            iop_adpcm[1].tune_no,
                             start,
+                            IAdpcmReadOffset(1, start),
                             iop_adpcm[1].lreq_size,
                             (u_int*)&AdpcmIopBuf[1][0x20000 * iop_adpcm[1].dbidi],
                             1,
@@ -710,7 +729,9 @@ void IAdpcmReadCh1()
                     } else if (remain_l) {
                         iop_adpcm[1].lreq_size = remain_l;
                         ICdvdLoadReqAdpcm(
+                            iop_adpcm[1].tune_no,
                             start,
+                            IAdpcmReadOffset(1, start),
                             iop_adpcm[1].lreq_size,
                             (u_int*)&AdpcmIopBuf[1][0x20000 * iop_adpcm[1].dbidi],
                             1,

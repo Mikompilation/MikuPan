@@ -12,13 +12,14 @@
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_basictypes.h"
 #include "mikupan/mikupan_config.h"
-#include "mikupan/mikupan_first_person.h"
+#include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_meshcache.h"
 #include "mikupan/rendering/mikupan_profiler.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan_framegraph.h"
+#include "outgame/title.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -956,6 +957,11 @@ void MikuPan_UiDebugMenuRender(void)
     if (igBeginMenu("Debug", 1))
     {
         igCheckbox("Zero's Menu", (bool*) &dbg_wrk.mode_on);
+        int title_debug_window = TitleDebugWindowVisible();
+        if (igCheckbox("Title Menu Debugger", (bool*) &title_debug_window))
+        {
+            TitleSetDebugWindowVisible(title_debug_window);
+        }
 
         igSeparator();
 

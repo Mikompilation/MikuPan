@@ -23,6 +23,11 @@ DEBUG_MENU dbg_menu_et =     {
         .nmax = 0,
     },
             {
+        .name = "TEST2",
+        .subnum = 4109,
+        .nmax = 0,
+    },
+            {
         .name = "_end_",
         .subnum = 0,
         .nmax = 0,

@@ -4,7 +4,7 @@
 #include "iopmain.h"
 
 #include "libsd.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "sdmacro.h"
 #include "stdio.h"
 

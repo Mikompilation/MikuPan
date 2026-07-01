@@ -15,8 +15,8 @@
 #include "graphics/graph3d/sgsu.h"
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
-#include "mikupan/mikupan_graph3d_compat.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/gameplay/mikupan_graph3d_compat.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_types.h"
 
 #define REG_VIF1_STAT        ((volatile u_int *)(0x10003c00))

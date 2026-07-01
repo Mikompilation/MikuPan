@@ -3,7 +3,7 @@
 #include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include <string.h>
 
 /* Shadow map is square. The runtime size is g_shadow_fbo_size (changeable from

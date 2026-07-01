@@ -1,7 +1,7 @@
 #ifndef MIKUPAN_ASSERT_H
 #define MIKUPAN_ASSERT_H
 
-#include "mikupan/mikupan_logging.h"
+#include "mikupan/debug/mikupan_logging.h"
 
 #if defined(_MSC_VER)
 #include <intrin.h>

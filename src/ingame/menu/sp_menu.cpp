@@ -2326,7 +2326,7 @@ static void DspSpData(u_char csr2, u_char alp, u_char type)
     float yy1;
     float yy2;
     u_short pos_y;
-    float csr_alp;
+    float csr_alp = 0.0f;
 
     xx1 = 462.0f;
     xx2 = 569.0f;

@@ -48,6 +48,7 @@ static void CmnLineForWin(short int win_x, short int win_y, short int ofs_x, sho
 #include "data/sozai.h" // SPRT_DAT sozai;
 #include "data/mask_l.h" // SPRT_DAT mask_l;
 #include "data/mask_s.h" // SPRT_DAT mask_s;
+#include <graphics/graph2d/message.h>
 
 static ANA_PAD ana_pad;
 static FLSH_CORE flsh;

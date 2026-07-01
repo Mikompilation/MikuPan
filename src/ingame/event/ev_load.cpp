@@ -17,7 +17,7 @@
 #include "ingame/map/map_area.h"
 #include "ingame/map/map_ctrl.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"

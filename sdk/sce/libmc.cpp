@@ -1,6 +1,6 @@
 #include "libmc.h"
-#include "mikupan/mikupan_file_c.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "typedefs.h"
 #include <stddef.h>
 #include <string.h>

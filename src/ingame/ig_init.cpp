@@ -19,7 +19,7 @@
 #include "ingame/ig_glob.h"
 #include "ingame/map/map_area.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/fileload.h"
 
@@ -121,7 +121,7 @@ void LoadStartDataInit()
 {
     load_start_wrk = {};
 
-    ingame_wrk.stts |= 0x28;
+    ingame_wrk.stts |= (INGAME_STTS_DSP3D_OFF | INGAME_STTS_CAMERA_LOCK);
 
     SortLoadDataAddr();
 

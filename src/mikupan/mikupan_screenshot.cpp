@@ -1,6 +1,6 @@
 #include "mikupan_screenshot.h"
 #include "mikupan_config.h"
-#include "mikupan_logging_c.h"
+#include "debug/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #include <stdio.h>

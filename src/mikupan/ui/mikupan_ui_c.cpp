@@ -3,8 +3,8 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_controller.h"
-#include "mikupan/mikupan_file_c.h"
+#include "mikupan/io/mikupan_controller.h"
+#include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/mikupan_screenshot.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/ui/mikupan_rmlui.h"
@@ -112,11 +112,11 @@ void MikuPan_DrawMissingDataUi(const char *missing_file)
         return;
     }
 
-    igTextWrapped("MikuPan needs the extracted Fatal Frame disc data before it can start.");
+    igTextWrapped("MikuPan needs the Fatal Frame disc data before it can start.");
     igSpacing();
     igText("Missing: %s", file);
     igSpacing();
-    igTextWrapped("Select the folder that contains IMG_HD.BIN and IMG_BD.BIN.");
+    igTextWrapped("Select the folder that contains IMG_HD.BIN and IMG_BD.BIN. Extracted files are optional and will be used when present.");
     igSpacing();
 
     if (igButton("Select Folder", ImVec2{160.0f * scale, 0.0f}))

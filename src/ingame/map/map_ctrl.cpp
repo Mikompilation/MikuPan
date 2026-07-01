@@ -22,7 +22,7 @@
 #include "ingame/map/map_ctrl.h"
 #include "ingame/map/map_htck.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui_debug.h"
 #include "os/eeiop/cdvd/eecdvd.h"

@@ -1,7 +1,7 @@
 #include "mikupan_shader.h"
 
-#include "mikupan/mikupan_file_c.h"
-#include "mikupan/mikupan_logging.h"
+#include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/debug/mikupan_logging.h"
 #include "mikupan_gpu.h"
 #include <stdio.h>
 #include <stdlib.h>

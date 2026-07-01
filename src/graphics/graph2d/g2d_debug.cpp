@@ -754,6 +754,8 @@ void gra2dDrawDbgMenu()
     cam_custom_wrk.set_sub = dbg_wrk.cc_set_sub;
     cam_custom_wrk.set_spe = dbg_wrk.cc_set_spe;
 
+    SetShibataSet();
+
     /// TODO: Reimplement some missing features
     ingame_wrk.clear_count = 1;//dbg_wrk.oth_sub_menu;
     SgPreRenderDbgOn();

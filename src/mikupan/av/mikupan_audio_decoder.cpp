@@ -1,6 +1,6 @@
 #include "mikupan_audio_decoder.h"
 
-#include "mikupan/mikupan_logging.h"
+#include "mikupan/debug/mikupan_logging.h"
 
 #include <algorithm>
 #include <cstring>

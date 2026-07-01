@@ -1,7 +1,7 @@
 #include "common.h"
 #include "graphics/graph3d/sglib.h"
-#include "mikupan/mikupan_file_c.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 
 #include <common/ul_math.h>
 #include <graphics/graph2d/effect.h>
@@ -24,8 +24,8 @@
 #include "camera.h"
 #include "enums.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_controller.h"
-#include "mikupan/mikupan_first_person.h"
+#include "mikupan/io/mikupan_controller.h"
+#include "mikupan/gameplay/mikupan_first_person.h"
 #include "os/key_cnf.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS

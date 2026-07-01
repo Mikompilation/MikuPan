@@ -1,15 +1,15 @@
 #include "mikupan_controller.h"
 #include "SDL3/SDL_scancode.h"
-#include "mikupan_config.h"
-#include "mikupan_logging_c.h"
-#include "mikupan_utils.h"
+#include "mikupan/mikupan_config.h"
+#include "mikupan/debug/mikupan_logging_c.h"
+#include "mikupan/mikupan_utils.h"
 #include "os/key_cnf.h"
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_mouse.h>
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
-#include "ui/mikupan_ui.h"
+#include "mikupan/ui/mikupan_ui.h"
 
 #include <stdio.h>
 

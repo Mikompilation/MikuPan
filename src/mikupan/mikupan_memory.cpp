@@ -1,6 +1,6 @@
-#include "mikupan_memory.h"
-#include "mikupan_logging_c.h"
 #include "typedefs.h"
+#include "mikupan_memory.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include <stdint.h>
 #include <string.h>
 

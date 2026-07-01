@@ -1,8 +1,8 @@
 #include "voice.h"
 #include "iop/iopmain.h"
 #include "mikupan/mikupan_audio.h"
-#include "mikupan/mikupan_file_c.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "sce/libsd.h"
 #include <SDL3/SDL_mutex.h>
 #include <stdint.h>

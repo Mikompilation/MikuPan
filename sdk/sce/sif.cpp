@@ -1,6 +1,6 @@
 #include "sif.h"
 
-#include "mikupan/mikupan_file_c.h"
+#include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/mikupan_memory.h"
 
 #include <string.h>

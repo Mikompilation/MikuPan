@@ -1,6 +1,6 @@
 #include "libcdvd.h"
 
-#include "mikupan/mikupan_file_c.h"
+#include "mikupan/io/mikupan_file_c.h"
 
 #include <SDL3/SDL.h>
 #include <stdio.h>
@@ -151,31 +151,50 @@ int sceCdRead(u_int lsn, u_int sectors, void* buf, sceCdRMode* mode)
 
     (void)mode;
 
-    if (buf == NULL) {
+    if (buf == NULL) 
+    {
         cd_last_error = 1;
         return 0;
     }
 
-    if (lsn >= MIKUPAN_CD_HD_LSN_BASE && lsn < MIKUPAN_CD_FILE_LSN_BASE) {
-        if (!ResolveDataFile("\\IMG_HD.BIN;1", path, sizeof(path))) {
+    if (lsn >= MIKUPAN_CD_HD_LSN_BASE && lsn < MIKUPAN_CD_FILE_LSN_BASE) 
+    {
+        if (!ResolveDataFile("\\IMG_HD.BIN;1", path, sizeof(path))) 
+        {
             cd_last_error = 1;
             return 0;
         }
+
         offset = (lsn - MIKUPAN_CD_HD_LSN_BASE) * 0x800u;
         return ReadFileBytes(path, offset, buf, sectors * 0x800u);
     }
 
     file = FindFileByLsn(lsn);
-    if (file != NULL) {
+    if (file != NULL) 
+    {
         return ReadFileBytes(file->path, 0, buf, sectors * 0x800u);
     }
 
-    if (!ResolveDataFile("\\IMG_BD.BIN;1", path, sizeof(path))) {
+    if (!ResolveDataFile("\\IMG_BD.BIN;1", path, sizeof(path))) 
+    {
         cd_last_error = 1;
         return 0;
     }
 
     return ReadFileBytes(path, offset, buf, sectors * 0x800u);
+}
+
+int sceCdReadFile(const char* name, u_int offset, void* buf, u_int size)
+{
+    char path[1024];
+
+    if (buf == NULL || name == NULL || !ResolveDataFile(name, path, sizeof(path)))
+    {
+        cd_last_error = 1;
+        return 0;
+    }
+
+    return ReadFileBytes(path, offset, buf, size);
 }
 
 int sceCdSync(int mode)
@@ -252,20 +271,28 @@ int sceCdSearchFile(sceCdlFILE* fp, const char* name)
     u_int size;
     u_int lsn;
 
-    if (fp == NULL || name == NULL || !ResolveDataFile(name, path, sizeof(path))) {
+    if (fp == NULL || name == NULL || !ResolveDataFile(name, path, sizeof(path))) 
+    {
         return 0;
     }
 
     size = MikuPan_GetFileSize(path);
-    if (size == 0) {
+
+    if (size == 0) 
+    {
         return 0;
     }
 
-    if (strstr(path, "IMG_HD.BIN") != NULL || strstr(path, "img_hd.bin") != NULL) {
+    if (strstr(path, "IMG_HD.BIN") != NULL || strstr(path, "img_hd.bin") != NULL) 
+    {
         lsn = MIKUPAN_CD_HD_LSN_BASE;
-    } else if (strstr(path, "IMG_BD.BIN") != NULL || strstr(path, "img_bd.bin") != NULL) {
+    } 
+    else if (strstr(path, "IMG_BD.BIN") != NULL || strstr(path, "img_bd.bin") != NULL) 
+    {
         lsn = 0;
-    } else {
+    } 
+    else
+    {
         lsn = cd_next_file_lsn++;
     }
 
@@ -275,6 +302,7 @@ int sceCdSearchFile(sceCdlFILE* fp, const char* name)
     fp->lsn = lsn;
     fp->size = size;
     strncpy(fp->name, name, sizeof(fp->name) - 1);
+
     return 1;
 }
 
@@ -287,7 +315,9 @@ int sceCdStStart(u_int lbn, sceCdRMode* mode)
     sceCdStStop();
 
     file = FindFileByLsn(lbn);
-    if (file == NULL) {
+
+    if (file == NULL) 
+    {
         return 0;
     }
 

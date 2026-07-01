@@ -1,7 +1,7 @@
 #include "libsd.h"
 
 #include "iop/se/voice.h"
-#include "mikupan/mikupan_logging_c.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 
 #include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_init.h>

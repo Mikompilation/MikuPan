@@ -33,6 +33,11 @@ DEBUG_MENU dbg_menu_param =     {
         .nmax = 1,
     },
             {
+        .name = "PAD TYPE",
+        .subnum = 32865,
+        .nmax = 1,
+    },
+            {
         .name = "HIGH SPEED MODE",
         .subnum = 8281,
         .nmax = 1,

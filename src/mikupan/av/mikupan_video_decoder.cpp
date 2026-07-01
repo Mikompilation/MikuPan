@@ -1,5 +1,5 @@
 #include "mikupan_video_decoder.h"
-#include "mikupan/mikupan_logging.h"
+#include "mikupan/debug/mikupan_logging.h"
 #include <cstdio>
 #include <string>
 

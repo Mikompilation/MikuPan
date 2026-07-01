@@ -6,8 +6,8 @@
 #include "ingame/plyr/plyr_ctl.h"
 #include "ingame/plyr/unit_ctl.h"
 #include "graphics/graph3d/sglib.h"
-#include "mikupan/mikupan_controller.h"
-#include "mikupan/mikupan_first_person.h"
+#include "mikupan/io/mikupan_controller.h"
+#include "mikupan/gameplay/mikupan_first_person.h"
 #include "os/key_cnf.h"
 #include "sce/libvu0.h"
 

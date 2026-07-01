@@ -14,7 +14,7 @@
 #include "ingame/entry/ap_rgost.h"
 #include "ingame/map/map_area.h"
 #include "main/glob.h"
-#include "mikupan/mikupan_logging.h"
+#include "mikupan/debug/mikupan_logging.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 

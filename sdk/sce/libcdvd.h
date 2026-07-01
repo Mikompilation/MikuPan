@@ -44,7 +44,7 @@ typedef struct {
 typedef struct {
     u_int lsn;
     u_int size;
-    char name[16];
+    char name[1024];
     u_char date[8];
     u_int flag;
 } sceCdlFILE;
@@ -53,6 +53,7 @@ int sceCdInit(int init_mode);
 int sceCdMmode(int media);
 int sceCdReadClock(sceCdCLOCK *rtc);
 int sceCdRead(u_int lsn, u_int sectors, void *buf, sceCdRMode *mode);
+int sceCdReadFile(const char *name, u_int offset, void *buf, u_int size);
 int sceCdSync(int mode);
 int sceCdBreak(void);
 int sceCdGetError(void);
