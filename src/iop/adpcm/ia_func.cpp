@@ -48,9 +48,9 @@ static int IAdpcmMakeThread(u_char channel)
     param.attr = 0x2000000;
 
     if (channel == 0)
-        param.entry = IAdpcmReadCh0;
+        param.entry = (void*)IAdpcmReadCh0;
     else
-        param.entry = IAdpcmReadCh1;
+        param.entry = (void*)IAdpcmReadCh1;
 
     param.initPriority = 31;
     param.stackSize = 2048;
