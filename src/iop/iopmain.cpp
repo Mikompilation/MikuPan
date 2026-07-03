@@ -32,7 +32,7 @@ int start(int argc, char** argv)
     int tmp;
 
     param.attr = 0x2000000;
-    param.entry = (void*)IopMainLoop;
+    param.entry = IopMainLoop;
     param.initPriority = 32;
     param.stackSize = 2048;
     param.option = 0;
@@ -131,7 +131,7 @@ static int IopInitMain()
     tmp = QueryMaxFreeMemSize();
 
     param.attr = 0x2000000;
-    param.entry = (void*)IopMain;
+    param.entry = IopMain;
     param.initPriority = 32;
     param.stackSize = 2048;
     param.option = 0;
@@ -139,7 +139,7 @@ static int IopInitMain()
     iop_sys_ctrl.thread_id = CreateThread(&param);
     StartThread(iop_sys_ctrl.thread_id, 0);
 
-    param.entry = (void*)IAdpcmMain;
+    param.entry = IAdpcmMain;
     param.initPriority = 30;
     iop_sys_ctrl.adpcm_thid = CreateThread(&param);
     StartThread(iop_sys_ctrl.adpcm_thid, 0);

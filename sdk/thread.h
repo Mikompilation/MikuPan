@@ -1,9 +1,11 @@
 #ifndef MIKUPAN_IOP_THREAD_H
 #define MIKUPAN_IOP_THREAD_H
 
+using ThreadEntry = void (*)();
+
 struct ThreadParam {
     int attr;
-    void* entry;
+    ThreadEntry entry;
     int initPriority;
     int stackSize;
     int option;
