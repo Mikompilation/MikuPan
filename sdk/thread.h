@@ -1,7 +1,7 @@
 #ifndef MIKUPAN_IOP_THREAD_H
 #define MIKUPAN_IOP_THREAD_H
 
-using ThreadEntry = void (*)();
+typedef void (*ThreadEntry)(void);
 
 struct ThreadParam {
     int attr;
