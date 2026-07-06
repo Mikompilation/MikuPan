@@ -3812,6 +3812,14 @@ void MikuPan_GPUSetFloat(const char* name, float value)
     {
         g_uniforms.uParams0[3] = value;
     }
+    else if (strcmp(name, "uContrast") == 0)
+    {
+        g_uniforms.uParams1[2] = value;
+    }
+    else if (strcmp(name, "uShadowDepth") == 0)
+    {
+        g_uniforms.uParams1[3] = value;
+    }
     else if (strcmp(name, "uCrtStrength") == 0)
     {
         g_uniforms.uCrt0[0] = value;

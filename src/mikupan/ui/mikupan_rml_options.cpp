@@ -2,18 +2,25 @@
 
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/io/mikupan_file.h"
+#include "mikupan/io/mikupan_controller.h"
+#include "mikupan/gameplay/mikupan_item_icon_hud.h"
+#include "os/key_cnf.h"
 
 #include "RmlUi/Core.h"
 #include "RmlUi/Core/ElementDocument.h"
 #include "RmlUi/Core/EventListener.h"
 #include "RmlUi/Core/Elements/ElementFormControlInput.h"
 #include "RmlUi/Core/Elements/ElementFormControlSelect.h"
+#include "SDL3/SDL_gamepad.h"
+#include "SDL3/SDL_keyboard.h"
+#include "SDL3/SDL_scancode.h"
 #include "SDL3/SDL_timer.h"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <cstdio>
 #include <cstdlib>
 #include <functional>
@@ -121,6 +128,8 @@ enum MikuPanStepControlKind
 {
     MIKUPAN_STEP_BRIGHTNESS = 0,
     MIKUPAN_STEP_GAMMA,
+    MIKUPAN_STEP_CONTRAST,
+    MIKUPAN_STEP_SHADOW_DEPTH,
     MIKUPAN_STEP_FONT_SCALE,
     MIKUPAN_STEP_CRT_FIELD,
     MIKUPAN_STEP_AUDIO_MASTER,
@@ -138,6 +147,10 @@ struct MikuPanStepControl
     float step = 0.1f;
     int precision = 2;
     int segments = 12;
+    float visual_min_value = 0.0f;
+    float visual_max_value = 1.0f;
+    float neutral_value = 1.0f;
+    bool has_neutral = false;
     bool suffix_x = false;
     bool suffix_percent = false;
 };
@@ -162,6 +175,22 @@ enum MikuPanControlScope
 {
     MIKUPAN_CONTROL_SCOPE_SIDEBAR = 0,
     MIKUPAN_CONTROL_SCOPE_CONTENT,
+};
+
+enum MikuPanControlsTab
+{
+    MIKUPAN_CONTROLS_TAB_KEYBOARD = 0,
+    MIKUPAN_CONTROLS_TAB_CONTROLLER,
+};
+
+enum MikuPanBindingCaptureKind
+{
+    MIKUPAN_BIND_CAPTURE_NONE = 0,
+    MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON,
+    MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG,
+    MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS,
+    MIKUPAN_BIND_CAPTURE_CONTROLLER_BUTTON,
+    MIKUPAN_BIND_CAPTURE_CONTROLLER_STICK_AXIS,
 };
 
 struct MikuPanRmlOptionsState
@@ -199,14 +228,28 @@ struct MikuPanRmlOptionsState
     Rml::Element* active_gpu_label = nullptr;
     Rml::Element* gpu_restart_note = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
+    Rml::ElementFormControlInput* finder_dpad_film_swap_input = nullptr;
+    Rml::ElementFormControlInput* mirror_stone_hud_input = nullptr;
+    Rml::ElementFormControlInput* improved_movement_collisions_input = nullptr;
     Rml::ElementFormControlInput* controller_remap_input = nullptr;
     Rml::ElementFormControlInput* data_folder_input = nullptr;
     Rml::Element* save_status = nullptr;
     Rml::Element* panel_title = nullptr;
     Rml::Element* confirm_save_modal = nullptr;
+    Rml::Element* calibration_panel = nullptr;
+    Rml::Element* calibration_level_panel = nullptr;
+    Rml::Element* crt_panel = nullptr;
+    Rml::Element* controls_keyboard_tab = nullptr;
+    Rml::Element* controls_controller_tab = nullptr;
+    Rml::Element* controls_list = nullptr;
+    Rml::Element* binding_capture_modal = nullptr;
+    Rml::Element* binding_capture_title = nullptr;
+    Rml::Element* binding_capture_text = nullptr;
+    Rml::Element* binding_capture_countdown = nullptr;
+    std::array<Rml::Element*, 16> calibration_level_swatches{};
     std::vector<MikuPanStepControl> step_controls;
-    std::array<Rml::Element*, 4> category_buttons{};
-    std::array<Rml::Element*, 4> category_pages{};
+    std::array<Rml::Element*, 5> category_buttons{};
+    std::array<Rml::Element*, 5> category_pages{};
     int selected_category = 0;
     MikuPanControlScope control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
     MikuPanChoicePickerKind active_picker = MIKUPAN_PICKER_NONE;
@@ -230,6 +273,21 @@ struct MikuPanRmlOptionsState
     bool option_exit_requested = false;
     bool has_unsaved_changes = false;
     bool exit_confirm_visible = false;
+    bool calibration_visible = false;
+    float calibration_original_brightness = 1.0f;
+    float calibration_original_gamma = 1.0f;
+    float calibration_original_contrast = 1.0f;
+    float calibration_original_shadow_depth = 1.0f;
+    bool calibration_original_dirty = false;
+    bool crt_visible = false;
+    MikuPan_ConfigCrt crt_original = {};
+    bool crt_original_dirty = false;
+    MikuPanControlsTab controls_tab = MIKUPAN_CONTROLS_TAB_KEYBOARD;
+    MikuPanBindingCaptureKind binding_capture_kind = MIKUPAN_BIND_CAPTURE_NONE;
+    int binding_capture_target = -1;
+    uint64_t binding_capture_after_ticks = 0;
+    uint64_t binding_capture_deadline_ticks = 0;
+    bool binding_capture_waiting_for_release = false;
     bool syncing = false;
     bool ui_move_sound_requested = false;
     Rml::Element* controller_focus_element = nullptr;
@@ -293,14 +351,15 @@ int IsCheckboxChecked(Rml::ElementFormControlInput* input)
 
 void AddListener(Rml::Element* element,
                  Rml::EventId event_id,
-                 std::unique_ptr<Rml::EventListener> listener)
+                 std::unique_ptr<Rml::EventListener> listener,
+                 bool capture = false)
 {
     if (element == nullptr || listener == nullptr)
     {
         return;
     }
 
-    element->AddEventListener(event_id, listener.get());
+    element->AddEventListener(event_id, listener.get(), capture);
     g_rml.listeners.push_back(std::move(listener));
 }
 
@@ -325,6 +384,7 @@ static constexpr const char* kCategoryTitles[] = {
     "DISPLAY",
     "GRAPHICS",
     "AUDIO",
+    "CONTROLS",
     "ADVANCED",
 };
 
@@ -332,6 +392,7 @@ static constexpr const char* kCategoryButtonIds[] = {
     "cat-display",
     "cat-graphics",
     "cat-audio",
+    "cat-controls",
     "cat-advanced",
 };
 
@@ -339,6 +400,7 @@ static constexpr const char* kCategoryPageIds[] = {
     "page-display",
     "page-graphics",
     "page-audio",
+    "page-controls",
     "page-advanced",
 };
 
@@ -346,7 +408,8 @@ static constexpr const char* kCategoryFirstControlIds[] = {
     "window-mode-picker",
     "resolution-picker",
     "master-volume-stepper",
-    "theme-select",
+    "controls-keyboard-tab",
+    "finder-dpad-film-swap-input",
 };
 
 static constexpr const char* kWindowModeLabels[] = {
@@ -363,8 +426,10 @@ static constexpr int kWindowModeCount =
     static_cast<int>(sizeof(kWindowModeLabels) / sizeof(kWindowModeLabels[0]));
 
 void ScrollFocusedContentRowIntoView(void);
+void ScrollChoicePickerSelectionIntoView(void);
 void FocusElementById(const char* id);
 void FocusButtonGroup(const char* const* ids, int count, int direction);
+bool HandleControlsTabHorizontalInput(int direction);
 void EnterSidebarScope(void);
 void EnterContentScope(void);
 bool AnySelectOpen(void);
@@ -374,7 +439,11 @@ bool HandleHorizontalInput(int direction);
 void HandleOptionsCancel(void);
 void RequestOptionsExit(void);
 void UpdateDisplayPickers(void);
+void UpdateMsaaSelectState(void);
 void UpdateStepControlVisuals(void);
+void SyncRmlSettingsValues(void);
+void SetChoicePickerVisible(bool visible);
+void SetResolutionConfirmVisible(bool visible, MikuPanDisplayConfirmKind kind);
 void UpdateResolutionConfirmTimeout(void);
 bool IsOptionsInputBlocked(void);
 void OpenChoicePicker(MikuPanChoicePickerKind kind);
@@ -386,6 +455,28 @@ void RequestUiMoveSound(void);
 void UpdateControllerFocusVisual(void);
 void ClearControllerFocusVisual(void);
 void ClearControllerFocusReferences(void);
+std::string EscapeRmlText(const char* text);
+
+void SetCalibrationVisible(bool visible);
+void OpenCalibrationPanel(void);
+void AcceptCalibrationPanel(void);
+void CancelCalibrationPanel(void);
+void ResetCalibrationDefaults(void);
+bool CalibrationPanelIsFocused(void);
+void SetCrtPanelVisible(bool visible);
+void OpenCrtPanel(void);
+void AcceptCrtPanel(void);
+void CancelCrtPanel(void);
+void ResetCrtDefaults(void);
+bool CrtPanelIsFocused(void);
+void SetBindingCaptureVisible(bool visible);
+void BeginBindingCapture(MikuPanBindingCaptureKind kind, int target);
+void CancelBindingCapture(void);
+void ClearActiveBindingCapture(void);
+void UpdateBindingCapture(void);
+void SelectControlsTab(MikuPanControlsTab tab);
+void RebuildControlsList(void);
+bool BindingCaptureIsVisible(void);
 
 void MarkSettingsDirty(void)
 {
@@ -440,6 +531,967 @@ void SaveAndReturnOptions(void)
     }
 }
 
+void UpdateMainWindowModalHidden(void)
+{
+    if (g_rml.window != nullptr)
+    {
+        g_rml.window->SetClass("calibration-hidden",
+                               g_rml.calibration_visible || g_rml.crt_visible);
+    }
+}
+
+void SetCalibrationVisible(bool visible)
+{
+    g_rml.calibration_visible = visible;
+    if (g_rml.calibration_panel != nullptr)
+    {
+        g_rml.calibration_panel->SetClass("hidden", !visible);
+    }
+    if (g_rml.calibration_level_panel != nullptr)
+    {
+        g_rml.calibration_level_panel->SetClass("hidden", !visible);
+    }
+
+    UpdateMainWindowModalHidden();
+}
+
+void SetCrtPanelVisible(bool visible)
+{
+    g_rml.crt_visible = visible;
+    if (g_rml.crt_panel != nullptr)
+    {
+        g_rml.crt_panel->SetClass("hidden", !visible);
+    }
+
+    UpdateMainWindowModalHidden();
+}
+
+void OpenCalibrationPanel(void)
+{
+    if (!g_rml.option_mode_open)
+    {
+        return;
+    }
+
+    g_rml.calibration_original_brightness = MikuPan_GetBrightness();
+    g_rml.calibration_original_gamma = MikuPan_GetGamma();
+    g_rml.calibration_original_contrast = MikuPan_GetContrast();
+    g_rml.calibration_original_shadow_depth = MikuPan_GetShadowDepth();
+    g_rml.calibration_original_dirty = g_rml.has_unsaved_changes;
+    SetExitConfirmVisible(false);
+    SetChoicePickerVisible(false);
+    g_rml.active_picker = MIKUPAN_PICKER_NONE;
+    SetResolutionConfirmVisible(false, MIKUPAN_DISPLAY_CONFIRM_NONE);
+    SetCrtPanelVisible(false);
+    SetCalibrationVisible(true);
+    UpdateStepControlVisuals();
+    FocusElementById("calibration-brightness-stepper");
+}
+
+void AcceptCalibrationPanel(void)
+{
+    if (!g_rml.calibration_visible)
+    {
+        return;
+    }
+
+    MarkSettingsDirty();
+    SetCalibrationVisible(false);
+    SyncRmlSettingsValues();
+    FocusElementById("open-calibration-button");
+}
+
+void CancelCalibrationPanel(void)
+{
+    if (!g_rml.calibration_visible)
+    {
+        return;
+    }
+
+    MikuPan_SetBrightness(g_rml.calibration_original_brightness);
+    MikuPan_SetGamma(g_rml.calibration_original_gamma);
+    MikuPan_SetContrast(g_rml.calibration_original_contrast);
+    MikuPan_SetShadowDepth(g_rml.calibration_original_shadow_depth);
+    g_rml.has_unsaved_changes = g_rml.calibration_original_dirty;
+    SetCalibrationVisible(false);
+    SyncRmlSettingsValues();
+    FocusElementById("open-calibration-button");
+}
+
+void ResetCalibrationDefaults(void)
+{
+    MikuPan_SetBrightness(1.0f);
+    MikuPan_SetGamma(1.0f);
+    MikuPan_SetContrast(1.0f);
+    MikuPan_SetShadowDepth(1.0f);
+    MarkSettingsDirty();
+    UpdateStepControlVisuals();
+    FocusElementById("calibration-reset-button");
+}
+
+bool CalibrationPanelIsFocused(void)
+{
+    if (!g_rml.calibration_visible || g_rml.context == nullptr)
+    {
+        return false;
+    }
+
+    Rml::Element* focus = g_rml.context->GetFocusElement();
+    while (focus != nullptr)
+    {
+        if (focus == g_rml.calibration_panel)
+        {
+            return true;
+        }
+        focus = focus->GetParentNode();
+    }
+
+    return false;
+}
+
+void OpenCrtPanel(void)
+{
+    if (!g_rml.option_mode_open)
+    {
+        return;
+    }
+
+    const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
+    g_rml.crt_original = crt != nullptr ? *crt : MikuPan_ConfigCrt();
+    g_rml.crt_original_dirty = g_rml.has_unsaved_changes;
+    SetExitConfirmVisible(false);
+    SetChoicePickerVisible(false);
+    g_rml.active_picker = MIKUPAN_PICKER_NONE;
+    SetResolutionConfirmVisible(false, MIKUPAN_DISPLAY_CONFIRM_NONE);
+    SetCalibrationVisible(false);
+    SetCrtPanelVisible(true);
+    UpdateStepControlVisuals();
+    SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
+    FocusElementById("crt-enabled-input");
+}
+
+void AcceptCrtPanel(void)
+{
+    if (!g_rml.crt_visible)
+    {
+        return;
+    }
+
+    MarkSettingsDirty();
+    SetCrtPanelVisible(false);
+    SyncRmlSettingsValues();
+    FocusElementById("open-crt-button");
+}
+
+void CancelCrtPanel(void)
+{
+    if (!g_rml.crt_visible)
+    {
+        return;
+    }
+
+    MikuPan_SetCrtSettings(&g_rml.crt_original);
+    g_rml.has_unsaved_changes = g_rml.crt_original_dirty;
+    SetCrtPanelVisible(false);
+    SyncRmlSettingsValues();
+    FocusElementById("open-crt-button");
+}
+
+void ResetCrtDefaults(void)
+{
+    MikuPan_ResetCrtSettings();
+    MarkSettingsDirty();
+    const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
+    SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
+    UpdateStepControlVisuals();
+    FocusElementById("reset-crt-button");
+}
+
+bool CrtPanelIsFocused(void)
+{
+    if (!g_rml.crt_visible || g_rml.context == nullptr)
+    {
+        return false;
+    }
+
+    Rml::Element* focus = g_rml.context->GetFocusElement();
+    while (focus != nullptr)
+    {
+        if (focus == g_rml.crt_panel)
+        {
+            return true;
+        }
+        focus = focus->GetParentNode();
+    }
+
+    return false;
+}
+
+static constexpr const char* kControlsButtonLabels[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
+    "Triangle",
+    "Cross / Confirm",
+    "Square",
+    "Circle / Cancel",
+    "D-Pad Up",
+    "D-Pad Down",
+    "D-Pad Left",
+    "D-Pad Right",
+    "R3 / Right Stick",
+    "Select",
+    "Start / Pause",
+    "L3 / Left Stick",
+    "R1 / RB",
+    "L2 / LT",
+    "R2 / RT",
+    "L1 / LB",
+};
+
+static constexpr const char* kControlsStickLabels[MIKUPAN_STICK_COUNT] = {
+    "Move X",
+    "Move Y",
+    "Aim X",
+    "Aim Y",
+};
+
+static constexpr const char* kControllerStickInvertLabels[MIKUPAN_STICK_COUNT] = {
+    "Invert Move X",
+    "Invert Move Y",
+    "Invert Aim X",
+    "Invert Aim Y",
+};
+
+std::string BuildBindingButton(const char* id, const char* text, bool small = false)
+{
+    std::string rml = "<button id=\"";
+    rml += id;
+    rml += "\" class=\"controls-bind-value";
+    if (small)
+    {
+        rml += " small";
+    }
+    rml += "\">";
+    rml += EscapeRmlText(text);
+    rml += "</button>";
+    return rml;
+}
+
+std::string BuildControlButtonRow(int index, const char* value, const char* bind_prefix, const char* clear_prefix)
+{
+    const std::string index_text = std::to_string(index);
+    std::string rml = "<div class=\"controls-bind-row\"><span class=\"controls-bind-label\">";
+    rml += EscapeRmlText(kControlsButtonLabels[index]);
+    rml += "</span>";
+    rml += BuildBindingButton((std::string(bind_prefix) + index_text).c_str(), value);
+    rml += "<button id=\"";
+    rml += clear_prefix;
+    rml += index_text;
+    rml += "\" class=\"controls-clear-button\">Clear</button></div>";
+    return rml;
+}
+
+std::string BuildKeyboardDirectionRow(const char* label,
+                                      const char* bind_id,
+                                      const char* clear_id,
+                                      int scancode)
+{
+    std::string rml = "<div class=\"controls-bind-row\"><span class=\"controls-bind-label\">";
+    rml += EscapeRmlText(label);
+    rml += "</span>";
+    rml += BuildBindingButton(bind_id, MikuPan_ControllerScanCodeLabel(scancode));
+    rml += "<button id=\"";
+    rml += clear_id;
+    rml += "\" class=\"controls-clear-button\">Clear</button></div>";
+    return rml;
+}
+
+std::string BuildControllerInvertRow(int index)
+{
+    const std::string index_text = std::to_string(index);
+    std::string rml = "<div class=\"controls-bind-row controls-option-row\"><span class=\"controls-bind-label\">";
+    rml += EscapeRmlText(kControllerStickInvertLabels[index]);
+    rml += "</span><button id=\"invert-pad-stick-";
+    rml += index_text;
+    rml += "\" class=\"controls-option-button\">";
+    rml += mikupan_stick_controller_map[index].invert ? "On" : "Off";
+    rml += "</button></div>";
+    return rml;
+}
+
+void RebuildControlsList(void)
+{
+    if (g_rml.controls_list == nullptr)
+    {
+        return;
+    }
+
+    std::string rml;
+    if (g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD)
+    {
+        rml += "<div class=\"controls-section-title\">Buttons</div>";
+        for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+        {
+            rml += BuildControlButtonRow(i,
+                                         MikuPan_ControllerScanCodeLabel(mikupan_keyboard_map[i]),
+                                         "bind-key-",
+                                         "clear-key-");
+        }
+
+        rml += "<div class=\"controls-section-title\">Movement</div>";
+        rml += BuildKeyboardDirectionRow("Forward",
+                                        "bind-key-stick-neg-1",
+                                        "clear-key-stick-neg-1",
+                                        mikupan_stick_keyboard_map[MIKUPAN_STICK_LY].neg_scancode);
+        rml += BuildKeyboardDirectionRow("Backward",
+                                        "bind-key-stick-pos-1",
+                                        "clear-key-stick-pos-1",
+                                        mikupan_stick_keyboard_map[MIKUPAN_STICK_LY].pos_scancode);
+        rml += BuildKeyboardDirectionRow("Left",
+                                        "bind-key-stick-neg-0",
+                                        "clear-key-stick-neg-0",
+                                        mikupan_stick_keyboard_map[MIKUPAN_STICK_LX].neg_scancode);
+        rml += BuildKeyboardDirectionRow("Right",
+                                        "bind-key-stick-pos-0",
+                                        "clear-key-stick-pos-0",
+                                        mikupan_stick_keyboard_map[MIKUPAN_STICK_LX].pos_scancode);
+
+        rml += "<div class=\"controls-section-title\">Aim</div>";
+        rml += BuildKeyboardDirectionRow("Aim Up",
+                                        "bind-key-stick-neg-3",
+                                        "clear-key-stick-neg-3",
+                                        mikupan_stick_keyboard_map[MIKUPAN_STICK_RY].neg_scancode);
+        rml += BuildKeyboardDirectionRow("Aim Down",
+                                        "bind-key-stick-pos-3",
+                                        "clear-key-stick-pos-3",
+                                        mikupan_stick_keyboard_map[MIKUPAN_STICK_RY].pos_scancode);
+        rml += BuildKeyboardDirectionRow("Aim Left",
+                                        "bind-key-stick-neg-2",
+                                        "clear-key-stick-neg-2",
+                                        mikupan_stick_keyboard_map[MIKUPAN_STICK_RX].neg_scancode);
+        rml += BuildKeyboardDirectionRow("Aim Right",
+                                        "bind-key-stick-pos-2",
+                                        "clear-key-stick-pos-2",
+                                        mikupan_stick_keyboard_map[MIKUPAN_STICK_RX].pos_scancode);
+    }
+    else
+    {
+        SDL_Gamepad* gp = MikuPan_GetController();
+        if (gp == nullptr)
+        {
+            rml += "<div class=\"placeholder\">No controller is currently open. Connect a controller, or select one in the ImGui device selector for now.</div>";
+        }
+
+        rml += "<div class=\"controls-section-title\">Buttons</div>";
+        for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+        {
+            rml += BuildControlButtonRow(i,
+                                         MikuPan_ControllerBindingLabel(mikupan_controller_map[i]),
+                                         "bind-pad-",
+                                         "clear-pad-");
+        }
+
+        rml += "<div class=\"controls-section-title\">Sticks</div>";
+        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+        {
+            const std::string index_text = std::to_string(i);
+            rml += "<div class=\"controls-bind-row\"><span class=\"controls-bind-label\">";
+            rml += EscapeRmlText(kControlsStickLabels[i]);
+            rml += "</span>";
+            rml += BuildBindingButton(("bind-pad-stick-" + index_text).c_str(),
+                                      MikuPan_ControllerStickAxisLabel(mikupan_stick_controller_map[i].axis));
+            rml += "<button id=\"clear-pad-stick-" + index_text + "\" class=\"controls-clear-button\">Clear</button></div>";
+        }
+
+        rml += "<div class=\"controls-section-title\">Stick Invert</div>";
+        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+        {
+            rml += BuildControllerInvertRow(i);
+        }
+    }
+
+    SetElementText(g_rml.controls_list, rml);
+}
+
+void SelectControlsTab(MikuPanControlsTab tab)
+{
+    g_rml.controls_tab = tab;
+    if (g_rml.controls_keyboard_tab != nullptr)
+    {
+        g_rml.controls_keyboard_tab->SetClass("selected", tab == MIKUPAN_CONTROLS_TAB_KEYBOARD);
+    }
+    if (g_rml.controls_controller_tab != nullptr)
+    {
+        g_rml.controls_controller_tab->SetClass("selected", tab == MIKUPAN_CONTROLS_TAB_CONTROLLER);
+    }
+    RebuildControlsList();
+}
+
+bool BindingCaptureIsVisible(void)
+{
+    return g_rml.binding_capture_kind != MIKUPAN_BIND_CAPTURE_NONE;
+}
+
+void SetBindingCaptureVisible(bool visible)
+{
+    if (g_rml.binding_capture_modal != nullptr)
+    {
+        g_rml.binding_capture_modal->SetClass("hidden", !visible);
+    }
+}
+
+void SetBindingCaptureCountdown(uint64_t now)
+{
+    if (g_rml.binding_capture_countdown == nullptr)
+    {
+        return;
+    }
+
+    int seconds_left = 0;
+    if (g_rml.binding_capture_deadline_ticks > now)
+    {
+        seconds_left = static_cast<int>((g_rml.binding_capture_deadline_ticks - now + 999u) / 1000u);
+    }
+
+    SetElementText(g_rml.binding_capture_countdown, std::to_string(seconds_left));
+}
+
+const char* BindingCaptureDeviceText(MikuPanBindingCaptureKind kind)
+{
+    switch (kind)
+    {
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON:
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG:
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS:
+            return "Press a key...";
+        case MIKUPAN_BIND_CAPTURE_CONTROLLER_BUTTON:
+            return "Press a controller button or trigger...";
+        case MIKUPAN_BIND_CAPTURE_CONTROLLER_STICK_AXIS:
+            return "Move a controller stick...";
+        default:
+            return "Press input...";
+    }
+}
+
+void BeginBindingCapture(MikuPanBindingCaptureKind kind, int target)
+{
+    const uint64_t now = SDL_GetTicks();
+    g_rml.binding_capture_kind = kind;
+    g_rml.binding_capture_target = target;
+    g_rml.binding_capture_after_ticks = now + 180u;
+    g_rml.binding_capture_deadline_ticks = now + 5000u;
+    g_rml.binding_capture_waiting_for_release = true;
+    SetElementText(g_rml.binding_capture_title, "Bind Control");
+    SetElementText(g_rml.binding_capture_text, BindingCaptureDeviceText(kind));
+    SetBindingCaptureCountdown(now);
+    SetBindingCaptureVisible(true);
+    FocusElementById("binding-capture-cancel-button");
+}
+
+void CancelBindingCapture(void)
+{
+    g_rml.binding_capture_kind = MIKUPAN_BIND_CAPTURE_NONE;
+    g_rml.binding_capture_target = -1;
+    g_rml.binding_capture_after_ticks = 0;
+    g_rml.binding_capture_deadline_ticks = 0;
+    g_rml.binding_capture_waiting_for_release = false;
+    SetElementText(g_rml.binding_capture_countdown, "0");
+    SetBindingCaptureVisible(false);
+    if (g_rml.visible && g_rml.option_mode_open)
+    {
+        FocusElementById(g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD
+                             ? "controls-keyboard-tab"
+                             : "controls-controller-tab");
+    }
+}
+
+void FinishBindingCapture(void)
+{
+    MarkSettingsDirty();
+    g_rml.binding_capture_kind = MIKUPAN_BIND_CAPTURE_NONE;
+    g_rml.binding_capture_target = -1;
+    g_rml.binding_capture_after_ticks = 0;
+    g_rml.binding_capture_deadline_ticks = 0;
+    g_rml.binding_capture_waiting_for_release = false;
+    SetElementText(g_rml.binding_capture_countdown, "0");
+    SetBindingCaptureVisible(false);
+    RebuildControlsList();
+    if (g_rml.visible && g_rml.option_mode_open)
+    {
+        FocusElementById(g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD
+                             ? "controls-keyboard-tab"
+                             : "controls-controller-tab");
+    }
+    RequestUiMoveSound();
+}
+
+void ClearActiveBindingCapture(void)
+{
+    const int target = g_rml.binding_capture_target;
+    if (target < 0)
+    {
+        CancelBindingCapture();
+        return;
+    }
+
+    switch (g_rml.binding_capture_kind)
+    {
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON:
+            if (target < MIKUPAN_CONTROLLER_LOGICAL_COUNT)
+            {
+                mikupan_keyboard_map[target] = 0;
+            }
+            break;
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG:
+            if (target < MIKUPAN_STICK_COUNT)
+            {
+                mikupan_stick_keyboard_map[target].neg_scancode = 0;
+            }
+            break;
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS:
+            if (target < MIKUPAN_STICK_COUNT)
+            {
+                mikupan_stick_keyboard_map[target].pos_scancode = 0;
+            }
+            break;
+        case MIKUPAN_BIND_CAPTURE_CONTROLLER_BUTTON:
+            if (target < MIKUPAN_CONTROLLER_LOGICAL_COUNT)
+            {
+                mikupan_controller_map[target].kind = MIKUPAN_CONTROLLER_BIND_NONE;
+                mikupan_controller_map[target].code = 0;
+            }
+            break;
+        case MIKUPAN_BIND_CAPTURE_CONTROLLER_STICK_AXIS:
+            if (target < MIKUPAN_STICK_COUNT)
+            {
+                mikupan_stick_controller_map[target].axis = -1;
+            }
+            break;
+        default:
+            break;
+    }
+
+    FinishBindingCapture();
+}
+
+bool AnyKeyboardCaptureInputDown(void)
+{
+    const bool* keys = SDL_GetKeyboardState(nullptr);
+    if (keys == nullptr)
+    {
+        return false;
+    }
+
+    for (int i = 4; i < SDL_SCANCODE_COUNT; i++)
+    {
+        if (keys[i])
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+int FindPressedKeyboardScancode(void)
+{
+    const bool* keys = SDL_GetKeyboardState(nullptr);
+    if (keys == nullptr)
+    {
+        return -1;
+    }
+
+    if (keys[SDL_SCANCODE_ESCAPE])
+    {
+        return SDL_SCANCODE_ESCAPE;
+    }
+    for (int i = 4; i < SDL_SCANCODE_COUNT; i++)
+    {
+        if (keys[i])
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+bool AnyControllerCaptureInputDown(SDL_Gamepad* gp)
+{
+    if (gp == nullptr)
+    {
+        return false;
+    }
+
+    for (int b = 0; b < SDL_GAMEPAD_BUTTON_COUNT; b++)
+    {
+        if (SDL_GetGamepadButton(gp, static_cast<SDL_GamepadButton>(b)))
+        {
+            return true;
+        }
+    }
+
+    const int axes[] = {
+        SDL_GAMEPAD_AXIS_LEFTX,
+        SDL_GAMEPAD_AXIS_LEFTY,
+        SDL_GAMEPAD_AXIS_RIGHTX,
+        SDL_GAMEPAD_AXIS_RIGHTY,
+        SDL_GAMEPAD_AXIS_LEFT_TRIGGER,
+        SDL_GAMEPAD_AXIS_RIGHT_TRIGGER,
+    };
+
+    for (int axis : axes)
+    {
+        const int value = SDL_GetGamepadAxis(gp, static_cast<SDL_GamepadAxis>(axis));
+        if (value > 12000 || value < -12000)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+int FindPressedControllerInput(SDL_Gamepad* gp, int* out_kind, int* out_code)
+{
+    if (gp == nullptr || out_kind == nullptr || out_code == nullptr)
+    {
+        return 0;
+    }
+
+    for (int b = 0; b < SDL_GAMEPAD_BUTTON_COUNT; b++)
+    {
+        if (SDL_GetGamepadButton(gp, static_cast<SDL_GamepadButton>(b)))
+        {
+            *out_kind = MIKUPAN_CONTROLLER_BIND_BUTTON;
+            *out_code = b;
+            return 1;
+        }
+    }
+
+    if (SDL_GetGamepadAxis(gp, SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > 16384)
+    {
+        *out_kind = MIKUPAN_CONTROLLER_BIND_AXIS;
+        *out_code = SDL_GAMEPAD_AXIS_LEFT_TRIGGER;
+        return 1;
+    }
+    if (SDL_GetGamepadAxis(gp, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) > 16384)
+    {
+        *out_kind = MIKUPAN_CONTROLLER_BIND_AXIS;
+        *out_code = SDL_GAMEPAD_AXIS_RIGHT_TRIGGER;
+        return 1;
+    }
+
+    return 0;
+}
+
+int FindMovedControllerStickAxis(SDL_Gamepad* gp, int* out_axis)
+{
+    if (gp == nullptr || out_axis == nullptr)
+    {
+        return 0;
+    }
+
+    const int threshold = 20000;
+    const int axes[] = {
+        SDL_GAMEPAD_AXIS_LEFTX,
+        SDL_GAMEPAD_AXIS_LEFTY,
+        SDL_GAMEPAD_AXIS_RIGHTX,
+        SDL_GAMEPAD_AXIS_RIGHTY,
+    };
+
+    for (int axis : axes)
+    {
+        const int value = SDL_GetGamepadAxis(gp, static_cast<SDL_GamepadAxis>(axis));
+        if (value > threshold || value < -threshold)
+        {
+            *out_axis = axis;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+void UpdateBindingCapture(void)
+{
+    if (!BindingCaptureIsVisible())
+    {
+        return;
+    }
+
+    const uint64_t now = SDL_GetTicks();
+    SetBindingCaptureCountdown(now);
+    if (g_rml.binding_capture_deadline_ticks != 0
+        && now >= g_rml.binding_capture_deadline_ticks)
+    {
+        CancelBindingCapture();
+        return;
+    }
+
+    if (now < g_rml.binding_capture_after_ticks)
+    {
+        return;
+    }
+
+    if (g_rml.binding_capture_waiting_for_release)
+    {
+        const bool waiting_for_keyboard =
+            g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON
+            || g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG
+            || g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS;
+        const bool input_down = waiting_for_keyboard
+                                    ? AnyKeyboardCaptureInputDown()
+                                    : AnyControllerCaptureInputDown(MikuPan_GetController());
+        if (input_down)
+        {
+            return;
+        }
+        g_rml.binding_capture_waiting_for_release = false;
+        SetElementText(g_rml.binding_capture_text, BindingCaptureDeviceText(g_rml.binding_capture_kind));
+    }
+
+    const int target = g_rml.binding_capture_target;
+    if (target < 0)
+    {
+        CancelBindingCapture();
+        return;
+    }
+
+    switch (g_rml.binding_capture_kind)
+    {
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON:
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG:
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS:
+        {
+            const int scancode = FindPressedKeyboardScancode();
+            if (scancode < 0)
+            {
+                return;
+            }
+            if (scancode == SDL_SCANCODE_ESCAPE)
+            {
+                CancelBindingCapture();
+                return;
+            }
+            if (g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON
+                && target < MIKUPAN_CONTROLLER_LOGICAL_COUNT)
+            {
+                mikupan_keyboard_map[target] = scancode;
+            }
+            else if (g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG
+                     && target < MIKUPAN_STICK_COUNT)
+            {
+                mikupan_stick_keyboard_map[target].neg_scancode = scancode;
+            }
+            else if (g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS
+                     && target < MIKUPAN_STICK_COUNT)
+            {
+                mikupan_stick_keyboard_map[target].pos_scancode = scancode;
+            }
+            FinishBindingCapture();
+            break;
+        }
+        case MIKUPAN_BIND_CAPTURE_CONTROLLER_BUTTON:
+        {
+            int kind = 0;
+            int code = 0;
+            if (FindPressedControllerInput(MikuPan_GetController(), &kind, &code))
+            {
+                if (target < MIKUPAN_CONTROLLER_LOGICAL_COUNT)
+                {
+                    mikupan_controller_map[target].kind = kind;
+                    mikupan_controller_map[target].code = code;
+                }
+                FinishBindingCapture();
+            }
+            break;
+        }
+        case MIKUPAN_BIND_CAPTURE_CONTROLLER_STICK_AXIS:
+        {
+            int axis = 0;
+            if (FindMovedControllerStickAxis(MikuPan_GetController(), &axis))
+            {
+                if (target < MIKUPAN_STICK_COUNT)
+                {
+                    mikupan_stick_controller_map[target].axis = axis;
+                }
+                FinishBindingCapture();
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+int ParseGeneratedIndex(const Rml::String& id, const char* prefix)
+{
+    const size_t prefix_len = std::strlen(prefix);
+    if (id.size() <= prefix_len || id.compare(0, prefix_len, prefix) != 0)
+    {
+        return -1;
+    }
+
+    char* end = nullptr;
+    const long value = std::strtol(id.c_str() + prefix_len, &end, 10);
+    if (end == id.c_str() + prefix_len || *end != '\0')
+    {
+        return -1;
+    }
+    return static_cast<int>(value);
+}
+
+Rml::String FindGeneratedId(Rml::Element* element)
+{
+    while (element != nullptr && element != g_rml.controls_list)
+    {
+        const Rml::String id = element->GetId();
+        if (!id.empty())
+        {
+            return id;
+        }
+        element = element->GetParentNode();
+    }
+    return "";
+}
+
+void HandledControlsListEvent(Rml::Event& event)
+{
+    event.StopPropagation();
+}
+
+void FocusGeneratedControlsButton(const char* prefix, int index)
+{
+    const std::string id = std::string(prefix) + std::to_string(index);
+    FocusElementById(id.c_str());
+}
+
+void HandleControlsListClick(Rml::Event& event)
+{
+    Rml::String id = FindGeneratedId(event.GetTargetElement());
+    if (id.empty())
+    {
+        id = FindGeneratedId(event.GetCurrentElement());
+    }
+    if (id.empty())
+    {
+        return;
+    }
+
+    int index = ParseGeneratedIndex(id, "bind-key-stick-neg-");
+    if (index >= 0)
+    {
+        HandledControlsListEvent(event);
+        BeginBindingCapture(MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG, index);
+        return;
+    }
+    index = ParseGeneratedIndex(id, "bind-key-stick-pos-");
+    if (index >= 0)
+    {
+        HandledControlsListEvent(event);
+        BeginBindingCapture(MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS, index);
+        return;
+    }
+    index = ParseGeneratedIndex(id, "clear-key-stick-neg-");
+    if (index >= 0 && index < MIKUPAN_STICK_COUNT)
+    {
+        HandledControlsListEvent(event);
+        mikupan_stick_keyboard_map[index].neg_scancode = 0;
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusGeneratedControlsButton("clear-key-stick-neg-", index);
+        RequestUiMoveSound();
+        return;
+    }
+    index = ParseGeneratedIndex(id, "clear-key-stick-pos-");
+    if (index >= 0 && index < MIKUPAN_STICK_COUNT)
+    {
+        HandledControlsListEvent(event);
+        mikupan_stick_keyboard_map[index].pos_scancode = 0;
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusGeneratedControlsButton("clear-key-stick-pos-", index);
+        RequestUiMoveSound();
+        return;
+    }
+    index = ParseGeneratedIndex(id, "clear-key-stick-");
+    if (index >= 0 && index < MIKUPAN_STICK_COUNT)
+    {
+        HandledControlsListEvent(event);
+        mikupan_stick_keyboard_map[index].neg_scancode = 0;
+        mikupan_stick_keyboard_map[index].pos_scancode = 0;
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusGeneratedControlsButton("clear-key-stick-", index);
+        RequestUiMoveSound();
+        return;
+    }
+    index = ParseGeneratedIndex(id, "bind-key-");
+    if (index >= 0)
+    {
+        HandledControlsListEvent(event);
+        BeginBindingCapture(MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON, index);
+        return;
+    }
+    index = ParseGeneratedIndex(id, "clear-key-");
+    if (index >= 0 && index < MIKUPAN_CONTROLLER_LOGICAL_COUNT)
+    {
+        HandledControlsListEvent(event);
+        mikupan_keyboard_map[index] = 0;
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusGeneratedControlsButton("clear-key-", index);
+        RequestUiMoveSound();
+        return;
+    }
+    index = ParseGeneratedIndex(id, "bind-pad-stick-");
+    if (index >= 0)
+    {
+        HandledControlsListEvent(event);
+        BeginBindingCapture(MIKUPAN_BIND_CAPTURE_CONTROLLER_STICK_AXIS, index);
+        return;
+    }
+    index = ParseGeneratedIndex(id, "invert-pad-stick-");
+    if (index >= 0 && index < MIKUPAN_STICK_COUNT)
+    {
+        HandledControlsListEvent(event);
+        mikupan_stick_controller_map[index].invert = mikupan_stick_controller_map[index].invert ? 0 : 1;
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusGeneratedControlsButton("invert-pad-stick-", index);
+        RequestUiMoveSound();
+        return;
+    }
+    index = ParseGeneratedIndex(id, "clear-pad-stick-");
+    if (index >= 0 && index < MIKUPAN_STICK_COUNT)
+    {
+        HandledControlsListEvent(event);
+        mikupan_stick_controller_map[index].axis = -1;
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusGeneratedControlsButton("clear-pad-stick-", index);
+        RequestUiMoveSound();
+        return;
+    }
+    index = ParseGeneratedIndex(id, "bind-pad-");
+    if (index >= 0)
+    {
+        HandledControlsListEvent(event);
+        BeginBindingCapture(MIKUPAN_BIND_CAPTURE_CONTROLLER_BUTTON, index);
+        return;
+    }
+    index = ParseGeneratedIndex(id, "clear-pad-");
+    if (index >= 0 && index < MIKUPAN_CONTROLLER_LOGICAL_COUNT)
+    {
+        HandledControlsListEvent(event);
+        mikupan_controller_map[index].kind = MIKUPAN_CONTROLLER_BIND_NONE;
+        mikupan_controller_map[index].code = 0;
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusGeneratedControlsButton("clear-pad-", index);
+        RequestUiMoveSound();
+    }
+}
+
 int ClampInt(int value, int minimum, int maximum)
 {
     return std::max(minimum, std::min(value, maximum));
@@ -473,6 +1525,38 @@ std::string ResolutionLabel(int index)
     return label != nullptr ? label : "Unavailable";
 }
 
+std::string EscapeRmlText(const char* text)
+{
+    if (text == nullptr)
+    {
+        return "";
+    }
+
+    std::string output;
+    for (const char* c = text; *c != '\0'; c++)
+    {
+        switch (*c)
+        {
+            case '&':
+                output += "&amp;";
+                break;
+            case '<':
+                output += "&lt;";
+                break;
+            case '>':
+                output += "&gt;";
+                break;
+            case '"':
+                output += "&quot;";
+                break;
+            default:
+                output += *c;
+                break;
+        }
+    }
+    return output;
+}
+
 float GetStepValue(const MikuPanStepControl& control)
 {
     switch (control.kind)
@@ -481,6 +1565,10 @@ float GetStepValue(const MikuPanStepControl& control)
             return MikuPan_GetBrightness();
         case MIKUPAN_STEP_GAMMA:
             return MikuPan_GetGamma();
+        case MIKUPAN_STEP_CONTRAST:
+            return MikuPan_GetContrast();
+        case MIKUPAN_STEP_SHADOW_DEPTH:
+            return MikuPan_GetShadowDepth();
         case MIKUPAN_STEP_FONT_SCALE:
             return MikuPan_GetUiFontScale();
         case MIKUPAN_STEP_CRT_FIELD:
@@ -509,6 +1597,12 @@ void SetStepValue(const MikuPanStepControl& control, float value)
         case MIKUPAN_STEP_GAMMA:
             MikuPan_SetGamma(clamped);
             break;
+        case MIKUPAN_STEP_CONTRAST:
+            MikuPan_SetContrast(clamped);
+            break;
+        case MIKUPAN_STEP_SHADOW_DEPTH:
+            MikuPan_SetShadowDepth(clamped);
+            break;
         case MIKUPAN_STEP_FONT_SCALE:
             MikuPan_SetUiFontScale(clamped);
             break;
@@ -526,25 +1620,137 @@ void SetStepValue(const MikuPanStepControl& control, float value)
     }
 }
 
+float ApplyCalibrationOutputLevel(float value)
+{
+    float color = ClampFloat(value, 0.0f, 1.0f);
+    color *= MikuPan_GetBrightness();
+    color = (color - 0.5f) * std::max(MikuPan_GetContrast(), 0.0f) + 0.5f;
+    color = std::pow(std::max(color, 0.0f),
+                     1.0f / std::max(MikuPan_GetGamma(), 0.01f));
+    return ClampFloat(color, 0.0f, 1.0f);
+}
+
+std::string FormatGrayColor(float value)
+{
+    const int channel = ClampInt(
+        static_cast<int>(std::round(ClampFloat(value, 0.0f, 1.0f) * 255.0f)),
+        0,
+        255);
+    char text[16];
+    std::snprintf(text, sizeof(text), "#%02x%02x%02x", channel, channel, channel);
+    return text;
+}
+
+void UpdateCalibrationLevelVisuals(void)
+{
+    const int count = static_cast<int>(g_rml.calibration_level_swatches.size());
+    for (int i = 0; i < count; i++)
+    {
+        Rml::Element* swatch = g_rml.calibration_level_swatches[static_cast<size_t>(i)];
+        if (swatch == nullptr)
+        {
+            continue;
+        }
+
+        const float t = count > 1
+                            ? static_cast<float>(i) / static_cast<float>(count - 1)
+                            : 0.0f;
+        const float source = std::pow(t, 2.0f);
+        const std::string color = FormatGrayColor(ApplyCalibrationOutputLevel(source));
+        swatch->SetProperty("background-color", color);
+    }
+}
+
+int GetStepVisualSegmentCount(float minimum,
+                              float maximum,
+                              float step,
+                              int preferred_segments)
+{
+    if (step > 0.0f)
+    {
+        const int step_count = static_cast<int>(
+            std::round((maximum - minimum) / step));
+        if (step_count > 0 && step_count <= 39)
+        {
+            return step_count + 1;
+        }
+    }
+
+    return std::max(1, preferred_segments);
+}
+
+int GetStepVisualIndex(float value,
+                       float minimum,
+                       float maximum,
+                       float step,
+                       int segments)
+{
+    if (step > 0.0f)
+    {
+        const int step_count = static_cast<int>(
+            std::round((maximum - minimum) / step));
+        if (step_count > 0 && step_count + 1 == segments)
+        {
+            return ClampInt(static_cast<int>(std::round((value - minimum) / step)),
+                            0,
+                            segments - 1);
+        }
+    }
+
+    const float range = std::max(maximum - minimum, 0.0001f);
+    const int last_segment = std::max(segments - 1, 1);
+    return ClampInt(static_cast<int>(std::round(((value - minimum) / range)
+                                                * static_cast<float>(last_segment))),
+                    0,
+                    segments - 1);
+}
+
 std::string BuildStepperBars(float value,
                              float minimum,
                              float maximum,
-                             int segments)
+                             float step,
+                             int segments,
+                             float neutral_value,
+                             bool has_neutral)
 {
-    segments = std::max(1, segments);
-    const float range = std::max(maximum - minimum, 0.0001f);
-    const float normalised = ClampFloat((value - minimum) / range, 0.0f, 1.0f);
-    const int filled = ClampInt(
-        static_cast<int>(std::round(normalised * static_cast<float>(segments))),
-        0,
-        segments);
+    segments = GetStepVisualSegmentCount(minimum, maximum, step, segments);
+    const int active_index = GetStepVisualIndex(value,
+                                                minimum,
+                                                maximum,
+                                                step,
+                                                segments);
+    const int neutral_index = GetStepVisualIndex(neutral_value,
+                                                 minimum,
+                                                 maximum,
+                                                 step,
+                                                 segments);
 
     std::string rml;
-    rml.reserve(static_cast<size_t>(segments) * 44u);
+    rml.reserve(static_cast<size_t>(segments) * 56u);
     for (int i = 0; i < segments; i++)
     {
-        rml += i < filled ? "<span class=\"stepper-segment filled\">|</span>"
-                          : "<span class=\"stepper-segment\">|</span>";
+        bool filled = false;
+        if (has_neutral)
+        {
+            filled = active_index >= neutral_index
+                         ? i >= neutral_index && i <= active_index
+                         : i <= neutral_index && i >= active_index;
+        }
+        else
+        {
+            filled = active_index > 0 && i <= active_index;
+        }
+
+        std::string classes = "stepper-segment step-index-" + std::to_string(i);
+        if (filled)
+        {
+            classes += " filled";
+        }
+        if (has_neutral && i == neutral_index)
+        {
+            classes += " neutral";
+        }
+        rml += "<span class=\"" + classes + "\"></span>";
     }
     return rml;
 }
@@ -572,16 +1778,31 @@ void UpdateStepControlVisual(MikuPanStepControl& control)
     SetElementText(control.value, FormatStepValue(control, value));
     SetElementText(control.bars,
                    BuildStepperBars(value,
-                                    control.min_value,
-                                    control.max_value,
-                                    control.segments));
+                                    control.visual_min_value,
+                                    control.visual_max_value,
+                                    control.step,
+                                    control.segments,
+                                    control.neutral_value,
+                                    control.has_neutral));
 }
 
 void UpdateStepControlVisuals(void)
 {
     for (MikuPanStepControl& control : g_rml.step_controls)
     {
+        if (control.control == nullptr)
+        {
+            continue;
+        }
+        if (control.kind == MIKUPAN_STEP_CRT_FIELD && !g_rml.crt_visible)
+        {
+            continue;
+        }
         UpdateStepControlVisual(control);
+    }
+    if (g_rml.calibration_visible)
+    {
+        UpdateCalibrationLevelVisuals();
     }
 }
 
@@ -609,6 +1830,22 @@ MikuPanStepControl* FindFocusedStepControl(void)
     return nullptr;
 }
 
+void CommitStepControlValue(MikuPanStepControl& control, float value)
+{
+    const float old_value = GetStepValue(control);
+    SetStepValue(control, value);
+    const float new_value = GetStepValue(control);
+    if (std::abs(new_value - old_value) < 0.00001f)
+    {
+        return;
+    }
+
+    MarkSettingsDirty();
+    UpdateStepControlVisual(control);
+    UpdateCalibrationLevelVisuals();
+    RequestUiMoveSound();
+}
+
 void AdjustStepControl(MikuPanStepControl& control, int direction)
 {
     if (direction == 0)
@@ -616,19 +1853,171 @@ void AdjustStepControl(MikuPanStepControl& control, int direction)
         return;
     }
 
-    const float old_value = GetStepValue(control);
-    const float new_value = ClampFloat(old_value + control.step * direction,
-                                       control.min_value,
-                                       control.max_value);
-    if (std::abs(new_value - old_value) < 0.00001f)
+    CommitStepControlValue(control,
+                           ClampFloat(GetStepValue(control) + control.step * direction,
+                                      control.min_value,
+                                      control.max_value));
+}
+
+MikuPanStepControl* FindStepControlByElement(Rml::Element* element)
+{
+    while (element != nullptr)
+    {
+        for (MikuPanStepControl& control : g_rml.step_controls)
+        {
+            if (element == control.control)
+            {
+                return &control;
+            }
+        }
+        element = element->GetParentNode();
+    }
+
+    return nullptr;
+}
+
+int FindStepSegmentIndex(Rml::Element* element)
+{
+    while (element != nullptr)
+    {
+        for (int i = 0; i < 40; i++)
+        {
+            const std::string class_name = "step-index-" + std::to_string(i);
+            if (element->IsClassSet(class_name.c_str()))
+            {
+                return i;
+            }
+        }
+        element = element->GetParentNode();
+    }
+
+    return -1;
+}
+
+int FindStepEdgeDirection(Rml::Element* element)
+{
+    while (element != nullptr)
+    {
+        if (element->IsClassSet("stepper-left"))
+        {
+            return -1;
+        }
+        if (element->IsClassSet("stepper-right"))
+        {
+            return 1;
+        }
+        element = element->GetParentNode();
+    }
+
+    return 0;
+}
+
+float GetElementClickT(Rml::Event& event, Rml::Element* element)
+{
+    if (element == nullptr)
+    {
+        return -1.0f;
+    }
+
+    const float width = static_cast<float>(element->GetOffsetWidth());
+    if (width <= 1.0f)
+    {
+        return -1.0f;
+    }
+
+    const Rml::Vector2f offset = element->GetAbsoluteOffset();
+    const float mouse_x = event.GetParameter("mouse_x", -1.0f);
+    if (mouse_x < offset.x || mouse_x > offset.x + width)
+    {
+        return -1.0f;
+    }
+
+    return ClampFloat((mouse_x - offset.x) / width, 0.0f, 1.0f);
+}
+
+float GetStepBarsClickT(Rml::Event& event, const MikuPanStepControl& control)
+{
+    if (control.bars == nullptr)
+    {
+        return -1.0f;
+    }
+
+    const int visual_segments = GetStepVisualSegmentCount(control.visual_min_value,
+                                                          control.visual_max_value,
+                                                          control.step,
+                                                          control.segments);
+    if (visual_segments <= 1)
+    {
+        return GetElementClickT(event, control.bars);
+    }
+
+    const float segment_width = 2.0f;
+    const float segment_margin = 0.5f;
+    const float visual_width = static_cast<float>(visual_segments) * (segment_width + segment_margin * 2.0f);
+    const float container_width = static_cast<float>(control.bars->GetOffsetWidth());
+    if (container_width <= 1.0f || visual_width <= 1.0f)
+    {
+        return -1.0f;
+    }
+
+    const Rml::Vector2f offset = control.bars->GetAbsoluteOffset();
+    const float content_width = std::min(visual_width, container_width);
+    const float visual_left = offset.x + std::max((container_width - content_width) * 0.5f, 0.0f);
+    const float visual_right = visual_left + content_width;
+    const float mouse_x = event.GetParameter("mouse_x", -1.0f);
+    if (mouse_x < visual_left || mouse_x > visual_right)
+    {
+        return -1.0f;
+    }
+
+    return ClampFloat((mouse_x - visual_left) / content_width, 0.0f, 1.0f);
+}
+
+void HandleStepControlClick(Rml::Event& event)
+{
+    MikuPanStepControl* control = FindStepControlByElement(event.GetTargetElement());
+    if (control == nullptr)
+    {
+        control = FindStepControlByElement(event.GetCurrentElement());
+    }
+    if (control == nullptr)
     {
         return;
     }
 
-    MarkSettingsDirty();
-    SetStepValue(control, new_value);
-    UpdateStepControlVisual(control);
-    RequestUiMoveSound();
+    if (control->control != nullptr)
+    {
+        control->control->Focus();
+    }
+
+    const int direction = FindStepEdgeDirection(event.GetTargetElement());
+    if (direction != 0)
+    {
+        AdjustStepControl(*control, direction);
+        return;
+    }
+
+    float t = GetStepBarsClickT(event, *control);
+    if (t < 0.0f)
+    {
+        const int segment_index = FindStepSegmentIndex(event.GetTargetElement());
+        if (segment_index >= 0)
+        {
+            const int visual_segments = GetStepVisualSegmentCount(control->visual_min_value,
+                                                                  control->visual_max_value,
+                                                                  control->step,
+                                                                  control->segments);
+            const int last_segment = std::max(visual_segments - 1, 1);
+            t = ClampFloat(static_cast<float>(segment_index) / static_cast<float>(last_segment), 0.0f, 1.0f);
+        }
+    }
+
+    if (t >= 0.0f)
+    {
+        CommitStepControlValue(*control,
+                               control->visual_min_value
+                                   + (control->visual_max_value - control->visual_min_value) * t);
+    }
 }
 
 bool ApplyPendingResolution(void);
@@ -764,6 +2153,54 @@ void SetPickerPendingIndex(int index)
     }
 }
 
+void ScrollChoicePickerSelectionIntoView(void)
+{
+    if (g_rml.document == nullptr || g_rml.choice_picker_list == nullptr
+        || g_rml.active_picker == MIKUPAN_PICKER_NONE)
+    {
+        return;
+    }
+
+    const int count = GetPickerCount(g_rml.active_picker);
+    if (count <= 0)
+    {
+        return;
+    }
+
+    g_rml.document->UpdateDocument();
+
+    const int pending = ClampInt(GetPickerPendingIndex(), 0, count - 1);
+    const std::string id = "choice-picker-option-" + std::to_string(pending);
+    Rml::Element* option = g_rml.document->GetElementById(id);
+    if (option == nullptr)
+    {
+        return;
+    }
+
+    const float list_top = g_rml.choice_picker_list->GetAbsoluteTop();
+    const float list_bottom = list_top + g_rml.choice_picker_list->GetClientHeight();
+    const float option_top = option->GetAbsoluteTop();
+    const float option_bottom = option_top + option->GetOffsetHeight();
+    constexpr float padding = 2.0f;
+    float scroll_top = g_rml.choice_picker_list->GetScrollTop();
+
+    if (option_top < list_top + padding)
+    {
+        scroll_top -= (list_top + padding) - option_top;
+    }
+    else if (option_bottom > list_bottom - padding)
+    {
+        scroll_top += option_bottom - (list_bottom - padding);
+    }
+
+    const float max_scroll_top = std::max(
+        0.0f,
+        g_rml.choice_picker_list->GetScrollHeight()
+            - g_rml.choice_picker_list->GetClientHeight());
+    g_rml.choice_picker_list->SetScrollTop(
+        ClampFloat(scroll_top, 0.0f, max_scroll_top));
+}
+
 void UpdateChoicePickerVisual(void)
 {
     if (g_rml.active_picker == MIKUPAN_PICKER_NONE)
@@ -792,23 +2229,15 @@ void UpdateChoicePickerVisual(void)
     if (count <= 0)
     {
         SetElementText(g_rml.choice_picker_list,
-                       "<button class=\"picker-option selected\">Unavailable</button>");
+                       "<div class=\"picker-option selected\">Unavailable</div>");
         return;
     }
 
-    int first = std::max(0, pending - 2);
-    int last = std::min(count - 1, first + 4);
-    first = std::max(0, last - 4);
-
     std::string rml;
-    if (first > 0)
-    {
-        rml += "<div class=\"picker-option ellipsis\">...</div>";
-    }
-    for (int i = first; i <= last; i++)
+    for (int i = 0; i < count; i++)
     {
         const char* label = GetPickerLabel(g_rml.active_picker, i);
-        rml += "<button id=\"choice-picker-option-" + std::to_string(i)
+        rml += "<div id=\"choice-picker-option-" + std::to_string(i)
                + "\" class=\"picker-option";
         if (i == pending)
         {
@@ -819,19 +2248,16 @@ void UpdateChoicePickerVisual(void)
             rml += " applied";
         }
         rml += "\">";
-        rml += label != nullptr ? label : "";
+        rml += EscapeRmlText(label);
         if (i == applied)
         {
             rml += " *";
         }
-        rml += "</button>";
-    }
-    if (last < count - 1)
-    {
-        rml += "<div class=\"picker-option ellipsis\">...</div>";
+        rml += "</div>";
     }
 
     SetElementText(g_rml.choice_picker_list, rml);
+    ScrollChoicePickerSelectionIntoView();
 }
 
 void UpdateWindowModePicker(void)
@@ -932,6 +2358,30 @@ void UpdateDisplayPickers(void)
     UpdateWindowSizePicker();
     UpdateResolutionPicker();
     UpdateChoicePickerVisual();
+    UpdateMsaaSelectState();
+}
+
+void UpdateMsaaSelectState(void)
+{
+    if (g_rml.msaa_select == nullptr)
+    {
+        return;
+    }
+
+    const int selected = MikuPan_GetSelectedMSAAOption();
+    if (g_rml.msaa_select->GetSelection() != selected)
+    {
+        g_rml.msaa_select->SetSelection(selected);
+    }
+
+    if (MikuPan_IsSuperSamplingEnabled())
+    {
+        g_rml.msaa_select->SetAttribute("disabled", "");
+    }
+    else
+    {
+        g_rml.msaa_select->RemoveAttribute("disabled");
+    }
 }
 
 void SetChoicePickerVisible(bool visible)
@@ -939,6 +2389,10 @@ void SetChoicePickerVisible(bool visible)
     if (g_rml.choice_picker_modal != nullptr)
     {
         g_rml.choice_picker_modal->SetClass("hidden", !visible);
+    }
+    if (!visible)
+    {
+        SetElementText(g_rml.choice_picker_list, "");
     }
 
     if (g_rml.visible)
@@ -997,9 +2451,8 @@ void OpenChoicePicker(MikuPanChoicePickerKind kind)
         g_rml.resolution_pending_dirty = false;
     }
 
-    UpdateChoicePickerVisual();
     SetChoicePickerVisible(true);
-    UpdateDisplayPickers();
+    UpdateChoicePickerVisual();
 }
 
 void CloseChoicePicker(void)
@@ -1069,6 +2522,16 @@ bool HandleVerticalInput(int direction)
         return false;
     }
 
+    if (BindingCaptureIsVisible())
+    {
+        return true;
+    }
+
+    if (g_rml.calibration_visible || g_rml.crt_visible)
+    {
+        return false;
+    }
+
     if (g_rml.exit_confirm_visible || g_rml.resolution_confirm_visible)
     {
         return true;
@@ -1104,6 +2567,30 @@ bool HandleHorizontalInput(int direction)
         "resolution-revert-button",
     };
 
+    if (BindingCaptureIsVisible())
+    {
+        static constexpr const char* kBindingCaptureButtons[] = {
+            "binding-capture-clear-button",
+            "binding-capture-cancel-button",
+        };
+        FocusButtonGroup(kBindingCaptureButtons,
+                         static_cast<int>(sizeof(kBindingCaptureButtons)
+                                          / sizeof(kBindingCaptureButtons[0])),
+                         direction);
+        return true;
+    }
+
+    if (g_rml.calibration_visible || g_rml.crt_visible)
+    {
+        MikuPanStepControl* control = FindFocusedStepControl();
+        if (control != nullptr)
+        {
+            AdjustStepControl(*control, direction);
+            return true;
+        }
+        return false;
+    }
+
     if (g_rml.exit_confirm_visible)
     {
         FocusButtonGroup(kExitButtons,
@@ -1129,6 +2616,11 @@ bool HandleHorizontalInput(int direction)
     if (AnySelectOpen())
     {
         return false;
+    }
+
+    if (HandleControlsTabHorizontalInput(direction))
+    {
+        return true;
     }
 
     if (g_rml.control_scope == MIKUPAN_CONTROL_SCOPE_SIDEBAR)
@@ -1398,6 +2890,22 @@ void ApplyChoicePicker(void)
     UpdateDisplayPickers();
 }
 
+int FindChoicePickerOptionIndex(Rml::Element* element)
+{
+    static const std::string prefix = "choice-picker-option-";
+    while (element != nullptr && element != g_rml.choice_picker_list)
+    {
+        const Rml::String id = element->GetId();
+        if (id.size() > prefix.size()
+            && id.compare(0, prefix.size(), prefix) == 0)
+        {
+            return std::atoi(id.c_str() + prefix.size());
+        }
+        element = element->GetParentNode();
+    }
+    return -1;
+}
+
 void HandleChoicePickerListClick(Rml::Event& event)
 {
     if (g_rml.active_picker == MIKUPAN_PICKER_NONE)
@@ -1405,23 +2913,19 @@ void HandleChoicePickerListClick(Rml::Event& event)
         return;
     }
 
-    Rml::Element* target = event.GetTargetElement();
-    if (target == nullptr)
+    int index = FindChoicePickerOptionIndex(event.GetTargetElement());
+    if (index < 0)
+    {
+        index = FindChoicePickerOptionIndex(event.GetCurrentElement());
+    }
+    if (index < 0)
     {
         return;
     }
 
-    const Rml::String id = target->GetId();
-    static const std::string prefix = "choice-picker-option-";
-    if (id.size() <= prefix.size() || id.compare(0, prefix.size(), prefix) != 0)
-    {
-        return;
-    }
-
-    const int index = std::atoi(id.c_str() + prefix.size());
     SetPickerPendingIndex(index);
-    UpdateDisplayPickers();
-    FocusElementById("choice-picker-apply-button");
+    RequestUiMoveSound();
+    ApplyChoicePicker();
 }
 
 void AddStepControl(const char* control_id,
@@ -1444,13 +2948,25 @@ void AddStepControl(const char* control_id,
     control.value = GetElement(value_id);
     control.min_value = minimum;
     control.max_value = maximum;
-    control.step = std::max(requested_step,
-                            (maximum - minimum) / 20.0f);
+    control.visual_min_value = kind == MIKUPAN_STEP_GAMMA ? 0.0f : minimum;
+    control.visual_max_value = maximum;
+    control.step = requested_step > 0.0f
+                       ? requested_step
+                       : (maximum - minimum) / 20.0f;
     control.precision = precision;
-    control.segments = 12;
+    control.segments = 21;
+    control.neutral_value = 1.0f;
+    control.has_neutral = minimum <= control.neutral_value
+                          && maximum >= control.neutral_value
+                          && kind != MIKUPAN_STEP_AUDIO_MASTER;
     control.suffix_x = suffix_x;
     control.suffix_percent = suffix_percent;
+    Rml::Element* control_element = control.control;
     g_rml.step_controls.push_back(control);
+    AddListener(control_element,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanEventListener>(
+                    [](Rml::Event& event) { HandleStepControlClick(event); }));
 }
 
 Rml::Element* FindSettingRowAncestor(Rml::Element* element)
@@ -1517,6 +3033,7 @@ void UpdateControllerFocusVisual(void)
 void ScrollFocusedContentRowIntoView(void)
 {
     if (g_rml.context == nullptr || g_rml.control_scope != MIKUPAN_CONTROL_SCOPE_CONTENT
+        || g_rml.calibration_visible || g_rml.crt_visible
         || g_rml.exit_confirm_visible || g_rml.resolution_confirm_visible
         || g_rml.active_picker != MIKUPAN_PICKER_NONE)
     {
@@ -1601,6 +3118,33 @@ void FocusButtonGroup(const char* const* ids, int count, int direction)
     }
 }
 
+bool HandleControlsTabHorizontalInput(int direction)
+{
+    static constexpr const char* kControlsTabs[] = {
+        "controls-keyboard-tab",
+        "controls-controller-tab",
+    };
+
+    const int current = GetFocusedIdIndex(
+        kControlsTabs,
+        static_cast<int>(sizeof(kControlsTabs) / sizeof(kControlsTabs[0])));
+    if (current < 0)
+    {
+        return false;
+    }
+
+    const int count = static_cast<int>(sizeof(kControlsTabs) / sizeof(kControlsTabs[0]));
+    const int next = (current + direction + count) % count;
+    if (next == current)
+    {
+        return true;
+    }
+
+    FocusElementById(kControlsTabs[next]);
+    RequestUiMoveSound();
+    return true;
+}
+
 void FocusSelectedCategory(void)
 {
     const int category = ClampInt(g_rml.selected_category,
@@ -1662,6 +3206,9 @@ bool FocusedControlWantsSpaceConfirm(void)
 
     if (focus == g_rml.vsync_input
         || focus == g_rml.crt_enabled_input
+        || focus == g_rml.finder_dpad_film_swap_input
+        || focus == g_rml.mirror_stone_hud_input
+        || focus == g_rml.improved_movement_collisions_input
         || focus == g_rml.controller_remap_input)
     {
         return true;
@@ -1680,6 +3227,16 @@ bool ActivateFocusedControl(void)
     Rml::Element* focus = g_rml.context->GetFocusElement();
     if (focus == nullptr)
     {
+        if (g_rml.crt_visible)
+        {
+            FocusElementById("crt-enabled-input");
+            return true;
+        }
+        if (g_rml.calibration_visible)
+        {
+            FocusElementById("calibration-brightness-stepper");
+            return true;
+        }
         if (g_rml.exit_confirm_visible)
         {
             FocusElementById("save-changes-yes-button");
@@ -1691,6 +3248,45 @@ bool ActivateFocusedControl(void)
             return true;
         }
         return false;
+    }
+
+    if (BindingCaptureIsVisible())
+    {
+        if (FocusedElementIs("binding-capture-clear-button"))
+        {
+            ClearActiveBindingCapture();
+        }
+        else
+        {
+            CancelBindingCapture();
+        }
+        return true;
+    }
+
+    if (g_rml.crt_visible)
+    {
+        if (CrtPanelIsFocused())
+        {
+            focus->Click();
+        }
+        else
+        {
+            FocusElementById("crt-enabled-input");
+        }
+        return true;
+    }
+
+    if (g_rml.calibration_visible)
+    {
+        if (CalibrationPanelIsFocused())
+        {
+            focus->Click();
+        }
+        else
+        {
+            FocusElementById("calibration-brightness-stepper");
+        }
+        return true;
     }
 
     if (g_rml.exit_confirm_visible)
@@ -1766,6 +3362,20 @@ bool ActivateFocusedControl(void)
         return true;
     }
 
+    if (FocusedElementIs("controls-keyboard-tab"))
+    {
+        SelectControlsTab(MIKUPAN_CONTROLS_TAB_KEYBOARD);
+        RequestUiMoveSound();
+        return true;
+    }
+
+    if (FocusedElementIs("controls-controller-tab"))
+    {
+        SelectControlsTab(MIKUPAN_CONTROLS_TAB_CONTROLLER);
+        RequestUiMoveSound();
+        return true;
+    }
+
     if (FindFocusedStepControl() != nullptr)
     {
         return true;
@@ -1784,6 +3394,24 @@ void HandleOptionsCancel(void)
 {
     if (!g_rml.option_mode_open)
     {
+        return;
+    }
+
+    if (BindingCaptureIsVisible())
+    {
+        CancelBindingCapture();
+        return;
+    }
+
+    if (g_rml.crt_visible)
+    {
+        CancelCrtPanel();
+        return;
+    }
+
+    if (g_rml.calibration_visible)
+    {
+        CancelCalibrationPanel();
         return;
     }
 
@@ -1842,7 +3470,9 @@ void SetSelectArrow(Rml::ElementFormControlSelect* select)
         return;
     }
 
-    const char* arrow = select->IsPseudoClassSet("checked") ? "^" : "v";
+    const char* arrow = select->IsPseudoClassSet("checked")
+                            ? "<span class=\"picker-arrow-shape open\"></span>"
+                            : "<span class=\"picker-arrow-shape\"></span>";
     for (int i = 0; i < select->GetNumChildren(true); i++)
     {
         Rml::Element* child = select->GetChild(i);
@@ -1979,10 +3609,7 @@ void SyncRmlSettingsValues(void)
         g_rml.gpu_backend_select->SetSelection(
             MikuPan_GetSelectedGpuDriverOption());
     }
-    if (g_rml.msaa_select != nullptr)
-    {
-        g_rml.msaa_select->SetSelection(MikuPan_GetSelectedMSAAOption());
-    }
+    UpdateMsaaSelectState();
     if (g_rml.shadow_resolution_select != nullptr)
     {
         g_rml.shadow_resolution_select->SetSelection(
@@ -2007,6 +3634,7 @@ void SyncRmlSettingsValues(void)
     }
 
     UpdateStepControlVisuals();
+    RebuildControlsList();
     SetCheckbox(g_rml.vsync_input, MikuPan_IsVsync());
     SetElementText(g_rml.active_gpu_label,
                    std::string("Active: ")
@@ -2017,6 +3645,12 @@ void SyncRmlSettingsValues(void)
                        : "");
     const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
     SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
+    SetCheckbox(g_rml.finder_dpad_film_swap_input,
+                MikuPan_FinderDpadFilmSwapEnabled());
+    SetCheckbox(g_rml.mirror_stone_hud_input,
+                MikuPan_MirrorStoneHudEnabled());
+    SetCheckbox(g_rml.improved_movement_collisions_input,
+                MikuPan_ImprovedMovementCollisionsEnabled());
 
     SetCheckbox(g_rml.controller_remap_input,
                 MikuPan_ShowControllerRemapWindow());
@@ -2087,24 +3721,63 @@ bool LoadOptionsDocument(void)
                 std::make_unique<MikuPanButtonListener>(
                     []() { OpenChoicePicker(MIKUPAN_PICKER_RESOLUTION); }));
 
-    AddStepControl("brightness-stepper",
-                   "brightness-bars",
-                   "brightness-value",
+    AddStepControl("calibration-brightness-stepper",
+                   "calibration-brightness-bars",
+                   "calibration-brightness-value",
                    MIKUPAN_STEP_BRIGHTNESS,
                    -1,
                    0.0f,
                    2.0f,
                    0.1f,
                    2);
-    AddStepControl("gamma-stepper",
-                   "gamma-bars",
-                   "gamma-value",
+    AddStepControl("calibration-gamma-stepper",
+                   "calibration-gamma-bars",
+                   "calibration-gamma-value",
                    MIKUPAN_STEP_GAMMA,
                    -1,
                    0.1f,
-                   3.0f,
+                   2.0f,
                    0.1f,
                    2);
+    AddStepControl("calibration-contrast-stepper",
+                   "calibration-contrast-bars",
+                   "calibration-contrast-value",
+                   MIKUPAN_STEP_CONTRAST,
+                   -1,
+                   0.0f,
+                   2.0f,
+                   0.1f,
+                   1);
+    AddStepControl("calibration-shadow-depth-stepper",
+                   "calibration-shadow-depth-bars",
+                   "calibration-shadow-depth-value",
+                   MIKUPAN_STEP_SHADOW_DEPTH,
+                   -1,
+                   0.0f,
+                   2.0f,
+                   0.1f,
+                   1);
+
+    AddListener(GetElement("open-calibration-button"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenCalibrationPanel(); }));
+    AddListener(GetElement("open-crt-button"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenCrtPanel(); }));
+    AddListener(GetElement("calibration-reset-button"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { ResetCalibrationDefaults(); }));
+    AddListener(GetElement("calibration-ok-button"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { AcceptCalibrationPanel(); }));
+    AddListener(GetElement("calibration-back-button"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { CancelCalibrationPanel(); }));
 
     g_rml.vsync_input = GetInput("vsync-input");
     AddListener(g_rml.vsync_input,
@@ -2130,7 +3803,10 @@ bool LoadOptionsDocument(void)
                           MikuPan_GetMSAAOptionCount(),
                           MikuPan_GetMSAAOptionLabel,
                           MikuPan_GetSelectedMSAAOption(),
-                          [](int index) { MikuPan_SelectMSAAOption(index); });
+                          [](int index) {
+                              MikuPan_SelectMSAAOption(index);
+                              UpdateMsaaSelectState();
+                          });
 
     g_rml.shadow_resolution_select = GetSelect("shadow-resolution-select");
     PopulateIndexedSelect(g_rml.shadow_resolution_select,
@@ -2224,25 +3900,82 @@ bool LoadOptionsDocument(void)
 
     AddListener(GetElement("reset-crt-button"),
                 Rml::EventId::Click,
-                std::make_unique<MikuPanButtonListener>([]() {
-                    MarkSettingsDirty();
-                    MikuPan_ResetCrtSettings();
-                }));
+                std::make_unique<MikuPanButtonListener>(
+                    []() { ResetCrtDefaults(); }));
+    AddListener(GetElement("crt-ok-button"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { AcceptCrtPanel(); }));
+    AddListener(GetElement("crt-back-button"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { CancelCrtPanel(); }));
 
-    g_rml.controller_remap_input = GetInput("controller-remap-input");
-    AddListener(g_rml.controller_remap_input,
+    g_rml.finder_dpad_film_swap_input = GetInput("finder-dpad-film-swap-input");
+    AddListener(g_rml.finder_dpad_film_swap_input,
                 Rml::EventId::Change,
                 std::make_unique<MikuPanInputListener>(
                     [](Rml::ElementFormControlInput* input) {
                         MarkSettingsDirty();
-                        MikuPan_SetControllerRemapWindowVisible(
+                        MikuPan_SetFinderDpadFilmSwapEnabled(
                             IsCheckboxChecked(input));
                     }));
-    AddListener(GetElement("reset-bindings-button"),
+
+
+    g_rml.mirror_stone_hud_input = GetInput("mirror-stone-hud-input");
+    AddListener(g_rml.mirror_stone_hud_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetMirrorStoneHudEnabled(
+                            IsCheckboxChecked(input));
+                    }));
+
+    g_rml.improved_movement_collisions_input =
+        GetInput("improved-movement-collisions-input");
+    AddListener(g_rml.improved_movement_collisions_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetImprovedMovementCollisionsEnabled(
+                            IsCheckboxChecked(input));
+                    }));
+
+    g_rml.controls_keyboard_tab = GetElement("controls-keyboard-tab");
+    g_rml.controls_controller_tab = GetElement("controls-controller-tab");
+    g_rml.controls_list = GetElement("controls-list");
+    AddListener(g_rml.controls_keyboard_tab,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>([]() {
+                    SelectControlsTab(MIKUPAN_CONTROLS_TAB_KEYBOARD);
+                    FocusElementById("controls-keyboard-tab");
+                    RequestUiMoveSound();
+                }));
+    AddListener(g_rml.controls_controller_tab,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>([]() {
+                    SelectControlsTab(MIKUPAN_CONTROLS_TAB_CONTROLLER);
+                    FocusElementById("controls-controller-tab");
+                    RequestUiMoveSound();
+                }));
+    AddListener(g_rml.controls_list,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanEventListener>(
+                    [](Rml::Event& event) { HandleControlsListClick(event); }),
+                true);
+    AddListener(GetElement("controls-reset-button"),
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>([]() {
                     MarkSettingsDirty();
                     MikuPan_ResetControllerBindingsFromUi();
+                    SetCheckbox(g_rml.finder_dpad_film_swap_input,
+                                MikuPan_FinderDpadFilmSwapEnabled());
+                    SetCheckbox(g_rml.mirror_stone_hud_input,
+                                MikuPan_MirrorStoneHudEnabled());
+                    RebuildControlsList();
+                    RequestUiMoveSound();
                 }));
 
     g_rml.data_folder_input = GetInput("data-folder-input");
@@ -2288,16 +4021,28 @@ bool LoadOptionsDocument(void)
                 std::make_unique<MikuPanButtonListener>(
                     []() { SetExitConfirmVisible(false); }));
     g_rml.window = GetElement("window");
+    g_rml.calibration_panel = GetElement("calibration-panel");
+    g_rml.calibration_level_panel = GetElement("calibration-level-panel");
+    for (size_t i = 0; i < g_rml.calibration_level_swatches.size(); i++)
+    {
+        const std::string id = "calibration-level-" + std::to_string(i);
+        g_rml.calibration_level_swatches[i] = GetElement(id.c_str());
+    }
     g_rml.save_status = GetElement("save-status");
     g_rml.panel_title = GetElement("panel-title");
     g_rml.confirm_save_modal = GetElement("confirm-save-modal");
     g_rml.choice_picker_modal = GetElement("choice-picker-modal");
     g_rml.choice_picker_title = GetElement("choice-picker-title");
     g_rml.choice_picker_list = GetElement("choice-picker-list");
+    g_rml.binding_capture_modal = GetElement("binding-capture-modal");
+    g_rml.binding_capture_title = GetElement("binding-capture-title");
+    g_rml.binding_capture_text = GetElement("binding-capture-text");
+    g_rml.binding_capture_countdown = GetElement("binding-capture-countdown");
     AddListener(g_rml.choice_picker_list,
                 Rml::EventId::Click,
                 std::make_unique<MikuPanEventListener>(
-                    [](Rml::Event& event) { HandleChoicePickerListClick(event); }));
+                    [](Rml::Event& event) { HandleChoicePickerListClick(event); }),
+                true);
     AddListener(GetElement("choice-picker-apply-button"),
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>([]() {
@@ -2308,6 +4053,17 @@ bool LoadOptionsDocument(void)
                 std::make_unique<MikuPanButtonListener>([]() {
                     CloseChoicePicker();
                 }));
+    AddListener(GetElement("binding-capture-clear-button"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>([]() {
+                    ClearActiveBindingCapture();
+                }));
+    AddListener(GetElement("binding-capture-cancel-button"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>([]() {
+                    CancelBindingCapture();
+                }));
+    g_rml.crt_panel = GetElement("crt-panel");
     g_rml.resolution_confirm_modal = GetElement("resolution-confirm-modal");
     g_rml.resolution_confirm_title = GetElement("resolution-confirm-title");
     g_rml.resolution_confirm_countdown =
@@ -2333,6 +4089,7 @@ bool LoadOptionsDocument(void)
                             EnterContentScope();
                         }));
     }
+    SelectControlsTab(g_rml.controls_tab);
     SelectCategory(g_rml.selected_category);
 
     SyncRmlSettingsValues();
@@ -2368,8 +4125,9 @@ void MikuPan_RmlOptionsStartFrame(void)
 
     if (g_rml.visible)
     {
-        SyncRmlSettingsValues();
         UpdateResolutionConfirmTimeout();
+        UpdateSelectArrows();
+        UpdateBindingCapture();
     }
 }
 
@@ -2389,6 +4147,7 @@ void MikuPan_RmlOptionsPrepareShutdown(void)
     g_rml.option_exit_requested = false;
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
     g_rml.resolution_confirm_visible = false;
+    g_rml.crt_visible = false;
 }
 
 void MikuPan_RmlOptionsShutdown(void)
@@ -2414,6 +4173,11 @@ static void MikuPan_RmlOptionsOpenInternal(bool in_game)
     g_rml.window_size_pending_dirty = false;
     g_rml.resolution_pending_dirty = false;
     g_rml.resolution_confirm_visible = false;
+    SetCalibrationVisible(false);
+    SetCrtPanelVisible(false);
+    CancelBindingCapture();
+    g_rml.controls_tab = MIKUPAN_CONTROLS_TAB_KEYBOARD;
+    SelectControlsTab(g_rml.controls_tab);
     g_rml.selected_category = 0;
     g_rml.pending_window_mode =
         WindowModeOptionFromValue(MikuPan_GetWindowMode());
@@ -2454,6 +4218,9 @@ void MikuPan_RmlOptionsClose(void)
     g_rml.window_mode_pending_dirty = false;
     g_rml.window_size_pending_dirty = false;
     g_rml.resolution_pending_dirty = false;
+    SetCalibrationVisible(false);
+    SetCrtPanelVisible(false);
+    CancelBindingCapture();
     SetExitConfirmVisible(false);
     SetChoicePickerVisible(false);
     SetResolutionConfirmVisible(false);
@@ -2486,6 +4253,11 @@ int MikuPan_RmlOptionsConsumeExitRequest(void)
 int MikuPan_RmlOptionsIsOpen(void)
 {
     return g_rml.option_mode_open ? 1 : 0;
+}
+
+int MikuPan_RmlOptionsIsCalibrationOpen(void)
+{
+    return g_rml.calibration_visible ? 1 : 0;
 }
 
 void MikuPan_RmlOptionsRequestExit(void)

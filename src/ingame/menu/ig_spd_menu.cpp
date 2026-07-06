@@ -296,15 +296,18 @@ static void SpdOptInit()
 
 void SpdOptMain()
 {
-    if (yw2d.io_x[0] == 0.0f)
+    if (!MikuPan_RmlOptionsIsCalibrationOpen())
     {
-        DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
-        BgFusumaYW(0x606060, yw2d.io_x[0], yw2d.io_a[0], 0x6e000);
-    }
-    else
-    {
-        DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
-        BgFusumaYW(0x606060, yw2d.io_x[0], yw2d.io_a[0], 0x6e000);
+        if (yw2d.io_x[0] == 0.0f)
+        {
+            DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
+            BgFusumaYW(0x606060, yw2d.io_x[0], yw2d.io_a[0], 0x6e000);
+        }
+        else
+        {
+            DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
+            BgFusumaYW(0x606060, yw2d.io_x[0], yw2d.io_a[0], 0x6e000);
+        }
     }
 
     SpdOptInOut();

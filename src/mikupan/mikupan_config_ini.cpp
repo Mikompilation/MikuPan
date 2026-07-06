@@ -183,6 +183,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
     ApplyValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     ApplyValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    ApplyValue(ini, "renderer", "contrast", mikupan_configuration.renderer.contrast);
+    ApplyValue(ini, "renderer", "shadow_depth", mikupan_configuration.renderer.shadow_depth);
     ApplyValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     ApplyString(ini, "renderer", "gpu_driver",
                 mikupan_configuration.renderer.gpu_driver,
@@ -351,6 +353,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
     SetValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     SetValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    SetValue(ini, "renderer", "contrast", mikupan_configuration.renderer.contrast);
+    SetValue(ini, "renderer", "shadow_depth", mikupan_configuration.renderer.shadow_depth);
     SetValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;

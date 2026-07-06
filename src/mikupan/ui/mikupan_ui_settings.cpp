@@ -22,7 +22,7 @@
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_ui_debug.h"
 #include "mikupan_ui_theme.h"
-#include "outgame/title.h"
+#include "mikupan/gameplay/mikupan_title_scene.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -65,8 +65,11 @@ static int is_fullscreen = 0;
 static int window_mode = 0; /* MikuPan_WindowMode: 0=windowed, 2=borderless fullscreen */
 static float brightness = 1.0f;
 static float gamma_value = 1.0f;
+static float contrast = 1.0f;
+static float shadow_depth = 1.0f;
 
 static void MikuPan_RefreshWindowBackedRenderResolution(void);
+static int MikuPan_IsSuperSamplingEnabledInternal(void);
 
 
 static int MikuPan_GetWindowDisplayBounds(SDL_Window* window, SDL_Rect* bounds)
@@ -185,6 +188,8 @@ static void MikuPan_UiSyncSettingsFromConfiguration(void)
     msaa_samples = mikupan_configuration.renderer.msaa_index;
     brightness = mikupan_configuration.renderer.brightness;
     gamma_value = mikupan_configuration.renderer.gamma;
+    contrast = mikupan_configuration.renderer.contrast;
+    shadow_depth = mikupan_configuration.renderer.shadow_depth;
     window_mode = mikupan_configuration.renderer.window_mode;
     is_fullscreen = mikupan_configuration.renderer.is_fullscreen;
     crt_settings = mikupan_configuration.crt;
@@ -231,11 +236,17 @@ static void MikuPan_UiStoreRuntimeConfiguration(void)
     is_fullscreen = (window_mode != MIKUPAN_WINDOW_WINDOWED);
     mikupan_configuration.renderer.is_fullscreen = is_fullscreen;
     mikupan_configuration.renderer.lighting_mode = MikuPan_GetMeshLightingMode();
+    if (MikuPan_IsSuperSamplingEnabledInternal())
+    {
+        msaa_samples = 0;
+    }
     mikupan_configuration.renderer.msaa_index = msaa_samples;
     mikupan_configuration.renderer.shadow_resolution =
         MikuPan_GetShadowResolution();
     mikupan_configuration.renderer.brightness = brightness;
     mikupan_configuration.renderer.gamma = gamma_value;
+    mikupan_configuration.renderer.contrast = contrast;
+    mikupan_configuration.renderer.shadow_depth = shadow_depth;
     mikupan_configuration.crt = crt_settings;
     mikupan_configuration.third_person_camera.enabled =
         camera_third_person_enabled ? 1 : 0;
@@ -498,12 +509,9 @@ static void MikuPan_PopulateResolutionList(SDL_DisplayID display,
         && !MikuPan_IsPs2ScaleResolution(render_resolution_width,
                                          render_resolution_height))
     {
-        char aspect[12];
         char label[64];
-        MikuPan_AspectRatioStr(render_resolution_width, render_resolution_height,
-                               aspect, sizeof(aspect));
-        snprintf(label, sizeof(label), "Custom (%d x %d, %s)",
-                 render_resolution_width, render_resolution_height, aspect);
+        snprintf(label, sizeof(label), "%d x %d",
+                 render_resolution_width, render_resolution_height);
         MikuPan_AddRenderResolutionOption(MIKUPAN_RENDER_RESOLUTION_FIXED,
                                           render_resolution_width,
                                           render_resolution_height,
@@ -661,10 +669,8 @@ static void MikuPan_FormatWindowSizeLabel(char* buffer, int buffer_size,
                                           int width, int height,
                                           const char* suffix)
 {
-    char aspect[12];
-    MikuPan_AspectRatioStr(width, height, aspect, sizeof(aspect));
-    snprintf(buffer, buffer_size, "%d x %d (%s)%s",
-             width, height, aspect, suffix != NULL ? suffix : "");
+    snprintf(buffer, buffer_size, "%d x %d%s",
+             width, height, suffix != NULL ? suffix : "");
 }
 
 static void MikuPan_PopulateWindowSizeList(SDL_DisplayID display,
@@ -707,8 +713,7 @@ static void MikuPan_PopulateWindowSizeList(SDL_DisplayID display,
             window_size_list[i].width,
             window_size_list[i].height);
 
-        const char* suffix = is_desktop ? " [Desktop]"
-                            : (!is_standard ? " [Custom]" : "");
+        const char* suffix = is_desktop ? " [Desktop]" : "";
         MikuPan_FormatWindowSizeLabel(window_size_labels[i],
                                       sizeof(window_size_labels[i]),
                                       window_size_list[i].width,
@@ -936,7 +941,9 @@ void MikuPan_UiSettingsRender(void)
             }
 
             igSliderFloat("Brightness", &brightness, 0.0f, 2.0f, "%.2f", 0);
-            igSliderFloat("Gamma", &gamma_value, 0.1f, 3.0f, "%.2f", 0);
+            igSliderFloat("Gamma", &gamma_value, 0.1f, 2.0f, "%.2f", 0);
+            igSliderFloat("Contrast", &contrast, 0.0f, 2.0f, "%.2f", 0);
+            igSliderFloat("Shadow Depth", &shadow_depth, 0.0f, 2.0f, "%.2f", 0);
             igCheckbox("VSync", (bool*) &mikupan_configuration.renderer.vsync);
 
             igSeparatorText("Graphics");
@@ -946,6 +953,12 @@ void MikuPan_UiSettingsRender(void)
             if (strcmp(SDL_GetPlatform(), "Android") == 0)
             {
                 igTextDisabled("MSAA: disabled on Android");
+            }
+            else if (MikuPan_IsSuperSamplingEnabledInternal())
+            {
+                msaa_samples = 0;
+                mikupan_configuration.renderer.msaa_index = 0;
+                igTextDisabled("MSAA: disabled while supersampling");
             }
             else
             {
@@ -1034,17 +1047,17 @@ void MikuPan_UiSettingsRender(void)
             }
 
             igSeparator();
-            int title_room_background = TitleUseRoomBackground();
+            int title_room_background = MikuPan_TitleUseRoomBackground();
             if (igCheckbox("Room title background",
                            (bool*) &title_room_background))
             {
-                TitleSetUseRoomBackground(title_room_background);
+                MikuPan_TitleSetUseRoomBackground(title_room_background);
             }
 
-            int title_dither = TitleUseDither();
+            int title_dither = MikuPan_TitleUseDither();
             if (igCheckbox("Title dithering", (bool*) &title_dither))
             {
-                TitleSetUseDither(title_dither);
+                MikuPan_TitleSetUseDither(title_dither);
             }
 
             igEndMenu();
@@ -1263,6 +1276,22 @@ int MikuPan_GetRenderResolutionHeight(void)
                                         : PS2_RESOLUTION_Y_INT;
 }
 
+static int MikuPan_IsSuperSamplingEnabledInternal(void)
+{
+    int window_width = 0;
+    int window_height = 0;
+    MikuPan_GetWindowPixelSize(&window_width, &window_height);
+
+    if (window_width <= 0 || window_height <= 0)
+    {
+        return 0;
+    }
+
+    const int render_width = MikuPan_GetRenderResolutionWidth();
+    const int render_height = MikuPan_GetRenderResolutionHeight();
+    return render_width > window_width || render_height > window_height;
+}
+
 int MikuPan_GetRenderResolutionOptionCount(void)
 {
     return resolution_count;
@@ -1317,11 +1346,21 @@ int MikuPan_SelectRenderResolutionOption(int index)
     }
 
     MikuPan_ConfigurationValidate();
+    if (MikuPan_IsSuperSamplingEnabledInternal())
+    {
+        msaa_samples = 0;
+        mikupan_configuration.renderer.msaa_index = 0;
+    }
     return 1;
 }
 
 int MikuPan_GetMSAA(void)
 {
+    if (MikuPan_IsSuperSamplingEnabledInternal())
+    {
+        return 0;
+    }
+
     return msaa_list[msaa_samples];
 }
 
@@ -1332,7 +1371,17 @@ int MikuPan_GetMSAAOptionCount(void)
 
 int MikuPan_GetSelectedMSAAOption(void)
 {
+    if (MikuPan_IsSuperSamplingEnabledInternal())
+    {
+        return 0;
+    }
+
     return msaa_samples;
+}
+
+int MikuPan_IsSuperSamplingEnabled(void)
+{
+    return MikuPan_IsSuperSamplingEnabledInternal();
 }
 
 const char* MikuPan_GetMSAAOptionLabel(int index)
@@ -1359,6 +1408,13 @@ int MikuPan_SelectMSAAOption(int index)
     if (index < 0 || index >= MikuPan_GetMSAAOptionCount())
     {
         return 0;
+    }
+
+    if (MikuPan_IsSuperSamplingEnabledInternal())
+    {
+        msaa_samples = 0;
+        mikupan_configuration.renderer.msaa_index = 0;
+        return 1;
     }
 
     msaa_samples = index;
@@ -1397,12 +1453,45 @@ float MikuPan_GetGamma(void)
 
 void MikuPan_SetGamma(float value)
 {
-    gamma_value = MikuPan_ClampFloat(value, 0.1f, 3.0f);
+    gamma_value = MikuPan_ClampFloat(value, 0.1f, 2.0f);
+}
+
+float MikuPan_GetContrast(void)
+{
+    return contrast;
+}
+
+void MikuPan_SetContrast(float value)
+{
+    contrast = MikuPan_ClampFloat(value, 0.0f, 2.0f);
+}
+
+float MikuPan_GetShadowDepth(void)
+{
+    return shadow_depth;
+}
+
+void MikuPan_SetShadowDepth(float value)
+{
+    shadow_depth = MikuPan_ClampFloat(value, 0.0f, 2.0f);
 }
 
 const MikuPan_ConfigCrt* MikuPan_GetCrtSettings(void)
 {
     return &crt_settings;
+}
+
+void MikuPan_SetCrtSettings(const MikuPan_ConfigCrt* settings)
+{
+    if (settings == NULL)
+    {
+        return;
+    }
+
+    crt_settings = *settings;
+    mikupan_configuration.crt = crt_settings;
+    MikuPan_ConfigurationValidate();
+    crt_settings = mikupan_configuration.crt;
 }
 
 void MikuPan_SetCrtEnabled(int enabled)

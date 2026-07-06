@@ -455,11 +455,10 @@ void IngameMenuModeSlct()
 
 static void IngameMenuRmlOption()
 {
-    /* The PC options menu lives in RmlUi now. Keep the in-game menu
-     * background/selection page alive underneath it, but do not load or draw
-     * the original PS2 option page.
-     */
-    IngameMenuModeSlctDisp();
+    if (!MikuPan_RmlOptionsIsCalibrationOpen())
+    {
+        IngameMenuModeSlctDisp();
+    }
 
     if (MikuPan_RmlOptionsConsumeExitRequest())
     {

@@ -28,6 +28,8 @@ MikuPan_Config mikupan_configuration = {
         256,
         1.0f,
         1.0f,
+        1.0f,
+        1.0f,
         0,
         "",
         0
@@ -164,6 +166,12 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->msaa_index = MIKUPAN_CONFIG_DEFAULT_MSAA_INDEX;
     }
 
+    if (renderer->render_mode == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE
+        && renderer->render_scale_percent > 100)
+    {
+        renderer->msaa_index = 0;
+    }
+
     if (renderer->shadow_resolution <= 0)
     {
         renderer->shadow_resolution = 256;
@@ -174,9 +182,19 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->brightness = 1.0f;
     }
 
-    if (renderer->gamma < 0.0f || renderer->gamma > 3.0f)
+    if (renderer->gamma < 0.1f || renderer->gamma > 2.0f)
     {
         renderer->gamma = 1.0f;
+    }
+
+    if (renderer->contrast < 0.0f || renderer->contrast > 2.0f)
+    {
+        renderer->contrast = 1.0f;
+    }
+
+    if (renderer->shadow_depth < 0.0f || renderer->shadow_depth > 2.0f)
+    {
+        renderer->shadow_depth = 1.0f;
     }
 
     /* Older test builds used 1=Linear and 2=Soft. Both now collapse to Soft. */

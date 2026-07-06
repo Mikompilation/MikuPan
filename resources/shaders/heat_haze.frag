@@ -12,6 +12,7 @@ uniform vec2 uFramebufferContentUvMax;
 uniform int uUseScreenPos;
 uniform vec2 uRenderSize;
 uniform int uBlackWhiteMode;
+uniform vec2 uDeformHalfExtent;
 
 vec3 ToBlackWhite(vec3 color)
 {
@@ -49,6 +50,19 @@ void main()
                                     1.0 - gl_FragCoord.y / uRenderSize.y),
                                vec2(0.0), vec2(1.0));
         src_uv = clamp(vUVData.xy, vec2(0.0), vec2(1.0));
+        dst_uv = screen_uv;
+        resolve_deform = true;
+    }
+    else if (uUseScreenPos == 6)
+    {
+        vec2 screen_uv = clamp(vec2(gl_FragCoord.x / uRenderSize.x,
+                                    1.0 - gl_FragCoord.y / uRenderSize.y),
+                               vec2(0.0), vec2(1.0));
+        vec2 ps2_src = vec2(vUVData.x * 1024.0, vUVData.y * 256.0);
+        src_uv = clamp(vec2((ps2_src.x - (320.0 - uDeformHalfExtent.x)) /
+                            (uDeformHalfExtent.x * 2.0),
+                            ps2_src.y / 224.0),
+                       vec2(0.0), vec2(1.0));
         dst_uv = screen_uv;
         resolve_deform = true;
     }
