@@ -45,6 +45,7 @@ void MikuPan_SetUniform1iToAllShaders(int value, char* name);
 void MikuPan_SetUniform1iToCurrentShader(int value, char* name);
 void MikuPan_SetUniform1fToAllShaders(float value, char* name);
 void MikuPan_SetUniform1fToCurrentShader(float value, char* name);
+void MikuPan_SetUniform2fToAllShaders(float x, float y, char* name);
 void MikuPan_SetUniform2fToCurrentShader(float x, float y, char* name);
 void MikuPan_ResetShaderCache(void);
 unsigned int MikuPan_GetShaderGeneration(void);

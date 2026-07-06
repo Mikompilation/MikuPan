@@ -48,6 +48,7 @@
 #include "main/glob.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/gameplay/mikupan_title_scene.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/ui/mikupan_ui_cheats.h"
 #include "os/system.h"
@@ -2187,6 +2188,7 @@ static void Gra3dReadRoomLightsToWork(int room_work_no, int disp_room)
         16);
 
     Gra3dCopyReadLightsToRoomWork(room_work_no);
+    MikuPan_TitleSceneAmendRoomLightPack(&room_wrk.mylight[room_work_no]);
 }
 
 static void Gra3dSetRoomBackgroundFog(int disp_room)

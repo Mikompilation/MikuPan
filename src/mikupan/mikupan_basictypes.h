@@ -87,6 +87,8 @@ typedef struct
     int shadow_resolution;
     float brightness;
     float gamma;
+    float contrast;
+    float shadow_depth;
     int dither_mode; /* 0=native, 1=soft */
     /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
      * Empty = let SDL pick. The device is created once, so a change only
@@ -169,6 +171,9 @@ typedef struct
     int action_profile_stick_subjective_move;
     int action_profile_finder_reverse_y;
     int action_profile_finder_swap_sticks;
+    int finder_dpad_film_swap_enabled;
+    int mirror_stone_hud_enabled;
+    int improved_movement_collisions_enabled;
     int action_profile_normal[16];
     int action_profile_finder[16];
 

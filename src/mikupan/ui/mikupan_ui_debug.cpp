@@ -19,7 +19,7 @@
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan_framegraph.h"
-#include "outgame/title.h"
+#include "mikupan/gameplay/mikupan_title_scene.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -48,6 +48,7 @@ static float photo_debug_preview_size = 256.0f;
 static int disable_gs_uploads = 0;
 static int show_bounding_boxes = 0;
 static int show_event_hitboxes = 0;
+static int player_collision_console_log = 0;
 static int show_mesh_0x82 = 1;
 static int show_mesh_0x32 = 1;
 static int show_mesh_0x10 = 1;
@@ -957,10 +958,10 @@ void MikuPan_UiDebugMenuRender(void)
     if (igBeginMenu("Debug", 1))
     {
         igCheckbox("Zero's Menu", (bool*) &dbg_wrk.mode_on);
-        int title_debug_window = TitleDebugWindowVisible();
+        int title_debug_window = MikuPan_TitleDebugWindowVisible();
         if (igCheckbox("Title Menu Debugger", (bool*) &title_debug_window))
         {
-            TitleSetDebugWindowVisible(title_debug_window);
+            MikuPan_TitleSetDebugWindowVisible(title_debug_window);
         }
 
         igSeparator();
@@ -1083,6 +1084,13 @@ void MikuPan_UiDebugMenuRender(void)
             igEndMenu();
         }
 
+        if (igBeginMenu("Gameplay", 1))
+        {
+            igCheckbox("Player Collision Console Log",
+                       (bool*) &player_collision_console_log);
+            igEndMenu();
+        }
+
         if (igBeginMenu("Camera", 1))
         {
             bool first_person_enabled = MikuPan_FirstPersonEnabled() != 0;
@@ -1168,6 +1176,7 @@ void MikuPan_UiDebugMenuRender(void)
 void MikuPan_UiDebugWindowsRender(void)
 {
     ImGuiIO* io = igGetIO_Nil();
+    MikuPan_PerfSetGpuWaitEnabled(show_frame_time_graph);
     FrameTimeGraph_Update(&g_frame_graph, 1000.0f / io->Framerate,
                           MikuPan_GetLastFrameCpuMs(),
                           MikuPan_GetLastFrameGpuMs());
@@ -1212,6 +1221,16 @@ int MikuPan_IsBoundingBoxRendering(void)
 int MikuPan_IsEventHitboxRendering(void)
 {
     return show_event_hitboxes;
+}
+
+int MikuPan_PlayerCollisionConsoleLogEnabled(void)
+{
+    return player_collision_console_log;
+}
+
+int MikuPan_PlayerMomentumSlideEnabled(void)
+{
+    return mikupan_configuration.input.improved_movement_collisions_enabled;
 }
 
 int MikuPan_ShowCameraDebug(void)

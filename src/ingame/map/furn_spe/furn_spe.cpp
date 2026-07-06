@@ -1256,10 +1256,7 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
             }
             else
             {
-                fawp->buff = SetEffects(23, 2, 3, fawp->pos,
-                    fefct_fire[no].fr, fefct_fire[no].fg, fefct_fire[no].fb, fefct_fire[no].fscl,
-                    fefct_fire[no].kr, fefct_fire[no].kg, fefct_fire[no].kb, fefct_fire[no].kscl
-                );
+                fawp->buff = SetFireEffect(2, 3, fawp->pos, fefct_fire[no].fr, fefct_fire[no].fg, fefct_fire[no].fb, fefct_fire[no].fscl, fefct_fire[no].kr, fefct_fire[no].kg, fefct_fire[no].kb, fefct_fire[no].kscl);
 
                 if (fawp->buff == NULL)
                 {
@@ -1286,10 +1283,7 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
             else if (!(fawp->furn_id == 330 || fawp->furn_id == 331 || fawp->furn_id == 332 || fawp->furn_id == 333))
             {
-                fawp->buff = SetEffects(23, 2, 3, fawp->pos,
-                    fefct_fire[no].fr, fefct_fire[no].fg, fefct_fire[no].fb, fefct_fire[no].fscl,
-                    fefct_fire[no].kr, fefct_fire[no].kg, fefct_fire[no].kb, fefct_fire[no].kscl
-                );
+                fawp->buff = SetFireEffect(2, 3, fawp->pos, fefct_fire[no].fr, fefct_fire[no].fg, fefct_fire[no].fb, fefct_fire[no].fscl, fefct_fire[no].kr, fefct_fire[no].kg, fefct_fire[no].kb, fefct_fire[no].kscl);
             }
         }
         // fall-through
@@ -2150,7 +2144,7 @@ void FSpeSetPointLight(FURN_ACT_WRK *fawp, float r, float g, float b)
 
     pl_pos = acsGetRopePos(fawp->furn_id);
 
-    fawp->buff = SetEffects(0x14, 2, 1, pl_pos, 0xff, 0xdf, 0xa0, 0.82f, 1);
+    fawp->buff = SetHaloEffect(2, 1, pl_pos, 0xff, 0xdf, 0xa0, 0.82f, 1);
 
     if (fawp->buff != NULL)
     {

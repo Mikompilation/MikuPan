@@ -31,6 +31,7 @@ static double g_perf_section_ms_last[PERF_SECT_COUNT] = {0};
 static Uint64 g_frame_cpu_start_ticks = 0;
 static float  g_last_frame_cpu_ms     = 0.0f;
 static float  g_last_frame_gpu_ms     = 0.0f;
+static int    g_gpu_wait_enabled      = 0;
 
 /// Coarse per-frame counters that feed the once-per-frame info_log line.
 /// `state_changes` is incremented on real (non-deduped) state transitions;
@@ -226,11 +227,28 @@ void MikuPan_PerfEndFrame(void)
         (float)((double)(cpu_done_ticks_gpu - g_frame_cpu_start_ticks) *
                 1000.0 / freq_gpu);
 
-    MikuPan_GPUWaitIdle();
-    Uint64 gpu_done_ticks = SDL_GetPerformanceCounter();
-    double gpu_ms =
-        (double)(gpu_done_ticks - cpu_done_ticks_gpu) * 1000.0 / freq_gpu;
-    g_last_frame_gpu_ms = gpu_ms > 0.0 ? (float)gpu_ms : 0.0f;
+    if (g_gpu_wait_enabled)
+    {
+        MikuPan_GPUWaitIdle();
+        Uint64 gpu_done_ticks = SDL_GetPerformanceCounter();
+        double gpu_ms =
+            (double)(gpu_done_ticks - cpu_done_ticks_gpu) * 1000.0 / freq_gpu;
+        g_last_frame_gpu_ms = gpu_ms > 0.0 ? (float)gpu_ms : 0.0f;
+    }
+    else
+    {
+        g_last_frame_gpu_ms = 0.0f;
+    }
+}
+
+void MikuPan_PerfSetGpuWaitEnabled(int enabled)
+{
+    g_gpu_wait_enabled = enabled ? 1 : 0;
+}
+
+int MikuPan_PerfIsGpuWaitEnabled(void)
+{
+    return g_gpu_wait_enabled;
 }
 
 void MikuPan_PerfResetFrame(void)

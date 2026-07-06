@@ -5,6 +5,7 @@
 #include "mikupan_gpu.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_profiler.h"
+#include "mikupan_renderer.h"
 #include "mikupan_renderer_internal.h"
 #include "mikupan_shader.h"
 
@@ -168,6 +169,63 @@ static int CameraDebugDifferent(const float a[4], const float b[4])
     float dy = a[1] - b[1];
     float dz = a[2] - b[2];
     return (dx * dx + dy * dy + dz * dz) > 4.0f;
+}
+
+static unsigned int MikuPan_DebugDrawDepthFunc(int depth_mode)
+{
+    switch (depth_mode)
+    {
+    case MIKUPAN_DEPTH_ALWAYS:
+        return GL_ALWAYS;
+    case MIKUPAN_DEPTH_GEQUAL:
+        return GL_GEQUAL;
+    case MIKUPAN_DEPTH_LEQUAL:
+    default:
+        return GL_LEQUAL;
+    }
+}
+
+void MikuPan_RenderWorldUntexturedTriangles3D(const sceVu0FVECTOR *vertices,
+                                              int count, u_char r, u_char g,
+                                              u_char b, u_char a,
+                                              int depth_mode,
+                                              MikuPan_GPUBlendMode blend_mode)
+{
+    if (vertices == NULL || count < 3)
+    {
+        return;
+    }
+
+    float color[4] = {
+        (float)r / 255.0f,
+        (float)g / 255.0f,
+        (float)b / 255.0f,
+        (float)a / 255.0f,
+    };
+
+    MikuPan_FlushTexturedSpriteBatch();
+    MikuPan_SetCurrentShaderProgram(BOUNDING_BOX_SHADER);
+    MikuPan_SetUniform4fvToCurrentShader(color, "uColor");
+    MikuPan_SetWorldSpaceModelTransform();
+    MikuPan_SetRenderState3D();
+    MikuPan_GPUSetCullNone();
+    MikuPan_GPUSetDepthFunc(MikuPan_DebugDrawDepthFunc(depth_mode));
+    MikuPan_GPUSetDepthWrite(0);
+    MikuPan_GPUSetBlendMode(1, blend_mode);
+
+    MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(POSITION4);
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+        (GLsizeiptr)(count * sizeof(vertices[0])),
+        vertices);
+    MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, count);
+
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
+    MikuPan_GPUSetDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetDepthWrite(1);
+    MikuPan_GPUSetCullBack();
+    MikuPan_ResetRenderStateCache();
 }
 
 void MikuPan_RenderLineLoop3D(const sceVu0FVECTOR *vertices, int count, u_char r,

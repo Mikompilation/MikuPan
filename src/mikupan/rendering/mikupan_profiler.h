@@ -133,6 +133,8 @@ void MikuPan_TimedDrawArrays(GLenum mode, GLint first, GLsizei count);
 void  MikuPan_PerfBeginFrame(void);
 void  MikuPan_PerfEndFrame(void);
 void  MikuPan_PerfResetFrame(void);
+void  MikuPan_PerfSetGpuWaitEnabled(int enabled);
+int   MikuPan_PerfIsGpuWaitEnabled(void);
 float MikuPan_GetLastFrameCpuMs(void);
 float MikuPan_GetLastFrameGpuMs(void);
 

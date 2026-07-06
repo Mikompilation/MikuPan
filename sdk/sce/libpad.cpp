@@ -35,19 +35,41 @@ int scePadInfoMode(int port, int slot, int term, int offs)
     return 7;
 }
 
+static constexpr int scePadPrimaryPort = 0;
+static constexpr int scePadCommandRejected = 0;
+static constexpr int scePadCommandAccepted = 1;
+static constexpr int scePadActuatorCount = 2;
+static constexpr int scePadActuatorSupported = 1;
+static constexpr int scePadActuatorUnsupported = 0;
+
+static int scePadCommandResultForPort(int port)
+{
+    return port == scePadPrimaryPort ? scePadCommandAccepted : scePadCommandRejected;
+}
+
 int scePadSetMainMode(int port, int slot, int offs, int lock)
 {
-    return scePadReqStateComplete;
+    return scePadCommandResultForPort(port);
 }
 
 int scePadInfoAct(int port, int slot, int actno, int term)
 {
-    return scePadReqStateComplete;
+    if (port != scePadPrimaryPort)
+    {
+        return scePadActuatorUnsupported;
+    }
+
+    if (actno < 0)
+    {
+        return scePadActuatorCount;
+    }
+
+    return actno < scePadActuatorCount ? scePadActuatorSupported : scePadActuatorUnsupported;
 }
 
 int scePadSetActAlign(int port, int slot, const unsigned char* data)
 {
-    return MikuPan_ControllerRumble(data);
+    return scePadCommandResultForPort(port);
 }
 
 int scePadGetReqState(int port, int slot)
@@ -67,5 +89,10 @@ int scePadEnterPressMode(int port, int slot)
 
 int scePadSetActDirect(int port, int slot, const unsigned char* data)
 {
+    if (port != scePadPrimaryPort)
+    {
+        return scePadCommandRejected;
+    }
+
     return MikuPan_ControllerRumble(data);
 }

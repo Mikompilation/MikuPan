@@ -800,7 +800,7 @@ void FodSetEffect(FOD_CTRL *fc)
 
     if (fef->zdepth == 1)
     {
-        SetEffects(EF_Z_DEP, 1);
+        SetZDepthEffect(1);
     }
 
     if (fef->mono == 1 && eff_param.mono_flg == 0)
@@ -839,17 +839,7 @@ void FodSetEffect(FOD_CTRL *fc)
 
                 sceVu0ApplyMatrix(eff_param.pdf_pos, fod_cmn_mtx, eff_param.pdf_pos);
 
-                eff_param.pdf_p = SetEffects(EF_PDEFORM, 2,
-                    (u_long)(fed->dither).alpmax,
-                    (u_long)(fed->dither).colmax,
-                    *(float *)(&((char *)fed)[36]),
-                    *(float *)(&((char *)fed)[40]),
-                    eff_param.pdf_pos,
-                    0, 0, 0, 0,
-                    &eff_param.pdf_spd,
-                    &eff_param.pdf_rate,
-                    &eff_param.pdf_trate
-                );
+                eff_param.pdf_p = SetPartsDeformEffect(2, (u_long)(fed->dither).alpmax, (u_long)(fed->dither).colmax, *(float *)(&((char *)fed)[36]), *(float *)(&((char *)fed)[40]), eff_param.pdf_pos, 0, 0, 0, nullptr, &eff_param.pdf_spd, &eff_param.pdf_rate, &eff_param.pdf_trate);
 
                 i += 2;
             }
@@ -876,30 +866,30 @@ void FodSetEffectParam(FOD_EFF_DATA *fed)
     switch(fed->dither.efct_id)
     {
     case FOD_EFF_DITHER:
-        SetEffects(EF_DITHER, 1, fed->dither.type, fed->dither.alpha, fed->dither.speed, fed->dither.alpmax, fed->dither.colmax);
+        SetDitherEffect(1, fed->dither.type, fed->dither.alpha, fed->dither.speed, fed->dither.alpmax, fed->dither.colmax);
     break;
     case FOD_EFF_BLUR_NORMAL:
     case FOD_EFF_BLUR_BLACK:
     case FOD_EFF_BLUR_WHITE:
-        SetEffects(EF_BLUR_N, 1, &fed->blur.alpha, fed->blur.scale, fed->blur.rot, 320.0f, 112.0f);
+        SetBlurEffect(EF_BLUR_N, 1, &fed->blur.alpha, fed->blur.scale, fed->blur.rot, 320.0f, 112.0f);
     break;
     case FOD_EFF_DEFORM:
-        SetEffects(EF_DEFORM, 1, fed->deform.type, fed->deform.volume);
+        SetDeformEffect(1, fed->deform.type, fed->deform.volume);
     break;
     case FOD_EFF_FOCUS:
-        SetEffects(EF_FOCUS, 1, fed->focus.volume);
+        SetFocusEffect(1, fed->focus.volume);
     break;
     case FOD_EFF_CONTRAST1:
-        SetEffects(EF_NCONTRAST, 1, fed->contrast.color, fed->contrast.alpha);
+        SetContrastEffect(EF_NCONTRAST, 1, fed->contrast.color, fed->contrast.alpha);
     break;
     case FOD_EFF_CONTRAST2:
-        SetEffects(EF_NCONTRAST2, 1, fed->contrast.color, fed->contrast.alpha);
+        SetContrastEffect(EF_NCONTRAST2, 1, fed->contrast.color, fed->contrast.alpha);
         break;
     case FOD_EFF_CONTRAST3:
-        SetEffects(EF_NCONTRAST3, 1, fed->contrast.color, fed->contrast.alpha);
+        SetContrastEffect(EF_NCONTRAST3, 1, fed->contrast.color, fed->contrast.alpha);
     break;
     case FOD_EFF_FADE_FRAME:
-        SetEffects(EF_FADEFRAME, 1, fed->f_frame.volume, 0x1000);
+        SetFadeFrameEffect(1, fed->f_frame.volume, 0x1000);
     break;
     case FOD_EFF_LENZ_FLARE:
         if (fed->lenz_f.type == 0)
@@ -961,11 +951,11 @@ void FodSetEffectParam(FOD_EFF_DATA *fed)
 
             sceVu0ApplyMatrix(eff_param.lenz_pos, fod_cmn_mtx, eff_param.lenz_pos);
 
-            SetEffects(EF_RENZFLARE, 1, 4, eff_param.lenz_pos, eff_param.lenz_rot);
+            SetRenzFlareEffect(1, 4, eff_param.lenz_pos, eff_param.lenz_rot);
         }
     break;
     case FOD_EFF_CROSS_FADE:
-        SetEffects(EF_OVERLAP, 1, fed->cross_f.volume);
+        SetOverlapEffect(1, fed->cross_f.volume);
     break;
     case FOD_EFF_FADE_SCREEN:
         if (fed->fade_scr.a != 0)
@@ -1012,7 +1002,7 @@ void FodSetEffectParam(FOD_EFF_DATA *fed)
 
         sceVu0ApplyMatrix(*fire, fod_cmn_mtx, *fire);
 
-        SetEffects(EF_FIRE, 1, 3, *fire, 0x50, 0x46, 0x1e, 0.4f, 0xf0, 0xd0, 0xa0, 3.0f);
+        SetFireEffect(1, 3, *fire, 0x50, 0x46, 0x1e, 0.4f, 0xf0, 0xd0, 0xa0, 3.0f);
 
         eff_param.fire_num++;
     break;

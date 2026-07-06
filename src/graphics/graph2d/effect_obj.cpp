@@ -18,8 +18,10 @@
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_shader.h"
+#include "mikupan/ui/mikupan_ui_debug.h"
 
 #include <math.h>
 
@@ -322,31 +324,45 @@ void ResetPartsBlur()
 
 void* CallPartsDeform2(int type, float scale, void *pos, u_int in, u_int keep, u_int out)
 {
-    return SetEffects(EF_PDEFORM, 4, type, 100, scale, scale, pos, in, keep, out, (void*)0, (void*)0, (void*)0, (void*)0);
+    return SetPartsDeformEffect(4, type, 100, scale, scale, pos, in, keep, out, nullptr, nullptr, nullptr, nullptr);
 }
 
 void* CallPartsDeform3(int type, float scale, void *pos, u_int in, u_int keep, u_int out, int alp)
 {
-    return SetEffects(EF_PDEFORM, 4, type, alp, scale, scale, pos, in, keep, out, (void*)0, (void*)0, (void*)0, (void*)0);
+    return SetPartsDeformEffect(4, type, alp, scale, scale, pos, in, keep, out, nullptr, nullptr, nullptr, nullptr);
 }
 
 void* CallPartsDeform3_2(int type, float sclx, float scly, void *pos, u_int in, u_int keep, u_int out, int alp)
 {
-    return SetEffects(EF_PDEFORM, 4, type, alp, sclx, scly, pos, in, keep, out, (void*)0, (void*)0, (void*)0, (void*)0);
+    return SetPartsDeformEffect(4, type, alp, sclx, scly, pos, in, keep, out, nullptr, nullptr, nullptr, nullptr);
 }
 
 void* CallPartsDeform4(int type, float scale, void *pos, float *vol)
 {
-    return SetEffects(EF_PDEFORM, 2, type, 0x80, scale, scale, pos, 0, 0, 0, vol, (void*)0, (void*)0, (void*)0);
+    return SetPartsDeformEffect(2, type, 0x80, scale, scale, pos, 0, 0, 0, vol, nullptr, nullptr, nullptr);
 }
 
 void* CallPartsDeform5(int type, float sclx, float scly, void *pos, float *vol)
 {
-    return SetEffects(EF_PDEFORM, 2, type, 0x80, sclx, scly, pos, 0, 0, 0, vol, (void*)0, (void*)0, (void*)0);
+    return SetPartsDeformEffect(2, type, 0x80, sclx, scly, pos, 0, 0, 0, vol, nullptr, nullptr, nullptr);
 }
 
 void SetPartsDeform(EFFECT_CONT *ec)
 {
+    if (MikuPan_DisablePartsDeformEnabled())
+    {
+        ResetEffects(ec);
+        return;
+    }
+
+    if (MikuPan_ScreenCopyConsoleLogEnabled())
+    {
+        info_log("[PARTS DEFORM] frame=%u type=%u fl=%u max=%u scale=(%.3f %.3f) flow=%u cnt=%u",
+                 sys_wrk.count, ec->dat.uc8[2], ec->dat.uc8[1], ec->max,
+                 (double)ec->dat.fl32[2], (double)ec->dat.fl32[3],
+                 ec->flow, ec->cnt);
+    }
+
     int ef;
     int n0;
     int sbj;

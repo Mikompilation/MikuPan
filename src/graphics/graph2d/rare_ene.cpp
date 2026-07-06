@@ -494,12 +494,12 @@ void DrawRareEne()
                             ResetEffects(efbuf[i]);
 
                             efbuf[i] = 0; // ??
-                            efbuf[i] = SetEffects(EF_PDEFORM, 2, 21, 0, redp->sclw * 10.0f, redp->sclh * 10.0f, cpos, 0, 0, 0, &alp[i], &spd, &rate, &trate);
+                            efbuf[i] = SetPartsDeformEffect(2, 21, 0, redp->sclw * 10.0f, redp->sclh * 10.0f, cpos, 0, 0, 0, &alp[i], &spd, &rate, &trate);
                         }
                     }
                     else
                     {
-                        efbuf[i] = SetEffects(EF_PDEFORM, 2, 21, 0, redp->sclw * 10.0f, redp->sclh * 10.0f, cpos, 0, 0, 0, &alp[i], &spd, &rate, &trate);
+                        efbuf[i] = SetPartsDeformEffect(2, 21, 0, redp->sclw * 10.0f, redp->sclh * 10.0f, cpos, 0, 0, 0, &alp[i], &spd, &rate, &trate);
                     }
 
                     DrawRareEne_Sub(j, i, rg_dsp_wrk[i].pos, rg_dsp_wrk[i].rg_no, rg_dsp_wrk[i].dsp_no, rg_dsp_wrk[i].alpha);

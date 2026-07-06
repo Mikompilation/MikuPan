@@ -318,41 +318,63 @@ input.text {
     text-align: center;
 }
 
-/* RmlUi <select> generates selectvalue, selectarrow, and selectbox.
- * Keep value + arrow visually attached so it reads as one dropdown control.
- */
-select selectvalue {
-    width: auto;
-    height: 18dp;
-    margin-right: 18dp;
-    padding: 1dp 5dp 0px 5dp;
-    color: #f0e4cc;
-    background-color: #11100e;
+select {
+    position: relative;
+    background-color: #0d0c0a;
     border: 1dp #5b4f3e;
-    text-align: center;
-    line-height: 16dp;
+    cursor: pointer;
 }
 
-select selectvalue:hover,
-select:focus selectvalue,
-select:focus-visible selectvalue,
-select.controller-focus selectvalue,
-select:checked selectvalue {
+select:hover,
+select:focus,
+select:focus-visible,
+select.controller-focus,
+select:checked {
     color: #fff4d8;
-    background-color: #221b12;
+    background-color: #19150f;
     border-color: #b09b73;
 }
 
-select selectarrow {
-    width: 18dp;
+select selectvalue {
+    display: block;
+    width: 150dp;
     height: 18dp;
-    margin-left: -1dp;
-    color: #e6d8bd;
-    background-color: #11100e;
-    border: 1dp #5b4f3e;
+    margin: 0dp;
+    padding: 0dp;
+    color: #f0e4cc;
+    background-color: transparent;
+    border: 0dp;
     text-align: center;
-    line-height: 16dp;
-    font-size: 8dp;
+    line-height: 18dp;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+select:focus selectvalue,
+select:focus-visible selectvalue,
+select.controller-focus selectvalue,
+select:checked selectvalue,
+select:hover selectvalue {
+    color: #fff4d8;
+}
+
+select selectarrow {
+    display: block;
+    position: absolute;
+    right: 8dp;
+    top: 7dp;
+    width: 0dp;
+    height: 0dp;
+    margin: 0dp;
+    padding: 0dp;
+    color: transparent;
+    background-color: transparent;
+    border: 0dp;
+    border-left: 4dp transparent;
+    border-right: 4dp transparent;
+    border-top: 5dp #c7a66e;
+    cursor: pointer;
 }
 
 select selectarrow:hover,
@@ -361,9 +383,7 @@ select:focus selectarrow,
 select:focus-visible selectarrow,
 select.controller-focus selectarrow,
 select:checked selectarrow {
-    color: #fff4d8;
-    background-color: #342817;
-    border-color: #b09b73;
+    border-top-color: #fff1be;
 }
 
 select selectbox {
@@ -384,12 +404,27 @@ select selectbox option {
     background-color: #0e0d0b;
     line-height: 12dp;
     text-align: center;
+    cursor: pointer;
 }
 
 select selectbox option:hover,
 select selectbox option:checked {
     color: #fff4d8;
     background-color: #302719;
+}
+
+input.text {
+    display: block;
+    width: 150dp;
+    height: 20dp;
+    margin: 0px;
+    padding: 0px;
+    color: #f0e4cc;
+    background-color: transparent;
+    border: 0dp;
+    font-size: 8dp;
+    line-height: 18dp;
+    text-align: center;
 }
 
 input.text {
@@ -410,13 +445,10 @@ input.text.controller-focus {
     border-color: #b09b73;
 }
 
-/* Console-style incremental controls. These replace RmlUi range sliders so
- * controller left/right changes values deliberately instead of fighting the
- * generated slider internals.
- */
 .stepper-control,
 .choice-picker {
     display: block;
+    position: relative;
     width: 150dp;
     height: 20dp;
     margin: 0px;
@@ -427,6 +459,7 @@ input.text.controller-focus {
     font-size: 8dp;
     line-height: 18dp;
     text-align: center;
+    cursor: pointer;
 }
 
 .stepper-control:hover,
@@ -452,36 +485,97 @@ input.text.controller-focus {
 .stepper-bars {
     display: inline-block;
     width: 112dp;
+    height: 10dp;
     text-align: center;
-    letter-spacing: 1dp;
+    letter-spacing: 0dp;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .stepper-segment {
-    color: #3e372e;
+    display: inline-block;
+    width: 2dp;
+    height: 8dp;
+    margin: 0dp 0.5dp;
+    background-color: #302a22;
 }
 
 .stepper-segment.filled {
-    color: #d0ad73;
+    background-color: #c7a66e;
+}
+
+.stepper-segment.neutral {
+    background-color: #7b6b53;
+}
+
+.stepper-segment.filled.neutral {
+    background-color: #fff1be;
 }
 
 .stepper-control:focus .stepper-segment.filled,
 .stepper-control:focus-visible .stepper-segment.filled,
 .stepper-control.controller-focus .stepper-segment.filled {
-    color: #fff1be;
+    background-color: #fff1be;
 }
 
 .choice-text {
-    display: inline-block;
-    width: 112dp;
+    display: block;
+    width: 126dp;
+    height: 18dp;
     color: #f0e4cc;
     text-align: center;
+    line-height: 18dp;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+    pointer-events: none;
 }
 
 .picker-arrow {
-    display: inline-block;
-    width: 12dp;
-    color: #c7a66e;
-    text-align: center;
+    position: absolute;
+    right: 4dp;
+    top: 0dp;
+    width: 14dp;
+    height: 18dp;
+    cursor: pointer;
+    pointer-events: none;
+}
+
+.picker-arrow-shape {
+    display: block;
+    width: 0dp;
+    height: 0dp;
+    margin: 7dp auto 0dp auto;
+    border-left: 4dp transparent;
+    border-right: 4dp transparent;
+    border-top: 5dp #c7a66e;
+}
+
+.picker-arrow-shape.open {
+    margin-top: 6dp;
+    border-top: 0dp transparent;
+    border-bottom: 5dp #c7a66e;
+}
+
+.choice-picker:hover .picker-arrow-shape,
+.choice-picker:focus .picker-arrow-shape,
+.choice-picker:focus-visible .picker-arrow-shape,
+.choice-picker.controller-focus .picker-arrow-shape,
+select:hover .picker-arrow-shape,
+select:focus .picker-arrow-shape,
+select:focus-visible .picker-arrow-shape,
+select.controller-focus .picker-arrow-shape,
+select:checked .picker-arrow-shape {
+    border-top-color: #fff1be;
+    border-bottom-color: #fff1be;
+}
+
+.stepper-control *,
+.choice-picker *,
+.picker-option,
+.picker-option * {
+    cursor: pointer;
 }
 
 input.checkbox {
@@ -561,11 +655,16 @@ button.controller-focus {
 
 #cat-audio {
     nav-up: #cat-graphics;
+    nav-down: #cat-controls;
+}
+
+#cat-controls {
+    nav-up: #cat-audio;
     nav-down: #cat-advanced;
 }
 
 #cat-advanced {
-    nav-up: #cat-audio;
+    nav-up: #cat-controls;
     nav-down: #save-return-button;
 }
 
@@ -581,14 +680,20 @@ button.controller-focus {
 
 #window-mode-picker,
 #resolution-picker,
-#brightness-stepper,
-#gamma-stepper,
+#open-calibration-button,
 #vsync-input {
     nav-left: #cat-display;
 }
 
 #master-volume-stepper {
     nav-left: #cat-audio;
+}
+
+#controls-keyboard-tab,
+#controls-controller-tab,
+#controls-list,
+#controls-reset-button {
+    nav-left: #cat-controls;
 }
 
 #gpu-backend-select,
@@ -599,29 +704,10 @@ button.controller-focus {
     nav-left: #cat-graphics;
 }
 
-#theme-select,
-#font-select,
-#font-scale-stepper,
-#crt-enabled-input,
-#crt-0-stepper,
-#crt-1-stepper,
-#crt-2-stepper,
-#crt-3-stepper,
-#crt-4-stepper,
-#crt-5-stepper,
-#crt-6-stepper,
-#crt-7-stepper,
-#crt-8-stepper,
-#crt-9-stepper,
-#crt-10-stepper,
-#crt-11-stepper,
-#crt-12-stepper,
-#crt-13-stepper,
-#crt-14-stepper,
-#crt-15-stepper,
-#reset-crt-button,
-#controller-remap-input,
-#reset-bindings-button,
+#finder-dpad-film-swap-input,
+#mirror-stone-hud-input,
+#improved-movement-collisions-input,
+#open-crt-button,
 #data-folder-input,
 #browse-folder-button {
     nav-left: #cat-advanced;
@@ -700,7 +786,7 @@ button.controller-focus {
     left: 136dp;
     top: 60dp;
     width: 264dp;
-    min-height: 170dp;
+    min-height: 198dp;
     padding: 14dp;
     background-color: #080706f2;
     border: 1dp #b09b73;
@@ -718,23 +804,20 @@ button.controller-focus {
 #choice-picker-list {
     display: block;
     width: 236dp;
-    min-height: 84dp;
+    height: 116dp;
     margin: 0dp auto 8dp auto;
     padding: 3dp;
     background-color: #0e0c0a;
     border: 1dp #4b4033;
-}
-
-#choice-picker-list button {
-    font-family: MikuPanRml;
-    cursor: pointer;
+    overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 .picker-option {
     display: block;
-    width: 228dp;
+    width: 220dp;
     min-height: 15dp;
-    margin: 0px;
+    margin: 0px 0px 1dp 0px;
     padding: 2dp 4dp;
     color: #766e62;
     background-color: transparent;
@@ -833,4 +916,537 @@ button.controller-focus {
 
 #resolution-revert-button {
     nav-left: #resolution-keep-button;
+}
+
+#window.calibration-hidden {
+    display: none;
+}
+
+.calibration-panel {
+    position: absolute;
+    left: 18dp;
+    bottom: 18dp;
+    width: 236dp;
+    padding: 10dp;
+    color: #d8d0c1;
+    background-color: #080706e6;
+    border: 1dp #8b7b61;
+}
+
+.calibration-panel.hidden {
+    display: none;
+}
+
+#calibration-title {
+    display: block;
+    margin: 0dp 0dp 7dp 0dp;
+    color: #efe8d8;
+    font-size: 14dp;
+    line-height: 17dp;
+    letter-spacing: 1dp;
+}
+
+#calibration-help {
+    display: none;
+}
+
+.calibration-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 216dp;
+    height: 24dp;
+    margin: 0dp 0dp 4dp 0dp;
+}
+
+.calibration-row label {
+    display: block;
+    flex: none;
+    width: 76dp;
+    color: #ddd2bd;
+    font-size: 7.5dp;
+    line-height: 9dp;
+}
+
+.calibration-row .stepper-control {
+    flex: none;
+    width: 140dp;
+}
+
+.calibration-row .stepper-bars {
+    width: 63dp;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#calibration-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    width: 216dp;
+    margin-top: 6dp;
+}
+
+#calibration-actions button {
+    width: 50dp;
+    margin-left: 4dp;
+    margin-right: 0dp;
+}
+
+#open-calibration-button,
+#open-crt-button {
+    width: 92dp;
+}
+
+.crt-panel {
+    position: absolute;
+    left: 18dp;
+    top: 18dp;
+    width: 236dp;
+    height: 270dp;
+    padding: 10dp;
+    color: #d8d0c1;
+    background-color: #080706e6;
+    border: 1dp #8b7b61;
+    overflow-y: scroll;
+}
+
+.crt-panel.hidden {
+    display: none;
+}
+
+#crt-title {
+    display: block;
+    margin: 0dp 0dp 7dp 0dp;
+    color: #efe8d8;
+    font-size: 14dp;
+    line-height: 17dp;
+    letter-spacing: 1dp;
+}
+
+.crt-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 216dp;
+    height: 24dp;
+    margin: 0dp 0dp 4dp 0dp;
+}
+
+.crt-row label {
+    display: block;
+    flex: none;
+    width: 76dp;
+    color: #ddd2bd;
+    font-size: 7.5dp;
+    line-height: 9dp;
+}
+
+.crt-row .stepper-control {
+    flex: none;
+    width: 140dp;
+}
+
+.crt-row .stepper-bars {
+    width: 63dp;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#crt-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    width: 216dp;
+    margin-top: 6dp;
+}
+
+#crt-actions button {
+    width: 50dp;
+    margin-left: 4dp;
+    margin-right: 0dp;
+}
+
+.calibration-level-panel {
+    position: absolute;
+    right: 18dp;
+    bottom: 18dp;
+    width: 142dp;
+    padding: 9dp;
+    color: #d8d0c1;
+    background-color: #080706d8;
+    border: 1dp #8b7b61;
+}
+
+.calibration-level-panel.hidden {
+    display: none;
+}
+
+#calibration-level-title {
+    display: block;
+    margin: 0dp 0dp 3dp 0dp;
+    color: #efe8d8;
+    font-size: 9dp;
+    line-height: 11dp;
+}
+
+#calibration-level-help {
+    display: none;
+}
+
+#calibration-level-strip {
+    display: flex;
+    flex-direction: row;
+    width: 128dp;
+    height: 18dp;
+    margin: 4dp auto 0dp auto;
+    padding: 0dp;
+    background-color: #000000;
+    border: 1dp #4b4033;
+}
+
+.calibration-level-swatch {
+    display: block;
+    flex: none;
+    width: 8dp;
+    height: 16dp;
+    margin: 0dp;
+    background-color: #000000;
+}
+
+#calibration-level-labels {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 128dp;
+    margin: 3dp auto 0dp auto;
+    color: #8f8678;
+    font-size: 5.5dp;
+    line-height: 7dp;
+}
+
+#calibration-brightness-stepper {
+    nav-up: #calibration-back-button;
+    nav-down: #calibration-gamma-stepper;
+}
+
+#calibration-gamma-stepper {
+    nav-up: #calibration-brightness-stepper;
+    nav-down: #calibration-contrast-stepper;
+}
+
+#calibration-contrast-stepper {
+    nav-up: #calibration-gamma-stepper;
+    nav-down: #calibration-shadow-depth-stepper;
+}
+
+#calibration-shadow-depth-stepper {
+    nav-up: #calibration-contrast-stepper;
+    nav-down: #calibration-reset-button;
+}
+
+#calibration-reset-button {
+    nav-up: #calibration-shadow-depth-stepper;
+    nav-right: #calibration-ok-button;
+    nav-down: #calibration-brightness-stepper;
+}
+
+#calibration-ok-button {
+    nav-left: #calibration-reset-button;
+    nav-right: #calibration-back-button;
+    nav-up: #calibration-shadow-depth-stepper;
+    nav-down: #calibration-brightness-stepper;
+}
+
+#calibration-back-button {
+    nav-left: #calibration-ok-button;
+    nav-right: #calibration-reset-button;
+    nav-up: #calibration-shadow-depth-stepper;
+    nav-down: #calibration-brightness-stepper;
+}
+
+
+#crt-enabled-input {
+    nav-up: #crt-back-button;
+    nav-down: #crt-0-stepper;
+}
+
+#crt-0-stepper {
+    nav-up: #crt-enabled-input;
+    nav-down: #crt-1-stepper;
+}
+
+#crt-1-stepper {
+    nav-up: #crt-0-stepper;
+    nav-down: #crt-2-stepper;
+}
+
+#crt-2-stepper {
+    nav-up: #crt-1-stepper;
+    nav-down: #crt-3-stepper;
+}
+
+#crt-3-stepper {
+    nav-up: #crt-2-stepper;
+    nav-down: #crt-4-stepper;
+}
+
+#crt-4-stepper {
+    nav-up: #crt-3-stepper;
+    nav-down: #crt-5-stepper;
+}
+
+#crt-5-stepper {
+    nav-up: #crt-4-stepper;
+    nav-down: #crt-6-stepper;
+}
+
+#crt-6-stepper {
+    nav-up: #crt-5-stepper;
+    nav-down: #crt-7-stepper;
+}
+
+#crt-7-stepper {
+    nav-up: #crt-6-stepper;
+    nav-down: #crt-8-stepper;
+}
+
+#crt-8-stepper {
+    nav-up: #crt-7-stepper;
+    nav-down: #crt-9-stepper;
+}
+
+#crt-9-stepper {
+    nav-up: #crt-8-stepper;
+    nav-down: #crt-10-stepper;
+}
+
+#crt-10-stepper {
+    nav-up: #crt-9-stepper;
+    nav-down: #crt-11-stepper;
+}
+
+#crt-11-stepper {
+    nav-up: #crt-10-stepper;
+    nav-down: #crt-12-stepper;
+}
+
+#crt-12-stepper {
+    nav-up: #crt-11-stepper;
+    nav-down: #crt-13-stepper;
+}
+
+#crt-13-stepper {
+    nav-up: #crt-12-stepper;
+    nav-down: #crt-14-stepper;
+}
+
+#crt-14-stepper {
+    nav-up: #crt-13-stepper;
+    nav-down: #crt-15-stepper;
+}
+
+#crt-15-stepper {
+    nav-up: #crt-14-stepper;
+    nav-down: #reset-crt-button;
+}
+
+#reset-crt-button {
+    nav-up: #crt-15-stepper;
+    nav-right: #crt-ok-button;
+    nav-down: #crt-enabled-input;
+}
+
+#crt-ok-button {
+    nav-left: #reset-crt-button;
+    nav-right: #crt-back-button;
+    nav-up: #crt-15-stepper;
+    nav-down: #crt-enabled-input;
+}
+
+#crt-back-button {
+    nav-left: #crt-ok-button;
+    nav-right: #reset-crt-button;
+    nav-up: #crt-15-stepper;
+    nav-down: #crt-enabled-input;
+}
+
+#controls-tabs {
+    display: flex;
+    flex-direction: row;
+    width: 351dp;
+    margin: 0dp 0dp 6dp 0dp;
+}
+
+.controls-tab {
+    flex: 1;
+    height: 22dp;
+    margin: 0dp 4dp 0dp 0dp;
+    line-height: 20dp;
+}
+
+#controls-controller-tab {
+    margin-right: 0dp;
+}
+
+.controls-tab.selected {
+    color: #fff4d8;
+    background-color: #302719;
+    border-color: #b09b73;
+}
+
+.controls-tab:focus,
+.controls-tab:focus-visible,
+.controls-tab.controller-focus {
+    color: #fff4d8;
+    background-color: #1d1710;
+    border-color: #8f7953;
+}
+
+.controls-tab.selected:focus,
+.controls-tab.selected:focus-visible,
+.controls-tab.selected.controller-focus {
+    background-color: #382d1c;
+    border-color: #d0b87e;
+}
+
+#controls-help {
+    width: 351dp;
+    margin: 0dp 0dp 7dp 0dp;
+}
+
+.controls-section-title {
+    display: block;
+    width: 351dp;
+    margin: 8dp 0dp 5dp 0dp;
+    padding: 0dp 0dp 4dp 0dp;
+    color: #bda57c;
+    border-bottom: 1dp #352d25;
+    font-size: 7dp;
+    line-height: 9dp;
+    letter-spacing: 1dp;
+    text-transform: uppercase;
+}
+
+.controls-bind-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 351dp;
+    min-height: 24dp;
+    margin: 0dp 0dp 3dp 0dp;
+    padding: 3dp 5dp;
+    background-color: #0f0d0bdd;
+    border: 1dp #2f281f;
+}
+
+.controls-bind-row:hover,
+.controls-bind-row.controller-focus {
+    background-color: #17120eee;
+    border-color: #6c5d48;
+}
+
+.controls-bind-label {
+    display: block;
+    flex: none;
+    width: 104dp;
+    color: #ddd2bd;
+    font-size: 7dp;
+    line-height: 9dp;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.controls-bind-value {
+    flex: none;
+    width: 166dp;
+    height: 18dp;
+    margin: 0dp 4dp 0dp 0dp;
+    padding: 0dp 5dp;
+    line-height: 16dp;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.controls-bind-value.small {
+    width: 76dp;
+}
+
+.controls-clear-button,
+.controls-option-button {
+    flex: none;
+    width: 38dp;
+    height: 18dp;
+    margin: 0dp 0dp 0dp 3dp;
+    padding: 0dp 4dp;
+    line-height: 16dp;
+}
+
+.controls-option-row .controls-bind-label {
+    width: 274dp;
+}
+
+.controls-option-button {
+    width: 58dp;
+}
+
+.controls-actions-row button {
+    width: 92dp;
+}
+
+#binding-capture-card {
+    position: absolute;
+    left: 143dp;
+    top: 88dp;
+    width: 250dp;
+    padding: 14dp;
+    background-color: #080706f2;
+    border: 1dp #b09b73;
+    text-align: center;
+}
+
+#binding-capture-title {
+    display: block;
+    margin: 0dp 0dp 7dp 0dp;
+    color: #fff4d8;
+    font-size: 13dp;
+    line-height: 16dp;
+    letter-spacing: 1dp;
+}
+
+#binding-capture-text {
+    display: block;
+    width: 100%;
+    margin: 0dp 0dp 6dp 0dp;
+    color: #d8d0c1;
+    font-size: 8dp;
+    line-height: 11dp;
+}
+
+#binding-capture-help {
+    display: block;
+    width: 100%;
+    margin: 0dp 0dp 12dp 0dp;
+    color: #8f8678;
+    font-size: 6.5dp;
+    line-height: 8dp;
+}
+
+#binding-capture-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#binding-capture-buttons button {
+    width: 58dp;
+    margin: 0dp 4dp;
+}
+
+#binding-capture-clear-button {
+    nav-right: #binding-capture-cancel-button;
+}
+
+#binding-capture-cancel-button {
+    nav-left: #binding-capture-clear-button;
 }

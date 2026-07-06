@@ -86,6 +86,8 @@ int MikuPan_FinderMouseLookEnabled(void);
 void MikuPan_SetFinderMouseLookEnabled(int enabled);
 float MikuPan_FinderMouseSensitivity(void);
 void MikuPan_SetFinderMouseSensitivity(float sensitivity);
+int MikuPan_ImprovedMovementCollisionsEnabled(void);
+void MikuPan_SetImprovedMovementCollisionsEnabled(int enabled);
 
 
 #ifdef __cplusplus

@@ -98,16 +98,41 @@ void InitEffects();
 void InitEffectsEF();
 void EffectEndSet();
 
-#ifdef MATCHING_DECOMP
-#ifdef INCLUDING_FROM_EFFECT_C
-// fix for undeclared SetEffects in header
-void* SetEffects(int id, int fl, ...);
-#else
-#define SetEffects(args...) (void *)SetEffects(args)
-#endif
-#else
-void* SetEffects(int id, int fl, ...);
-#endif
+void* SetZDepthEffect(int fl);
+void* SetZDepth2Effect(int fl);
+void* SetDitherEffect(int fl, int type, float alpha, float speed, int alpha_max, int color_max, u_int in = 0, u_int keep = 0, u_int out = 0);
+void* SetDither2Effect(int fl, int type, float alpha, float speed);
+void* SetBlurEffect(int id, int fl, u_char *alpha, u_int scale, u_int rotation, float x, float y);
+void* SetDeformEffect(int fl, int type, int rate, u_int in = 0, u_int keep = 0, u_int out = 0);
+void* SetFocusEffect(int fl, int volume);
+void* SetOverlapEffect(int fl, int alpha);
+void* SetFadeFrameEffect(int fl, int alpha, u_int color);
+void* SetRenzFlareEffect(int fl, int type, void *position, void *rotation);
+void* SetHazeEffect(int fl);
+void* SetBlackFilterEffect(int fl, int alpha);
+void* SetNegaEffect(int fl, int color, int alpha, u_char *alpha2);
+void* SetNegaEffectTimed(int fl, int color, int alpha, u_int in, u_int keep, u_int out);
+void* SetContrastEffect(int id, int fl, int color, int alpha);
+void* SetMagatokiEffect(int fl, u_int in, u_int out, void *flag);
+void* SetSpiritEffect(int fl, int flow, void *position, int r1, int g1, int b1, float scale1, int r2, int g2, int b2, float scale2, void *alpha);
+void* SetPBlurEffect(int fl, int alpha);
+void* SetFireEffect(int fl, int flow, void *position, int r1, int g1, int b1, float scale1, int r2, int g2, int b2, float scale2);
+void* SetFire2Effect(int fl, int flow, void *position, int r1, int g1, int b1, float scale1, int r2, int g2, int b2, float scale2, float scale_rate);
+void* SetHaloEffect(int fl, int type, void *position, int r, int g, int b, float scale, int blend);
+void* SetRippleEffect(int fl, int type, int time, void *position);
+void* SetRipple2Effect(int fl, int type, int time, int r, int g, int b, float scale, float alpha_rate, void *position, void *rotation, int count = 0);
+void* SetPartsDeformEffect(int fl, int type, u_int max, float scale_x, float scale_y, void *position, u_int in, u_int keep, u_int out, float *effect, float *speed, float *rate, float *trail_rate);
+void* SetEneInEffect(int fl, int type, int alpha, float scale, void *position, u_int in, u_int keep, u_int out);
+void* SetEneOutEffect(int fl, int index, int value, float scale);
+void* SetDustEffect(int fl, void *position);
+void* SetWaterdropEffect(int fl, void *position, int state, float speed, u_int max, int r, int g, int b);
+void* SetSunshineEffect(int fl, void *position1, void *position2, void *rotation, u_int max, float scale_x, float scale_y, int r, int g, int b);
+void* SetEneFireEffect(int fl, int type, void *position, void *position2, void *color, void *size, u_int life, void *rate);
+void* SetTorchEffect(int fl, int type, void *position, float *scale_rate, float *alpha_rate);
+void* SetSmokeEffect(int fl, void *position);
+void* SetNegaCircleEffect(int fl, float x, float y, float size, int alpha, u_int in, u_int keep, u_int out);
+void* SetEneFaceEffect(int fl, int type, int rotation, float x, float y, float z);
+void* SetFaceSpiritEffect(int fl, void *position, int r, int g, int b, float *alpha, int index);
 
 void ResetEffects(void *p);
 int SearchEmptyEffectBuf();

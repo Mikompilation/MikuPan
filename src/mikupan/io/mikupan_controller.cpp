@@ -3,6 +3,7 @@
 #include "mikupan/mikupan_config.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/gameplay/mikupan_item_icon_hud.h"
 #include "os/key_cnf.h"
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_mouse.h>
@@ -25,6 +26,8 @@ static int remap_stick_mode = 0;
 
 SDL_Gamepad *mikupan_gamepad = NULL;
 static int mikupan_preferred_gamepad_index = MIKUPAN_CONTROLLER_AUTO_INDEX;
+static unsigned short mikupan_rumble_low = 0;
+static unsigned short mikupan_rumble_high = 0;
 
 /* Which device's bindings the mapping UI shows: 1 = keyboard & mouse, 0 = the
  * selected gamepad. -1 until first drawn, then defaulted from whether a gamepad
@@ -173,9 +176,13 @@ static void MikuPan_CloseCurrentGamepad(void)
 {
     if (mikupan_gamepad != NULL)
     {
+        SDL_RumbleGamepad(mikupan_gamepad, 0, 0, 0);
         SDL_CloseGamepad(mikupan_gamepad);
         mikupan_gamepad = NULL;
     }
+
+    mikupan_rumble_low = 0;
+    mikupan_rumble_high = 0;
 }
 
 void MikuPan_ControllerSetPreferredGamepadIndex(int index)
@@ -374,6 +381,8 @@ void MikuPan_ControllerResetBindings(void)
     }
     finder_mouse_enabled = 1;
     finder_mouse_sensitivity = 1.0f;
+    MikuPan_SetFinderDpadFilmSwapEnabled(0);
+    MikuPan_SetMirrorStoneHudEnabled(0);
     MikuPan_ResetCustomActionProfile();
     MikuPan_SetCustomActionProfileEnabled(0);
 }
@@ -409,6 +418,11 @@ void MikuPan_ControllerStoreBindingsToConfig(void)
         MikuPan_CustomActionProfileUsesFinderReverseY();
     cfg->action_profile_finder_swap_sticks =
         MikuPan_CustomActionProfileSwapsFinderSticks();
+    cfg->finder_dpad_film_swap_enabled =
+        MikuPan_FinderDpadFilmSwapEnabled();
+    cfg->mirror_stone_hud_enabled = MikuPan_MirrorStoneHudEnabled();
+    cfg->improved_movement_collisions_enabled =
+        MikuPan_ImprovedMovementCollisionsEnabled();
     cfg->finder_mouse_enabled = finder_mouse_enabled;
     cfg->finder_mouse_sensitivity = finder_mouse_sensitivity;
     for (int i = 0; i < MIKUPAN_ACTION_PROFILE_ACTION_COUNT; i++)
@@ -458,6 +472,9 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
         finder_mouse_enabled = cfg->finder_mouse_enabled ? 1 : 0;
         MikuPan_SetFinderMouseSensitivity(cfg->finder_mouse_sensitivity);
     }
+    MikuPan_SetFinderDpadFilmSwapEnabled(
+        cfg->finder_dpad_film_swap_enabled);
+    MikuPan_SetMirrorStoneHudEnabled(cfg->mirror_stone_hud_enabled);
     if (cfg->action_profile_saved)
     {
         if (cfg->action_profile_layout >= 2)
@@ -492,6 +509,17 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
     }
     MikuPan_SetCustomActionProfileEnabled(
         cfg->action_profile_saved ? cfg->action_profile_enabled : 0);
+}
+
+
+int MikuPan_ImprovedMovementCollisionsEnabled(void)
+{
+    return mikupan_configuration.input.improved_movement_collisions_enabled;
+}
+
+void MikuPan_SetImprovedMovementCollisionsEnabled(int enabled)
+{
+    mikupan_configuration.input.improved_movement_collisions_enabled = enabled ? 1 : 0;
 }
 
 int MikuPan_ReadController(unsigned char *rdata)
@@ -690,12 +718,36 @@ SDL_Gamepad *MikuPan_GetController(void)
 
 int MikuPan_ControllerRumble(const unsigned char *data)
 {
-    if (mikupan_gamepad == NULL)
+    if (data == NULL)
     {
         return 0;
     }
 
-    return SDL_RumbleGamepad(mikupan_gamepad, data[0] * 32896, data[1] * 257, 100);
+    if (mikupan_gamepad == NULL)
+    {
+        MikuPan_OpenController();
+        if (mikupan_gamepad == NULL)
+        {
+            return 0;
+        }
+    }
+
+    unsigned short low = (unsigned short)((unsigned int)data[1] * 257u);
+    unsigned short high = data[0] != 0 ? 0xffffu : 0u;
+
+    if (low == 0 && high == 0 && mikupan_rumble_low == 0 && mikupan_rumble_high == 0)
+    {
+        return 1;
+    }
+
+    if (!SDL_RumbleGamepad(mikupan_gamepad, low, high, 120))
+    {
+        return 0;
+    }
+
+    mikupan_rumble_low = low;
+    mikupan_rumble_high = high;
+    return 1;
 }
 
 int MikuPan_FinderMouseLookEnabled(void)
@@ -1491,6 +1543,22 @@ static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
     }
     igTextDisabled("On (default): left stick / WASD move, right stick / mouse "
                    "aim. Off: classic (left stick aims, right stick moves).");
+
+    bool finder_film_swap = MikuPan_FinderDpadFilmSwapEnabled() != 0;
+    if (igCheckbox("D-Pad quick film swap", &finder_film_swap))
+    {
+        MikuPan_SetFinderDpadFilmSwapEnabled(finder_film_swap ? 1 : 0);
+    }
+    igTextDisabled("Use D-Pad Up / Down in finder mode to switch film.\n"
+                   "D-Pad finder aim is disabled while enabled.");
+
+    bool mirror_stone_hud = MikuPan_MirrorStoneHudEnabled() != 0;
+    if (igCheckbox("Mirror Stone HUD icon", &mirror_stone_hud))
+    {
+        MikuPan_SetMirrorStoneHudEnabled(mirror_stone_hud ? 1 : 0);
+    }
+    igTextDisabled("Shows a small Mirror Stone box next to the filament. It "
+                   "stays visible even when you do not have one.");
 
     if (igButton("Reset custom profile", ImVec2{0, 0}))
     {

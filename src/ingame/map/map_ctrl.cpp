@@ -1592,6 +1592,30 @@ u_char MapHitCheckAll(u_short pos_x, u_short pos_y, u_char room_id)
     return hit_flg;
 }
 
+u_char MikuPan_MapHitCheckAllSource(u_short pos_x, u_short pos_y, u_char room_id)
+{
+    u_char source;
+
+    source = 0;
+
+    if (MapHitCheck(pos_x, pos_y, room_id) != 0)
+    {
+        source |= 1;
+    }
+
+    if (FurnHitCheck2(pos_x, pos_y, room_id) != 0)
+    {
+        source |= 2;
+    }
+
+    if (DoorHitCheck2(pos_x, pos_y, room_id) != 0)
+    {
+        source |= 4;
+    }
+
+    return source;
+}
+
 void PlyrHitRot(sceVu0FVECTOR pos, sceVu0FVECTOR dst, float *go_rot, float *no_rot, u_char div, u_char room_id)
 {
     sceVu0FVECTOR rpos;

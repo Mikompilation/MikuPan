@@ -37,10 +37,13 @@
 #include "ingame/plyr/time_ctl.h"
 #include "ingame/plyr/unit_ctl.h"
 #include "main/glob.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
+#include "mikupan/gameplay/mikupan_item_icon_hud.h"
 #include "mikupan/gameplay/mikupan_point_depth.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_shader.h"
+#include "mikupan/ui/mikupan_ui_debug.h"
 #include "os/eeiop/eese.h"
 #include "os/key_cnf.h"
 #include "os/pad.h"
@@ -225,7 +228,7 @@ void PlyrCondChk()
     switch (plyr_wrk.cond)
     {
     case 2:
-        SetEffects(EF_DEFORM, 1, 7, 0x14);
+        SetDeformEffect(1, 7, 0x14);
 
         if (LeverGachaChk() != 0)
         {
@@ -233,7 +236,7 @@ void PlyrCondChk()
         }
         break;
     case 3:
-        SetEffects(EF_DEFORM, 1, 4, 0x32);
+        SetDeformEffect(1, 4, 0x32);
     break;
     }
 }
@@ -735,6 +738,7 @@ void PlyrSpotMoveCtrl()
     plyr_wrk.spot_rot[1] = r;
 }
 
+
 void PlyrFinderCtrl()
 {
     if (plyr_wrk.sta & 0x1000)
@@ -747,6 +751,7 @@ void PlyrFinderCtrl()
     FModeScreenEffect();
     EneFrameHitChk();
     PlyrPhotoChk();
+    MikuPan_QuickSwapFinderFilm();
     PlyrSubAtkChk();
     PlyrCamRotCngChk();
     PlyrFModeMoveCtrl();
@@ -811,7 +816,7 @@ void FModeScreenEffect()
     {
         if (req_dmg_ef[i])
         {
-            SetEffects(EF_FADEFRAME, 1, 0, 0x80000);
+            SetFadeFrameEffect(1, 0, 0x80000);
 
             return;
         }
@@ -853,8 +858,8 @@ void FModeScreenEffect()
         }
     }
 
-    SetEffects(EF_DITHER, 1, 3, alpha, 8.0f, 101, 64);
-    SetEffects(EF_NCONTRAST2, 1, crate, crate);
+    SetDitherEffect(1, 3, alpha, 8.0f, 101, 64);
+    SetContrastEffect(EF_NCONTRAST2, 1, crate, crate);
 }
 
 void PlyrDmgCtrl()
@@ -1314,7 +1319,7 @@ void PlyrSpotLightOnChk()
 
     if (plyr_wrk.mode == PMODE_NORMAL && plyr_wrk.anime_no != PANI_CAM_SET_OUT)
     {
-        SetEffects(EF_RENZFLARE, 1, 4, plyr_wrk.spot_pos, plyr_wrk.move_box.rot);
+        SetRenzFlareEffect(1, 4, plyr_wrk.spot_pos, plyr_wrk.move_box.rot);
     }
 }
 
@@ -2045,7 +2050,8 @@ void EneFrameHitChk()
 
 
                     // CheckPointDepth(&ppj);
-                    MikuPan_CheckPointDepth(&ppj);
+                    MikuPan_CheckPointDepthKeyed(
+                        &ppj, MIKUPAN_POINT_DEPTH_KEY_ENEMY_FRAME_HIT, i, 0);
 
                     if (ppj.result[0] != 0 || dpe <= 300.f)
                     {
@@ -2283,7 +2289,9 @@ int FrameInsideChkFurn(FURN_WRK *fw, float *degree, u_int fsta)
                 ppj.p[0][3] = fpc[3];
 
                 // CheckPointDepth(&ppj);
-                MikuPan_CheckPointDepth(&ppj);
+                MikuPan_CheckPointDepthKeyed(
+                    &ppj, MIKUPAN_POINT_DEPTH_KEY_FURN_FRAME_POINT,
+                    (int)(fw - furn_wrk), i);
 
                 if (ppj.result[0] != 0)
                 {
@@ -3010,7 +3018,10 @@ void PlyrNModeMoveCtrl()
 
         if (PlyrMoveHitChk(mb, tv, 0))
         {
-            PlyrHitTurnChk(mb, tv);
+            if (MikuPan_PlayerMomentumSlideEnabled() == 0)
+            {
+                PlyrHitTurnChk(mb, tv);
+            }
         }
 
         PlyrPosSet(mb, tv);
@@ -3617,6 +3628,261 @@ void PlyrKonwakuMove(MOVE_BOX *mb, sceVu0FVECTOR tv)
     RotFvector(mb->rot, tv);
 }
 
+struct MikuPanPlayerCollisionState {
+    sceVu0FVECTOR momentum;
+    int momentum_valid;
+    int block_frames;
+    u_char last_source;
+    int last_null_move;
+    float pad_rot;
+    u_char run_state;
+    u_char analog_dir;
+};
+
+static MikuPanPlayerCollisionState plyr_collision_state = {
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    0,
+    0,
+    0xff,
+    -1,
+    10.0f,
+    0,
+    0xff,
+};
+
+static const float plyr_collision_min_move = 0.05f;
+static const float plyr_collision_null_scale = 0.15f;
+static const float plyr_collision_min_dot = 0.2f;
+
+static const char *PlyrCollisionHitSourceName(u_char source)
+{
+    switch (source)
+    {
+    case 1:
+        return "MAP";
+    case 2:
+        return "FURN";
+    case 3:
+        return "MAP|FURN";
+    case 4:
+        return "DOOR";
+    case 5:
+        return "MAP|DOOR";
+    case 6:
+        return "FURN|DOOR";
+    case 7:
+        return "MAP|FURN|DOOR";
+    default:
+        return "NONE";
+    }
+}
+
+static u_char PlyrCollisionMoveDiv(float x, float z)
+{
+    float dist;
+    u_char div;
+
+    dist = GetDist(x, z);
+
+    if (dist > 24.0f)
+    {
+        div = (u_char)(dist / 24.0f);
+    }
+    else
+    {
+        div = (u_char)dist;
+    }
+
+    if ((div & 0xff) == 0)
+    {
+        div = 1;
+    }
+
+    return div;
+}
+
+static void PlyrCollisionSetInputState(float pad_rot, u_char run_state, u_char analog_dir)
+{
+    plyr_collision_state.pad_rot = pad_rot;
+    plyr_collision_state.run_state = run_state;
+    plyr_collision_state.analog_dir = analog_dir;
+}
+
+static void PlyrCollisionClearMomentum(void)
+{
+    plyr_collision_state.momentum[0] = 0.0f;
+    plyr_collision_state.momentum[1] = 0.0f;
+    plyr_collision_state.momentum[2] = 0.0f;
+    plyr_collision_state.momentum[3] = 0.0f;
+    plyr_collision_state.momentum_valid = 0;
+}
+
+static void PlyrCollisionStoreMomentum(sceVu0FVECTOR tv)
+{
+    if (GetDist(tv[0], tv[2]) <= plyr_collision_min_move)
+    {
+        return;
+    }
+
+    plyr_collision_state.momentum[0] = tv[0];
+    plyr_collision_state.momentum[1] = 0.0f;
+    plyr_collision_state.momentum[2] = tv[2];
+    plyr_collision_state.momentum[3] = 0.0f;
+    plyr_collision_state.momentum_valid = 1;
+}
+
+static int PlyrCollisionTryMomentumSlide(MOVE_BOX *mb, sceVu0FVECTOR tv,
+                                          sceVu0FVECTOR desired,
+                                          float desired_dist,
+                                          u_char room_id)
+{
+    sceVu0FVECTOR fallback;
+    float momentum_dist;
+    float dot;
+    float scale;
+    u_char div;
+    u_char hit;
+
+    if (MikuPan_PlayerMomentumSlideEnabled() == 0 ||
+        plyr_collision_state.momentum_valid == 0)
+    {
+        return 0;
+    }
+
+    momentum_dist = GetDist(plyr_collision_state.momentum[0],
+                            plyr_collision_state.momentum[2]);
+
+    if (desired_dist <= plyr_collision_min_move ||
+        momentum_dist <= plyr_collision_min_move)
+    {
+        return 0;
+    }
+
+    dot = (desired[0] * plyr_collision_state.momentum[0] +
+           desired[2] * plyr_collision_state.momentum[2]) /
+          (desired_dist * momentum_dist);
+
+    if (dot < plyr_collision_min_dot)
+    {
+        return 0;
+    }
+
+    scale = desired_dist / momentum_dist;
+
+    fallback[0] = plyr_collision_state.momentum[0] * scale;
+    fallback[1] = 0.0f;
+    fallback[2] = plyr_collision_state.momentum[2] * scale;
+    fallback[3] = 0.0f;
+
+    div = PlyrCollisionMoveDiv(fallback[0], fallback[2]);
+    hit = PlyrMapHitCheck(fallback, mb->pos, div, room_id);
+
+    if (GetDist(fallback[0], fallback[2]) <= desired_dist * plyr_collision_null_scale)
+    {
+        return 0;
+    }
+
+    tv[0] = fallback[0];
+    tv[1] = fallback[1];
+    tv[2] = fallback[2];
+    tv[3] = fallback[3];
+
+    return hit == 0 ? 2 : 1;
+}
+
+static void PlyrCollisionResetLog(void)
+{
+    plyr_collision_state.block_frames = 0;
+    plyr_collision_state.last_source = 0xff;
+    plyr_collision_state.last_null_move = -1;
+}
+
+static void PlyrCollisionLog(MOVE_BOX *mb, u_char id, u_char room_id,
+                             u_char source, u_char result, int null_move,
+                             int momentum_used, sceVu0FVECTOR desired,
+                             sceVu0FVECTOR adjusted, u_char div)
+{
+    int active;
+    const char *kind;
+    const char *mode;
+
+    if (MikuPan_PlayerCollisionConsoleLogEnabled() == 0)
+    {
+        return;
+    }
+
+    active = result != 0 || null_move != 0 || momentum_used != 0;
+
+    if (active == 0)
+    {
+        PlyrCollisionResetLog();
+        return;
+    }
+
+    plyr_collision_state.block_frames++;
+
+    if (source == plyr_collision_state.last_source &&
+        null_move == plyr_collision_state.last_null_move &&
+        momentum_used == 0 &&
+        plyr_collision_state.block_frames != 1 &&
+        (plyr_collision_state.block_frames % 30) != 0)
+    {
+        return;
+    }
+
+    plyr_collision_state.last_source = source;
+    plyr_collision_state.last_null_move = null_move;
+
+    if (momentum_used != 0)
+    {
+        kind = momentum_used == 2 ? "MOMENTUM_FREE" : "MOMENTUM_HIT";
+    }
+    else if (null_move != 0)
+    {
+        kind = "NULL_MOVE";
+    }
+    else
+    {
+        kind = "BLOCK";
+    }
+
+    if (plyr_collision_state.run_state != 0)
+    {
+        mode = "square-forward";
+    }
+    else if (plyr_collision_state.pad_rot != 10.0f)
+    {
+        mode = "analog";
+    }
+    else
+    {
+        mode = "other";
+    }
+
+    info_log("[PLAYER COLLISION] %s hold=%d id=%u room=%u src=%s mode=%s square=%d an_dir=%u pad_rot=%.3f div=%u pos=(%.1f %.1f %.1f) rot=%.3f desired=(%.3f %.3f) adjusted=(%.3f %.3f) momentum=(%.3f %.3f) mvsta=0x%08x",
+             kind,
+             plyr_collision_state.block_frames,
+             id,
+             room_id,
+             PlyrCollisionHitSourceName(source),
+             mode,
+             SQUARE_PRESSED() != 0,
+             plyr_collision_state.analog_dir,
+             plyr_collision_state.pad_rot,
+             div,
+             mb->pos[0],
+             mb->pos[1],
+             mb->pos[2],
+             mb->rot[1],
+             desired[0],
+             desired[2],
+             adjusted[0],
+             adjusted[2],
+             plyr_collision_state.momentum[0],
+             plyr_collision_state.momentum[2],
+             plyr_wrk.mvsta);
+}
+
 void PlyrMovePad(MOVE_BOX *mb, sceVu0FVECTOR tv)
 {
     sceVu0FVECTOR fr = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -3634,6 +3900,7 @@ void PlyrMovePad(MOVE_BOX *mb, sceVu0FVECTOR tv)
     r = GetMovePad(0);
 
     run_chk = PlyrMoveStaChk(r);
+    PlyrCollisionSetInputState(r, run_chk, pad[0].an_dir[0]);
 
     GetMoveSpeed(tv);
 
@@ -4279,36 +4546,76 @@ u_int PlyrLeverInputChk()
 
 u_char PlyrMoveHitChk(MOVE_BOX *mb, sceVu0FVECTOR tv, u_char id)
 {
+    sceVu0FVECTOR desired;
     float dist;
+    float adjusted_dist;
     u_char result;
     u_char div;
+    u_char source;
+    int null_move;
+    int momentum_used;
+    u_short pos_x;
+    u_short pos_y;
 
     result = 0;
+    source = 0;
+    null_move = 0;
+    momentum_used = 0;
+
+    desired[0] = tv[0];
+    desired[1] = tv[1];
+    desired[2] = tv[2];
+    desired[3] = tv[3];
 
     if (tv[0] != 0.0f || tv[2] != 0.0f)
     {
         dist = GetDist(tv[0], tv[2]);
+        div = PlyrCollisionMoveDiv(tv[0], tv[2]);
 
-        if (24.0f < dist)
+        if (MikuPan_PlayerCollisionConsoleLogEnabled() != 0)
         {
-            div = (dist / 24.0f);
+            pos_y = (u_short)(mb->pos[0] + desired[0]);
+            pos_x = (u_short)(mb->pos[2] + desired[2]);
+            source = MikuPan_MapHitCheckAllSource(pos_x, pos_y,
+                                                  plyr_wrk.pr_info.room_no);
         }
-        else
-        {
-            div = dist;
 
-            if ((div & 0xff) == 0)
+        result = PlyrMapHitCheck(tv, mb->pos, div, plyr_wrk.pr_info.room_no);
+        adjusted_dist = GetDist(tv[0], tv[2]);
+
+        if (id == 0 && result != 0 && adjusted_dist <= dist * plyr_collision_null_scale)
+        {
+            momentum_used = PlyrCollisionTryMomentumSlide(mb, tv, desired, dist,
+                                                          plyr_wrk.pr_info.room_no);
+
+            if (momentum_used != 0)
             {
-                div = 1;
+                result = 0;
+                adjusted_dist = GetDist(tv[0], tv[2]);
             }
         }
 
-        result = PlyrMapHitCheck(tv,mb->pos,div,plyr_wrk.pr_info.room_no);
+        null_move = dist > plyr_collision_min_move &&
+                    adjusted_dist <= plyr_collision_min_move;
+
+        PlyrCollisionLog(mb, id, plyr_wrk.pr_info.room_no, source, result,
+                         null_move, momentum_used, desired, tv, div);
+
+        if (adjusted_dist > plyr_collision_min_move)
+        {
+            PlyrCollisionStoreMomentum(tv);
+        }
 
         if (id != 0)
         {
             PlyrSpecialMoveChk2(tv);
         }
+    }
+    else
+    {
+        PlyrCollisionClearMomentum();
+        PlyrCollisionLog(mb, id, plyr_wrk.pr_info.room_no, 0, 0, 0, 0,
+                         desired, tv, 1);
     }
 
     return result;
@@ -4905,7 +5212,8 @@ int SearchFurnHint()
                     ppj.p[0][3] = tv[3];
 
                     // CheckPointDepth(&ppj);
-                    MikuPan_CheckPointDepth(&ppj);
+                    MikuPan_CheckPointDepthKeyed(
+                        &ppj, MIKUPAN_POINT_DEPTH_KEY_FURN_HINT, i, 0);
 
                     if (ppj.result[0] != 0)
                     {

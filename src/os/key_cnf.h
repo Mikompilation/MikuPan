@@ -26,6 +26,8 @@ void MikuPan_SetCustomActionProfileFinderReverseY(int enabled);
 int MikuPan_CustomActionProfileUsesFinderReverseY(void);
 void MikuPan_SetCustomActionProfileFinderSwapSticks(int enabled);
 int MikuPan_CustomActionProfileSwapsFinderSticks(void);
+void MikuPan_SetFinderDpadFilmSwapEnabled(int enabled);
+int MikuPan_FinderDpadFilmSwapEnabled(void);
 int MikuPan_KeyProfileUsesSubjectiveMove(void);
 int MikuPan_KeyProfileUsesFinderReverseY(void);
 int MikuPan_KeyProfileSwapsFinderSticks(void);

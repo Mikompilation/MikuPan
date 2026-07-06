@@ -25,10 +25,11 @@
 #include "ingame/ig_glob.h"
 #include "ingame/photo/pht_make.h"
 #include "main/glob.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/ui/mikupan_ui_debug.h"
 // #include "ingame/entry/ap_sgost.h" // DO NOT INCLUDE
 
-#include <stdarg.h>
 #include <string.h>
 
 #include "data/camdat.h"// SPRT_DAT camdat[];
@@ -203,57 +204,55 @@ static void MikuPan_EffectDebugStartPersistent(int id)
     {
         case EF_RENZFLARE:
             effect_debug_handle[id] =
-                SetEffects(id, 2, 4, effect_debug_pos, effect_debug_rot);
+                SetRenzFlareEffect(2, 4, effect_debug_pos, effect_debug_rot);
             break;
         case EF_MAGATOKI:
             effect_debug_magatoki_flag = 1;
             effect_debug_handle[id] =
-                SetEffects(id, 8, 30, 30, &effect_debug_magatoki_flag);
+                SetMagatokiEffect(8, 30, 30, &effect_debug_magatoki_flag);
             break;
         case EF_HALO:
-            effect_debug_handle[id] = SetEffects(
-                id, 2, 0, effect_debug_pos, 0x80, 0x80, 0xff, 0.8f, 0);
+            effect_debug_handle[id] = SetHaloEffect(
+                2, 0, effect_debug_pos, 0x80, 0x80, 0xff, 0.8f, 0);
             break;
         case EF_FIRE:
-            effect_debug_handle[id] = SetEffects(
-                id, 2, 3, effect_debug_pos, 0x50, 0x46, 0x1e, 0.4f, 0xf0,
+            effect_debug_handle[id] = SetFireEffect(
+                2, 3, effect_debug_pos, 0x50, 0x46, 0x1e, 0.4f, 0xf0,
                 0xd0, 0xa0, 3.0f);
             break;
         case EF_FIRE2:
-            effect_debug_handle[id] = SetEffects(
-                id, 2, 3, effect_debug_pos, 0x50, 0x46, 0x1e, 0.4f, 0xf0,
+            effect_debug_handle[id] = SetFire2Effect(
+                2, 3, effect_debug_pos, 0x50, 0x46, 0x1e, 0.4f, 0xf0,
                 0xd0, 0xa0, 3.0f, 1.0f);
             break;
         case EF_TORCH:
             effect_debug_handle[id] =
-                SetEffects(id, 2, 1, effect_debug_pos, &effect_debug_rate,
-                           &effect_debug_rate);
+                SetTorchEffect(2, 1, effect_debug_pos, &effect_debug_rate, &effect_debug_rate);
             break;
         case EF_SMOKE:
-            effect_debug_handle[id] = SetEffects(id, 2, effect_debug_pos);
+            effect_debug_handle[id] = SetSmokeEffect(2, effect_debug_pos);
             break;
         case EF_PDEFORM:
             effect_debug_handle[id] =
-                SetEffects(id, 2, 23, 0x80, 0.8f, 0.8f, effect_debug_pos, 0, 0,
-                           0, (void *)0, &effect_debug_parts_speed,
-                           &effect_debug_parts_rate, &effect_debug_parts_trate);
+                SetPartsDeformEffect(2, 23, 0x80, 0.8f, 0.8f, effect_debug_pos, 0, 0, 0, nullptr, &effect_debug_parts_speed, &effect_debug_parts_rate, &effect_debug_parts_trate);
             break;
         case EF_DUST:
-            effect_debug_handle[id] = SetEffects(id, 2, effect_debug_pos);
+            effect_debug_handle[id] = SetDustEffect(2, effect_debug_pos);
             break;
         case EF_WATERDROP:
-            effect_debug_handle[id] = SetEffects(
-                id, 2, effect_debug_pos, 1, 250.0f, 200, 0x80, 0x80, 0x80);
+            effect_debug_handle[id] = SetWaterdropEffect(
+                2, effect_debug_pos, 1, 250.0f, 200, 0x80, 0x80, 0x80);
             break;
         case EF_SUNSHINE:
             effect_debug_handle[id] =
-                SetEffects(id, 2, effect_debug_pos, effect_debug_pos2,
-                           effect_debug_rot, 8, 0.9f, 0.6f, 0xff, 0xf0, 0xc0);
+                SetSunshineEffect(2, effect_debug_pos, effect_debug_pos2,
+                                  effect_debug_rot, 8, 0.9f, 0.6f, 0xff,
+                                  0xf0, 0xc0);
             break;
         case EF_ENEFACE:
             effect_debug_handle[id] =
-                SetEffects(id, 2, 0, 0, effect_debug_pos[0],
-                           effect_debug_pos[1], effect_debug_pos[2]);
+                SetEneFaceEffect(2, 0, 0, effect_debug_pos[0],
+                                 effect_debug_pos[1], effect_debug_pos[2]);
             break;
     }
 }
@@ -263,56 +262,56 @@ static void MikuPan_EffectDebugApplyOneShot(int id)
     switch (id)
     {
         case EF_Z_DEP:
-            SetEffects(id, 1);
+            SetZDepthEffect(1);
             break;
         case EF_DITHER:
-            SetEffects(id, 1, 2, 24.0f, 8.0f, 0x6a, 0x65);
+            SetDitherEffect(1, 2, 24.0f, 8.0f, 0x6a, 0x65);
             break;
         case EF_BLUR_N:
         case EF_BLUR_B:
         case EF_BLUR_W:
-            SetEffects(id, 1, &effect_debug_blur_alpha, 1000, 1800, 320.0f,
-                       112.0f);
+            SetBlurEffect(id, 1, &effect_debug_blur_alpha, 1000, 1800, 320.0f,
+                          112.0f);
             break;
         case EF_DEFORM:
-            SetEffects(id, 1, 2, 12);
+            SetDeformEffect(1, 2, 12);
             break;
         case EF_FOCUS:
-            SetEffects(id, 1, 20);
+            SetFocusEffect(1, 20);
             break;
         case EF_OVERLAP:
-            SetEffects(id, 1, 0x28);
+            SetOverlapEffect(1, 0x28);
             break;
         case EF_FADEFRAME:
-            SetEffects(id, 1, 0x50, 0x80000);
+            SetFadeFrameEffect(1, 0x50, 0x80000);
             break;
         case EF_BLACKFILTER:
-            SetEffects(id, 1, 0x48);
+            SetBlackFilterEffect(1, 0x48);
             break;
         case EF_NEGA:
-            SetEffects(id, 1, 0x40, 0xc4, &effect_debug_nega_alpha);
+            SetNegaEffect(1, 0x40, 0xc4, &effect_debug_nega_alpha);
             break;
         case EF_NCONTRAST:
         case EF_NCONTRAST2:
         case EF_NCONTRAST3:
-            SetEffects(id, 1, 0x80, 0x80);
+            SetContrastEffect(id, 1, 0x80, 0x80);
             break;
         case EF_RIPPLE:
-            SetEffects(id, 1, 1, 16, effect_debug_pos);
+            SetRippleEffect(1, 1, 16, effect_debug_pos);
             break;
         case EF_RIPPLE2:
-            SetEffects(id, 8, 1, 16, 0x80, 0x80, 0x80, 1.0f, 3.2f,
-                       effect_debug_pos, effect_debug_rot, 1);
+            SetRipple2Effect(8, 1, 16, 0x80, 0x80, 0x80, 1.0f, 3.2f,
+                             effect_debug_pos, effect_debug_rot, 1);
             break;
         case EF_NEGACIRCLE:
-            SetEffects(id, 1, 320.0f, 224.0f, 180.0f, 0x60, 0x80, 0x40,
-                       0x40);
+            SetNegaCircleEffect(1, 320.0f, 224.0f, 180.0f, 0x60, 0x80,
+                                0x40, 0x40);
             break;
         case EF_DITHER2:
-            SetEffects(id, 1, 1, 18.0f, 7.0f);
+            SetDither2Effect(1, 1, 18.0f, 7.0f);
             break;
         case EF_Z_DEP2:
-            SetEffects(id, 1);
+            SetZDepth2Effect(1);
             break;
         case EF_HAZE:
             if (!effect_debug_haze_active)
@@ -591,15 +590,12 @@ static void MikuPan_ApplyLegacyDebugMenuEffects(void)
 
     if (dbg_wrk.eff_z_dep != 0)
     {
-        SetEffects(EF_Z_DEP, 1);
+        SetZDepthEffect(1);
     }
 
     if (dbg_wrk.eff_dither != 0)
     {
-        SetEffects(EF_DITHER, 1, dbg_wrk.eff_dither,
-                   (float)dbg_wrk.eff_dithal, (float)dbg_wrk.eff_dithsp,
-                   MikuPan_ClampLegacyDebugByte(dither_alp),
-                   MikuPan_ClampLegacyDebugByte(dither_col));
+        SetDitherEffect(1, dbg_wrk.eff_dither, (float)dbg_wrk.eff_dithal, (float)dbg_wrk.eff_dithsp, MikuPan_ClampLegacyDebugByte(dither_alp), MikuPan_ClampLegacyDebugByte(dither_col));
     }
 
     blur_id = 0;
@@ -619,29 +615,27 @@ static void MikuPan_ApplyLegacyDebugMenuEffects(void)
     if (blur_id != 0)
     {
         legacy_blur_alpha = MikuPan_ClampLegacyDebugByte(dbg_wrk.eff_blra);
-        SetEffects(blur_id, 1, &legacy_blur_alpha, dbg_wrk.eff_blrs,
-                   dbg_wrk.eff_blrr, 320.0f, 112.0f);
+        SetBlurEffect(blur_id, 1, &legacy_blur_alpha, dbg_wrk.eff_blrs, dbg_wrk.eff_blrr, 320.0f, 112.0f);
     }
 
     if (dbg_wrk.eff_dfm != 0)
     {
-        SetEffects(EF_DEFORM, 1, dbg_wrk.eff_dfm, dbg_wrk.eff_dfmr);
+        SetDeformEffect(1, dbg_wrk.eff_dfm, dbg_wrk.eff_dfmr);
     }
 
     if (dbg_wrk.eff_focus != 0)
     {
-        SetEffects(EF_FOCUS, 1, dbg_wrk.eff_focus);
+        SetFocusEffect(1, dbg_wrk.eff_focus);
     }
 
     if (dbg_wrk.eff_ffr != 0)
     {
-        SetEffects(EF_FADEFRAME, 1, dbg_wrk.eff_ffra, 0x80000);
+        SetFadeFrameEffect(1, dbg_wrk.eff_ffra, 0x80000);
     }
 
     if (dbg_wrk.eff_renz != 0)
     {
-        SetEffects(EF_RENZFLARE, 1, dbg_wrk.eff_renzs, effect_debug_pos,
-                   effect_debug_rot);
+        SetRenzFlareEffect(1, dbg_wrk.eff_renzs, effect_debug_pos, effect_debug_rot);
     }
 
     if (dbg_wrk.eff_rip != 0)
@@ -657,8 +651,7 @@ static void MikuPan_ApplyLegacyDebugMenuEffects(void)
         if (legacy_ripple_handle == NULL)
         {
             legacy_ripple_handle =
-                SetEffects(EF_RIPPLE, 2, dbg_wrk.eff_rip, dbg_wrk.eff_rips,
-                           effect_debug_pos);
+                SetRippleEffect(2, dbg_wrk.eff_rip, dbg_wrk.eff_rips, effect_debug_pos);
         }
 
         legacy_ripple_mode = dbg_wrk.eff_rip;
@@ -684,10 +677,7 @@ static void MikuPan_ApplyLegacyDebugMenuEffects(void)
 
         if (legacy_pdeform_handle == NULL)
         {
-            legacy_pdeform_handle = SetEffects(
-                EF_PDEFORM, 2, pdeform_type, 0x80, 0.8f, 0.8f,
-                effect_debug_pos, 0, 0, 0, (void *)0, (void *)0, (void *)0,
-                (void *)0);
+            legacy_pdeform_handle = SetPartsDeformEffect(2, pdeform_type, 0x80, 0.8f, 0.8f, effect_debug_pos, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
         }
 
         legacy_pdeform_type = pdeform_type;
@@ -701,12 +691,12 @@ static void MikuPan_ApplyLegacyDebugMenuEffects(void)
 
     if (dbg_wrk.eff_sccol_over != 0)
     {
-        SetEffects(EF_OVERLAP, 1, dbg_wrk.eff_sccol_cont_alp);
+        SetOverlapEffect(1, dbg_wrk.eff_sccol_cont_alp);
     }
 
     if (dbg_wrk.eff_sccol_blk != 0 || dbg_wrk.eff_sccol_tp1 == 3)
     {
-        SetEffects(EF_BLACKFILTER, 1, dbg_wrk.eff_sccol_blk);
+        SetBlackFilterEffect(1, dbg_wrk.eff_sccol_blk);
     }
 
     contrast_type = 0;
@@ -726,16 +716,14 @@ static void MikuPan_ApplyLegacyDebugMenuEffects(void)
 
     if (contrast_type != 0)
     {
-        SetEffects(contrast_type, 1, dbg_wrk.eff_sccol_cont_col,
-                   dbg_wrk.eff_sccol_cont_alp);
+        SetContrastEffect(contrast_type, 1, dbg_wrk.eff_sccol_cont_col, dbg_wrk.eff_sccol_cont_alp);
     }
 
     if (dbg_wrk.eff_sccol_tp2 == 5)
     {
         legacy_nega_alpha2 =
             MikuPan_ClampLegacyDebugByte(dbg_wrk.eff_sccol_cont_alp2);
-        SetEffects(EF_NEGA, 1, dbg_wrk.eff_sccol_cont_col,
-                   dbg_wrk.eff_sccol_cont_alp, &legacy_nega_alpha2);
+        SetNegaEffect(1, dbg_wrk.eff_sccol_cont_col, dbg_wrk.eff_sccol_cont_alp, &legacy_nega_alpha2);
     }
 
     if (dbg_wrk.eff_leaf == 1 && (sys_wrk.count & 0xf) == 0)
@@ -843,19 +831,17 @@ void InitEffectsEF()
     {
         if (msbtset.dt.sw != 0)
         {
-            SetEffects(EF_DITHER, 1, msbtset.dt.type, msbtset.dt.alp,
-                       msbtset.dt.spd, msbtset.dt.amax, msbtset.dt.cmax);
+            SetDitherEffect(1, msbtset.dt.type, msbtset.dt.alp, msbtset.dt.spd, msbtset.dt.amax, msbtset.dt.cmax);
         }
 
         if (msbtset.bl.sw != 0)
         {
-            SetEffects(EF_BLUR_N, 1, &msbtset.bl.alp, msbtset.bl.scl,
-                       msbtset.bl.rot, msbtset.bl.x, msbtset.bl.y);
+            SetBlurEffect(EF_BLUR_N, 1, &msbtset.bl.alp, msbtset.bl.scl, msbtset.bl.rot, msbtset.bl.x, msbtset.bl.y);
         }
 
         if (msbtset.df.sw != 0)
         {
-            SetEffects(EF_DEFORM, 1, msbtset.df.type, msbtset.df.rate);
+            SetDeformEffect(1, msbtset.df.type, msbtset.df.rate);
         }
 
         if (msbtset.cn.sw != 0)
@@ -863,28 +849,25 @@ void InitEffectsEF()
             switch (msbtset.cn.type)
             {
                 case 1:
-                    SetEffects(EF_NCONTRAST, 1, msbtset.cn.col, msbtset.cn.alp);
+                    SetContrastEffect(EF_NCONTRAST, 1, msbtset.cn.col, msbtset.cn.alp);
                     break;
                 case 2:
-                    SetEffects(EF_NCONTRAST2, 1, msbtset.cn.col,
-                               msbtset.cn.alp);
+                    SetContrastEffect(EF_NCONTRAST2, 1, msbtset.cn.col, msbtset.cn.alp);
                     break;
                 case 3:
-                    SetEffects(EF_NCONTRAST3, 1, msbtset.cn.col,
-                               msbtset.cn.alp);
+                    SetContrastEffect(EF_NCONTRAST3, 1, msbtset.cn.col, msbtset.cn.alp);
                     break;
             }
         }
 
         if (msbtset.ff.sw != 0)
         {
-            SetEffects(EF_FADEFRAME, 1, msbtset.ff.alp, 0x80000);
+            SetFadeFrameEffect(1, msbtset.ff.alp, 0x80000);
         }
 
         if (msbtset.ng.sw != 0)
         {
-            SetEffects(EF_NEGA, 1, msbtset.ng.col, msbtset.ng.alp,
-                       msbtset.ng.alp2);
+            SetNegaEffect(1, msbtset.ng.col, msbtset.ng.alp, &msbtset.ng.alp2);
         }
 
         if (msbtset.mn.sw == 0)
@@ -913,8 +896,7 @@ void InitEffectsEF()
         {
             if (e[i] == NULL)
             {
-                e[i] = SetEffects(EF_FACESPIRIT, 2, fly_wrk[i].move_box.pos,
-                                  0x50, 0x50, 0x5c, &aalp, i);
+                e[i] = SetFaceSpiritEffect(2, fly_wrk[i].move_box.pos, 0x50, 0x50, 0x5c, &aalp, i);
             }
         }
         else
@@ -944,14 +926,12 @@ void InitEffectsEF()
     {
         if (r23_e1 == NULL)
         {
-            r23_e1 = SetEffects(EF_WATERDROP, 2, canal1, 1, 250.0, 200, 0x80,
-                                0x80, 0x80);
+            r23_e1 = SetWaterdropEffect(2, canal1, 1, 250.0, 200, 0x80, 0x80, 0x80);
         }
 
         if (r23_e2 == NULL)
         {
-            r23_e2 = SetEffects(EF_WATERDROP, 2, canal2, 4, 250.0, 0x104, 0x80,
-                                0x80, 0x80);
+            r23_e2 = SetWaterdropEffect(2, canal2, 4, 250.0, 0x104, 0x80, 0x80, 0x80);
         }
     }
 
@@ -992,579 +972,851 @@ void EffectEndSet()
     eff_blur_off = 0;
 }
 
-void *SetEffects(int id, int fl, ...)
+static EFFECT_CONT *MikuPan_AllocEffectCont(int id)
 {
-    va_list ap;
-    va_start(ap, fl);
-
-    int ret;
-    EFFECT_CONT *ec;
-
     if ((ingame_wrk.stts & INGAME_STTS_DSP3D_OFF) && ev_wrk.movie_on != 4
         && effect_disp_flg == 0)
     {
-        return NULL;
-    }
-
-    switch (id)
-    {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        case 16:
-        case 19:
-        case 35:
-        case 36:
-        case 37:
-            if (change_efbank != 0)
-            {
-                ec = &efcnt[id];
-            }
-            else
-            {
-                ec = &efcnt_cnt[id];
-            }
-            break;
-        case 20:
-        case 21:
-        case 22:
-        case 23:
-        case 24:
-        case 25:
-        case 26:
-        case 27:
-        case 28:
-        case 29:
-        case 30:
-        case 31:
-        case 32:
-        case 33:
-        case 34:
-        case 38:
-        case 40:
-            ret = SearchEmptyEffectBuf();
-
-            if (ret == -1)
-            {
-                return NULL;
-            }
-
-            if (change_efbank != 0)
-            {
-                ec = &efcntm[ret];
-            }
-            else
-            {
-                ec = &efcntm_cnt[ret];
-            }
-            break;
-        default:
-            return NULL;
+        return nullptr;
     }
 
     switch (id)
     {
         case EF_Z_DEP:
-            ec->dat.uc8[0] = 1;
-            ec->dat.uc8[1] = fl;
-            break;
-        case EF_Z_DEP2:
-            ec->dat.uc8[0] = 36;
-            ec->dat.uc8[1] = fl;
-            break;
         case EF_DITHER:
-            ec->dat.uc8[0] = 2;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.fl32[3] = va_arg(ap, double);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = (u_char) va_arg(ap, int);
-
-            if (fl & 4)
-            {
-                ec->in = va_arg(ap, u_int);
-                ec->keep = va_arg(ap, u_int);
-                ec->out = va_arg(ap, u_int);
-                ec->cnt = 0;
-                ec->flow =
-                    (ec->in == 0 ? (ec->keep == 0 ? ec->out != 0 ? 2 : 3 : 1)
-                                 : 0);
-            }
-            break;
+        case EF_BLUR_N:
+        case EF_BLUR_B:
+        case EF_BLUR_W:
+        case EF_DEFORM:
+        case EF_FOCUS:
+        case EF_OVERLAP:
+        case EF_FADEFRAME:
+        case EF_RENZFLARE:
+        case EF_BLACKFILTER:
+        case EF_NEGA:
+        case EF_NCONTRAST:
+        case EF_NCONTRAST2:
+        case EF_NCONTRAST3:
+        case EF_MAGATOKI:
+        case EF_SPIRIT:
         case EF_DITHER2:
-            ec->dat.uc8[0] = 35;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[1] = va_arg(ap, double);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            break;
+        case EF_Z_DEP2:
+        case EF_HAZE:
+            return change_efbank != 0 ? &efcnt[id] : &efcnt_cnt[id];
+        case EF_HALO:
+        case EF_RIPPLE:
+        case EF_RIPPLE2:
+        case EF_FIRE:
+        case EF_FIRE2:
+        case EF_TORCH:
+        case EF_SMOKE:
+        case EF_PDEFORM:
+        case EF_ENEFIRE:
+        case EF_DUST:
+        case EF_WATERDROP:
+        case EF_SUNSHINE:
+        case EF_NEGACIRCLE:
+        case EF_ENEFACE:
+        case EF_FACESPIRIT:
+        case EF_PBLUR:
+        case EF_ENEOUT:
+        {
+            int ret = SearchEmptyEffectBuf();
+
+            if (ret == -1)
+            {
+                return nullptr;
+            }
+
+            return change_efbank != 0 ? &efcntm[ret] : &efcntm_cnt[ret];
+        }
+        default:
+            return nullptr;
+    }
+}
+
+static void MikuPan_SetEffectFlow(EFFECT_CONT *ec)
+{
+    ec->flow = ec->in == 0 ? (ec->keep == 0 ? (ec->out != 0 ? 2 : 3) : 1) : 0;
+}
+
+static void MikuPan_SetFireStartCounter(EFFECT_CONT *ec)
+{
+    if (ec->flow == 3)
+    {
+        ec->cnt = vu0Rand() * 21.0f;
+    }
+    else
+    {
+        ec->cnt = 0;
+    }
+}
+
+void *SetZDepthEffect(int fl)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_Z_DEP);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 1;
+    ec->dat.uc8[1] = fl;
+    return ec;
+}
+
+void *SetZDepth2Effect(int fl)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_Z_DEP2);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 36;
+    ec->dat.uc8[1] = fl;
+    return ec;
+}
+
+void *SetDitherEffect(int fl, int type, float alpha, float speed, int alpha_max, int color_max, u_int in, u_int keep, u_int out)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_DITHER);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 2;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->dat.fl32[2] = alpha;
+    ec->dat.fl32[3] = speed;
+    ec->dat.uc8[3] = (u_char)alpha_max;
+    ec->dat.uc8[4] = (u_char)color_max;
+
+    if (fl & 4)
+    {
+        ec->in = in;
+        ec->keep = keep;
+        ec->out = out;
+        ec->cnt = 0;
+        MikuPan_SetEffectFlow(ec);
+    }
+
+    return ec;
+}
+
+void *SetDither2Effect(int fl, int type, float alpha, float speed)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_DITHER2);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 35;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->dat.fl32[1] = alpha;
+    ec->dat.fl32[2] = speed;
+    return ec;
+}
+
+void *SetBlurEffect(int id, int fl, u_char *alpha, u_int scale, u_int rotation, float x, float y)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(id);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    switch (id)
+    {
         case EF_BLUR_N:
             ec->dat.uc8[0] = 3;
-            ec->dat.uc8[1] = fl;
             ec->dat.uc8[2] = 0;
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->dat.ui32[2] = va_arg(ap, u_int);
-            ec->dat.ui32[3] = va_arg(ap, u_int);
-            ec->fw[0] = va_arg(ap, double);
-            ec->fw[1] = va_arg(ap, double);
             break;
         case EF_BLUR_B:
             ec->dat.uc8[0] = 4;
-            ec->dat.uc8[1] = fl;
             ec->dat.uc8[2] = 1;
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->dat.ui32[2] = va_arg(ap, u_int);
-            ec->dat.ui32[3] = va_arg(ap, u_int);
-            ec->fw[0] = va_arg(ap, double);
-            ec->fw[1] = va_arg(ap, double);
             break;
         case EF_BLUR_W:
             ec->dat.uc8[0] = 5;
-            ec->dat.uc8[1] = fl;
             ec->dat.uc8[2] = 2;
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->dat.ui32[2] = va_arg(ap, u_int);
-            ec->dat.ui32[3] = va_arg(ap, u_int);
-            ec->fw[0] = va_arg(ap, double);
-            ec->fw[1] = va_arg(ap, double);
             break;
-        case EF_DEFORM:
-            ec->dat.uc8[0] = 6;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = 0;
+        default:
+            return nullptr;
+    }
 
-            if (fl & 4)
-            {
-                ec->flow =
-                    (ec->in == 0 ? (ec->keep == 0 ? ec->out != 0 ? 2 : 3 : 1)
-                                 : 0);
-                ec->cnt = 0;
-                ec->in = va_arg(ap, u_int);
-                ec->keep = va_arg(ap, u_int);
-                ec->out = va_arg(ap, u_int);
-            }
-            break;
-        case EF_FOCUS:
-            ec->dat.uc8[0] = 7;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            break;
-        case EF_STEALTH:
-            ec->dat.uc8[0] = 42;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = 0;
-            ec->pnt[0] = va_arg(ap, void *);
-            break;
-        case EF_STEALTH2:
-            ec->dat.uc8[0] = 42;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = 1;
-            ec->pnt[0] = va_arg(ap, void *);
-            break;
-        case EF_007:
-            ec->dat.uc8[0] = 42;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = 2;
-            ec->pnt[0] = va_arg(ap, void *);
-            break;
-        case EF_MONO:
-            ec->dat.uc8[0] = 45;
-            ec->dat.uc8[1] = fl;
-            break;
-        case EF_SEPIA:
-            ec->dat.uc8[0] = 46;
-            ec->dat.uc8[1] = fl;
-            break;
-        case EF_OVERLAP:
-            ec->dat.uc8[0] = 8;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            break;
-        case EF_FADEFRAME:
-            ec->dat.uc8[0] = 9;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.ui32[1] = va_arg(ap, u_int);
-            break;
-        case EF_RENZFLARE:
-            ec->dat.uc8[0] = 10;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->pnt[1] = va_arg(ap, void *);
-            break;
-        case EF_HAZE:
-            ec->dat.uc8[0] = 37;
-            ec->dat.uc8[1] = fl;
-            break;
-        case EF_BLACKFILTER:
-            ec->dat.uc8[0] = 11;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            break;
-        case EF_NEGA:
-            ec->dat.uc8[0] = 12;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
+    ec->dat.uc8[1] = fl;
+    ec->pnt[0] = alpha;
+    ec->dat.ui32[2] = scale;
+    ec->dat.ui32[3] = rotation;
+    ec->fw[0] = x;
+    ec->fw[1] = y;
+    return ec;
+}
 
-            if (fl & 4)
-            {
-                ec->in = va_arg(ap, u_int);
-                ec->keep = va_arg(ap, u_int);
-                ec->out = va_arg(ap, u_int);
-                ec->cnt = 0;
-                ec->flow =
-                    (ec->in == 0 ? (ec->keep == 0 ? ec->out != 0 ? 2 : 3 : 1)
-                                 : 0);
-            }
-            else
-            {
-                ec->pnt[0] = va_arg(ap, void *);
-            }
-            break;
+void *SetDeformEffect(int fl, int type, int rate, u_int in, u_int keep, u_int out)
+{
+    if (MikuPan_ScreenCopyConsoleLogEnabled())
+    {
+        info_log("[DEFORM SET] frame=%u fl=%d type=%d rate=%d in=%u keep=%u out=%u",
+                 sys_wrk.count, fl, type, rate, in, keep, out);
+    }
+
+    if (MikuPan_DisableScreenDeformEnabled())
+    {
+        return nullptr;
+    }
+
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_DEFORM);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 6;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->dat.uc8[3] = (u_char)rate;
+    ec->dat.uc8[4] = 0;
+
+    if (fl & 4)
+    {
+        ec->cnt = 0;
+        ec->in = in;
+        ec->keep = keep;
+        ec->out = out;
+        MikuPan_SetEffectFlow(ec);
+    }
+
+    return ec;
+}
+
+void *SetFocusEffect(int fl, int volume)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_FOCUS);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 7;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)volume;
+    return ec;
+}
+
+void *SetOverlapEffect(int fl, int alpha)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_OVERLAP);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 8;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)alpha;
+    return ec;
+}
+
+void *SetFadeFrameEffect(int fl, int alpha, u_int color)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_FADEFRAME);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 9;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)alpha;
+    ec->dat.ui32[1] = color;
+    return ec;
+}
+
+void *SetRenzFlareEffect(int fl, int type, void *position, void *rotation)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_RENZFLARE);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 10;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->pnt[0] = position;
+    ec->pnt[1] = rotation;
+    return ec;
+}
+
+void *SetHazeEffect(int fl)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_HAZE);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 37;
+    ec->dat.uc8[1] = fl;
+    return ec;
+}
+
+void *SetBlackFilterEffect(int fl, int alpha)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_BLACKFILTER);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 11;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)alpha;
+    return ec;
+}
+
+void *SetNegaEffect(int fl, int color, int alpha, u_char *alpha2)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_NEGA);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 12;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)color;
+    ec->dat.uc8[3] = (u_char)alpha;
+    ec->pnt[0] = alpha2;
+    return ec;
+}
+
+void *SetNegaEffectTimed(int fl, int color, int alpha, u_int in, u_int keep, u_int out)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_NEGA);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 12;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)color;
+    ec->dat.uc8[3] = (u_char)alpha;
+    ec->in = in;
+    ec->keep = keep;
+    ec->out = out;
+    ec->cnt = 0;
+    MikuPan_SetEffectFlow(ec);
+    return ec;
+}
+
+void *SetContrastEffect(int id, int fl, int color, int alpha)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(id);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    switch (id)
+    {
         case EF_NCONTRAST:
             ec->dat.uc8[0] = 13;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
             break;
         case EF_NCONTRAST2:
             ec->dat.uc8[0] = 14;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
             break;
         case EF_NCONTRAST3:
             ec->dat.uc8[0] = 15;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
             break;
-        case EF_MAGATOKI:
-            ec->dat.uc8[0] = 16;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = fl;
-            ec->flow = 0;
-            ec->in = va_arg(ap, u_int);
-            ec->out = va_arg(ap, u_int);
-            ec->pnt[0] = va_arg(ap, void *);
-            break;
-        case EF_ENEDMG1:
-            ec->dat.uc8[0] = 17;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (char) va_arg(ap, int);
-            break;
-        case EF_ENEDMG2:
-            ec->dat.uc8[0] = 18;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (char) va_arg(ap, int);
-            break;
-        case EF_SPIRIT:
-            ec->dat.uc8[0] = 19;
-            ec->dat.uc8[1] = fl;
-            ec->flow = va_arg(ap, int);
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.uc8[5] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[6] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[7] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[3] = va_arg(ap, double);
-            ec->pnt[1] = va_arg(ap, void *);
-            ec->cnt = 0;
-            ec->max = 0;
-            ec->keep = 0;
-            break;
-        case EF_PBLUR:
-            ec->dat.uc8[0] = 38;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            break;
-        case EF_LUMINE:
-            ec->dat.uc8[0] = 41;
-            ec->dat.uc8[1] = fl;
-            ec->pnt[0] = va_arg(ap, void *);
-            break;
-        case EF_FIRE:
-            ec->dat.uc8[0] = 23;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->flow = (char) va_arg(ap, int);
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.uc8[5] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[6] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[7] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[3] = va_arg(ap, double);
-
-            if (ec->flow == 3)
-            {
-                float r;
-
-                // inlined from effect.h
-                r = vu0Rand();
-                // end of inlined section
-                ec->cnt = r * 21.0f;
-            }
-            else
-            {
-                ec->cnt = 0;
-            }
-            break;
-        case EF_FIRE2:
-            ec->dat.uc8[0] = 24;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->flow = va_arg(ap, int);
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.uc8[5] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[6] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[7] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[3] = va_arg(ap, double);
-            ec->fw[0] = va_arg(ap, double);
-
-            if (ec->flow == 3)
-            {
-                float r;
-                // inlined from effect.h
-                r = vu0Rand();
-                // end of inlined section
-                ec->cnt = r * 21.0f;
-            }
-            else
-            {
-                ec->cnt = 0;
-            }
-            break;
-        case EF_HALO:
-            ec->dat.uc8[0] = 20;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[5] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.uc8[6] = (u_char) va_arg(ap, int);
-            break;
-        case EF_RIPPLE:
-            ec->dat.uc8[0] = 21;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = 0;
-            ec->dat.uc8[7] = 0;
-            ec->pnt[0] = va_arg(ap, void *);
-            break;
-        case EF_RIPPLE2:
-            ec->dat.uc8[0] = 22;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->cnt = 0;
-            ec->dat.uc8[4] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[5] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[6] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[7] = 0;
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.fl32[3] = va_arg(ap, double);
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->pnt[1] = va_arg(ap, void *);
-
-            if (fl & 8)
-            {
-                ec->dat.uc8[7] = (u_char) va_arg(ap, int);
-            }
-            break;
-        case EF_PDEFORM:
-            ec->dat.uc8[0] = 27;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->max = va_arg(ap, u_int);
-            ec->dat.uc8[4] = 0xff;
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.fl32[3] = va_arg(ap, double);
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->fw[0] = 0.0f;
-            ec->cnt = 0;
-            ec->in = va_arg(ap, u_int);
-            ec->keep = va_arg(ap, u_int);
-            ec->out = va_arg(ap, u_int);
-            ec->pnt[1] = va_arg(ap, void *);
-            ec->pnt[2] = va_arg(ap, void *);
-            ec->pnt[4] = va_arg(ap, void *);
-            ec->pnt[5] = NULL;
-            ec->pnt[5] = va_arg(ap, void *);
-
-            if (fl & 4)
-            {
-                ec->flow =
-                    (ec->in == 0 ? (ec->keep == 0 ? ec->out != 0 ? 2 : 3 : 1)
-                                 : 0);
-            }
-            break;
-        case EF_ENEIN:
-            ec->dat.uc8[0] = 39;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = 0xff;
-            ec->dat.fl32[3] = va_arg(ap, double);
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->cnt = 0;
-            ec->in = va_arg(ap, u_int);
-            ec->keep = va_arg(ap, u_int);
-            ec->out = va_arg(ap, u_int);
-            ec->max = 100;
-
-            if (fl & 4)
-            {
-                ec->flow =
-                    (ec->in == 0 ? (ec->keep == 0 ? ec->out != 0 ? 2 : 3 : 1)
-                                 : 0);
-            }
-            break;
-        case EF_ENEOUT:
-            ec->dat.uc8[0] = 40;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = 0;
-            ec->dat.uc8[3] = 0;
-            ec->dat.uc8[4] = 0;
-            ec->dat.uc8[6] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[5] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[7] = 0;
-            ec->fw[0] = 2.0f;
-            ec->fw[1] = 0.0f;
-            ec->fw[2] = va_arg(ap, double);
-            ec->pnt[0] = NULL;
-            break;
-        case EF_DUST:
-            ec->dat.uc8[0] = 29;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->dat.uc8[2] = 1;
-            ec->pnt[0] = va_arg(ap, void *);
-            break;
-        case EF_WATERDROP:
-            ec->dat.uc8[0] = 30;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->dat.uc8[5] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.ui32[3] = 0;
-            ec->cnt = ec->max = va_arg(ap, u_int);
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[6] = 0;
-            break;
-        case EF_SUNSHINE:
-            ec->dat.uc8[0] = 31;
-            ec->dat.uc8[1] = fl;
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->pnt[1] = va_arg(ap, void *);
-            ec->pnt[2] = va_arg(ap, void *);
-            ec->max = va_arg(ap, u_int);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.fl32[3] = va_arg(ap, double);
-            ec->cnt = 0;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = (u_char) va_arg(ap, int);
-            break;
-        case EF_ENEFIRE:
-            ec->dat.uc8[0] = 28;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->pnt[4] = va_arg(ap, void *);
-            ec->pnt[1] = va_arg(ap, void *);
-            ec->pnt[2] = va_arg(ap, void *);
-            ec->pnt[3] = NULL;
-            ec->dat.ui32[3] = va_arg(ap, u_int);
-            ec->pnt[5] = va_arg(ap, void *);
-            break;
-        case EF_TORCH:
-            ec->dat.uc8[0] = 25;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = 0;
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->pnt[1] = NULL;
-            ec->pnt[2] = va_arg(ap, void *);
-            ec->pnt[3] = va_arg(ap, void *);
-            break;
-        case EF_SMOKE:
-            ec->dat.uc8[0] = 26;
-            ec->dat.uc8[1] = fl | 0x80;
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->pnt[1] = NULL;
-            break;
-        case EF_NEGACIRCLE:
-            ec->dat.uc8[0] = 32;
-            ec->dat.uc8[1] = fl;
-            ec->dat.fl32[1] = va_arg(ap, double);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.fl32[3] = va_arg(ap, double);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->in = va_arg(ap, u_int);
-            ec->keep = va_arg(ap, u_int);
-            ec->out = va_arg(ap, u_int);
-            break;
-        case EF_ENEFACE:
-            ec->dat.uc8[0] = 33;
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.fl32[1] = va_arg(ap, double);
-            ec->dat.fl32[2] = va_arg(ap, double);
-            ec->dat.fl32[3] = va_arg(ap, double);
-            ec->cnt = 0;
-            ec->out = 0;
-            break;
-        case EF_FACESPIRIT:
-            ec->dat.uc8[1] = fl;
-            ec->dat.uc8[0] = 34;
-            ec->pnt[0] = va_arg(ap, void *);
-            ec->dat.uc8[2] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[3] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[4] = (u_char) va_arg(ap, int);
-            ec->pnt[1] = va_arg(ap, void *);
-            ec->dat.uc8[5] = (u_char) va_arg(ap, int);
-            ec->dat.uc8[6] = 0;
-            ec->cnt = 0;
-            ec->max = 0;
-            ec->keep = 0;
-            break;
-        case EF_NULL:
-            // do nothing ...
-            break;
+        default:
+            return nullptr;
     }
 
-    va_end(ap);
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)color;
+    ec->dat.uc8[3] = (u_char)alpha;
+    return ec;
+}
 
+void *SetMagatokiEffect(int fl, u_int in, u_int out, void *flag)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_MAGATOKI);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 16;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = fl;
+    ec->flow = 0;
+    ec->in = in;
+    ec->out = out;
+    ec->pnt[0] = flag;
+    return ec;
+}
+
+void *SetSpiritEffect(int fl, int flow, void *position, int r1, int g1, int b1, float scale1, int r2, int g2, int b2, float scale2, void *alpha)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_SPIRIT);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 19;
+    ec->dat.uc8[1] = fl;
+    ec->flow = flow;
+    ec->pnt[0] = position;
+    ec->dat.uc8[2] = (u_char)r1;
+    ec->dat.uc8[3] = (u_char)g1;
+    ec->dat.uc8[4] = (u_char)b1;
+    ec->dat.fl32[2] = scale1;
+    ec->dat.uc8[5] = (u_char)r2;
+    ec->dat.uc8[6] = (u_char)g2;
+    ec->dat.uc8[7] = (u_char)b2;
+    ec->dat.fl32[3] = scale2;
+    ec->pnt[1] = alpha;
+    ec->cnt = 0;
+    ec->max = 0;
+    ec->keep = 0;
+    return ec;
+}
+
+void *SetPBlurEffect(int fl, int alpha)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_PBLUR);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 38;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)alpha;
+    return ec;
+}
+
+void *SetFireEffect(int fl, int flow, void *position, int r1, int g1, int b1, float scale1, int r2, int g2, int b2, float scale2)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_FIRE);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 23;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->flow = (char)flow;
+    ec->pnt[0] = position;
+    ec->dat.uc8[2] = (u_char)r1;
+    ec->dat.uc8[3] = (u_char)g1;
+    ec->dat.uc8[4] = (u_char)b1;
+    ec->dat.fl32[2] = scale1;
+    ec->dat.uc8[5] = (u_char)r2;
+    ec->dat.uc8[6] = (u_char)g2;
+    ec->dat.uc8[7] = (u_char)b2;
+    ec->dat.fl32[3] = scale2;
+    MikuPan_SetFireStartCounter(ec);
+    return ec;
+}
+
+void *SetFire2Effect(int fl, int flow, void *position, int r1, int g1, int b1, float scale1, int r2, int g2, int b2, float scale2, float scale_rate)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_FIRE2);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 24;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->flow = flow;
+    ec->pnt[0] = position;
+    ec->dat.uc8[2] = (u_char)r1;
+    ec->dat.uc8[3] = (u_char)g1;
+    ec->dat.uc8[4] = (u_char)b1;
+    ec->dat.fl32[2] = scale1;
+    ec->dat.uc8[5] = (u_char)r2;
+    ec->dat.uc8[6] = (u_char)g2;
+    ec->dat.uc8[7] = (u_char)b2;
+    ec->dat.fl32[3] = scale2;
+    ec->fw[0] = scale_rate;
+    MikuPan_SetFireStartCounter(ec);
+    return ec;
+}
+
+void *SetHaloEffect(int fl, int type, void *position, int r, int g, int b, float scale, int blend)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_HALO);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 20;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->pnt[0] = position;
+    ec->dat.uc8[3] = (u_char)r;
+    ec->dat.uc8[4] = (u_char)g;
+    ec->dat.uc8[5] = (u_char)b;
+    ec->dat.fl32[2] = scale;
+    ec->dat.uc8[6] = (u_char)blend;
+    return ec;
+}
+
+void *SetRippleEffect(int fl, int type, int time, void *position)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_RIPPLE);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 21;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->dat.uc8[3] = (u_char)time;
+    ec->dat.uc8[4] = 0;
+    ec->dat.uc8[7] = 0;
+    ec->pnt[0] = position;
+    return ec;
+}
+
+void *SetRipple2Effect(int fl, int type, int time, int r, int g, int b, float scale, float alpha_rate, void *position, void *rotation, int count)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_RIPPLE2);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 22;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->dat.uc8[3] = (u_char)time;
+    ec->cnt = 0;
+    ec->dat.uc8[4] = (u_char)r;
+    ec->dat.uc8[5] = (u_char)g;
+    ec->dat.uc8[6] = (u_char)b;
+    ec->dat.uc8[7] = 0;
+    ec->dat.fl32[2] = scale;
+    ec->dat.fl32[3] = alpha_rate;
+    ec->pnt[0] = position;
+    ec->pnt[1] = rotation;
+
+    if (fl & 8)
+    {
+        ec->dat.uc8[7] = (u_char)count;
+    }
+
+    return ec;
+}
+
+void *SetPartsDeformEffect(int fl, int type, u_int max, float scale_x, float scale_y, void *position, u_int in, u_int keep, u_int out, float *effect, float *speed, float *rate, float *trail_rate)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_PDEFORM);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 27;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->max = max;
+    ec->dat.uc8[4] = 0xff;
+    ec->dat.fl32[2] = scale_x;
+    ec->dat.fl32[3] = scale_y;
+    ec->pnt[0] = position;
+    ec->fw[0] = 0.0f;
+    ec->cnt = 0;
+    ec->in = in;
+    ec->keep = keep;
+    ec->out = out;
+    ec->pnt[1] = effect;
+    ec->pnt[2] = speed;
+    ec->pnt[4] = rate;
+    ec->pnt[5] = trail_rate;
+
+    if (fl & 4)
+    {
+        MikuPan_SetEffectFlow(ec);
+    }
+
+    return ec;
+}
+
+void *SetEneInEffect(int fl, int type, int alpha, float scale, void *position, u_int in, u_int keep, u_int out)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_ENEIN);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 39;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->dat.uc8[3] = (u_char)alpha;
+    ec->dat.uc8[4] = 0xff;
+    ec->dat.fl32[3] = scale;
+    ec->pnt[0] = position;
+    ec->cnt = 0;
+    ec->in = in;
+    ec->keep = keep;
+    ec->out = out;
+    ec->max = 100;
+
+    if (fl & 4)
+    {
+        MikuPan_SetEffectFlow(ec);
+    }
+
+    return ec;
+}
+
+void *SetEneOutEffect(int fl, int index, int value, float scale)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_ENEOUT);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 40;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = 0;
+    ec->dat.uc8[3] = 0;
+    ec->dat.uc8[4] = 0;
+    ec->dat.uc8[6] = (u_char)index;
+    ec->dat.uc8[5] = (u_char)value;
+    ec->dat.uc8[7] = 0;
+    ec->fw[0] = 2.0f;
+    ec->fw[1] = 0.0f;
+    ec->fw[2] = scale;
+    ec->pnt[0] = nullptr;
+    return ec;
+}
+
+void *SetDustEffect(int fl, void *position)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_DUST);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 29;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->dat.uc8[2] = 1;
+    ec->pnt[0] = position;
+    return ec;
+}
+
+void *SetWaterdropEffect(int fl, void *position, int state, float speed, u_int max, int r, int g, int b)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_WATERDROP);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 30;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->pnt[0] = position;
+    ec->dat.uc8[5] = (u_char)state;
+    ec->dat.fl32[2] = speed;
+    ec->dat.ui32[3] = 0;
+    ec->cnt = ec->max = max;
+    ec->dat.uc8[2] = (u_char)r;
+    ec->dat.uc8[3] = (u_char)g;
+    ec->dat.uc8[4] = (u_char)b;
+    ec->dat.uc8[6] = 0;
+    return ec;
+}
+
+void *SetSunshineEffect(int fl, void *position1, void *position2, void *rotation, u_int max, float scale_x, float scale_y, int r, int g, int b)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_SUNSHINE);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 31;
+    ec->dat.uc8[1] = fl;
+    ec->pnt[0] = position1;
+    ec->pnt[1] = position2;
+    ec->pnt[2] = rotation;
+    ec->max = max;
+    ec->dat.fl32[2] = scale_x;
+    ec->dat.fl32[3] = scale_y;
+    ec->cnt = 0;
+    ec->dat.uc8[2] = (u_char)r;
+    ec->dat.uc8[3] = (u_char)g;
+    ec->dat.uc8[4] = (u_char)b;
+    return ec;
+}
+
+void *SetEneFireEffect(int fl, int type, void *position, void *position2, void *color, void *size, u_int life, void *rate)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_ENEFIRE);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 28;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->pnt[0] = position;
+    ec->pnt[4] = position2;
+    ec->pnt[1] = color;
+    ec->pnt[2] = size;
+    ec->pnt[3] = nullptr;
+    ec->dat.ui32[3] = life;
+    ec->pnt[5] = rate;
+    return ec;
+}
+
+void *SetTorchEffect(int fl, int type, void *position, float *scale_rate, float *alpha_rate)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_TORCH);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 25;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->dat.uc8[3] = 0;
+    ec->pnt[0] = position;
+    ec->pnt[1] = nullptr;
+    ec->pnt[2] = scale_rate;
+    ec->pnt[3] = alpha_rate;
+    return ec;
+}
+
+void *SetSmokeEffect(int fl, void *position)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_SMOKE);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 26;
+    ec->dat.uc8[1] = fl | 0x80;
+    ec->pnt[0] = position;
+    ec->pnt[1] = nullptr;
+    return ec;
+}
+
+void *SetNegaCircleEffect(int fl, float x, float y, float size, int alpha, u_int in, u_int keep, u_int out)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_NEGACIRCLE);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 32;
+    ec->dat.uc8[1] = fl;
+    ec->dat.fl32[1] = x;
+    ec->dat.fl32[2] = y;
+    ec->dat.fl32[3] = size;
+    ec->dat.uc8[3] = (u_char)alpha;
+    ec->in = in;
+    ec->keep = keep;
+    ec->out = out;
+    return ec;
+}
+
+void *SetEneFaceEffect(int fl, int type, int rotation, float x, float y, float z)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_ENEFACE);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[0] = 33;
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[2] = (u_char)type;
+    ec->dat.uc8[3] = (u_char)rotation;
+    ec->dat.fl32[1] = x;
+    ec->dat.fl32[2] = y;
+    ec->dat.fl32[3] = z;
+    ec->cnt = 0;
+    ec->out = 0;
+    return ec;
+}
+
+void *SetFaceSpiritEffect(int fl, void *position, int r, int g, int b, float *alpha, int index)
+{
+    EFFECT_CONT *ec = MikuPan_AllocEffectCont(EF_FACESPIRIT);
+
+    if (ec == nullptr)
+    {
+        return nullptr;
+    }
+
+    ec->dat.uc8[1] = fl;
+    ec->dat.uc8[0] = 34;
+    ec->pnt[0] = position;
+    ec->dat.uc8[2] = (u_char)r;
+    ec->dat.uc8[3] = (u_char)g;
+    ec->dat.uc8[4] = (u_char)b;
+    ec->pnt[1] = alpha;
+    ec->dat.uc8[5] = (u_char)index;
+    ec->dat.uc8[6] = 0;
+    ec->cnt = 0;
+    ec->max = 0;
+    ec->keep = 0;
     return ec;
 }
 

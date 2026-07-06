@@ -309,13 +309,7 @@ void FurnEfctSet(FURN_WRK *fwp)
 
         FurnEfctSetRot0(fwp, pos_top);
 
-        fefct_wrk[fewrk_no].addr = SetEffects(
-            31, 2,
-            fefct_wrk[fewrk_no].pos1, fefct_wrk[fewrk_no].pos0,
-            fefct_wrk[fewrk_no].rot0, fefct_sunshine[ef_no].power,
-            fefct_sunshine[ef_no].w, fefct_sunshine[ef_no].h,
-            fefct_sunshine[ef_no].r, fefct_sunshine[ef_no].g, fefct_sunshine[ef_no].b
-        );
+        fefct_wrk[fewrk_no].addr = SetSunshineEffect(2, fefct_wrk[fewrk_no].pos1, fefct_wrk[fewrk_no].pos0, fefct_wrk[fewrk_no].rot0, fefct_sunshine[ef_no].power, fefct_sunshine[ef_no].w, fefct_sunshine[ef_no].h, fefct_sunshine[ef_no].r, fefct_sunshine[ef_no].g, fefct_sunshine[ef_no].b);
 
         if (fefct_wrk[fewrk_no].addr == NULL)
         {
@@ -455,7 +449,7 @@ void FurnHintDeformCtrl()
                 scly = 0.7f;
             }
 
-            SetEffects(EF_PDEFORM, 1, 23, 80, sclx, scly, &ep[j], 0, 0, 0, NULL, &spd, &rate, &trate);
+            SetPartsDeformEffect(1, 23, 80, sclx, scly, &ep[j], 0, 0, 0, nullptr, &spd, &rate, &trate);
 
             j++;
         }

@@ -18,6 +18,7 @@ float Hash(float2 p)
 float3 ToneMap(float3 color)
 {
     color *= uParams0.z;
+    color = (color - 0.5.xxx) * max(uParams1.z, 0.0) + 0.5.xxx;
     return pow(max(color, 0.0.xxx), (1.0 / max(uParams0.w, 0.01)).xxx);
 }
 

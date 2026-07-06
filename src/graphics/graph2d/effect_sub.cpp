@@ -3068,7 +3068,7 @@ void SetScreenZ(int addr)
 
 void CaptureScreen(u_int addr)
 {
-    (void)addr; // We don't need this, it just shuts up warnings.
+    MikuPan_CapturePauseScreen(addr);
 
     if (!EffectSubReadResolvedMainFramebuffer(buf2))
     {
@@ -3085,6 +3085,11 @@ void CaptureScreen(u_int addr)
 /// @param a alpha factor
 void DrawScreen(u_int pri, u_int addr, u_char r, u_char g, u_char b, u_char a)
 {
+    if (MikuPan_RenderPauseScreen(addr, r, g, b, a))
+    {
+        return;
+    }
+
     DISP_SPRT ds = {0};
 
     SPRT_DAT sd =
@@ -3557,6 +3562,7 @@ void LocalCopyLtoB_Sub2(int no, int type, int addr)
 }
 
 void LocalCopyBtoL_Sub(int no, int type, int addr) {
+    MikuPan_ClearPauseScreenCapture(addr);
 	u_long128 *bbuf;
 	int nloop;
 	int bline;

@@ -184,7 +184,7 @@ void SetRDLongFire2(sceVu0FVECTOR pos, u_char sta, float szw, float szh, float s
 
         Vu0CopyVector(bf->fpos, pos);
 
-        bf->ebuf = SetEffects(0x17, 2, 0, &bf->fpos, 0x80, 0x75, 0x70, 0.3f, 0xf0, 0xd0, 0xa0, 3.0f);
+        bf->ebuf = SetFireEffect(2, 0, &bf->fpos, 0x80, 0x75, 0x70, 0.3f, 0xf0, 0xd0, 0xa0, 3.0f);
 
         bf->furn_id = furn_id;
         bf->ligdiff[0] = r;
@@ -766,10 +766,10 @@ void SetRoomDirecPazzEne()
 
 void SetRDSmoke()
 {
-    ef_smoke_addr[0] = SetEffects(EF_SMOKE, 2, ef_smoke_pos11);
-    ef_smoke_addr[1] = SetEffects(EF_SMOKE, 2, ef_smoke_pos12);
-    ef_smoke_addr[2] = SetEffects(EF_SMOKE, 2, ef_smoke_pos13);
-    ef_smoke_addr[3] = SetEffects(EF_SMOKE, 2, ef_smoke_pos14);
+    ef_smoke_addr[0] = SetSmokeEffect(2, ef_smoke_pos11);
+    ef_smoke_addr[1] = SetSmokeEffect(2, ef_smoke_pos12);
+    ef_smoke_addr[2] = SetSmokeEffect(2, ef_smoke_pos13);
+    ef_smoke_addr[3] = SetSmokeEffect(2, ef_smoke_pos14);
 }
 
 void ResetRDSmoke()
@@ -808,12 +808,7 @@ void SetRDSunshine(int n)
 {
     if (sunshine[n].adr == NULL)
     {
-        sunshine[n].adr = SetEffects(
-            EF_SUNSHINE, 2,
-            sunshine[n].lpos, &sunshine[n],
-            sunshine[n].brot, sunshine[n].power,
-            sunshine[n].ww, sunshine[n].hh,
-            sunshine[n].r,sunshine[n].g, sunshine[n].b);
+        sunshine[n].adr = SetSunshineEffect(2, sunshine[n].lpos, &sunshine[n], sunshine[n].brot, sunshine[n].power, sunshine[n].ww, sunshine[n].hh, sunshine[n].r, sunshine[n].g, sunshine[n].b);
     }
 }
 
@@ -867,11 +862,11 @@ void SetRDBloodDrop(float *pos, int sta, u_short furn_id)
 
     if (sta & 4)
     {
-        blood_drop_rsv[ret].adr = SetEffects(0x1e, 2, pos, sta, 250.0f, 200, 0x80, 0x80, 0x80);
+        blood_drop_rsv[ret].adr = SetWaterdropEffect(2, pos, sta, 250.0f, 200, 0x80, 0x80, 0x80);
     }
     else
     {
-        blood_drop_rsv[ret].adr = SetEffects(0x1e, 2, pos, sta, -10.0f, 0x78, 0x80, 0, 0);
+        blood_drop_rsv[ret].adr = SetWaterdropEffect(2, pos, sta, -10.0f, 0x78, 0x80, 0, 0);
     }
 
     blood_drop_rsv[ret].furn_id = furn_id;
@@ -934,7 +929,7 @@ void SetRDPFire(sceVu0FVECTOR pos, u_short furn_id)
         return;
     }
 
-    pfire_rsv[ret].adr = SetEffects(EF_TORCH, 2, 3, pos, (void*)0, (void*)0);
+    pfire_rsv[ret].adr = SetTorchEffect(2, 3, pos, nullptr, nullptr);
 
     pfire_rsv[ret].furn_id = furn_id;
 }

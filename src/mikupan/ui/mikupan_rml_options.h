@@ -19,6 +19,7 @@ void MikuPan_RmlOptionsOpenInGame(void);
 void MikuPan_RmlOptionsClose(void);
 int MikuPan_RmlOptionsConsumeExitRequest(void);
 int MikuPan_RmlOptionsIsOpen(void);
+int MikuPan_RmlOptionsIsCalibrationOpen(void);
 int MikuPan_RmlOptionsInputBlocked(void);
 void MikuPan_RmlOptionsRequestExit(void);
 void MikuPan_RmlOptionsHandleCancel(void);

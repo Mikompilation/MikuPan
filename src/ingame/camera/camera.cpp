@@ -2562,28 +2562,31 @@ int FinderModePadChk(int *pad_x, int *pad_y, float *ax, float *ay,
 
     *ax = *ay = 0.0f;
 
-    if (DPAD_UP_PRESSED() != 0 || DPAD_DOWN_PRESSED() != 0
-        || DPAD_RIGHT_PRESSED() != 0 || DPAD_LEFT_PRESSED() != 0)
+    const int dpad_film_swap = MikuPan_FinderDpadFilmSwapEnabled();
+
+    if (dpad_film_swap == 0
+        && (DPAD_UP_PRESSED() != 0 || DPAD_DOWN_PRESSED() != 0
+            || DPAD_RIGHT_PRESSED() != 0 || DPAD_LEFT_PRESSED() != 0))
     {
         *jpad_on = 1;
     }
 
     if (pad[0].id == 0x79 || *jpad_on != 0)
     {
-        if (DPAD_UP_PRESSED() != 0)
+        if (dpad_film_swap == 0 && DPAD_UP_PRESSED() != 0)
         {
             *ay = -40.0f;
         }
-        else if (DPAD_DOWN_PRESSED() != 0)
+        else if (dpad_film_swap == 0 && DPAD_DOWN_PRESSED() != 0)
         {
             *ay = 40.0f;
         }
 
-        if (DPAD_RIGHT_PRESSED() != 0)
+        if (dpad_film_swap == 0 && DPAD_RIGHT_PRESSED() != 0)
         {
             *ax = 40.0f;
         }
-        else if (DPAD_LEFT_PRESSED() != 0)
+        else if (dpad_film_swap == 0 && DPAD_LEFT_PRESSED() != 0)
         {
             *ax = -40.0f;
         }
@@ -3772,7 +3775,7 @@ void FinderInOverRapCtrl()
     {
         fior_tm--;
 
-        SetEffects(EF_OVERLAP, 1, 30);
+        SetOverlapEffect(1, 30);
     }
 }
 

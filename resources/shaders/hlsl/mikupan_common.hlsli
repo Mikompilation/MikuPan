@@ -39,7 +39,7 @@ cbuffer MikuPanUniforms : register(b0, MIKUPAN_UNIFORM_SPACE)
     float4 uCrt1;    // x=scanline scale, y=thickness, z=mask strength, w=mask scale
     float4 uCrt2;    // x=vignette strength, y=size, z=chroma offset, w=blend strength
     float4 uCrt3;    // x=blend radius, y=noise, z=flicker, w=glow
-    float4 uParams1; // x=time, y=photo negative strength, z=final output curve
+    float4 uParams1; // x=time, y=photo negative strength, z=contrast, w=shadow depth
     float4 uPs2Feedback; // x=strength, y=burn, z=saturation, w=ghost
     float4 uScreenNegative; // rgb=Himuro negative colour, a=strength
 

@@ -515,6 +515,11 @@ void MikuPan_SetUniform1fToCurrentShader(float value, char *name)
     MikuPan_GPUSetFloat(name, value);
 }
 
+void MikuPan_SetUniform2fToAllShaders(float x, float y, char *name)
+{
+    MikuPan_GPUSetVec2(name, x, y);
+}
+
 void MikuPan_SetUniform2fToCurrentShader(float x, float y, char *name)
 {
     MikuPan_GPUSetVec2(name, x, y);

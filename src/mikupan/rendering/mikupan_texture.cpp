@@ -82,6 +82,30 @@ float MikuPan_GetPhotoDebugForceNegativePreviewStrength(void)
     return g_photo_debug.force_negative_preview_strength;
 }
 
+void MikuPan_ClearPhotoNegativeSourceTextureReference(void)
+{
+    g_photo_debug.negative_source_texture_valid = 0;
+    g_photo_debug.negative_source_texture_id = 0;
+    g_photo_debug.negative_source_texture_width = 0;
+    g_photo_debug.negative_source_texture_height = 0;
+}
+
+void MikuPan_SetPhotoNegativeSourceTextureReference(unsigned int texture_id,
+                                                    int width, int height)
+{
+    if (texture_id == 0 || width <= 0 || height <= 0)
+    {
+        MikuPan_ClearPhotoNegativeSourceTextureReference();
+        return;
+    }
+
+    g_photo_debug.negative_source_texture_valid = 1;
+    g_photo_debug.negative_source_texture_id = texture_id;
+    g_photo_debug.negative_source_texture_width = width;
+    g_photo_debug.negative_source_texture_height = height;
+    g_photo_debug.negative_source_texture_update_count++;
+}
+
 void MikuPan_SetPhotoDebugTargetRectEnabled(int enabled)
 {
     g_photo_debug.target_rect_enabled = enabled != 0;
