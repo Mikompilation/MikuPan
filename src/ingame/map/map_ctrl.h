@@ -46,6 +46,7 @@ u_char PosInAreaJudge0(u_char room, u_short pos_x, u_short pos_y);
 u_char PosInAreaJudge1(u_char map, u_char room, u_char data, u_short pos_x, u_short pos_y);
 u_char MapHitCheck(u_short pos_x, u_short pos_y, u_char room_id);
 u_char MapHitCheckAll(u_short pos_x, u_short pos_y, u_char room_id);
+u_char MikuPan_MapHitCheckAllSource(u_short pos_x, u_short pos_y, u_char room_id);
 void PlyrHitRot(sceVu0FVECTOR pos, sceVu0FVECTOR dst, float *go_rot, float *no_rot, u_char div, u_char room_id);
 u_char PlyrMapHitCheck(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char div, u_char room_id);
 int PlyrMapHitMoveOfs(sceVu0FVECTOR dst, sceVu0FVECTOR pos, u_char room, u_char flr_room);

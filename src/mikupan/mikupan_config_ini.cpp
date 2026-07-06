@@ -292,6 +292,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.input.finder_dpad_film_swap_enabled);
     ApplyValue(ini, "input", "mirror_stone_hud_enabled",
                mikupan_configuration.input.mirror_stone_hud_enabled);
+    ApplyValue(ini, "input", "improved_movement_collisions_enabled",
+               mikupan_configuration.input.improved_movement_collisions_enabled);
     ApplyValue(ini, "input", "finder_mouse_enabled",
                mikupan_configuration.input.finder_mouse_enabled);
     ApplyValue(ini, "input", "finder_mouse_sensitivity",
@@ -459,6 +461,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
                  mikupan_configuration.input.finder_dpad_film_swap_enabled);
         SetValue(ini, "input", "mirror_stone_hud_enabled",
                  mikupan_configuration.input.mirror_stone_hud_enabled);
+        SetValue(ini, "input", "improved_movement_collisions_enabled",
+                 mikupan_configuration.input.improved_movement_collisions_enabled);
         SetValue(ini, "input", "finder_mouse_enabled",
                  mikupan_configuration.input.finder_mouse_enabled);
         SetValue(ini, "input", "finder_mouse_sensitivity",

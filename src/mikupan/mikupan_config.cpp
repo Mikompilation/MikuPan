@@ -264,6 +264,8 @@ static void MikuPan_ConfigurationValidateInput(MikuPan_ConfigInput* input)
         input->finder_dpad_film_swap_enabled ? 1 : 0;
     input->mirror_stone_hud_enabled =
         input->mirror_stone_hud_enabled ? 1 : 0;
+    input->improved_movement_collisions_enabled =
+        input->improved_movement_collisions_enabled ? 1 : 0;
     input->finder_mouse_enabled = input->finder_mouse_enabled ? 1 : 0;
 
     if (input->finder_mouse_sensitivity < 0.0f)

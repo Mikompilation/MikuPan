@@ -414,6 +414,8 @@ void MikuPan_ControllerStoreBindingsToConfig(void)
     cfg->finder_dpad_film_swap_enabled =
         MikuPan_FinderDpadFilmSwapEnabled();
     cfg->mirror_stone_hud_enabled = MikuPan_MirrorStoneHudEnabled();
+    cfg->improved_movement_collisions_enabled =
+        MikuPan_ImprovedMovementCollisionsEnabled();
     cfg->finder_mouse_enabled = finder_mouse_enabled;
     cfg->finder_mouse_sensitivity = finder_mouse_sensitivity;
     for (int i = 0; i < MIKUPAN_ACTION_PROFILE_ACTION_COUNT; i++)
@@ -500,6 +502,17 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
     }
     MikuPan_SetCustomActionProfileEnabled(
         cfg->action_profile_saved ? cfg->action_profile_enabled : 0);
+}
+
+
+int MikuPan_ImprovedMovementCollisionsEnabled(void)
+{
+    return mikupan_configuration.input.improved_movement_collisions_enabled;
+}
+
+void MikuPan_SetImprovedMovementCollisionsEnabled(int enabled)
+{
+    mikupan_configuration.input.improved_movement_collisions_enabled = enabled ? 1 : 0;
 }
 
 int MikuPan_ReadController(unsigned char *rdata)
