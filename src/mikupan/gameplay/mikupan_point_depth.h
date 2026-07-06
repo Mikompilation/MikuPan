@@ -4,7 +4,15 @@
 #include "graphics/graph2d/effect_sub.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 
-static inline void MikuPan_CheckPointDepth(PP_JUDGE *ppj)
+#define MIKUPAN_POINT_DEPTH_KEY_DEFAULT 0
+#define MIKUPAN_POINT_DEPTH_KEY_ENEMY_IN_DISPLAY 1
+#define MIKUPAN_POINT_DEPTH_KEY_ENEMY_FRAME_HIT 2
+#define MIKUPAN_POINT_DEPTH_KEY_FURN_FRAME_POINT 3
+#define MIKUPAN_POINT_DEPTH_KEY_FURN_HINT 4
+
+static inline void MikuPan_CheckPointDepthKeyed(PP_JUDGE *ppj, int kind,
+                                                int object_id,
+                                                int point_base)
 {
     int i;
 
@@ -20,7 +28,8 @@ static inline void MikuPan_CheckPointDepth(PP_JUDGE *ppj)
         int visible;
 
         GetCamI2DPos(ppj->p[i], &tx, &ty);
-        visible = MikuPan_GPUDepthQueryPointVisibleWorldScreen(ppj->p[i], tx, ty);
+        visible = MikuPan_GPUDepthQueryPointVisibleWorldScreenQueued(
+            kind, object_id, point_base + i, ppj->p[i], tx, ty);
         if (visible < 0)
         {
             CheckPointDepth(ppj);
@@ -31,4 +40,9 @@ static inline void MikuPan_CheckPointDepth(PP_JUDGE *ppj)
     }
 }
 
-#endif // MIKUPAN_POINT_DEPTH_H
+static inline void MikuPan_CheckPointDepth(PP_JUDGE *ppj)
+{
+    MikuPan_CheckPointDepthKeyed(ppj, MIKUPAN_POINT_DEPTH_KEY_DEFAULT, 0, 0);
+}
+
+#endif

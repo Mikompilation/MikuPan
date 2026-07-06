@@ -2048,7 +2048,8 @@ void EneFrameHitChk()
 
 
                     // CheckPointDepth(&ppj);
-                    MikuPan_CheckPointDepth(&ppj);
+                    MikuPan_CheckPointDepthKeyed(
+                        &ppj, MIKUPAN_POINT_DEPTH_KEY_ENEMY_FRAME_HIT, i, 0);
 
                     if (ppj.result[0] != 0 || dpe <= 300.f)
                     {
@@ -2286,7 +2287,9 @@ int FrameInsideChkFurn(FURN_WRK *fw, float *degree, u_int fsta)
                 ppj.p[0][3] = fpc[3];
 
                 // CheckPointDepth(&ppj);
-                MikuPan_CheckPointDepth(&ppj);
+                MikuPan_CheckPointDepthKeyed(
+                    &ppj, MIKUPAN_POINT_DEPTH_KEY_FURN_FRAME_POINT,
+                    (int)(fw - furn_wrk), i);
 
                 if (ppj.result[0] != 0)
                 {
@@ -4908,7 +4911,8 @@ int SearchFurnHint()
                     ppj.p[0][3] = tv[3];
 
                     // CheckPointDepth(&ppj);
-                    MikuPan_CheckPointDepth(&ppj);
+                    MikuPan_CheckPointDepthKeyed(
+                        &ppj, MIKUPAN_POINT_DEPTH_KEY_FURN_HINT, i, 0);
 
                     if (ppj.result[0] != 0)
                     {

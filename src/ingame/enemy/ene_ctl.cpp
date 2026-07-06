@@ -1620,7 +1620,9 @@ void EneInDispChk(ENE_WRK *ew)
         sceVu0AddVector(ppj.p[0], ew->mpos.p0, tv);
 
         // CheckPointDepth(&ppj);
-        MikuPan_CheckPointDepth(&ppj);
+        MikuPan_CheckPointDepthKeyed(
+            &ppj, MIKUPAN_POINT_DEPTH_KEY_ENEMY_IN_DISPLAY,
+            (int)(ew - ene_wrk), 0);
 
         if (ppj.result[0] != 0)
         {
