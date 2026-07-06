@@ -314,7 +314,7 @@ static int g_scene_resolve_requested = 0;
 static int g_scene_resolve_preserve_msaa = 1;
 static int g_pass_resolves_scene = 0;
 
-static GPURenderState g_state = {0};
+static GPURenderState g_state = {};
 static unsigned int g_bound_vao = 0;
 static unsigned int g_bound_textures[2] = {0, 0};
 static int g_current_shader = -1;
@@ -350,14 +350,14 @@ static SDL_GPUBuffer* g_vertex_storage_buffer = NULL;
 /// persist across draws within a pass, so re-issuing identical bindings every
 /// draw is pure overhead. Track the last bound set and skip the call when it is
 /// unchanged. Both are invalidated at pass begin (a new pass clears bindings).
-static SDL_GPUBuffer* g_last_vertex_buffers[4] = {0};
+static SDL_GPUBuffer* g_last_vertex_buffers[4] = {};
 static unsigned int g_last_vertex_buffer_count = 0;
 static int g_vertex_binding_valid = 0;
 
 static void BeginTargetPassIfNeeded(void);
 static void ResolveSceneTexture(int preserve_msaa);
-static SDL_GPUTexture* g_last_sampler_textures[2] = {0};
-static SDL_GPUSampler* g_last_sampler_samplers[2] = {0};
+static SDL_GPUTexture* g_last_sampler_textures[2] = {};
+static SDL_GPUSampler* g_last_sampler_samplers[2] = {};
 static int g_sampler_binding_valid = 0;
 static int g_sampler_nearest_override = 0;
 static SDL_GPUBuffer* g_last_index_buffer = NULL;
@@ -686,11 +686,11 @@ static void CreateFallbackTexture(void)
     }
 
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(g_device);
-    SDL_GPUTextureTransferInfo src = {0};
+    SDL_GPUTextureTransferInfo src = {};
     src.transfer_buffer = transfer;
     src.pixels_per_row = 1;
     src.rows_per_layer = 1;
-    SDL_GPUTextureRegion dst = {0};
+    SDL_GPUTextureRegion dst = {};
     dst.texture = g_fallback_texture;
     dst.w = 1;
     dst.h = 1;
@@ -1037,7 +1037,7 @@ unsigned int MikuPan_GPUCreateDepthTexture(int width, int height)
         return 0;
     }
 
-    SDL_GPUTextureCreateInfo info = {0};
+    SDL_GPUTextureCreateInfo info = {};
     info.type = SDL_GPU_TEXTURETYPE_2D;
     info.format = g_depth_format;
     info.usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
@@ -1417,7 +1417,7 @@ static void BeginDepthQueryPass(void)
     g_target_clear = 0;
     g_target_clear_depth = 0;
 
-    SDL_GPUColorTargetInfo color = {0};
+    SDL_GPUColorTargetInfo color = {};
     color.texture = g_target_color;
     color.clear_color = SDL_FColor{0.0f, 0.0f, 0.0f, 0.0f};
     color.load_op = SDL_GPU_LOADOP_CLEAR;
@@ -1433,7 +1433,7 @@ static void BeginDepthQueryPass(void)
         color.store_op = SDL_GPU_STOREOP_STORE;
     }
 
-    SDL_GPUDepthStencilTargetInfo depth_target = {0};
+    SDL_GPUDepthStencilTargetInfo depth_target = {};
     depth_target.texture = g_target_depth;
     depth_target.clear_depth = 1.0f;
     depth_target.load_op = SDL_GPU_LOADOP_LOAD;
@@ -1616,7 +1616,7 @@ unsigned int MikuPan_GPUCreateBuffer(unsigned int size,
         return 0;
     }
 
-    SDL_GPUBufferCreateInfo info = {0};
+    SDL_GPUBufferCreateInfo info = {};
     info.usage = BufferUsageFromKind(kind);
     info.size = size;
     g_buffers[id].buffer = SDL_CreateGPUBuffer(g_device, &info);
@@ -1693,7 +1693,7 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
     if (size > entry->size)
     {
         SDL_ReleaseGPUBuffer(g_device, entry->buffer);
-        SDL_GPUBufferCreateInfo info = {0};
+        SDL_GPUBufferCreateInfo info = {};
         info.usage = BufferUsageFromKind(entry->kind);
         info.size = size;
         entry->buffer = SDL_CreateGPUBuffer(g_device, &info);
@@ -1716,10 +1716,10 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
         SDL_UnmapGPUTransferBuffer(g_device, transfer);
     }
 
-    SDL_GPUTransferBufferLocation src = {0};
+    SDL_GPUTransferBufferLocation src = {};
     src.transfer_buffer = transfer;
     src.offset = 0;
-    SDL_GPUBufferRegion dst = {0};
+    SDL_GPUBufferRegion dst = {};
     dst.buffer = entry->buffer;
     dst.offset = 0;
     dst.size = size;
@@ -1896,13 +1896,13 @@ void MikuPan_GPUUploadTextureRGBA8(unsigned int id, int width, int height,
         SDL_UnmapGPUTransferBuffer(g_device, transfer);
     }
 
-    SDL_GPUTextureTransferInfo src = {0};
+    SDL_GPUTextureTransferInfo src = {};
     src.transfer_buffer = transfer;
     src.offset = 0;
     src.pixels_per_row = (Uint32) (pitch / 4);
     src.rows_per_layer = (Uint32) height;
 
-    SDL_GPUTextureRegion dst = {0};
+    SDL_GPUTextureRegion dst = {};
     dst.texture = entry->texture;
     dst.w = (Uint32) width;
     dst.h = (Uint32) height;
@@ -1939,12 +1939,12 @@ int MikuPan_GPUReadTextureRGBA8(unsigned int texture_id, int width, int height,
         return 0;
     }
 
-    SDL_GPUTextureRegion src = {0};
+    SDL_GPUTextureRegion src = {};
     src.texture = entry->texture;
     src.w = (Uint32) width;
     src.h = (Uint32) height;
     src.d = 1;
-    SDL_GPUTextureTransferInfo dst = {0};
+    SDL_GPUTextureTransferInfo dst = {};
     dst.transfer_buffer = transfer;
     dst.pixels_per_row = (Uint32) width;
     dst.rows_per_layer = (Uint32) height;
@@ -2001,14 +2001,14 @@ static int MikuPan_GPUReadTextureRGBA8Region(unsigned int texture_id, int x,
         return 0;
     }
 
-    SDL_GPUTextureRegion src = {0};
+    SDL_GPUTextureRegion src = {};
     src.texture = entry->texture;
     src.x = (Uint32)x;
     src.y = (Uint32)y;
     src.w = (Uint32)width;
     src.h = (Uint32)height;
     src.d = 1;
-    SDL_GPUTextureTransferInfo dst = {0};
+    SDL_GPUTextureTransferInfo dst = {};
     dst.transfer_buffer = transfer;
     dst.pixels_per_row = (Uint32)width;
     dst.rows_per_layer = (Uint32)height;
@@ -2052,12 +2052,12 @@ int MikuPan_GPUReadTextureR8(unsigned int texture_id, int size,
         return 0;
     }
 
-    SDL_GPUTextureRegion src = {0};
+    SDL_GPUTextureRegion src = {};
     src.texture = entry->texture;
     src.w = (Uint32) size;
     src.h = (Uint32) size;
     src.d = 1;
-    SDL_GPUTextureTransferInfo dst = {0};
+    SDL_GPUTextureTransferInfo dst = {};
     dst.transfer_buffer = transfer;
     dst.pixels_per_row = (Uint32) size;
     dst.rows_per_layer = (Uint32) size;
@@ -2236,7 +2236,7 @@ static int AddDepthQueryDownload(MikuPanDepthQueryPendingBatch *batch,
 
     const unsigned int byte_count = (unsigned int)width *
                                     (unsigned int)height * 4u;
-    SDL_GPUTransferBufferCreateInfo info = {0};
+    SDL_GPUTransferBufferCreateInfo info{};
     info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
     info.size = byte_count;
     SDL_GPUTransferBuffer *transfer = SDL_CreateGPUTransferBuffer(g_device,
@@ -2246,7 +2246,7 @@ static int AddDepthQueryDownload(MikuPanDepthQueryPendingBatch *batch,
         return 0;
     }
 
-    SDL_GPUTextureRegion src = {0};
+    SDL_GPUTextureRegion src {};
     src.texture = entry->texture;
     src.x = (Uint32)x0;
     src.y = (Uint32)y0;
@@ -2254,7 +2254,7 @@ static int AddDepthQueryDownload(MikuPanDepthQueryPendingBatch *batch,
     src.h = (Uint32)height;
     src.d = 1;
 
-    SDL_GPUTextureTransferInfo dst = {0};
+    SDL_GPUTextureTransferInfo dst {};
     dst.transfer_buffer = transfer;
     dst.pixels_per_row = (Uint32)width;
     dst.rows_per_layer = (Uint32)height;
@@ -2682,9 +2682,9 @@ void MikuPan_GPUCopyTexture(unsigned int src_texture_id,
     }
     MikuPan_GPUFlushRenderPass();
 
-    SDL_GPUTextureLocation src_loc = {0};
+    SDL_GPUTextureLocation src_loc = {};
     src_loc.texture = src->texture;
-    SDL_GPUTextureLocation dst_loc = {0};
+    SDL_GPUTextureLocation dst_loc = {};
     dst_loc.texture = dst->texture;
 
     SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(g_cmd);
@@ -2816,8 +2816,8 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
         return NULL;
     }
 
-    SDL_GPUVertexBufferDescription vb_desc[4] = {0};
-    SDL_GPUVertexAttribute attrs[16] = {0};
+    SDL_GPUVertexBufferDescription vb_desc[4] = {};
+    SDL_GPUVertexAttribute attrs[16] = {};
     unsigned int attr_count = 0;
     for (unsigned int i = 0; i < pipeline_info->num_buffers && i < 4; i++)
     {
@@ -2893,7 +2893,7 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
     color_desc.format = g_target_color_format;
     color_desc.blend_state = blend;
 
-    SDL_GPUGraphicsPipelineCreateInfo info = {0};
+    SDL_GPUGraphicsPipelineCreateInfo info = {};
     info.vertex_shader = MikuPan_GetGPUVertexShader(g_current_shader);
     info.fragment_shader = MikuPan_GetGPUFragmentShader(g_current_shader);
     info.vertex_input_state.vertex_buffer_descriptions = vb_desc;
@@ -2967,7 +2967,7 @@ static void BeginTargetPassIfNeeded(void)
         return;
     }
 
-    SDL_GPUColorTargetInfo color = {0};
+    SDL_GPUColorTargetInfo color = {};
     const int resolving_scene = g_target_resolve != NULL
                                 && g_scene_resolve_requested;
     color.texture = g_target_color;
@@ -2990,7 +2990,7 @@ static void BeginTargetPassIfNeeded(void)
     const int clear_depth =
         !resolving_scene && (g_target_clear || g_target_clear_depth);
 
-    SDL_GPUDepthStencilTargetInfo depth = {0};
+    SDL_GPUDepthStencilTargetInfo depth = {};
     SDL_GPUDepthStencilTargetInfo* depth_ptr = NULL;
     if (!resolving_scene && g_target_has_depth && g_target_depth != NULL)
     {
@@ -3487,7 +3487,7 @@ static void BindDrawState(unsigned int primitive)
     }
 
     GPUVaoEntry* vao = &g_vaos[g_bound_vao];
-    SDL_GPUBufferBinding bindings[4] = {0};
+    SDL_GPUBufferBinding bindings[4] = {};
     unsigned int binding_count = 0;
 
     for (unsigned int i = 0; i < vao->num_buffers && i < 4; i++)
@@ -3531,7 +3531,7 @@ static void BindDrawState(unsigned int primitive)
     // uAuxTexture), so SDL_GPU requires exactly two fragment samplers bound at
     // every draw. Fill any unbound slot with the 1x1 white fallback so we never
     // trip "Missing fragment sampler binding!".
-    SDL_GPUTextureSamplerBinding samplers[2] = {0};
+    SDL_GPUTextureSamplerBinding samplers[2] = {};
     for (int i = 0; i < 2; i++)
     {
         GPUTextureEntry* tex = TextureEntry(g_bound_textures[i]);
@@ -3617,7 +3617,7 @@ void MikuPan_GPUDrawElements(unsigned int gl_mode, int count,
         if (!g_index_binding_valid || ibo->buffer != g_last_index_buffer
             || index_size != g_last_index_size)
         {
-            SDL_GPUBufferBinding binding = {0};
+            SDL_GPUBufferBinding binding = {};
             binding.buffer = ibo->buffer;
             binding.offset = 0;
             SDL_BindGPUIndexBuffer(g_pass, &binding, index_size);
