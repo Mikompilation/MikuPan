@@ -3,6 +3,7 @@
 #include "mikupan/mikupan_config.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/gameplay/mikupan_item_icon_hud.h"
 #include "os/key_cnf.h"
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_mouse.h>
@@ -25,6 +26,8 @@ static int remap_stick_mode = 0;
 
 SDL_Gamepad *mikupan_gamepad = NULL;
 static int mikupan_preferred_gamepad_index = MIKUPAN_CONTROLLER_AUTO_INDEX;
+static unsigned short mikupan_rumble_low = 0;
+static unsigned short mikupan_rumble_high = 0;
 
 /* Which device's bindings the mapping UI shows: 1 = keyboard & mouse, 0 = the
  * selected gamepad. -1 until first drawn, then defaulted from whether a gamepad
@@ -173,9 +176,13 @@ static void MikuPan_CloseCurrentGamepad(void)
 {
     if (mikupan_gamepad != NULL)
     {
+        SDL_RumbleGamepad(mikupan_gamepad, 0, 0, 0);
         SDL_CloseGamepad(mikupan_gamepad);
         mikupan_gamepad = NULL;
     }
+
+    mikupan_rumble_low = 0;
+    mikupan_rumble_high = 0;
 }
 
 void MikuPan_ControllerSetPreferredGamepadIndex(int index)
@@ -711,12 +718,36 @@ SDL_Gamepad *MikuPan_GetController(void)
 
 int MikuPan_ControllerRumble(const unsigned char *data)
 {
-    if (mikupan_gamepad == NULL)
+    if (data == NULL)
     {
         return 0;
     }
 
-    return SDL_RumbleGamepad(mikupan_gamepad, data[0] * 32896, data[1] * 257, 100);
+    if (mikupan_gamepad == NULL)
+    {
+        MikuPan_OpenController();
+        if (mikupan_gamepad == NULL)
+        {
+            return 0;
+        }
+    }
+
+    unsigned short low = (unsigned short)((unsigned int)data[1] * 257u);
+    unsigned short high = data[0] != 0 ? 0xffffu : 0u;
+
+    if (low == 0 && high == 0 && mikupan_rumble_low == 0 && mikupan_rumble_high == 0)
+    {
+        return 1;
+    }
+
+    if (!SDL_RumbleGamepad(mikupan_gamepad, low, high, 120))
+    {
+        return 0;
+    }
+
+    mikupan_rumble_low = low;
+    mikupan_rumble_high = high;
+    return 1;
 }
 
 int MikuPan_FinderMouseLookEnabled(void)
