@@ -254,7 +254,7 @@ void JEneEntry(u_char wrk_no, u_char dat_no)
     ew->nee_size = 10000.0f;
     ew->nee_col = ew->dat->aura_alp | 0x40404500;
     ew->nee_rate = 1.0f;
-    ew->nee = SetEffects(EF_ENEFIRE, 2, 1, &ew->move_box.pos, &ew->mpos, &ew->nee_col, &ew->nee_size, 0xa0, &ew->nee_rate);
+    ew->nee = SetEneFireEffect(2, 1, &ew->move_box.pos, &ew->mpos, &ew->nee_col, &ew->nee_size, 0xa0, &ew->nee_rate);
     ew->se_area_no = SeGetGhostPos(ew->dat->se_no, ew->type);
 
     EneActSet(ew, 9);
@@ -302,7 +302,7 @@ void FEneEntry(u_char wrk_no, u_char dat_no)
     ew->nee_size = 10000.0f;
     ew->nee_col = ew->dat->aura_alp | 0x40404500;
     ew->nee_rate = 1.0f;
-    ew->nee = SetEffects(EF_ENEFIRE, 2, 1, ew->move_box.pos, ew->mpos, &ew->nee_col, &ew->nee_size, 0xa0, &ew->nee_rate);
+    ew->nee = SetEneFireEffect(2, 1, ew->move_box.pos, &ew->mpos, &ew->nee_col, &ew->nee_size, 0xa0, &ew->nee_rate);
     ew->se_area_no = SeGetGhostPos(ew->dat->se_no, ew->type);
 
     AdpcmPlayGhost(ene_wrk[wrk_no].dat->adpcm_no, &ew->move_box.pos, MAX_VOLUME, wrk_no, 200);
@@ -1946,7 +1946,7 @@ void EneNormalEffectCtrl(ENE_WRK *ew)
         ew->mpos.p9[2] = ew->bep[2];
         ew->mpos.p9[3] = ew->bep[3];
 
-        dp[0] = SetEffects(EF_PDEFORM, 4, 5, 0x28, 0.3f, 1.1f, ew->mpos.p9, 50, 0, 50, 0, &spd[no], &rate[no], &trate[no]);
+        dp[0] = SetPartsDeformEffect(4, 5, 0x28, 0.3f, 1.1f, ew->mpos.p9, 50, 0, 50, nullptr, &spd[no], &rate[no], &trate[no]);
 
         ne_job[no]++;
 

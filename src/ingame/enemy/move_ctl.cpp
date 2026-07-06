@@ -1458,7 +1458,7 @@ void EJob01B(MOVE_BOX *mb)
 
     sceVu0AddVector(p[no], mb->pos, tv);
 
-    SetEffects(EF_PDEFORM, 4, 23, 100, 0.5f, 1.0f, p[no], var1, var2, var3, 0, &spd[no], &rate[no], &trate[no]);
+    SetPartsDeformEffect(4, 23, 100, 0.5f, 1.0f, p[no], var1, var2, var3, nullptr, &spd[no], &rate[no], &trate[no]);
 
     ene_wrk[mb->idx].nee_col = 0x40404860;
     ene_wrk[mb->idx].nee_size = 10000.0f;
@@ -2699,7 +2699,7 @@ void EJob049(MOVE_BOX *mb)
     f = mb->comm_add.pu8[0] | (mb->comm_add.pu8[1] << 8); mb->comm_add.pu16++;
     g = mb->comm_add.pu8[0] | (mb->comm_add.pu8[1] << 8); mb->comm_add.pu16++;
 
-    SetEffects(EF_DITHER, 4, a, b, spd, c, d, e, f, g);
+    SetDitherEffect(4, a, b, spd, c, d, e, f, g);
 
     mb->wait_time = 0;
     mb->pos_no = 0;
@@ -2893,7 +2893,7 @@ void EJob052(MOVE_BOX *mb)
     type = *mb->comm_add.pu8++;
     volume = *mb->comm_add.pu8++;
 
-    SetEffects(EF_DEFORM, 1, type, volume);
+    SetDeformEffect(1, type, volume);
 
     mb->wait_time = 0;
     mb->pos_no = 0;
@@ -3192,7 +3192,7 @@ void EJob061(MOVE_BOX *mb)
 
         ene_wrk[mb->idx].sta = ene_wrk[mb->idx].sta & ~0x40000;
 
-        SetEffects(EF_ENEOUT, 8, mb->idx, val, 1.0f);
+        SetEneOutEffect(8, mb->idx, val, 1.0f);
 
         mb->wait_time = 1;
         mb->pos_no++;

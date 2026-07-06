@@ -1625,7 +1625,7 @@ void SceneTestEffectTest()
 
     if (scn_eff_ctrl[0].eff_flg != 0)
     {
-        SetEffects(EF_Z_DEP, 1);
+        SetZDepthEffect(1);
     }
 
     if (scn_eff_ctrl[1].eff_flg != 0 && mono_flg == 0)
@@ -1645,62 +1645,62 @@ void SceneTestEffectTest()
     {
         fed = &scn_eff_ctrl[3].eff_data;
 
-        SetEffects(EF_DITHER, 1, fed->dither.type, fed->dither.alpha, fed->dither.speed, fed->dither.alpmax, fed->dither.colmax);
+        SetDitherEffect(1, fed->dither.type, fed->dither.alpha, fed->dither.speed, fed->dither.alpmax, fed->dither.colmax);
     }
 
     if (scn_eff_ctrl[4].eff_flg != 0)
     {
         fed = &scn_eff_ctrl[4].eff_data;
 
-        SetEffects(EF_BLUR_N, 1, &fed->blur.alpha, fed->blur.scale, fed->blur.rot, 320.0f, 112.0f);
+        SetBlurEffect(EF_BLUR_N, 1, &fed->blur.alpha, fed->blur.scale, fed->blur.rot, 320.0f, 112.0f);
     }
 
     if (scn_eff_ctrl[5].eff_flg != 0)
     {
         fed = &scn_eff_ctrl[5].eff_data;
 
-        SetEffects(EF_BLUR_N, 1, &fed->blur.alpha, fed->blur.scale, fed->blur.rot, 320.0f, 112.0f);
+        SetBlurEffect(EF_BLUR_N, 1, &fed->blur.alpha, fed->blur.scale, fed->blur.rot, 320.0f, 112.0f);
     }
 
     if (scn_eff_ctrl[6].eff_flg != 0)
     {
         fed = &scn_eff_ctrl[6].eff_data;
 
-        SetEffects(EF_BLUR_N, 1, &fed->blur.alpha, fed->blur.scale, fed->blur.rot, 320.0f, 112.0f);
+        SetBlurEffect(EF_BLUR_N, 1, &fed->blur.alpha, fed->blur.scale, fed->blur.rot, 320.0f, 112.0f);
     }
 
     if (scn_eff_ctrl[7].eff_flg != 0)
     {
         fed = &scn_eff_ctrl[7].eff_data;
 
-        SetEffects(EF_DEFORM, 1, fed->deform.type, fed->deform.volume);
+        SetDeformEffect(1, fed->deform.type, fed->deform.volume);
     }
 
     if (scn_eff_ctrl[8].eff_flg != 0)
     {
         fed = &scn_eff_ctrl[8].eff_data;
 
-        SetEffects(EF_FOCUS, 1, fed->focus.volume);
+        SetFocusEffect(1, fed->focus.volume);
     }
 
     if (scn_eff_ctrl[9].eff_flg != 0)
     {
         fed = &scn_eff_ctrl[9].eff_data;
 
-        SetEffects(EF_NCONTRAST, 1, fed->contrast.color, fed->contrast.alpha);
+        SetContrastEffect(EF_NCONTRAST, 1, fed->contrast.color, fed->contrast.alpha);
     }
 
     if (scn_eff_ctrl[10].eff_flg != 0)
     {
         fed = &scn_eff_ctrl[10].eff_data;
 
-        SetEffects(EF_NCONTRAST2, 1, fed->contrast.color, fed->contrast.alpha);
+        SetContrastEffect(EF_NCONTRAST2, 1, fed->contrast.color, fed->contrast.alpha);
 
         if (scn_eff_ctrl[10].eff_flg != 0)
         {
             fed = &scn_eff_ctrl[11].eff_data;
 
-            SetEffects(EF_NCONTRAST3, 1, fed->contrast.color, fed->contrast.alpha);
+            SetContrastEffect(EF_NCONTRAST3, 1, fed->contrast.color, fed->contrast.alpha);
         }
     }
 
@@ -1708,14 +1708,14 @@ void SceneTestEffectTest()
     {
         fed = &scn_eff_ctrl[12].eff_data;
 
-        SetEffects(EF_FADEFRAME, 1, fed->f_frame.volume, 0x1000);
+        SetFadeFrameEffect(1, fed->f_frame.volume, 0x1000);
     }
 
     if (scn_eff_ctrl[13].eff_flg != 0)
     {
         fed = &scn_eff_ctrl[13].eff_data;
 
-        SetEffects(EF_OVERLAP, 1, fed->f_frame.volume);
+        SetOverlapEffect(1, fed->f_frame.volume);
     }
 
     if (scn_eff_ctrl[14].eff_flg != 0)

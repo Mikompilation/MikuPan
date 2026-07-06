@@ -3775,7 +3775,7 @@ void FinderInOverRapCtrl()
     {
         fior_tm--;
 
-        SetEffects(EF_OVERLAP, 1, 30);
+        SetOverlapEffect(1, 30);
     }
 }
 

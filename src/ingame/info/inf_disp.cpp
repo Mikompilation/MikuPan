@@ -4,7 +4,10 @@
 #include "inf_disp.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_rng.h"
+#include "mikupan/mikupan_utils.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
+#include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/ui/mikupan_ui.h"
 
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_ene.h"
@@ -797,7 +800,7 @@ static void PointerNP(short int cx, short int cy, u_char red, u_char alp, float 
 
     if (red != 0)
     {
-        SetEffects(EF_NEGACIRCLE, 1, (float)cx, (float)cy, siz * 0.5f, alp, red, 0x80 - red, 0x80 - red);
+        SetNegaCircleEffect(1, (float)cx, (float)cy, siz * 0.5f, alp, red, 0x80 - red, 0x80 - red);
     }
 }
 

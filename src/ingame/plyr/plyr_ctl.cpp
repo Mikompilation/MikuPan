@@ -226,7 +226,7 @@ void PlyrCondChk()
     switch (plyr_wrk.cond)
     {
     case 2:
-        SetEffects(EF_DEFORM, 1, 7, 0x14);
+        SetDeformEffect(1, 7, 0x14);
 
         if (LeverGachaChk() != 0)
         {
@@ -234,7 +234,7 @@ void PlyrCondChk()
         }
         break;
     case 3:
-        SetEffects(EF_DEFORM, 1, 4, 0x32);
+        SetDeformEffect(1, 4, 0x32);
     break;
     }
 }
@@ -736,6 +736,7 @@ void PlyrSpotMoveCtrl()
     plyr_wrk.spot_rot[1] = r;
 }
 
+
 void PlyrFinderCtrl()
 {
     if (plyr_wrk.sta & 0x1000)
@@ -813,7 +814,7 @@ void FModeScreenEffect()
     {
         if (req_dmg_ef[i])
         {
-            SetEffects(EF_FADEFRAME, 1, 0, 0x80000);
+            SetFadeFrameEffect(1, 0, 0x80000);
 
             return;
         }
@@ -855,8 +856,8 @@ void FModeScreenEffect()
         }
     }
 
-    SetEffects(EF_DITHER, 1, 3, alpha, 8.0f, 101, 64);
-    SetEffects(EF_NCONTRAST2, 1, crate, crate);
+    SetDitherEffect(1, 3, alpha, 8.0f, 101, 64);
+    SetContrastEffect(EF_NCONTRAST2, 1, crate, crate);
 }
 
 void PlyrDmgCtrl()
@@ -1316,7 +1317,7 @@ void PlyrSpotLightOnChk()
 
     if (plyr_wrk.mode == PMODE_NORMAL && plyr_wrk.anime_no != PANI_CAM_SET_OUT)
     {
-        SetEffects(EF_RENZFLARE, 1, 4, plyr_wrk.spot_pos, plyr_wrk.move_box.rot);
+        SetRenzFlareEffect(1, 4, plyr_wrk.spot_pos, plyr_wrk.move_box.rot);
     }
 }
 
