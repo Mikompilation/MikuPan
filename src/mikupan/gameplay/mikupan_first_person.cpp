@@ -39,6 +39,11 @@ static int MikuPan_FirstPersonSpecialMoveActive(void)
     return (plyr_wrk.mvsta & 0xfff0) != 0;
 }
 
+static int MikuPan_FirstPersonDoorMoveActive(void)
+{
+    return (plyr_wrk.sta & 0x8) != 0;
+}
+
 static void MikuPan_FirstPersonClearWalkRunState(void)
 {
     plyr_wrk.mvsta &= ~(0x80000 | 0x8 | 0x4 | 0x2 | 0x1);
@@ -89,6 +94,11 @@ static int MikuPan_FirstPersonCanOwnGameplay(void)
     }
 
     if (plyr_wrk.mode != PMODE_NORMAL)
+    {
+        return 0;
+    }
+
+    if (MikuPan_FirstPersonDoorMoveActive())
     {
         return 0;
     }
