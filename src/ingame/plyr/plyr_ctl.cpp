@@ -38,6 +38,7 @@
 #include "ingame/plyr/unit_ctl.h"
 #include "main/glob.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
+#include "mikupan/gameplay/mikupan_item_icon_hud.h"
 #include "mikupan/gameplay/mikupan_point_depth.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_shader.h"
@@ -747,6 +748,7 @@ void PlyrFinderCtrl()
     FModeScreenEffect();
     EneFrameHitChk();
     PlyrPhotoChk();
+    MikuPan_QuickSwapFinderFilm();
     PlyrSubAtkChk();
     PlyrCamRotCngChk();
     PlyrFModeMoveCtrl();

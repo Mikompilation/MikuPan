@@ -4,6 +4,7 @@
 #include "inf_disp.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_rng.h"
+#include "mikupan/gameplay/mikupan_item_icon_hud.h"
 
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_ene.h"
@@ -110,6 +111,7 @@ void InformationDispInit()
     memset(&jet2, 0, sizeof(jet2));
 
     point_get_end = 0;
+    MikuPan_ResetItemIconHud();
 }
 
 void InformationDispMain()
@@ -174,6 +176,11 @@ void InformationDispMain()
     {
         PhotoScoreDisp(plyr_wrk.ap_timer, plyr_wrk.sta & 0x1 ? 1 : 60);
     }
+
+    if (inf_dsp.fndr_dsp_flg != 0)
+    {
+        MikuPan_DrawFinderFilmIcon(fndr_mx, fndr_my, inf_dsp.fndr_fade_alp);
+}
 }
 
 void InformationDispModeCtrl()
@@ -841,12 +848,12 @@ static void FilmZansu(int number, short int pos_x, short int pos_y, short int nu
 
     number = number % multi10;
 
-    if (inf_dsp.fndr_mode_tmr == 1)
+    if (inf_dsp.fndr_mode_tmr == 1 || MikuPan_ConsumeFinderFilmCounterSnap() != 0)
     {
         info_wrk.film_bak = info_wrk.film_num;
+        inf_dsp.flm_cng_tmr = 0;
     }
-
-    if (info_wrk.film_num != info_wrk.film_bak)
+    else if (info_wrk.film_num != info_wrk.film_bak)
     {
         inf_dsp.flm_cng_tmr = 80;
 
@@ -1151,6 +1158,11 @@ static void EdogawaLamp(short int pos_x, short int pos_y, u_char out)
     }
 
     PutSpriteYW(FND_RMP_GRS, FND_RMP_GRS, pos_x, pos_y, 0.0f, 0x808080, (int)(cmn_alp / 2), 1.0f, 1.0f, 0, 0xff, 1, 1, 1);
+
+    if (out != 0)
+    {
+        MikuPan_DrawMirrorStoneHudIcon(pos_x, pos_y, cmn_alp);
+    }
 }
 
 static void NewFndrBase(short int pos_x, short int pos_y)

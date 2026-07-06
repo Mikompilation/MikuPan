@@ -260,6 +260,10 @@ static void MikuPan_ConfigurationValidateInput(MikuPan_ConfigInput* input)
         input->action_profile_finder_reverse_y ? 1 : 0;
     input->action_profile_finder_swap_sticks =
         input->action_profile_finder_swap_sticks ? 1 : 0;
+    input->finder_dpad_film_swap_enabled =
+        input->finder_dpad_film_swap_enabled ? 1 : 0;
+    input->mirror_stone_hud_enabled =
+        input->mirror_stone_hud_enabled ? 1 : 0;
     input->finder_mouse_enabled = input->finder_mouse_enabled ? 1 : 0;
 
     if (input->finder_mouse_sensitivity < 0.0f)

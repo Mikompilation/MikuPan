@@ -374,6 +374,8 @@ void MikuPan_ControllerResetBindings(void)
     }
     finder_mouse_enabled = 1;
     finder_mouse_sensitivity = 1.0f;
+    MikuPan_SetFinderDpadFilmSwapEnabled(0);
+    MikuPan_SetMirrorStoneHudEnabled(0);
     MikuPan_ResetCustomActionProfile();
     MikuPan_SetCustomActionProfileEnabled(0);
 }
@@ -409,6 +411,9 @@ void MikuPan_ControllerStoreBindingsToConfig(void)
         MikuPan_CustomActionProfileUsesFinderReverseY();
     cfg->action_profile_finder_swap_sticks =
         MikuPan_CustomActionProfileSwapsFinderSticks();
+    cfg->finder_dpad_film_swap_enabled =
+        MikuPan_FinderDpadFilmSwapEnabled();
+    cfg->mirror_stone_hud_enabled = MikuPan_MirrorStoneHudEnabled();
     cfg->finder_mouse_enabled = finder_mouse_enabled;
     cfg->finder_mouse_sensitivity = finder_mouse_sensitivity;
     for (int i = 0; i < MIKUPAN_ACTION_PROFILE_ACTION_COUNT; i++)
@@ -458,6 +463,9 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
         finder_mouse_enabled = cfg->finder_mouse_enabled ? 1 : 0;
         MikuPan_SetFinderMouseSensitivity(cfg->finder_mouse_sensitivity);
     }
+    MikuPan_SetFinderDpadFilmSwapEnabled(
+        cfg->finder_dpad_film_swap_enabled);
+    MikuPan_SetMirrorStoneHudEnabled(cfg->mirror_stone_hud_enabled);
     if (cfg->action_profile_saved)
     {
         if (cfg->action_profile_layout >= 2)
@@ -1491,6 +1499,22 @@ static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
     }
     igTextDisabled("On (default): left stick / WASD move, right stick / mouse "
                    "aim. Off: classic (left stick aims, right stick moves).");
+
+    bool finder_film_swap = MikuPan_FinderDpadFilmSwapEnabled() != 0;
+    if (igCheckbox("D-Pad quick film swap", &finder_film_swap))
+    {
+        MikuPan_SetFinderDpadFilmSwapEnabled(finder_film_swap ? 1 : 0);
+    }
+    igTextDisabled("Use D-Pad Up / Down in finder mode to switch film.\n"
+                   "D-Pad finder aim is disabled while enabled.");
+
+    bool mirror_stone_hud = MikuPan_MirrorStoneHudEnabled() != 0;
+    if (igCheckbox("Mirror Stone HUD icon", &mirror_stone_hud))
+    {
+        MikuPan_SetMirrorStoneHudEnabled(mirror_stone_hud ? 1 : 0);
+    }
+    igTextDisabled("Shows a small Mirror Stone box next to the filament. It "
+                   "stays visible even when you do not have one.");
 
     if (igButton("Reset custom profile", ImVec2{0, 0}))
     {

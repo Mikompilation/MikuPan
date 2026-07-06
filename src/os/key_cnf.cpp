@@ -112,6 +112,7 @@ static int custom_action_profile_finder_reverse_y = 0;
  * character, right stick / mouse aims the camera. Flip to 0 for the classic
  * layout (left stick aims, right stick moves). */
 static int custom_action_profile_finder_swap_sticks = 1;
+static int finder_dpad_film_swap_enabled = 0;
 
 static int IsFinderProfileMode(void)
 {
@@ -285,6 +286,16 @@ void MikuPan_SetCustomActionProfileFinderSwapSticks(int enabled)
 int MikuPan_CustomActionProfileSwapsFinderSticks(void)
 {
     return custom_action_profile_finder_swap_sticks;
+}
+
+void MikuPan_SetFinderDpadFilmSwapEnabled(int enabled)
+{
+    finder_dpad_film_swap_enabled = enabled ? 1 : 0;
+}
+
+int MikuPan_FinderDpadFilmSwapEnabled(void)
+{
+    return finder_dpad_film_swap_enabled;
 }
 
 int MikuPan_KeyProfileUsesSubjectiveMove(void)

@@ -169,6 +169,8 @@ typedef struct
     int action_profile_stick_subjective_move;
     int action_profile_finder_reverse_y;
     int action_profile_finder_swap_sticks;
+    int finder_dpad_film_swap_enabled;
+    int mirror_stone_hud_enabled;
     int action_profile_normal[16];
     int action_profile_finder[16];
 
