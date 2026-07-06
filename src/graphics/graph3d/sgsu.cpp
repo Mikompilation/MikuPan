@@ -954,15 +954,6 @@ int write_coord = 0;
 void AppendVUProgTag(u_int *prog)
 {
     return;
-    while (((SgSourceChainTag *) prog)->ID
-           != 7) /* so long as it's not DmaEnd */
-    {
-        AppendDmaTag((u_int) (((SgSourceChainTag *) prog) + 1),
-                     ((SgSourceChainTag *) prog)->QWC);
-        prog = (u_int *) &(
-            ((u_long *) prog)[((SgSourceChainTag *) prog)->QWC * 2 + 2]);
-        FlushModel(0);
-    }
 }
 
 void LoadSgProg(int load_prog)
