@@ -880,8 +880,8 @@ void MikuPan_GPUEndFrame(void)
         }
         else
         {
-        SDL_SubmitGPUCommandBuffer(g_cmd);
-    }
+            SDL_SubmitGPUCommandBuffer(g_cmd);
+        }
     }
 
     g_cmd = NULL;
@@ -2470,7 +2470,7 @@ int MikuPan_GPUDepthQueryPointVisibleWorldScreenQueued(int kind,
 }
 
 static int MikuPan_GPUDepthQueryReadMarkerRegion(float screen_x,
-                                                   float screen_y)
+                                                 float screen_y)
 {
     if (g_depth_query_texture_id == 0 || g_depth_query_width <= 0 ||
         g_depth_query_height <= 0 || g_depth_query_readback == NULL)
@@ -3365,6 +3365,29 @@ void MikuPan_GPUSetScreenCopyTarget(unsigned int texture_id, int width,
     g_target_resolve = NULL;
     g_target_sample_count = 1;
     g_target_clear = clear;
+    g_target_initialized = 1;
+}
+
+
+void MikuPan_GPUSetMirrorTarget(unsigned int color_id, unsigned int depth_id,
+                                int clear)
+{
+    MikuPan_GPUFlushRenderPass();
+    GPUTextureEntry* color = TextureEntry(color_id);
+    GPUTextureEntry* depth = TextureEntry(depth_id);
+
+    g_target = MIKUPAN_GPU_TARGET_MIRROR;
+    g_target_color = color ? color->texture : NULL;
+    g_target_color_format = color ? color->format : SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+    g_target_width = color ? color->width : 1;
+    g_target_height = color ? color->height : 1;
+    g_target_has_depth = depth != NULL && depth->texture != NULL;
+    g_target_depth = depth ? depth->texture : NULL;
+    g_target_depth_format = depth ? depth->format : g_depth_format;
+    g_target_resolve = NULL;
+    g_target_sample_count = 1;
+    g_target_clear = clear;
+    g_target_clear_depth = clear;
     g_target_initialized = 1;
 }
 

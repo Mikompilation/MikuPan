@@ -1081,11 +1081,24 @@ void MirrorDraw(SgCAMERA *camera, void *sgd_top,
     pdrawenv->scissor1.SCAY1 = (draw_ymax / 16) + -0x790;
 
     SetEnvironment();
-    MikuPan_EnableMirrorScissorFromGsBounds(draw_xmin, draw_ymin,
-                                            draw_xmax, draw_ymax);
-    MirrorRender(camera, render_func);
-    MikuPan_ClearMirrorScissorDepth();
-    MikuPan_DisableMirrorScissor();
+
+    if (MikuPan_ShouldUpdateMirrorTexture(disp_frame_counter))
+    {
+        if (MikuPan_BeginMirrorTextureUpdate(draw_xmin, draw_ymin,
+                                             draw_xmax, draw_ymax))
+        {
+            MirrorRender(camera, render_func);
+            MikuPan_EndMirrorTextureUpdate();
+        }
+        else
+        {
+            MikuPan_EnableMirrorScissorFromGsBounds(draw_xmin, draw_ymin,
+                                                    draw_xmax, draw_ymax);
+            MirrorRender(camera, render_func);
+            MikuPan_ClearMirrorScissorDepth();
+            MikuPan_DisableMirrorScissor();
+        }
+    }
 
     pdrawenv->scissor1 = bak_scissor;
 
@@ -1098,9 +1111,26 @@ void MirrorDraw(SgCAMERA *camera, void *sgd_top,
     ClearMaterialCache((HeaderSection *) sgd_top);
     SetUpSortUnit();
     SetClipValue(-1.0f, 1.0f, -1.0f, 1.0f);
-    MikuPan_SetUniform1iToAllShaders(1, "uMirrorSurfacePass");
+
+    int using_mirror_texture = MikuPan_HasMirrorTexture();
+
+    if (using_mirror_texture)
+    {
+        MikuPan_BindMirrorTextureToAuxSlot();
+        MikuPan_SetUniform1iToAllShaders(2, "uMirrorSurfacePass");
+    }
+    else
+    {
+        MikuPan_SetUniform1iToAllShaders(1, "uMirrorSurfacePass");
+    }
+
     MirrorPrim((u_int *) GetTopProcUnitHeaderPtr(hs, num));
     MikuPan_SetUniform1iToAllShaders(0, "uMirrorSurfacePass");
+
+    if (using_mirror_texture)
+    {
+        MikuPan_UnbindMirrorTextureFromAuxSlot();
+    }
 }
 
 void MirrorRender(SgCAMERA *camera,

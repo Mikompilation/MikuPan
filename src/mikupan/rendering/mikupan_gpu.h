@@ -24,7 +24,8 @@ typedef enum MikuPan_GPUTarget
     MIKUPAN_GPU_TARGET_SCENE = 0,
     MIKUPAN_GPU_TARGET_WINDOW,
     MIKUPAN_GPU_TARGET_SHADOW,
-    MIKUPAN_GPU_TARGET_SCREEN_COPY
+    MIKUPAN_GPU_TARGET_SCREEN_COPY,
+    MIKUPAN_GPU_TARGET_MIRROR
 } MikuPan_GPUTarget;
 
 typedef enum MikuPan_GPUBufferKind
@@ -160,6 +161,7 @@ unsigned int MikuPan_GPUCreateTextureRGBA8(int width, int height,
                                            int mipmaps);
 unsigned int MikuPan_GPUCreateTextureR8Target(int width, int height);
 unsigned int MikuPan_GPUCreateRenderTextureRGBA8(int width, int height);
+unsigned int MikuPan_GPUCreateDepthTexture(int width, int height);
 void MikuPan_GPUReleaseTexture(unsigned int id);
 /// Raw SDL_GPUTexture handle for a texture id, or NULL. Used as an ImGui
 /// ImTextureID (the SDL_GPU3 backend expects an SDL_GPUTexture*, not the id).
@@ -236,6 +238,8 @@ void MikuPan_GPUSetShadowTarget(unsigned int texture_id, int size,
                                 int clear);
 void MikuPan_GPUSetScreenCopyTarget(unsigned int texture_id, int width,
                                     int height, int clear);
+void MikuPan_GPUSetMirrorTarget(unsigned int color_id, unsigned int depth_id,
+                                int clear);
 
 void MikuPan_GPUBindTextureSlot(int slot, unsigned int texture_id);
 unsigned int MikuPan_GPUGetBoundTexture0(void);
