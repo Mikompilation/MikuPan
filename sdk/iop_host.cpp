@@ -14,11 +14,9 @@
 #define MIKUPAN_IOP_MAX_THREADS 64
 #define MIKUPAN_IOP_MAX_TIMERS 8
 
-typedef int (*IopThreadEntry)(void);
-
 typedef struct {
     int id;
-    void* entry;
+    ThreadEntry entry;
     SDL_Thread* thread;
     SDL_Semaphore* wake;
     int started;
@@ -63,12 +61,12 @@ static MikuPanIopTimer* FindTimer(int timer_id)
 static int SDLCALL IopThreadMain(void* data)
 {
     MikuPanIopThread* thread = (MikuPanIopThread *)data;
-    IopThreadEntry entry = (IopThreadEntry)thread->entry;
+    ThreadEntry entry = thread->entry;
 
     SDL_SetTLS(&iop_thread_tls, thread, NULL);
 
     if (entry != NULL) {
-        return entry();
+        entry();
     }
 
     return 0;

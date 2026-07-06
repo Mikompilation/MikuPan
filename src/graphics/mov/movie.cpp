@@ -1026,7 +1026,7 @@ void initMov(char *bsfilename)
             info_log("[AUDIO] %d Hz %d ch", g_audio_state.rate,
                      g_audio_state.channels);
 
-            SDL_AudioSpec spec = {0};
+            SDL_AudioSpec spec;
             spec.freq = g_audio_state.rate;
             spec.format = SDL_AUDIO_S16;
             spec.channels = g_audio_state.channels;
@@ -2325,7 +2325,7 @@ int strFileOpen(StrFile *file, char *filename)
     int dlen;
     int i;
     int len;
-    char *tail;
+    const char *tail;
     sceCdRMode mode;
     int ret;
 

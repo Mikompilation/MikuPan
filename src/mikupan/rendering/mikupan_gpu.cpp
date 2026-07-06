@@ -151,7 +151,7 @@ static SDL_GPUTransferBuffer* AcquireUploadTransfer(unsigned int size)
         return g_xfer_pool[best].buffer;
     }
 
-    SDL_GPUTransferBufferCreateInfo info = {0};
+    SDL_GPUTransferBufferCreateInfo info{};
     info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
     info.size = size;
     SDL_GPUTransferBuffer* buf = SDL_CreateGPUTransferBuffer(g_device, &info);
@@ -642,7 +642,7 @@ static void SetDefaultRenderState(void)
 
 static void CreateFallbackTexture(void)
 {
-    SDL_GPUTextureCreateInfo tinfo = {0};
+    SDL_GPUTextureCreateInfo tinfo{};
     tinfo.type = SDL_GPU_TEXTURETYPE_2D;
     tinfo.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
     tinfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER;
@@ -653,7 +653,7 @@ static void CreateFallbackTexture(void)
     tinfo.sample_count = SDL_GPU_SAMPLECOUNT_1;
     g_fallback_texture = SDL_CreateGPUTexture(g_device, &tinfo);
 
-    SDL_GPUSamplerCreateInfo sinfo = {0};
+    SDL_GPUSamplerCreateInfo sinfo{};
     sinfo.min_filter = SDL_GPU_FILTER_LINEAR;
     sinfo.mag_filter = SDL_GPU_FILTER_LINEAR;
     sinfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
@@ -668,7 +668,7 @@ static void CreateFallbackTexture(void)
     }
 
     const Uint32 white = 0xFFFFFFFFu;
-    SDL_GPUTransferBufferCreateInfo tb = {0};
+    SDL_GPUTransferBufferCreateInfo tb{};
     tb.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
     tb.size = sizeof(white);
     SDL_GPUTransferBuffer* transfer =
@@ -996,7 +996,7 @@ static void CreateDepthTexture(int width, int height)
         return;
     }
 
-    SDL_GPUTextureCreateInfo info = {0};
+    SDL_GPUTextureCreateInfo info{};
     info.type = SDL_GPU_TEXTURETYPE_2D;
     info.format = g_depth_format;
     info.usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
@@ -1073,7 +1073,7 @@ static unsigned int CreateMsaaColorTexture(int width, int height,
         return 0;
     }
 
-    SDL_GPUTextureCreateInfo info = {0};
+    SDL_GPUTextureCreateInfo info{};
     info.type = SDL_GPU_TEXTURETYPE_2D;
     info.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
     info.usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET;
@@ -1767,7 +1767,7 @@ void MikuPan_GPUSetVertexStorageBuffer(unsigned int buffer_id)
 
 static SDL_GPUSampler* CreateSampler(int repeat, int mipmaps, int nearest)
 {
-    SDL_GPUSamplerCreateInfo info = {0};
+    SDL_GPUSamplerCreateInfo info{};
     info.min_filter = nearest ? SDL_GPU_FILTER_NEAREST : SDL_GPU_FILTER_LINEAR;
     info.mag_filter = nearest ? SDL_GPU_FILTER_NEAREST : SDL_GPU_FILTER_LINEAR;
     info.mipmap_mode = mipmaps && !nearest ? SDL_GPU_SAMPLERMIPMAPMODE_LINEAR
@@ -1792,7 +1792,7 @@ static unsigned int CreateTexture(int width, int height,
         return 0;
     }
 
-    SDL_GPUTextureCreateInfo info = {0};
+    SDL_GPUTextureCreateInfo info{};
     info.type = SDL_GPU_TEXTURETYPE_2D;
     info.format = format;
     info.usage = usage;
@@ -1929,7 +1929,7 @@ int MikuPan_GPUReadTextureRGBA8(unsigned int texture_id, int width, int height,
     MikuPan_GPUFlushRenderPass();
     const unsigned int pitch = (unsigned int) width * 4u;
     const unsigned int size = pitch * (unsigned int) height;
-    SDL_GPUTransferBufferCreateInfo info = {0};
+    SDL_GPUTransferBufferCreateInfo info{};
     info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
     info.size = size;
     SDL_GPUTransferBuffer* transfer =
@@ -1991,7 +1991,7 @@ static int MikuPan_GPUReadTextureRGBA8Region(unsigned int texture_id, int x,
 
     const unsigned int pitch = (unsigned int)width * 4u;
     const unsigned int size = pitch * (unsigned int)height;
-    SDL_GPUTransferBufferCreateInfo info = {0};
+    SDL_GPUTransferBufferCreateInfo info{};
     info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
     info.size = size;
     SDL_GPUTransferBuffer* transfer =
@@ -2042,7 +2042,7 @@ int MikuPan_GPUReadTextureR8(unsigned int texture_id, int size,
     }
 
     const unsigned int byte_count = (unsigned int) size * (unsigned int) size;
-    SDL_GPUTransferBufferCreateInfo info = {0};
+    SDL_GPUTransferBufferCreateInfo info{};
     info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
     info.size = byte_count;
     SDL_GPUTransferBuffer* transfer =
@@ -2837,7 +2837,7 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
         }
     }
 
-    SDL_GPUColorTargetBlendState blend = {0};
+    SDL_GPUColorTargetBlendState blend{};
     blend.enable_blend = g_state.blend ? true : false;
     switch (g_state.blend_mode)
     {
@@ -2889,7 +2889,7 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
     blend.enable_color_write_mask = g_state.color_mask_enabled ? true : false;
     blend.color_write_mask = g_state.color_mask;
 
-    SDL_GPUColorTargetDescription color_desc = {0};
+    SDL_GPUColorTargetDescription color_desc{};
     color_desc.format = g_target_color_format;
     color_desc.blend_state = blend;
 
