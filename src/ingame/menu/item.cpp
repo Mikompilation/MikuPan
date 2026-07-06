@@ -20,6 +20,9 @@
 #include "ingame/menu/item_get.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_utils.h"
+#include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/ui/mikupan_ui.h"
 #include "os/eeiop/adpcm/ea_tape.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
@@ -51,6 +54,10 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
 static void SttsRenew();
 static void ItmTrFlsh(short int pos_x, short int pos_y, short int alpha);
 static void YW_DBG();
+static void PutSpriteYWFlipX(u_short label, float pos_x, float pos_y, float rot, int rgb, float alp, float scl_x, float scl_y, u_char scl_mode, int pri, u_char by, u_char blnd, u_char z_sw);
+static void BgFusumaWideSideYW(int rgb, float pos_x, float alpha, int pri, float scl_x, float scl_y);
+static void BgFusumaFadeQuad(float x0, float x1, float a0, float a1);
+static float BgFusumaAlpha(float alpha);
 
 ITEM_USE_DAT item_use_dat[70] = {
     {
@@ -2588,6 +2595,190 @@ void XYAdefaultYW(u_char no)
     yw2d.io_a[no] = 128.0f;
 }
 
+static void PutSpriteYWFlipX(u_short label, float pos_x, float pos_y, float rot, int rgb, float alp, float scl_x, float scl_y, u_char scl_mode, int pri, u_char by, u_char blnd, u_char z_sw)
+{
+    DISP_SPRT ds;
+    float rot_px;
+    float rot_py;
+    float scl_px;
+    float scl_py;
+
+    CopySprDToSpr(&ds, spr_dat + label);
+
+    ds.x += pos_x;
+    ds.y += pos_y;
+
+    if (blnd != 0)
+    {
+        ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+    }
+    else
+    {
+        ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+    }
+
+    ds.alpha = alp;
+
+    rot_px = ds.x + (ds.w >> 1);
+    rot_py = ds.y + (ds.h >> 1);
+
+    ds.rot = rot;
+    ds.crx = rot_px;
+    ds.cry = rot_py;
+
+    ds.r = ((u_int)rgb & 0xff0000) >> 16;
+    ds.g = ((u_int)rgb & 0x00ff00) >> 8;
+    ds.b = ((u_int)rgb & 0x0000ff);
+
+    if (scl_mode == 0)
+    {
+        scl_px = ds.x + (ds.w >> 1);
+        scl_py = ds.y + (ds.h >> 1);
+    }
+    else
+    {
+        scl_px = spr_dat[label].x;
+        scl_py = spr_dat[label].y;
+    }
+
+    ds.csx = scl_px;
+    ds.csy = scl_py;
+    ds.scw = scl_x;
+    ds.sch = scl_y;
+    ds.att |= 0x2;
+
+    if (pri != 0xff)
+    {
+        ds.z = 0x0fffffff - pri;
+        ds.pri = pri;
+    }
+
+    ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, by, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
+
+    if (z_sw != 0)
+    {
+        ds.zbuf = SCE_GS_SET_ZBUF_1(0x8c, SCE_GS_PSMCT24, 1);
+    }
+
+    DispSprD(&ds);
+}
+
+static float BgFusumaAlpha(float alpha)
+{
+    int a = (int)(alpha + 0.5f);
+    a = MikuPan_ClampInt(a, 0, 255);
+    return MikuPan_ConvertScaleColor((u_char)a);
+}
+
+static void BgFusumaFadeQuad(float x0, float x1, float a0, float a1)
+{
+    const float render_w = (float)MikuPan_GetRenderResolutionWidth();
+    const float render_h = (float)MikuPan_GetRenderResolutionHeight();
+    float vertices[6][8];
+    const float y0 = 0.0f;
+    const float y1 = PS2_RESOLUTION_Y_FLOAT;
+    const float positions[6][3] = {
+        {x0, y0, a0}, {x1, y0, a1}, {x0, y1, a0},
+        {x1, y0, a1}, {x1, y1, a1}, {x0, y1, a0}
+    };
+
+    if (render_w <= 0.0f || render_h <= 0.0f || x0 == x1)
+    {
+        return;
+    }
+
+    for (int i = 0; i < 6; i++)
+    {
+        float ndc[2];
+
+        MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(
+            ndc, render_w, render_h,
+            positions[i][0] - PS2_CENTER_X,
+            positions[i][1] - PS2_CENTER_Y);
+        vertices[i][0] = 0.0f;
+        vertices[i][1] = 0.0f;
+        vertices[i][2] = 0.0f;
+        vertices[i][3] = positions[i][2];
+        vertices[i][4] = ndc[0];
+        vertices[i][5] = ndc[1];
+        vertices[i][6] = 0.0f;
+        vertices[i][7] = 1.0f;
+    }
+
+    MikuPan_RenderUntexturedTriangles3D(&vertices[0][0], 6,
+                                        MIKUPAN_DEPTH_ALWAYS,
+                                        MIKUPAN_GPU_BLEND_NORMAL);
+}
+
+static void BgFusumaWideSideYW(int rgb, float pos_x, float alpha, int pri, float scl_x, float scl_y)
+{
+    const float panel_w = (float)spr_dat[396].w;
+    const float panel_w_scaled = panel_w * scl_x;
+    const int render_w = MikuPan_GetRenderResolutionWidth();
+    const int render_h = MikuPan_GetRenderResolutionHeight();
+    float viewport_x = 0.0f;
+    float viewport_y = 0.0f;
+    float viewport_w = 0.0f;
+    float viewport_h = 0.0f;
+    float viewport_scale = 1.0f;
+
+    if (panel_w <= 0.0f || panel_w_scaled <= 0.0f || render_w <= 0 || render_h <= 0)
+    {
+        return;
+    }
+
+    MikuPan_GetPS2Viewport(render_w, render_h,
+                           &viewport_x, &viewport_y,
+                           &viewport_w, &viewport_h,
+                           &viewport_scale);
+
+    if (viewport_scale <= 0.0f)
+    {
+        return;
+    }
+
+    const float screen_left = -viewport_x / viewport_scale;
+    const float screen_right = PS2_RESOLUTION_X_FLOAT + viewport_x / viewport_scale;
+    const float left_start = -pos_x * scl_x;
+    const float right_end = PS2_RESOLUTION_X_FLOAT + pos_x * scl_x;
+
+    if (screen_left < left_start)
+    {
+        for (int i = 1; i <= 16; i++)
+        {
+            const float end_x = left_start - panel_w_scaled * (float)(i - 1);
+            if (end_x <= screen_left)
+            {
+                break;
+            }
+            PutSpriteYWFlipX(396, -pos_x - panel_w * (float)i, 0.0f, 0.0f,
+                             rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
+        }
+
+        const float fade_mid = MikuPan_ClampFloat(screen_left + (left_start - screen_left) * 0.5f + 50.0f, screen_left, left_start);
+        BgFusumaFadeQuad(screen_left, fade_mid, BgFusumaAlpha(alpha), 0.0f);
+    }
+
+    if (screen_right > right_end)
+    {
+        for (int i = 1; i <= 16; i++)
+        {
+            const float start_x = right_end + panel_w_scaled * (float)(i - 1);
+            if (start_x >= screen_right)
+            {
+                break;
+            }
+            PutSpriteYWFlipX(397, pos_x + panel_w * (float)i, 0.0f, 0.0f,
+                             rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
+        }
+
+        const float fade_mid = MikuPan_ClampFloat(right_end + (screen_right - right_end) * 0.5f - 50.0f, right_end, screen_right);
+        BgFusumaFadeQuad(fade_mid, screen_right, 0.0f, BgFusumaAlpha(alpha));
+    }
+
+    (void)pri;
+}
+
 void BgFusumaYW(int rgb, float pos_x, float alpha, int pri)
 {
     float scl_x;
@@ -2600,7 +2791,7 @@ void BgFusumaYW(int rgb, float pos_x, float alpha, int pri)
 
     PutSpriteYW(396, 396, -pos_x, 0.0f, 0.0f, rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
     PutSpriteYW(397, 397, +pos_x, 0.0f, 0.0f, rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
-
+    BgFusumaWideSideYW(rgb, pos_x, alpha, pri, scl_x, scl_y);
 }
 
 static void SttsRenew()

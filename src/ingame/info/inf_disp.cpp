@@ -14,7 +14,7 @@
 #include "graphics/graph2d/effect_sub.h"
 #include "graphics/graph2d/message.h"
 #include "graphics/graph2d/number.h"
-// #include "graphics/graph2d/tim2.h" // (miss) DispSprD
+#include "graphics/graph2d/tim2.h"
 #include "graphics/graph3d/sglib.h"
 #include "ingame/event/ev_main.h"
 #include "ingame/info/inf_disp.h"
@@ -23,14 +23,19 @@
 #include "ingame/plyr/plyr_ctl.h"
 #include "main/glob.h"
 #include "os/eeiop/eese.h"
+#include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
 #include "ingame/plyr/plyr_ctl.h"
 
 #include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 static void FndrInit();
 static void SttsFade();
 static void FndrFade();
+static void MikuPan_DrawFinderViewportMask(u_char alpha, float padding_pixels, int force_solid);
+static void MikuPan_AddFinderMaskQuad(float *dst, int *vertex, float x0, float y0, float x1, float y1, float alpha);
 static void WeakPoint(short int pos_x, short int pos_y);
 static void DspBigCircle(u_short lu_chr, short int pos_x, short int pos_y, u_char alp, short int size_r, u_char cl_ptn);
 static void PointerNP(short int cx, short int cy, u_char red, u_char alp, float siz);
@@ -91,7 +96,6 @@ static ZAN dmg_scr;
 static JET_SET jet1[25];
 static JET_SET jet2[25];
 static u_char znz[12][6];
-
 #define PI 3.1415927f
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
 
@@ -140,6 +144,7 @@ void InformationDispMain()
 
     if (inf_dsp.fndr_dsp_flg != 0)
     {
+        MikuPan_DrawFinderViewportMask(inf_dsp.fndr_fade_alp, 28.0f, 0);
         FinderDisp(fndr_mx, fndr_my);
     }
 
@@ -183,7 +188,12 @@ void InformationDispMain()
     if (inf_dsp.fndr_dsp_flg != 0)
     {
         MikuPan_DrawFinderFilmIcon(fndr_mx, fndr_my, inf_dsp.fndr_fade_alp);
+    }
 }
+
+
+void InformationDispLateFinderMask()
+{
 }
 
 void InformationDispModeCtrl()
@@ -490,6 +500,119 @@ static void FndrFade()
             inf_dsp.fndr_dsp_flg = 1;
         }
     break;
+    }
+}
+
+static void MikuPan_AddFinderMaskQuad(float *dst, int *vertex, float x0, float y0, float x1, float y1, float alpha)
+{
+    const float colour[4] = {0.0f, 0.0f, 0.0f, alpha};
+    const float z = 0.0f;
+    const float w = 1.0f;
+    const float quad[6][2] = {
+        {x0, y0}, {x1, y0}, {x0, y1},
+        {x1, y0}, {x1, y1}, {x0, y1}
+    };
+
+    for (int i = 0; i < 6; i++)
+    {
+        float *v = dst + (*vertex * 8);
+        v[0] = colour[0];
+        v[1] = colour[1];
+        v[2] = colour[2];
+        v[3] = colour[3];
+        v[4] = quad[i][0];
+        v[5] = quad[i][1];
+        v[6] = z;
+        v[7] = w;
+        (*vertex)++;
+    }
+}
+
+static void MikuPan_DrawFinderViewportMask(u_char alpha, float padding_pixels, int force_solid)
+{
+    if (alpha == 0)
+    {
+        return;
+    }
+
+    const int render_w = MikuPan_GetRenderResolutionWidth();
+    const int render_h = MikuPan_GetRenderResolutionHeight();
+
+    if (render_w <= 0 || render_h <= 0)
+    {
+        return;
+    }
+
+    float viewport_x = 0.0f;
+    float viewport_y = 0.0f;
+    float viewport_w = 0.0f;
+    float viewport_h = 0.0f;
+    float viewport_scale = 1.0f;
+
+    MikuPan_GetPS2Viewport(render_w, render_h,
+                           &viewport_x, &viewport_y,
+                           &viewport_w, &viewport_h,
+                           &viewport_scale);
+
+    float mask_left = viewport_x + padding_pixels;
+    float mask_right = viewport_x + viewport_w - padding_pixels;
+    float mask_top = viewport_y + padding_pixels;
+    float mask_bottom = viewport_y + viewport_h - padding_pixels;
+
+    mask_left = MikuPan_ClampFloat(mask_left, 0.0f, (float)render_w);
+    mask_right = MikuPan_ClampFloat(mask_right, 0.0f, (float)render_w);
+    mask_top = MikuPan_ClampFloat(mask_top, 0.0f, (float)render_h);
+    mask_bottom = MikuPan_ClampFloat(mask_bottom, 0.0f, (float)render_h);
+
+    if (mask_left > mask_right)
+    {
+        float center = (mask_left + mask_right) * 0.5f;
+        mask_left = center;
+        mask_right = center;
+    }
+
+    if (mask_top > mask_bottom)
+    {
+        float center = (mask_top + mask_bottom) * 0.5f;
+        mask_top = center;
+        mask_bottom = center;
+    }
+
+    const float left = mask_left / (float)render_w * 2.0f - 1.0f;
+    const float right = mask_right / (float)render_w * 2.0f - 1.0f;
+    const float top = 1.0f - mask_top / (float)render_h * 2.0f;
+    const float bottom = 1.0f - mask_bottom / (float)render_h * 2.0f;
+    const float mask_alpha = force_solid != 0 ? 1.0f :
+        MikuPan_ConvertScaleColor((u_char)MikuPan_ClampInt((int)(alpha * 128.0f / 100.0f + 0.5f), 0, 128));
+
+    float vertices[24 * 8];
+    int vertex = 0;
+
+    if (left > -1.0f)
+    {
+        MikuPan_AddFinderMaskQuad(vertices, &vertex, -1.0f, 1.0f, left, -1.0f, mask_alpha);
+    }
+
+    if (right < 1.0f)
+    {
+        MikuPan_AddFinderMaskQuad(vertices, &vertex, right, 1.0f, 1.0f, -1.0f, mask_alpha);
+    }
+
+    if (top < 1.0f)
+    {
+        MikuPan_AddFinderMaskQuad(vertices, &vertex, left, 1.0f, right, top, mask_alpha);
+    }
+
+    if (bottom > -1.0f)
+    {
+        MikuPan_AddFinderMaskQuad(vertices, &vertex, left, bottom, right, -1.0f, mask_alpha);
+    }
+
+    if (vertex > 0)
+    {
+        MikuPan_RenderUntexturedTriangles3D(vertices, vertex,
+                                            MIKUPAN_DEPTH_ALWAYS,
+                                            MIKUPAN_GPU_BLEND_NORMAL);
     }
 }
 

@@ -90,6 +90,7 @@ static void gra2dSubG3(int fl)
     InformationDispMain();
     PhotoMakeSave2();
     EffectControl(GRA2D_CALL_IG32);
+    InformationDispLateFinderMask();
     PauseDisp();
 #ifdef BUILD_EU_VERSION
     CallSubtitles();
