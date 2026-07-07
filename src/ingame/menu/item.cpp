@@ -33,7 +33,7 @@
 #include "graphics/graph2d/subtitles.h"
 #endif
 
-static void ItemUse(u_char item_no);
+
 static int IngameMenuItemEventOpenJudge(u_char item_no);
 static void ItemModeInOut();
 static void ItemModeInOut2();
@@ -976,7 +976,7 @@ void IngameMenuItemDisp()
     ItemCntRenew();
 }
 
-static void ItemUse(u_char item_no)
+void ItemUse(u_char item_no)
 {
     int adpcm_no;
 
@@ -994,6 +994,13 @@ static void ItemUse(u_char item_no)
         SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
     break;
     case 3:
+        /// Check if player is already max HP
+        if (plyr_wrk.hp == 500)
+        {
+            //SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
+            break;
+        }
+
         plyr_wrk.hp += item_use_dat[item_no].value1;
 
         if (plyr_wrk.hp > 500)

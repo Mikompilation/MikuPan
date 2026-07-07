@@ -1,3 +1,4 @@
+#include <graphics/graph2d/sprt.h>
 SPRT_DAT fntdat[] = {
     {
         .tex0 = 0x20051005e5422300,

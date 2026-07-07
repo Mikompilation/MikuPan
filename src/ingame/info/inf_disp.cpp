@@ -188,6 +188,7 @@ void InformationDispMain()
     if (inf_dsp.fndr_dsp_flg != 0)
     {
         MikuPan_DrawFinderFilmIcon(fndr_mx, fndr_my, inf_dsp.fndr_fade_alp);
+        MikuPan_DrawHealingItemHudIcon(fndr_mx, fndr_my, inf_dsp.fndr_fade_alp);
     }
 }
 
