@@ -181,6 +181,89 @@ static u_char EffectScrClampColor(int value)
     return (u_char)value;
 }
 
+static int EffectScrClipHasUsableW(const sceVu0FVECTOR clip)
+{
+    const float min_w = 0.00001f;
+
+    return MikuPan_IsFiniteFloat(clip[0]) &&
+           MikuPan_IsFiniteFloat(clip[1]) &&
+           MikuPan_IsFiniteFloat(clip[2]) &&
+           MikuPan_IsFiniteFloat(clip[3]) &&
+           clip[3] > min_w;
+}
+
+static int EffectScrClipToNDC(float *ndc, const sceVu0FVECTOR clip)
+{
+    float inv_w;
+
+    ndc[0] = 0.0f;
+    ndc[1] = 0.0f;
+    ndc[2] = 0.0f;
+
+    if (!EffectScrClipHasUsableW(clip))
+    {
+        return 0;
+    }
+
+    if (clip[0] < -clip[3] || clip[0] > clip[3] ||
+        clip[1] < -clip[3] || clip[1] > clip[3] ||
+        clip[2] < -clip[3] || clip[2] > clip[3])
+    {
+        return 0;
+    }
+
+    inv_w = 1.0f / clip[3];
+    ndc[0] = clip[0] * inv_w;
+    ndc[1] = clip[1] * inv_w;
+    ndc[2] = clip[2] * inv_w;
+
+    return MikuPan_IsFiniteFloat(ndc[0]) &&
+           MikuPan_IsFiniteFloat(ndc[1]) &&
+           MikuPan_IsFiniteFloat(ndc[2]);
+}
+
+static void EffectScrClipToScreenCopyUV(float *uv, const sceVu0FVECTOR clip)
+{
+    float inv_w;
+
+    if (!EffectScrClipHasUsableW(clip))
+    {
+        uv[0] = 0.0f;
+        uv[1] = 0.0f;
+        return;
+    }
+
+    inv_w = 1.0f / clip[3];
+    uv[0] = clip[0] * inv_w * 0.5f + 0.5f;
+    uv[1] = 0.5f - clip[1] * inv_w * 0.5f;
+
+    if (!MikuPan_IsFiniteFloat(uv[0]) || !MikuPan_IsFiniteFloat(uv[1]))
+    {
+        uv[0] = 0.0f;
+        uv[1] = 0.0f;
+    }
+}
+
+static void EffectScrWriteProjectedScreenCopyVertex(
+    float *dst,
+    const float *src_uv,
+    const float *dst_ndc,
+    int alpha)
+{
+    dst[0] = src_uv[0];
+    dst[1] = src_uv[1];
+    dst[2] = 0.0f;
+    dst[3] = 0.0f;
+    dst[4] = 1.0f;
+    dst[5] = 1.0f;
+    dst[6] = 1.0f;
+    dst[7] = MikuPan_ConvertScaleColor(EffectScrClampColor(alpha));
+    dst[8] = dst_ndc[0];
+    dst[9] = dst_ndc[1];
+    dst[10] = dst_ndc[2];
+    dst[11] = 1.0f;
+}
+
 static void EffectScrWriteScreenCopyVertex(
     float *dst,
     float src_x,
@@ -1679,7 +1762,34 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
 
     {
         float render_buffer[EFFECT_SCR_DEFORM_MAX_VERTICES][12];
+        float src_uv[825][2];
+        float dst_ndc[825][3];
+        int visible[825];
         int render_vertices = 0;
+        sceVu0FMATRIX gl_slm;
+
+        sceVu0MulMatrix(gl_slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
+
+        for (i = 0; i < vnumw * vnumh; i++)
+        {
+            sceVu0FVECTOR src_local;
+            sceVu0FVECTOR src_clip;
+            sceVu0FVECTOR dst_clip;
+
+            wix = i % vnumw;
+            wiy = i / vnumw;
+
+            src_local[0] = wix * ts - cntw;
+            src_local[1] = wiy * ts - cnth;
+            src_local[2] = 0.0f;
+            src_local[3] = 1.0f;
+
+            sceVu0ApplyMatrix(src_clip, gl_slm, src_local);
+            EffectScrClipToScreenCopyUV(src_uv[i], src_clip);
+
+            sceVu0ApplyMatrix(dst_clip, gl_slm, vt[i]);
+            visible[i] = EffectScrClipToNDC(dst_ndc[i], dst_clip);
+        }
 
         for (int j = 0; j < pnumh; j++)
         {
@@ -1689,39 +1799,57 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
                 int bl = tl + vnumw;
                 int tr = tl + 1;
                 int br = bl + 1;
-                int tlc = swch ? (tl % 0xff) : 0x80;
-                int blc = swch ? (bl % 0xff) : 0x80;
-                int trc = swch ? (tr % 0xff) : 0x80;
-                int brc = swch ? (br % 0xff) : 0x80;
-                float src_x[4] = {tx[tl], tx[bl], tx[tr], tx[br]};
-                float src_y[4] = {ty[tl], ty[bl], ty[tr], ty[br]};
-                float dst_x[4] = {vtw[tl][0], vtw[bl][0], vtw[tr][0], vtw[br][0]};
-                float dst_y[4] = {vtw[tl][1], vtw[bl][1], vtw[tr][1], vtw[br][1]};
-                int rgba[4][4] = {
-                    {tlc, tlc, tlc, swch ? 0x80 : 0x80},
-                    {blc, blc, blc, swch ? 0x80 : alp},
-                    {trc, trc, trc, swch ? 0x80 : 0x80},
-                    {brc, brc, brc, swch ? 0x80 : alp},
-                };
 
-                render_vertices = EffectScrAppendScreenCopyQuad(
-                    &render_buffer[0][0],
-                    render_vertices,
-                    EFFECT_SCR_DEFORM_MAX_VERTICES,
-                    src_x,
-                    src_y,
-                    dst_x,
-                    dst_y,
-                    rgba);
+                if (render_vertices + 6 > EFFECT_SCR_DEFORM_MAX_VERTICES)
+                {
+                    break;
+                }
+
+                if (visible[tl] && visible[bl] && visible[tr])
+                {
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[tl],
+                        dst_ndc[tl],
+                        alp);
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[bl],
+                        dst_ndc[bl],
+                        alp);
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[tr],
+                        dst_ndc[tr],
+                        alp);
+                }
+
+                if (visible[tr] && visible[bl] && visible[br])
+                {
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[tr],
+                        dst_ndc[tr],
+                        alp);
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[bl],
+                        dst_ndc[bl],
+                        alp);
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[br],
+                        dst_ndc[br],
+                        alp);
+                }
             }
         }
 
-        MikuPan_RenderScreenCopyTriangles3D(
+        MikuPan_RenderScreenCopyTriangles3DSTQ(
             &sd1.g_GsTex0,
             &render_buffer[0][0],
             render_vertices,
-            1,
-            MIKUPAN_GPU_BLEND_NORMAL);
+            MIKUPAN_DEPTH_ALWAYS);
     }
     
     pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
@@ -1808,45 +1936,55 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
     vnumh = 25;
     vnumw = 33;
 
-    pszw = 640.0f; // $f30,0x4420
-	pszh = 224.0f; // $f29,0x4360
-    cntw = 320.0f; // $f28,0x43a0
-	cnth = 112.0f; // $f27,0x42e0
-
-    LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
-
-    yoff = GetYOffsetf();
-
-    for (j = 0; j < vnumh; j++)
     {
-        for (i = 0; i < vnumw; i++)
-        {
-            vt[j][i][0] = 2048.0f;
-            vt[j][i][1] = 2048.0f;
-            vt[j][i][2] = 0.0f;
-            vt[j][i][3] = 1.0f;
+        float eff_hw, eff_hh;
+        float tx_start;
+        float ty_start;
 
-            tx[j][i] = (float)(i * 640) / pnumw;
-            ty[j][i] = (float)(j * 224) / pnumh + yoff;
-            
-            if (i == 0)
+        MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);
+
+        pszw = eff_hw * 2.0f;
+        pszh = eff_hh;
+        cntw = eff_hw;
+        cnth = eff_hh * 0.5f;
+        tx_start = 320.0f - eff_hw;
+        ty_start = 112.0f - cnth;
+
+        LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
+
+        yoff = GetYOffsetf();
+
+        for (j = 0; j < vnumh; j++)
+        {
+            for (i = 0; i < vnumw; i++)
             {
-                tx[j][0] += 1.0f;
-            }
-            
-            if (i == vnumw-1)
-            {
-                tx[j][vnumw-1] -= 1.0f;
-            }
-            
-            if (j == 0)
-            {
-                ty[0][i] += 1.0f;
-            }
-            
-            if (j == vnumh-1)
-            {
-                ty[vnumh-1][i] -= 1.0f;
+                vt[j][i][0] = 2048.0f;
+                vt[j][i][1] = 2048.0f;
+                vt[j][i][2] = 0.0f;
+                vt[j][i][3] = 1.0f;
+
+                tx[j][i] = (float)(i * pszw) / pnumw + tx_start;
+                ty[j][i] = (float)(j * pszh) / pnumh + ty_start + yoff;
+
+                if (i == 0)
+                {
+                    tx[j][0] += 1.0f;
+                }
+
+                if (i == vnumw-1)
+                {
+                    tx[j][vnumw-1] -= 1.0f;
+                }
+
+                if (j == 0)
+                {
+                    ty[0][i] += 1.0f;
+                }
+
+                if (j == vnumh-1)
+                {
+                    ty[vnumh-1][i] -= 1.0f;
+                }
             }
         }
     }
@@ -1997,8 +2135,18 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
                 int blc = (i * 2 + 1) * c;
                 int trc = (i * 2 + 2) * c;
                 int brc = (i * 2 + 3) * c;
-                float src_x[4] = {tx[j][i], tx[j + 1][i], tx[j][i + 1], tx[j + 1][i + 1]};
-                float src_y[4] = {ty[j][i], ty[j + 1][i], ty[j][i + 1], ty[j + 1][i + 1]};
+                float src_x[4] = {
+                    tx[j][i], 
+                    tx[j + 1][i], 
+                    tx[j][i + 1], 
+                    tx[j + 1][i + 1]
+                };
+                float src_y[4] = {
+                    ty[j][i] - yoff,
+                    ty[j + 1][i] - yoff,
+                    ty[j][i + 1] - yoff,
+                    ty[j + 1][i + 1] - yoff,
+                };
                 float dst_x[4] = {
                     vt[j][i][0] + vtw[j][i][0],
                     vt[j + 1][i][0] + vtw[j + 1][i][0],
@@ -3263,7 +3411,10 @@ void SubDither3(/* s0 16 */ int type, /* f27 65 */ float alp, /* f28 66 */ float
     sceVu0CopyVector(old_cam_i, camera.i);
     
     
-    if (isnan(tx) || isnan(ty) || isnan(otx) || isnan(oty) || isinf(tx) || isinf(ty) || isinf(otx) || isinf(oty))
+    if (!MikuPan_IsFiniteFloat(tx) ||
+        !MikuPan_IsFiniteFloat(ty) ||
+        !MikuPan_IsFiniteFloat(otx) ||
+        !MikuPan_IsFiniteFloat(oty))
     {
         mvx = 0.0f;
         mvy = 0.0f;
@@ -3464,7 +3615,10 @@ void SubDither4(/* f27 65 */ float alp, /* f28 66 */ float spd)
     GetCamI2DPos(old_cam_i, &otx, &oty);
     sceVu0CopyVector(old_cam_i,camera.i);
     
-    if (isnan(tx) || isnan(ty) || isnan(otx) || isnan(oty))
+    if (!MikuPan_IsFiniteFloat(tx) ||
+        !MikuPan_IsFiniteFloat(ty) ||
+        !MikuPan_IsFiniteFloat(otx) ||
+        !MikuPan_IsFiniteFloat(oty))
     {
         mvx = 0.0f;
         mvy = 0.0f;
