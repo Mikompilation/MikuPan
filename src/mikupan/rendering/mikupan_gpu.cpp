@@ -4,6 +4,7 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_shader.h"
+#include "mikupan_profiler.h"
 #include <glad/gl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -714,11 +715,11 @@ int MikuPan_GPUInit(SDL_Window* window, int vsync, const char* gpu_driver,
         SDL_CreateGPUDevice(MIKUPAN_GPU_SHADER_FORMATS, debug, requested);
     if (g_device == NULL && requested != NULL)
     {
-        info_log("Could not create SDL_GPU device with driver '%s' (%s), "
-                 "falling back to automatic selection",
-                 requested, SDL_GetError());
-        g_device =
-            SDL_CreateGPUDevice(MIKUPAN_GPU_SHADER_FORMATS, debug, NULL);
+        info_log(
+            "Could not create SDL_GPU device with driver '%s' (%s), "
+            "falling back to automatic selection",
+            requested, SDL_GetError());
+        g_device = SDL_CreateGPUDevice(MIKUPAN_GPU_SHADER_FORMATS, debug, NULL);
     }
 
     if (g_device == NULL)
@@ -847,6 +848,7 @@ void MikuPan_GPUFlushRenderPass(void)
 {
     if (g_pass != NULL)
     {
+        MikuPan_PerfRecordRenderPassFlush();
         SDL_EndGPURenderPass(g_pass);
         g_pass = NULL;
         if (g_pass_resolves_scene)
@@ -865,7 +867,7 @@ void MikuPan_GPUEndFrame(void)
     if (g_cmd != NULL)
     {
         if (g_depth_query_submitting_batch != NULL &&
-            g_depth_query_submitting_batch->count > 0)
+             g_depth_query_submitting_batch->count > 0)
         {
             SDL_GPUFence *fence = SDL_SubmitGPUCommandBufferAndAcquireFence(g_cmd);
             if (fence != NULL)
@@ -890,8 +892,10 @@ void MikuPan_GPUEndFrame(void)
 
 static void ResolveSceneTexture(int preserve_msaa)
 {
-    if (g_scene_msaa <= 1 || !g_scene_resolve_dirty
-        || g_scene_texture_id == 0 || g_scene_msaa_color_id == 0)
+    if (g_scene_msaa <= 1
+        || !g_scene_resolve_dirty
+        || g_scene_texture_id == 0
+        || g_scene_msaa_color_id == 0)
     {
         return;
     }
@@ -1027,7 +1031,6 @@ static void CreateDepthTexture(int width, int height)
     g_scene_depth_id = id;
 }
 
-
 unsigned int MikuPan_GPUCreateDepthTexture(int width, int height)
 {
     unsigned int id = AllocTextureId();
@@ -1101,9 +1104,9 @@ static unsigned int CreateMsaaColorTexture(int width, int height,
 static int DepthQueryKeysEqual(const MikuPanDepthQueryKey *a,
                                const MikuPanDepthQueryKey *b)
 {
-    return a->kind == b->kind &&
-           a->object_id == b->object_id &&
-           a->point_index == b->point_index;
+    return a->kind == b->kind
+        && a->object_id == b->object_id
+        && a->point_index == b->point_index;
 }
 
 static void ResetDepthQueryQueue(void)
@@ -1115,7 +1118,8 @@ static void ResetDepthQueryQueue(void)
 
     for (int i = 0; i < MIKUPAN_DEPTH_QUERY_MAX_PENDING_BATCHES; i++)
     {
-        MikuPanDepthQueryPendingBatch *batch = &g_depth_query_pending_batches[i];
+        MikuPanDepthQueryPendingBatch *batch =
+            &g_depth_query_pending_batches[i];
         if (batch->fence != NULL)
         {
             SDL_ReleaseGPUFence(g_device, batch->fence);
@@ -1135,8 +1139,8 @@ static void ResetDepthQueryQueue(void)
            sizeof(g_depth_query_pending_batches));
 }
 
-static MikuPanDepthQueryCacheEntry *FindDepthQueryCache(
-    const MikuPanDepthQueryKey *key)
+static MikuPanDepthQueryCacheEntry*
+FindDepthQueryCache(const MikuPanDepthQueryKey *key)
 {
     for (int i = 0; i < MIKUPAN_DEPTH_QUERY_CACHE_SLOTS; i++)
     {
@@ -1150,8 +1154,8 @@ static MikuPanDepthQueryCacheEntry *FindDepthQueryCache(
     return NULL;
 }
 
-static MikuPanDepthQueryCacheEntry *AllocDepthQueryCache(
-    const MikuPanDepthQueryKey *key)
+static MikuPanDepthQueryCacheEntry*
+AllocDepthQueryCache(const MikuPanDepthQueryKey *key)
 {
     MikuPanDepthQueryCacheEntry *oldest = NULL;
 
@@ -1243,8 +1247,7 @@ static void ReleaseDepthQueryPendingBatch(MikuPanDepthQueryPendingBatch *batch)
     {
         if (batch->entries[i].transfer != NULL)
         {
-            SDL_ReleaseGPUTransferBuffer(g_device,
-                                         batch->entries[i].transfer);
+            SDL_ReleaseGPUTransferBuffer(g_device, batch->entries[i].transfer);
         }
     }
 
@@ -1301,8 +1304,8 @@ static void PollDepthQueryPendingBatches(void)
             if (entry->active)
             {
                 SetDepthQueryCache(&entry->key,
-                                   DepthQueryTransferVisible(entry),
-                                   g_gpu_frame);
+                                    DepthQueryTransferVisible(entry),
+                                    g_gpu_frame);
             }
         }
 
@@ -1345,10 +1348,10 @@ static int EnsureDepthQueryTargets(void)
         return 0;
     }
 
-    if (g_depth_query_texture_id != 0 &&
-        g_depth_query_width == g_scene_width &&
-        g_depth_query_height == g_scene_height &&
-        g_depth_query_msaa == g_scene_msaa)
+    if (g_depth_query_texture_id != 0
+        && g_depth_query_width == g_scene_width
+        && g_depth_query_height == g_scene_height
+        && g_depth_query_msaa == g_scene_msaa)
     {
         return 1;
     }
@@ -1403,8 +1406,7 @@ static void BeginDepthQueryPass(void)
     MikuPan_GPUFlushRenderPass();
 
     g_target = MIKUPAN_GPU_TARGET_SCREEN_COPY;
-    g_target_color = (g_scene_msaa > 1 && msaa != NULL) ? msaa->texture
-                                                        : resolve->texture;
+    g_target_color = (g_scene_msaa > 1 && msaa != NULL) ? msaa->texture : resolve->texture;
     g_target_resolve = (g_scene_msaa > 1) ? resolve->texture : NULL;
     g_target_depth = depth->texture;
     g_target_color_format = resolve->format;
@@ -1463,8 +1465,11 @@ static void BeginDepthQueryPass(void)
     g_viewport[1] = 0;
     g_viewport[2] = g_target_width;
     g_viewport[3] = g_target_height;
-    SDL_GPUViewport vp = {0.0f, 0.0f, (float)g_target_width,
-                          (float)g_target_height, 0.0f, 1.0f};
+    SDL_GPUViewport vp = {
+        0.0f, 0.0f,
+        (float)g_target_width,
+        (float)g_target_height,
+        0.0f, 1.0f};
     SDL_SetGPUViewport(g_pass, &vp);
 
     g_scissor_enabled = 0;
@@ -1505,7 +1510,7 @@ void MikuPan_GPUCreateInternalBuffer(int width, int height, int msaa)
     SDL_GPUSampleCount sc = SampleCountFromMSAA(msaa);
     while (sc != SDL_GPU_SAMPLECOUNT_1
            && !SDL_GPUTextureSupportsSampleCount(
-                  g_device, SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, sc))
+               g_device, SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, sc))
     {
         sc = (sc == SDL_GPU_SAMPLECOUNT_8)   ? SDL_GPU_SAMPLECOUNT_4
              : (sc == SDL_GPU_SAMPLECOUNT_4) ? SDL_GPU_SAMPLECOUNT_2
@@ -1690,6 +1695,7 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
         return;
     }
 
+    int grew = 0;
     if (size > entry->size)
     {
         SDL_ReleaseGPUBuffer(g_device, entry->buffer);
@@ -1698,8 +1704,11 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
         info.size = size;
         entry->buffer = SDL_CreateGPUBuffer(g_device, &info);
         entry->size = size;
+        grew = 1;
     }
 
+    int flushed_render_pass = g_pass != NULL;
+    MikuPan_PerfRecordGpuUpload(id, size, grew, flushed_render_pass);
     MikuPan_GPUFlushRenderPass();
 
     SDL_GPUTransferBuffer* transfer = AcquireUploadTransfer(size);
@@ -1978,7 +1987,8 @@ static int MikuPan_GPUReadTextureRGBA8Region(unsigned int texture_id, int x,
         return 0;
     }
 
-    if (x < 0 || y < 0 || x + width > entry->width || y + height > entry->height)
+    if (x < 0 || y < 0 || x + width > entry->width
+        || y + height > entry->height)
     {
         return 0;
     }
@@ -2111,11 +2121,14 @@ static void RestoreDepthQueryGpuState(const GPURenderState *state,
 }
 
 static int MikuPan_GPUDepthQueryProjectWorldToTarget(const float world_pos[4],
-                                                       float *screen_x,
-                                                       float *screen_y)
+                                                     float *screen_x,
+                                                     float *screen_y)
 {
-    if (world_pos == NULL || screen_x == NULL || screen_y == NULL ||
-        g_depth_query_width <= 0 || g_depth_query_height <= 0)
+    if (world_pos == NULL
+        || screen_x == NULL
+        || screen_y == NULL
+        || g_depth_query_width <= 0
+        || g_depth_query_height <= 0)
     {
         return -1;
     }
@@ -2127,7 +2140,7 @@ static int MikuPan_GPUDepthQueryProjectWorldToTarget(const float world_pos[4],
 
     for (int row = 0; row < 4; row++)
     {
-        view_pos[row] =
+        view_pos[row] = 
             view[row] * world_pos[0] +
             view[4 + row] * world_pos[1] +
             view[8 + row] * world_pos[2] +
@@ -2136,8 +2149,7 @@ static int MikuPan_GPUDepthQueryProjectWorldToTarget(const float world_pos[4],
 
     for (int row = 0; row < 4; row++)
     {
-        clip_pos[row] =
-            proj[row] * view_pos[0] +
+        clip_pos[row] = proj[row] * view_pos[0] +
             proj[4 + row] * view_pos[1] +
             proj[8 + row] * view_pos[2] +
             proj[12 + row] * view_pos[3];
@@ -2150,20 +2162,21 @@ static int MikuPan_GPUDepthQueryProjectWorldToTarget(const float world_pos[4],
 
     const float ndc_x = clip_pos[0] / clip_pos[3];
     const float ndc_y = clip_pos[1] / clip_pos[3];
-    const float margin_x = MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN /
-                           (float)g_depth_query_width * 2.0f;
-    const float margin_y = MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN /
-                           (float)g_depth_query_height * 2.0f;
+    const float margin_x =
+        MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN / (float)g_depth_query_width * 2.0f;
+    const float margin_y =
+        MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN / (float)g_depth_query_height * 2.0f;
 
-    if (ndc_x < -1.0f - margin_x || ndc_x > 1.0f + margin_x ||
-        ndc_y < -1.0f - margin_y || ndc_y > 1.0f + margin_y)
+    if (ndc_x < -1.0f - margin_x
+        || ndc_x > 1.0f + margin_x
+        || ndc_y < -1.0f - margin_y
+        || ndc_y > 1.0f + margin_y)
     {
         return 0;
     }
 
     *screen_x = (ndc_x * 0.5f + 0.5f) * (float)g_depth_query_width;
-    *screen_y = (1.0f - (ndc_y * 0.5f + 0.5f)) *
-                (float)g_depth_query_height;
+    *screen_y = (1.0f - (ndc_y * 0.5f + 0.5f)) * (float)g_depth_query_height;
     return 1;
 }
 
@@ -2171,8 +2184,8 @@ static int DepthQueryQueuedIndex(const MikuPanDepthQueryKey *key)
 {
     for (int i = 0; i < g_depth_query_request_count; i++)
     {
-        if (g_depth_query_requests[i].active &&
-            DepthQueryKeysEqual(&g_depth_query_requests[i].key, key))
+        if (g_depth_query_requests[i].active
+            && DepthQueryKeysEqual(&g_depth_query_requests[i].key, key))
         {
             return i;
         }
@@ -2183,12 +2196,14 @@ static int DepthQueryQueuedIndex(const MikuPanDepthQueryKey *key)
 
 static int AddDepthQueryDownload(MikuPanDepthQueryPendingBatch *batch,
                                  const MikuPanDepthQueryKey *key,
-                                 float screen_x,
-                                 float screen_y)
+                                 float screen_x, float screen_y)
 {
     GPUTextureEntry *entry = TextureEntry(g_depth_query_texture_id);
-    if (batch == NULL || key == NULL || entry == NULL ||
-        g_depth_query_width <= 0 || g_depth_query_height <= 0)
+    if (batch == NULL
+        || key == NULL
+        || entry == NULL
+        || g_depth_query_width <= 0
+        || g_depth_query_height <= 0)
     {
         return 0;
     }
@@ -2198,29 +2213,26 @@ static int AddDepthQueryDownload(MikuPanDepthQueryPendingBatch *batch,
         return 0;
     }
 
-    if (screen_x < -MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN ||
-        screen_x > (float)g_depth_query_width +
-                       MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN ||
-        screen_y < -MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN ||
-        screen_y > (float)g_depth_query_height +
-                       MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN)
+    if (screen_x < -MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN
+        || screen_x > (float) g_depth_query_width + MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN
+        || screen_y < -MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN
+        || screen_y > (float) g_depth_query_height
+                          + MIKUPAN_DEPTH_QUERY_SCREEN_MARGIN)
     {
         SetDepthQueryCache(key, 0, g_gpu_frame);
         return 0;
     }
 
-    const int cx = MikuPan_ClampInt((int)(screen_x + 0.5f), 0,
-                                    g_depth_query_width - 1);
-    const int cy = MikuPan_ClampInt((int)(screen_y + 0.5f), 0,
-                                    g_depth_query_height - 1);
-    const int rx = MikuPan_ClampInt(
-        MIKUPAN_DEPTH_QUERY_SCREEN_RADIUS,
-        MIKUPAN_DEPTH_QUERY_MIN_READ_RADIUS,
-        MIKUPAN_DEPTH_QUERY_MAX_READ_RADIUS);
-    const int ry = MikuPan_ClampInt(
-        MIKUPAN_DEPTH_QUERY_SCREEN_RADIUS,
-        MIKUPAN_DEPTH_QUERY_MIN_READ_RADIUS,
-        MIKUPAN_DEPTH_QUERY_MAX_READ_RADIUS);
+    const int cx =
+        MikuPan_ClampInt((int)(screen_x + 0.5f), 0,g_depth_query_width - 1);
+    const int cy =
+        MikuPan_ClampInt((int)(screen_y + 0.5f), 0,g_depth_query_height - 1);
+    const int rx = MikuPan_ClampInt(MIKUPAN_DEPTH_QUERY_SCREEN_RADIUS,
+                                    MIKUPAN_DEPTH_QUERY_MIN_READ_RADIUS,
+                                    MIKUPAN_DEPTH_QUERY_MAX_READ_RADIUS);
+    const int ry = MikuPan_ClampInt(MIKUPAN_DEPTH_QUERY_SCREEN_RADIUS,
+                                    MIKUPAN_DEPTH_QUERY_MIN_READ_RADIUS,
+                                    MIKUPAN_DEPTH_QUERY_MAX_READ_RADIUS);
     const int x0 = MikuPan_ClampInt(cx - rx, 0, g_depth_query_width - 1);
     const int y0 = MikuPan_ClampInt(cy - ry, 0, g_depth_query_height - 1);
     const int x1 = MikuPan_ClampInt(cx + rx + 1, 1, g_depth_query_width);
@@ -2234,13 +2246,11 @@ static int AddDepthQueryDownload(MikuPanDepthQueryPendingBatch *batch,
         return 0;
     }
 
-    const unsigned int byte_count = (unsigned int)width *
-                                    (unsigned int)height * 4u;
+    const unsigned int byte_count = (unsigned int)width * (unsigned int)height * 4u;
     SDL_GPUTransferBufferCreateInfo info{};
     info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
     info.size = byte_count;
-    SDL_GPUTransferBuffer *transfer = SDL_CreateGPUTransferBuffer(g_device,
-                                                                  &info);
+    SDL_GPUTransferBuffer *transfer = SDL_CreateGPUTransferBuffer(g_device, &info);
     if (transfer == NULL)
     {
         return 0;
@@ -2494,12 +2504,12 @@ static int MikuPan_GPUDepthQueryReadMarkerRegion(float screen_x,
                                     g_depth_query_height - 1);
     const int rx = MikuPan_ClampInt(
         MIKUPAN_DEPTH_QUERY_SCREEN_RADIUS,
-        MIKUPAN_DEPTH_QUERY_MIN_READ_RADIUS,
-        MIKUPAN_DEPTH_QUERY_MAX_READ_RADIUS);
+                                    MIKUPAN_DEPTH_QUERY_MIN_READ_RADIUS,
+                                    MIKUPAN_DEPTH_QUERY_MAX_READ_RADIUS);
     const int ry = MikuPan_ClampInt(
         MIKUPAN_DEPTH_QUERY_SCREEN_RADIUS,
-        MIKUPAN_DEPTH_QUERY_MIN_READ_RADIUS,
-        MIKUPAN_DEPTH_QUERY_MAX_READ_RADIUS);
+                                    MIKUPAN_DEPTH_QUERY_MIN_READ_RADIUS,
+                                    MIKUPAN_DEPTH_QUERY_MAX_READ_RADIUS);
 
     const int x0 = MikuPan_ClampInt(cx - rx, 0, g_depth_query_width - 1);
     const int y0 = MikuPan_ClampInt(cy - ry, 0, g_depth_query_height - 1);
@@ -2664,7 +2674,6 @@ int MikuPan_GPUDepthQueryPointVisibleWorld(const float world_pos[4])
     return MikuPan_GPUDepthQueryPointVisibleWorldScreen(
         world_pos, 320.0f, 112.0f);
 }
-
 
 void MikuPan_GPUCopyTexture(unsigned int src_texture_id,
                             unsigned int dst_texture_id, int width, int height)
@@ -2861,7 +2870,6 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
             blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
             break;
 
-
         case MIKUPAN_GPU_BLEND_NORMAL:
         default:
             blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
@@ -2974,7 +2982,7 @@ static void BeginTargetPassIfNeeded(void)
     color.clear_color = SDL_FColor{0.0f, 0.0f, 0.0f, 1.0f};
     color.load_op = (!resolving_scene && g_target_clear)
                         ? SDL_GPU_LOADOP_CLEAR
-                        : SDL_GPU_LOADOP_LOAD;
+                                                         : SDL_GPU_LOADOP_LOAD;
     color.store_op = SDL_GPU_STOREOP_STORE;
     color.cycle = false;
 
@@ -3280,7 +3288,7 @@ void MikuPan_GPUSetTarget(MikuPan_GPUTarget target, int clear)
             if (!SDL_WaitAndAcquireGPUSwapchainTexture(g_cmd, g_window,
                                                        &g_swapchain,
                                                        &swapchain_width,
-                                                       &swapchain_height))
+                    &swapchain_height))
             {
                 info_log("SDL_WaitAndAcquireGPUSwapchainTexture failed: %s",
                          SDL_GetError());
@@ -3367,7 +3375,6 @@ void MikuPan_GPUSetScreenCopyTarget(unsigned int texture_id, int width,
     g_target_clear = clear;
     g_target_initialized = 1;
 }
-
 
 void MikuPan_GPUSetMirrorTarget(unsigned int color_id, unsigned int depth_id,
                                 int clear)
@@ -3539,8 +3546,8 @@ static void BindDrawState(unsigned int primitive)
         if (tex != NULL)
         {
             sampler = g_sampler_nearest_override && tex->sampler_nearest != NULL
-                ? tex->sampler_nearest
-                : tex->sampler;
+                          ? tex->sampler_nearest
+                          : tex->sampler;
         }
         if (tex != NULL && tex->texture != NULL && sampler != NULL)
         {
