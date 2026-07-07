@@ -426,6 +426,7 @@ void MikuPan_RenderMeshType0x32(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPU
  * Draw a shadow caster from SetVUVNDataShadowModel's compact vec4 positions.
  * Regular mesh pipelines include normal/UV/color strides; using them here
  * skips vertices and produces unstable silhouettes.
+ */
 void MikuPan_RenderShadowSilhouettePrepared(unsigned int *pVUVN,
                                             unsigned int *pPUHead,
                                             const float *shadow_positions)
@@ -546,6 +547,7 @@ void MikuPan_RenderShadowSilhouettePrepared(unsigned int *pVUVN,
  * 0x80 uses the same inline VUVN position/normal block as 0x82, but has no
  * ST/texture payload. For the shadow map we only need positions and topology,
  * so reuse avt2 and avoid the 0x82 UV parser entirely.
+ */
 void MikuPan_RenderShadowSilhouette0x80(unsigned int *pVUVN,
                                         unsigned int *pPUHead)
 {
