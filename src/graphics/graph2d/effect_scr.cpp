@@ -4439,8 +4439,6 @@ void SubGameOver(/* 0x11b60(sp) */ u_char alp, /* f20 58 */ float rate)
         vt[i][2] = 0.0f; // Line 5130
         vt[i][3] = 1.0f; // Line 5131
         
-        if (wfh) {} // HACK: fixes a stack disalignment
-        
         tx[i] = (int)(((f1 - f3)        + 320.0f) * 16.0f); // Line 5133
         ty[i] = (int)(((f2 - f4) * 0.5f + 112.0f) * 16.0f); // Line 5134
         
@@ -4678,7 +4676,7 @@ int SetGameOver()
 	/* s1 17 */ int alp3;
 	/* s5 21 */ int num;
 	/* f21 59 */ float scl;
-    int type;
+    int type = 0;
     // int ret;
 
     sec5 = 30;
