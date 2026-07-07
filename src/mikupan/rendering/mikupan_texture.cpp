@@ -9,6 +9,9 @@
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include <stdlib.h>
+#include <string>
+#include <format>
+#include <mikupan/io/mikupan_file.h>
 
 static MikuPan_TextureInfo *fnt_texture[6] = {0};
 static MikuPan_TextureInfo *curr_fnt_texture = NULL;
@@ -253,7 +256,22 @@ void MikuPan_SetupFntTexture()
     {
         if (fnt_texture[i] == NULL)
         {
-            fnt_texture[i] = MikuPan_CreateGLTexture((sceGsTex0 *) &fntdat[i].tex0);
+            std::string texture_path = std::format("./resources/fonts/hd_texture_font_{}.png", i);
+            fnt_texture[i] = MikuPan_CreateGLTexture((sceGsTex0*) &fntdat[i].tex0);
+            continue;
+
+            if (MikuPan_GetFileSize(texture_path.c_str()) == 0)
+            {
+                continue;
+            }
+
+            fnt_texture[i] = MikuPan_CreateGLTexture((sceGsTex0*) &fntdat[i].tex0);
+
+            SDL_Surface* surface = SDL_LoadPNG(texture_path.c_str());
+
+            fnt_texture[i]->id = MikuPan_GPUCreateTextureFromSurface(surface);
+
+            SDL_DestroySurface(surface);
         }
     }
 

@@ -154,6 +154,8 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
 void MikuPan_GPUUpdateUniformCPUBuffer(unsigned int id, unsigned int size,
                                        const void *data);
 
+unsigned int MikuPan_GPUCreateTextureFromSurface(SDL_Surface* surface);
+
 unsigned int MikuPan_GPUCreateTextureRGBA8(int width, int height,
                                            const void *pixels,
                                            int pitch,

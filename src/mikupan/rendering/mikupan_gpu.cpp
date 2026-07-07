@@ -1826,6 +1826,21 @@ static unsigned int CreateTexture(int width, int height,
     return id;
 }
 
+unsigned int MikuPan_GPUCreateTextureFromSurface(SDL_Surface* surface)
+{
+    unsigned int id = CreateTexture(surface->w, surface->h,
+                                    SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+                                    SDL_GPU_TEXTUREUSAGE_SAMPLER, 1, 0);
+
+    if (id != 0)
+    {
+        MikuPan_GPUUploadTextureRGBA8(id, surface->w, surface->h,
+                                      surface->pixels, surface->pitch);
+    }
+
+    return id;
+}
+
 unsigned int MikuPan_GPUCreateTextureRGBA8(int width, int height,
                                            const void* pixels, int pitch,
                                            int repeat, int mipmaps)

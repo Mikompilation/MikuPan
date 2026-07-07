@@ -55,12 +55,6 @@ void SendDmaOFF()
 
 void ClearDMATrans()
 {
-    //printf("Dma Trans Error %x\n", *REG_VIF1_STAT);
-
-    //*REG_DMAC_ENABLEW = 0x10000;
-    //*REG_DMAC_1_VIF1_CHCR &= 0xfffffeff;
-    //*REG_DMAC_ENABLEW = 0;
-
     sceDevVif1Reset();
 
     info_log("wait");
@@ -68,23 +62,11 @@ void ClearDMATrans()
 
 void CheckDMATrans()
 {
-    //if (*REG_VIF1_STAT & 0x3400)
-    //{
-    //    ClearDMATrans();
-    //}
 }
 
 void CheckDmaSync()
 {
-    while (sceDmaSync(dvif1, 1, 0) != 0)
-    {
-        CheckDMATrans();
-    }
-
-    if (*REG_VIF1_STAT != 0)
-    {
-        ClearDMATrans();
-    }
+    return;
 }
 
 static void FlushBuffer()
@@ -176,24 +158,11 @@ void AppendDmaBuffer(int size)
 
 void AppendDmaTagCall(int64_t next_tag_addr)
 {
-    SgSourceChainTag *ptag;
-
-    /// TODO : Reimplement this
-    //ptag = &cachetag[vu1tag_num];
-
-    //((int *)ptag)[0] = 0x20000000;
-    //*(uint64_t*)&((int *)ptag)[1] = ((uint64_t)next_tag_addr);
-    //((int *)ptag)[1] = next_tag_addr & 0x0fffffff;
-
-    //ptag->pad[0] = ptag->pad[1] = 0;
-
     vu1tag_num++;
 }
 
 void AppendDmaTagNextRet(void *tag_addr)
 {
-    ((int *)tag_addr)[0] = 0x20000000;
-    *(uint64_t*)&((int *)tag_addr)[1] = (uint64_t)&cachetag[vu1tag_num];
 }
 
 void AppendDmaBufferFromEndAddress(qword *end_adr)
@@ -363,6 +332,10 @@ void RebuildTRI2Files(u_int *prim)
     qword *base;
     sceGsStoreImage spi = {0};
 
+    /// PC port does not need to reconvert textures for a more efficient
+    /// GS Upload
+    return;
+
     fprim = prim;
     next_pointer = (int64_t)GetNextProcUnitHeaderPtr(prim);
     tnum = prim[2];
@@ -375,10 +348,6 @@ void RebuildTRI2Files(u_int *prim)
     {
         return;
     }
-
-    /// PC port does not need to reconvert textures for a more efficient
-    /// GS Upload
-    return;
 
     InitialDmaBuffer();
 
@@ -579,15 +548,16 @@ void LoadTextureAnimation(u_int *prim)
 
     prim = (u_int *)((int64_t)&prim[4] + (pta->pads / 4) * 4);
 
-    for (i = 0; i < tnum; i++)
+    for (i = 0; i < tnum+1; i++)
     {
+        MikuPan_MirrorTri2PacketToHostGs(prim);
         tri2size = *(u_short *)&prim[3];
         prim = (u_int *)((int64_t)&prim[4] + tri2size * 16);
     }
 
-    tri2size = *(u_short *)&prim[3];
+    return;
 
-    MikuPan_MirrorTri2PacketToHostGs(prim);
+    tri2size = *(u_short *)&prim[3];
 
     prim[2] = 0x11000000;
 

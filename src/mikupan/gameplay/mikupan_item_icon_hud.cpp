@@ -17,6 +17,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ingame/menu/item.h>
 
 struct MikuPanItemIconSlot
 {
@@ -27,7 +28,7 @@ struct MikuPanItemIconSlot
     MikuPan_TextureInfo* dim_texture;
 };
 
-static MikuPanItemIconSlot mikupan_item_icon_slots[8] = {};
+static MikuPanItemIconSlot mikupan_item_icon_slots[10] = {};
 static int mikupan_finder_film_icon_current = -1;
 static int mikupan_finder_film_icon_previous = -1;
 static int mikupan_finder_film_icon_direction = 0;
@@ -35,6 +36,14 @@ static int mikupan_finder_film_icon_timer = 0;
 static int mikupan_finder_film_counter_snap = 0;
 static int mikupan_mirror_stone_hud_enabled = 0;
 static int mikupan_item_icon_slots_initialised = 0;
+
+static int mikupan_finder_healing_icon_previous = 0;
+static int mikupan_finder_healing_icon_direction = 0;
+static int mikupan_finder_healing_icon_timer = 0;
+static int mikupan_finder_healing_counter_snap = 0;
+static int mikupan_healing_item_index_no = 0;
+static constexpr int mikupan_healing_item_no_list[2] = {6, 7};
+static constexpr int mikupan_healing_item_no_size = (int) (sizeof(mikupan_healing_item_no_list) / sizeof(mikupan_healing_item_no_list[0]));
 
 static constexpr int MIKUPAN_FINDER_FILM_ICON_SWAP_FRAMES = 18;
 static constexpr int MIKUPAN_ITEM_ICON_COUNT = (int)(sizeof(mikupan_item_icon_slots) / sizeof(mikupan_item_icon_slots[0]));
@@ -561,6 +570,44 @@ int MikuPan_ConsumeFinderFilmCounterSnap(void)
     return value;
 }
 
+static int MikuPan_GetSelectedHealingItem(int prefered)
+{
+    if (prefered < 0)
+    {
+        prefered = 0;
+    }
+
+    prefered = prefered % mikupan_healing_item_no_size;
+
+    for (int i = 0; i < mikupan_healing_item_no_size; i++)
+    {
+        if (poss_item[mikupan_healing_item_no_list[prefered]] > 0)
+        {
+            return prefered;
+        }
+
+        prefered = ++prefered % mikupan_healing_item_no_size;
+    }
+
+    return -1;
+}
+
+static int MikuPan_NextHealingItem(int current)
+{
+    if (DPAD_LEFT_PRESSED() == 1)
+    {
+        mikupan_finder_healing_icon_previous = current;
+        current = MikuPan_GetSelectedHealingItem(++current);
+
+        if (current != -1)
+        {
+            SeStartFix(SE_SEALING, 0, 0x1000, 0xa00, 0);
+        }
+    }    
+
+    return current;
+}
+
 void MikuPan_DrawFinderFilmIcon(short int pos_x, short int pos_y, u_char fade_alpha)
 {
     if (!MikuPan_FinderDpadFilmSwapEnabled())
@@ -694,6 +741,94 @@ void MikuPan_DrawMirrorStoneHudIcon(short int pos_x, short int pos_y, u_char fad
         clip_rect[1],
         clip_rect[2],
         clip_rect[3]);
+}
+
+void MikuPan_DrawHealingItemHudIcon(short int pos_x, short int pos_y,
+                                    u_char fade_alpha)
+{
+    if (!MikuPan_FinderDpadFilmSwapEnabled())
+    {
+        return;
+    }
+
+    /// Ensures that there will always be a healing item selected if one is available
+    mikupan_healing_item_index_no = MikuPan_GetSelectedHealingItem(mikupan_healing_item_index_no);
+    mikupan_healing_item_index_no = MikuPan_NextHealingItem(mikupan_healing_item_index_no);
+
+    if (mikupan_healing_item_index_no == -1)
+    {
+        return;
+    }
+
+    if (mikupan_healing_item_index_no != mikupan_finder_healing_icon_previous
+        && mikupan_finder_healing_icon_timer == 0)
+    {
+        mikupan_finder_healing_icon_direction = 1;
+        mikupan_finder_healing_icon_timer = MIKUPAN_FINDER_FILM_ICON_SWAP_FRAMES;
+    }
+
+    int item_no = mikupan_healing_item_no_list[mikupan_healing_item_index_no];
+
+    if (DPAD_RIGHT_PRESSED() == 1)
+    {
+        if (poss_item[item_no] > 0)
+        {
+            ItemUse(item_no);
+        }
+    }
+
+    static constexpr float healing_slot_x = 57.0f;
+    static constexpr float healing_slot_y = 280.0f;
+    static constexpr float healing_icon_scale = 0.100f;
+
+    float base_alpha = fade_alpha * 128.0f / 100.0f;
+    float slot_x = pos_x + healing_slot_x;
+    float slot_y = pos_y + healing_slot_y;
+    float icon_center_x = slot_x + 15.0f;
+    float icon_center_y = slot_y + 10.0f;
+    float scale = healing_icon_scale;
+    float clip_rect[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+
+    MikuPanDrawItemIconSlotFrame(slot_x, slot_y, 30.0f, 20.0f, base_alpha,
+                                 clip_rect);
+
+    if (mikupan_finder_healing_icon_timer > 0
+        && mikupan_finder_healing_icon_direction != 0
+        && mikupan_finder_healing_icon_previous != -1)
+    {
+        int previous_item_no = mikupan_healing_item_no_list[mikupan_finder_healing_icon_previous];
+        float progress = (MIKUPAN_FINDER_FILM_ICON_SWAP_FRAMES - mikupan_finder_healing_icon_timer) / (float) MIKUPAN_FINDER_FILM_ICON_SWAP_FRAMES;
+        float offset = 32.0f;
+        float direction = (float) mikupan_finder_healing_icon_direction;
+
+        MikuPanDrawItemIconCenteredClipped(
+            (previous_item_no),
+            icon_center_x, icon_center_y - direction * offset * progress, scale,
+            MikuPanItemIconAlpha(base_alpha * (1.0f - progress)), clip_rect[0],
+            clip_rect[1], clip_rect[2], clip_rect[3]);
+
+        MikuPanDrawItemIconCenteredClipped(
+            (item_no),
+            icon_center_x,
+            icon_center_y + direction * offset * (1.0f - progress), scale,
+            MikuPanItemIconAlpha(base_alpha * progress), clip_rect[0],
+            clip_rect[1], clip_rect[2], clip_rect[3]);
+
+        mikupan_finder_healing_icon_timer--;
+
+        if (mikupan_finder_healing_icon_timer == 0)
+        {
+            mikupan_finder_healing_icon_timer = 0;
+            mikupan_finder_healing_icon_previous =
+                mikupan_healing_item_index_no;
+        }
+        return;
+    }
+    
+    MikuPanDrawItemIconCenteredClipped(item_no, icon_center_x, icon_center_y,
+                                       scale,
+        MikuPanItemIconAlpha(base_alpha), clip_rect[0], clip_rect[1],
+        clip_rect[2], clip_rect[3]);
 }
 
 void MikuPan_SetMirrorStoneHudEnabled(int enabled)
