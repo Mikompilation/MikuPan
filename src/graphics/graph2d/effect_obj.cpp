@@ -19,6 +19,7 @@
 #include "graphics/graph3d/sglib.h"
 #include "main/glob.h"
 #include "mikupan/debug/mikupan_logging_c.h"
+#include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan/ui/mikupan_ui_debug.h"
@@ -120,19 +121,14 @@ static inline void dummy2(sceVu0FVECTOR *v0)
     Vu0CopyVector(g_vu0_stq_params[2], v0[2]);
 }
 
-static int PartsDeformIsFinite(float value)
-{
-    return !isnan(value) && !isinf(value);
-}
-
 static int PartsDeformClipHasUsableW(const sceVu0FVECTOR clip)
 {
     const float min_w = 0.00001f;
 
-    return PartsDeformIsFinite(clip[0]) &&
-           PartsDeformIsFinite(clip[1]) &&
-           PartsDeformIsFinite(clip[2]) &&
-           PartsDeformIsFinite(clip[3]) &&
+    return MikuPan_IsFiniteFloat(clip[0]) &&
+           MikuPan_IsFiniteFloat(clip[1]) &&
+           MikuPan_IsFiniteFloat(clip[2]) &&
+           MikuPan_IsFiniteFloat(clip[3]) &&
            clip[3] > min_w;
 }
 
@@ -157,9 +153,9 @@ static int PartsDeformClipToNDC(float *ndc, const sceVu0FVECTOR clip)
     ndc[1] = clip[1] * inv_w;
     ndc[2] = clip[2] * inv_w;
 
-    return PartsDeformIsFinite(ndc[0]) &&
-           PartsDeformIsFinite(ndc[1]) &&
-           PartsDeformIsFinite(ndc[2]);
+    return MikuPan_IsFiniteFloat(ndc[0]) &&
+           MikuPan_IsFiniteFloat(ndc[1]) &&
+           MikuPan_IsFiniteFloat(ndc[2]);
 }
 
 static void CalcPartsDeformSourceUV(float (*src_uv)[2], int total, sceVu0FVECTOR *vt, sceVu0FMATRIX wlm, float trate)
@@ -186,8 +182,8 @@ static void CalcPartsDeformSourceUV(float (*src_uv)[2], int total, sceVu0FVECTOR
             src_uv[i][0] = clip[0] * inv_w * 0.5f + 0.5f;
             src_uv[i][1] = 0.5f - clip[1] * inv_w * 0.5f;
 
-            if (!PartsDeformIsFinite(src_uv[i][0]) ||
-                !PartsDeformIsFinite(src_uv[i][1]))
+            if (!MikuPan_IsFiniteFloat(src_uv[i][0]) ||
+                !MikuPan_IsFiniteFloat(src_uv[i][1]))
             {
                 src_uv[i][0] = 0.0f;
                 src_uv[i][1] = 0.0f;
@@ -743,7 +739,7 @@ void MakePartsDeformPacket(int pnumw, int pnumh, sceVu0FVECTOR *vt, sceVu0FMATRI
             gl_clip[i] = 0;
 
             if (PartsDeformClipToNDC(gl_ndc[i], clip) &&
-                PartsDeformIsFinite(stq[i][2]) &&
+                MikuPan_IsFiniteFloat(stq[i][2]) &&
                 stq[i][2] > 0.00000001f)
             {
                 continue;

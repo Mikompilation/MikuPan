@@ -16,6 +16,7 @@
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/gameplay/mikupan_enemy_motion.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/rendering/mikupan_profiler.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 #include "outgame/mode_slct.h"
@@ -82,6 +83,7 @@ void DrawGirlSubObj(u_int *mpk_p, u_char alpha)
     char obj_id[2][2] = { {0x03, 0x06}, {0x01, 0x08} };
 
     obj_num = *mpk_p;
+    MikuPan_PerfRecordDrawGirlSubObj(obj_num);
 
     //cp = (SgCOORDUNIT*)mpk_p[10];
     cp = (SgCOORDUNIT*)MikuPan_GetHostAddress(mpk_p[10]);
@@ -113,7 +115,15 @@ void DrawGirlSubObj(u_int *mpk_p, u_char alpha)
         ManmdlSetAlpha(hs, alpha);
         ManTexflush();
 
-        SortUnitRefCoordKind(hs, cp, -1);
+        MikuPan_PerfRecordDrawGirlSubObjItem((int)i);
+        {
+            MikuPan_DrawSourceState draw_source;
+            int draw_source_token;
+            MikuPan_DrawSourceGetCurrent(&draw_source);
+            draw_source_token = MikuPan_DrawSourcePush(draw_source.kind, (int)i, draw_source.detail1);
+            SortUnitRefCoordKind(hs, cp, -1);
+            MikuPan_DrawSourcePop(draw_source_token);
+        }
     }
 }
 
@@ -136,7 +146,14 @@ void DrawEneSubObj(u_int *mpk_p, u_char alpha1, u_char alpha2)
         hs = (HeaderSection *)GetFileInPak(mpk_p, i);
         ManmdlSetAlpha(hs, alpha);
         ManTexflush();
-        SortUnitRefCoordKind(hs, cp, -1);
+        {
+            MikuPan_DrawSourceState draw_source;
+            int draw_source_token;
+            MikuPan_DrawSourceGetCurrent(&draw_source);
+            draw_source_token = MikuPan_DrawSourcePush(draw_source.kind, draw_source.detail0, (int)i);
+            SortUnitRefCoordKind(hs, cp, -1);
+            MikuPan_DrawSourcePop(draw_source_token);
+        }
     }
 }
 

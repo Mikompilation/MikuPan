@@ -22,7 +22,9 @@
 #include "mikupan/gameplay/mikupan_title_scene.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 const int mikupan_no_navigation_window =
     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration
@@ -60,6 +62,8 @@ static float normal_length = 10.0f;
 static int render_wireframe = 0;
 static int render_normals = 0;
 static int show_frame_time_graph = 0;
+static int show_perf_diag_window = 0;
+static int show_perf_diag_window_initialized = 0;
 static int measure_gpu_wait = 0;
 static FrameTimeGraph g_frame_graph = {.count = 0,
                                        .max_samples = 600,
@@ -103,6 +107,755 @@ const char* GlPrimName(GLenum mode)
         default:
             return "?";
     }
+}
+
+#define DRAW_SUMMARY_MAX 128
+
+typedef struct
+{
+    int shader_idx;
+    GLenum mode;
+    int is_elements;
+    GLenum index_type;
+    unsigned int texture0;
+    int draws;
+    int elements;
+    int skipped;
+    float ms;
+    int first;
+    int last;
+    int vao_changes;
+    unsigned int last_vao;
+} MikuPan_DrawGroupSummary;
+
+typedef struct
+{
+    int shader_idx;
+    GLenum mode;
+    int is_elements;
+    GLenum index_type;
+    unsigned int texture0;
+    int runs;
+    int draws;
+    int elements;
+    int saved;
+    int max_run;
+    int max_run_first;
+    float ms;
+} MikuPan_DrawRunSummary;
+
+typedef struct
+{
+    int source_kind;
+    int source_detail0;
+    int source_detail1;
+    int draws;
+    int elements;
+    int skipped;
+    float ms;
+    int first;
+    int last;
+} MikuPan_DrawSourceSummary;
+
+typedef struct
+{
+    int source_kind;
+    int source_detail0;
+    int source_detail1;
+    int shader_idx;
+    unsigned int texture0;
+    int draws;
+    int elements;
+    int skipped;
+    float ms;
+    int first;
+    int last;
+} MikuPan_DrawSourceShaderSummary;
+
+static const char* MikuPan_DrawShaderName(int shader_idx)
+{
+    if (shader_idx >= 0)
+    {
+        return MikuPan_GetShaderName(shader_idx);
+    }
+    return "<external>";
+}
+
+static void MikuPan_FormatDrawSource(char* out, size_t out_size, int kind, int detail0, int detail1)
+{
+    const char* name = MikuPan_DrawSourceName(kind);
+    if (detail0 != 0 || detail1 != 0)
+    {
+        snprintf(out, out_size, "%s:%d/%d", name, detail0, detail1);
+    }
+    else
+    {
+        snprintf(out, out_size, "%s", name);
+    }
+}
+
+static int MikuPan_DrawSourceMatches(const MikuPan_DrawSourceSummary* g, const MikuPan_DrawCapEntry* e)
+{
+    return g->source_kind == e->source_kind
+        && g->source_detail0 == e->source_detail0
+        && g->source_detail1 == e->source_detail1;
+}
+
+static int MikuPan_DrawSourceKindMatches(const MikuPan_DrawSourceSummary* g, const MikuPan_DrawCapEntry* e)
+{
+    return g->source_kind == e->source_kind;
+}
+
+static int MikuPan_DrawSourceShaderMatches(const MikuPan_DrawSourceShaderSummary* g, const MikuPan_DrawCapEntry* e)
+{
+    return g->source_kind == e->source_kind
+        && g->source_detail0 == e->source_detail0
+        && g->source_detail1 == e->source_detail1
+        && g->shader_idx == e->shader_idx
+        && g->texture0 == e->texture0;
+}
+
+static int MikuPan_DrawGroupMatches(const MikuPan_DrawGroupSummary* g, const MikuPan_DrawCapEntry* e)
+{
+    return g->shader_idx == e->shader_idx
+        && g->mode == e->mode
+        && g->is_elements == e->is_elements
+        && g->index_type == e->index_type
+        && g->texture0 == e->texture0;
+}
+
+static int MikuPan_DrawRunMatches(const MikuPan_DrawRunSummary* g, const MikuPan_DrawCapEntry* e)
+{
+    return g->shader_idx == e->shader_idx
+        && g->mode == e->mode
+        && g->is_elements == e->is_elements
+        && g->index_type == e->index_type
+        && g->texture0 == e->texture0;
+}
+
+static int MikuPan_DrawEntriesMergeKeyEqual(const MikuPan_DrawCapEntry* a, const MikuPan_DrawCapEntry* b)
+{
+    if (a == NULL || b == NULL || a->skipped || b->skipped)
+    {
+        return 0;
+    }
+    return a->shader_idx == b->shader_idx
+        && a->mode == b->mode
+        && a->is_elements == b->is_elements
+        && a->index_type == b->index_type
+        && a->texture0 == b->texture0;
+}
+
+static int MikuPan_CompareDrawGroupSummary(const void* a, const void* b)
+{
+    const MikuPan_DrawGroupSummary* ga = (const MikuPan_DrawGroupSummary*)a;
+    const MikuPan_DrawGroupSummary* gb = (const MikuPan_DrawGroupSummary*)b;
+    if (gb->draws != ga->draws)
+    {
+        return gb->draws - ga->draws;
+    }
+    if (gb->elements != ga->elements)
+    {
+        return gb->elements - ga->elements;
+    }
+    if (gb->ms > ga->ms) return 1;
+    if (gb->ms < ga->ms) return -1;
+    return ga->first - gb->first;
+}
+
+static int MikuPan_CompareDrawSourceSummary(const void* a, const void* b)
+{
+    const MikuPan_DrawSourceSummary* ga = (const MikuPan_DrawSourceSummary*)a;
+    const MikuPan_DrawSourceSummary* gb = (const MikuPan_DrawSourceSummary*)b;
+    if (gb->draws != ga->draws)
+    {
+        return gb->draws - ga->draws;
+    }
+    if (gb->elements != ga->elements)
+    {
+        return gb->elements - ga->elements;
+    }
+    if (gb->ms > ga->ms) return 1;
+    if (gb->ms < ga->ms) return -1;
+    return ga->first - gb->first;
+}
+
+static int MikuPan_CompareDrawSourceShaderSummary(const void* a, const void* b)
+{
+    const MikuPan_DrawSourceShaderSummary* ga = (const MikuPan_DrawSourceShaderSummary*)a;
+    const MikuPan_DrawSourceShaderSummary* gb = (const MikuPan_DrawSourceShaderSummary*)b;
+    if (gb->draws != ga->draws)
+    {
+        return gb->draws - ga->draws;
+    }
+    if (gb->elements != ga->elements)
+    {
+        return gb->elements - ga->elements;
+    }
+    if (gb->ms > ga->ms) return 1;
+    if (gb->ms < ga->ms) return -1;
+    return ga->first - gb->first;
+}
+
+static int MikuPan_CompareDrawRunSummary(const void* a, const void* b)
+{
+    const MikuPan_DrawRunSummary* ga = (const MikuPan_DrawRunSummary*)a;
+    const MikuPan_DrawRunSummary* gb = (const MikuPan_DrawRunSummary*)b;
+    if (gb->saved != ga->saved)
+    {
+        return gb->saved - ga->saved;
+    }
+    if (gb->draws != ga->draws)
+    {
+        return gb->draws - ga->draws;
+    }
+    if (gb->elements != ga->elements)
+    {
+        return gb->elements - ga->elements;
+    }
+    return ga->max_run_first - gb->max_run_first;
+}
+
+static void MikuPan_AddDrawGroup(MikuPan_DrawGroupSummary* groups, int* group_count, const MikuPan_DrawCapEntry* e, int index)
+{
+    for (int i = 0; i < *group_count; i++)
+    {
+        if (MikuPan_DrawGroupMatches(&groups[i], e))
+        {
+            groups[i].draws++;
+            groups[i].elements += e->count;
+            groups[i].skipped += e->skipped ? 1 : 0;
+            groups[i].ms += e->ms;
+            groups[i].last = index;
+            if (groups[i].last_vao != e->vao)
+            {
+                groups[i].vao_changes++;
+                groups[i].last_vao = e->vao;
+            }
+            return;
+        }
+    }
+
+    if (*group_count >= DRAW_SUMMARY_MAX)
+    {
+        return;
+    }
+
+    MikuPan_DrawGroupSummary* g = &groups[*group_count];
+    memset(g, 0, sizeof(*g));
+    g->shader_idx = e->shader_idx;
+    g->mode = e->mode;
+    g->is_elements = e->is_elements;
+    g->index_type = e->index_type;
+    g->texture0 = e->texture0;
+    g->draws = 1;
+    g->elements = e->count;
+    g->skipped = e->skipped ? 1 : 0;
+    g->ms = e->ms;
+    g->first = index;
+    g->last = index;
+    g->last_vao = e->vao;
+    (*group_count)++;
+}
+
+static void MikuPan_AddDrawSourceKind(MikuPan_DrawSourceSummary* sources, int* source_count, const MikuPan_DrawCapEntry* e, int index)
+{
+    for (int i = 0; i < *source_count; i++)
+    {
+        if (MikuPan_DrawSourceKindMatches(&sources[i], e))
+        {
+            sources[i].draws++;
+            sources[i].elements += e->count;
+            sources[i].skipped += e->skipped ? 1 : 0;
+            sources[i].ms += e->ms;
+            sources[i].last = index;
+            return;
+        }
+    }
+
+    if (*source_count >= DRAW_SUMMARY_MAX)
+    {
+        return;
+    }
+
+    MikuPan_DrawSourceSummary* g = &sources[*source_count];
+    memset(g, 0, sizeof(*g));
+    g->source_kind = e->source_kind;
+    g->draws = 1;
+    g->elements = e->count;
+    g->skipped = e->skipped ? 1 : 0;
+    g->ms = e->ms;
+    g->first = index;
+    g->last = index;
+    (*source_count)++;
+}
+
+static void MikuPan_AddDrawSource(MikuPan_DrawSourceSummary* sources, int* source_count, const MikuPan_DrawCapEntry* e, int index)
+{
+    for (int i = 0; i < *source_count; i++)
+    {
+        if (MikuPan_DrawSourceMatches(&sources[i], e))
+        {
+            sources[i].draws++;
+            sources[i].elements += e->count;
+            sources[i].skipped += e->skipped ? 1 : 0;
+            sources[i].ms += e->ms;
+            sources[i].last = index;
+            return;
+        }
+    }
+
+    if (*source_count >= DRAW_SUMMARY_MAX)
+    {
+        return;
+    }
+
+    MikuPan_DrawSourceSummary* g = &sources[*source_count];
+    memset(g, 0, sizeof(*g));
+    g->source_kind = e->source_kind;
+    g->source_detail0 = e->source_detail0;
+    g->source_detail1 = e->source_detail1;
+    g->draws = 1;
+    g->elements = e->count;
+    g->skipped = e->skipped ? 1 : 0;
+    g->ms = e->ms;
+    g->first = index;
+    g->last = index;
+    (*source_count)++;
+}
+
+static void MikuPan_AddDrawSourceShader(MikuPan_DrawSourceShaderSummary* sources, int* source_count, const MikuPan_DrawCapEntry* e, int index)
+{
+    for (int i = 0; i < *source_count; i++)
+    {
+        if (MikuPan_DrawSourceShaderMatches(&sources[i], e))
+        {
+            sources[i].draws++;
+            sources[i].elements += e->count;
+            sources[i].skipped += e->skipped ? 1 : 0;
+            sources[i].ms += e->ms;
+            sources[i].last = index;
+            return;
+        }
+    }
+
+    if (*source_count >= DRAW_SUMMARY_MAX)
+    {
+        return;
+    }
+
+    MikuPan_DrawSourceShaderSummary* g = &sources[*source_count];
+    memset(g, 0, sizeof(*g));
+    g->source_kind = e->source_kind;
+    g->source_detail0 = e->source_detail0;
+    g->source_detail1 = e->source_detail1;
+    g->shader_idx = e->shader_idx;
+    g->texture0 = e->texture0;
+    g->draws = 1;
+    g->elements = e->count;
+    g->skipped = e->skipped ? 1 : 0;
+    g->ms = e->ms;
+    g->first = index;
+    g->last = index;
+    (*source_count)++;
+}
+
+static void MikuPan_AddDrawRun(MikuPan_DrawRunSummary* runs, int* run_count, const MikuPan_DrawCapEntry* e, int first, int len, int elements, float ms)
+{
+    for (int i = 0; i < *run_count; i++)
+    {
+        if (MikuPan_DrawRunMatches(&runs[i], e))
+        {
+            runs[i].runs++;
+            runs[i].draws += len;
+            runs[i].elements += elements;
+            runs[i].saved += len - 1;
+            runs[i].ms += ms;
+            if (len > runs[i].max_run)
+            {
+                runs[i].max_run = len;
+                runs[i].max_run_first = first;
+            }
+            return;
+        }
+    }
+
+    if (*run_count >= DRAW_SUMMARY_MAX)
+    {
+        return;
+    }
+
+    MikuPan_DrawRunSummary* r = &runs[*run_count];
+    memset(r, 0, sizeof(*r));
+    r->shader_idx = e->shader_idx;
+    r->mode = e->mode;
+    r->is_elements = e->is_elements;
+    r->index_type = e->index_type;
+    r->texture0 = e->texture0;
+    r->runs = 1;
+    r->draws = len;
+    r->elements = elements;
+    r->saved = len - 1;
+    r->max_run = len;
+    r->max_run_first = first;
+    r->ms = ms;
+    (*run_count)++;
+}
+
+static void MikuPan_UiDrawCallSummary(int count)
+{
+    MikuPan_DrawGroupSummary groups[DRAW_SUMMARY_MAX];
+    MikuPan_DrawRunSummary runs[DRAW_SUMMARY_MAX];
+    MikuPan_DrawSourceSummary source_kinds[DRAW_SUMMARY_MAX];
+    MikuPan_DrawSourceSummary sources[DRAW_SUMMARY_MAX];
+    MikuPan_DrawSourceShaderSummary source_shaders[DRAW_SUMMARY_MAX];
+    int group_count = 0;
+    int run_count = 0;
+    int source_kind_count = 0;
+    int source_count = 0;
+    int source_shader_count = 0;
+    int captured = 0;
+    int skipped = 0;
+    int drawn = 0;
+    int mesh_draws = 0;
+    int sprite_draws = 0;
+    int other_draws = 0;
+    int total_elements = 0;
+    float total_ms = 0.0f;
+
+    memset(groups, 0, sizeof(groups));
+    memset(runs, 0, sizeof(runs));
+    memset(source_kinds, 0, sizeof(source_kinds));
+    memset(sources, 0, sizeof(sources));
+    memset(source_shaders, 0, sizeof(source_shaders));
+
+    for (int i = 0; i < count; i++)
+    {
+        const MikuPan_DrawCapEntry* e = MikuPan_DrawCapLastEntryAt(i);
+        if (e == NULL)
+        {
+            break;
+        }
+
+        captured++;
+        skipped += e->skipped ? 1 : 0;
+        if (!e->skipped)
+        {
+            drawn++;
+            total_elements += e->count;
+            total_ms += e->ms;
+        }
+
+        const char* shader_name = MikuPan_DrawShaderName(e->shader_idx);
+        if (strncmp(shader_name, "MESH", 4) == 0)
+        {
+            mesh_draws++;
+        }
+        else if (strncmp(shader_name, "SPRI", 4) == 0)
+        {
+            sprite_draws++;
+        }
+        else
+        {
+            other_draws++;
+        }
+
+        MikuPan_AddDrawGroup(groups, &group_count, e, i);
+        MikuPan_AddDrawSourceKind(source_kinds, &source_kind_count, e, i);
+        MikuPan_AddDrawSource(sources, &source_count, e, i);
+        MikuPan_AddDrawSourceShader(source_shaders, &source_shader_count, e, i);
+    }
+
+    int i = 0;
+    while (i < count)
+    {
+        const MikuPan_DrawCapEntry* start = MikuPan_DrawCapLastEntryAt(i);
+        if (start == NULL)
+        {
+            break;
+        }
+        if (start->skipped)
+        {
+            i++;
+            continue;
+        }
+
+        int first = i;
+        int len = 1;
+        int elements = start->count;
+        float ms = start->ms;
+        int j = i + 1;
+        while (j < count)
+        {
+            const MikuPan_DrawCapEntry* next = MikuPan_DrawCapLastEntryAt(j);
+            if (!MikuPan_DrawEntriesMergeKeyEqual(start, next))
+            {
+                break;
+            }
+            len++;
+            elements += next->count;
+            ms += next->ms;
+            j++;
+        }
+
+        if (len >= 2)
+        {
+            MikuPan_AddDrawRun(runs, &run_count, start, first, len, elements, ms);
+        }
+        i = j;
+    }
+
+    qsort(groups, (size_t)group_count, sizeof(groups[0]), MikuPan_CompareDrawGroupSummary);
+    qsort(runs, (size_t)run_count, sizeof(runs[0]), MikuPan_CompareDrawRunSummary);
+    qsort(source_kinds, (size_t)source_kind_count, sizeof(source_kinds[0]), MikuPan_CompareDrawSourceSummary);
+    qsort(sources, (size_t)source_count, sizeof(sources[0]), MikuPan_CompareDrawSourceSummary);
+    qsort(source_shaders, (size_t)source_shader_count, sizeof(source_shaders[0]), MikuPan_CompareDrawSourceShaderSummary);
+
+    int possible_saved = 0;
+    int possible_run_draws = 0;
+    for (int r = 0; r < run_count; r++)
+    {
+        possible_saved += runs[r].saved;
+        possible_run_draws += runs[r].draws;
+    }
+
+    igSeparatorText("Grouped summary");
+    igText("Captured %d  drawn %d  skipped %d  elements %d  submit %.3f ms", captured, drawn, skipped, total_elements, total_ms);
+    igText("Mesh-ish %d  sprite-ish %d  other %d  unique draw keys %d", mesh_draws, sprite_draws, other_draws, group_count);
+    igText("Consecutive merge candidates: %d draws in %d run groups, possible saved draws %d", possible_run_draws, run_count, possible_saved);
+    igTextDisabled("Merge candidates group by shader + primitive + texture + index mode and intentionally ignore VAO/buffer ids.");
+
+    if (source_kind_count > 0)
+    {
+        igSeparatorText("Top broad draw sources");
+        igText("%-4s %-24s %-6s %-8s %-7s %s", "#", "source", "draws", "elements", "ms", "range");
+        int shown = source_kind_count < 12 ? source_kind_count : 12;
+        for (int g = 0; g < shown; g++)
+        {
+            igText("%-4d %-24s %-6d %-8d %-7.3f %d-%d",
+                   g, MikuPan_DrawSourceName(source_kinds[g].source_kind), source_kinds[g].draws,
+                   source_kinds[g].elements, source_kinds[g].ms, source_kinds[g].first, source_kinds[g].last);
+        }
+    }
+
+    if (source_count > 0)
+    {
+        igSeparatorText("Top detailed draw sources");
+        igText("%-4s %-26s %-6s %-8s %-7s %s", "#", "source", "draws", "elements", "ms", "range");
+        int shown = source_count < 12 ? source_count : 12;
+        for (int g = 0; g < shown; g++)
+        {
+            char label[96];
+            MikuPan_FormatDrawSource(label, sizeof(label), sources[g].source_kind, sources[g].source_detail0, sources[g].source_detail1);
+            igText("%-4d %-26s %-6d %-8d %-7.3f %d-%d",
+                   g, label, sources[g].draws, sources[g].elements, sources[g].ms, sources[g].first, sources[g].last);
+        }
+    }
+
+    if (source_shader_count > 0)
+    {
+        igSeparatorText("Top source + shader groups");
+        igText("%-4s %-24s %-22s %-7s %-6s %-8s %-7s %s", "#", "source", "shader", "tex0", "draws", "elements", "ms", "range");
+        int shown = source_shader_count < 12 ? source_shader_count : 12;
+        for (int g = 0; g < shown; g++)
+        {
+            char label[96];
+            MikuPan_FormatDrawSource(label, sizeof(label), source_shaders[g].source_kind, source_shaders[g].source_detail0, source_shaders[g].source_detail1);
+            igText("%-4d %-24s %-22s %-7u %-6d %-8d %-7.3f %d-%d",
+                   g, label, MikuPan_DrawShaderName(source_shaders[g].shader_idx), source_shaders[g].texture0,
+                   source_shaders[g].draws, source_shaders[g].elements, source_shaders[g].ms,
+                   source_shaders[g].first, source_shaders[g].last);
+        }
+    }
+
+    if (run_count > 0)
+    {
+        igSeparatorText("Best consecutive merge candidates");
+        igText("%-4s %-22s %-13s %-7s %-5s %-5s %-6s %-7s %s", "#", "shader", "primitive", "tex0", "draws", "runs", "saved", "maxrun", "first");
+        int shown = run_count < 12 ? run_count : 12;
+        for (int r = 0; r < shown; r++)
+        {
+            igText("%-4d %-22s %-13s %-7u %-5d %-5d %-6d %-7d %d",
+                   r,
+                   MikuPan_DrawShaderName(runs[r].shader_idx),
+                   GlPrimName(runs[r].mode),
+                   runs[r].texture0,
+                   runs[r].draws,
+                   runs[r].runs,
+                   runs[r].saved,
+                   runs[r].max_run,
+                   runs[r].max_run_first);
+        }
+    }
+
+    if (group_count > 0)
+    {
+        igSeparatorText("Top draw groups");
+        igText("%-4s %-22s %-13s %-7s %-6s %-8s %-7s %-9s %s", "#", "shader", "primitive", "tex0", "draws", "elements", "ms", "vao churn", "range");
+        int shown = group_count < 12 ? group_count : 12;
+        for (int g = 0; g < shown; g++)
+        {
+            igText("%-4d %-22s %-13s %-7u %-6d %-8d %-7.3f %-9d %d-%d",
+                   g,
+                   MikuPan_DrawShaderName(groups[g].shader_idx),
+                   GlPrimName(groups[g].mode),
+                   groups[g].texture0,
+                   groups[g].draws,
+                   groups[g].elements,
+                   groups[g].ms,
+                   groups[g].vao_changes,
+                   groups[g].first,
+                   groups[g].last);
+        }
+    }
+}
+
+
+void MikuPan_UiPerfDiagWindow(void)
+{
+    if (!show_perf_diag_window)
+    {
+        return;
+    }
+
+    igSetNextWindowSize(ImVec2{640.0f, 620.0f}, ImGuiCond_FirstUseEver);
+    if (!igBegin("Performance Diagnostics", (bool*) &show_perf_diag_window, 0))
+    {
+        igEnd();
+        return;
+    }
+
+    bool enabled = MikuPan_PerfDiagIsEnabled() != 0;
+    if (igCheckbox("Collect diagnostics", &enabled))
+    {
+        MikuPan_PerfDiagSetEnabled(enabled ? 1 : 0);
+    }
+
+    extern int MikuPan_GpuWeightedSkinningEnabled(void);
+    extern void MikuPan_SetGpuWeightedSkinningEnabled(int);
+    bool weighted_gpu_skin = MikuPan_GpuWeightedSkinningEnabled() != 0;
+    if (igCheckbox("GPU weighted skinning", &weighted_gpu_skin))
+    {
+        MikuPan_SetGpuWeightedSkinningEnabled(weighted_gpu_skin ? 1 : 0);
+    }
+
+    bool log_enabled = MikuPan_PerfDiagLogEnabled() != 0;
+    if (igCheckbox("Log to console", &log_enabled))
+    {
+        MikuPan_PerfDiagSetLogEnabled(log_enabled ? 1 : 0);
+    }
+
+    int interval = MikuPan_PerfDiagGetLogInterval();
+    if (igInputInt("Log interval", &interval, 1, 60, 0))
+    {
+        MikuPan_PerfDiagSetLogInterval(interval);
+    }
+
+    if (igButton("Open Draw Call Inspector", ImVec2{0.0f, 0.0f}))
+    {
+        show_draw_inspector = 1;
+    }
+
+    if (!enabled)
+    {
+        igTextDisabled("Collection is off. Toggle it here, or set MIKUPAN_PERF_DIAG=1 before launch.");
+    }
+
+    MikuPan_PerfDiagSnapshot s;
+    MikuPan_PerfDiagGetLastSnapshot(&s);
+
+    igSeparatorText("Frame");
+    igText("Frame %u  CPU %.3f ms  GPU wait %.3f ms", s.frame, s.cpu_ms, s.gpu_wait_ms);
+    igText("Draws %d  State %d  Uploads %d  Upload bytes %.2f KiB", s.draw_calls, s.state_changes, s.gpu_uploads, (double)s.gpu_upload_bytes / 1024.0);
+    igText("Upload flushes %d  Render pass flushes %d  Buffer grows %d", s.gpu_upload_flushes, s.render_pass_flushes, s.gpu_upload_grows);
+    igText("Mesh cache %d hit / %d new / %d full  Texture L1 %d hit / %d miss", s.mesh_cache_hits, s.mesh_cache_misses_new, s.mesh_cache_misses_full, s.tex_l1_hits, s.tex_l1_misses);
+
+    igSeparatorText("Mesh 0x2 / 0xA");
+    igText("0x2 calls %d  0xA calls %d  CPU path %d  GPU path %d", s.mesh0x2_calls, s.mesh0xA_calls, s.mesh0x2_cpu, s.mesh0x2_gpu);
+    igText("Shadow %d  Receiver %d  Cache on %d  Cache hit %d  Static miss %d", s.mesh0x2_shadow, s.mesh0x2_receiver, s.mesh0x2_cache_on, s.mesh0x2_cache_hit, s.mesh0x2_static_miss);
+    igText("Submeshes %d  Vertices %d  Indices %d", s.mesh0x2_submeshes, s.mesh0x2_vertices, s.mesh0x2_indices);
+    igText("Max packet: submeshes %d  vertices %d  indices %d", s.mesh0x2_max_submeshes, s.mesh0x2_max_vertices, s.mesh0x2_max_indices);
+    igText("CPU stream skips %d  skipped bytes %.2f KiB", s.mesh0x2_stream_skips, (double)s.mesh0x2_stream_skip_bytes / 1024.0);
+
+    igSeparatorText("Skinning");
+    igText("vtype2 %d  vtype3 %d  other %d  allowed %d  blocked %d", s.skin_vtype2, s.skin_vtype3, s.skin_other, s.skin_allowed, s.skin_blocked);
+    igText("copy %d / %d vertices", s.skin_paths[MIKUPAN_PERF_SKIN_COPY], s.skin_vertices[MIKUPAN_PERF_SKIN_COPY]);
+    igText("weighted copy %d / %d vertices", s.skin_paths[MIKUPAN_PERF_SKIN_WEIGHTED_COPY], s.skin_vertices[MIKUPAN_PERF_SKIN_WEIGHTED_COPY]);
+    igText("CPU calc %d / %d vertices", s.skin_paths[MIKUPAN_PERF_SKIN_CPU_CALC], s.skin_vertices[MIKUPAN_PERF_SKIN_CPU_CALC]);
+    igText("GPU %d / %d vertices", s.skin_paths[MIKUPAN_PERF_SKIN_GPU], s.skin_vertices[MIKUPAN_PERF_SKIN_GPU]);
+
+    igTextDisabled("VType detail");
+    for (int i = 0; i < MIKUPAN_PERF_SKIN_VTYPE_COUNT; i++)
+    {
+        if (s.skin_vtype_counts[i] == 0)
+        {
+            continue;
+        }
+        igText("vtype 0x%02X  %d / %d vertices  copy %d/%d  weighted %d/%d  calc %d/%d  gpu %d/%d",
+               i,
+               s.skin_vtype_counts[i],
+               s.skin_vtype_vertices[i],
+               s.skin_vtype_path_counts[MIKUPAN_PERF_SKIN_COPY][i],
+               s.skin_vtype_path_vertices[MIKUPAN_PERF_SKIN_COPY][i],
+               s.skin_vtype_path_counts[MIKUPAN_PERF_SKIN_WEIGHTED_COPY][i],
+               s.skin_vtype_path_vertices[MIKUPAN_PERF_SKIN_WEIGHTED_COPY][i],
+               s.skin_vtype_path_counts[MIKUPAN_PERF_SKIN_CPU_CALC][i],
+               s.skin_vtype_path_vertices[MIKUPAN_PERF_SKIN_CPU_CALC][i],
+               s.skin_vtype_path_counts[MIKUPAN_PERF_SKIN_GPU][i],
+               s.skin_vtype_path_vertices[MIKUPAN_PERF_SKIN_GPU][i]);
+    }
+
+    igTextDisabled("GPU reject reasons");
+    for (int i = 0; i < MIKUPAN_PERF_SKIN_REJECT_COUNT; i++)
+    {
+        if (s.skin_reject_counts[i] == 0)
+        {
+            continue;
+        }
+        igText("%-22s %d / %d vertices",
+               MikuPan_PerfDiagSkinRejectName(i),
+               s.skin_reject_counts[i],
+               s.skin_reject_vertices[i]);
+        for (int j = 0; j < MIKUPAN_PERF_SKIN_VTYPE_COUNT; j++)
+        {
+            if (s.skin_reject_vtype_counts[i][j] == 0)
+            {
+                continue;
+            }
+            igText("  vtype 0x%02X  %d / %d vertices",
+                   j,
+                   s.skin_reject_vtype_counts[i][j],
+                   s.skin_reject_vtype_vertices[i][j]);
+        }
+    }
+
+    igSeparatorText("DrawGirl");
+    igText("normal %d  mirror %d  rendered %d  hidden %d  tofu %d", s.drawgirl_normal, s.drawgirl_mirror, s.drawgirl_rendered, s.drawgirl_hidden, s.drawgirl_tofu);
+    igText("subobj calls %d  subobj total %d  sorted items %d", s.drawgirl_subobj_calls, s.drawgirl_subobj_total, s.drawgirl_sort_items);
+
+    igSeparatorText("Upload contexts");
+    for (int i = 0; i < MIKUPAN_PERF_UPLOAD_COUNT; i++)
+    {
+        igText("%-22s %5d  %.2f KiB", MikuPan_PerfDiagUploadContextName(i), s.upload_counts[i], (double)s.upload_bytes[i] / 1024.0);
+    }
+
+    igSeparatorText("Red flags");
+    if (s.mesh0x2_cpu > 100 && s.gpu_upload_flushes > 100)
+    {
+        igTextColored(ImVec4{1.0f, 0.55f, 0.25f, 1.0f}, "CPU 0x2 packets and upload flushes are both high.");
+        igTextColored(ImVec4{1.0f, 0.55f, 0.25f, 1.0f}, "This points at CPU-skinned per-packet streaming.");
+    }
+    else if (s.mesh0x2_gpu > 100 && s.gpu_upload_flushes <= 10)
+    {
+        igTextColored(ImVec4{0.55f, 0.9f, 0.55f, 1.0f}, "0x2 count is high, but upload flushes are low.");
+        igTextColored(ImVec4{0.55f, 0.9f, 0.55f, 1.0f}, "If it still stalls, focus on draw/state/texture churn next.");
+    }
+    else
+    {
+        igTextDisabled("Capture a bad ghost frame and compare CPU path, uploads, and flushes.");
+    }
+
+    igEnd();
 }
 
 void MikuPan_UiDrawCallInspector(void)
@@ -150,12 +903,13 @@ void MikuPan_UiDrawCallInspector(void)
     int count = MikuPan_DrawCapLastCount();
     igText("Last frame: %d draw calls captured", count);
 
+    MikuPan_UiDrawCallSummary(count);
+
     igSpacing();
     igSeparator();
 
-    // Header row + scrollable child so long captures stay manageable.
-    igText("%-4s %-6s %-16s %-26s %-7s %-7s %-9s %s", "#", "skip?", "primitive",
-           "shader", "vao", "tex0", "ms", "");
+    igText("%-4s %-6s %-16s %-22s %-24s %-7s %-7s %-9s %s", "#", "skip?", "primitive",
+           "source", "shader", "vao", "tex0", "ms", "");
 
     igBeginChild_Str("##draw_list", ImVec2{0.0f, 0.0f}, 0, 0);
 
@@ -173,8 +927,11 @@ void MikuPan_UiDrawCallInspector(void)
         ImVec4 col = e->skipped ? ImVec4{0.6f, 0.6f, 0.6f, 1.0f}
                                 : ImVec4{0.9f, 0.9f, 0.9f, 1.0f};
 
-        igTextColored(col, "%-4d %-6s %-16s %-26s %-7u %-7u %7.3f  count=%d%s",
+        char source_label[96];
+        MikuPan_FormatDrawSource(source_label, sizeof(source_label), e->source_kind, e->source_detail0, e->source_detail1);
+        igTextColored(col, "%-4d %-6s %-16s %-22s %-24s %-7u %-7u %7.3f  count=%d%s",
                       i, e->skipped ? "skip" : "draw", GlPrimName(e->mode),
+                      source_label,
                       e->shader_idx >= 0 ? MikuPan_GetShaderName(e->shader_idx)
                                          : "<external>",
                       (unsigned) e->vao, (unsigned) e->texture0, e->ms,
@@ -1059,6 +1816,14 @@ void MikuPan_UiDebugMenuRender(void)
                 {
                     MikuPan_SetGpuSkinningEnabled(gpu_skin_on);
                 }
+
+                extern int MikuPan_GpuWeightedSkinningEnabled(void);
+                extern void MikuPan_SetGpuWeightedSkinningEnabled(int);
+                int gpu_weighted_skin_on = MikuPan_GpuWeightedSkinningEnabled();
+                if (igCheckbox("GPU Weighted Skinning", (bool*) &gpu_weighted_skin_on))
+                {
+                    MikuPan_SetGpuWeightedSkinningEnabled(gpu_weighted_skin_on);
+                }
                 igEndMenu();
             }
 
@@ -1167,6 +1932,19 @@ void MikuPan_UiDebugMenuRender(void)
             igCheckbox("FPS Counter", (bool*) &mikupan_configuration.show_fps);
 
             igCheckbox("Frame Time Graph", (bool*) &show_frame_time_graph);
+
+            bool perf_diag_enabled = MikuPan_PerfDiagIsEnabled() != 0;
+            if (igCheckbox("Performance Diagnostics", &perf_diag_enabled))
+            {
+                MikuPan_PerfDiagSetEnabled(perf_diag_enabled ? 1 : 0);
+                if (perf_diag_enabled)
+                {
+                    show_perf_diag_window = 1;
+                }
+            }
+
+            igCheckbox("Performance Diagnostics Window",
+                       (bool*) &show_perf_diag_window);
             igCheckbox("Measure GPU Wait", (bool*) &measure_gpu_wait);
             igEndMenu();
         }
@@ -1177,6 +1955,12 @@ void MikuPan_UiDebugMenuRender(void)
 
 void MikuPan_UiDebugWindowsRender(void)
 {
+    if (!show_perf_diag_window_initialized)
+    {
+        show_perf_diag_window = MikuPan_PerfDiagIsEnabled();
+        show_perf_diag_window_initialized = 1;
+    }
+
     ImGuiIO* io = igGetIO_Nil();
     MikuPan_PerfSetGpuWaitEnabled(show_frame_time_graph && measure_gpu_wait);
     FrameTimeGraph_Update(&g_frame_graph, 1000.0f / io->Framerate,
@@ -1200,6 +1984,7 @@ void MikuPan_UiDebugWindowsRender(void)
 
     MikuPan_UiShaderReloadWindow();
     MikuPan_UiEffectDebugWindow();
+    MikuPan_UiPerfDiagWindow();
     MikuPan_UiDrawCallInspector();
     MikuPan_UiCameraDebugWindow();
     MikuPan_UiPhotoDebugWindow();

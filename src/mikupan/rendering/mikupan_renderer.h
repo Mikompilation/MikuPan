@@ -266,6 +266,11 @@ void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex,
                                       int vertex_count,
                                       int depth_mode,
                                       MikuPan_GPUBlendMode blend_mode);
+void MikuPan_RenderScreenCopyTriangles3DResolve(sceGsTex0 *tex,
+                                                float *buffer,
+                                                int vertex_count,
+                                                int depth_mode,
+                                                MikuPan_GPUBlendMode blend_mode);
 int MikuPan_RenderPauseScreenDeformTriangles(u_int addr, float *buffer,
                                              int vertex_count, int depth_mode,
                                              MikuPan_GPUBlendMode blend_mode);

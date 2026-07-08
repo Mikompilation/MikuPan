@@ -363,6 +363,10 @@ void MikuPan_MeshCache_StreamVbo(MikuPan_MeshCacheEntry *entry,
         entry->stream_size[idx] == size &&
         entry->stream_hash[idx] == h)
     {
+        if (MikuPan_PerfGetUploadContext() == MIKUPAN_PERF_UPLOAD_MESH0X2_CPU_STREAM)
+        {
+            MikuPan_PerfRecordMesh0x2StreamSkip(size);
+        }
         return;
     }
 

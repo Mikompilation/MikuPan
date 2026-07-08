@@ -1468,6 +1468,7 @@ typedef enum MikuPan_ScreenCopyScreenPosMode
 {
     MIKUPAN_SCREEN_COPY_SCREEN_POS_NORMAL = 0,
     MIKUPAN_SCREEN_COPY_SCREEN_POS_MODULATE = 1,
+    MIKUPAN_SCREEN_COPY_SCREEN_POS_RESOLVE = 2,
 } MikuPan_ScreenCopyScreenPosMode;
 
 static MikuPan_ScreenCopyScreenPosMode MikuPan_ScreenCopyScreenPosModeFromTex(const sceGsTex0 *tex)
@@ -1518,7 +1519,8 @@ static void MikuPan_RenderScreenCopyTriangles3DScreenPosMode(sceGsTex0 *tex,
                                         g_screen_copy_content_uv_max[1],
                                         "uFramebufferContentUvMax");
     MikuPan_SetUniform1iToCurrentShader(
-        screen_pos_mode == MIKUPAN_SCREEN_COPY_SCREEN_POS_MODULATE ? 4 : 1,
+        screen_pos_mode == MIKUPAN_SCREEN_COPY_SCREEN_POS_MODULATE ? 4 :
+        screen_pos_mode == MIKUPAN_SCREEN_COPY_SCREEN_POS_RESOLVE ? 2 : 1,
         "uUseScreenPos");
     MikuPan_SetUniform2fToCurrentShader((float)g_screen_copy_w,
                                         (float)g_screen_copy_h,
@@ -1551,6 +1553,17 @@ void MikuPan_RenderScreenCopyTriangles3DScreenPos(sceGsTex0 *tex,
     MikuPan_RenderScreenCopyTriangles3DScreenPosMode(
         tex, buffer, vertex_count, depth_mode, blend_mode,
         MikuPan_ScreenCopyScreenPosModeFromTex(tex));
+}
+
+void MikuPan_RenderScreenCopyTriangles3DResolve(sceGsTex0 *tex,
+                                                float *buffer,
+                                                int vertex_count,
+                                                int depth_mode,
+                                                MikuPan_GPUBlendMode blend_mode)
+{
+    MikuPan_RenderScreenCopyTriangles3DScreenPosMode(
+        tex, buffer, vertex_count, depth_mode, blend_mode,
+        MIKUPAN_SCREEN_COPY_SCREEN_POS_RESOLVE);
 }
 
 void MikuPan_RenderScreenCopyTriangles3DScreenPosGSAlpha(sceGsTex0 *tex,
