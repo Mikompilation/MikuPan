@@ -25,6 +25,7 @@
 #include "os/pad.h"
 #include "os/eeiop/eese.h"
 #include "graphics/graph2d/g2d_debug.h"
+#include "mikupan/ui/mikupan_ui.h"
 
 int odev = 0;
 int stop_put_draw_env = 0;
@@ -116,10 +117,11 @@ void InitOptionWrk()
     opt_wrk.pad_mode = 0;
     opt_wrk.se_vol = 0x3fff;
     opt_wrk.bgm_vol = 0xccc;
-    opt_wrk.pad_move = 1;
+    opt_wrk.pad_move = 0;
     opt_wrk.key_type = 0;
     opt_wrk.sound_mode = 0;
-    SeSetMVol(0xccc);
+    //SeSetMVol(0xccc);
+    MikuPan_SetAudioMasterVolume(MikuPan_GetAudioMasterVolume());
     SeSetSteMono(opt_wrk.sound_mode);
 }
 

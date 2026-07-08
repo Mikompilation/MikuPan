@@ -1,6 +1,7 @@
 #include "voice.h"
 #include "iop/iopmain.h"
 #include "mikupan/mikupan_audio.h"
+#include "mikupan/mikupan_audio_bus.h"
 #include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "sce/libsd.h"
@@ -13,6 +14,7 @@ bool loopEnd;
 bool loopRepeat;
 VOICE voices[VOICE_NUM];
 static SDL_Mutex *voice_mutex;
+static u_int voice_audio_revision;
 
 #define VOICE_BUFFER_BYTES (0x15160 * 10)
 #define VOICE_BUFFER_SAMPLES (VOICE_BUFFER_BYTES / (int)sizeof(s16))
@@ -36,6 +38,8 @@ static s32 GetVoiceLeftVolume(const VOICE *v);
 static s32 GetVoiceRightVolume(const VOICE *v);
 static s32 GetVoiceAdsrLevel(VOICE *v);
 static s32 ApplyEnvelopeToVolume(s32 volume, s32 envelope);
+static void ApplyVoiceStreamGain(VOICE *v);
+static void RefreshVoiceStreamGains(void);
 
 static void LockVoices(void)
 {
@@ -131,6 +135,36 @@ static void MixStereoSamples(int sampleCount, s16 *samples, VOICE *v)
     }
 }
 
+static void ApplyVoiceStreamGain(VOICE *v)
+{
+    if (v == NULL || v->stream == NULL)
+    {
+        return;
+    }
+
+    if (!SDL_SetAudioStreamGain(v->stream, MikuPan_AudioGetMasterScale()))
+    {
+        info_log("Failed to set audio stream gain: %s", SDL_GetError());
+    }
+}
+
+static void RefreshVoiceStreamGains(void)
+{
+    const u_int revision = MikuPan_AudioGetRevision();
+
+    if (voice_audio_revision == revision)
+    {
+        return;
+    }
+
+    for (int i = 0; i < VOICE_NUM; i++)
+    {
+        ApplyVoiceStreamGain(&voices[i]);
+    }
+
+    voice_audio_revision = revision;
+}
+
 static bool EnsureVoiceStream(VOICE *v)
 {
     if (v->stream != NULL)
@@ -165,6 +199,7 @@ static bool EnsureVoiceStream(VOICE *v)
     }
 
     v->frequency_ratio = 0.0f;
+    ApplyVoiceStreamGain(v);
     return true;
 }
 
@@ -762,6 +797,7 @@ static void SaveDebugBuffer()
 void VoiceRun()
 {
     LockVoices();
+    RefreshVoiceStreamGains();
     for (int i = 0; i < VOICE_NUM; i++)
     {
         if (voices[i].isPlaying)

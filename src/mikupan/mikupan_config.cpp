@@ -84,7 +84,8 @@ MikuPan_Config mikupan_configuration = {
         2.0f
     },
     {
-        -1
+        -1,
+        1
     },
     ""
 };
@@ -270,6 +271,7 @@ static void MikuPan_ConfigurationValidateFirstPersonCamera(
 
 static void MikuPan_ConfigurationValidateInput(MikuPan_ConfigInput* input)
 {
+    input->rumble_enabled = input->rumble_enabled ? 1 : 0;
     input->bindings_saved = input->bindings_saved ? 1 : 0;
     input->action_profile_saved = input->action_profile_saved ? 1 : 0;
     input->action_profile_enabled = input->action_profile_enabled ? 1 : 0;

@@ -28,6 +28,8 @@ static void MapMove(u_char alp);
 static void MapInfo1(u_char alp);
 static void MapInfo2(u_char alp);
 static void MapPrint(short int mov_px, short int mov_py, u_char alp);
+static void DrawMapExtendedShroud(u_char alp);
+static u_short MapExtendedShroudSize(float value);
 static void MapPlayer(short int mov_px, short int mov_py, u_char alp);
 static void MapChrCtrl(short int pos_x, short int pos_y, u_char alp);
 static void MapChrSet(u_char id, short int pos_x, short int pos_y, int rgb, u_char alp, float scl, int pri);
@@ -189,6 +191,7 @@ void IngameMenuMap()
 void IngameMenuMapDisp(u_char mod)
 {
     MapCntInit();
+    DrawMapExtendedShroud(128);
 
     if (mod == 0)
     {
@@ -677,6 +680,47 @@ static void MapPrint(short int mov_px, short int mov_py, u_char alp)
         PolySquareYW(320.0f - eff_hw, 224.0f - eff_hh, (u_short)(eff_hw * 2.0f), (u_short)(eff_hh * 2.0f), 0, 128.0f - yw2d.io_a[6], 1.0f, 1.0f, 0x4b000, 0, 0, 0);
     }
     PutSpriteYW(MAP_BACK_MASK1, MAP_BACK_MASK4, 0.0f, 0.0f, 0.0f, 0x808080, 128.0f, 2.6890757f, 2.698795f, 1, 0xff, 1, 0, 0);
+}
+
+static void DrawMapExtendedShroud(u_char alp)
+{
+    float eff_hw;
+    float eff_hh;
+
+    MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);
+
+    const float full_x = 320.0f - eff_hw;
+    const float full_y = 224.0f - eff_hh;
+    const u_short full_w = MapExtendedShroudSize(eff_hw * 2.0f);
+    const u_short full_h = MapExtendedShroudSize(eff_hh * 2.0f);
+
+    if (eff_hw > 320.0f)
+    {
+        const u_short rect_w = MapExtendedShroudSize(eff_hw - 320.0f);
+        PolySquareYW(full_x, full_y, rect_w, full_h,
+                     0, alp, 1.0f, 1.0f, 0x4b100, 0, 0, 0);
+        PolySquareYW(636.0f, full_y, rect_w, full_h,
+                     0, alp, 1.0f, 1.0f, 0x4b100, 0, 0, 0);
+    }
+
+    if (eff_hh > 224.0f)
+    {
+        const u_short rect_h = MapExtendedShroudSize(eff_hh - 224.0f);
+        PolySquareYW(full_x, full_y, full_w, rect_h,
+                     0, alp, 1.0f, 1.0f, 0x4b100, 0, 0, 0);
+        PolySquareYW(full_x, 444.0f, full_w, rect_h,
+                     0, alp, 1.0f, 1.0f, 0x4b100, 0, 0, 0);
+    }
+}
+
+static u_short MapExtendedShroudSize(float value)
+{
+    if (value <= 0.0f)
+    {
+        return 0;
+    }
+
+    return (u_short) (value + 4.999f);
 }
 
 static void MapPlayer(short int mov_px, short int mov_py, u_char alp)

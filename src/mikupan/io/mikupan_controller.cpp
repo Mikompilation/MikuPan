@@ -4,6 +4,7 @@
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
+#include "main/glob.h"
 #include "os/key_cnf.h"
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_mouse.h>
@@ -28,6 +29,17 @@ SDL_Gamepad *mikupan_gamepad = NULL;
 static int mikupan_preferred_gamepad_index = MIKUPAN_CONTROLLER_AUTO_INDEX;
 static unsigned short mikupan_rumble_low = 0;
 static unsigned short mikupan_rumble_high = 0;
+
+static void MikuPan_ControllerStopRumble(void)
+{
+    if (mikupan_gamepad != NULL && (mikupan_rumble_low != 0 || mikupan_rumble_high != 0))
+    {
+        SDL_RumbleGamepad(mikupan_gamepad, 0, 0, 0);
+    }
+
+    mikupan_rumble_low = 0;
+    mikupan_rumble_high = 0;
+}
 
 /* Which device's bindings the mapping UI shows: 1 = keyboard & mouse, 0 = the
  * selected gamepad. -1 until first drawn, then defaulted from whether a gamepad
@@ -381,6 +393,7 @@ void MikuPan_ControllerResetBindings(void)
     }
     finder_mouse_enabled = 1;
     finder_mouse_sensitivity = 1.0f;
+    MikuPan_SetControllerRumbleEnabled(1);
     MikuPan_SetFinderDpadFilmSwapEnabled(0);
     MikuPan_SetMirrorStoneHudEnabled(0);
     MikuPan_ResetCustomActionProfile();
@@ -425,6 +438,7 @@ void MikuPan_ControllerStoreBindingsToConfig(void)
         MikuPan_ImprovedMovementCollisionsEnabled();
     cfg->finder_mouse_enabled = finder_mouse_enabled;
     cfg->finder_mouse_sensitivity = finder_mouse_sensitivity;
+    cfg->rumble_enabled = MikuPan_ControllerRumbleEnabled();
     for (int i = 0; i < MIKUPAN_ACTION_PROFILE_ACTION_COUNT; i++)
     {
         cfg->action_profile_normal[i] =
@@ -442,6 +456,7 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
 {
     const MikuPan_ConfigInput *cfg = &mikupan_configuration.input;
 
+    MikuPan_SetControllerRumbleEnabled(cfg->rumble_enabled);
     MikuPan_ResetCustomActionProfile();
     MikuPan_SetCustomActionProfileEnabled(0);
 
@@ -716,11 +731,33 @@ SDL_Gamepad *MikuPan_GetController(void)
     return mikupan_gamepad;
 }
 
+int MikuPan_ControllerRumbleEnabled(void)
+{
+    return mikupan_configuration.input.rumble_enabled ? 1 : 0;
+}
+
+void MikuPan_SetControllerRumbleEnabled(int enabled)
+{
+    mikupan_configuration.input.rumble_enabled = enabled ? 1 : 0;
+    opt_wrk.pad_move = mikupan_configuration.input.rumble_enabled ? 0 : 1;
+
+    if (!mikupan_configuration.input.rumble_enabled)
+    {
+        MikuPan_ControllerStopRumble();
+    }
+}
+
 int MikuPan_ControllerRumble(const unsigned char *data)
 {
     if (data == NULL)
     {
         return 0;
+    }
+
+    if (!MikuPan_ControllerRumbleEnabled())
+    {
+        MikuPan_ControllerStopRumble();
+        return 1;
     }
 
     if (mikupan_gamepad == NULL)
