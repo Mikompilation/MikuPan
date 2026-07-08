@@ -5,6 +5,7 @@
 #include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
+#include "mikupan/mikupan_utils.h"
 #include <math.h>
 #include <string.h>
 
@@ -127,9 +128,12 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     //glm_perspective(mikupan_camera->fov, (float)MikuPan_GetWindowWidth() / (float)MikuPan_GetWindowHeight(), 10.0f, mikupan_camera->farz, projection);
     float nearz = 10.0f;
     float farz  = mikupan_camera->farz;
-    float halfW = (float) MikuPan_GetWindowWidth()  / 2.0f;
-    float halfH = (float) MikuPan_GetWindowHeight() / 4.0f;
-    float scrz = halfH / tanf(mikupan_camera->fov * 0.5f) * 2.0f;
+    float halfW;
+    float fullHalfH;
+    MikuPan_GetFullScreenHalfExtent(&halfW, &fullHalfH);
+    float halfH = fullHalfH * 0.5f;
+    float focalHalfH = PS2_CENTER_Y * 0.5f;
+    float scrz = focalHalfH / tanf(mikupan_camera->fov * 0.5f) * 2.0f;
     float rscrz = nearz / scrz;
     float gsxv = halfW * rscrz;
     float gsyv = halfH * rscrz;
@@ -160,8 +164,8 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     float gs_width  = 4096.0f;
     float gs_height = 4096.0f;
 
-    float scaleX = (float)MikuPan_GetWindowWidth()  / gs_width;
-    float scaleY = (float)MikuPan_GetWindowHeight() / gs_height;
+    float scaleX = (halfW * 2.0f) / gs_width;
+    float scaleY = (fullHalfH * 2.0f) / gs_height;
 
     mat4 vc;
     glm_mat4_identity(vc);

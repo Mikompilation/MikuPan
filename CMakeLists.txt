@@ -306,6 +306,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/mikupan_config.cpp
         src/mikupan/mikupan_config_ini.cpp
         src/mikupan/mikupan_config.h
+        src/mikupan/mikupan_audio_bus.cpp
+        src/mikupan/mikupan_audio_bus.h
         "src/mikupan/io/mikupan_controller.cpp"
         "src/mikupan/io/mikupan_controller.h"
         src/mikupan/mikupan_screenshot.cpp
@@ -335,6 +337,7 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/gameplay/mikupan_title_scene.cpp"
         "src/mikupan/gs/mikupan_gs.cpp"
         "src/mikupan/gs/mikupan_texture_manager.cpp"
+        "src/mikupan/mikupan_audio_bus.cpp"
         "src/mikupan/mikupan_config_ini.cpp"
         "src/mikupan/mikupan_file.cpp"
         "src/mikupan/mikupan_logging.cpp"

@@ -12,6 +12,7 @@
 #include "ingame/menu/ig_spd_menu.h"
 #include "ingame/menu/item.h"
 #include "main/glob.h"
+#include "mikupan/io/mikupan_controller.h"
 #include "os/eeiop/eese.h"
 #include "os/key_cnf.h"
 #include "os/pad.h"
@@ -304,23 +305,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 (Ana2PadDirCnt(3) > 25 && (Ana2PadDirCnt(3) % 5) == 1)
             )
             {
-                if (opt_wrk.pad_move != 0)
-                {
-                    opt_wrk.pad_move--;
-                }
-                else
-                {
-                    opt_wrk.pad_move = 1;
-                }
-
-                if (opt_wrk.pad_move == 0)
-                {
-                    menu_opt.vive_flg = 60;
-                }
-                else
-                {
-                    menu_opt.vive_flg = 0;
-                }
+                MikuPan_SetControllerRumbleEnabled(!MikuPan_ControllerRumbleEnabled());
+                menu_opt.vive_flg = MikuPan_ControllerRumbleEnabled() ? 60 : 0;
 
                 if (ingame_wrk.stts & 0x80)
                 {
@@ -338,23 +324,8 @@ char MenuOptionPad(u_char *csr, u_char *mode)
                 (Ana2PadDirCnt(1) > 25 && Ana2PadDirCnt(1) % 5 == 1)
             )
             {
-                if (opt_wrk.pad_move == 0)
-                {
-                    opt_wrk.pad_move++;
-                }
-                else
-                {
-                    opt_wrk.pad_move = 0;
-                }
-
-                if (opt_wrk.pad_move == 0)
-                {
-                    menu_opt.vive_flg = 60;
-                }
-                else
-                {
-                    menu_opt.vive_flg = 0;
-                }
+                MikuPan_SetControllerRumbleEnabled(!MikuPan_ControllerRumbleEnabled());
+                menu_opt.vive_flg = MikuPan_ControllerRumbleEnabled() ? 60 : 0;
 
                 if (ingame_wrk.stts & 0x80)
                 {

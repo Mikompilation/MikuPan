@@ -147,6 +147,7 @@ typedef struct
 typedef struct
 {
     int selected_gamepad_index;
+    int rumble_enabled;
 
     /* Saved controller / keyboard bindings. Sizes mirror
      * MIKUPAN_CONTROLLER_LOGICAL_COUNT (16) and MIKUPAN_STICK_COUNT (4) from
