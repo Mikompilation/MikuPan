@@ -1,6 +1,7 @@
 #include "mikupan/ui/mikupan_rml_options.h"
 
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/mikupan_config.h"
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
@@ -222,6 +223,7 @@ struct MikuPanRmlOptionsState
     Rml::ElementFormControlSelect* shadow_resolution_select = nullptr;
     Rml::ElementFormControlSelect* lighting_mode_select = nullptr;
     Rml::ElementFormControlSelect* dither_mode_select = nullptr;
+    Rml::ElementFormControlSelect* finder_surround_select = nullptr;
     Rml::ElementFormControlSelect* theme_select = nullptr;
     Rml::ElementFormControlSelect* font_select = nullptr;
     Rml::ElementFormControlInput* vsync_input = nullptr;
@@ -3176,6 +3178,7 @@ bool AnySelectOpen(void)
         g_rml.shadow_resolution_select,
         g_rml.lighting_mode_select,
         g_rml.dither_mode_select,
+        g_rml.finder_surround_select,
         g_rml.theme_select,
         g_rml.font_select,
     };
@@ -3491,6 +3494,7 @@ void UpdateSelectArrows(void)
     SetSelectArrow(g_rml.shadow_resolution_select);
     SetSelectArrow(g_rml.lighting_mode_select);
     SetSelectArrow(g_rml.dither_mode_select);
+    SetSelectArrow(g_rml.finder_surround_select);
     SetSelectArrow(g_rml.theme_select);
     SetSelectArrow(g_rml.font_select);
 }
@@ -3624,6 +3628,14 @@ void SyncRmlSettingsValues(void)
         g_rml.dither_mode_select->SetSelection(
             MikuPan_GetSelectedDitherModeOption());
     }
+    if (g_rml.finder_surround_select != nullptr)
+    {
+        g_rml.finder_surround_select->SetSelection(
+            mikupan_configuration.renderer.finder_viewport_mask_mode ==
+                    MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR);
+    }
     if (g_rml.theme_select != nullptr)
     {
         g_rml.theme_select->SetSelection(MikuPan_GetSelectedThemeOption());
@@ -3685,6 +3697,10 @@ bool LoadOptionsDocument(void)
     static constexpr const char* kLightingModeLabels[] = {
         "Pixel (Modern)",
         "Vertex (PS2)",
+    };
+    static constexpr const char* kFinderSurroundLabels[] = {
+        "Black",
+        "Blur",
     };
 
     g_rml.window_mode_picker = GetElement("window-mode-picker");
@@ -3830,6 +3846,22 @@ bool LoadOptionsDocument(void)
                           MikuPan_GetDitherModeOptionLabel,
                           MikuPan_GetSelectedDitherModeOption(),
                           [](int index) { MikuPan_SelectDitherModeOption(index); });
+
+    g_rml.finder_surround_select = GetSelect("finder-surround-select");
+    PopulateStaticSelect(
+        g_rml.finder_surround_select,
+        kFinderSurroundLabels,
+        2,
+        mikupan_configuration.renderer.finder_viewport_mask_mode ==
+                MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR,
+        [](int index) {
+            mikupan_configuration.renderer.finder_viewport_mask_mode =
+                index == MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                    ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                    : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR;
+        });
 
     AddStepControl("master-volume-stepper",
                    "master-volume-bars",

@@ -190,6 +190,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                 mikupan_configuration.renderer.gpu_driver,
                 sizeof(mikupan_configuration.renderer.gpu_driver));
     ApplyValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);
+    ApplyValue(ini, "renderer", "finder_viewport_mask_mode",
+               mikupan_configuration.renderer.finder_viewport_mask_mode);
     ApplyValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     ApplyValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     ApplyValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
@@ -359,6 +361,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;
     SetValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);
+    SetValue(ini, "renderer", "finder_viewport_mask_mode",
+             mikupan_configuration.renderer.finder_viewport_mask_mode);
     SetValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     SetValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     SetValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);

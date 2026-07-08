@@ -299,6 +299,11 @@ void MikuPan_RenderScreenCopyTriangles3DFeedbackModulate(sceGsTex0 *tex,
                                                          int vertex_count,
                                                          int depth_mode,
                                                          MikuPan_GPUBlendMode blend_mode);
+void MikuPan_RenderFinderViewportBlurTriangles3D(sceGsTex0 *tex,
+                                                 float *buffer,
+                                                 int vertex_count,
+                                                 int depth_mode,
+                                                 MikuPan_GPUBlendMode blend_mode);
 void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode);
 const MikuPan_TextureInfo *MikuPan_GetScreenCopyTextureInfo(void);
 const MikuPan_ScreenCopyDebugInfo *MikuPan_GetScreenCopyDebugInfo(void);

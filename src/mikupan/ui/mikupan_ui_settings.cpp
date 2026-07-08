@@ -1015,6 +1015,16 @@ void MikuPan_UiSettingsRender(void)
             MikuPan_UiDitherModeCombo();
             igTextDisabled("Save Configuration to keep Dither Filtering after restart.");
 
+            const char* finder_mask_modes[] = {"Black", "Blur"};
+            int finder_mask_mode =
+                mikupan_configuration.renderer.finder_viewport_mask_mode;
+            if (igCombo_Str_arr("Finder Surround", &finder_mask_mode,
+                                finder_mask_modes, 2, -1))
+            {
+                mikupan_configuration.renderer.finder_viewport_mask_mode =
+                    finder_mask_mode;
+            }
+
             igEndMenu();
         }
 

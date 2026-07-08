@@ -700,7 +700,8 @@ button.controller-focus {
 #msaa-select,
 #shadow-resolution-select,
 #lighting-mode-select,
-#dither-mode-select {
+#dither-mode-select,
+#finder-surround-select {
     nav-left: #cat-graphics;
 }
 

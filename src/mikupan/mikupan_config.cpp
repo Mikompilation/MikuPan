@@ -32,7 +32,8 @@ MikuPan_Config mikupan_configuration = {
         1.0f,
         0,
         "",
-        0
+        0,
+        MIKUPAN_FINDER_VIEWPORT_MASK_BLUR
     },
     {
         0,
@@ -201,6 +202,10 @@ static void MikuPan_ConfigurationValidateRenderer(
     renderer->dither_mode = renderer->dither_mode <= 0 ? 0 : 1;
 
     renderer->gpu_debug = renderer->gpu_debug ? 1 : 0;
+    renderer->finder_viewport_mask_mode =
+        renderer->finder_viewport_mask_mode == MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR;
 }
 
 static void MikuPan_ConfigurationValidateCrt(MikuPan_ConfigCrt* crt)
