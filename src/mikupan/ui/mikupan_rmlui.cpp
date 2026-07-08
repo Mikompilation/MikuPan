@@ -2,9 +2,9 @@
 #include "mikupan/ui/mikupan_rml_options.h"
 #include "mikupan/ui/mikupan_ui.h"
 
-#include "glad/gl.h"
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
+#include "mikupan/rendering/mikupan_gl_compat.h"
 
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan/rendering/mikupan_pipeline.h"

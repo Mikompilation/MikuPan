@@ -5,7 +5,7 @@
 #include "mikupan_pipeline.h"
 #include "mikupan_shader.h"
 #include "mikupan_profiler.h"
-#include <glad/gl.h>
+#include "mikupan_gl_compat.h"
 #include <stdlib.h>
 #include <string.h>
 

@@ -3,7 +3,7 @@
 
 #include "SDL3/SDL_stdinc.h"  /* Uint64 */
 #include "SDL3/SDL_timer.h"   /* SDL_GetPerformanceCounter — used by MIKUPAN_PERF_SCOPE */
-#include <glad/gl.h>          /* GLenum / GLsizei / GLint — used by timed-draw wrappers */
+#include "mikupan_gl_compat.h"
 
 #ifdef __cplusplus
 extern "C" {

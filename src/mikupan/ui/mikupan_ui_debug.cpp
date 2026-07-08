@@ -3,11 +3,11 @@
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
-#include "glad/gl.h"
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "ingame/camera/camera.h"
 #include "ingame/camera/camera_types.h"
+#include "mikupan/rendering/mikupan_gl_compat.h"
 #include "main/glob.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_basictypes.h"

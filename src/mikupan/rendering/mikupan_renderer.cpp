@@ -38,8 +38,6 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
 #include "mikupan_meshcache.h"
 #include "mikupan_pipeline.h"
 
-#include <glad/gl.h>
-
 MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_MsaaBufferObject render_back_msaa = {0};
 static int g_mirror_scissor_enabled = 0;
@@ -212,7 +210,7 @@ SDL_AppResult MikuPan_Init()
 
     MikuPan_LoadConfiguration(NULL);
 
-    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
+    //SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
 
     info_log("Loading SDL_GameControllerDB");
 

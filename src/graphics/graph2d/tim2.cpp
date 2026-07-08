@@ -12,10 +12,10 @@
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sglib.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/rendering/mikupan_gl_compat.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
 
-#include <glad/gl.h>
 #include <stdlib.h>
 
 // borrowed and adapted from FF2 symbols

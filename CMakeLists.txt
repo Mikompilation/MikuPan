@@ -447,7 +447,6 @@ target_include_directories(MikuPan PRIVATE
         "src"
         "src/iop"
         "extern/"
-        "extern/glad/include/"
         ${MIKUPAN_GENERATED_DIR}
         ${SDL3_INCLUDE_DIR}
         "${FFMPEG_ROOT}/include"

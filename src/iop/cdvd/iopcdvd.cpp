@@ -8,6 +8,8 @@
 
 #include "intrman.h"
 #include "libcdvd.h"
+#include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/mikupan_memory.h"
 #include "memory.h"
 #include "sif.h"
 #include "string.h"
@@ -42,6 +44,7 @@ static void ICdvdAdpcmLoad();
 static void ICdvdExecCmd();
 static void ICdvdDataReadOnceSector();
 static void ICdvdStrLoad();
+static int ICdvdTryWholeFileLoad(CDVD_REQ_BUF* req_bufp);
 static int ICdvdCheckLoadError();
 static void ICdvdTransFinishedData();
 static void ICdvdMainLocked();
@@ -763,6 +766,11 @@ void ICdvdBreak()
 
 static int ICdvdSectorLoad(CDVD_REQ_BUF* req_bufp)
 {
+    if (ICdvdTryWholeFileLoad(req_bufp))
+    {
+        return 2;
+    }
+
     if (!ICdvdCheckBufStatus())
     {
         return 0;
@@ -783,6 +791,99 @@ static int ICdvdSectorLoad(CDVD_REQ_BUF* req_bufp)
     //ICdvdDataReadOnceSector();
     cdvd_stat.cmd_on = 1;
     ICdvdSetRetStat(cdvd_stat.id, CDVD_LS_LOADING);
+    return 1;
+}
+
+static void ICdvdFinishWholeFileLoad(CDVD_REQ_BUF* req_bufp)
+{
+    if (MikuPan_IsPs2MemoryPointer((int64_t)(uintptr_t)req_bufp->taddr))
+    {
+        MikuPan_NotifyPs2MemoryLoad(
+            MikuPan_GetPs2OffsetFromHostPointer(req_bufp->taddr));
+    }
+
+    ICdvdSetRetStat(req_bufp->id, CDVD_LS_FINISHED);
+    cdvd_stat.start_pos = (cdvd_stat.start_pos + 1) % 32;
+    cdvd_stat.buf_use_num--;
+    cdvd_stat.cmd_on = 0;
+    cdvd_stat.stat = CDVD_STAT_FREE;
+}
+
+static int ICdvdReadWholeNamedFile(
+    const char* name, void* target, u_int requested_size)
+{
+    sceCdlFILE file_info = {0};
+
+    if (name == NULL || !sceCdSearchFile(&file_info, name))
+    {
+        return 0;
+    }
+
+    u_int read_size = file_info.size;
+    if (read_size > requested_size)
+    {
+        read_size = requested_size;
+    }
+
+    if (read_size != 0 && !sceCdReadFile(name, 0, target, read_size))
+    {
+        return 0;
+    }
+
+    if (read_size < requested_size)
+    {
+        memset((u_char*)target + read_size, 0, requested_size - read_size);
+    }
+
+    return 1;
+}
+
+static int ICdvdReadWholeArchiveFile(CDVD_REQ_BUF* req_bufp)
+{
+    if (req_bufp->size_sector == 0)
+    {
+        return 1;
+    }
+
+    return sceCdReadFile(
+        "\\IMG_BD.BIN;1",
+        (u_int)req_bufp->start_sector * 2048u,
+        req_bufp->taddr,
+        (u_int)req_bufp->size_sector);
+}
+
+static int ICdvdTryWholeFileLoad(CDVD_REQ_BUF* req_bufp)
+{
+    if (req_bufp == NULL || req_bufp->taddr == NULL)
+    {
+        return 0;
+    }
+
+    if (req_bufp->tmem == TRANS_MEM_SPU || req_bufp->size_sector < 0)
+    {
+        return 0;
+    }
+
+    if (req_bufp->size_sector == 0)
+    {
+        ICdvdFinishWholeFileLoad(req_bufp);
+        return 1;
+    }
+
+    const char* name = NULL;
+    if (req_bufp->file_no >= 0)
+    {
+        name = file_name[req_bufp->file_no];
+    }
+
+    if (!ICdvdReadWholeNamedFile(name, req_bufp->taddr,
+            (u_int)req_bufp->size_sector)
+        && !ICdvdReadWholeArchiveFile(req_bufp))
+    {
+        return 0;
+    }
+
+    ICdvdFinishWholeFileLoad(req_bufp);
     return 1;
 }
 
@@ -928,11 +1029,19 @@ static int ICdvdExecCmdSub(CDVD_REQ_BUF* req_bufp)
         cdvd_stat.stat = CDVD_STAT_LOADING;
         break;
     case IC_CDVD_LOAD_SECT:
-        if (ICdvdSectorLoad(req_bufp)) {
+    {
+        int load_result = ICdvdSectorLoad(req_bufp);
+        if (load_result == 1)
+        {
             cdvd_stat.stat = CDVD_STAT_LOADING;
             ret_param = 1;
         }
+        else if (load_result == 2)
+        {
+            ret_param = 1;
+        }
         break;
+    }
     case IC_CDVD_SEEK:
         cdvd_stat.stat = CDVD_STAT_SEEKING;
         break;
