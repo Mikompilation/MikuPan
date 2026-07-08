@@ -1793,7 +1793,7 @@ static void ShowEneCtrl(short int pos_x, short int pos_y)
 
     if (ene_no != 0xff)
     {
-        if (ene_wrk[ene_no].hp <= 500)
+        if (ene_wrk[ene_no].hp <= 700)
         {
             ene_hp = ene_wrk[ene_no].hp;
 
@@ -1801,12 +1801,12 @@ static void ShowEneCtrl(short int pos_x, short int pos_y)
         }
         else
         {
-            ene_hp = 500;
+            ene_hp = 700;
 
             new_inf.bar_over = ene_wrk[ene_no].hp + 12;
         }
 
-        ep_bar = (ene_hp * 100) / 500.0f;
+        ep_bar = (ene_hp * 100) / 700.0f;
         new_inf.ep_bar = (ep_bar * 153) / 100.0f;
 
         new_inf.ep_tmr = 180;
@@ -1985,9 +1985,9 @@ static char EneDamegeCtrl(short int pos_x, short int pos_y)
     break;
     }
 
-    if (new_inf.dsp_dmg_blu > 500)
+    if (new_inf.dsp_dmg_blu > 700)
     {
-        bar_blu = 500;
+        bar_blu = 700;
 
         new_inf.bar_over = new_inf.dsp_dmg_blu + 12;
     }
@@ -1998,19 +1998,19 @@ static char EneDamegeCtrl(short int pos_x, short int pos_y)
         new_inf.bar_over = 0;
     }
 
-    hp_perc_blu = (bar_blu * 100) / 500.0f;
+    hp_perc_blu = (bar_blu * 100) / 700.0f;
     ep_bar1 = (hp_perc_blu * 153) / 100.0f;
 
-    if (new_inf.dsp_dmg_red > 500)
+    if (new_inf.dsp_dmg_red > 700)
     {
-        bar_red = 500;
+        bar_red = 700;
     }
     else
     {
         bar_red = new_inf.dsp_dmg_red;
     }
 
-    hp_perc_red = (bar_red * 100) / 500.0f;
+    hp_perc_red = (bar_red * 100) / 700.0f;
     ep_bar2 = (hp_perc_red * 153) / 100.0f;
 
     ShowEnePower(ep_bar1, ep_bar2, pos_x, pos_y, new_inf.dsp_dmg_alp, new_inf.bar_over);
