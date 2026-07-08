@@ -250,6 +250,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.first_person_camera.stick_pitch_speed_deg);
     ApplyValue(ini, "input", "selected_gamepad_index",
                mikupan_configuration.input.selected_gamepad_index);
+    ApplyValue(ini, "input", "rumble_enabled",
+               mikupan_configuration.input.rumble_enabled);
     ApplyValue(ini, "input", "bindings_saved",
                mikupan_configuration.input.bindings_saved);
     for (int i = 0; i < 16; i++)
@@ -419,6 +421,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
              mikupan_configuration.first_person_camera.stick_pitch_speed_deg);
     SetValue(ini, "input", "selected_gamepad_index",
              mikupan_configuration.input.selected_gamepad_index);
+    SetValue(ini, "input", "rumble_enabled",
+             mikupan_configuration.input.rumble_enabled);
     SetValue(ini, "input", "bindings_saved",
              mikupan_configuration.input.bindings_saved);
     if (mikupan_configuration.input.bindings_saved)

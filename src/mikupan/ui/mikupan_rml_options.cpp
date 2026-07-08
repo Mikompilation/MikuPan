@@ -817,6 +817,15 @@ std::string BuildControllerInvertRow(int index)
     return rml;
 }
 
+std::string BuildControllerRumbleRow(void)
+{
+    std::string rml = "<div class=\"controls-bind-row controls-option-row\"><span class=\"controls-bind-label\">Controller Rumble</span>";
+    rml += "<button id=\"controller-rumble-toggle\" class=\"controls-option-button\">";
+    rml += MikuPan_ControllerRumbleEnabled() ? "On" : "Off";
+    rml += "</button></div>";
+    return rml;
+}
+
 void RebuildControlsList(void)
 {
     if (g_rml.controls_list == nullptr)
@@ -879,6 +888,9 @@ void RebuildControlsList(void)
         {
             rml += "<div class=\"placeholder\">No controller is currently open. Connect a controller, or select one in the ImGui device selector for now.</div>";
         }
+
+        rml += "<div class=\"controls-section-title\">Controller</div>";
+        rml += BuildControllerRumbleRow();
 
         rml += "<div class=\"controls-section-title\">Buttons</div>";
         for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
@@ -1374,6 +1386,18 @@ void HandleControlsListClick(Rml::Event& event)
     }
     if (id.empty())
     {
+        return;
+    }
+
+    if (id == "controller-rumble-toggle")
+    {
+        HandledControlsListEvent(event);
+        MikuPan_SetControllerRumbleEnabled(
+            !MikuPan_ControllerRumbleEnabled());
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusElementById("controller-rumble-toggle");
+        RequestUiMoveSound();
         return;
     }
 

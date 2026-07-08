@@ -69,6 +69,8 @@ void MikuPan_ControllerSetPreferredGamepadIndex(int index);
 int MikuPan_ControllerGetPreferredGamepadIndex(void);
 void MikuPan_ControllerDrawDeviceSelectorUi(void);
 SDL_Gamepad* MikuPan_GetController(void);
+int MikuPan_ControllerRumbleEnabled(void);
+void MikuPan_SetControllerRumbleEnabled(int enabled);
 int MikuPan_ControllerRumble(const unsigned char* data);
 void MikuPan_ControllerDrawRemapWindow(void);
 
