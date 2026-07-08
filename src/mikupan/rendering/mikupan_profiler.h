@@ -93,11 +93,34 @@ typedef enum
 Uint64 MikuPan_PerfBegin(void);
 void   MikuPan_PerfEnd(MikuPan_PerfSection sect, Uint64 t0);
 
-/// RAII-style scope helper. Declare at function entry; any return path
-/// (including early returns) automatically accumulates the elapsed time
-/// into the right bucket via __attribute__((cleanup)).
+/// Scope helper state. C++ users wrap this in MikuPan_PerfScopeGuard below;
+/// C/GNU users can still use __attribute__((cleanup)).
 typedef struct { Uint64 t0; int section; } MikuPan_PerfScope;
 void MikuPan_PerfScopeEnd(MikuPan_PerfScope *s);
+
+#ifdef __cplusplus
+}
+
+struct MikuPan_PerfScopeGuard
+{
+    MikuPan_PerfScope scope;
+
+    explicit MikuPan_PerfScopeGuard(int section)
+        : scope{SDL_GetPerformanceCounter(), section}
+    {
+    }
+
+    ~MikuPan_PerfScopeGuard()
+    {
+        MikuPan_PerfScopeEnd(&scope);
+    }
+
+    MikuPan_PerfScopeGuard(const MikuPan_PerfScopeGuard&) = delete;
+    MikuPan_PerfScopeGuard& operator=(const MikuPan_PerfScopeGuard&) = delete;
+};
+
+extern "C" {
+#endif
 
 /// `__LINE__`-suffixed variable name lets the same function declare multiple
 /// MIKUPAN_PERF_SCOPE blocks (e.g. an outer aggregate plus a per-dispatch
@@ -105,7 +128,10 @@ void MikuPan_PerfScopeEnd(MikuPan_PerfScope *s);
 #define MIKUPAN_PERF_SCOPE_PASTE_(a, b) a##b
 #define MIKUPAN_PERF_SCOPE_PASTE(a, b)  MIKUPAN_PERF_SCOPE_PASTE_(a, b)
 
-#if defined(__GNUC__) || defined(__clang__)
+#ifdef __cplusplus
+#define MIKUPAN_PERF_SCOPE(sect)                                               \
+    MikuPan_PerfScopeGuard MIKUPAN_PERF_SCOPE_PASTE(_perf_scope_, __LINE__)(sect)
+#elif defined(__GNUC__) || defined(__clang__)
 #define MIKUPAN_PERF_SCOPE(sect) \
     MikuPan_PerfScope MIKUPAN_PERF_SCOPE_PASTE(_perf_scope_, __LINE__) \
         __attribute__((cleanup(MikuPan_PerfScopeEnd))) = \

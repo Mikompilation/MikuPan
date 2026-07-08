@@ -25,6 +25,8 @@ void MikuPan_ImGui_ImplShutdown(void);
 void MikuPan_ImGui_ImplNewFrame(void);
 void MikuPan_ImGui_ImplProcessEvent(SDL_Event* event);
 void MikuPan_ImGui_ImplRenderDrawData(void);
+void MikuPan_ImPlot_CreateContext(void);
+void MikuPan_ImPlot_DestroyContext(void);
 #ifdef __cplusplus
 }
 #endif
@@ -51,6 +53,7 @@ void MikuPan_InitUi(SDL_Window* window)
 {
     ui_window = window;
     igCreateContext(NULL);
+    MikuPan_ImPlot_CreateContext();
     ImGuiIO* io = igGetIO_Nil();
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
 
@@ -131,6 +134,7 @@ void MikuPan_ShutDownUi(void)
 {
     MikuPan_RmlUiShutdown();
     MikuPan_ImGui_ImplShutdown();
+    MikuPan_ImPlot_DestroyContext();
     igDestroyContext(NULL);
 }
 

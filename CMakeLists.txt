@@ -37,6 +37,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)
 include(sdl3)
 include(rmlui)
 include(cimgui)
+include(implot)
 include(spdlog)
 include(cglm)
 include(ffmpeg)
@@ -455,6 +456,7 @@ target_include_directories(MikuPan PRIVATE
 target_link_libraries(MikuPan PRIVATE
         RmlUi::RmlUi
         cimgui
+        implot
         SDL3::SDL3
         spdlog::spdlog
         cglm
