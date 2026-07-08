@@ -12,8 +12,7 @@
 #include "SDL3/SDL_video.h"
 #include "ingame/camera/camera.h"
 #include "mikupan/mikupan_config.h"
-#include "main/glob.h"
-#include "os/eeiop/eese.h"
+#include "mikupan/mikupan_audio_bus.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/mikupan_utils.h"
@@ -1669,24 +1668,6 @@ static float MikuPan_ClampAudioVolume(float value)
     return MikuPan_ClampFloat(value, 0.0f, 1.0f);
 }
 
-static u_short MikuPan_AudioVolumeToOptionValue(float value)
-{
-    int scaled;
-
-    value = MikuPan_ClampAudioVolume(value);
-    scaled = (int) (value * 0x1000 + 0.5f);
-    if (scaled < 0)
-    {
-        scaled = 0;
-    }
-    else if (scaled > 0x1000)
-    {
-        scaled = 0x1000;
-    }
-
-    return (u_short) scaled;
-}
-
 float MikuPan_GetAudioMasterVolume(void)
 {
     return MikuPan_ClampAudioVolume(mikupan_configuration.audio.master);
@@ -1695,14 +1676,14 @@ float MikuPan_GetAudioMasterVolume(void)
 void MikuPan_SetAudioMasterVolume(float value)
 {
     value = MikuPan_ClampAudioVolume(value);
-    mikupan_configuration.audio.master = value;
 
-    /* Keep the RML slider on the original game volume path instead of the
-     * experimental split-bus mixer. The PS2 option uses bgm_vol for the ADPCM
-     * master and also feeds SeSetMVol for the SE master. */
-    opt_wrk.bgm_vol = MikuPan_AudioVolumeToOptionValue(value);
-    opt_wrk.se_vol = (u_short) ((value * 0x3fff) + 0.5f);
-    SeSetMVol(opt_wrk.bgm_vol);
+    if (mikupan_configuration.audio.master == value)
+    {
+        return;
+    }
+
+    mikupan_configuration.audio.master = value;
+    MikuPan_AudioBumpRevision();
 }
 
 int MikuPan_IsFullScreen(void)
