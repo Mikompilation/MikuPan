@@ -30,5 +30,6 @@ void MikuPan_ConvertPs2GSCoordToNDC(float* out, float window_width, float window
 void MikuPan_ConvertPs2GSSubPixelToNDC(float* out, float window_width, float window_height, int gs_sub_x, int gs_sub_y);
 int MikuPan_ClampInt(int value, int min_value, int max_value);
 float MikuPan_ClampFloat(float value, float min_value, float max_value);
+bool MikuPan_IsFiniteFloat(float value);
 
 #endif//MIKUPAN_MIKUPAN_UTILS_H
