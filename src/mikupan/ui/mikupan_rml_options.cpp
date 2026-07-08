@@ -199,6 +199,7 @@ struct MikuPanRmlOptionsState
     Rml::Context* context = nullptr;
     std::vector<std::unique_ptr<Rml::EventListener>> listeners;
     Rml::ElementDocument* document = nullptr;
+    Rml::Element* root = nullptr;
     Rml::Element* window = nullptr;
     Rml::Element* window_mode_picker = nullptr;
     Rml::Element* window_mode_choice = nullptr;
@@ -411,7 +412,7 @@ static constexpr const char* kCategoryFirstControlIds[] = {
     "resolution-picker",
     "master-volume-stepper",
     "controls-keyboard-tab",
-    "finder-dpad-film-swap-input",
+    "theme-select",
 };
 
 static constexpr const char* kWindowModeLabels[] = {
@@ -426,6 +427,22 @@ static constexpr int kWindowModeValues[] = {
 
 static constexpr int kWindowModeCount =
     static_cast<int>(sizeof(kWindowModeLabels) / sizeof(kWindowModeLabels[0]));
+
+static constexpr const char* kRmlThemeClasses[] = {
+    "theme-moonlit",
+    "theme-ghost-cyan",
+    "theme-crimson",
+    "theme-ff1-ritual",
+    "theme-mist-teal",
+    "theme-sepia",
+};
+
+int ClampRmlThemeIndex(int theme)
+{
+    const int count =
+        static_cast<int>(sizeof(kRmlThemeClasses) / sizeof(kRmlThemeClasses[0]));
+    return theme >= 0 && theme < count ? theme : 0;
+}
 
 void ScrollFocusedContentRowIntoView(void);
 void ScrollChoicePickerSelectionIntoView(void);
@@ -458,6 +475,7 @@ void UpdateControllerFocusVisual(void);
 void ClearControllerFocusVisual(void);
 void ClearControllerFocusReferences(void);
 std::string EscapeRmlText(const char* text);
+void ApplyRmlThemeClass(int theme);
 
 void SetCalibrationVisible(bool visible);
 void OpenCalibrationPanel(void);
@@ -491,6 +509,27 @@ void MarkSettingsDirty(void)
 void RequestUiMoveSound(void)
 {
     g_rml.ui_move_sound_requested = true;
+}
+
+void ApplyRmlThemeClass(int theme)
+{
+    if (g_rml.root == nullptr)
+    {
+        return;
+    }
+
+    theme = ClampRmlThemeIndex(theme);
+    for (int i = 0;
+         i < static_cast<int>(sizeof(kRmlThemeClasses) / sizeof(kRmlThemeClasses[0]));
+         i++)
+    {
+        g_rml.root->SetClass(kRmlThemeClasses[i], i == theme);
+    }
+
+    if (g_rml.document != nullptr)
+    {
+        g_rml.document->UpdateDocument();
+    }
 }
 
 bool IsOptionsInputBlocked(void)
@@ -3640,6 +3679,7 @@ void SyncRmlSettingsValues(void)
     {
         g_rml.theme_select->SetSelection(MikuPan_GetSelectedThemeOption());
     }
+    ApplyRmlThemeClass(MikuPan_GetSelectedThemeOption());
     if (g_rml.font_select != nullptr)
     {
         g_rml.font_select->SetSelection(MikuPan_GetSelectedFontOption());
@@ -3693,6 +3733,8 @@ bool LoadOptionsDocument(void)
     {
         return false;
     }
+
+    g_rml.root = GetElement("options-root");
 
     static constexpr const char* kLightingModeLabels[] = {
         "Pixel (Modern)",
@@ -4365,6 +4407,11 @@ int MikuPan_RmlOptionsConsumeMoveSoundRequest(void)
     const int requested = g_rml.ui_move_sound_requested ? 1 : 0;
     g_rml.ui_move_sound_requested = false;
     return requested;
+}
+
+void MikuPan_RmlOptionsApplyTheme(int theme)
+{
+    ApplyRmlThemeClass(theme);
 }
 
 void MikuPan_RmlOptionsToggleDebug(void)

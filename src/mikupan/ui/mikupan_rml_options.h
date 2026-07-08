@@ -29,6 +29,7 @@ int MikuPan_RmlOptionsHandleHorizontalInput(int direction);
 int MikuPan_RmlOptionsHandleVerticalInput(int direction);
 void MikuPan_RmlOptionsEnsureFocusedControlVisible(void);
 int MikuPan_RmlOptionsConsumeMoveSoundRequest(void);
+void MikuPan_RmlOptionsApplyTheme(int theme);
 void MikuPan_RmlOptionsToggleDebug(void);
 
 #ifdef __cplusplus

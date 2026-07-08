@@ -20,6 +20,7 @@
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/ui/mikupan_rml_options.h"
 #include "mikupan_ui_debug.h"
 #include "mikupan_ui_theme.h"
 #include "mikupan/gameplay/mikupan_title_scene.h"
@@ -1932,6 +1933,7 @@ int MikuPan_SelectThemeOption(int index)
 
     mikupan_configuration.selected_theme = index;
     MikuPan_ApplyFatalFrameStyle(index);
+    MikuPan_RmlOptionsApplyTheme(index);
     return 1;
 }
 
