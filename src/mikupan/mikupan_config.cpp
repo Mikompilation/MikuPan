@@ -85,6 +85,9 @@ MikuPan_Config mikupan_configuration = {
     {
         -1
     },
+    {
+        0
+    },
     ""
 };
 

@@ -146,6 +146,11 @@ typedef struct
 
 typedef struct
 {
+    int correctedScale;
+} MikuPan_ConfigInfoDisp;
+
+typedef struct
+{
     int selected_gamepad_index;
 
     /* Saved controller / keyboard bindings. Sizes mirror
@@ -221,6 +226,7 @@ typedef struct
     MikuPan_ConfigThirdPersonCamera third_person_camera;
     MikuPan_ConfigFirstPersonCamera first_person_camera;
     MikuPan_ConfigInput input;
+    MikuPan_ConfigInfoDisp infoDisp;
     char data_folder[512];
 } MikuPan_Config;
 

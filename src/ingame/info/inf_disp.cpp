@@ -8,6 +8,7 @@
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/mikupan_config.h"
 
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_ene.h"
@@ -99,6 +100,11 @@ static u_char znz[12][6];
 #define PI 3.1415927f
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
 
+static float normalScale = 500.0f;
+static float eneCorrectedScale = 700.0f;
+static float currentScale;
+
+
 
 #ifdef BUILD_EU_VERSION
 #define PL_FNDR_PK2_ADDRESS 0x1d83000
@@ -119,6 +125,9 @@ void InformationDispInit()
 
     point_get_end = 0;
     MikuPan_ResetItemIconHud();
+
+    currentScale = normalScale;
+    
 }
 
 void InformationDispMain()
@@ -1791,9 +1800,17 @@ static void ShowEneCtrl(short int pos_x, short int pos_y)
 
     alp_max = (inf_dsp.fndr_fade_alp * 128) / 100.0f;
 
+    if (mikupan_configuration.infoDisp.correctedScale != 0)
+    {
+        currentScale = eneCorrectedScale;
+    }
+    else {
+        currentScale = normalScale;
+    }
+
     if (ene_no != 0xff)
     {
-        if (ene_wrk[ene_no].hp <= 700)
+        if (ene_wrk[ene_no].hp <= currentScale)
         {
             ene_hp = ene_wrk[ene_no].hp;
 
@@ -1801,12 +1818,12 @@ static void ShowEneCtrl(short int pos_x, short int pos_y)
         }
         else
         {
-            ene_hp = 700;
+            ene_hp = currentScale;
 
             new_inf.bar_over = ene_wrk[ene_no].hp + 12;
         }
 
-        ep_bar = (ene_hp * 100) / 700.0f;
+        ep_bar = (ene_hp * 100) / currentScale;
         new_inf.ep_bar = (ep_bar * 153) / 100.0f;
 
         new_inf.ep_tmr = 180;
@@ -1985,9 +2002,9 @@ static char EneDamegeCtrl(short int pos_x, short int pos_y)
     break;
     }
 
-    if (new_inf.dsp_dmg_blu > 700)
+    if (new_inf.dsp_dmg_blu > currentScale)
     {
-        bar_blu = 700;
+        bar_blu = currentScale;
 
         new_inf.bar_over = new_inf.dsp_dmg_blu + 12;
     }
@@ -1998,19 +2015,19 @@ static char EneDamegeCtrl(short int pos_x, short int pos_y)
         new_inf.bar_over = 0;
     }
 
-    hp_perc_blu = (bar_blu * 100) / 700.0f;
+    hp_perc_blu = (bar_blu * 100) / currentScale;
     ep_bar1 = (hp_perc_blu * 153) / 100.0f;
 
-    if (new_inf.dsp_dmg_red > 700)
+    if (new_inf.dsp_dmg_red > currentScale)
     {
-        bar_red = 700;
+        bar_red = currentScale;
     }
     else
     {
         bar_red = new_inf.dsp_dmg_red;
     }
 
-    hp_perc_red = (bar_red * 100) / 700.0f;
+    hp_perc_red = (bar_red * 100) / currentScale;
     ep_bar2 = (hp_perc_red * 153) / 100.0f;
 
     ShowEnePower(ep_bar1, ep_bar2, pos_x, pos_y, new_inf.dsp_dmg_alp, new_inf.bar_over);

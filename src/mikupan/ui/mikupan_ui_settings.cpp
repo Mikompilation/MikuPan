@@ -68,6 +68,8 @@ static float gamma_value = 1.0f;
 static float contrast = 1.0f;
 static float shadow_depth = 1.0f;
 
+static int ene_correct_health_scale = 0;
+
 static void MikuPan_RefreshWindowBackedRenderResolution(void);
 static int MikuPan_IsSuperSamplingEnabledInternal(void);
 
@@ -1014,6 +1016,9 @@ void MikuPan_UiSettingsRender(void)
 
             MikuPan_UiDitherModeCombo();
             igTextDisabled("Save Configuration to keep Dither Filtering after restart.");
+
+            igSeparatorText("Enhancements");            
+            igCheckbox("Corrected Enemy Health Bar", (bool*)&mikupan_configuration.infoDisp.correctedScale);
 
             igEndMenu();
         }
