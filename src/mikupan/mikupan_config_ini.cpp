@@ -288,6 +288,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.input.action_profile_dpad_subjective_move);
     ApplyValue(ini, "input.action_profile", "stick_subjective_move",
                mikupan_configuration.input.action_profile_stick_subjective_move);
+    ApplyValue(ini, "input", "movement_style_override_enabled",
+               mikupan_configuration.input.movement_style_override_enabled);
     ApplyValue(ini, "input.action_profile", "finder_reverse_y",
                mikupan_configuration.input.action_profile_finder_reverse_y);
     ApplyValue(ini, "input.action_profile", "finder_swap_sticks",
@@ -461,6 +463,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
                  mikupan_configuration.input.action_profile_dpad_subjective_move);
         SetValue(ini, "input.action_profile", "stick_subjective_move",
                  mikupan_configuration.input.action_profile_stick_subjective_move);
+        SetValue(ini, "input", "movement_style_override_enabled",
+                 mikupan_configuration.input.movement_style_override_enabled);
         SetValue(ini, "input.action_profile", "finder_reverse_y",
                  mikupan_configuration.input.action_profile_finder_reverse_y);
         SetValue(ini, "input.action_profile", "finder_swap_sticks",

@@ -16,6 +16,8 @@ void SetKeyType();
 void MikuPan_ResetCustomActionProfile(void);
 void MikuPan_SetCustomActionProfileEnabled(int enabled);
 int MikuPan_IsCustomActionProfileEnabled(void);
+void MikuPan_SetMovementStyleOverrideEnabled(int enabled);
+int MikuPan_MovementStyleOverrideEnabled(void);
 void MikuPan_SetCustomActionProfileSubjectiveMove(int enabled);
 int MikuPan_CustomActionProfileUsesSubjectiveMove(void);
 void MikuPan_SetCustomActionProfileDpadSubjectiveMove(int enabled);

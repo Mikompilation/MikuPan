@@ -107,6 +107,7 @@ static int custom_action_profile_enabled = 0;
 static int custom_action_profile_dpad_subjective_move = 0;
 static int custom_action_profile_stick_subjective_move = 0;
 static int custom_action_profile_last_subjective_move = 0;
+static int movement_style_override_enabled = 0;
 static int custom_action_profile_finder_reverse_y = 0;
 /* Default to the modern twin-stick finder layout: left stick / WASD moves the
  * character, right stick / mouse aims the camera. Flip to 0 for the classic
@@ -220,6 +221,7 @@ void MikuPan_ResetCustomActionProfile(void)
     custom_action_profile_dpad_subjective_move = 0;
     custom_action_profile_stick_subjective_move = 0;
     custom_action_profile_last_subjective_move = 0;
+    movement_style_override_enabled = 0;
     custom_action_profile_finder_reverse_y = 0;
     custom_action_profile_finder_swap_sticks = 1;
     SetKeyType();
@@ -234,6 +236,16 @@ void MikuPan_SetCustomActionProfileEnabled(int enabled)
 int MikuPan_IsCustomActionProfileEnabled(void)
 {
     return custom_action_profile_enabled;
+}
+
+void MikuPan_SetMovementStyleOverrideEnabled(int enabled)
+{
+    movement_style_override_enabled = enabled ? 1 : 0;
+}
+
+int MikuPan_MovementStyleOverrideEnabled(void)
+{
+    return movement_style_override_enabled;
 }
 
 void MikuPan_SetCustomActionProfileSubjectiveMove(int enabled)
@@ -300,7 +312,7 @@ int MikuPan_FinderDpadFilmSwapEnabled(void)
 
 int MikuPan_KeyProfileUsesSubjectiveMove(void)
 {
-    if (custom_action_profile_enabled)
+    if (custom_action_profile_enabled || movement_style_override_enabled)
     {
         if (NormalMoveStickActive())
         {

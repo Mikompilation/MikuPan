@@ -689,11 +689,39 @@ button.controller-focus {
     nav-left: #cat-audio;
 }
 
+#movement-dpad-mode,
+#movement-stick-mode,
+#finder-stick-layout-mode,
+#finder-dpad-film-swap-mode,
 #controls-keyboard-tab,
 #controls-controller-tab,
 #controls-list,
 #controls-reset-button {
     nav-left: #cat-controls;
+}
+
+#movement-dpad-mode {
+    nav-down: #movement-stick-mode;
+}
+
+#movement-stick-mode {
+    nav-up: #movement-dpad-mode;
+    nav-down: #finder-stick-layout-mode;
+}
+
+#finder-stick-layout-mode {
+    nav-up: #movement-stick-mode;
+    nav-down: #finder-dpad-film-swap-mode;
+}
+
+#finder-dpad-film-swap-mode {
+    nav-up: #finder-stick-layout-mode;
+    nav-down: #controls-keyboard-tab;
+}
+
+#controls-keyboard-tab,
+#controls-controller-tab {
+    nav-up: #finder-dpad-film-swap-mode;
 }
 
 #gpu-backend-select,
@@ -704,7 +732,6 @@ button.controller-focus {
     nav-left: #cat-graphics;
 }
 
-#finder-dpad-film-swap-input,
 #mirror-stone-hud-input,
 #improved-movement-collisions-input,
 #open-crt-button,
@@ -1426,27 +1453,8 @@ button.controller-focus {
 #binding-capture-help {
     display: block;
     width: 100%;
-    margin: 0dp 0dp 12dp 0dp;
+    margin: 0dp;
     color: #8f8678;
     font-size: 6.5dp;
     line-height: 8dp;
-}
-
-#binding-capture-buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-#binding-capture-buttons button {
-    width: 58dp;
-    margin: 0dp 4dp;
-}
-
-#binding-capture-clear-button {
-    nav-right: #binding-capture-cancel-button;
-}
-
-#binding-capture-cancel-button {
-    nav-left: #binding-capture-clear-button;
 }
