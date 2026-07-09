@@ -104,6 +104,10 @@
 
                     <div class="subsection-title">Gameplay</div>
                     <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="minimap-enabled-input">Mini Map</label><p class="setting-desc">Show the corner map while exploring.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="minimap-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row compact">
                         <div class="setting-copy"><label class="setting-title" for="finder-dpad-film-swap-input">Quick Film Swap</label><p class="setting-desc">Use D-Pad Up / Down in finder mode to switch film.<br />D-Pad finder aim is disabled while enabled.</p></div>
                         <div class="setting-control checkbox-control"><input type="checkbox" id="finder-dpad-film-swap-input" class="checkbox" /></div>
                     </div>

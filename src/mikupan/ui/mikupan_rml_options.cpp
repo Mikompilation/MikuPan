@@ -255,6 +255,7 @@ struct MikuPanRmlOptionsState
     Rml::Element* active_gpu_label = nullptr;
     Rml::Element* gpu_restart_note = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
+    Rml::ElementFormControlInput* minimap_enabled_input = nullptr;
     Rml::ElementFormControlInput* finder_dpad_film_swap_input = nullptr;
     Rml::ElementFormControlInput* mirror_stone_hud_input = nullptr;
     Rml::ElementFormControlInput* improved_movement_collisions_input = nullptr;
@@ -4594,6 +4595,8 @@ void SyncRmlSettingsValues(void)
     UpdateGpuDriverNotes();
     const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
     SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
+    SetCheckbox(g_rml.minimap_enabled_input,
+                mikupan_configuration.minimap_enabled);
     SetCheckbox(g_rml.finder_dpad_film_swap_input,
                 MikuPan_FinderDpadFilmSwapEnabled());
     SetCheckbox(g_rml.mirror_stone_hud_input,
@@ -4929,6 +4932,16 @@ bool LoadOptionsDocument(void)
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>(
                     []() { CancelCrtPanel(); }));
+
+    g_rml.minimap_enabled_input = GetInput("minimap-enabled-input");
+    AddListener(g_rml.minimap_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        mikupan_configuration.minimap_enabled =
+                            IsCheckboxChecked(input) ? 1 : 0;
+                    }));
 
     g_rml.finder_dpad_film_swap_input = GetInput("finder-dpad-film-swap-input");
     AddListener(g_rml.finder_dpad_film_swap_input,

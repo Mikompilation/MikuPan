@@ -63,6 +63,7 @@ MikuPan_Config mikupan_configuration = {
     0,
     1,
     1,
+    1,
     {
         0,
         900.0f,
@@ -319,6 +320,8 @@ void MikuPan_ConfigurationValidate(void)
     mikupan_configuration.font_scale =
         MikuPan_ClampFloat(mikupan_configuration.font_scale, 0.5f, 3.0f);
     mikupan_configuration.show_fps = mikupan_configuration.show_fps ? 1 : 0;
+    mikupan_configuration.minimap_enabled =
+        mikupan_configuration.minimap_enabled ? 1 : 0;
     mikupan_configuration.title_room_background =
         mikupan_configuration.title_room_background ? 1 : 0;
     mikupan_configuration.title_dither =

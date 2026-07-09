@@ -756,6 +756,7 @@ button.controller-focus {
 #theme-picker,
 #font-picker,
 #font-scale-stepper,
+#minimap-enabled-input,
 #finder-dpad-film-swap-input,
 #mirror-stone-hud-input,
 #improved-movement-collisions-input,

@@ -232,6 +232,10 @@ void MikuPan_RenderSprite2DDepthStateFiltered(sceGsTex0 *tex, float *buffer,
                                              int depth_test, int depth_write,
                                              unsigned int depth_func,
                                              int nearest_sampler);
+void MikuPan_RenderSpriteTextureId2DDepthStateFiltered(
+    unsigned int texture_id, int texture_width, int texture_height,
+    float *buffer, int depth_test, int depth_write, unsigned int depth_func,
+    int nearest_sampler);
 void MikuPan_RenderSprite2DGSAlpha(sceGsTex0 *tex, float *buffer,
                                    unsigned long gs_alpha);
 void MikuPan_RenderSprite2DFilteredGSAlpha(sceGsTex0 *tex, float *buffer,
@@ -342,6 +346,7 @@ void MikuPan_SetMaterial(const sceVu0FVECTOR* ambient,
 void MikuPan_SetFontTexture(int fnt);
 void MikuPan_DeleteTexture(MikuPan_TextureInfo* texture_info);
 MikuPan_TextureInfo* MikuPan_CreateGLTexture(sceGsTex0 *tex0);
+MikuPan_TextureInfo* MikuPan_CreateStandaloneGLTexture(sceGsTex0 *tex0);
 void MikuPan_SetTexture(sceGsTex0 *tex0);
 void MikuPan_SetupCamera(MikuPan_Camera *camera);
 void MikuPan_SetupMirrorMtx(float* wv);
