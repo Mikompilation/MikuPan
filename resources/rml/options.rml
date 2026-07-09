@@ -50,28 +50,28 @@
                         <div class="setting-control"><button id="resolution-picker" class="choice-picker"><span id="resolution-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="gpu-backend-select">GPU Backend</label><p class="setting-desc">Renderer backend selection. A restart may be required.</p><p id="active-gpu-label" class="note"></p><p id="gpu-restart-note" class="note"></p></div>
-                        <div class="setting-control"><select id="gpu-backend-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="gpu-backend-picker">GPU Backend</label><p class="setting-desc">Renderer backend selection. A restart may be required.</p><p id="active-gpu-label" class="note"></p><p id="gpu-restart-note" class="note"></p></div>
+                        <div class="setting-control"><button id="gpu-backend-picker" class="choice-picker"><span id="gpu-backend-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="msaa-select">MSAA</label><p class="setting-desc">Smooth geometry edges using multisampling.</p></div>
-                        <div class="setting-control"><select id="msaa-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="msaa-picker">MSAA</label><p class="setting-desc">Smooth geometry edges using multisampling.</p></div>
+                        <div class="setting-control"><button id="msaa-picker" class="choice-picker"><span id="msaa-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="shadow-resolution-select">Shadow Resolution</label><p class="setting-desc">Higher values sharpen shadows at a performance cost.</p></div>
-                        <div class="setting-control"><select id="shadow-resolution-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="shadow-resolution-picker">Shadow Resolution</label><p class="setting-desc">Higher values sharpen shadows at a performance cost.</p></div>
+                        <div class="setting-control"><button id="shadow-resolution-picker" class="choice-picker"><span id="shadow-resolution-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="lighting-mode-select">Lighting Mode</label><p class="setting-desc">Modern pixel lighting or PS2-style vertex lighting.</p></div>
-                        <div class="setting-control"><select id="lighting-mode-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="lighting-mode-picker">Lighting Mode</label><p class="setting-desc">Modern pixel lighting or PS2-style vertex lighting.</p></div>
+                        <div class="setting-control"><button id="lighting-mode-picker" class="choice-picker"><span id="lighting-mode-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="dither-mode-select">Dither Filtering</label><p class="setting-desc">Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays.</p></div>
-                        <div class="setting-control"><select id="dither-mode-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="dither-mode-picker">Dither Filtering</label><p class="setting-desc">Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays.</p></div>
+                        <div class="setting-control"><button id="dither-mode-picker" class="choice-picker"><span id="dither-mode-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="finder-surround-select">Finder Surround</label><p class="setting-desc">Choose the area outside the Camera Obscura frame.</p></div>
-                        <div class="setting-control"><select id="finder-surround-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="finder-surround-picker">Finder Surround</label><p class="setting-desc">Choose the area outside the Camera Obscura frame.</p></div>
+                        <div class="setting-control"><button id="finder-surround-picker" class="choice-picker"><span id="finder-surround-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                 </div>
 
@@ -93,12 +93,12 @@
                 <div id="page-advanced" class="page hidden">
                     <div class="subsection-title">Interface</div>
                     <div class="setting-row compact">
-                        <div class="setting-copy"><label class="setting-title" for="theme-select">Theme</label><p class="setting-desc">Use the same colour palette as the ImGui overlay.</p></div>
-                        <div class="setting-control"><select id="theme-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="theme-picker">Theme</label><p class="setting-desc">Use the same colour palette as the ImGui overlay.</p></div>
+                        <div class="setting-control"><button id="theme-picker" class="choice-picker"><span id="theme-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row compact">
-                        <div class="setting-copy"><label class="setting-title" for="font-select">Font</label><p class="setting-desc">Choose the options-menu font.</p></div>
-                        <div class="setting-control"><select id="font-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="font-picker">Font</label><p class="setting-desc">Choose the options-menu font.</p></div>
+                        <div class="setting-control"><button id="font-picker" class="choice-picker"><span id="font-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="font-scale-stepper">Font Scale <span id="font-scale-value" class="value"></span></label><p class="setting-desc">Adjust interface text size.</p></div><div class="setting-control"><button id="font-scale-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="font-scale-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div></div>
 

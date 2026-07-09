@@ -679,6 +679,7 @@ button.controller-focus {
 }
 
 #window-mode-picker,
+#window-size-picker,
 #resolution-picker,
 #open-calibration-button,
 #vsync-input {
@@ -696,17 +697,17 @@ button.controller-focus {
     nav-left: #cat-controls;
 }
 
-#gpu-backend-select,
-#msaa-select,
-#shadow-resolution-select,
-#lighting-mode-select,
-#dither-mode-select,
-#finder-surround-select {
+#gpu-backend-picker,
+#msaa-picker,
+#shadow-resolution-picker,
+#lighting-mode-picker,
+#dither-mode-picker,
+#finder-surround-picker {
     nav-left: #cat-graphics;
 }
 
-#theme-select,
-#font-select,
+#theme-picker,
+#font-picker,
 #font-scale-stepper,
 #finder-dpad-film-swap-input,
 #mirror-stone-hud-input,
@@ -2750,6 +2751,12 @@ button.controller-focus {
 
 #options-root .picker-option.applied {
     color: #b98c60;
+    border-left-color: #5b3027;
+}
+
+#options-root .picker-option.applied.selected {
+    color: #f4ead8;
+    border-left-color: #a1352c;
 }
 
 #options-root scrollbarvertical sliderbar {
@@ -3152,6 +3159,25 @@ button.controller-focus {
 #options-root .choice-text {
     width: 118dp;
     overflow: hidden;
+}
+
+#options-root .choice-picker.disabled,
+#options-root .choice-picker.disabled:hover,
+#options-root .choice-picker.disabled:focus,
+#options-root .choice-picker.disabled:focus-visible,
+#options-root .choice-picker.disabled.controller-focus {
+    color: #776c5d;
+    background-color: #05030366;
+    border-bottom-color: #33211d;
+}
+
+#options-root .choice-picker.disabled .choice-text,
+#options-root .choice-picker.disabled .picker-arrow,
+#options-root .choice-picker.disabled .picker-arrow-shape {
+    color: #776c5d;
+    border-top-color: #776c5d;
+    border-bottom-color: #776c5d;
+    cursor: default;
 }
 
 #options-root .picker-arrow {
