@@ -276,6 +276,8 @@ static void MikuPan_ConfigurationValidateInput(MikuPan_ConfigInput* input)
         input->action_profile_dpad_subjective_move ? 1 : 0;
     input->action_profile_stick_subjective_move =
         input->action_profile_stick_subjective_move ? 1 : 0;
+    input->movement_style_override_enabled =
+        input->movement_style_override_enabled ? 1 : 0;
     input->action_profile_finder_reverse_y =
         input->action_profile_finder_reverse_y ? 1 : 0;
     input->action_profile_finder_swap_sticks =

@@ -228,7 +228,6 @@ struct MikuPanRmlOptionsState
     Rml::Element* active_gpu_label = nullptr;
     Rml::Element* gpu_restart_note = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
-    Rml::ElementFormControlInput* finder_dpad_film_swap_input = nullptr;
     Rml::ElementFormControlInput* mirror_stone_hud_input = nullptr;
     Rml::ElementFormControlInput* improved_movement_collisions_input = nullptr;
     Rml::ElementFormControlInput* controller_remap_input = nullptr;
@@ -288,6 +287,9 @@ struct MikuPanRmlOptionsState
     uint64_t binding_capture_after_ticks = 0;
     uint64_t binding_capture_deadline_ticks = 0;
     bool binding_capture_waiting_for_release = false;
+    std::string binding_capture_restore_focus_id;
+    std::string queued_focus_id;
+    int queued_focus_attempts = 0;
     bool syncing = false;
     bool ui_move_sound_requested = false;
     Rml::Element* controller_focus_element = nullptr;
@@ -408,8 +410,8 @@ static constexpr const char* kCategoryFirstControlIds[] = {
     "window-mode-picker",
     "resolution-picker",
     "master-volume-stepper",
-    "controls-keyboard-tab",
-    "finder-dpad-film-swap-input",
+    "movement-dpad-mode",
+    "mirror-stone-hud-input",
 };
 
 static constexpr const char* kWindowModeLabels[] = {
@@ -427,9 +429,14 @@ static constexpr int kWindowModeCount =
 
 void ScrollFocusedContentRowIntoView(void);
 void ScrollChoicePickerSelectionIntoView(void);
-void FocusElementById(const char* id);
+bool FocusElementById(const char* id);
+void QueueFocusElementById(const char* id);
+void ApplyQueuedFocus(void);
+const Rml::String GetFocusedElementId(void);
 void FocusButtonGroup(const char* const* ids, int count, int direction);
 bool HandleControlsTabHorizontalInput(int direction);
+bool HandleControlsVerticalInput(int direction);
+bool HandleControlsBindingHorizontalInput(int direction);
 void EnterSidebarScope(void);
 void EnterContentScope(void);
 bool AnySelectOpen(void);
@@ -472,7 +479,6 @@ bool CrtPanelIsFocused(void);
 void SetBindingCaptureVisible(bool visible);
 void BeginBindingCapture(MikuPanBindingCaptureKind kind, int target);
 void CancelBindingCapture(void);
-void ClearActiveBindingCapture(void);
 void UpdateBindingCapture(void);
 void SelectControlsTab(MikuPanControlsTab tab);
 void RebuildControlsList(void);
@@ -495,6 +501,15 @@ bool IsOptionsInputBlocked(void)
 {
     return g_rml.option_mode_open
            && SDL_GetTicks() < g_rml.input_block_until_ticks;
+}
+
+void BlockOptionsInputBriefly(void)
+{
+    const uint64_t block_until = SDL_GetTicks() + 250u;
+    if (g_rml.input_block_until_ticks < block_until)
+    {
+        g_rml.input_block_until_ticks = block_until;
+    }
 }
 
 void SetExitConfirmVisible(bool visible)
@@ -826,6 +841,119 @@ std::string BuildControllerRumbleRow(void)
     return rml;
 }
 
+int CurrentDpadMovementUsesSubjective(void)
+{
+    if (MikuPan_IsCustomActionProfileEnabled() || MikuPan_MovementStyleOverrideEnabled())
+    {
+        return MikuPan_CustomActionProfileUsesDpadSubjectiveMove();
+    }
+
+    return MikuPan_KeyProfileUsesSubjectiveMove();
+}
+
+int CurrentStickMovementUsesSubjective(void)
+{
+    if (MikuPan_IsCustomActionProfileEnabled() || MikuPan_MovementStyleOverrideEnabled())
+    {
+        return MikuPan_CustomActionProfileUsesStickSubjectiveMove();
+    }
+
+    return MikuPan_KeyProfileUsesSubjectiveMove();
+}
+
+const char* MovementStyleLabel(int subjective)
+{
+    return subjective ? "Subjective" : "Objective";
+}
+
+void SyncMovementStyleButtons(void)
+{
+    if (g_rml.document == nullptr)
+    {
+        return;
+    }
+
+    SetElementText(g_rml.document->GetElementById("movement-dpad-mode"),
+                   MovementStyleLabel(CurrentDpadMovementUsesSubjective()));
+    SetElementText(g_rml.document->GetElementById("movement-stick-mode"),
+                   MovementStyleLabel(CurrentStickMovementUsesSubjective()));
+}
+
+void SeedMovementStyleOverride(void)
+{
+    if (!MikuPan_IsCustomActionProfileEnabled()
+        && !MikuPan_MovementStyleOverrideEnabled())
+    {
+        const int subjective = MikuPan_KeyProfileUsesSubjectiveMove();
+        MikuPan_SetCustomActionProfileDpadSubjectiveMove(subjective);
+        MikuPan_SetCustomActionProfileStickSubjectiveMove(subjective);
+    }
+    MikuPan_SetMovementStyleOverrideEnabled(1);
+}
+
+void ToggleMovementStyle(int dpad)
+{
+    SeedMovementStyleOverride();
+    if (dpad)
+    {
+        MikuPan_SetCustomActionProfileDpadSubjectiveMove(
+            !CurrentDpadMovementUsesSubjective());
+        FocusElementById("movement-dpad-mode");
+    }
+    else
+    {
+        MikuPan_SetCustomActionProfileStickSubjectiveMove(
+            !CurrentStickMovementUsesSubjective());
+        FocusElementById("movement-stick-mode");
+    }
+    MarkSettingsDirty();
+    SyncMovementStyleButtons();
+    RequestUiMoveSound();
+}
+
+const char* FinderStickLayoutLabel(void)
+{
+    return MikuPan_CustomActionProfileSwapsFinderSticks() ? "Modern" : "Classic";
+}
+
+const char* FinderFilmSwapLabel(void)
+{
+    return MikuPan_FinderDpadFilmSwapEnabled() ? "On" : "Off";
+}
+
+void SyncViewfinderButtons(void)
+{
+    if (g_rml.document == nullptr)
+    {
+        return;
+    }
+
+    SetElementText(g_rml.document->GetElementById("finder-stick-layout-mode"),
+                   FinderStickLayoutLabel());
+    SetElementText(g_rml.document->GetElementById("finder-dpad-film-swap-mode"),
+                   FinderFilmSwapLabel());
+}
+
+void ToggleFinderStickLayout(void)
+{
+    MikuPan_SetCustomActionProfileFinderSwapSticks(
+        !MikuPan_CustomActionProfileSwapsFinderSticks());
+    MarkSettingsDirty();
+    SyncViewfinderButtons();
+    FocusElementById("finder-stick-layout-mode");
+    RequestUiMoveSound();
+}
+
+void ToggleFinderDpadFilmSwap(void)
+{
+    MikuPan_SetFinderDpadFilmSwapEnabled(
+        !MikuPan_FinderDpadFilmSwapEnabled());
+    MarkSettingsDirty();
+    SyncViewfinderButtons();
+    FocusElementById("finder-dpad-film-swap-mode");
+    RequestUiMoveSound();
+}
+
 void RebuildControlsList(void)
 {
     if (g_rml.controls_list == nullptr)
@@ -983,11 +1111,67 @@ const char* BindingCaptureDeviceText(MikuPanBindingCaptureKind kind)
     }
 }
 
+std::string BindingCaptureFocusId(MikuPanBindingCaptureKind kind, int target)
+{
+    if (target < 0)
+    {
+        return {};
+    }
+
+    const std::string index = std::to_string(target);
+    switch (kind)
+    {
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON:
+            return "bind-key-" + index;
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG:
+            return "bind-key-stick-neg-" + index;
+        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS:
+            return "bind-key-stick-pos-" + index;
+        case MIKUPAN_BIND_CAPTURE_CONTROLLER_BUTTON:
+            return "bind-pad-" + index;
+        case MIKUPAN_BIND_CAPTURE_CONTROLLER_STICK_AXIS:
+            return "bind-pad-stick-" + index;
+        default:
+            return {};
+    }
+}
+
+void RestoreBindingCaptureFocus(void)
+{
+    if (!g_rml.visible || !g_rml.option_mode_open)
+    {
+        g_rml.binding_capture_restore_focus_id.clear();
+        g_rml.queued_focus_id.clear();
+        g_rml.queued_focus_attempts = 0;
+        return;
+    }
+
+    const std::string restore_id = g_rml.binding_capture_restore_focus_id;
+    g_rml.binding_capture_restore_focus_id.clear();
+    if (!restore_id.empty())
+    {
+        FocusElementById(restore_id.c_str());
+        QueueFocusElementById(restore_id.c_str());
+        return;
+    }
+
+    const char* tab_id = g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD
+                             ? "controls-keyboard-tab"
+                             : "controls-controller-tab";
+    FocusElementById(tab_id);
+    QueueFocusElementById(tab_id);
+}
+
 void BeginBindingCapture(MikuPanBindingCaptureKind kind, int target)
 {
     const uint64_t now = SDL_GetTicks();
     g_rml.binding_capture_kind = kind;
     g_rml.binding_capture_target = target;
+    g_rml.binding_capture_restore_focus_id = BindingCaptureFocusId(kind, target);
+    if (g_rml.binding_capture_restore_focus_id.empty())
+    {
+        g_rml.binding_capture_restore_focus_id = GetFocusedElementId().c_str();
+    }
     g_rml.binding_capture_after_ticks = now + 180u;
     g_rml.binding_capture_deadline_ticks = now + 5000u;
     g_rml.binding_capture_waiting_for_release = true;
@@ -995,11 +1179,11 @@ void BeginBindingCapture(MikuPanBindingCaptureKind kind, int target)
     SetElementText(g_rml.binding_capture_text, BindingCaptureDeviceText(kind));
     SetBindingCaptureCountdown(now);
     SetBindingCaptureVisible(true);
-    FocusElementById("binding-capture-cancel-button");
 }
 
 void CancelBindingCapture(void)
 {
+    const bool was_visible = BindingCaptureIsVisible();
     g_rml.binding_capture_kind = MIKUPAN_BIND_CAPTURE_NONE;
     g_rml.binding_capture_target = -1;
     g_rml.binding_capture_after_ticks = 0;
@@ -1007,12 +1191,11 @@ void CancelBindingCapture(void)
     g_rml.binding_capture_waiting_for_release = false;
     SetElementText(g_rml.binding_capture_countdown, "0");
     SetBindingCaptureVisible(false);
-    if (g_rml.visible && g_rml.option_mode_open)
+    if (was_visible)
     {
-        FocusElementById(g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD
-                             ? "controls-keyboard-tab"
-                             : "controls-controller-tab");
+        BlockOptionsInputBriefly();
     }
+    RestoreBindingCaptureFocus();
 }
 
 void FinishBindingCapture(void)
@@ -1025,63 +1208,10 @@ void FinishBindingCapture(void)
     g_rml.binding_capture_waiting_for_release = false;
     SetElementText(g_rml.binding_capture_countdown, "0");
     SetBindingCaptureVisible(false);
+    BlockOptionsInputBriefly();
     RebuildControlsList();
-    if (g_rml.visible && g_rml.option_mode_open)
-    {
-        FocusElementById(g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD
-                             ? "controls-keyboard-tab"
-                             : "controls-controller-tab");
-    }
+    RestoreBindingCaptureFocus();
     RequestUiMoveSound();
-}
-
-void ClearActiveBindingCapture(void)
-{
-    const int target = g_rml.binding_capture_target;
-    if (target < 0)
-    {
-        CancelBindingCapture();
-        return;
-    }
-
-    switch (g_rml.binding_capture_kind)
-    {
-        case MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON:
-            if (target < MIKUPAN_CONTROLLER_LOGICAL_COUNT)
-            {
-                mikupan_keyboard_map[target] = 0;
-            }
-            break;
-        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG:
-            if (target < MIKUPAN_STICK_COUNT)
-            {
-                mikupan_stick_keyboard_map[target].neg_scancode = 0;
-            }
-            break;
-        case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS:
-            if (target < MIKUPAN_STICK_COUNT)
-            {
-                mikupan_stick_keyboard_map[target].pos_scancode = 0;
-            }
-            break;
-        case MIKUPAN_BIND_CAPTURE_CONTROLLER_BUTTON:
-            if (target < MIKUPAN_CONTROLLER_LOGICAL_COUNT)
-            {
-                mikupan_controller_map[target].kind = MIKUPAN_CONTROLLER_BIND_NONE;
-                mikupan_controller_map[target].code = 0;
-            }
-            break;
-        case MIKUPAN_BIND_CAPTURE_CONTROLLER_STICK_AXIS:
-            if (target < MIKUPAN_STICK_COUNT)
-            {
-                mikupan_stick_controller_map[target].axis = -1;
-            }
-            break;
-        default:
-            break;
-    }
-
-    FinishBindingCapture();
 }
 
 bool AnyKeyboardCaptureInputDown(void)
@@ -1277,11 +1407,6 @@ void UpdateBindingCapture(void)
             const int scancode = FindPressedKeyboardScancode();
             if (scancode < 0)
             {
-                return;
-            }
-            if (scancode == SDL_SCANCODE_ESCAPE)
-            {
-                CancelBindingCapture();
                 return;
             }
             if (g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON
@@ -2571,6 +2696,11 @@ bool HandleVerticalInput(int direction)
         return false;
     }
 
+    if (HandleControlsVerticalInput(direction))
+    {
+        return true;
+    }
+
     return false;
 }
 
@@ -2593,14 +2723,6 @@ bool HandleHorizontalInput(int direction)
 
     if (BindingCaptureIsVisible())
     {
-        static constexpr const char* kBindingCaptureButtons[] = {
-            "binding-capture-clear-button",
-            "binding-capture-cancel-button",
-        };
-        FocusButtonGroup(kBindingCaptureButtons,
-                         static_cast<int>(sizeof(kBindingCaptureButtons)
-                                          / sizeof(kBindingCaptureButtons[0])),
-                         direction);
         return true;
     }
 
@@ -2643,6 +2765,11 @@ bool HandleHorizontalInput(int direction)
     }
 
     if (HandleControlsTabHorizontalInput(direction))
+    {
+        return true;
+    }
+
+    if (HandleControlsBindingHorizontalInput(direction))
     {
         return true;
     }
@@ -2997,7 +3124,8 @@ Rml::Element* FindSettingRowAncestor(Rml::Element* element)
 {
     while (element != nullptr)
     {
-        if (element->IsClassSet("setting-row"))
+        if (element->IsClassSet("setting-row")
+            || element->IsClassSet("controls-bind-row"))
         {
             return element;
         }
@@ -3072,19 +3200,55 @@ void ScrollFocusedContentRowIntoView(void)
     }
 }
 
-void FocusElementById(const char* id)
+bool FocusElementById(const char* id)
 {
-    if (g_rml.document == nullptr || id == nullptr)
+    if (g_rml.document == nullptr || g_rml.context == nullptr || id == nullptr)
+    {
+        return false;
+    }
+
+    Rml::Element* element = g_rml.document->GetElementById(id);
+    if (element == nullptr)
+    {
+        return false;
+    }
+
+    element->Focus();
+    UpdateControllerFocusVisual();
+    ScrollFocusedContentRowIntoView();
+    return g_rml.context->GetFocusElement() == element;
+}
+
+void QueueFocusElementById(const char* id)
+{
+    if (id == nullptr || id[0] == '\0')
     {
         return;
     }
 
-    Rml::Element* element = g_rml.document->GetElementById(id);
-    if (element != nullptr)
+    g_rml.queued_focus_id = id;
+    g_rml.queued_focus_attempts = 8;
+}
+
+void ApplyQueuedFocus(void)
+{
+    if (g_rml.queued_focus_id.empty() || g_rml.queued_focus_attempts <= 0)
     {
-        element->Focus();
-        UpdateControllerFocusVisual();
-        ScrollFocusedContentRowIntoView();
+        return;
+    }
+
+    const std::string id = g_rml.queued_focus_id;
+    if (FocusElementById(id.c_str()))
+    {
+        g_rml.queued_focus_id.clear();
+        g_rml.queued_focus_attempts = 0;
+        return;
+    }
+
+    g_rml.queued_focus_attempts--;
+    if (g_rml.queued_focus_attempts <= 0)
+    {
+        g_rml.queued_focus_id.clear();
     }
 }
 
@@ -3140,6 +3304,198 @@ void FocusButtonGroup(const char* const* ids, int count, int direction)
     {
         RequestUiMoveSound();
     }
+}
+
+struct ControlsFocusRow
+{
+    std::string primary;
+    std::string secondary;
+};
+
+void AddControlsFocusRow(std::vector<ControlsFocusRow>& rows,
+                         const std::string& primary,
+                         const std::string& secondary = {})
+{
+    if (!primary.empty())
+    {
+        rows.push_back({primary, secondary});
+    }
+}
+
+std::vector<ControlsFocusRow> BuildControlsFocusRows(void)
+{
+    std::vector<ControlsFocusRow> rows;
+    AddControlsFocusRow(rows, "movement-dpad-mode");
+    AddControlsFocusRow(rows, "movement-stick-mode");
+    AddControlsFocusRow(rows, "finder-stick-layout-mode");
+    AddControlsFocusRow(rows, "finder-dpad-film-swap-mode");
+    rows.push_back({"controls-keyboard-tab", "controls-controller-tab"});
+
+    if (g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD)
+    {
+        for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+        {
+            const std::string index = std::to_string(i);
+            AddControlsFocusRow(rows, "bind-key-" + index, "clear-key-" + index);
+        }
+
+        const int move_rows[] = {1, 1, 0, 0, 3, 3, 2, 2};
+        const char* move_prefixes[] = {
+            "bind-key-stick-neg-",
+            "bind-key-stick-pos-",
+            "bind-key-stick-neg-",
+            "bind-key-stick-pos-",
+            "bind-key-stick-neg-",
+            "bind-key-stick-pos-",
+            "bind-key-stick-neg-",
+            "bind-key-stick-pos-",
+        };
+        const char* clear_prefixes[] = {
+            "clear-key-stick-neg-",
+            "clear-key-stick-pos-",
+            "clear-key-stick-neg-",
+            "clear-key-stick-pos-",
+            "clear-key-stick-neg-",
+            "clear-key-stick-pos-",
+            "clear-key-stick-neg-",
+            "clear-key-stick-pos-",
+        };
+        for (int i = 0; i < 8; i++)
+        {
+            const std::string index = std::to_string(move_rows[i]);
+            AddControlsFocusRow(rows,
+                                std::string(move_prefixes[i]) + index,
+                                std::string(clear_prefixes[i]) + index);
+        }
+    }
+    else
+    {
+        AddControlsFocusRow(rows, "controller-rumble-toggle");
+        for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+        {
+            const std::string index = std::to_string(i);
+            AddControlsFocusRow(rows, "bind-pad-" + index, "clear-pad-" + index);
+        }
+        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+        {
+            const std::string index = std::to_string(i);
+            AddControlsFocusRow(rows, "bind-pad-stick-" + index, "clear-pad-stick-" + index);
+        }
+        for (int i = 0; i < MIKUPAN_STICK_COUNT; i++)
+        {
+            AddControlsFocusRow(rows, "invert-pad-stick-" + std::to_string(i));
+        }
+    }
+
+    AddControlsFocusRow(rows, "controls-reset-button");
+    return rows;
+}
+
+int FindControlsFocusRow(const std::vector<ControlsFocusRow>& rows,
+                         const Rml::String& focus_id,
+                         int* column)
+{
+    for (int i = 0; i < static_cast<int>(rows.size()); i++)
+    {
+        if (rows[i].primary == focus_id.c_str())
+        {
+            if (column != nullptr)
+            {
+                *column = 0;
+            }
+            return i;
+        }
+        if (!rows[i].secondary.empty() && rows[i].secondary == focus_id.c_str())
+        {
+            if (column != nullptr)
+            {
+                *column = 1;
+            }
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool ControlsFocusRowIsTabs(const ControlsFocusRow& row)
+{
+    return row.primary == "controls-keyboard-tab"
+           && row.secondary == "controls-controller-tab";
+}
+
+bool HandleControlsVerticalInput(int direction)
+{
+    if (g_rml.selected_category != 3
+        || g_rml.control_scope != MIKUPAN_CONTROL_SCOPE_CONTENT)
+    {
+        return false;
+    }
+
+    std::vector<ControlsFocusRow> rows = BuildControlsFocusRows();
+    if (rows.empty())
+    {
+        return true;
+    }
+
+    int column = 0;
+    int row_index = FindControlsFocusRow(rows, GetFocusedElementId(), &column);
+    if (row_index < 0)
+    {
+        row_index = direction > 0 ? 0 : static_cast<int>(rows.size()) - 1;
+    }
+    else
+    {
+        const bool from_tabs = ControlsFocusRowIsTabs(rows[row_index]);
+        row_index = ClampInt(row_index + direction,
+                             0,
+                             static_cast<int>(rows.size()) - 1);
+        if (from_tabs && direction > 0)
+        {
+            column = 0;
+        }
+    }
+
+    const ControlsFocusRow& row = rows[row_index];
+    const std::string& target = column == 1 && !row.secondary.empty()
+                                    ? row.secondary
+                                    : row.primary;
+    const Rml::String old_focus_id = GetFocusedElementId();
+    FocusElementById(target.c_str());
+    if (old_focus_id != target.c_str())
+    {
+        RequestUiMoveSound();
+    }
+    return true;
+}
+
+bool HandleControlsBindingHorizontalInput(int direction)
+{
+    if (g_rml.selected_category != 3
+        || g_rml.control_scope != MIKUPAN_CONTROL_SCOPE_CONTENT)
+    {
+        return false;
+    }
+
+    std::vector<ControlsFocusRow> rows = BuildControlsFocusRows();
+    int column = 0;
+    const int row_index = FindControlsFocusRow(rows, GetFocusedElementId(), &column);
+    if (row_index < 0 || ControlsFocusRowIsTabs(rows[row_index]))
+    {
+        return false;
+    }
+
+    const ControlsFocusRow& row = rows[row_index];
+    if (direction > 0 && column == 0 && !row.secondary.empty())
+    {
+        FocusElementById(row.secondary.c_str());
+        RequestUiMoveSound();
+    }
+    else if (direction < 0 && column == 1)
+    {
+        FocusElementById(row.primary.c_str());
+        RequestUiMoveSound();
+    }
+    return true;
 }
 
 bool HandleControlsTabHorizontalInput(int direction)
@@ -3230,7 +3586,6 @@ bool FocusedControlWantsSpaceConfirm(void)
 
     if (focus == g_rml.vsync_input
         || focus == g_rml.crt_enabled_input
-        || focus == g_rml.finder_dpad_film_swap_input
         || focus == g_rml.mirror_stone_hud_input
         || focus == g_rml.improved_movement_collisions_input
         || focus == g_rml.controller_remap_input)
@@ -3276,14 +3631,6 @@ bool ActivateFocusedControl(void)
 
     if (BindingCaptureIsVisible())
     {
-        if (FocusedElementIs("binding-capture-clear-button"))
-        {
-            ClearActiveBindingCapture();
-        }
-        else
-        {
-            CancelBindingCapture();
-        }
         return true;
     }
 
@@ -3423,7 +3770,6 @@ void HandleOptionsCancel(void)
 
     if (BindingCaptureIsVisible())
     {
-        CancelBindingCapture();
         return;
     }
 
@@ -3659,6 +4005,8 @@ void SyncRmlSettingsValues(void)
 
     UpdateStepControlVisuals();
     RebuildControlsList();
+    SyncMovementStyleButtons();
+    SyncViewfinderButtons();
     SetCheckbox(g_rml.vsync_input, MikuPan_IsVsync());
     SetElementText(g_rml.active_gpu_label,
                    std::string("Active: ")
@@ -3669,8 +4017,6 @@ void SyncRmlSettingsValues(void)
                        : "");
     const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
     SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
-    SetCheckbox(g_rml.finder_dpad_film_swap_input,
-                MikuPan_FinderDpadFilmSwapEnabled());
     SetCheckbox(g_rml.mirror_stone_hud_input,
                 MikuPan_MirrorStoneHudEnabled());
     SetCheckbox(g_rml.improved_movement_collisions_input,
@@ -3935,17 +4281,6 @@ bool LoadOptionsDocument(void)
                 std::make_unique<MikuPanButtonListener>(
                     []() { CancelCrtPanel(); }));
 
-    g_rml.finder_dpad_film_swap_input = GetInput("finder-dpad-film-swap-input");
-    AddListener(g_rml.finder_dpad_film_swap_input,
-                Rml::EventId::Change,
-                std::make_unique<MikuPanInputListener>(
-                    [](Rml::ElementFormControlInput* input) {
-                        MarkSettingsDirty();
-                        MikuPan_SetFinderDpadFilmSwapEnabled(
-                            IsCheckboxChecked(input));
-                    }));
-
-
     g_rml.mirror_stone_hud_input = GetInput("mirror-stone-hud-input");
     AddListener(g_rml.mirror_stone_hud_input,
                 Rml::EventId::Change,
@@ -3984,6 +4319,22 @@ bool LoadOptionsDocument(void)
                     FocusElementById("controls-controller-tab");
                     RequestUiMoveSound();
                 }));
+    AddListener(GetElement("movement-dpad-mode"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { ToggleMovementStyle(1); }));
+    AddListener(GetElement("movement-stick-mode"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { ToggleMovementStyle(0); }));
+    AddListener(GetElement("finder-stick-layout-mode"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { ToggleFinderStickLayout(); }));
+    AddListener(GetElement("finder-dpad-film-swap-mode"),
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { ToggleFinderDpadFilmSwap(); }));
     AddListener(g_rml.controls_list,
                 Rml::EventId::Click,
                 std::make_unique<MikuPanEventListener>(
@@ -3994,8 +4345,7 @@ bool LoadOptionsDocument(void)
                 std::make_unique<MikuPanButtonListener>([]() {
                     MarkSettingsDirty();
                     MikuPan_ResetControllerBindingsFromUi();
-                    SetCheckbox(g_rml.finder_dpad_film_swap_input,
-                                MikuPan_FinderDpadFilmSwapEnabled());
+                    SyncViewfinderButtons();
                     SetCheckbox(g_rml.mirror_stone_hud_input,
                                 MikuPan_MirrorStoneHudEnabled());
                     RebuildControlsList();
@@ -4077,16 +4427,6 @@ bool LoadOptionsDocument(void)
                 std::make_unique<MikuPanButtonListener>([]() {
                     CloseChoicePicker();
                 }));
-    AddListener(GetElement("binding-capture-clear-button"),
-                Rml::EventId::Click,
-                std::make_unique<MikuPanButtonListener>([]() {
-                    ClearActiveBindingCapture();
-                }));
-    AddListener(GetElement("binding-capture-cancel-button"),
-                Rml::EventId::Click,
-                std::make_unique<MikuPanButtonListener>([]() {
-                    CancelBindingCapture();
-                }));
     g_rml.crt_panel = GetElement("crt-panel");
     g_rml.resolution_confirm_modal = GetElement("resolution-confirm-modal");
     g_rml.resolution_confirm_title = GetElement("resolution-confirm-title");
@@ -4149,6 +4489,7 @@ void MikuPan_RmlOptionsStartFrame(void)
 
     if (g_rml.visible)
     {
+        ApplyQueuedFocus();
         UpdateResolutionConfirmTimeout();
         UpdateSelectArrows();
         UpdateBindingCapture();
@@ -4350,6 +4691,11 @@ void MikuPan_RmlOptionsEnsureFocusedControlVisible(void)
 int MikuPan_RmlOptionsInputBlocked(void)
 {
     return IsOptionsInputBlocked() ? 1 : 0;
+}
+
+int MikuPan_RmlOptionsBindingCaptureActive(void)
+{
+    return BindingCaptureIsVisible() ? 1 : 0;
 }
 
 int MikuPan_RmlOptionsConsumeMoveSoundRequest(void)

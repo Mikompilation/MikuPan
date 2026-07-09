@@ -427,6 +427,8 @@ void MikuPan_ControllerStoreBindingsToConfig(void)
         MikuPan_CustomActionProfileUsesDpadSubjectiveMove();
     cfg->action_profile_stick_subjective_move =
         MikuPan_CustomActionProfileUsesStickSubjectiveMove();
+    cfg->movement_style_override_enabled =
+        MikuPan_MovementStyleOverrideEnabled();
     cfg->action_profile_finder_reverse_y =
         MikuPan_CustomActionProfileUsesFinderReverseY();
     cfg->action_profile_finder_swap_sticks =
@@ -504,6 +506,8 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
             MikuPan_SetCustomActionProfileSubjectiveMove(
                 cfg->action_profile_subjective_move);
         }
+        MikuPan_SetMovementStyleOverrideEnabled(
+            cfg->movement_style_override_enabled);
         MikuPan_SetCustomActionProfileFinderReverseY(
             cfg->action_profile_finder_reverse_y);
         MikuPan_SetCustomActionProfileFinderSwapSticks(
@@ -641,58 +645,251 @@ int MikuPan_ReadController(unsigned char *rdata)
     return 1;
 }
 
+static const char *MikuPan_GamepadButtonFaceLabel(SDL_Gamepad *gamepad, SDL_GamepadButton button)
+{
+    if (gamepad == NULL)
+    {
+        return NULL;
+    }
+
+    switch (SDL_GetGamepadButtonLabel(gamepad, button))
+    {
+        case SDL_GAMEPAD_BUTTON_LABEL_A:
+            return "A";
+        case SDL_GAMEPAD_BUTTON_LABEL_B:
+            return "B";
+        case SDL_GAMEPAD_BUTTON_LABEL_X:
+            return "X";
+        case SDL_GAMEPAD_BUTTON_LABEL_Y:
+            return "Y";
+        case SDL_GAMEPAD_BUTTON_LABEL_CROSS:
+            return "Cross";
+        case SDL_GAMEPAD_BUTTON_LABEL_CIRCLE:
+            return "Circle";
+        case SDL_GAMEPAD_BUTTON_LABEL_SQUARE:
+            return "Square";
+        case SDL_GAMEPAD_BUTTON_LABEL_TRIANGLE:
+            return "Triangle";
+        default:
+            return NULL;
+    }
+}
+
+static int MikuPan_GamepadHasPlayStationLabels(SDL_Gamepad *gamepad)
+{
+    if (gamepad == NULL)
+    {
+        return 0;
+    }
+
+    SDL_GamepadButtonLabel south = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
+    SDL_GamepadButtonLabel east = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_EAST);
+    return south == SDL_GAMEPAD_BUTTON_LABEL_CROSS || east == SDL_GAMEPAD_BUTTON_LABEL_CIRCLE;
+}
+
+static int MikuPan_GamepadHasNintendoLabels(SDL_Gamepad *gamepad)
+{
+    if (gamepad == NULL)
+    {
+        return 0;
+    }
+
+    SDL_GamepadButtonLabel south = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
+    SDL_GamepadButtonLabel east = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_EAST);
+    SDL_GamepadButtonLabel west = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_WEST);
+    SDL_GamepadButtonLabel north = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_NORTH);
+    return south == SDL_GAMEPAD_BUTTON_LABEL_B && east == SDL_GAMEPAD_BUTTON_LABEL_A &&
+           west == SDL_GAMEPAD_BUTTON_LABEL_Y && north == SDL_GAMEPAD_BUTTON_LABEL_X;
+}
+
+static int MikuPan_GamepadHasXboxLabels(SDL_Gamepad *gamepad)
+{
+    if (gamepad == NULL)
+    {
+        return 0;
+    }
+
+    SDL_GamepadButtonLabel south = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
+    SDL_GamepadButtonLabel east = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_EAST);
+    SDL_GamepadButtonLabel west = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_WEST);
+    SDL_GamepadButtonLabel north = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_NORTH);
+    return south == SDL_GAMEPAD_BUTTON_LABEL_A && east == SDL_GAMEPAD_BUTTON_LABEL_B &&
+           west == SDL_GAMEPAD_BUTTON_LABEL_X && north == SDL_GAMEPAD_BUTTON_LABEL_Y;
+}
+
+static const char *MikuPan_GamepadShoulderLabel(SDL_Gamepad *gamepad, SDL_GamepadButton button)
+{
+    if (MikuPan_GamepadHasPlayStationLabels(gamepad))
+    {
+        if (button == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)
+            return "L1";
+        if (button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+            return "R1";
+    }
+
+    if (MikuPan_GamepadHasNintendoLabels(gamepad))
+    {
+        if (button == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)
+            return "L";
+        if (button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+            return "R";
+    }
+
+    if (MikuPan_GamepadHasXboxLabels(gamepad))
+    {
+        if (button == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)
+            return "LB";
+        if (button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+            return "RB";
+    }
+
+    return NULL;
+}
+
+static const char *MikuPan_GamepadTriggerAxisLabel(SDL_Gamepad *gamepad, SDL_GamepadAxis axis)
+{
+    if (MikuPan_GamepadHasPlayStationLabels(gamepad))
+    {
+        if (axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
+            return "L2";
+        if (axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
+            return "R2";
+    }
+
+    if (MikuPan_GamepadHasNintendoLabels(gamepad))
+    {
+        if (axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
+            return "ZL";
+        if (axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
+            return "ZR";
+    }
+
+    if (MikuPan_GamepadHasXboxLabels(gamepad))
+    {
+        if (axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
+            return "LT";
+        if (axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
+            return "RT";
+    }
+
+    return NULL;
+}
+
+static const char *MikuPan_GamepadButtonFallbackLabel(SDL_GamepadButton button)
+{
+    switch (button)
+    {
+        case SDL_GAMEPAD_BUTTON_NORTH:
+            return "Y / Triangle";
+        case SDL_GAMEPAD_BUTTON_SOUTH:
+            return "A / Cross";
+        case SDL_GAMEPAD_BUTTON_WEST:
+            return "X / Square";
+        case SDL_GAMEPAD_BUTTON_EAST:
+            return "B / Circle";
+        case SDL_GAMEPAD_BUTTON_DPAD_UP:
+            return "DPad Up";
+        case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
+            return "DPad Down";
+        case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
+            return "DPad Left";
+        case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
+            return "DPad Right";
+        case SDL_GAMEPAD_BUTTON_LEFT_STICK:
+            return "Left Stick (L3)";
+        case SDL_GAMEPAD_BUTTON_RIGHT_STICK:
+            return "Right Stick (R3)";
+        case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:
+            return "L1 / LB";
+        case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER:
+            return "R1 / RB";
+        case SDL_GAMEPAD_BUTTON_START:
+            return "Start";
+        case SDL_GAMEPAD_BUTTON_BACK:
+            return "Select / Back";
+        case SDL_GAMEPAD_BUTTON_GUIDE:
+            return "Guide";
+        case SDL_GAMEPAD_BUTTON_MISC1:
+            return "Misc 1";
+        case SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1:
+            return "Right Paddle 1";
+        case SDL_GAMEPAD_BUTTON_LEFT_PADDLE1:
+            return "Left Paddle 1";
+        case SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2:
+            return "Right Paddle 2";
+        case SDL_GAMEPAD_BUTTON_LEFT_PADDLE2:
+            return "Left Paddle 2";
+        case SDL_GAMEPAD_BUTTON_TOUCHPAD:
+            return "Touchpad";
+        case SDL_GAMEPAD_BUTTON_MISC2:
+            return "Misc 2";
+        case SDL_GAMEPAD_BUTTON_MISC3:
+            return "Misc 3";
+        case SDL_GAMEPAD_BUTTON_MISC4:
+            return "Misc 4";
+        case SDL_GAMEPAD_BUTTON_MISC5:
+            return "Misc 5";
+        case SDL_GAMEPAD_BUTTON_MISC6:
+            return "Misc 6";
+        default:
+            break;
+    }
+
+    const char *name = SDL_GetGamepadStringForButton(button);
+    return (name != NULL && name[0] != '\0') ? name : "Unknown Button";
+}
+
 const char *MikuPan_ControllerBindingLabel(MikuPan_ControllerBindings binding)
 {
+    SDL_Gamepad *gamepad = mikupan_gamepad;
+
     if (binding.kind == MIKUPAN_CONTROLLER_BIND_BUTTON)
     {
-        switch (binding.code)
+        SDL_GamepadButton button = (SDL_GamepadButton) binding.code;
+        const char *face_label = MikuPan_GamepadButtonFaceLabel(gamepad, button);
+        if (face_label != NULL)
         {
-            case SDL_GAMEPAD_BUTTON_NORTH:
-                return "Y / Triangle";
-            case SDL_GAMEPAD_BUTTON_SOUTH:
-                return "A / Cross";
-            case SDL_GAMEPAD_BUTTON_WEST:
-                return "X / Square";
-            case SDL_GAMEPAD_BUTTON_EAST:
-                return "B / Circle";
-            case SDL_GAMEPAD_BUTTON_DPAD_UP:
-                return "DPad Up";
-            case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
-                return "DPad Down";
-            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
-                return "DPad Left";
-            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
-                return "DPad Right";
-            case SDL_GAMEPAD_BUTTON_LEFT_STICK:
-                return "Left Stick (L3)";
-            case SDL_GAMEPAD_BUTTON_RIGHT_STICK:
-                return "Right Stick (R3)";
-            case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:
-                return "L1 / LB";
-            case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER:
-                return "R1 / RB";
-            case SDL_GAMEPAD_BUTTON_START:
-                return "Start";
-            case SDL_GAMEPAD_BUTTON_BACK:
-                return "Select / Back";
-            case SDL_GAMEPAD_BUTTON_GUIDE:
-                return "Guide";
-            default:
-                return "Unknown Button";
+            return face_label;
         }
+
+        const char *shoulder_label = MikuPan_GamepadShoulderLabel(gamepad, button);
+        if (shoulder_label != NULL)
+        {
+            return shoulder_label;
+        }
+
+        return MikuPan_GamepadButtonFallbackLabel(button);
     }
 
     if (binding.kind == MIKUPAN_CONTROLLER_BIND_AXIS)
     {
-        switch (binding.code)
+        SDL_GamepadAxis axis = (SDL_GamepadAxis) binding.code;
+        const char *trigger_label = MikuPan_GamepadTriggerAxisLabel(gamepad, axis);
+        if (trigger_label != NULL)
+        {
+            return trigger_label;
+        }
+
+        switch (axis)
         {
             case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:
                 return "L2 / LT (axis)";
             case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
                 return "R2 / RT (axis)";
+            case SDL_GAMEPAD_AXIS_LEFTX:
+                return "Left Stick X";
+            case SDL_GAMEPAD_AXIS_LEFTY:
+                return "Left Stick Y";
+            case SDL_GAMEPAD_AXIS_RIGHTX:
+                return "Right Stick X";
+            case SDL_GAMEPAD_AXIS_RIGHTY:
+                return "Right Stick Y";
             default:
-                return "Unknown Axis";
+                break;
         }
+
+        const char *name = SDL_GetGamepadStringForAxis(axis);
+        return (name != NULL && name[0] != '\0') ? name : "Unknown Axis";
     }
 
     return "<unmapped>";
