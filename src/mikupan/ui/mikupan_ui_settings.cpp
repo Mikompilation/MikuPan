@@ -1045,8 +1045,7 @@ void MikuPan_UiSettingsRender(void)
             if (igCombo_Str_arr("Font", &selected_font, MikuPan_UiFontLabels,
                                 MIKUPAN_UI_FONT_COUNT, -1))
             {
-                mikupan_configuration.selected_font = selected_font;
-                MikuPan_ApplyUiFont(selected_font);
+                MikuPan_SelectFontOption(selected_font);
             }
 
             float font_scale = mikupan_configuration.font_scale;
@@ -1949,6 +1948,7 @@ int MikuPan_SelectFontOption(int index)
 
     mikupan_configuration.selected_font = index;
     MikuPan_ApplyUiFont(index);
+    MikuPan_RmlOptionsApplyFont(index);
     return 1;
 }
 

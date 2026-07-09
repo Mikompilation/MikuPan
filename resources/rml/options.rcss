@@ -303,6 +303,53 @@ button {
     nav: auto;
 }
 
+#options-root.rml-font-imgui-default,
+#options-root.rml-font-century {
+    font-family: MikuPanRml;
+}
+
+#options-root.rml-font-zapf {
+    font-family: MikuPanRmlZapf;
+}
+
+#options-root.rml-font-imgui-default .category-button,
+#options-root.rml-font-imgui-default select,
+#options-root.rml-font-imgui-default input.text,
+#options-root.rml-font-imgui-default input.checkbox,
+#options-root.rml-font-imgui-default button,
+#options-root.rml-font-century .category-button,
+#options-root.rml-font-century select,
+#options-root.rml-font-century input.text,
+#options-root.rml-font-century input.checkbox,
+#options-root.rml-font-century button {
+    font-family: MikuPanRml;
+}
+
+#options-root.rml-font-zapf .category-button,
+#options-root.rml-font-zapf select,
+#options-root.rml-font-zapf input.text,
+#options-root.rml-font-zapf input.checkbox,
+#options-root.rml-font-zapf button {
+    font-family: MikuPanRmlZapf;
+}
+
+#options-root.rml-font-zapf #side-title,
+#options-root.rml-font-zapf h1,
+#options-root.rml-font-zapf #panel-title,
+#options-root.rml-font-zapf #choice-picker-title,
+#options-root.rml-font-zapf #confirm-save-title,
+#options-root.rml-font-zapf #resolution-confirm-title,
+#options-root.rml-font-zapf #binding-capture-title {
+    letter-spacing: 0.5dp;
+}
+
+#options-root.rml-font-zapf .category-button,
+#options-root.rml-font-zapf .setting-title,
+#options-root.rml-font-zapf .subsection-title,
+#options-root.rml-font-zapf .controls-section-title {
+    letter-spacing: 0dp;
+}
+
 select,
 input.text {
     display: block;
@@ -2442,7 +2489,7 @@ button.controller-focus {
     padding: 4dp 5dp;
     background-color: transparent;
     border: 0dp transparent;
-    border-bottom: 1dp #241514;
+    border-bottom: 2dp #241514;
 }
 
 #options-root .setting-row:hover,
@@ -3311,4 +3358,956 @@ button.controller-focus {
     color: #eee9ff;
     background-color: #0b1717cc;
     border-left-color: #9e8fcf;
+}
+
+/* Option 6: photographic ritual pass. Inert overlay marks and more severe
+ * menu geometry push the screen away from a clean app surface.
+ */
+#options-root #window {
+    overflow: hidden;
+    background-color: #020101f4;
+    border: 1dp #2a1715;
+    border-top-color: #3a1f1b;
+    border-bottom-color: #241311;
+}
+
+#options-root #side {
+    background-color: #030202e6;
+    border-right-color: #241313;
+}
+
+#options-root #content {
+    background-color: #01010133;
+}
+
+#ritual-overlay {
+    display: block;
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 536dp;
+    height: 306dp;
+    pointer-events: none;
+}
+
+#ritual-edge-top,
+#ritual-edge-bottom,
+#ritual-edge-left,
+#ritual-edge-right,
+.ritual-corner,
+.ritual-scratch,
+.ritual-speck {
+    display: block;
+    position: absolute;
+    pointer-events: none;
+}
+
+#ritual-edge-top {
+    left: 0dp;
+    top: 0dp;
+    width: 536dp;
+    height: 7dp;
+    background-color: #00000034;
+    border: 0dp transparent;
+    border-top: 2dp #3a1f1b;
+}
+
+#ritual-edge-bottom {
+    left: 0dp;
+    bottom: 0dp;
+    width: 536dp;
+    height: 8dp;
+    background-color: #0000003c;
+    border: 0dp transparent;
+    border-bottom: 2dp #241311;
+}
+
+#ritual-edge-left {
+    left: 0dp;
+    top: 0dp;
+    width: 6dp;
+    height: 306dp;
+    background-color: #00000030;
+    border: 0dp transparent;
+    border-left: 2dp #2a1715;
+}
+
+#ritual-edge-right {
+    right: 0dp;
+    top: 0dp;
+    width: 6dp;
+    height: 306dp;
+    background-color: #0000003a;
+    border: 0dp transparent;
+    border-right: 2dp #2a1715;
+}
+
+.ritual-corner {
+    width: 21dp;
+    height: 21dp;
+    border: 0dp transparent;
+}
+
+#ritual-corner-tl {
+    left: 6dp;
+    top: 6dp;
+    border-left: 2dp #6f2a22;
+    border-top: 2dp #6f2a22;
+}
+
+#ritual-corner-tr {
+    right: 6dp;
+    top: 6dp;
+    border-right: 2dp #5b3027;
+    border-top: 2dp #5b3027;
+}
+
+#ritual-corner-bl {
+    left: 6dp;
+    bottom: 6dp;
+    border-left: 2dp #5b3027;
+    border-bottom: 2dp #5b3027;
+}
+
+#ritual-corner-br {
+    right: 6dp;
+    bottom: 6dp;
+    border-right: 2dp #6f2a22;
+    border-bottom: 2dp #6f2a22;
+}
+
+#ritual-scratch-a {
+    left: 21dp;
+    top: 38dp;
+    width: 16dp;
+    height: 1dp;
+    background-color: #f4dcc512;
+}
+
+#ritual-scratch-b {
+    right: 27dp;
+    top: 263dp;
+    width: 20dp;
+    height: 1dp;
+    background-color: #d0a17112;
+}
+
+#ritual-scratch-c {
+    right: 22dp;
+    top: 73dp;
+    width: 1dp;
+    height: 18dp;
+    background-color: #f4dcc50e;
+}
+
+#ritual-speck-a {
+    left: 109dp;
+    top: 49dp;
+    width: 2dp;
+    height: 1dp;
+    background-color: #f4dcc520;
+}
+
+#ritual-speck-b {
+    left: 319dp;
+    top: 231dp;
+    width: 1dp;
+    height: 1dp;
+    background-color: #d0a17128;
+}
+
+#ritual-speck-c {
+    left: 487dp;
+    top: 103dp;
+    width: 2dp;
+    height: 2dp;
+    background-color: #f4dcc51c;
+}
+
+#options-root .setting-row,
+#options-root .controls-bind-row,
+#options-root .placeholder {
+    border-left: 2dp transparent;
+    border-bottom: 2dp #1b0d0c;
+}
+
+#options-root .setting-row:hover,
+#options-root .setting-row.controller-focus,
+#options-root .controls-bind-row:hover,
+#options-root .controls-bind-row.controller-focus {
+    background-color: #120706d8;
+    border-left-color: #a1352c;
+    border-bottom-color: #3d1b17;
+}
+
+#options-root .setting-row.controller-focus .setting-title,
+#options-root .controls-bind-row.controller-focus .controls-bind-label {
+    color: #f4ead8;
+}
+
+#options-root .category-button,
+#options-root .side-action-button {
+    color: #a99a85;
+}
+
+#options-root #category-list .category-button,
+#options-root #side-actions .side-action-button {
+    border-bottom: 1dp #1d1110;
+}
+
+#options-root #category-list .category-button.selected,
+#options-root #category-list .category-button.controller-focus,
+#options-root #side-actions .side-action-button.controller-focus {
+    border-bottom-color: #a1352c;
+}
+
+#options-root .category-button.selected,
+#options-root .category-button.controller-focus,
+#options-root .side-action-button.controller-focus {
+    color: #f4ead8;
+    background-color: #120706cc;
+    border-left-color: #a1352c;
+}
+
+#options-root select,
+#options-root input.text,
+#options-root .stepper-control,
+#options-root .choice-picker,
+#options-root button,
+#options-root .controls-bind-value {
+    background-color: #020101b8;
+    border-bottom-color: #281613;
+}
+
+#options-root .choice-picker:hover,
+#options-root .choice-picker:focus,
+#options-root .choice-picker:focus-visible,
+#options-root .choice-picker.controller-focus,
+#options-root .stepper-control:hover,
+#options-root .stepper-control:focus,
+#options-root .stepper-control:focus-visible,
+#options-root .stepper-control.controller-focus,
+#options-root button:hover,
+#options-root button:focus,
+#options-root button:focus-visible,
+#options-root button.controller-focus {
+    background-color: #160706d8;
+    border-bottom-color: #8a332a;
+}
+
+#options-root #choice-picker-card,
+#options-root #confirm-save-card,
+#options-root #resolution-confirm-card,
+#options-root #binding-capture-card {
+    background-color: #020101fa;
+    border: 0dp transparent;
+    border-left: 2dp #5b3027;
+    border-bottom: 2dp #3a1f1b;
+}
+
+#options-root #choice-picker-list {
+    background-color: #010101e8;
+    border: 0dp transparent;
+    border-top: 2dp #281613;
+    border-bottom: 2dp #281613;
+}
+
+#options-root .picker-option {
+    min-height: 16dp;
+    padding-left: 8dp;
+    color: #6f6255;
+    border-left: 2dp transparent;
+}
+
+#options-root .picker-option:hover,
+#options-root .picker-option:focus,
+#options-root .picker-option:focus-visible,
+#options-root .picker-option.controller-focus,
+#options-root .picker-option.selected {
+    background-color: #120706d8;
+    border-left-color: #a1352c;
+}
+
+#options-root.theme-moonlit .ritual-corner {
+    border-color: #6f98c9;
+}
+
+#options-root.theme-ghost-cyan .ritual-corner {
+    border-color: #72b7bf;
+}
+
+#options-root.theme-crimson .ritual-corner {
+    border-color: #d9662e;
+}
+
+#options-root.theme-ff1-ritual .ritual-corner {
+    border-color: #9e5cad;
+}
+
+#options-root.theme-mist-teal .ritual-corner {
+    border-color: #657d9f;
+}
+
+#options-root.theme-moonlit #window {
+    background-color: #020711f4;
+    border-color: #182a40;
+    border-top-color: #274766;
+    border-bottom-color: #102033;
+}
+
+#options-root.theme-moonlit #side {
+    background-color: #02050de8;
+    border-right-color: #18304a;
+}
+
+#options-root.theme-moonlit #content {
+    background-color: #07122640;
+}
+
+#options-root.theme-moonlit #side-title,
+#options-root.theme-moonlit h1,
+#options-root.theme-moonlit #panel-title,
+#options-root.theme-moonlit #choice-picker-title,
+#options-root.theme-moonlit #confirm-save-title,
+#options-root.theme-moonlit #resolution-confirm-title,
+#options-root.theme-moonlit #binding-capture-title {
+    color: #dce9fb;
+}
+
+#options-root.theme-moonlit .setting-title,
+#options-root.theme-moonlit .controls-bind-label {
+    color: #c6d7e8;
+}
+
+#options-root.theme-moonlit #ritual-edge-top,
+#options-root.theme-moonlit #ritual-edge-bottom,
+#options-root.theme-moonlit #ritual-edge-left,
+#options-root.theme-moonlit #ritual-edge-right {
+    background-color: #06152b66;
+    border-color: #274766;
+}
+
+#options-root.theme-moonlit .ritual-scratch,
+#options-root.theme-moonlit .ritual-speck {
+    background-color: #8fb8e824;
+}
+
+#options-root.theme-moonlit .setting-row,
+#options-root.theme-moonlit .controls-bind-row,
+#options-root.theme-moonlit .placeholder {
+    border-bottom-color: #102033;
+}
+
+#options-root.theme-moonlit #category-list .category-button,
+#options-root.theme-moonlit #side-actions .side-action-button {
+    border-bottom-color: #102033;
+}
+
+#options-root.theme-moonlit .setting-row:hover,
+#options-root.theme-moonlit .setting-row.controller-focus,
+#options-root.theme-moonlit .controls-bind-row:hover,
+#options-root.theme-moonlit .controls-bind-row.controller-focus,
+#options-root.theme-moonlit .category-button.selected,
+#options-root.theme-moonlit .category-button.controller-focus,
+#options-root.theme-moonlit .side-action-button.controller-focus,
+#options-root.theme-moonlit .picker-option:hover,
+#options-root.theme-moonlit .picker-option:focus,
+#options-root.theme-moonlit .picker-option:focus-visible,
+#options-root.theme-moonlit .picker-option.controller-focus,
+#options-root.theme-moonlit .picker-option.selected {
+    background-color: #071528d8;
+    border-left-color: #6f98c9;
+    border-bottom-color: #284966;
+}
+
+#options-root.theme-moonlit select,
+#options-root.theme-moonlit input.text,
+#options-root.theme-moonlit .stepper-control,
+#options-root.theme-moonlit .choice-picker,
+#options-root.theme-moonlit button,
+#options-root.theme-moonlit .controls-bind-value {
+    background-color: #020712b8;
+    border-bottom-color: #1b334c;
+}
+
+#options-root.theme-moonlit .choice-picker:hover,
+#options-root.theme-moonlit .choice-picker:focus,
+#options-root.theme-moonlit .choice-picker:focus-visible,
+#options-root.theme-moonlit .choice-picker.controller-focus,
+#options-root.theme-moonlit .stepper-control:hover,
+#options-root.theme-moonlit .stepper-control:focus,
+#options-root.theme-moonlit .stepper-control:focus-visible,
+#options-root.theme-moonlit .stepper-control.controller-focus,
+#options-root.theme-moonlit button:hover,
+#options-root.theme-moonlit button:focus,
+#options-root.theme-moonlit button:focus-visible,
+#options-root.theme-moonlit button.controller-focus {
+    background-color: #071528d8;
+    border-bottom-color: #6f98c9;
+}
+
+#options-root.theme-moonlit #choice-picker-card,
+#options-root.theme-moonlit #confirm-save-card,
+#options-root.theme-moonlit #resolution-confirm-card,
+#options-root.theme-moonlit #binding-capture-card {
+    background-color: #020711fa;
+    border-left-color: #385f86;
+    border-bottom-color: #1d3853;
+}
+
+#options-root.theme-moonlit #choice-picker-list {
+    background-color: #01050de8;
+    border-top-color: #172a40;
+    border-bottom-color: #172a40;
+}
+
+#options-root.theme-ghost-cyan #window {
+    background-color: #010809f4;
+    border-color: #173337;
+    border-top-color: #28575e;
+    border-bottom-color: #102729;
+}
+
+#options-root.theme-ghost-cyan #side {
+    background-color: #010606e8;
+    border-right-color: #173a3d;
+}
+
+#options-root.theme-ghost-cyan #content {
+    background-color: #061a1d40;
+}
+
+#options-root.theme-ghost-cyan #side-title,
+#options-root.theme-ghost-cyan h1,
+#options-root.theme-ghost-cyan #panel-title,
+#options-root.theme-ghost-cyan #choice-picker-title,
+#options-root.theme-ghost-cyan #confirm-save-title,
+#options-root.theme-ghost-cyan #resolution-confirm-title,
+#options-root.theme-ghost-cyan #binding-capture-title {
+    color: #dcf4f5;
+}
+
+#options-root.theme-ghost-cyan .setting-title,
+#options-root.theme-ghost-cyan .controls-bind-label {
+    color: #c4dfe1;
+}
+
+#options-root.theme-ghost-cyan #ritual-edge-top,
+#options-root.theme-ghost-cyan #ritual-edge-bottom,
+#options-root.theme-ghost-cyan #ritual-edge-left,
+#options-root.theme-ghost-cyan #ritual-edge-right {
+    background-color: #061b1f66;
+    border-color: #28575e;
+}
+
+#options-root.theme-ghost-cyan .ritual-scratch,
+#options-root.theme-ghost-cyan .ritual-speck {
+    background-color: #9de2ea24;
+}
+
+#options-root.theme-ghost-cyan .setting-row,
+#options-root.theme-ghost-cyan .controls-bind-row,
+#options-root.theme-ghost-cyan .placeholder {
+    border-bottom-color: #102729;
+}
+
+#options-root.theme-ghost-cyan #category-list .category-button,
+#options-root.theme-ghost-cyan #side-actions .side-action-button {
+    border-bottom-color: #102729;
+}
+
+#options-root.theme-ghost-cyan .setting-row:hover,
+#options-root.theme-ghost-cyan .setting-row.controller-focus,
+#options-root.theme-ghost-cyan .controls-bind-row:hover,
+#options-root.theme-ghost-cyan .controls-bind-row.controller-focus,
+#options-root.theme-ghost-cyan .category-button.selected,
+#options-root.theme-ghost-cyan .category-button.controller-focus,
+#options-root.theme-ghost-cyan .side-action-button.controller-focus,
+#options-root.theme-ghost-cyan .picker-option:hover,
+#options-root.theme-ghost-cyan .picker-option:focus,
+#options-root.theme-ghost-cyan .picker-option:focus-visible,
+#options-root.theme-ghost-cyan .picker-option.controller-focus,
+#options-root.theme-ghost-cyan .picker-option.selected {
+    background-color: #051719d8;
+    border-left-color: #72b7bf;
+    border-bottom-color: #28575e;
+}
+
+#options-root.theme-ghost-cyan select,
+#options-root.theme-ghost-cyan input.text,
+#options-root.theme-ghost-cyan .stepper-control,
+#options-root.theme-ghost-cyan .choice-picker,
+#options-root.theme-ghost-cyan button,
+#options-root.theme-ghost-cyan .controls-bind-value {
+    background-color: #010809b8;
+    border-bottom-color: #183b40;
+}
+
+#options-root.theme-ghost-cyan .choice-picker:hover,
+#options-root.theme-ghost-cyan .choice-picker:focus,
+#options-root.theme-ghost-cyan .choice-picker:focus-visible,
+#options-root.theme-ghost-cyan .choice-picker.controller-focus,
+#options-root.theme-ghost-cyan .stepper-control:hover,
+#options-root.theme-ghost-cyan .stepper-control:focus,
+#options-root.theme-ghost-cyan .stepper-control:focus-visible,
+#options-root.theme-ghost-cyan .stepper-control.controller-focus,
+#options-root.theme-ghost-cyan button:hover,
+#options-root.theme-ghost-cyan button:focus,
+#options-root.theme-ghost-cyan button:focus-visible,
+#options-root.theme-ghost-cyan button.controller-focus {
+    background-color: #051719d8;
+    border-bottom-color: #72b7bf;
+}
+
+#options-root.theme-ghost-cyan #choice-picker-card,
+#options-root.theme-ghost-cyan #confirm-save-card,
+#options-root.theme-ghost-cyan #resolution-confirm-card,
+#options-root.theme-ghost-cyan #binding-capture-card {
+    background-color: #010809fa;
+    border-left-color: #3a747b;
+    border-bottom-color: #1e454a;
+}
+
+#options-root.theme-ghost-cyan #choice-picker-list {
+    background-color: #010708e8;
+    border-top-color: #183538;
+    border-bottom-color: #183538;
+}
+
+#options-root.theme-crimson #window {
+    background-color: #100302f4;
+    border-color: #3d1915;
+    border-top-color: #7a2d25;
+    border-bottom-color: #2b100d;
+}
+
+#options-root.theme-crimson #side {
+    background-color: #0a0201e8;
+    border-right-color: #3d1712;
+}
+
+#options-root.theme-crimson #content {
+    background-color: #27070640;
+}
+
+#options-root.theme-crimson #side-title,
+#options-root.theme-crimson h1,
+#options-root.theme-crimson #panel-title,
+#options-root.theme-crimson #choice-picker-title,
+#options-root.theme-crimson #confirm-save-title,
+#options-root.theme-crimson #resolution-confirm-title,
+#options-root.theme-crimson #binding-capture-title {
+    color: #f4dac4;
+}
+
+#options-root.theme-crimson .setting-title,
+#options-root.theme-crimson .controls-bind-label {
+    color: #e3c5a6;
+}
+
+#options-root.theme-crimson #ritual-edge-top,
+#options-root.theme-crimson #ritual-edge-bottom,
+#options-root.theme-crimson #ritual-edge-left,
+#options-root.theme-crimson #ritual-edge-right {
+    background-color: #2b080566;
+    border-color: #7a2d25;
+}
+
+#options-root.theme-crimson .ritual-scratch,
+#options-root.theme-crimson .ritual-speck {
+    background-color: #d9662e24;
+}
+
+#options-root.theme-crimson #category-list .category-button,
+#options-root.theme-crimson #side-actions .side-action-button {
+    border-bottom-color: #2b100d;
+}
+
+#options-root.theme-crimson .setting-row:hover,
+#options-root.theme-crimson .setting-row.controller-focus,
+#options-root.theme-crimson .controls-bind-row:hover,
+#options-root.theme-crimson .controls-bind-row.controller-focus,
+#options-root.theme-crimson .category-button.selected,
+#options-root.theme-crimson .category-button.controller-focus,
+#options-root.theme-crimson .side-action-button.controller-focus,
+#options-root.theme-crimson .picker-option:hover,
+#options-root.theme-crimson .picker-option:focus,
+#options-root.theme-crimson .picker-option:focus-visible,
+#options-root.theme-crimson .picker-option.controller-focus,
+#options-root.theme-crimson .picker-option.selected {
+    background-color: #210706d8;
+    border-left-color: #d9662e;
+    border-bottom-color: #7a2d25;
+}
+
+#options-root.theme-crimson select,
+#options-root.theme-crimson input.text,
+#options-root.theme-crimson .stepper-control,
+#options-root.theme-crimson .choice-picker,
+#options-root.theme-crimson button,
+#options-root.theme-crimson .controls-bind-value {
+    background-color: #110302b8;
+    border-bottom-color: #4e1c17;
+}
+
+#options-root.theme-crimson .choice-picker:hover,
+#options-root.theme-crimson .choice-picker:focus,
+#options-root.theme-crimson .choice-picker:focus-visible,
+#options-root.theme-crimson .choice-picker.controller-focus,
+#options-root.theme-crimson .stepper-control:hover,
+#options-root.theme-crimson .stepper-control:focus,
+#options-root.theme-crimson .stepper-control:focus-visible,
+#options-root.theme-crimson .stepper-control.controller-focus,
+#options-root.theme-crimson button:hover,
+#options-root.theme-crimson button:focus,
+#options-root.theme-crimson button:focus-visible,
+#options-root.theme-crimson button.controller-focus {
+    background-color: #210706d8;
+    border-bottom-color: #d9662e;
+}
+
+#options-root.theme-crimson #choice-picker-card,
+#options-root.theme-crimson #confirm-save-card,
+#options-root.theme-crimson #resolution-confirm-card,
+#options-root.theme-crimson #binding-capture-card {
+    background-color: #100302fa;
+    border-left-color: #7a2d25;
+    border-bottom-color: #4e1c17;
+}
+
+#options-root.theme-crimson #choice-picker-list {
+    background-color: #0b0201e8;
+    border-top-color: #3a1512;
+    border-bottom-color: #3a1512;
+}
+
+#options-root.theme-ff1-ritual #window {
+    background-color: #09030af4;
+    border-color: #2e1a33;
+    border-top-color: #5a2d63;
+    border-bottom-color: #211225;
+}
+
+#options-root.theme-ff1-ritual #side {
+    background-color: #070207e8;
+    border-right-color: #301734;
+}
+
+#options-root.theme-ff1-ritual #content {
+    background-color: #1a071e40;
+}
+
+#options-root.theme-ff1-ritual #side-title,
+#options-root.theme-ff1-ritual h1,
+#options-root.theme-ff1-ritual #panel-title,
+#options-root.theme-ff1-ritual #choice-picker-title,
+#options-root.theme-ff1-ritual #confirm-save-title,
+#options-root.theme-ff1-ritual #resolution-confirm-title,
+#options-root.theme-ff1-ritual #binding-capture-title {
+    color: #ead8f2;
+}
+
+#options-root.theme-ff1-ritual .setting-title,
+#options-root.theme-ff1-ritual .controls-bind-label {
+    color: #d8c3df;
+}
+
+#options-root.theme-ff1-ritual #ritual-edge-top,
+#options-root.theme-ff1-ritual #ritual-edge-bottom,
+#options-root.theme-ff1-ritual #ritual-edge-left,
+#options-root.theme-ff1-ritual #ritual-edge-right {
+    background-color: #1b082166;
+    border-color: #5a2d63;
+}
+
+#options-root.theme-ff1-ritual .ritual-scratch,
+#options-root.theme-ff1-ritual .ritual-speck {
+    background-color: #b482bc24;
+}
+
+#options-root.theme-ff1-ritual #category-list .category-button,
+#options-root.theme-ff1-ritual #side-actions .side-action-button {
+    border-bottom-color: #211225;
+}
+
+#options-root.theme-ff1-ritual .setting-row:hover,
+#options-root.theme-ff1-ritual .setting-row.controller-focus,
+#options-root.theme-ff1-ritual .controls-bind-row:hover,
+#options-root.theme-ff1-ritual .controls-bind-row.controller-focus,
+#options-root.theme-ff1-ritual .category-button.selected,
+#options-root.theme-ff1-ritual .category-button.controller-focus,
+#options-root.theme-ff1-ritual .side-action-button.controller-focus,
+#options-root.theme-ff1-ritual .picker-option:hover,
+#options-root.theme-ff1-ritual .picker-option:focus,
+#options-root.theme-ff1-ritual .picker-option:focus-visible,
+#options-root.theme-ff1-ritual .picker-option.controller-focus,
+#options-root.theme-ff1-ritual .picker-option.selected {
+    background-color: #18071bd8;
+    border-left-color: #9e5cad;
+    border-bottom-color: #5a2d63;
+}
+
+#options-root.theme-ff1-ritual select,
+#options-root.theme-ff1-ritual input.text,
+#options-root.theme-ff1-ritual .stepper-control,
+#options-root.theme-ff1-ritual .choice-picker,
+#options-root.theme-ff1-ritual button,
+#options-root.theme-ff1-ritual .controls-bind-value {
+    background-color: #09030ab8;
+    border-bottom-color: #3a1f40;
+}
+
+#options-root.theme-ff1-ritual .choice-picker:hover,
+#options-root.theme-ff1-ritual .choice-picker:focus,
+#options-root.theme-ff1-ritual .choice-picker:focus-visible,
+#options-root.theme-ff1-ritual .choice-picker.controller-focus,
+#options-root.theme-ff1-ritual .stepper-control:hover,
+#options-root.theme-ff1-ritual .stepper-control:focus,
+#options-root.theme-ff1-ritual .stepper-control:focus-visible,
+#options-root.theme-ff1-ritual .stepper-control.controller-focus,
+#options-root.theme-ff1-ritual button:hover,
+#options-root.theme-ff1-ritual button:focus,
+#options-root.theme-ff1-ritual button:focus-visible,
+#options-root.theme-ff1-ritual button.controller-focus {
+    background-color: #18071bd8;
+    border-bottom-color: #9e5cad;
+}
+
+#options-root.theme-ff1-ritual #choice-picker-card,
+#options-root.theme-ff1-ritual #confirm-save-card,
+#options-root.theme-ff1-ritual #resolution-confirm-card,
+#options-root.theme-ff1-ritual #binding-capture-card {
+    background-color: #09030afa;
+    border-left-color: #5a2d63;
+    border-bottom-color: #3a1f40;
+}
+
+#options-root.theme-ff1-ritual #choice-picker-list {
+    background-color: #060207e8;
+    border-top-color: #301734;
+    border-bottom-color: #301734;
+}
+
+#options-root.theme-mist-teal #window {
+    background-color: #02090af4;
+    border-color: #1f3639;
+    border-top-color: #415369;
+    border-bottom-color: #14282a;
+}
+
+#options-root.theme-mist-teal #side {
+    background-color: #020707e8;
+    border-right-color: #21393c;
+}
+
+#options-root.theme-mist-teal #content {
+    background-color: #07191b40;
+}
+
+#options-root.theme-mist-teal #side-title,
+#options-root.theme-mist-teal h1,
+#options-root.theme-mist-teal #panel-title,
+#options-root.theme-mist-teal #choice-picker-title,
+#options-root.theme-mist-teal #confirm-save-title,
+#options-root.theme-mist-teal #resolution-confirm-title,
+#options-root.theme-mist-teal #binding-capture-title {
+    color: #dedcf2;
+}
+
+#options-root.theme-mist-teal .setting-title,
+#options-root.theme-mist-teal .controls-bind-label {
+    color: #c8d6d4;
+}
+
+#options-root.theme-mist-teal #ritual-edge-top,
+#options-root.theme-mist-teal #ritual-edge-bottom,
+#options-root.theme-mist-teal #ritual-edge-left,
+#options-root.theme-mist-teal #ritual-edge-right {
+    background-color: #071d1f66;
+    border-color: #415369;
+}
+
+#options-root.theme-mist-teal .ritual-scratch,
+#options-root.theme-mist-teal .ritual-speck {
+    background-color: #9e8fcf24;
+}
+
+#options-root.theme-mist-teal #category-list .category-button,
+#options-root.theme-mist-teal #side-actions .side-action-button {
+    border-bottom-color: #14282a;
+}
+
+#options-root.theme-mist-teal .setting-row:hover,
+#options-root.theme-mist-teal .setting-row.controller-focus,
+#options-root.theme-mist-teal .controls-bind-row:hover,
+#options-root.theme-mist-teal .controls-bind-row.controller-focus,
+#options-root.theme-mist-teal .category-button.selected,
+#options-root.theme-mist-teal .category-button.controller-focus,
+#options-root.theme-mist-teal .side-action-button.controller-focus,
+#options-root.theme-mist-teal .picker-option:hover,
+#options-root.theme-mist-teal .picker-option:focus,
+#options-root.theme-mist-teal .picker-option:focus-visible,
+#options-root.theme-mist-teal .picker-option.controller-focus,
+#options-root.theme-mist-teal .picker-option.selected {
+    background-color: #061719d8;
+    border-left-color: #657d9f;
+    border-bottom-color: #415369;
+}
+
+#options-root.theme-mist-teal select,
+#options-root.theme-mist-teal input.text,
+#options-root.theme-mist-teal .stepper-control,
+#options-root.theme-mist-teal .choice-picker,
+#options-root.theme-mist-teal button,
+#options-root.theme-mist-teal .controls-bind-value {
+    background-color: #02090ab8;
+    border-bottom-color: #284047;
+}
+
+#options-root.theme-mist-teal .choice-picker:hover,
+#options-root.theme-mist-teal .choice-picker:focus,
+#options-root.theme-mist-teal .choice-picker:focus-visible,
+#options-root.theme-mist-teal .choice-picker.controller-focus,
+#options-root.theme-mist-teal .stepper-control:hover,
+#options-root.theme-mist-teal .stepper-control:focus,
+#options-root.theme-mist-teal .stepper-control:focus-visible,
+#options-root.theme-mist-teal .stepper-control.controller-focus,
+#options-root.theme-mist-teal button:hover,
+#options-root.theme-mist-teal button:focus,
+#options-root.theme-mist-teal button:focus-visible,
+#options-root.theme-mist-teal button.controller-focus {
+    background-color: #061719d8;
+    border-bottom-color: #657d9f;
+}
+
+#options-root.theme-mist-teal #choice-picker-card,
+#options-root.theme-mist-teal #confirm-save-card,
+#options-root.theme-mist-teal #resolution-confirm-card,
+#options-root.theme-mist-teal #binding-capture-card {
+    background-color: #02090afa;
+    border-left-color: #415369;
+    border-bottom-color: #284047;
+}
+
+#options-root.theme-mist-teal #choice-picker-list {
+    background-color: #010607e8;
+    border-top-color: #21393c;
+    border-bottom-color: #21393c;
+}
+
+#options-root.theme-sepia #window {
+    background-color: #070302f4;
+    border-color: #2a1715;
+    border-top-color: #5b3027;
+    border-bottom-color: #241311;
+}
+
+#options-root.theme-sepia #side {
+    background-color: #050202e8;
+    border-right-color: #321b18;
+}
+
+#options-root.theme-sepia #content {
+    background-color: #1a0a0640;
+}
+
+#options-root.theme-sepia #side-title,
+#options-root.theme-sepia h1,
+#options-root.theme-sepia #panel-title,
+#options-root.theme-sepia #choice-picker-title,
+#options-root.theme-sepia #confirm-save-title,
+#options-root.theme-sepia #resolution-confirm-title,
+#options-root.theme-sepia #binding-capture-title {
+    color: #eadcc4;
+}
+
+#options-root.theme-sepia .setting-title,
+#options-root.theme-sepia .controls-bind-label {
+    color: #d9cbb4;
+}
+
+#options-root.theme-sepia #ritual-edge-top,
+#options-root.theme-sepia #ritual-edge-bottom,
+#options-root.theme-sepia #ritual-edge-left,
+#options-root.theme-sepia #ritual-edge-right {
+    background-color: #19080566;
+    border-color: #5b3027;
+}
+
+#options-root.theme-sepia .ritual-corner {
+    border-color: #a77952;
+}
+
+#options-root.theme-sepia .ritual-scratch,
+#options-root.theme-sepia .ritual-speck {
+    background-color: #d0a17124;
+}
+
+#options-root.theme-sepia .setting-row,
+#options-root.theme-sepia .controls-bind-row,
+#options-root.theme-sepia .placeholder {
+    border-bottom-color: #241311;
+}
+
+#options-root.theme-sepia #category-list .category-button,
+#options-root.theme-sepia #side-actions .side-action-button {
+    border-bottom-color: #241311;
+}
+
+#options-root.theme-sepia .setting-row:hover,
+#options-root.theme-sepia .setting-row.controller-focus,
+#options-root.theme-sepia .controls-bind-row:hover,
+#options-root.theme-sepia .controls-bind-row.controller-focus,
+#options-root.theme-sepia .category-button.selected,
+#options-root.theme-sepia .category-button.controller-focus,
+#options-root.theme-sepia .side-action-button.controller-focus,
+#options-root.theme-sepia .picker-option:hover,
+#options-root.theme-sepia .picker-option:focus,
+#options-root.theme-sepia .picker-option:focus-visible,
+#options-root.theme-sepia .picker-option.controller-focus,
+#options-root.theme-sepia .picker-option.selected {
+    background-color: #170806d8;
+    border-left-color: #b78a62;
+    border-bottom-color: #5b3027;
+}
+
+#options-root.theme-sepia select,
+#options-root.theme-sepia input.text,
+#options-root.theme-sepia .stepper-control,
+#options-root.theme-sepia .choice-picker,
+#options-root.theme-sepia button,
+#options-root.theme-sepia .controls-bind-value {
+    background-color: #070302b8;
+    border-bottom-color: #321b18;
+}
+
+#options-root.theme-sepia .choice-picker:hover,
+#options-root.theme-sepia .choice-picker:focus,
+#options-root.theme-sepia .choice-picker:focus-visible,
+#options-root.theme-sepia .choice-picker.controller-focus,
+#options-root.theme-sepia .stepper-control:hover,
+#options-root.theme-sepia .stepper-control:focus,
+#options-root.theme-sepia .stepper-control:focus-visible,
+#options-root.theme-sepia .stepper-control.controller-focus,
+#options-root.theme-sepia button:hover,
+#options-root.theme-sepia button:focus,
+#options-root.theme-sepia button:focus-visible,
+#options-root.theme-sepia button.controller-focus {
+    background-color: #170806d8;
+    border-bottom-color: #b78a62;
+}
+
+#options-root.theme-sepia #choice-picker-card,
+#options-root.theme-sepia #confirm-save-card,
+#options-root.theme-sepia #resolution-confirm-card,
+#options-root.theme-sepia #binding-capture-card {
+    background-color: #070302fa;
+    border-left-color: #6f442f;
+    border-bottom-color: #321b18;
+}
+
+#options-root.theme-sepia #choice-picker-list {
+    background-color: #040201e8;
+    border-top-color: #281613;
+    border-bottom-color: #281613;
 }

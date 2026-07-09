@@ -479,11 +479,24 @@ static constexpr const char* kRmlThemeClasses[] = {
     "theme-sepia",
 };
 
+static constexpr const char* kRmlFontClasses[] = {
+    "rml-font-imgui-default",
+    "rml-font-century",
+    "rml-font-zapf",
+};
+
 int ClampRmlThemeIndex(int theme)
 {
     const int count =
         static_cast<int>(sizeof(kRmlThemeClasses) / sizeof(kRmlThemeClasses[0]));
     return theme >= 0 && theme < count ? theme : 0;
+}
+
+int ClampRmlFontIndex(int font)
+{
+    const int count =
+        static_cast<int>(sizeof(kRmlFontClasses) / sizeof(kRmlFontClasses[0]));
+    return font >= 0 && font < count ? font : 1;
 }
 
 void ScrollFocusedContentRowIntoView(void);
@@ -521,6 +534,7 @@ void ClearControllerFocusVisual(void);
 void ClearControllerFocusReferences(void);
 std::string EscapeRmlText(const char* text);
 void ApplyRmlThemeClass(int theme);
+void ApplyRmlFontClass(int font);
 
 void SetCalibrationVisible(bool visible);
 void OpenCalibrationPanel(void);
@@ -569,6 +583,27 @@ void ApplyRmlThemeClass(int theme)
          i++)
     {
         g_rml.root->SetClass(kRmlThemeClasses[i], i == theme);
+    }
+
+    if (g_rml.document != nullptr)
+    {
+        g_rml.document->UpdateDocument();
+    }
+}
+
+void ApplyRmlFontClass(int font)
+{
+    if (g_rml.root == nullptr)
+    {
+        return;
+    }
+
+    font = ClampRmlFontIndex(font);
+    for (int i = 0;
+         i < static_cast<int>(sizeof(kRmlFontClasses) / sizeof(kRmlFontClasses[0]));
+         i++)
+    {
+        g_rml.root->SetClass(kRmlFontClasses[i], i == font);
     }
 
     if (g_rml.document != nullptr)
@@ -4551,6 +4586,7 @@ void SyncRmlSettingsValues(void)
     {
         g_rml.font_select->SetSelection(MikuPan_GetSelectedFontOption());
     }
+    ApplyRmlFontClass(MikuPan_GetSelectedFontOption());
 
     UpdateStepControlVisuals();
     RebuildControlsList();
@@ -5329,6 +5365,11 @@ int MikuPan_RmlOptionsConsumeMoveSoundRequest(void)
 void MikuPan_RmlOptionsApplyTheme(int theme)
 {
     ApplyRmlThemeClass(theme);
+}
+
+void MikuPan_RmlOptionsApplyFont(int font)
+{
+    ApplyRmlFontClass(font);
 }
 
 void MikuPan_RmlOptionsToggleDebug(void)

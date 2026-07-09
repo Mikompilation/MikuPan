@@ -126,6 +126,23 @@
 
         </div>
 
+        <div id="ritual-overlay">
+            <div id="ritual-edge-top"></div>
+            <div id="ritual-edge-bottom"></div>
+            <div id="ritual-edge-left"></div>
+            <div id="ritual-edge-right"></div>
+            <div id="ritual-corner-tl" class="ritual-corner"></div>
+            <div id="ritual-corner-tr" class="ritual-corner"></div>
+            <div id="ritual-corner-bl" class="ritual-corner"></div>
+            <div id="ritual-corner-br" class="ritual-corner"></div>
+            <div id="ritual-scratch-a" class="ritual-scratch"></div>
+            <div id="ritual-scratch-b" class="ritual-scratch"></div>
+            <div id="ritual-scratch-c" class="ritual-scratch"></div>
+            <div id="ritual-speck-a" class="ritual-speck"></div>
+            <div id="ritual-speck-b" class="ritual-speck"></div>
+            <div id="ritual-speck-c" class="ritual-speck"></div>
+        </div>
+
         <div id="confirm-save-modal" class="modal hidden">
             <div id="confirm-save-card">
                 <div id="confirm-save-title">Save Changes?</div>
