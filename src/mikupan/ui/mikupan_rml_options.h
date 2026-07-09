@@ -24,6 +24,7 @@ int MikuPan_RmlOptionsInputBlocked(void);
 void MikuPan_RmlOptionsRequestExit(void);
 void MikuPan_RmlOptionsHandleCancel(void);
 int MikuPan_RmlOptionsAnySelectOpen(void);
+void MikuPan_RmlOptionsClearNativeSelectOpen(void);
 int MikuPan_RmlOptionsActivateFocusedControl(void);
 int MikuPan_RmlOptionsHandleHorizontalInput(int direction);
 int MikuPan_RmlOptionsHandleVerticalInput(int direction);

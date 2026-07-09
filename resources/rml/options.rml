@@ -5,7 +5,7 @@
 <body id="options-root">
     <div id="window">
         <div id="side">
-            <div id="side-title">Options</div>
+            <div id="side-title">OPTIONS</div>
             <div id="category-list">
                 <button id="cat-display" class="category-button selected" autofocus="autofocus">Display</button>
                 <button id="cat-graphics" class="category-button">Graphics</button>
@@ -14,8 +14,8 @@
                 <button id="cat-advanced" class="category-button">Advanced</button>
             </div>
             <div id="side-actions">
-                <button id="save-return-button" class="side-action-button">Save and return</button>
-                <button id="cancel-options-button" class="side-action-button">Cancel</button>
+                <button id="save-return-button" class="side-action-button">Save</button>
+                <button id="cancel-options-button" class="side-action-button">Back</button>
             </div>
         </div>
 
@@ -36,7 +36,7 @@
                     </div>
                     <div class="setting-row">
                         <div class="setting-copy"><span class="setting-title">Image Calibration</span><p class="setting-desc">Open a scene preview with all image controls in one place.</p></div>
-                        <div class="setting-control"><button id="open-calibration-button">Adjust...</button></div>
+                        <div class="setting-control"><button id="open-calibration-button">Adjust</button></div>
                     </div>
                     <div class="setting-row compact">
                         <div class="setting-copy"><label class="setting-title" for="vsync-input">VSync</label><p class="setting-desc">Synchronise presentation to the display refresh.</p></div>
@@ -87,7 +87,7 @@
                     <div id="controls-list"></div>
                     <div class="setting-row compact controls-actions-row">
                         <div class="setting-copy"><span class="setting-title">Defaults</span><p class="setting-desc">Restore keyboard and controller bindings.</p></div>
-                        <div class="setting-control"><button id="controls-reset-button">Reset Defaults</button></div>
+                        <div class="setting-control"><button id="controls-reset-button">Defaults</button></div>
                     </div>
                 </div>
                 <div id="page-advanced" class="page hidden">
@@ -117,7 +117,7 @@
                     </div>
 
                     <div class="subsection-title">Video Filters</div>
-                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="open-crt-button">CRT Filter</label><p class="setting-desc">Open the CRT post-process tuning panel.</p></div><div class="setting-control"><button id="open-crt-button">Adjust...</button></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="open-crt-button">CRT Filter</label><p class="setting-desc">Open the CRT post-process tuning panel.</p></div><div class="setting-control"><button id="open-crt-button">Adjust</button></div></div>
 
                     <div class="subsection-title">Files</div>
                     <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="data-folder-input">Data Folder</label><p class="setting-desc">Folder containing extracted MikuPan game data.</p></div><div class="setting-control wide-control"><input type="text" id="data-folder-input" class="text" /><button id="browse-folder-button">Browse</button></div></div>
@@ -128,8 +128,8 @@
 
         <div id="confirm-save-modal" class="modal hidden">
             <div id="confirm-save-card">
-                <div id="confirm-save-title">Settings have changed</div>
-                <div id="confirm-save-text">Would you like to save?</div>
+                <div id="confirm-save-title">Save Changes?</div>
+                <div id="confirm-save-text">Unsaved settings remain.</div>
                 <div id="confirm-save-buttons">
                     <button id="save-changes-yes-button">Yes</button>
                     <button id="save-changes-no-button">No</button>
@@ -140,7 +140,7 @@
 
         <div id="choice-picker-modal" class="modal hidden">
             <div id="choice-picker-card">
-                <div id="choice-picker-title">Choose Setting</div>
+                <div id="choice-picker-title">Select</div>
                 <div id="choice-picker-list"></div>
                 <div id="choice-picker-help">Up / Down to choose. Confirm applies. Back cancels.</div>
                 <div id="choice-picker-buttons">

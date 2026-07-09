@@ -2325,3 +2325,964 @@ button.controller-focus {
 #options-root.theme-mist-teal .stepper-segment.neutral {
     background-color: #476466;
 }
+
+/* Fatal Frame tone pass: keep the palette hooks, but make the UI read like a
+ * sparse in-game menu instead of a stacked web form.
+ */
+#options-root .setting-desc,
+#options-root p.setting-desc,
+#options-root #controls-help,
+#options-root #choice-picker-help,
+#options-root #binding-capture-help {
+    display: none;
+}
+
+#options-root #window,
+#options-root.theme-moonlit #window,
+#options-root.theme-ghost-cyan #window,
+#options-root.theme-crimson #window,
+#options-root.theme-ff1-ritual #window,
+#options-root.theme-mist-teal #window,
+#options-root.theme-sepia #window {
+    background-color: #030202ee;
+    border-color: #291615;
+}
+
+#options-root #side,
+#options-root.theme-moonlit #side,
+#options-root.theme-ghost-cyan #side,
+#options-root.theme-crimson #side,
+#options-root.theme-ff1-ritual #side,
+#options-root.theme-mist-teal #side,
+#options-root.theme-sepia #side {
+    background-color: #050303d8;
+    border-right-color: #321b18;
+}
+
+#options-root #header,
+#options-root.theme-moonlit #header,
+#options-root.theme-ghost-cyan #header,
+#options-root.theme-crimson #header,
+#options-root.theme-ff1-ritual #header,
+#options-root.theme-mist-teal #header,
+#options-root.theme-sepia #header {
+    height: 28dp;
+    border-bottom-color: #321b18;
+}
+
+#options-root #side-title {
+    margin-bottom: 16dp;
+    color: #eadcc4;
+    font-size: 15dp;
+    line-height: 18dp;
+    letter-spacing: 2dp;
+}
+
+#options-root h1,
+#options-root #panel-title {
+    color: #e6d9c4;
+    font-size: 18dp;
+    line-height: 22dp;
+    letter-spacing: 3dp;
+}
+
+#options-root #page-area {
+    height: 212dp;
+    margin-top: 7dp;
+    padding-right: 8dp;
+}
+
+#options-root .subsection-title,
+#options-root .controls-section-title,
+#options-root.theme-moonlit .subsection-title,
+#options-root.theme-moonlit .controls-section-title,
+#options-root.theme-ghost-cyan .subsection-title,
+#options-root.theme-ghost-cyan .controls-section-title,
+#options-root.theme-crimson .subsection-title,
+#options-root.theme-crimson .controls-section-title,
+#options-root.theme-ff1-ritual .subsection-title,
+#options-root.theme-ff1-ritual .controls-section-title,
+#options-root.theme-mist-teal .subsection-title,
+#options-root.theme-mist-teal .controls-section-title,
+#options-root.theme-sepia .subsection-title,
+#options-root.theme-sepia .controls-section-title {
+    margin: 9dp 0dp 3dp 0dp;
+    padding-bottom: 3dp;
+    color: #8f6b55;
+    border-bottom-color: #2c1816;
+    font-size: 6.5dp;
+    line-height: 8dp;
+    letter-spacing: 2dp;
+}
+
+#options-root .setting-row,
+#options-root .controls-bind-row,
+#options-root .placeholder,
+#options-root.theme-moonlit .setting-row,
+#options-root.theme-moonlit .controls-bind-row,
+#options-root.theme-moonlit .placeholder,
+#options-root.theme-ghost-cyan .setting-row,
+#options-root.theme-ghost-cyan .controls-bind-row,
+#options-root.theme-ghost-cyan .placeholder,
+#options-root.theme-crimson .setting-row,
+#options-root.theme-crimson .controls-bind-row,
+#options-root.theme-crimson .placeholder,
+#options-root.theme-ff1-ritual .setting-row,
+#options-root.theme-ff1-ritual .controls-bind-row,
+#options-root.theme-ff1-ritual .placeholder,
+#options-root.theme-mist-teal .setting-row,
+#options-root.theme-mist-teal .controls-bind-row,
+#options-root.theme-mist-teal .placeholder,
+#options-root.theme-sepia .setting-row,
+#options-root.theme-sepia .controls-bind-row,
+#options-root.theme-sepia .placeholder {
+    min-height: 27dp;
+    margin: 0dp;
+    padding: 4dp 5dp;
+    background-color: transparent;
+    border: 0dp transparent;
+    border-bottom: 1dp #241514;
+}
+
+#options-root .setting-row:hover,
+#options-root .setting-row.controller-focus,
+#options-root .controls-bind-row:hover,
+#options-root .controls-bind-row.controller-focus,
+#options-root.theme-moonlit .setting-row:hover,
+#options-root.theme-moonlit .setting-row.controller-focus,
+#options-root.theme-moonlit .controls-bind-row:hover,
+#options-root.theme-moonlit .controls-bind-row.controller-focus,
+#options-root.theme-ghost-cyan .setting-row:hover,
+#options-root.theme-ghost-cyan .setting-row.controller-focus,
+#options-root.theme-ghost-cyan .controls-bind-row:hover,
+#options-root.theme-ghost-cyan .controls-bind-row.controller-focus,
+#options-root.theme-crimson .setting-row:hover,
+#options-root.theme-crimson .setting-row.controller-focus,
+#options-root.theme-crimson .controls-bind-row:hover,
+#options-root.theme-crimson .controls-bind-row.controller-focus,
+#options-root.theme-ff1-ritual .setting-row:hover,
+#options-root.theme-ff1-ritual .setting-row.controller-focus,
+#options-root.theme-ff1-ritual .controls-bind-row:hover,
+#options-root.theme-ff1-ritual .controls-bind-row.controller-focus,
+#options-root.theme-mist-teal .setting-row:hover,
+#options-root.theme-mist-teal .setting-row.controller-focus,
+#options-root.theme-mist-teal .controls-bind-row:hover,
+#options-root.theme-mist-teal .controls-bind-row.controller-focus,
+#options-root.theme-sepia .setting-row:hover,
+#options-root.theme-sepia .setting-row.controller-focus,
+#options-root.theme-sepia .controls-bind-row:hover,
+#options-root.theme-sepia .controls-bind-row.controller-focus {
+    background-color: #160b0acc;
+    border-bottom-color: #7a2d25;
+}
+
+#options-root .setting-copy {
+    width: 202dp;
+}
+
+#options-root .setting-control {
+    width: 136dp;
+    text-align: right;
+}
+
+#options-root .setting-title,
+#options-root .calibration-row label,
+#options-root .crt-row label,
+#options-root .controls-bind-label {
+    color: #d9cbb4;
+    font-size: 7.5dp;
+    line-height: 9dp;
+    letter-spacing: 1dp;
+    text-transform: uppercase;
+}
+
+#options-root .value,
+#options-root .note,
+#options-root p.note {
+    color: #a77952;
+}
+
+#options-root .category-button,
+#options-root .side-action-button,
+#options-root.theme-moonlit .category-button,
+#options-root.theme-moonlit .side-action-button,
+#options-root.theme-ghost-cyan .category-button,
+#options-root.theme-ghost-cyan .side-action-button,
+#options-root.theme-crimson .category-button,
+#options-root.theme-crimson .side-action-button,
+#options-root.theme-ff1-ritual .category-button,
+#options-root.theme-ff1-ritual .side-action-button,
+#options-root.theme-mist-teal .category-button,
+#options-root.theme-mist-teal .side-action-button,
+#options-root.theme-sepia .category-button,
+#options-root.theme-sepia .side-action-button {
+    height: 22dp;
+    margin-bottom: 3dp;
+    padding: 0dp 0dp 0dp 8dp;
+    color: #c8b9a4;
+    background-color: transparent;
+    border: 0dp transparent;
+    border-left: 2dp transparent;
+    line-height: 22dp;
+    letter-spacing: 1dp;
+}
+
+#options-root .category-button:hover,
+#options-root .category-button.selected,
+#options-root .category-button:focus,
+#options-root .category-button:focus-visible,
+#options-root .side-action-button:hover,
+#options-root .side-action-button:focus,
+#options-root .side-action-button:focus-visible,
+#options-root .side-action-button.controller-focus,
+#options-root.theme-moonlit .category-button:hover,
+#options-root.theme-moonlit .category-button.selected,
+#options-root.theme-moonlit .category-button:focus,
+#options-root.theme-moonlit .category-button:focus-visible,
+#options-root.theme-moonlit .side-action-button:hover,
+#options-root.theme-moonlit .side-action-button:focus,
+#options-root.theme-moonlit .side-action-button:focus-visible,
+#options-root.theme-moonlit .side-action-button.controller-focus,
+#options-root.theme-ghost-cyan .category-button:hover,
+#options-root.theme-ghost-cyan .category-button.selected,
+#options-root.theme-ghost-cyan .category-button:focus,
+#options-root.theme-ghost-cyan .category-button:focus-visible,
+#options-root.theme-ghost-cyan .side-action-button:hover,
+#options-root.theme-ghost-cyan .side-action-button:focus,
+#options-root.theme-ghost-cyan .side-action-button:focus-visible,
+#options-root.theme-ghost-cyan .side-action-button.controller-focus,
+#options-root.theme-crimson .category-button:hover,
+#options-root.theme-crimson .category-button.selected,
+#options-root.theme-crimson .category-button:focus,
+#options-root.theme-crimson .category-button:focus-visible,
+#options-root.theme-crimson .side-action-button:hover,
+#options-root.theme-crimson .side-action-button:focus,
+#options-root.theme-crimson .side-action-button:focus-visible,
+#options-root.theme-crimson .side-action-button.controller-focus,
+#options-root.theme-ff1-ritual .category-button:hover,
+#options-root.theme-ff1-ritual .category-button.selected,
+#options-root.theme-ff1-ritual .category-button:focus,
+#options-root.theme-ff1-ritual .category-button:focus-visible,
+#options-root.theme-ff1-ritual .side-action-button:hover,
+#options-root.theme-ff1-ritual .side-action-button:focus,
+#options-root.theme-ff1-ritual .side-action-button:focus-visible,
+#options-root.theme-ff1-ritual .side-action-button.controller-focus,
+#options-root.theme-mist-teal .category-button:hover,
+#options-root.theme-mist-teal .category-button.selected,
+#options-root.theme-mist-teal .category-button:focus,
+#options-root.theme-mist-teal .category-button:focus-visible,
+#options-root.theme-mist-teal .side-action-button:hover,
+#options-root.theme-mist-teal .side-action-button:focus,
+#options-root.theme-mist-teal .side-action-button:focus-visible,
+#options-root.theme-mist-teal .side-action-button.controller-focus,
+#options-root.theme-sepia .category-button:hover,
+#options-root.theme-sepia .category-button.selected,
+#options-root.theme-sepia .category-button:focus,
+#options-root.theme-sepia .category-button:focus-visible,
+#options-root.theme-sepia .side-action-button:hover,
+#options-root.theme-sepia .side-action-button:focus,
+#options-root.theme-sepia .side-action-button:focus-visible,
+#options-root.theme-sepia .side-action-button.controller-focus {
+    color: #f4ead8;
+    background-color: #1a0c0ccc;
+    border-left-color: #a1352c;
+}
+
+#options-root select,
+#options-root input.text,
+#options-root .stepper-control,
+#options-root .choice-picker,
+#options-root button,
+#options-root .controls-bind-value,
+#options-root.theme-moonlit select,
+#options-root.theme-moonlit input.text,
+#options-root.theme-moonlit .stepper-control,
+#options-root.theme-moonlit .choice-picker,
+#options-root.theme-moonlit button,
+#options-root.theme-moonlit .controls-bind-value,
+#options-root.theme-ghost-cyan select,
+#options-root.theme-ghost-cyan input.text,
+#options-root.theme-ghost-cyan .stepper-control,
+#options-root.theme-ghost-cyan .choice-picker,
+#options-root.theme-ghost-cyan button,
+#options-root.theme-ghost-cyan .controls-bind-value,
+#options-root.theme-crimson select,
+#options-root.theme-crimson input.text,
+#options-root.theme-crimson .stepper-control,
+#options-root.theme-crimson .choice-picker,
+#options-root.theme-crimson button,
+#options-root.theme-crimson .controls-bind-value,
+#options-root.theme-ff1-ritual select,
+#options-root.theme-ff1-ritual input.text,
+#options-root.theme-ff1-ritual .stepper-control,
+#options-root.theme-ff1-ritual .choice-picker,
+#options-root.theme-ff1-ritual button,
+#options-root.theme-ff1-ritual .controls-bind-value,
+#options-root.theme-mist-teal select,
+#options-root.theme-mist-teal input.text,
+#options-root.theme-mist-teal .stepper-control,
+#options-root.theme-mist-teal .choice-picker,
+#options-root.theme-mist-teal button,
+#options-root.theme-mist-teal .controls-bind-value,
+#options-root.theme-sepia select,
+#options-root.theme-sepia input.text,
+#options-root.theme-sepia .stepper-control,
+#options-root.theme-sepia .choice-picker,
+#options-root.theme-sepia button,
+#options-root.theme-sepia .controls-bind-value {
+    color: #e5d6bf;
+    background-color: #06040499;
+    border: 0dp transparent;
+    border-bottom: 1dp #4a3129;
+}
+
+#options-root select:hover,
+#options-root select:focus,
+#options-root select:focus-visible,
+#options-root select.controller-focus,
+#options-root select:checked,
+#options-root input.text:hover,
+#options-root input.text:focus,
+#options-root input.text:focus-visible,
+#options-root input.text.controller-focus,
+#options-root .stepper-control:hover,
+#options-root .stepper-control:focus,
+#options-root .stepper-control:focus-visible,
+#options-root .stepper-control.controller-focus,
+#options-root .choice-picker:hover,
+#options-root .choice-picker:focus,
+#options-root .choice-picker:focus-visible,
+#options-root .choice-picker.controller-focus,
+#options-root button:hover,
+#options-root button:focus,
+#options-root button:focus-visible,
+#options-root button.controller-focus {
+    color: #fff4d8;
+    background-color: #1b0d0dcc;
+    border-bottom-color: #a1352c;
+}
+
+#options-root select selectvalue,
+#options-root .choice-text,
+#options-root input.text {
+    text-align: right;
+}
+
+#options-root .choice-text {
+    width: 118dp;
+}
+
+#options-root .picker-arrow {
+    right: 1dp;
+}
+
+#options-root .stepper-edge,
+#options-root select selectarrow,
+#options-root .picker-arrow-shape {
+    color: #a77952;
+    border-top-color: #a77952;
+    border-bottom-color: #a77952;
+}
+
+#options-root .stepper-segment {
+    background-color: #1f1714;
+}
+
+#options-root .stepper-segment.filled,
+#options-root input.checkbox:checked {
+    background-color: #8a332a;
+}
+
+#options-root .stepper-segment.filled.neutral,
+#options-root .stepper-control:focus .stepper-segment.filled,
+#options-root .stepper-control:focus-visible .stepper-segment.filled,
+#options-root .stepper-control.controller-focus .stepper-segment.filled {
+    background-color: #d0a171;
+}
+
+#options-root #confirm-save-card,
+#options-root #choice-picker-card,
+#options-root #resolution-confirm-card,
+#options-root #binding-capture-card,
+#options-root .calibration-panel,
+#options-root .crt-panel,
+#options-root .calibration-level-panel {
+    background-color: #050303f2;
+    border-color: #4c211c;
+}
+
+#options-root #confirm-save-title,
+#options-root #choice-picker-title,
+#options-root #resolution-confirm-title,
+#options-root #binding-capture-title,
+#options-root #calibration-title,
+#options-root #crt-title,
+#options-root #calibration-level-title {
+    color: #eadcc4;
+    letter-spacing: 2dp;
+    text-transform: uppercase;
+}
+
+#options-root #choice-picker-list,
+#options-root scrollbarvertical slidertrack,
+#options-root #calibration-level-strip {
+    background-color: #030202dd;
+    border-color: #281614;
+}
+
+#options-root .picker-option {
+    color: #806f60;
+    background-color: transparent;
+    border: 0dp transparent;
+    border-left: 2dp transparent;
+    text-align: left;
+}
+
+#options-root .picker-option:hover,
+#options-root .picker-option:focus,
+#options-root .picker-option:focus-visible,
+#options-root .picker-option.controller-focus,
+#options-root .picker-option.selected {
+    color: #f4ead8;
+    background-color: #1a0c0ccc;
+    border-left-color: #a1352c;
+}
+
+#options-root .picker-option.applied {
+    color: #b98c60;
+}
+
+#options-root scrollbarvertical sliderbar {
+    background-color: #5b3027;
+}
+
+#options-root scrollbarvertical sliderbar:hover,
+#options-root scrollbarvertical sliderbar:active {
+    background-color: #a1352c;
+}
+
+#options-root.theme-moonlit .subsection-title,
+#options-root.theme-moonlit .controls-section-title,
+#options-root.theme-moonlit .value,
+#options-root.theme-moonlit .note,
+#options-root.theme-moonlit p.note,
+#options-root.theme-moonlit .picker-option.applied {
+    color: #8fb8e8;
+}
+
+#options-root.theme-moonlit .setting-row:hover,
+#options-root.theme-moonlit .setting-row.controller-focus,
+#options-root.theme-moonlit .controls-bind-row:hover,
+#options-root.theme-moonlit .controls-bind-row.controller-focus,
+#options-root.theme-moonlit select:hover,
+#options-root.theme-moonlit select:focus,
+#options-root.theme-moonlit select:focus-visible,
+#options-root.theme-moonlit select.controller-focus,
+#options-root.theme-moonlit select:checked,
+#options-root.theme-moonlit input.text:hover,
+#options-root.theme-moonlit input.text:focus,
+#options-root.theme-moonlit input.text:focus-visible,
+#options-root.theme-moonlit input.text.controller-focus,
+#options-root.theme-moonlit .stepper-control:hover,
+#options-root.theme-moonlit .stepper-control:focus,
+#options-root.theme-moonlit .stepper-control:focus-visible,
+#options-root.theme-moonlit .stepper-control.controller-focus,
+#options-root.theme-moonlit .choice-picker:hover,
+#options-root.theme-moonlit .choice-picker:focus,
+#options-root.theme-moonlit .choice-picker:focus-visible,
+#options-root.theme-moonlit .choice-picker.controller-focus,
+#options-root.theme-moonlit button:hover,
+#options-root.theme-moonlit button:focus,
+#options-root.theme-moonlit button:focus-visible,
+#options-root.theme-moonlit button.controller-focus {
+    background-color: #0d1521cc;
+    border-bottom-color: #6f98c9;
+}
+
+#options-root.theme-moonlit .category-button:hover,
+#options-root.theme-moonlit .category-button.selected,
+#options-root.theme-moonlit .category-button:focus,
+#options-root.theme-moonlit .category-button:focus-visible,
+#options-root.theme-moonlit .side-action-button:hover,
+#options-root.theme-moonlit .side-action-button:focus,
+#options-root.theme-moonlit .side-action-button:focus-visible,
+#options-root.theme-moonlit .side-action-button.controller-focus,
+#options-root.theme-moonlit .picker-option:hover,
+#options-root.theme-moonlit .picker-option:focus,
+#options-root.theme-moonlit .picker-option:focus-visible,
+#options-root.theme-moonlit .picker-option.controller-focus,
+#options-root.theme-moonlit .picker-option.selected {
+    background-color: #0d1521cc;
+    border-left-color: #8fb8e8;
+}
+
+#options-root.theme-moonlit .stepper-edge,
+#options-root.theme-moonlit select selectarrow,
+#options-root.theme-moonlit .picker-arrow-shape {
+    color: #8fb8e8;
+    border-top-color: #8fb8e8;
+    border-bottom-color: #8fb8e8;
+}
+
+#options-root.theme-moonlit .stepper-segment.filled,
+#options-root.theme-moonlit input.checkbox:checked,
+#options-root.theme-moonlit scrollbarvertical sliderbar {
+    background-color: #5f8fca;
+}
+
+#options-root.theme-ghost-cyan .subsection-title,
+#options-root.theme-ghost-cyan .controls-section-title,
+#options-root.theme-ghost-cyan .value,
+#options-root.theme-ghost-cyan .note,
+#options-root.theme-ghost-cyan p.note,
+#options-root.theme-ghost-cyan .picker-option.applied {
+    color: #9de2ea;
+}
+
+#options-root.theme-ghost-cyan .setting-row:hover,
+#options-root.theme-ghost-cyan .setting-row.controller-focus,
+#options-root.theme-ghost-cyan .controls-bind-row:hover,
+#options-root.theme-ghost-cyan .controls-bind-row.controller-focus,
+#options-root.theme-ghost-cyan select:hover,
+#options-root.theme-ghost-cyan select:focus,
+#options-root.theme-ghost-cyan select:focus-visible,
+#options-root.theme-ghost-cyan select.controller-focus,
+#options-root.theme-ghost-cyan select:checked,
+#options-root.theme-ghost-cyan input.text:hover,
+#options-root.theme-ghost-cyan input.text:focus,
+#options-root.theme-ghost-cyan input.text:focus-visible,
+#options-root.theme-ghost-cyan input.text.controller-focus,
+#options-root.theme-ghost-cyan .stepper-control:hover,
+#options-root.theme-ghost-cyan .stepper-control:focus,
+#options-root.theme-ghost-cyan .stepper-control:focus-visible,
+#options-root.theme-ghost-cyan .stepper-control.controller-focus,
+#options-root.theme-ghost-cyan .choice-picker:hover,
+#options-root.theme-ghost-cyan .choice-picker:focus,
+#options-root.theme-ghost-cyan .choice-picker:focus-visible,
+#options-root.theme-ghost-cyan .choice-picker.controller-focus,
+#options-root.theme-ghost-cyan button:hover,
+#options-root.theme-ghost-cyan button:focus,
+#options-root.theme-ghost-cyan button:focus-visible,
+#options-root.theme-ghost-cyan button.controller-focus {
+    background-color: #0c171bcc;
+    border-bottom-color: #72b7bf;
+}
+
+#options-root.theme-ghost-cyan .category-button:hover,
+#options-root.theme-ghost-cyan .category-button.selected,
+#options-root.theme-ghost-cyan .category-button:focus,
+#options-root.theme-ghost-cyan .category-button:focus-visible,
+#options-root.theme-ghost-cyan .side-action-button:hover,
+#options-root.theme-ghost-cyan .side-action-button:focus,
+#options-root.theme-ghost-cyan .side-action-button:focus-visible,
+#options-root.theme-ghost-cyan .side-action-button.controller-focus,
+#options-root.theme-ghost-cyan .picker-option:hover,
+#options-root.theme-ghost-cyan .picker-option:focus,
+#options-root.theme-ghost-cyan .picker-option:focus-visible,
+#options-root.theme-ghost-cyan .picker-option.controller-focus,
+#options-root.theme-ghost-cyan .picker-option.selected {
+    background-color: #0c171bcc;
+    border-left-color: #9de2ea;
+}
+
+#options-root.theme-ghost-cyan .stepper-edge,
+#options-root.theme-ghost-cyan select selectarrow,
+#options-root.theme-ghost-cyan .picker-arrow-shape {
+    color: #9de2ea;
+    border-top-color: #9de2ea;
+    border-bottom-color: #9de2ea;
+}
+
+#options-root.theme-ghost-cyan .stepper-segment.filled,
+#options-root.theme-ghost-cyan input.checkbox:checked,
+#options-root.theme-ghost-cyan scrollbarvertical sliderbar {
+    background-color: #72b7bf;
+}
+
+#options-root.theme-crimson .subsection-title,
+#options-root.theme-crimson .controls-section-title,
+#options-root.theme-crimson .value,
+#options-root.theme-crimson .note,
+#options-root.theme-crimson p.note,
+#options-root.theme-crimson .picker-option.applied {
+    color: #df8848;
+}
+
+#options-root.theme-crimson .setting-row:hover,
+#options-root.theme-crimson .setting-row.controller-focus,
+#options-root.theme-crimson .controls-bind-row:hover,
+#options-root.theme-crimson .controls-bind-row.controller-focus,
+#options-root.theme-crimson select:hover,
+#options-root.theme-crimson select:focus,
+#options-root.theme-crimson select:focus-visible,
+#options-root.theme-crimson select.controller-focus,
+#options-root.theme-crimson select:checked,
+#options-root.theme-crimson input.text:hover,
+#options-root.theme-crimson input.text:focus,
+#options-root.theme-crimson input.text:focus-visible,
+#options-root.theme-crimson input.text.controller-focus,
+#options-root.theme-crimson .stepper-control:hover,
+#options-root.theme-crimson .stepper-control:focus,
+#options-root.theme-crimson .stepper-control:focus-visible,
+#options-root.theme-crimson .stepper-control.controller-focus,
+#options-root.theme-crimson .choice-picker:hover,
+#options-root.theme-crimson .choice-picker:focus,
+#options-root.theme-crimson .choice-picker:focus-visible,
+#options-root.theme-crimson .choice-picker.controller-focus,
+#options-root.theme-crimson button:hover,
+#options-root.theme-crimson button:focus,
+#options-root.theme-crimson button:focus-visible,
+#options-root.theme-crimson button.controller-focus {
+    background-color: #1d0d0bcc;
+    border-bottom-color: #a33a27;
+}
+
+#options-root.theme-crimson .category-button:hover,
+#options-root.theme-crimson .category-button.selected,
+#options-root.theme-crimson .category-button:focus,
+#options-root.theme-crimson .category-button:focus-visible,
+#options-root.theme-crimson .side-action-button:hover,
+#options-root.theme-crimson .side-action-button:focus,
+#options-root.theme-crimson .side-action-button:focus-visible,
+#options-root.theme-crimson .side-action-button.controller-focus,
+#options-root.theme-crimson .picker-option:hover,
+#options-root.theme-crimson .picker-option:focus,
+#options-root.theme-crimson .picker-option:focus-visible,
+#options-root.theme-crimson .picker-option.controller-focus,
+#options-root.theme-crimson .picker-option.selected {
+    background-color: #1d0d0bcc;
+    border-left-color: #d9662e;
+}
+
+#options-root.theme-crimson .stepper-edge,
+#options-root.theme-crimson select selectarrow,
+#options-root.theme-crimson .picker-arrow-shape {
+    color: #df8848;
+    border-top-color: #df8848;
+    border-bottom-color: #df8848;
+}
+
+#options-root.theme-crimson .stepper-segment.filled,
+#options-root.theme-crimson input.checkbox:checked,
+#options-root.theme-crimson scrollbarvertical sliderbar {
+    background-color: #a33a27;
+}
+
+#options-root.theme-ff1-ritual .subsection-title,
+#options-root.theme-ff1-ritual .controls-section-title,
+#options-root.theme-ff1-ritual .value,
+#options-root.theme-ff1-ritual .note,
+#options-root.theme-ff1-ritual p.note,
+#options-root.theme-ff1-ritual .picker-option.applied {
+    color: #b482bc;
+}
+
+#options-root.theme-ff1-ritual .setting-row:hover,
+#options-root.theme-ff1-ritual .setting-row.controller-focus,
+#options-root.theme-ff1-ritual .controls-bind-row:hover,
+#options-root.theme-ff1-ritual .controls-bind-row.controller-focus,
+#options-root.theme-ff1-ritual select:hover,
+#options-root.theme-ff1-ritual select:focus,
+#options-root.theme-ff1-ritual select:focus-visible,
+#options-root.theme-ff1-ritual select.controller-focus,
+#options-root.theme-ff1-ritual select:checked,
+#options-root.theme-ff1-ritual input.text:hover,
+#options-root.theme-ff1-ritual input.text:focus,
+#options-root.theme-ff1-ritual input.text:focus-visible,
+#options-root.theme-ff1-ritual input.text.controller-focus,
+#options-root.theme-ff1-ritual .stepper-control:hover,
+#options-root.theme-ff1-ritual .stepper-control:focus,
+#options-root.theme-ff1-ritual .stepper-control:focus-visible,
+#options-root.theme-ff1-ritual .stepper-control.controller-focus,
+#options-root.theme-ff1-ritual .choice-picker:hover,
+#options-root.theme-ff1-ritual .choice-picker:focus,
+#options-root.theme-ff1-ritual .choice-picker:focus-visible,
+#options-root.theme-ff1-ritual .choice-picker.controller-focus,
+#options-root.theme-ff1-ritual button:hover,
+#options-root.theme-ff1-ritual button:focus,
+#options-root.theme-ff1-ritual button:focus-visible,
+#options-root.theme-ff1-ritual button.controller-focus {
+    background-color: #1b0d12cc;
+    border-bottom-color: #714180;
+}
+
+#options-root.theme-ff1-ritual .category-button:hover,
+#options-root.theme-ff1-ritual .category-button.selected,
+#options-root.theme-ff1-ritual .category-button:focus,
+#options-root.theme-ff1-ritual .category-button:focus-visible,
+#options-root.theme-ff1-ritual .side-action-button:hover,
+#options-root.theme-ff1-ritual .side-action-button:focus,
+#options-root.theme-ff1-ritual .side-action-button:focus-visible,
+#options-root.theme-ff1-ritual .side-action-button.controller-focus,
+#options-root.theme-ff1-ritual .picker-option:hover,
+#options-root.theme-ff1-ritual .picker-option:focus,
+#options-root.theme-ff1-ritual .picker-option:focus-visible,
+#options-root.theme-ff1-ritual .picker-option.controller-focus,
+#options-root.theme-ff1-ritual .picker-option.selected {
+    background-color: #1b0d12cc;
+    border-left-color: #9e5cad;
+}
+
+#options-root.theme-ff1-ritual .stepper-edge,
+#options-root.theme-ff1-ritual select selectarrow,
+#options-root.theme-ff1-ritual .picker-arrow-shape {
+    color: #b482bc;
+    border-top-color: #b482bc;
+    border-bottom-color: #b482bc;
+}
+
+#options-root.theme-ff1-ritual .stepper-segment.filled,
+#options-root.theme-ff1-ritual input.checkbox:checked,
+#options-root.theme-ff1-ritual scrollbarvertical sliderbar {
+    background-color: #714180;
+}
+
+#options-root.theme-mist-teal .subsection-title,
+#options-root.theme-mist-teal .controls-section-title,
+#options-root.theme-mist-teal .value,
+#options-root.theme-mist-teal .note,
+#options-root.theme-mist-teal p.note,
+#options-root.theme-mist-teal .picker-option.applied {
+    color: #9e8fcf;
+}
+
+#options-root.theme-mist-teal .setting-row:hover,
+#options-root.theme-mist-teal .setting-row.controller-focus,
+#options-root.theme-mist-teal .controls-bind-row:hover,
+#options-root.theme-mist-teal .controls-bind-row.controller-focus,
+#options-root.theme-mist-teal select:hover,
+#options-root.theme-mist-teal select:focus,
+#options-root.theme-mist-teal select:focus-visible,
+#options-root.theme-mist-teal select.controller-focus,
+#options-root.theme-mist-teal select:checked,
+#options-root.theme-mist-teal input.text:hover,
+#options-root.theme-mist-teal input.text:focus,
+#options-root.theme-mist-teal input.text:focus-visible,
+#options-root.theme-mist-teal input.text.controller-focus,
+#options-root.theme-mist-teal .stepper-control:hover,
+#options-root.theme-mist-teal .stepper-control:focus,
+#options-root.theme-mist-teal .stepper-control:focus-visible,
+#options-root.theme-mist-teal .stepper-control.controller-focus,
+#options-root.theme-mist-teal .choice-picker:hover,
+#options-root.theme-mist-teal .choice-picker:focus,
+#options-root.theme-mist-teal .choice-picker:focus-visible,
+#options-root.theme-mist-teal .choice-picker.controller-focus,
+#options-root.theme-mist-teal button:hover,
+#options-root.theme-mist-teal button:focus,
+#options-root.theme-mist-teal button:focus-visible,
+#options-root.theme-mist-teal button.controller-focus {
+    background-color: #0b1717cc;
+    border-bottom-color: #657d9f;
+}
+
+#options-root.theme-mist-teal .category-button:hover,
+#options-root.theme-mist-teal .category-button.selected,
+#options-root.theme-mist-teal .category-button:focus,
+#options-root.theme-mist-teal .category-button:focus-visible,
+#options-root.theme-mist-teal .side-action-button:hover,
+#options-root.theme-mist-teal .side-action-button:focus,
+#options-root.theme-mist-teal .side-action-button:focus-visible,
+#options-root.theme-mist-teal .side-action-button.controller-focus,
+#options-root.theme-mist-teal .picker-option:hover,
+#options-root.theme-mist-teal .picker-option:focus,
+#options-root.theme-mist-teal .picker-option:focus-visible,
+#options-root.theme-mist-teal .picker-option.controller-focus,
+#options-root.theme-mist-teal .picker-option.selected {
+    background-color: #0b1717cc;
+    border-left-color: #9e8fcf;
+}
+
+#options-root.theme-mist-teal .stepper-edge,
+#options-root.theme-mist-teal select selectarrow,
+#options-root.theme-mist-teal .picker-arrow-shape {
+    color: #9e8fcf;
+    border-top-color: #9e8fcf;
+    border-bottom-color: #9e8fcf;
+}
+
+#options-root.theme-mist-teal .stepper-segment.filled,
+#options-root.theme-mist-teal input.checkbox:checked,
+#options-root.theme-mist-teal scrollbarvertical sliderbar {
+    background-color: #657d9f;
+}
+
+/* Layout guardrails for the sparse menu treatment above. */
+#options-root .setting-row,
+#options-root .controls-bind-row {
+    overflow: hidden;
+}
+
+#options-root .setting-copy {
+    width: 184dp;
+    padding-right: 8dp;
+    overflow: hidden;
+}
+
+#options-root .setting-title {
+    overflow: hidden;
+}
+
+#options-root .setting-control {
+    width: 150dp;
+    overflow: hidden;
+}
+
+#options-root .wide-control {
+    width: 150dp;
+}
+
+#options-root select,
+#options-root input.text,
+#options-root .stepper-control,
+#options-root .choice-picker {
+    width: 144dp;
+    overflow: hidden;
+}
+
+#options-root select selectvalue {
+    width: 120dp;
+    padding: 0dp 18dp 0dp 0dp;
+    overflow: hidden;
+}
+
+#options-root select selectbox {
+    width: 144dp;
+}
+
+#options-root .choice-text {
+    width: 118dp;
+    overflow: hidden;
+}
+
+#options-root .picker-arrow {
+    right: 1dp;
+    width: 12dp;
+}
+
+#options-root .stepper-control {
+    padding: 0dp 2dp;
+}
+
+#options-root .stepper-edge {
+    width: 9dp;
+}
+
+#options-root .stepper-bars {
+    width: 104dp;
+}
+
+#options-root .checkbox-control {
+    width: 150dp;
+}
+
+#options-root input.checkbox {
+    width: 13dp;
+    height: 13dp;
+}
+
+#options-root #open-calibration-button,
+#options-root #open-crt-button,
+#options-root #controls-reset-button {
+    width: 86dp;
+}
+
+#options-root #data-folder-input {
+    width: 90dp;
+}
+
+#options-root #browse-folder-button {
+    width: 42dp;
+    margin-left: 4dp;
+    margin-right: 0dp;
+    padding: 0dp 4dp;
+}
+
+#options-root .controls-bind-label {
+    width: 102dp;
+    overflow: hidden;
+}
+
+#options-root .controls-bind-value {
+    width: 158dp;
+    overflow: hidden;
+}
+
+#options-root .controls-bind-value.small {
+    width: 70dp;
+}
+
+#options-root .controls-clear-button {
+    width: 37dp;
+    margin-left: 3dp;
+    margin-right: 0dp;
+    padding: 0dp 4dp;
+}
+
+#options-root .controls-option-row .controls-bind-label {
+    width: 264dp;
+}
+
+#options-root .controls-option-button {
+    width: 52dp;
+    margin-left: 3dp;
+    margin-right: 0dp;
+}
+
+#options-root select selectbox option {
+    border-left: 2dp transparent;
+    text-align: left;
+}
+
+#options-root select selectbox option:hover,
+#options-root select selectbox option:focus,
+#options-root select selectbox option:focus-visible,
+#options-root select selectbox option:checked {
+    color: #f4ead8;
+    background-color: #1a0c0ccc;
+    border-left-color: #a1352c;
+}
+
+#options-root.theme-moonlit select selectbox option:hover,
+#options-root.theme-moonlit select selectbox option:focus,
+#options-root.theme-moonlit select selectbox option:focus-visible,
+#options-root.theme-moonlit select selectbox option:checked {
+    color: #e6f0ff;
+    background-color: #0d1521cc;
+    border-left-color: #8fb8e8;
+}
+
+#options-root.theme-ghost-cyan select selectbox option:hover,
+#options-root.theme-ghost-cyan select selectbox option:focus,
+#options-root.theme-ghost-cyan select selectbox option:focus-visible,
+#options-root.theme-ghost-cyan select selectbox option:checked {
+    color: #e8ffff;
+    background-color: #0c171bcc;
+    border-left-color: #9de2ea;
+}
+
+#options-root.theme-crimson select selectbox option:hover,
+#options-root.theme-crimson select selectbox option:focus,
+#options-root.theme-crimson select selectbox option:focus-visible,
+#options-root.theme-crimson select selectbox option:checked {
+    color: #fff1d8;
+    background-color: #1d0d0bcc;
+    border-left-color: #d9662e;
+}
+
+#options-root.theme-ff1-ritual select selectbox option:hover,
+#options-root.theme-ff1-ritual select selectbox option:focus,
+#options-root.theme-ff1-ritual select selectbox option:focus-visible,
+#options-root.theme-ff1-ritual select selectbox option:checked {
+    color: #f6e6fb;
+    background-color: #1b0d12cc;
+    border-left-color: #9e5cad;
+}
+
+#options-root.theme-mist-teal select selectbox option:hover,
+#options-root.theme-mist-teal select selectbox option:focus,
+#options-root.theme-mist-teal select selectbox option:focus-visible,
+#options-root.theme-mist-teal select selectbox option:checked {
+    color: #eee9ff;
+    background-color: #0b1717cc;
+    border-left-color: #9e8fcf;
+}

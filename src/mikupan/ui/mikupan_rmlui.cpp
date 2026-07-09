@@ -1010,6 +1010,7 @@ void DispatchPadAction(MikuPanRmlPadAction action)
             if (MikuPan_RmlOptionsAnySelectOpen())
             {
                 PulseKey(Rml::Input::KI_ESCAPE);
+                MikuPan_RmlOptionsClearNativeSelectOpen();
             }
             else
             {

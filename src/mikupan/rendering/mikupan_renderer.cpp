@@ -210,7 +210,7 @@ SDL_AppResult MikuPan_Init()
 
     MikuPan_LoadConfiguration(NULL);
 
-    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
+    //SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
 
     info_log("Loading SDL_GameControllerDB");
 

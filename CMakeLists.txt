@@ -325,7 +325,7 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui_settings.h
         src/mikupan/ui/mikupan_ui_theme.cpp
         src/mikupan/ui/mikupan_ui_theme.h
-)
+ "src/mikupan/mikupan_framelimiter.cpp")
 
 # The legacy game + SDK code (originally .c, now renamed to .cpp) is decompiled C
 # compiled as C++, so it needs the same C-ism relaxations on every compiler. The handful

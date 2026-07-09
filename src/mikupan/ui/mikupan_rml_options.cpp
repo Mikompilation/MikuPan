@@ -295,6 +295,7 @@ struct MikuPanRmlOptionsState
     bool ui_move_sound_requested = false;
     Rml::Element* controller_focus_element = nullptr;
     Rml::Element* controller_focus_row = nullptr;
+    Rml::ElementFormControlSelect* controller_open_select = nullptr;
 };
 MikuPanRmlOptionsState g_rml;
 
@@ -448,6 +449,9 @@ void ScrollFocusedContentRowIntoView(void);
 void ScrollChoicePickerSelectionIntoView(void);
 void FocusElementById(const char* id);
 void FocusButtonGroup(const char* const* ids, int count, int direction);
+bool HandleContentVerticalInput(int direction);
+bool HandleCalibrationVerticalInput(int direction);
+bool HandleCrtVerticalInput(int direction);
 bool HandleControlsTabHorizontalInput(int direction);
 void EnterSidebarScope(void);
 void EnterContentScope(void);
@@ -2592,9 +2596,14 @@ bool HandleVerticalInput(int direction)
         return true;
     }
 
-    if (g_rml.calibration_visible || g_rml.crt_visible)
+    if (g_rml.calibration_visible)
     {
-        return false;
+        return HandleCalibrationVerticalInput(direction);
+    }
+
+    if (g_rml.crt_visible)
+    {
+        return HandleCrtVerticalInput(direction);
     }
 
     if (g_rml.exit_confirm_visible || g_rml.resolution_confirm_visible)
@@ -2610,6 +2619,11 @@ bool HandleVerticalInput(int direction)
     if (AnySelectOpen())
     {
         return false;
+    }
+
+    if (g_rml.control_scope == MIKUPAN_CONTROL_SCOPE_CONTENT)
+    {
+        return HandleContentVerticalInput(direction);
     }
 
     return false;
@@ -3183,6 +3197,345 @@ void FocusButtonGroup(const char* const* ids, int count, int direction)
     }
 }
 
+bool FocusSubmenuControlList(const char* const* ids, int count, int direction)
+{
+    if (count <= 0 || ids == nullptr || direction == 0)
+    {
+        return false;
+    }
+
+    int index = GetFocusedIdIndex(ids, count);
+    if (index < 0)
+    {
+        index = direction < 0 ? count - 1 : 0;
+    }
+    else
+    {
+        index = (index + direction + count) % count;
+    }
+
+    const Rml::String old_focus_id = GetFocusedElementId();
+    FocusElementById(ids[index]);
+
+    Rml::Element* focus = g_rml.context != nullptr
+                              ? g_rml.context->GetFocusElement()
+                              : nullptr;
+    if (focus != nullptr)
+    {
+        focus->ScrollIntoView(false);
+    }
+
+    if (old_focus_id != ids[index])
+    {
+        RequestUiMoveSound();
+    }
+
+    return true;
+}
+
+bool IsFocusableContentElement(Rml::Element* element)
+{
+    if (element == nullptr || element->HasAttribute("disabled")
+        || element->IsClassSet("hidden"))
+    {
+        return false;
+    }
+
+    const Rml::String tag = element->GetTagName();
+    return tag == "button" || tag == "select" || tag == "input";
+}
+
+Rml::ElementFormControlSelect* ElementAsNativeSelect(Rml::Element* element)
+{
+    while (element != nullptr)
+    {
+        auto* select =
+            rmlui_dynamic_cast<Rml::ElementFormControlSelect*>(element);
+        if (select != nullptr)
+        {
+            return select;
+        }
+        element = element->GetParentNode();
+    }
+
+    return nullptr;
+}
+
+Rml::ElementFormControlSelect* GetFocusedNativeSelect(void)
+{
+    return g_rml.context != nullptr
+               ? ElementAsNativeSelect(g_rml.context->GetFocusElement())
+               : nullptr;
+}
+
+bool ControllerNativeSelectOpen(void)
+{
+    if (g_rml.controller_open_select == nullptr)
+    {
+        return false;
+    }
+
+    if (g_rml.context == nullptr)
+    {
+        g_rml.controller_open_select = nullptr;
+        return false;
+    }
+
+    Rml::Element* focus = g_rml.context->GetFocusElement();
+    while (focus != nullptr)
+    {
+        if (focus == g_rml.controller_open_select)
+        {
+            return true;
+        }
+        focus = focus->GetParentNode();
+    }
+
+    g_rml.controller_open_select = nullptr;
+    return false;
+}
+
+void CollectFocusableContentElements(Rml::Element* element,
+                                     std::vector<Rml::Element*>& elements)
+{
+    if (element == nullptr || element->IsClassSet("hidden"))
+    {
+        return;
+    }
+
+    if (IsFocusableContentElement(element))
+    {
+        elements.push_back(element);
+    }
+
+    const int child_count = element->GetNumChildren(true);
+    for (int i = 0; i < child_count; i++)
+    {
+        CollectFocusableContentElements(element->GetChild(i), elements);
+    }
+}
+
+bool ElementContainsDescendant(Rml::Element* ancestor, Rml::Element* element)
+{
+    while (element != nullptr)
+    {
+        if (element == ancestor)
+        {
+            return true;
+        }
+        element = element->GetParentNode();
+    }
+    return false;
+}
+
+Rml::Element* FindFocusableContentAncestor(Rml::Element* root,
+                                           Rml::Element* element)
+{
+    while (element != nullptr && ElementContainsDescendant(root, element))
+    {
+        if (IsFocusableContentElement(element))
+        {
+            return element;
+        }
+        if (element == root)
+        {
+            break;
+        }
+        element = element->GetParentNode();
+    }
+    return nullptr;
+}
+
+float ElementCenterX(Rml::Element* element)
+{
+    const Rml::Vector2f offset = element->GetAbsoluteOffset();
+    return offset.x + static_cast<float>(element->GetOffsetWidth()) * 0.5f;
+}
+
+float ElementCenterY(Rml::Element* element)
+{
+    const Rml::Vector2f offset = element->GetAbsoluteOffset();
+    return offset.y + static_cast<float>(element->GetOffsetHeight()) * 0.5f;
+}
+
+Rml::Element* FindVisualEdgeElement(const std::vector<Rml::Element*>& elements,
+                                    int direction)
+{
+    if (elements.empty())
+    {
+        return nullptr;
+    }
+
+    Rml::Element* best = elements.front();
+    for (Rml::Element* element : elements)
+    {
+        const float y = ElementCenterY(element);
+        const float best_y = ElementCenterY(best);
+        const float x = ElementCenterX(element);
+        const float best_x = ElementCenterX(best);
+        if (direction > 0)
+        {
+            if (y < best_y - 1.0f
+                || (std::abs(y - best_y) <= 1.0f && x < best_x))
+            {
+                best = element;
+            }
+        }
+        else if (y > best_y + 1.0f
+                 || (std::abs(y - best_y) <= 1.0f && x > best_x))
+        {
+            best = element;
+        }
+    }
+    return best;
+}
+
+bool FocusElement(Rml::Element* element)
+{
+    if (element == nullptr || g_rml.context == nullptr)
+    {
+        return false;
+    }
+
+    Rml::Element* old_focus = g_rml.context->GetFocusElement();
+    element->Focus();
+    UpdateControllerFocusVisual();
+    ScrollFocusedContentRowIntoView();
+    element->ScrollIntoView(false);
+    if (old_focus != element)
+    {
+        RequestUiMoveSound();
+    }
+    return true;
+}
+
+bool HandleContentVerticalInput(int direction)
+{
+    if (direction == 0 || g_rml.context == nullptr || g_rml.document == nullptr)
+    {
+        return false;
+    }
+
+    const int category = ClampInt(g_rml.selected_category,
+                                  0,
+                                  static_cast<int>(g_rml.category_pages.size()) - 1);
+    Rml::Element* page = g_rml.category_pages[category];
+    if (page == nullptr)
+    {
+        return false;
+    }
+
+    g_rml.document->UpdateDocument();
+
+    std::vector<Rml::Element*> elements;
+    CollectFocusableContentElements(page, elements);
+    if (elements.empty())
+    {
+        return false;
+    }
+
+    Rml::Element* focus =
+        FindFocusableContentAncestor(page, g_rml.context->GetFocusElement());
+    if (ControllerNativeSelectOpen())
+    {
+        return false;
+    }
+
+    if (focus == nullptr)
+    {
+        return FocusElement(FindVisualEdgeElement(elements, direction));
+    }
+
+    constexpr float kSameRowTolerance = 1.0f;
+    const float focus_x = ElementCenterX(focus);
+    const float focus_y = ElementCenterY(focus);
+    Rml::Element* best = nullptr;
+    float best_score = 1000000000.0f;
+
+    for (Rml::Element* element : elements)
+    {
+        if (element == focus)
+        {
+            continue;
+        }
+
+        const float candidate_x = ElementCenterX(element);
+        const float candidate_y = ElementCenterY(element);
+        const float delta_y = candidate_y - focus_y;
+        if ((direction > 0 && delta_y <= kSameRowTolerance)
+            || (direction < 0 && delta_y >= -kSameRowTolerance))
+        {
+            continue;
+        }
+
+        const float row_distance = std::abs(delta_y);
+        const float column_distance = std::abs(candidate_x - focus_x);
+        const float score = row_distance * 10000.0f + column_distance;
+        if (score < best_score)
+        {
+            best_score = score;
+            best = element;
+        }
+    }
+
+    if (best == nullptr)
+    {
+        best = FindVisualEdgeElement(elements, direction);
+    }
+
+    return FocusElement(best);
+}
+
+bool HandleCalibrationVerticalInput(int direction)
+{
+    static constexpr const char* kCalibrationControls[] = {
+        "calibration-brightness-stepper",
+        "calibration-gamma-stepper",
+        "calibration-contrast-stepper",
+        "calibration-shadow-depth-stepper",
+        "calibration-reset-button",
+        "calibration-ok-button",
+        "calibration-back-button",
+    };
+
+    return FocusSubmenuControlList(
+        kCalibrationControls,
+        static_cast<int>(sizeof(kCalibrationControls)
+                         / sizeof(kCalibrationControls[0])),
+        direction);
+}
+
+bool HandleCrtVerticalInput(int direction)
+{
+    static constexpr const char* kCrtControls[] = {
+        "crt-enabled-input",
+        "crt-0-stepper",
+        "crt-1-stepper",
+        "crt-2-stepper",
+        "crt-3-stepper",
+        "crt-4-stepper",
+        "crt-5-stepper",
+        "crt-6-stepper",
+        "crt-7-stepper",
+        "crt-8-stepper",
+        "crt-9-stepper",
+        "crt-10-stepper",
+        "crt-11-stepper",
+        "crt-12-stepper",
+        "crt-13-stepper",
+        "crt-14-stepper",
+        "crt-15-stepper",
+        "reset-crt-button",
+        "crt-ok-button",
+        "crt-back-button",
+    };
+
+    return FocusSubmenuControlList(
+        kCrtControls,
+        static_cast<int>(sizeof(kCrtControls) / sizeof(kCrtControls[0])),
+        direction);
+}
+
 bool HandleControlsTabHorizontalInput(int direction)
 {
     static constexpr const char* kControlsTabs[] = {
@@ -3235,6 +3588,11 @@ void EnterContentScope(void)
 
 bool AnySelectOpen(void)
 {
+    if (ControllerNativeSelectOpen())
+    {
+        return true;
+    }
+
     Rml::ElementFormControlSelect* selects[] = {
         g_rml.gpu_backend_select,
         g_rml.msaa_select,
@@ -3327,6 +3685,19 @@ bool ActivateFocusedControl(void)
             CancelBindingCapture();
         }
         return true;
+    }
+
+    if (Rml::ElementFormControlSelect* select = GetFocusedNativeSelect())
+    {
+        if (g_rml.controller_open_select == select)
+        {
+            g_rml.controller_open_select = nullptr;
+        }
+        else
+        {
+            g_rml.controller_open_select = select;
+        }
+        return false;
     }
 
     if (g_rml.crt_visible)
@@ -4246,6 +4617,7 @@ void MikuPan_RmlOptionsPrepareShutdown(void)
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
     g_rml.resolution_confirm_visible = false;
     g_rml.crt_visible = false;
+    g_rml.controller_open_select = nullptr;
 }
 
 void MikuPan_RmlOptionsShutdown(void)
@@ -4266,6 +4638,7 @@ static void MikuPan_RmlOptionsOpenInternal(bool in_game)
     g_rml.option_exit_requested = false;
     g_rml.has_unsaved_changes = false;
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
+    g_rml.controller_open_select = nullptr;
     g_rml.control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
     g_rml.window_mode_pending_dirty = false;
     g_rml.window_size_pending_dirty = false;
@@ -4312,6 +4685,7 @@ void MikuPan_RmlOptionsClose(void)
     g_rml.option_exit_requested = false;
     g_rml.has_unsaved_changes = false;
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
+    g_rml.controller_open_select = nullptr;
     g_rml.control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
     g_rml.window_mode_pending_dirty = false;
     g_rml.window_size_pending_dirty = false;
@@ -4385,6 +4759,11 @@ int MikuPan_RmlOptionsAnySelectOpen(void)
     }
 
     return AnySelectOpen() ? 1 : 0;
+}
+
+void MikuPan_RmlOptionsClearNativeSelectOpen(void)
+{
+    g_rml.controller_open_select = nullptr;
 }
 
 

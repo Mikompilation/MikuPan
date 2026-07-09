@@ -12,9 +12,61 @@ float3 SampleScene(float2 uv)
     return uTexture.Sample(uTextureSampler, clamp(uv, 0.0.xx, 1.0.xx)).rgb;
 }
 
-float GaussianWeight(float x, float sigma)
+float3 HorrorLensBlur(float2 uv, float2 texel)
 {
-    return exp(-(x * x) / (2.0 * sigma * sigma));
+    float2 center = 0.5.xx;
+    float2 dir = uv - center;
+
+    float dist = length(dir * float2(1.0, 0.82));
+
+    /*
+        Stronger blur toward the outside of the lens.
+        Center remains more readable.
+    */
+    float edge_blur = smoothstep(0.10, 0.72, dist);
+
+    float3 c = 0.0.xxx;
+    float total = 0.0;
+
+    float w;
+
+    w = 0.28;
+    c += SampleScene(uv) * w;
+    total += w;
+
+    w = 0.20 * edge_blur;
+    c += SampleScene(uv - dir * 0.025) * w;
+    total += w;
+
+    w = 0.16 * edge_blur;
+    c += SampleScene(uv - dir * 0.055) * w;
+    total += w;
+
+    w = 0.12 * edge_blur;
+    c += SampleScene(uv - dir * 0.090) * w;
+    total += w;
+
+    w = 0.09 * edge_blur;
+    c += SampleScene(uv - dir * 0.135) * w;
+    total += w;
+
+    w = 0.06 * edge_blur;
+    c += SampleScene(uv - dir * 0.190) * w;
+    total += w;
+
+    /*
+        Small asymmetric ghost offsets.
+        These make the image feel less clean and more haunted.
+    */
+    w = 0.055 * edge_blur;
+    c += SampleScene(uv + texel * float2(4.0, -2.0)) * w;
+    total += w;
+
+    w = 0.045 * edge_blur;
+    c += SampleScene(uv + texel * float2(-5.0, 3.0)) * w;
+    total += w;
+
+    return c / max(total, 0.000001);
 }
 
 float4 main(PSInput input) : SV_Target0
@@ -35,57 +87,15 @@ float4 main(PSInput input) : SV_Target0
         1.0.xx
     );
 
-    // Keeps the UV data dependency from your original shader.
     uv = clamp(uv + input.vUVData.xy * 0.000001, 0.0.xx, 1.0.xx);
 
     float2 texel = 1.0.xx / max(uRenderSize.xy, 1.0.xx);
 
-    /*
-        Gaussian blur settings.
-
-        blur_radius controls how far the blur reaches in pixels.
-        sigma controls how soft/wide the Gaussian curve is.
-
-        Larger radius = wider blur, more expensive.
-        Larger sigma  = softer blur distribution.
-    */
-    const float blur_radius = 24.0;
-    const float sigma = 6.0;
-
-    float3 blur = 0.0.xxx;
-    float total_weight = 0.0;
+    float3 blur = HorrorLensBlur(uv, texel);
 
     /*
-        9x9 Gaussian kernel.
-
-        This is a proper 2D Gaussian blur.
-        You can increase the loop range to -6..6 for a heavier blur,
-        but it will cost more samples.
-    */
-    [unroll]
-    for (int y = -4; y <= 4; y++)
-    {
-        [unroll]
-        for (int x = -4; x <= 4; x++)
-        {
-            float2 offset = float2((float) x, (float) y);
-
-            float dist = length(offset);
-            float weight = GaussianWeight(dist, sigma);
-
-            float2 sample_uv = uv + offset * texel * blur_radius;
-
-            blur += SampleScene(sample_uv) * weight;
-            total_weight += weight;
-        }
-    }
-
-    blur /= max(total_weight, 0.000001);
-
-    /*
-        Lens/vignette mask from your original shader.
-
-        The center remains brighter, the outside gets darker.
+        Lens mask.
+        1.0 near the center, 0.0 near the outer edge.
     */
     float lens_vignette = smoothstep(
         0.88,
@@ -98,13 +108,30 @@ float4 main(PSInput input) : SV_Target0
     */
     float3 lens_tint = float3(0.72, 0.67, 0.82);
 
+    /*
+        Slight desaturation helps make it feel older and colder.
+    */
+    float luma = dot(blur, float3(0.299, 0.587, 0.114));
+    blur = lerp(luma.xxx, blur, 0.72);
+
     float3 out_rgb = blur;
 
-    // Apply the same general brightness shaping as your original shader.
-    out_rgb *= lerp(0.42, 0.74, lens_vignette);
+    /*
+        Darken outer lens area while keeping the center visible.
+    */
+    out_rgb *= lerp(0.34, 0.78, lens_vignette);
 
-    // Apply the color tint.
+    /*
+        Purple/cold tint.
+    */
     out_rgb *= lens_tint;
+
+    /*
+        Optional extra edge darkness.
+        This gives more of a camera-objective look.
+    */
+    float edge_darkness = smoothstep(0.18, 0.95, lens_vignette);
+    out_rgb *= lerp(0.72, 1.0, edge_darkness);
 
     return float4(out_rgb, fade);
 }
