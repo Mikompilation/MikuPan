@@ -4,6 +4,8 @@
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include "mikupan/debug/mikupan_logging_c.h"
+#include "mikupan/mikupan_config.h"
+#include "mikupan/mikupan_utils.h"
 #include <string.h>
 
 /* Shadow map is square. The runtime size is g_shadow_fbo_size (changeable from
@@ -135,6 +137,29 @@ void MikuPan_SetShadowStrengthFromPs2Alpha(int alpha)
     }
 
     g_shadow_strength = (float) alpha / 128.0f;
+}
+
+static float MikuPan_GetShadowSoftRadiusForSampling(void)
+{
+    if (!mikupan_configuration.renderer.shadow_soft_enabled)
+    {
+        return 0.0f;
+    }
+
+    return MikuPan_ClampFloat(
+        mikupan_configuration.renderer.shadow_soft_radius, 0.0f, 8.0f);
+}
+
+static void MikuPan_SetShadowSamplingUniforms(void)
+{
+    const float soft_radius = MikuPan_GetShadowSoftRadiusForSampling();
+    float shadow_size[4] = {
+        (float)g_shadow_fbo_size,
+        (float)g_shadow_fbo_size,
+        soft_radius,
+        soft_radius > 0.001f ? 1.0f : 0.0f,
+    };
+    MikuPan_SetUniform4fvToAllShaders(shadow_size, "uShadowSize");
 }
 
 static void MikuPan_EnsureShadowFbo(void)
@@ -373,6 +398,7 @@ void MikuPan_EndShadowPass(void)
     MikuPan_SetUniform1iToAllShaders(0,                                                "uShadowEnabled");
     MikuPan_SetUniform1iToAllShaders(1,                                                "uShadowTex");
     MikuPan_SetUniform1fToAllShaders(g_shadow_strength,                                "uShadowStrength");
+    MikuPan_SetShadowSamplingUniforms();
     MikuPan_SetUniformMatrix4fvToAllShaders((float *)g_shadow_world_clip_view,         "uShadowMatrix");
 
     MikuPan_ActiveTextureCached(GL_TEXTURE1);
@@ -394,6 +420,7 @@ void MikuPan_BeginShadowReceiverPass(void)
     MikuPan_SetCurrentShaderProgram(SHADOW_RECEIVER_SHADER);
     MikuPan_SetUniform1iToCurrentShader(g_shadow_receiver_debug_view,
                                         "uShadowDebugView");
+    MikuPan_SetShadowSamplingUniforms();
     g_shadow_receiver_pass_active = 1;
 
     MikuPan_ActiveTextureCached(GL_TEXTURE1);

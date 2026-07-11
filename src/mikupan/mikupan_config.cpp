@@ -26,9 +26,19 @@ MikuPan_Config mikupan_configuration = {
         0,
         2,
         256,
+        1,
+        2.25f,
         1.0f,
         1.0f,
         0,
+        1,
+        0.55f,
+        5.0f,
+        0.0025f,
+        1,
+        0.35f,
+        0.72f,
+        0.85f,
         "",
         0
     },
@@ -168,6 +178,9 @@ static void MikuPan_ConfigurationValidateRenderer(
     {
         renderer->shadow_resolution = 256;
     }
+    renderer->shadow_soft_enabled = renderer->shadow_soft_enabled ? 1 : 0;
+    renderer->shadow_soft_radius =
+        MikuPan_ClampFloat(renderer->shadow_soft_radius, 0.0f, 8.0f);
 
     if (renderer->brightness < 0.0f || renderer->brightness > 2.0f)
     {
@@ -181,6 +194,23 @@ static void MikuPan_ConfigurationValidateRenderer(
 
     /* Older test builds used 1=Linear and 2=Soft. Both now collapse to Soft. */
     renderer->dither_mode = renderer->dither_mode <= 0 ? 0 : 1;
+
+    renderer->ssao_enabled = renderer->ssao_enabled ? 1 : 0;
+    renderer->ssao_strength =
+        MikuPan_ClampFloat(renderer->ssao_strength, 0.0f, 1.5f);
+    renderer->ssao_radius =
+        MikuPan_ClampFloat(renderer->ssao_radius, 1.0f, 24.0f);
+    renderer->ssao_bias =
+        MikuPan_ClampFloat(renderer->ssao_bias, 0.0f, 0.05f);
+
+    renderer->volumetric_shafts_enabled =
+        renderer->volumetric_shafts_enabled ? 1 : 0;
+    renderer->volumetric_shafts_strength =
+        MikuPan_ClampFloat(renderer->volumetric_shafts_strength, 0.0f, 1.5f);
+    renderer->volumetric_shafts_radius =
+        MikuPan_ClampFloat(renderer->volumetric_shafts_radius, 0.15f, 1.5f);
+    renderer->volumetric_shafts_density =
+        MikuPan_ClampFloat(renderer->volumetric_shafts_density, 0.0f, 1.5f);
 
     renderer->gpu_debug = renderer->gpu_debug ? 1 : 0;
 }

@@ -124,6 +124,13 @@ enum MikuPanStepControlKind
     MIKUPAN_STEP_FONT_SCALE,
     MIKUPAN_STEP_CRT_FIELD,
     MIKUPAN_STEP_AUDIO_MASTER,
+    MIKUPAN_STEP_SSAO_STRENGTH,
+    MIKUPAN_STEP_SSAO_RADIUS,
+    MIKUPAN_STEP_SSAO_BIAS,
+    MIKUPAN_STEP_VOLUMETRIC_SHAFTS_STRENGTH,
+    MIKUPAN_STEP_VOLUMETRIC_SHAFTS_RADIUS,
+    MIKUPAN_STEP_VOLUMETRIC_SHAFTS_DENSITY,
+    MIKUPAN_STEP_SOFT_SHADOW_RADIUS,
 };
 
 struct MikuPanStepControl
@@ -198,6 +205,9 @@ struct MikuPanRmlOptionsState
     Rml::ElementFormControlInput* vsync_input = nullptr;
     Rml::Element* active_gpu_label = nullptr;
     Rml::Element* gpu_restart_note = nullptr;
+    Rml::ElementFormControlInput* ssao_enabled_input = nullptr;
+    Rml::ElementFormControlInput* volumetric_shafts_enabled_input = nullptr;
+    Rml::ElementFormControlInput* soft_shadows_enabled_input = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
     Rml::ElementFormControlInput* controller_remap_input = nullptr;
     Rml::ElementFormControlInput* data_folder_input = nullptr;
@@ -489,6 +499,20 @@ float GetStepValue(const MikuPanStepControl& control)
                        : 0.0f;
         case MIKUPAN_STEP_AUDIO_MASTER:
             return MikuPan_GetAudioMasterVolume();
+        case MIKUPAN_STEP_SSAO_STRENGTH:
+            return MikuPan_GetSsaoStrength();
+        case MIKUPAN_STEP_SSAO_RADIUS:
+            return MikuPan_GetSsaoRadius();
+        case MIKUPAN_STEP_SSAO_BIAS:
+            return MikuPan_GetSsaoBias();
+        case MIKUPAN_STEP_VOLUMETRIC_SHAFTS_STRENGTH:
+            return MikuPan_GetVolumetricShaftsStrength();
+        case MIKUPAN_STEP_VOLUMETRIC_SHAFTS_RADIUS:
+            return MikuPan_GetVolumetricShaftsRadius();
+        case MIKUPAN_STEP_VOLUMETRIC_SHAFTS_DENSITY:
+            return MikuPan_GetVolumetricShaftsDensity();
+        case MIKUPAN_STEP_SOFT_SHADOW_RADIUS:
+            return MikuPan_GetSoftShadowRadius();
         default:
             return 0.0f;
     }
@@ -520,6 +544,27 @@ void SetStepValue(const MikuPanStepControl& control, float value)
             break;
         case MIKUPAN_STEP_AUDIO_MASTER:
             MikuPan_SetAudioMasterVolume(clamped);
+            break;
+        case MIKUPAN_STEP_SSAO_STRENGTH:
+            MikuPan_SetSsaoStrength(clamped);
+            break;
+        case MIKUPAN_STEP_SSAO_RADIUS:
+            MikuPan_SetSsaoRadius(clamped);
+            break;
+        case MIKUPAN_STEP_SSAO_BIAS:
+            MikuPan_SetSsaoBias(clamped);
+            break;
+        case MIKUPAN_STEP_VOLUMETRIC_SHAFTS_STRENGTH:
+            MikuPan_SetVolumetricShaftsStrength(clamped);
+            break;
+        case MIKUPAN_STEP_VOLUMETRIC_SHAFTS_RADIUS:
+            MikuPan_SetVolumetricShaftsRadius(clamped);
+            break;
+        case MIKUPAN_STEP_VOLUMETRIC_SHAFTS_DENSITY:
+            MikuPan_SetVolumetricShaftsDensity(clamped);
+            break;
+        case MIKUPAN_STEP_SOFT_SHADOW_RADIUS:
+            MikuPan_SetSoftShadowRadius(clamped);
             break;
         default:
             break;
@@ -2015,6 +2060,11 @@ void SyncRmlSettingsValues(void)
                    MikuPan_IsGpuDriverRestartPending()
                        ? "Save Configuration and restart to apply"
                        : "");
+    SetCheckbox(g_rml.ssao_enabled_input, MikuPan_IsSsaoEnabled());
+    SetCheckbox(g_rml.volumetric_shafts_enabled_input,
+                MikuPan_IsVolumetricShaftsEnabled());
+    SetCheckbox(g_rml.soft_shadows_enabled_input,
+                MikuPan_IsSoftShadowsEnabled());
     const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
     SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
 
@@ -2131,6 +2181,100 @@ bool LoadOptionsDocument(void)
                           MikuPan_GetMSAAOptionLabel,
                           MikuPan_GetSelectedMSAAOption(),
                           [](int index) { MikuPan_SelectMSAAOption(index); });
+
+    g_rml.ssao_enabled_input = GetInput("ssao-enabled-input");
+    AddListener(g_rml.ssao_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetSsaoEnabled(IsCheckboxChecked(input));
+                    }));
+    AddStepControl("ssao-strength-stepper",
+                   "ssao-strength-bars",
+                   "ssao-strength-value",
+                   MIKUPAN_STEP_SSAO_STRENGTH,
+                   -1,
+                   0.0f,
+                   1.5f,
+                   0.05f,
+                   2);
+    AddStepControl("ssao-radius-stepper",
+                   "ssao-radius-bars",
+                   "ssao-radius-value",
+                   MIKUPAN_STEP_SSAO_RADIUS,
+                   -1,
+                   1.0f,
+                   24.0f,
+                   1.0f,
+                   0);
+    AddStepControl("ssao-bias-stepper",
+                   "ssao-bias-bars",
+                   "ssao-bias-value",
+                   MIKUPAN_STEP_SSAO_BIAS,
+                   -1,
+                   0.0f,
+                   0.05f,
+                   0.0025f,
+                   4);
+
+    g_rml.volumetric_shafts_enabled_input =
+        GetInput("volumetric-shafts-enabled-input");
+    AddListener(g_rml.volumetric_shafts_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetVolumetricShaftsEnabled(
+                            IsCheckboxChecked(input));
+                    }));
+    AddStepControl("volumetric-shafts-strength-stepper",
+                   "volumetric-shafts-strength-bars",
+                   "volumetric-shafts-strength-value",
+                   MIKUPAN_STEP_VOLUMETRIC_SHAFTS_STRENGTH,
+                   -1,
+                   0.0f,
+                   1.5f,
+                   0.05f,
+                   2);
+    AddStepControl("volumetric-shafts-radius-stepper",
+                   "volumetric-shafts-radius-bars",
+                   "volumetric-shafts-radius-value",
+                   MIKUPAN_STEP_VOLUMETRIC_SHAFTS_RADIUS,
+                   -1,
+                   0.15f,
+                   1.5f,
+                   0.05f,
+                   2);
+    AddStepControl("volumetric-shafts-density-stepper",
+                   "volumetric-shafts-density-bars",
+                   "volumetric-shafts-density-value",
+                   MIKUPAN_STEP_VOLUMETRIC_SHAFTS_DENSITY,
+                   -1,
+                   0.0f,
+                   1.5f,
+                   0.05f,
+                   2);
+
+    g_rml.soft_shadows_enabled_input =
+        GetInput("soft-shadows-enabled-input");
+    AddListener(g_rml.soft_shadows_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetSoftShadowsEnabled(
+                            IsCheckboxChecked(input));
+                    }));
+    AddStepControl("soft-shadow-radius-stepper",
+                   "soft-shadow-radius-bars",
+                   "soft-shadow-radius-value",
+                   MIKUPAN_STEP_SOFT_SHADOW_RADIUS,
+                   -1,
+                   0.0f,
+                   8.0f,
+                   0.25f,
+                   2);
 
     g_rml.shadow_resolution_select = GetSelect("shadow-resolution-select");
     PopulateIndexedSelect(g_rml.shadow_resolution_select,

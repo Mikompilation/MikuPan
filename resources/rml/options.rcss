@@ -593,7 +593,17 @@ button.controller-focus {
 
 #gpu-backend-select,
 #msaa-select,
+#ssao-enabled-input,
+#ssao-strength-stepper,
+#ssao-radius-stepper,
+#ssao-bias-stepper,
+#volumetric-shafts-enabled-input,
+#volumetric-shafts-strength-stepper,
+#volumetric-shafts-radius-stepper,
+#volumetric-shafts-density-stepper,
 #shadow-resolution-select,
+#soft-shadows-enabled-input,
+#soft-shadow-radius-stepper,
 #lighting-mode-select,
 #dither-mode-select {
     nav-left: #cat-graphics;

@@ -19,6 +19,8 @@ enum ShaderPrograms
     SHADOW_RECEIVER_SHADER,   ///< projected shadow decal over receiver meshes
     CAMERA_DEBUG_SHADER,
     HEAT_HAZE_SHADER,
+    SSAO_SHADER,
+    VOLUMETRIC_SHAFTS_SHADER,
     MESH_0x2_SKINNED_SHADER, ///< GPU-skinned mesh 0x2 (2-bone LBS in the VS)
     MESH_0xA_SKINNED_SHADER, ///< GPU-skinned mesh 0xA (2-bone LBS in the VS)
     MAX_SHADER_PROGRAMS

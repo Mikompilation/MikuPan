@@ -290,6 +290,18 @@ void MikuPan_SetupFntTexture();
 void MikuPan_SetWorldClipView();
 float* MikuPan_GetWorldClipView();
 float* MikuPan_GetWorldClip();
+typedef struct
+{
+    int valid;
+    float pos_view[4];
+    float dir_view[4];
+    float color[4];
+    float power;
+    float intens;
+    float score;
+} MikuPan_VolumetricSpotInfo;
+void MikuPan_ResetVolumetricSpotInfo(void);
+const MikuPan_VolumetricSpotInfo* MikuPan_GetVolumetricSpotInfo(void);
 void MikuPan_SetupAmbientLighting(const LIGHT_PACK* lp, float *eyevec);
 void MikuPan_SetBakedLighting(int parallel_count,
                               const sceVu0FVECTOR parallel_ambient,

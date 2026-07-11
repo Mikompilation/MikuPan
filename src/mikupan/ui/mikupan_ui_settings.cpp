@@ -992,7 +992,103 @@ void MikuPan_UiSettingsRender(void)
                 igTextDisabled("Scene samples: %dx", MikuPan_GPUGetSceneMSAA());
             }
 
+            {
+                bool ssao_enabled = MikuPan_IsSsaoEnabled() != 0;
+                if (igCheckbox("SSAO", &ssao_enabled))
+                {
+                    MikuPan_SetSsaoEnabled(ssao_enabled ? 1 : 0);
+                }
+
+                if (MikuPan_GPUGetSceneMSAA() > 1)
+                {
+                    igTextDisabled("SSAO requires MSAA Off; scene depth is multisampled.");
+                }
+                else if (!MikuPan_GPUIsSceneDepthTextureSampleable())
+                {
+                    igTextDisabled("SSAO unavailable: backend cannot sample the scene depth format.");
+                }
+
+                if (MikuPan_IsSsaoEnabled())
+                {
+                    float ssao_strength = MikuPan_GetSsaoStrength();
+                    float ssao_radius = MikuPan_GetSsaoRadius();
+                    float ssao_bias = MikuPan_GetSsaoBias();
+                    if (igSliderFloat("SSAO Strength", &ssao_strength, 0.0f,
+                                      1.5f, "%.2f", 0))
+                    {
+                        MikuPan_SetSsaoStrength(ssao_strength);
+                    }
+                    if (igSliderFloat("SSAO Radius", &ssao_radius, 1.0f,
+                                      24.0f, "%.1f", 0))
+                    {
+                        MikuPan_SetSsaoRadius(ssao_radius);
+                    }
+                    if (igSliderFloat("SSAO Bias", &ssao_bias, 0.0f,
+                                      0.05f, "%.4f", 0))
+                    {
+                        MikuPan_SetSsaoBias(ssao_bias);
+                    }
+                }
+            }
+
+            {
+                bool shafts_enabled = MikuPan_IsVolumetricShaftsEnabled() != 0;
+                if (igCheckbox("Volumetric Shafts", &shafts_enabled))
+                {
+                    MikuPan_SetVolumetricShaftsEnabled(shafts_enabled ? 1 : 0);
+                }
+
+                if (MikuPan_GPUGetSceneMSAA() > 1)
+                {
+                    igTextDisabled("Volumetric shafts require MSAA Off; scene depth is multisampled.");
+                }
+                else if (!MikuPan_GPUIsSceneDepthTextureSampleable())
+                {
+                    igTextDisabled("Volumetric shafts unavailable: backend cannot sample the scene depth format.");
+                }
+
+                if (MikuPan_IsVolumetricShaftsEnabled())
+                {
+                    float shaft_strength = MikuPan_GetVolumetricShaftsStrength();
+                    float shaft_radius = MikuPan_GetVolumetricShaftsRadius();
+                    float shaft_density = MikuPan_GetVolumetricShaftsDensity();
+                    if (igSliderFloat("Shaft Strength", &shaft_strength, 0.0f,
+                                      1.5f, "%.2f", 0))
+                    {
+                        MikuPan_SetVolumetricShaftsStrength(shaft_strength);
+                    }
+                    if (igSliderFloat("Shaft Radius", &shaft_radius, 0.15f,
+                                      1.5f, "%.2f", 0))
+                    {
+                        MikuPan_SetVolumetricShaftsRadius(shaft_radius);
+                    }
+                    if (igSliderFloat("Shaft Density", &shaft_density, 0.0f,
+                                      1.5f, "%.2f", 0))
+                    {
+                        MikuPan_SetVolumetricShaftsDensity(shaft_density);
+                    }
+                }
+            }
+
             MikuPan_UiShadowResolutionCombo("Shadow Resolution");
+
+            {
+                bool soft_shadows = MikuPan_IsSoftShadowsEnabled() != 0;
+                if (igCheckbox("Soft Shadows", &soft_shadows))
+                {
+                    MikuPan_SetSoftShadowsEnabled(soft_shadows ? 1 : 0);
+                }
+
+                if (MikuPan_IsSoftShadowsEnabled())
+                {
+                    float shadow_radius = MikuPan_GetSoftShadowRadius();
+                    if (igSliderFloat("Soft Shadow Radius", &shadow_radius,
+                                      0.0f, 8.0f, "%.2f", 0))
+                    {
+                        MikuPan_SetSoftShadowRadius(shadow_radius);
+                    }
+                }
+            }
 
             const char* display_lighting_modes[] = {"Pixel (Modern)",
                                                     "Vertex (PS2)"};
@@ -1758,6 +1854,27 @@ int MikuPan_SelectShadowResolutionOption(int index)
     return 1;
 }
 
+int MikuPan_IsSoftShadowsEnabled(void)
+{
+    return mikupan_configuration.renderer.shadow_soft_enabled;
+}
+
+void MikuPan_SetSoftShadowsEnabled(int enabled)
+{
+    mikupan_configuration.renderer.shadow_soft_enabled = enabled ? 1 : 0;
+}
+
+float MikuPan_GetSoftShadowRadius(void)
+{
+    return mikupan_configuration.renderer.shadow_soft_radius;
+}
+
+void MikuPan_SetSoftShadowRadius(float value)
+{
+    mikupan_configuration.renderer.shadow_soft_radius =
+        MikuPan_ClampFloat(value, 0.0f, 8.0f);
+}
+
 int MikuPan_GetLightingMode(void)
 {
     return mikupan_configuration.renderer.lighting_mode;
@@ -1800,6 +1917,92 @@ int MikuPan_SelectDitherModeOption(int index)
 
     mikupan_configuration.renderer.dither_mode = index;
     return 1;
+}
+
+int MikuPan_IsSsaoEnabled(void)
+{
+    return mikupan_configuration.renderer.ssao_enabled;
+}
+
+void MikuPan_SetSsaoEnabled(int enabled)
+{
+    mikupan_configuration.renderer.ssao_enabled = enabled ? 1 : 0;
+}
+
+float MikuPan_GetSsaoStrength(void)
+{
+    return mikupan_configuration.renderer.ssao_strength;
+}
+
+void MikuPan_SetSsaoStrength(float value)
+{
+    mikupan_configuration.renderer.ssao_strength =
+        MikuPan_ClampFloat(value, 0.0f, 1.5f);
+}
+
+float MikuPan_GetSsaoRadius(void)
+{
+    return mikupan_configuration.renderer.ssao_radius;
+}
+
+void MikuPan_SetSsaoRadius(float value)
+{
+    mikupan_configuration.renderer.ssao_radius =
+        MikuPan_ClampFloat(value, 1.0f, 24.0f);
+}
+
+float MikuPan_GetSsaoBias(void)
+{
+    return mikupan_configuration.renderer.ssao_bias;
+}
+
+void MikuPan_SetSsaoBias(float value)
+{
+    mikupan_configuration.renderer.ssao_bias =
+        MikuPan_ClampFloat(value, 0.0f, 0.05f);
+}
+
+int MikuPan_IsVolumetricShaftsEnabled(void)
+{
+    return mikupan_configuration.renderer.volumetric_shafts_enabled;
+}
+
+void MikuPan_SetVolumetricShaftsEnabled(int enabled)
+{
+    mikupan_configuration.renderer.volumetric_shafts_enabled = enabled ? 1 : 0;
+}
+
+float MikuPan_GetVolumetricShaftsStrength(void)
+{
+    return mikupan_configuration.renderer.volumetric_shafts_strength;
+}
+
+void MikuPan_SetVolumetricShaftsStrength(float value)
+{
+    mikupan_configuration.renderer.volumetric_shafts_strength =
+        MikuPan_ClampFloat(value, 0.0f, 1.5f);
+}
+
+float MikuPan_GetVolumetricShaftsRadius(void)
+{
+    return mikupan_configuration.renderer.volumetric_shafts_radius;
+}
+
+void MikuPan_SetVolumetricShaftsRadius(float value)
+{
+    mikupan_configuration.renderer.volumetric_shafts_radius =
+        MikuPan_ClampFloat(value, 0.15f, 1.5f);
+}
+
+float MikuPan_GetVolumetricShaftsDensity(void)
+{
+    return mikupan_configuration.renderer.volumetric_shafts_density;
+}
+
+void MikuPan_SetVolumetricShaftsDensity(float value)
+{
+    mikupan_configuration.renderer.volumetric_shafts_density =
+        MikuPan_ClampFloat(value, 0.0f, 1.5f);
 }
 
 int MikuPan_GetThemeOptionCount(void)

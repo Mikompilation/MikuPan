@@ -181,9 +181,19 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "lighting_mode", mikupan_configuration.renderer.lighting_mode);
     ApplyValue(ini, "renderer", "msaa_index", mikupan_configuration.renderer.msaa_index);
     ApplyValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
+    ApplyValue(ini, "renderer", "shadow_soft_enabled", mikupan_configuration.renderer.shadow_soft_enabled);
+    ApplyValue(ini, "renderer", "shadow_soft_radius", mikupan_configuration.renderer.shadow_soft_radius);
     ApplyValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     ApplyValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
     ApplyValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
+    ApplyValue(ini, "renderer", "ssao_enabled", mikupan_configuration.renderer.ssao_enabled);
+    ApplyValue(ini, "renderer", "ssao_strength", mikupan_configuration.renderer.ssao_strength);
+    ApplyValue(ini, "renderer", "ssao_radius", mikupan_configuration.renderer.ssao_radius);
+    ApplyValue(ini, "renderer", "ssao_bias", mikupan_configuration.renderer.ssao_bias);
+    ApplyValue(ini, "renderer", "volumetric_shafts_enabled", mikupan_configuration.renderer.volumetric_shafts_enabled);
+    ApplyValue(ini, "renderer", "volumetric_shafts_strength", mikupan_configuration.renderer.volumetric_shafts_strength);
+    ApplyValue(ini, "renderer", "volumetric_shafts_radius", mikupan_configuration.renderer.volumetric_shafts_radius);
+    ApplyValue(ini, "renderer", "volumetric_shafts_density", mikupan_configuration.renderer.volumetric_shafts_density);
     ApplyString(ini, "renderer", "gpu_driver",
                 mikupan_configuration.renderer.gpu_driver,
                 sizeof(mikupan_configuration.renderer.gpu_driver));
@@ -343,9 +353,19 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "lighting_mode", mikupan_configuration.renderer.lighting_mode);
     SetValue(ini, "renderer", "msaa_index", mikupan_configuration.renderer.msaa_index);
     SetValue(ini, "renderer", "shadow_resolution", mikupan_configuration.renderer.shadow_resolution);
+    SetValue(ini, "renderer", "shadow_soft_enabled", mikupan_configuration.renderer.shadow_soft_enabled);
+    SetValue(ini, "renderer", "shadow_soft_radius", mikupan_configuration.renderer.shadow_soft_radius);
     SetValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     SetValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
     SetValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
+    SetValue(ini, "renderer", "ssao_enabled", mikupan_configuration.renderer.ssao_enabled);
+    SetValue(ini, "renderer", "ssao_strength", mikupan_configuration.renderer.ssao_strength);
+    SetValue(ini, "renderer", "ssao_radius", mikupan_configuration.renderer.ssao_radius);
+    SetValue(ini, "renderer", "ssao_bias", mikupan_configuration.renderer.ssao_bias);
+    SetValue(ini, "renderer", "volumetric_shafts_enabled", mikupan_configuration.renderer.volumetric_shafts_enabled);
+    SetValue(ini, "renderer", "volumetric_shafts_strength", mikupan_configuration.renderer.volumetric_shafts_strength);
+    SetValue(ini, "renderer", "volumetric_shafts_radius", mikupan_configuration.renderer.volumetric_shafts_radius);
+    SetValue(ini, "renderer", "volumetric_shafts_density", mikupan_configuration.renderer.volumetric_shafts_density);
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;
     SetValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);

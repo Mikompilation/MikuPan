@@ -19,6 +19,7 @@
 #include "mikupan_shader.h"
 
 #include <mikupan_version.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -46,6 +47,8 @@ static int g_photo_capture_suppress_screen_copy_effects = 0;
 static unsigned int g_photo_framebuffer_id = 0;
 static int g_photo_framebuffer_valid = 0;
 static unsigned int g_screen_negative_scene_copy_id = 0;
+static unsigned int g_ssao_scene_copy_id = 0;
+static unsigned int g_volumetric_scene_copy_id = 0;
 
 void MikuPan_StreamUploadFull(GLenum target, GLuint buffer,
                                             GLsizeiptr size, const void *data)
@@ -278,6 +281,18 @@ void MikuPan_DestroyInternalBuffer()
     {
         MikuPan_GPUReleaseTexture(g_screen_negative_scene_copy_id);
         g_screen_negative_scene_copy_id = 0;
+    }
+
+    if (g_ssao_scene_copy_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_ssao_scene_copy_id);
+        g_ssao_scene_copy_id = 0;
+    }
+
+    if (g_volumetric_scene_copy_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_volumetric_scene_copy_id);
+        g_volumetric_scene_copy_id = 0;
     }
 
     MikuPan_GPUDestroyInternalBuffer();
@@ -657,6 +672,18 @@ void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
     }
     g_screen_negative_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
 
+    if (g_ssao_scene_copy_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_ssao_scene_copy_id);
+    }
+    g_ssao_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
+
+    if (g_volumetric_scene_copy_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_volumetric_scene_copy_id);
+    }
+    g_volumetric_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
+
     MikuPan_SetViewportCached(0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height);
 }
 
@@ -799,6 +826,7 @@ void MikuPan_Clear()
     MikuPan_GPUBeginFrame();
     MikuPan_PerfBeginFrame();
     MikuPan_ShadowDebugBeginFrame();
+    MikuPan_ResetVolumetricSpotInfo();
 
     MikuPan_GsResetFrameMetrics();
     MikuPan_PerfResetFrame();
@@ -869,10 +897,239 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
     out[3] = (1.0f - br[1]) * 0.5f;
 }
 
+static int MikuPan_ShouldApplySsao(void)
+{
+    return mikupan_configuration.renderer.ssao_enabled != 0 &&
+           mikupan_configuration.renderer.ssao_strength > 0.001f &&
+           render_back_msaa.texture.id != 0 &&
+           g_ssao_scene_copy_id != 0 &&
+           render_back_msaa.texture.width > 0 &&
+           render_back_msaa.texture.height > 0 &&
+           MikuPan_GPUGetSceneMSAA() <= 1 &&
+           MikuPan_GPUIsSceneDepthTextureSampleable() != 0 &&
+           MikuPan_GPUGetSceneDepthTextureId() != 0;
+}
+
+static void MikuPan_ApplySsaoPass(void)
+{
+    if (!MikuPan_ShouldApplySsao())
+    {
+        return;
+    }
+
+    MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
+                           g_ssao_scene_copy_id,
+                           render_back_msaa.texture.width,
+                           render_back_msaa.texture.height);
+
+    float quad[] = {
+        0,1,0,0,   1,1,1,1,   -1,-1,0,1,
+        1,1,0,0,   1,1,1,1,    1,-1,0,1,
+        0,0,0,0,   1,1,1,1,   -1, 1,0,1,
+        1,0,0,0,   1,1,1,1,    1, 1,0,1
+    };
+
+    float ssao_params[4] = {
+        mikupan_configuration.renderer.ssao_strength,
+        mikupan_configuration.renderer.ssao_radius,
+        mikupan_configuration.renderer.ssao_bias,
+        120.0f,
+    };
+
+    MikuPan_SetViewportCached(0, 0,
+                              render_back_msaa.texture.width,
+                              render_back_msaa.texture.height);
+    MikuPan_GPUSetScreenCopyTarget(render_back_msaa.texture.id,
+                                   render_back_msaa.texture.width,
+                                   render_back_msaa.texture.height,
+                                   0);
+    MikuPan_SetRenderState2D();
+    MikuPan_SetCurrentShaderProgram(SSAO_SHADER);
+
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+    MikuPan_BindTexture2DCached(g_ssao_scene_copy_id);
+    MikuPan_ActiveTextureCached(GL_TEXTURE1);
+    MikuPan_BindTexture2DCached(MikuPan_GPUGetSceneDepthTextureId());
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+
+    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
+    MikuPan_SetUniform1iToCurrentShader(1, "uPhotoNegativeSourceTexture");
+    MikuPan_SetUniform2fToCurrentShader((float) render_back_msaa.texture.width,
+                                        (float) render_back_msaa.texture.height,
+                                        "uTextureSize");
+    MikuPan_SetUniform4fvToCurrentShader(ssao_params, "uSsaoParams");
+
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr)sizeof(quad), quad);
+    MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+static int MikuPan_ShouldApplyVolumetricShafts(void)
+{
+    const MikuPan_VolumetricSpotInfo* spot = MikuPan_GetVolumetricSpotInfo();
+    return mikupan_configuration.renderer.volumetric_shafts_enabled != 0 &&
+           mikupan_configuration.renderer.volumetric_shafts_strength > 0.001f &&
+           spot != NULL &&
+           spot->valid != 0 &&
+           render_back_msaa.texture.id != 0 &&
+           g_volumetric_scene_copy_id != 0 &&
+           render_back_msaa.texture.width > 0 &&
+           render_back_msaa.texture.height > 0 &&
+           MikuPan_GPUGetSceneMSAA() <= 1 &&
+           MikuPan_GPUIsSceneDepthTextureSampleable() != 0 &&
+           MikuPan_GPUGetSceneDepthTextureId() != 0;
+}
+
+static int MikuPan_PrepareVolumetricShaftUniforms(
+    float params[4], float light[4], float color[4])
+{
+    const MikuPan_VolumetricSpotInfo* spot = MikuPan_GetVolumetricSpotInfo();
+    if (spot == NULL || !spot->valid)
+    {
+        return 0;
+    }
+
+    vec3 dir = {
+        spot->dir_view[0],
+        spot->dir_view[1],
+        spot->dir_view[2],
+    };
+    const float dir_len2 =
+        dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2];
+    if (dir_len2 <= 0.0001f)
+    {
+        return 0;
+    }
+    glm_vec3_normalize(dir);
+
+    const float range =
+        MikuPan_ClampFloat(spot->power * 1.35f, 650.0f, 6500.0f);
+    vec4 target_view = {
+        spot->pos_view[0] - dir[0] * range,
+        spot->pos_view[1] - dir[1] * range,
+        spot->pos_view[2] - dir[2] * range,
+        1.0f,
+    };
+    vec4 clip;
+    glm_mat4_mulv(projection, target_view, clip);
+    if (clip[3] <= 0.001f)
+    {
+        return 0;
+    }
+
+    const float inv_w = 1.0f / clip[3];
+    const float ndc_x = clip[0] * inv_w;
+    const float ndc_y = clip[1] * inv_w;
+    const float ndc_z = clip[2] * inv_w;
+    const float uv_x = ndc_x * 0.5f + 0.5f;
+    const float uv_y = 0.5f - ndc_y * 0.5f;
+    const float offscreen =
+        MikuPan_ClampFloat(
+            fmaxf(fmaxf(-uv_x, uv_x - 1.0f), fmaxf(-uv_y, uv_y - 1.0f)),
+            0.0f,
+            0.85f);
+    const float visibility = 1.0f - offscreen / 0.85f;
+    if (visibility <= 0.001f)
+    {
+        return 0;
+    }
+
+    const float cone_width = sqrtf(fmaxf(1.0f - spot->intens, 0.03f));
+    const float radius =
+        MikuPan_ClampFloat(
+            mikupan_configuration.renderer.volumetric_shafts_radius *
+                (0.65f + cone_width * 0.55f),
+            0.08f,
+            1.5f);
+
+    params[0] = mikupan_configuration.renderer.volumetric_shafts_strength;
+    params[1] = radius;
+    params[2] = mikupan_configuration.renderer.volumetric_shafts_density;
+    params[3] = 0.92f;
+
+    light[0] = uv_x;
+    light[1] = uv_y;
+    light[2] = MikuPan_ClampFloat(ndc_z * 0.5f + 0.5f, 0.0f, 1.0f);
+    light[3] = visibility;
+
+    color[0] = MikuPan_ClampFloat(spot->color[0] * 1.35f, 0.0f, 1.0f);
+    color[1] = MikuPan_ClampFloat(spot->color[1] * 1.35f, 0.0f, 1.0f);
+    color[2] = MikuPan_ClampFloat(spot->color[2] * 1.35f, 0.0f, 1.0f);
+    color[3] = 0.65f;
+
+    return 1;
+}
+
+static void MikuPan_ApplyVolumetricShaftsPass(void)
+{
+    if (!MikuPan_ShouldApplyVolumetricShafts())
+    {
+        return;
+    }
+
+    float params[4];
+    float light[4];
+    float color[4];
+    if (!MikuPan_PrepareVolumetricShaftUniforms(params, light, color))
+    {
+        return;
+    }
+
+    MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
+                           g_volumetric_scene_copy_id,
+                           render_back_msaa.texture.width,
+                           render_back_msaa.texture.height);
+
+    float quad[] = {
+        0,1,0,0,   1,1,1,1,   -1,-1,0,1,
+        1,1,0,0,   1,1,1,1,    1,-1,0,1,
+        0,0,0,0,   1,1,1,1,   -1, 1,0,1,
+        1,0,0,0,   1,1,1,1,    1, 1,0,1
+    };
+
+    MikuPan_SetViewportCached(0, 0,
+                              render_back_msaa.texture.width,
+                              render_back_msaa.texture.height);
+    MikuPan_GPUSetScreenCopyTarget(render_back_msaa.texture.id,
+                                   render_back_msaa.texture.width,
+                                   render_back_msaa.texture.height,
+                                   0);
+    MikuPan_SetRenderState2D();
+    MikuPan_SetCurrentShaderProgram(VOLUMETRIC_SHAFTS_SHADER);
+
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+    MikuPan_BindTexture2DCached(g_volumetric_scene_copy_id);
+    MikuPan_ActiveTextureCached(GL_TEXTURE1);
+    MikuPan_BindTexture2DCached(MikuPan_GPUGetSceneDepthTextureId());
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+
+    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
+    MikuPan_SetUniform1iToCurrentShader(1, "uPhotoNegativeSourceTexture");
+    MikuPan_SetUniform2fToCurrentShader((float) render_back_msaa.texture.width,
+                                        (float) render_back_msaa.texture.height,
+                                        "uTextureSize");
+    MikuPan_SetUniform1fToCurrentShader(
+        (float)((double)SDL_GetTicks() / 1000.0),
+        "uTime");
+    MikuPan_SetUniform4fvToCurrentShader(params, "uVolumetricParams");
+    MikuPan_SetUniform4fvToCurrentShader(light, "uVolumetricLight");
+    MikuPan_SetUniform4fvToCurrentShader(color, "uVolumetricColor");
+
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr)sizeof(quad), quad);
+    MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
 void MikuPan_EndFrame()
 {
     MikuPan_GPUFlushRenderPass();
     MikuPan_GPUResolveSceneForPresent();
+    MikuPan_ApplySsaoPass();
+    MikuPan_ApplyVolumetricShaftsPass();
     MikuPan_SetViewportCached(
         0,
         0,

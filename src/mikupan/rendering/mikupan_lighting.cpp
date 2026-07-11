@@ -4,6 +4,7 @@
 #include "mikupan/gameplay/mikupan_graph3d_compat.h"
 #include "mikupan/mikupan_types.h"
 #include "graphics/graph3d/sg_dat.h"
+#include <math.h>
 #include <string.h>
 
 extern int loadbw_flg;
@@ -25,6 +26,7 @@ static float g_raw_point_pos[MIKUPAN_MAX_SOURCE_LIGHTS][4] = {0};
 static float g_raw_spot_pos[MIKUPAN_MAX_SOURCE_LIGHTS][4] = {0};
 static float g_raw_spot_dir[MIKUPAN_MAX_SOURCE_LIGHTS][4] = {0};
 static float g_current_material_alpha = 1.0f;
+static MikuPan_VolumetricSpotInfo g_volumetric_spot = {0};
 
 static int MikuPan_ClampLightCount(int count)
 {
@@ -148,6 +150,59 @@ static void MikuPan_CopyVec4(float dst[4], const float src[4])
     dst[1] = src[1];
     dst[2] = src[2];
     dst[3] = src[3];
+}
+
+void MikuPan_ResetVolumetricSpotInfo(void)
+{
+    memset(&g_volumetric_spot, 0, sizeof(g_volumetric_spot));
+}
+
+const MikuPan_VolumetricSpotInfo* MikuPan_GetVolumetricSpotInfo(void)
+{
+    return &g_volumetric_spot;
+}
+
+static void MikuPan_RecordVolumetricSpotCandidate(int slot)
+{
+    if (slot < 0 || slot >= MIKUPAN_MAX_LIGHTS)
+    {
+        return;
+    }
+
+    const float* color = mikupan_light_data.uSpotDiffuse[slot];
+    const float power = mikupan_light_data.uSpotPower[slot][0];
+    const float intens = mikupan_light_data.uSpotIntens[slot][0];
+    const float dir_len2 =
+        mikupan_light_data.uSpotDir[slot][0] * mikupan_light_data.uSpotDir[slot][0] +
+        mikupan_light_data.uSpotDir[slot][1] * mikupan_light_data.uSpotDir[slot][1] +
+        mikupan_light_data.uSpotDir[slot][2] * mikupan_light_data.uSpotDir[slot][2];
+    const float luminance =
+        color[0] * 0.2126f + color[1] * 0.7152f + color[2] * 0.0722f;
+
+    if (luminance <= 0.001f || power <= 0.001f || dir_len2 <= 0.0001f)
+    {
+        return;
+    }
+
+    const float cone_width = 1.0f - intens;
+    const float cone_weight =
+        cone_width > 0.0f ? (0.25f + cone_width) : 0.25f;
+    const float score = luminance * sqrtf(power) * cone_weight;
+    if (g_volumetric_spot.valid && score <= g_volumetric_spot.score)
+    {
+        return;
+    }
+
+    g_volumetric_spot.valid = 1;
+    MikuPan_CopyVec4(g_volumetric_spot.pos_view,
+                     mikupan_light_data.uSpotPos[slot]);
+    MikuPan_CopyVec4(g_volumetric_spot.dir_view,
+                     mikupan_light_data.uSpotDir[slot]);
+    MikuPan_CopyVec4(g_volumetric_spot.color,
+                     mikupan_light_data.uSpotDiffuse[slot]);
+    g_volumetric_spot.power = power;
+    g_volumetric_spot.intens = intens;
+    g_volumetric_spot.score = score;
 }
 
 static void MikuPan_ApplyBlackWhiteColor(float color[4])
@@ -471,6 +526,8 @@ void MikuPan_SetupAmbientLighting(const LIGHT_PACK *lp, float *eyevec)
         }
         mikupan_light_data.uSpotIntens[i][0] = intens;
         mikupan_light_data.uSpotIntens[i][1] = intens_b;
+
+        MikuPan_RecordVolumetricSpotCandidate(i);
     }
 
     MikuPan_UploadLightData();
@@ -540,6 +597,11 @@ void MikuPan_SetBakedLighting(int parallel_count,
                            spot_btimes, spotSlots);
     MikuPan_CopySpotIntens(mikupan_light_data.uSpotIntens,
                            spot_intens, spot_intens_b, spotSlots);
+
+    for (int i = 0; i < spotSlots; i++)
+    {
+        MikuPan_RecordVolumetricSpotCandidate(i);
+    }
 
     MikuPan_UploadLightData();
 }

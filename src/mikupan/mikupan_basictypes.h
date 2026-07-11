@@ -85,9 +85,19 @@ typedef struct
     int lighting_mode;
     int msaa_index;
     int shadow_resolution;
+    int shadow_soft_enabled;
+    float shadow_soft_radius;
     float brightness;
     float gamma;
     int dither_mode; /* 0=native, 1=soft */
+    int ssao_enabled;
+    float ssao_strength;
+    float ssao_radius;
+    float ssao_bias;
+    int volumetric_shafts_enabled;
+    float volumetric_shafts_strength;
+    float volumetric_shafts_radius;
+    float volumetric_shafts_density;
     /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
      * Empty = let SDL pick. The device is created once, so a change only
      * applies on the next launch. */

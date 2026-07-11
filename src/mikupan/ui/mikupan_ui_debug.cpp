@@ -1,5 +1,6 @@
 #include "typedefs.h"
 #include "mikupan_ui_debug.h"
+#include "mikupan_ui.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
@@ -396,6 +397,21 @@ void MikuPan_UiShadowDebugWindow(void)
     if (igCheckbox("Receiver Debug Colors", (bool*) &receiver_debug_view))
     {
         MikuPan_SetShadowReceiverDebugViewEnabled(receiver_debug_view);
+    }
+
+    int soft_shadows = MikuPan_IsSoftShadowsEnabled();
+    if (igCheckbox("Soft Shadows", (bool*) &soft_shadows))
+    {
+        MikuPan_SetSoftShadowsEnabled(soft_shadows);
+    }
+    if (soft_shadows)
+    {
+        float soft_radius = MikuPan_GetSoftShadowRadius();
+        if (igSliderFloat("Soft Radius", &soft_radius, 0.0f, 8.0f,
+                          "%.2f", 0))
+        {
+            MikuPan_SetSoftShadowRadius(soft_radius);
+        }
     }
 
     int inspect = MikuPan_IsShadowInspectEnabled();
@@ -1006,6 +1022,34 @@ void MikuPan_UiDebugMenuRender(void)
                 if (igCheckbox("Enable Shadows", (bool*) &shadows_on))
                 {
                     MikuPan_SetShadowEnabled(shadows_on);
+                }
+
+                int soft_shadows = MikuPan_IsSoftShadowsEnabled();
+                if (igCheckbox("Soft Shadows", (bool*) &soft_shadows))
+                {
+                    MikuPan_SetSoftShadowsEnabled(soft_shadows);
+                }
+
+                if (soft_shadows)
+                {
+                    float soft_radius = MikuPan_GetSoftShadowRadius();
+                    if (igSliderFloat("Soft Radius", &soft_radius, 0.0f,
+                                      8.0f, "%.2f", 0))
+                    {
+                        MikuPan_SetSoftShadowRadius(soft_radius);
+                    }
+                }
+
+                int ssao_on = MikuPan_IsSsaoEnabled();
+                if (igCheckbox("Enable SSAO", (bool*) &ssao_on))
+                {
+                    MikuPan_SetSsaoEnabled(ssao_on);
+                }
+
+                int shafts_on = MikuPan_IsVolumetricShaftsEnabled();
+                if (igCheckbox("Volumetric Shafts", (bool*) &shafts_on))
+                {
+                    MikuPan_SetVolumetricShaftsEnabled(shafts_on);
                 }
 
                 MikuPan_UiShadowResolutionCombo("Resolution");

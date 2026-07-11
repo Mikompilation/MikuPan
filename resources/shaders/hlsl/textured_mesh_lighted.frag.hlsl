@@ -28,6 +28,51 @@ float3 MikuPan_ApplyPs2SceneTone(float3 color)
     return saturate(lerp(color, rolledHighlights, highlightWeight));
 }
 
+static const float2 kShadowPcfDisk[12] = {
+    float2( 0.000,  0.500),
+    float2( 0.433,  0.250),
+    float2( 0.433, -0.250),
+    float2( 0.000, -0.500),
+    float2(-0.433, -0.250),
+    float2(-0.433,  0.250),
+    float2( 0.780,  0.000),
+    float2( 0.390,  0.676),
+    float2(-0.390,  0.676),
+    float2(-0.780,  0.000),
+    float2(-0.390, -0.676),
+    float2( 0.390, -0.676),
+};
+
+float MikuPan_SampleShadowMask(float2 uv)
+{
+    return uAuxTexture.Sample(uAuxTextureSampler, saturate(uv)).r;
+}
+
+float MikuPan_SampleShadowOcclusion(float2 uv)
+{
+    float radius = max(uShadowSize.z, 0.0);
+    if (uShadowSize.w <= 0.5 || radius <= 0.01)
+    {
+        return MikuPan_SampleShadowMask(uv);
+    }
+
+    float2 texel_radius = radius / max(uShadowSize.xy, 1.0.xx);
+    float occlusion = MikuPan_SampleShadowMask(uv) * 2.0;
+    float total_weight = 2.0;
+
+    [unroll]
+    for (int i = 0; i < 12; i++)
+    {
+        float tap_weight = 1.0 - saturate(length(kShadowPcfDisk[i]) * 0.35);
+        occlusion +=
+            MikuPan_SampleShadowMask(uv + kShadowPcfDisk[i] * texel_radius) *
+            tap_weight;
+        total_weight += tap_weight;
+    }
+
+    return occlusion / total_weight;
+}
+
 struct PSInput
 {
     float4 position : SV_Position;
@@ -106,7 +151,7 @@ float4 main(PSInput input) : SV_Target0
                 suv.y >= 0.0 && suv.y <= 1.0 &&
                 sndc.z >= -1.0 && sndc.z <= 1.0)
             {
-                float occluded = uAuxTexture.Sample(uAuxTextureSampler, suv).r;
+                float occluded = MikuPan_SampleShadowOcclusion(suv);
                 color.rgb *= 1.0 - occluded * uParams0.y;
             }
         }

@@ -60,9 +60,49 @@
                         <div class="setting-copy"><label class="setting-title" for="msaa-select">MSAA</label><p class="setting-desc">Smooth geometry edges using multisampling.</p></div>
                         <div class="setting-control"><select id="msaa-select"></select></div>
                     </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="ssao-enabled-input">Enable SSAO</label><p class="setting-desc">Screen-space contact darkening. Requires MSAA Off.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="ssao-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="ssao-strength-stepper">SSAO Strength <span id="ssao-strength-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="ssao-strength-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="ssao-strength-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="ssao-radius-stepper">SSAO Radius <span id="ssao-radius-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="ssao-radius-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="ssao-radius-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="ssao-bias-stepper">SSAO Bias <span id="ssao-bias-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="ssao-bias-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="ssao-bias-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="volumetric-shafts-enabled-input">Enable Volumetric Shafts</label><p class="setting-desc">Flashlight fog beams. Requires MSAA Off.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="volumetric-shafts-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="volumetric-shafts-strength-stepper">Shaft Strength <span id="volumetric-shafts-strength-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="volumetric-shafts-strength-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="volumetric-shafts-strength-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="volumetric-shafts-radius-stepper">Shaft Radius <span id="volumetric-shafts-radius-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="volumetric-shafts-radius-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="volumetric-shafts-radius-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="volumetric-shafts-density-stepper">Shaft Density <span id="volumetric-shafts-density-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="volumetric-shafts-density-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="volumetric-shafts-density-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
                     <div class="setting-row">
                         <div class="setting-copy"><label class="setting-title" for="shadow-resolution-select">Shadow Resolution</label><p class="setting-desc">Higher values sharpen shadows at a performance cost.</p></div>
                         <div class="setting-control"><select id="shadow-resolution-select"></select></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="soft-shadows-enabled-input">Enable Soft Shadows</label><p class="setting-desc">Filters shadow-map edges for a smoother contact shape.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="soft-shadows-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="soft-shadow-radius-stepper">Soft Shadow Radius <span id="soft-shadow-radius-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="soft-shadow-radius-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="soft-shadow-radius-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
                     </div>
                     <div class="setting-row">
                         <div class="setting-copy"><label class="setting-title" for="lighting-mode-select">Lighting Mode</label><p class="setting-desc">Modern pixel lighting or PS2-style vertex lighting.</p></div>

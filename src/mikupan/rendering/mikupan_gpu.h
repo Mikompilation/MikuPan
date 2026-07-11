@@ -83,6 +83,7 @@ typedef struct MikuPan_GPUUniformBlock
     float uColor[4];
     float uFog[4];
     float uFogColor[4];
+    // xy=shadow map size, z=soft radius in texels, w=soft enabled
     float uShadowSize[4];
     float uTextureSize[4];
     float uOutputSize[4];
@@ -103,6 +104,14 @@ typedef struct MikuPan_GPUUniformBlock
     float uPs2Feedback[4];
     // rgb=Himuro EF_NEGA colour, a=fade strength
     float uScreenNegative[4];
+    // x=strength, y=radius in pixels, z=depth bias, w=depth contrast scale
+    float uSsaoParams[4];
+    // x=strength, y=screen radius, z=density, w=decay
+    float uVolumetricParams[4];
+    // xy=projected source UV, z=source depth, w=active
+    float uVolumetricLight[4];
+    // rgb=shaft tint, a=light/fog tint mix
+    float uVolumetricColor[4];
 
     int uFlags0[4];
     int uFlags1[4];
@@ -137,6 +146,8 @@ void MikuPan_GPUResolveSceneForPresent(void);
 void MikuPan_GPUCreateInternalBuffer(int width, int height, int msaa);
 void MikuPan_GPUDestroyInternalBuffer(void);
 unsigned int MikuPan_GPUGetSceneTextureId(void);
+unsigned int MikuPan_GPUGetSceneDepthTextureId(void);
+int MikuPan_GPUIsSceneDepthTextureSampleable(void);
 unsigned int MikuPan_GPUGetSceneWidth(void);
 unsigned int MikuPan_GPUGetSceneHeight(void);
 int MikuPan_GPUGetSceneMSAA(void);

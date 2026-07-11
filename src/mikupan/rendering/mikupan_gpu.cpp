@@ -330,6 +330,7 @@ extern float WorldView[4][4];
 extern float projection[4][4];
 
 static SDL_GPUTextureFormat PickSupportedDepthFormat(void);
+static SDL_GPUSampler* CreateSampler(int repeat, int mipmaps, int nearest);
 static void DestroyDepthQueryTargets(void);
 static int EnsureDepthQueryTargets(void);
 static void BeginDepthQueryPass(void);
@@ -547,6 +548,10 @@ static void SetDefaultUniforms(void)
     g_uniforms.uColor[3] = 1.0f;
     g_uniforms.uTextureSize[0] = 1.0f;
     g_uniforms.uTextureSize[1] = 1.0f;
+    g_uniforms.uShadowSize[0] = 1.0f;
+    g_uniforms.uShadowSize[1] = 1.0f;
+    g_uniforms.uShadowSize[2] = 0.0f;
+    g_uniforms.uShadowSize[3] = 0.0f;
     g_uniforms.uOutputSize[0] = 1.0f;
     g_uniforms.uOutputSize[1] = 1.0f;
     g_uniforms.uPhotoNegativeContentRect[2] = 1.0f;
@@ -568,6 +573,22 @@ static void SetDefaultUniforms(void)
     g_uniforms.uParams0[3] = 1.0f;
     g_uniforms.uParams1[2] = 1.0f;
     g_uniforms.uPs2Feedback[2] = 1.0f;
+    g_uniforms.uSsaoParams[0] = 0.0f;
+    g_uniforms.uSsaoParams[1] = 5.0f;
+    g_uniforms.uSsaoParams[2] = 0.0025f;
+    g_uniforms.uSsaoParams[3] = 120.0f;
+    g_uniforms.uVolumetricParams[0] = 0.0f;
+    g_uniforms.uVolumetricParams[1] = 0.72f;
+    g_uniforms.uVolumetricParams[2] = 0.85f;
+    g_uniforms.uVolumetricParams[3] = 0.92f;
+    g_uniforms.uVolumetricLight[0] = 0.5f;
+    g_uniforms.uVolumetricLight[1] = 0.5f;
+    g_uniforms.uVolumetricLight[2] = 1.0f;
+    g_uniforms.uVolumetricLight[3] = 0.0f;
+    g_uniforms.uVolumetricColor[0] = 1.0f;
+    g_uniforms.uVolumetricColor[1] = 1.0f;
+    g_uniforms.uVolumetricColor[2] = 1.0f;
+    g_uniforms.uVolumetricColor[3] = 0.65f;
 }
 
 static void SetDefaultRenderState(void)
@@ -922,10 +943,22 @@ static void CreateDepthTexture(int width, int height)
         return;
     }
 
+    SDL_GPUTextureUsageFlags usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
+    if (g_scene_msaa <= 1 &&
+        SDL_GPUTextureSupportsFormat(
+            g_device,
+            g_depth_format,
+            SDL_GPU_TEXTURETYPE_2D,
+            SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET |
+                SDL_GPU_TEXTUREUSAGE_SAMPLER))
+    {
+        usage |= SDL_GPU_TEXTUREUSAGE_SAMPLER;
+    }
+
     SDL_GPUTextureCreateInfo info = {0};
     info.type = SDL_GPU_TEXTURETYPE_2D;
     info.format = g_depth_format;
-    info.usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
+    info.usage = usage;
     info.width = (Uint32) width;
     info.height = (Uint32) height;
     info.layer_count_or_depth = 1;
@@ -950,6 +983,11 @@ static void CreateDepthTexture(int width, int height)
     g_textures[id].height = height;
     g_textures[id].format = info.format;
     g_textures[id].usage = info.usage;
+    if ((usage & SDL_GPU_TEXTUREUSAGE_SAMPLER) != 0)
+    {
+        g_textures[id].sampler = CreateSampler(0, 0, 1);
+        g_textures[id].sampler_nearest = CreateSampler(0, 0, 1);
+    }
     g_scene_depth_id = id;
 }
 
@@ -1265,6 +1303,21 @@ void MikuPan_GPUDestroyInternalBuffer(void)
 unsigned int MikuPan_GPUGetSceneTextureId(void)
 {
     return g_scene_texture_id;
+}
+
+unsigned int MikuPan_GPUGetSceneDepthTextureId(void)
+{
+    return g_scene_depth_id;
+}
+
+int MikuPan_GPUIsSceneDepthTextureSampleable(void)
+{
+    GPUTextureEntry* depth = TextureEntry(g_scene_depth_id);
+    return depth != NULL &&
+           depth->texture != NULL &&
+           depth->sampler != NULL &&
+           (depth->usage & SDL_GPU_TEXTUREUSAGE_SAMPLER) != 0 &&
+           g_scene_msaa <= 1;
 }
 
 unsigned int MikuPan_GPUGetSceneWidth(void)
@@ -3008,6 +3061,10 @@ void MikuPan_GPUSetVec4(const char* name, const float* vec)
     {
         memcpy(g_uniforms.uFogColor, vec, sizeof(g_uniforms.uFogColor));
     }
+    else if (strcmp(name, "uShadowSize") == 0)
+    {
+        memcpy(g_uniforms.uShadowSize, vec, sizeof(g_uniforms.uShadowSize));
+    }
     else if (strcmp(name, "uPhotoNegativeContentRect") == 0)
     {
         memcpy(g_uniforms.uPhotoNegativeContentRect, vec,
@@ -3022,6 +3079,25 @@ void MikuPan_GPUSetVec4(const char* name, const float* vec)
     {
         memcpy(g_uniforms.uScreenNegative, vec,
                sizeof(g_uniforms.uScreenNegative));
+    }
+    else if (strcmp(name, "uSsaoParams") == 0)
+    {
+        memcpy(g_uniforms.uSsaoParams, vec, sizeof(g_uniforms.uSsaoParams));
+    }
+    else if (strcmp(name, "uVolumetricParams") == 0)
+    {
+        memcpy(g_uniforms.uVolumetricParams, vec,
+               sizeof(g_uniforms.uVolumetricParams));
+    }
+    else if (strcmp(name, "uVolumetricLight") == 0)
+    {
+        memcpy(g_uniforms.uVolumetricLight, vec,
+               sizeof(g_uniforms.uVolumetricLight));
+    }
+    else if (strcmp(name, "uVolumetricColor") == 0)
+    {
+        memcpy(g_uniforms.uVolumetricColor, vec,
+               sizeof(g_uniforms.uVolumetricColor));
     }
 
     g_vertex_uniform_dirty = 1;
