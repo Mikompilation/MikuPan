@@ -60,7 +60,6 @@ static int g_photo_capture_readback_texture_width = 0;
 static int g_photo_capture_readback_texture_height = 0;
 static unsigned int g_screen_negative_scene_copy_id = 0;
 static unsigned int g_ssao_scene_copy_id = 0;
-static unsigned int g_atmospheric_fog_scene_copy_id = 0;
 static unsigned int g_bloom_scene_copy_id = 0;
 static unsigned int g_pause_capture_texture_id = 0;
 static int g_pause_capture_valid = 0;
@@ -414,12 +413,6 @@ void MikuPan_DestroyInternalBuffer()
     {
         MikuPan_GPUReleaseTexture(g_ssao_scene_copy_id);
         g_ssao_scene_copy_id = 0;
-    }
-
-    if (g_atmospheric_fog_scene_copy_id != 0)
-    {
-        MikuPan_GPUReleaseTexture(g_atmospheric_fog_scene_copy_id);
-        g_atmospheric_fog_scene_copy_id = 0;
     }
 
     if (g_bloom_scene_copy_id != 0)
@@ -1472,12 +1465,6 @@ void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
     }
     g_ssao_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
 
-    if (g_atmospheric_fog_scene_copy_id != 0)
-    {
-        MikuPan_GPUReleaseTexture(g_atmospheric_fog_scene_copy_id);
-    }
-    g_atmospheric_fog_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
-
     if (g_bloom_scene_copy_id != 0)
     {
         MikuPan_GPUReleaseTexture(g_bloom_scene_copy_id);
@@ -2027,12 +2014,205 @@ static int MikuPan_ShouldApplyAtmosphericFog(void)
     return mikupan_configuration.renderer.atmospheric_fog_enabled != 0 &&
            mikupan_configuration.renderer.atmospheric_fog_strength > 0.001f &&
            render_back_msaa.texture.id != 0 &&
-           g_atmospheric_fog_scene_copy_id != 0 &&
            render_back_msaa.texture.width > 0 &&
-           render_back_msaa.texture.height > 0 &&
-           MikuPan_GPUGetSceneMSAA() <= 1 &&
-           MikuPan_GPUIsSceneDepthTextureSampleable() != 0 &&
-           MikuPan_GPUGetSceneDepthTextureId() != 0;
+           render_back_msaa.texture.height > 0;
+}
+
+enum
+{
+    MIKUPAN_ATMOSPHERIC_FOG_COLUMNS = 10,
+    MIKUPAN_ATMOSPHERIC_FOG_ROWS = 12,
+    MIKUPAN_ATMOSPHERIC_FOG_LAYERS = 3,
+    MIKUPAN_ATMOSPHERIC_FOG_MAX_VERTICES =
+        MIKUPAN_ATMOSPHERIC_FOG_COLUMNS *
+        MIKUPAN_ATMOSPHERIC_FOG_ROWS *
+        MIKUPAN_ATMOSPHERIC_FOG_LAYERS * 6,
+};
+
+static float MikuPan_Vec3LengthSq(const vec3 v)
+{
+    return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+}
+
+static int MikuPan_NormalizeVec3(vec3 v)
+{
+    const float len_sq = MikuPan_Vec3LengthSq(v);
+    if (len_sq <= 0.000001f)
+    {
+        return 0;
+    }
+
+    const float inv_len = 1.0f / sqrtf(len_sq);
+    v[0] *= inv_len;
+    v[1] *= inv_len;
+    v[2] *= inv_len;
+    return 1;
+}
+
+static void MikuPan_CrossVec3(vec3 out, const vec3 a, const vec3 b)
+{
+    out[0] = a[1] * b[2] - a[2] * b[1];
+    out[1] = a[2] * b[0] - a[0] * b[2];
+    out[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+static void MikuPan_AddAtmosphericFogVertex(
+    float vertices[MIKUPAN_ATMOSPHERIC_FOG_MAX_VERTICES][4],
+    int *vertex_count,
+    const vec3 pos)
+{
+    if (*vertex_count >= MIKUPAN_ATMOSPHERIC_FOG_MAX_VERTICES)
+    {
+        return;
+    }
+
+    vertices[*vertex_count][0] = pos[0];
+    vertices[*vertex_count][1] = pos[1];
+    vertices[*vertex_count][2] = pos[2];
+    vertices[*vertex_count][3] = 1.0f;
+    (*vertex_count)++;
+}
+
+static void MikuPan_BuildAtmosphericFogPoint(
+    vec3 out,
+    const vec3 camera,
+    const vec3 forward,
+    const vec3 right,
+    float distance,
+    float side,
+    float y)
+{
+    out[0] = camera[0] + forward[0] * distance + right[0] * side;
+    out[1] = y;
+    out[2] = camera[2] + forward[2] * distance + right[2] * side;
+}
+
+static int MikuPan_BuildAtmosphericFogSheets(
+    float vertices[MIKUPAN_ATMOSPHERIC_FOG_MAX_VERTICES][4])
+{
+    mat4 inv_view;
+    glm_mat4_inv(WorldView, inv_view);
+
+    vec3 camera = {
+        inv_view[3][0],
+        inv_view[3][1],
+        inv_view[3][2],
+    };
+    vec3 forward = {
+        -inv_view[2][0],
+        0.0f,
+        -inv_view[2][2],
+    };
+    if (!MikuPan_NormalizeVec3(forward))
+    {
+        forward[0] = 0.0f;
+        forward[1] = 0.0f;
+        forward[2] = -1.0f;
+    }
+
+    vec3 world_up = {0.0f, 1.0f, 0.0f};
+    vec3 right;
+    MikuPan_CrossVec3(right, forward, world_up);
+    if (!MikuPan_NormalizeVec3(right))
+    {
+        right[0] = 1.0f;
+        right[1] = 0.0f;
+        right[2] = 0.0f;
+    }
+
+    const float density =
+        MikuPan_ClampFloat(
+            mikupan_configuration.renderer.atmospheric_fog_density,
+            0.0f,
+            1.5f);
+    const float height_bias =
+        MikuPan_ClampFloat(
+            mikupan_configuration.renderer.atmospheric_fog_height,
+            0.0f,
+            1.0f);
+    const float near_distance = 180.0f;
+    const float far_distance =
+        MikuPan_ClampFloat(3950.0f + density * 1350.0f +
+                               height_bias * 650.0f,
+                           3600.0f,
+                           6900.0f);
+    const float projection_scale =
+        fabsf(projection[0][0]) > 0.001f
+            ? 1.0f / fabsf(projection[0][0])
+            : 1.0f;
+    const float base_y =
+        camera[1] - (430.0f - height_bias * 260.0f);
+    const float layer_spacing =
+        80.0f + height_bias * 80.0f;
+    const float range = far_distance - near_distance;
+
+    int vertex_count = 0;
+    for (int layer = 0; layer < MIKUPAN_ATMOSPHERIC_FOG_LAYERS; layer++)
+    {
+        const float layer_y = base_y + (float)layer * layer_spacing;
+
+        for (int row = MIKUPAN_ATMOSPHERIC_FOG_ROWS - 1; row >= 0; row--)
+        {
+            const float row_t0 =
+                (float)row / (float)MIKUPAN_ATMOSPHERIC_FOG_ROWS;
+            const float row_t1 =
+                (float)(row + 1) / (float)MIKUPAN_ATMOSPHERIC_FOG_ROWS;
+            const float d0 =
+                near_distance + range * row_t0 * row_t0;
+            const float d1 =
+                near_distance + range * row_t1 * row_t1;
+            const float w0 =
+                MikuPan_ClampFloat(d0 * projection_scale * 1.45f,
+                                   620.0f,
+                                   6200.0f);
+            const float w1 =
+                MikuPan_ClampFloat(d1 * projection_scale * 1.45f,
+                                   620.0f,
+                                   6200.0f);
+
+            for (int col = 0; col < MIKUPAN_ATMOSPHERIC_FOG_COLUMNS; col++)
+            {
+                const float col_t0 =
+                    (float)col / (float)MIKUPAN_ATMOSPHERIC_FOG_COLUMNS;
+                const float col_t1 =
+                    (float)(col + 1) /
+                    (float)MIKUPAN_ATMOSPHERIC_FOG_COLUMNS;
+                const float x00 = -w0 + w0 * 2.0f * col_t0;
+                const float x10 = -w0 + w0 * 2.0f * col_t1;
+                const float x01 = -w1 + w1 * 2.0f * col_t0;
+                const float x11 = -w1 + w1 * 2.0f * col_t1;
+
+                vec3 p00;
+                vec3 p10;
+                vec3 p01;
+                vec3 p11;
+                MikuPan_BuildAtmosphericFogPoint(
+                    p00, camera, forward, right, d0, x00, layer_y);
+                MikuPan_BuildAtmosphericFogPoint(
+                    p10, camera, forward, right, d0, x10, layer_y);
+                MikuPan_BuildAtmosphericFogPoint(
+                    p01, camera, forward, right, d1, x01, layer_y);
+                MikuPan_BuildAtmosphericFogPoint(
+                    p11, camera, forward, right, d1, x11, layer_y);
+
+                MikuPan_AddAtmosphericFogVertex(
+                    vertices, &vertex_count, p01);
+                MikuPan_AddAtmosphericFogVertex(
+                    vertices, &vertex_count, p11);
+                MikuPan_AddAtmosphericFogVertex(
+                    vertices, &vertex_count, p10);
+
+                MikuPan_AddAtmosphericFogVertex(
+                    vertices, &vertex_count, p01);
+                MikuPan_AddAtmosphericFogVertex(
+                    vertices, &vertex_count, p10);
+                MikuPan_AddAtmosphericFogVertex(
+                    vertices, &vertex_count, p00);
+            }
+        }
+    }
+
+    return vertex_count;
 }
 
 static void MikuPan_ApplyAtmosphericFogPass(void)
@@ -2042,17 +2222,12 @@ static void MikuPan_ApplyAtmosphericFogPass(void)
         return;
     }
 
-    MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
-                           g_atmospheric_fog_scene_copy_id,
-                           render_back_msaa.texture.width,
-                           render_back_msaa.texture.height);
-
-    float quad[] = {
-        0,1,0,0,   1,1,1,1,   -1,-1,0,1,
-        1,1,0,0,   1,1,1,1,    1,-1,0,1,
-        0,0,0,0,   1,1,1,1,   -1, 1,0,1,
-        1,0,0,0,   1,1,1,1,    1, 1,0,1
-    };
+    float vertices[MIKUPAN_ATMOSPHERIC_FOG_MAX_VERTICES][4];
+    const int vertex_count = MikuPan_BuildAtmosphericFogSheets(vertices);
+    if (vertex_count <= 0)
+    {
+        return;
+    }
 
     float fog_params[4] = {
         mikupan_configuration.renderer.atmospheric_fog_strength,
@@ -2064,35 +2239,33 @@ static void MikuPan_ApplyAtmosphericFogPass(void)
     MikuPan_SetViewportCached(0, 0,
                               render_back_msaa.texture.width,
                               render_back_msaa.texture.height);
-    MikuPan_GPUSetScreenCopyTarget(render_back_msaa.texture.id,
-                                   render_back_msaa.texture.width,
-                                   render_back_msaa.texture.height,
-                                   0);
-    MikuPan_SetRenderState2D();
+    MikuPan_FlushTexturedSpriteBatch();
+    MikuPan_SetRenderState3D();
+    MikuPan_GPUSetCullNone();
+    MikuPan_GPUSetDepthWrite(0);
+    MikuPan_GPUSetDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
     MikuPan_SetCurrentShaderProgram(ATMOSPHERIC_FOG_SHADER);
 
-    MikuPan_ActiveTextureCached(GL_TEXTURE0);
-    MikuPan_BindTexture2DCached(g_atmospheric_fog_scene_copy_id);
-    MikuPan_ActiveTextureCached(GL_TEXTURE1);
-    MikuPan_BindTexture2DCached(MikuPan_GPUGetSceneDepthTextureId());
-    MikuPan_ActiveTextureCached(GL_TEXTURE0);
-
-    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
-    MikuPan_SetUniform1iToCurrentShader(1, "uPhotoNegativeSourceTexture");
-    MikuPan_SetUniform2fToCurrentShader((float) render_back_msaa.texture.width,
-                                        (float) render_back_msaa.texture.height,
-                                        "uTextureSize");
     MikuPan_SetUniform1fToCurrentShader(
         (float)((double)SDL_GetTicks() / 1000.0),
         "uTime");
     MikuPan_SetUniform4fvToCurrentShader(fog_params,
                                          "uAtmosphericFogParams");
 
-    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4);
     MikuPan_BindVAO(pipeline->vao);
     MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
-                             (GLsizeiptr)sizeof(quad), quad);
-    MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                             (GLsizeiptr)(vertex_count * sizeof(vertices[0])),
+                             vertices);
+    MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, vertex_count);
+    MikuPan_PerfDrawCall();
+
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
+    MikuPan_GPUSetDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetDepthWrite(1);
+    MikuPan_GPUSetCullBack();
+    MikuPan_ResetRenderStateCache();
 }
 
 static int MikuPan_ShouldApplyBloom(void)
@@ -2160,10 +2333,10 @@ static void MikuPan_ApplyBloomPass(void)
 void MikuPan_EndFrame()
 {
     MikuPan_ApplyVolumetricShaftsPass();
+    MikuPan_ApplyAtmosphericFogPass();
     MikuPan_GPUFlushRenderPass();
     MikuPan_GPUResolveSceneForPresent();
     MikuPan_ApplySsaoPass();
-    MikuPan_ApplyAtmosphericFogPass();
     MikuPan_ApplyBloomPass();
     MikuPan_SetViewportCached(
         0,

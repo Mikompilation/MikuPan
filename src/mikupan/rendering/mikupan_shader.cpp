@@ -52,7 +52,7 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
      "resources/shaders/hlsl/ssao.frag.hlsl"},
     {"resources/shaders/hlsl/volumetric_shafts.vert.hlsl", NULL,
      "resources/shaders/hlsl/volumetric_shafts.frag.hlsl"},
-    {"resources/shaders/hlsl/sprite.vert.hlsl", NULL,
+    {"resources/shaders/hlsl/atmospheric_fog.vert.hlsl", NULL,
      "resources/shaders/hlsl/atmospheric_fog.frag.hlsl"},
     {"resources/shaders/hlsl/sprite.vert.hlsl", NULL,
      "resources/shaders/hlsl/bloom.frag.hlsl"},

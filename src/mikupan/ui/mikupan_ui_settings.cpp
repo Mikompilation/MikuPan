@@ -1155,15 +1155,6 @@ void MikuPan_UiSettingsRender(void)
                     MikuPan_SetAtmosphericFogEnabled(fog_enabled ? 1 : 0);
                 }
 
-                if (MikuPan_GPUGetSceneMSAA() > 1)
-                {
-                    igTextDisabled("Atmospheric fog requires MSAA Off; scene depth is multisampled.");
-                }
-                else if (!MikuPan_GPUIsSceneDepthTextureSampleable())
-                {
-                    igTextDisabled("Atmospheric fog unavailable: backend cannot sample the scene depth format.");
-                }
-
                 if (MikuPan_IsAtmosphericFogEnabled())
                 {
                     float fog_strength = MikuPan_GetAtmosphericFogStrength();

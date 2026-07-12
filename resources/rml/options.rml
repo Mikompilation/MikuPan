@@ -126,7 +126,7 @@
                         <div class="setting-control"><button id="color-grade-saturation-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="color-grade-saturation-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
                     </div>
                     <div class="setting-row compact">
-                        <div class="setting-copy"><label class="setting-title" for="atmospheric-fog-enabled-input">Enable Atmospheric Fog</label><p class="setting-desc">Layered depth haze and low fog pockets. Requires MSAA Off.</p></div>
+                        <div class="setting-copy"><label class="setting-title" for="atmospheric-fog-enabled-input">Enable Atmospheric Fog</label><p class="setting-desc">Depth-tested world fog sheets and low air pockets.</p></div>
                         <div class="setting-control checkbox-control"><input type="checkbox" id="atmospheric-fog-enabled-input" class="checkbox" /></div>
                     </div>
                     <div class="setting-row">
