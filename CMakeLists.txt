@@ -280,6 +280,12 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_rmlui.cpp
         src/mikupan/ui/mikupan_rml_options.cpp
         src/mikupan/ui/mikupan_rml_options.h
+        src/mikupan/ui/mikupan_rml_title.cpp
+        src/mikupan/ui/mikupan_rml_title.h
+        src/mikupan/ui/mikupan_rml_save_load.cpp
+        src/mikupan/ui/mikupan_rml_save_load.h
+        src/mikupan/ui/mikupan_rml_save_point.cpp
+        src/mikupan/ui/mikupan_rml_save_point.h
         src/mikupan/rendering/mikupan_profiler.cpp
         src/mikupan/rendering/mikupan_gpu.cpp
         src/mikupan/rendering/mikupan_camera.cpp

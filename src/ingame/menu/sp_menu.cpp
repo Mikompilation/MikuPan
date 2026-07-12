@@ -21,6 +21,8 @@
 #include "ingame/plyr/plyr_ctl.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/ui/mikupan_rml_save_load.h"
+#include "mikupan/ui/mikupan_rml_save_point.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mc/mc_at.h"
 #include "mc/mc_disp.h"
@@ -53,11 +55,14 @@ static void DspSaveTitle(u_char type, short int pos_x, short int pos_y,
                          u_char alp, u_char pri);
 static void PhotoDataExchange();
 static int AlbmDesignLoadInGame(u_char side, u_char type);
+static void SavePointMenuRmlAction(int action);
 
 static SAVE_CONTE sav_con;
 static FLSH_CORE flsh[3];
 static int sp_load_id;
 static u_char btn_flsh_cnt;
+static int rml_save_active;
+static int rml_save_point_active;
 
 static MIRACLE_LENZ mrcl_lnz;
 static SV_DSP_SW sv_dsp_sw;
@@ -104,6 +109,7 @@ void SavePointMenuOpen()
 
 void SavePointMenuOpenInit(u_char msn)
 {
+    MikuPan_RmlSaveLoadCapturePreview();
     sav_con = {};
     mrcl_lnz = {};
     sv_dsp_sw = {};
@@ -139,10 +145,14 @@ void SavePointMenuOpenInit(u_char msn)
     sp_load_id = -1;
 
     btn_flsh_cnt = 0;
+    rml_save_active = 0;
+    rml_save_point_active = 0;
+    MikuPan_RmlSavePointClose();
 }
 
 void BtlModSaveInit()
 {
+    MikuPan_RmlSaveLoadCapturePreview();
     sav_con = {};
     mrcl_lnz = {};
     sv_dsp_sw = {};
@@ -166,6 +176,9 @@ void BtlModSaveInit()
     sp_load_id = -1;
 
     btn_flsh_cnt = 0;
+    rml_save_active = 0;
+    rml_save_point_active = 0;
+    MikuPan_RmlSavePointClose();
 }
 
 char SavePointMenuMain(u_char msn)
@@ -284,6 +297,12 @@ char SavePointMenuMain(u_char msn)
         case 4:
             SetSprFile(MikuPan_GetHostAddress(LOAD_ADDRESS_1));
 
+            if (rml_save_point_active == 0)
+            {
+                rml_save_point_active =
+                    MikuPan_RmlSavePointOpen(mode, msn, spmenu_wrk.csr[3]);
+            }
+
             if (dsp_svp.top_alp + 8 < 0x80)
             {
                 dsp_svp.top_alp += 8;
@@ -302,7 +321,21 @@ char SavePointMenuMain(u_char msn)
             break;
         case 5:
             SetSprFile(MikuPan_GetHostAddress(LOAD_ADDRESS_1));
-            SavePointMenuModeSlct(msn, mode);
+            if (rml_save_point_active != 0)
+            {
+                MikuPan_RmlSavePointSetPresentation(mode, msn, 1, 1.0f);
+                spmenu_wrk.csr[3] =
+                    static_cast<u_char>(MikuPan_RmlSavePointGetSelection());
+                const int action = MikuPan_RmlSavePointConsumeAction();
+                if (action != MIKUPAN_RML_SAVE_POINT_ACTION_NONE)
+                {
+                    SavePointMenuRmlAction(action);
+                }
+            }
+            else
+            {
+                SavePointMenuModeSlct(msn, mode);
+            }
             break;
         case 6:
             SetSprFile(MikuPan_GetHostAddress(LOAD_ADDRESS_1));
@@ -319,22 +352,27 @@ char SavePointMenuMain(u_char msn)
                     dsp_svp.top_alp = 0;
                     dsp_svp.bak_alp = 0x80;
 
+                    int mission_flag;
                     if (is_btlmode)
                     {
-                        mcInit(0, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), mc_header.game.msn_flg);
-                    }
-                    else if (msn == 0)
-                    {
-                        mcInit(0, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
+                        mission_flag = mc_header.game.msn_flg;
                     }
                     else
                     {
-                        mcInit(0, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 1);
+                        mission_flag = msn == 0 ? 0 : 1;
+                    }
+
+                    MikuPan_RmlSaveLoadOpenSave(mission_flag);
+                    rml_save_active = MikuPan_RmlSaveLoadIsOpen();
+                    if (rml_save_active == 0)
+                    {
+                        mcInit(0,
+                               (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS),
+                               mission_flag);
+                        sav_con.step = 1;
                     }
 
                     spmenu_wrk.mode = 7;
-
-                    sav_con.step = 1;
                 }
             }
             break;
@@ -343,10 +381,20 @@ char SavePointMenuMain(u_char msn)
             SetSprFile(MikuPan_GetHostAddress(LOAD_ADDRESS_1));
             SetSprFile(MikuPan_GetHostAddress(LOAD_ADDRESS_3));
 
-            if (McAtSaveChk() != 0)
+            if (rml_save_active != 0)
+            {
+                int result = MikuPan_RmlSaveLoadConsumeResult();
+                if (result == MIKUPAN_RML_SAVE_LOAD_RESULT_SAVED
+                    || result == MIKUPAN_RML_SAVE_LOAD_RESULT_CANCELLED)
+                {
+                    rml_save_active = 0;
+                    SendManMdlTex();
+                    spmenu_wrk.mode = 8;
+                }
+            }
+            else if (McAtSaveChk() != 0)
             {
                 SendManMdlTex();
-
                 spmenu_wrk.mode = 8;
             }
             break;
@@ -791,6 +839,9 @@ char SavePointMenuMain(u_char msn)
                     dsp_svp.top_alp = 0;
                     dsp_svp.bak_alp = 0;
 
+                    MikuPan_RmlSavePointClose();
+                    rml_save_point_active = 0;
+
                     if (msn == 0)
                     {
                         ingame_wrk.stts &= ~0x20;
@@ -821,7 +872,19 @@ char SavePointMenuMain(u_char msn)
             break;
     }
 
-    if (dsp_svp.top_alp != 0)
+    if (rml_save_point_active != 0)
+    {
+        const int interactive = spmenu_wrk.mode == 5 ? 1 : 0;
+        MikuPan_RmlSavePointSetPresentation(
+            mode,
+            msn,
+            interactive,
+            static_cast<float>(dsp_svp.top_alp) / 128.0f);
+        spmenu_wrk.csr[3] =
+            static_cast<u_char>(MikuPan_RmlSavePointGetSelection());
+    }
+
+    if (dsp_svp.top_alp != 0 && rml_save_point_active == 0)
     {
         SavePointMenuModeSlctDisp(msn, spmenu_wrk.csr[3], spmenu_wrk.csr[4],
                                   dsp_svp.top_alp, mode);
@@ -859,6 +922,54 @@ char SavePointMenuMain(u_char msn)
     }
 
     return rtrn;
+}
+
+static void SavePointMenuRmlAction(int action)
+{
+    spmenu_wrk.csr[3] = static_cast<u_char>(action);
+
+    switch (action)
+    {
+        case MIKUPAN_RML_SAVE_POINT_ACTION_SAVE:
+            MikuPan_RmlSaveLoadCapturePreview();
+#ifdef BUILD_EU_VERSION
+            sp_load_id = LoadReqLanguage(PL_SAVE_E_PK2, LOAD_ADDRESS_2);
+#else
+            sp_load_id = LoadReq(PL_SAVE_PK2, LOAD_ADDRESS_2);
+#endif
+            sp_load_id = LoadReq(SV_PHT_PK2, LOAD_ADDRESS_3);
+            spmenu_wrk.mode = SPMODE_SAVE_INN;
+            break;
+        case MIKUPAN_RML_SAVE_POINT_ACTION_ALBUM:
+#ifdef BUILD_EU_VERSION
+            sp_load_id = LoadReqLanguage(PL_SAVE_E_PK2, LOAD_ADDRESS_2);
+            sp_load_id =
+                LoadReqLanguage(PL_ALBM_SAVE_E_PK2, LOAD_ADDRESS_3);
+#else
+            sp_load_id = LoadReq(PL_SAVE_PK2, LOAD_ADDRESS_2);
+            sp_load_id = LoadReq(PL_ALBM_SAVE_PK2, LOAD_ADDRESS_3);
+#endif
+            dsp_svp.atype_buf[0] = 5;
+            dsp_svp.atype_buf[1] = 5;
+            dsp_svp.in_album = 0;
+            spmenu_wrk.mode = SPMODE_ALBM_PSVP_WAIT;
+            break;
+        case MIKUPAN_RML_SAVE_POINT_ACTION_FILM:
+            poss_item[1] = 30;
+            break;
+        case MIKUPAN_RML_SAVE_POINT_ACTION_EXIT:
+#ifdef BUILD_EU_VERSION
+            sp_load_id = LoadReqLanguage(PL_PLDT_E_PK2, LOAD_ADDRESS_4);
+            sp_load_id = LoadReqLanguage(PL_MTOP_E_PK2, LOAD_ADDRESS_2);
+#else
+            sp_load_id = LoadReq(PL_PLDT_PK2, LOAD_ADDRESS_4);
+            sp_load_id = LoadReq(PL_MTOP_PK2, LOAD_ADDRESS_2);
+#endif
+            spmenu_wrk.mode = SPMENU_EXIT;
+            break;
+        default:
+            break;
+    }
 }
 
 void SavePointMenuModeSlct(u_char msn, u_char mode)

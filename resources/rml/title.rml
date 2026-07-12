@@ -1,0 +1,153 @@
+<rml>
+<head>
+    <link type="text/rcss" href="title.rcss"/>
+</head>
+<body>
+    <div id="title-root" class="hidden">
+        <div id="title-vignette">
+            <div id="title-vignette-left" class="title-vignette-edge"></div>
+            <div id="title-vignette-right" class="title-vignette-edge"></div>
+            <div id="title-vignette-top" class="title-vignette-edge"></div>
+            <div id="title-vignette-bottom" class="title-vignette-edge"></div>
+        </div>
+        <div id="title-focus-group">
+            <div id="title-logo-group">
+                <img id="title-smoke-a" class="title-logo-layer title-smoke" src="../title/eu/back_2.png"/>
+                <img id="title-smoke-b" class="title-logo-layer title-smoke" src="../title/eu/back_3.png"/>
+                <img id="title-ring-glow-a" class="title-logo-layer title-ring-glow" src="../title/eu/back_1_glow.png"/>
+                <img id="title-ring-glow-b" class="title-logo-layer title-ring-glow" src="../title/eu/back_1_glow.png?mirror_x"/>
+                <img id="title-ring" class="title-logo-layer" src="../title/eu/back_1.png"/>
+                <img id="title-logo" class="title-logo-layer" src="../title/eu/title.png"/>
+            </div>
+
+            <button id="title-press-button" class="title-bottom-text">Press Start</button>
+
+            <div id="title-menu-panel" class="hidden">
+                <button id="title-menu-new" class="title-menu-button selected">
+                    <span class="title-menu-backing title-menu-backing-left"></span>
+                    <span class="title-menu-backing title-menu-backing-center"></span>
+                    <span class="title-menu-backing title-menu-backing-right"></span>
+                    <span class="title-menu-divider title-menu-divider-left"></span>
+                    <span class="title-menu-divider title-menu-divider-center"></span>
+                    <span class="title-menu-divider title-menu-divider-right"></span>
+                    <span class="title-menu-label">New Game</span>
+                </button>
+                <button id="title-menu-load" class="title-menu-button">
+                    <span class="title-menu-backing title-menu-backing-left"></span>
+                    <span class="title-menu-backing title-menu-backing-center"></span>
+                    <span class="title-menu-backing title-menu-backing-right"></span>
+                    <span class="title-menu-divider title-menu-divider-left"></span>
+                    <span class="title-menu-divider title-menu-divider-center"></span>
+                    <span class="title-menu-divider title-menu-divider-right"></span>
+                    <span class="title-menu-label">Load Game</span>
+                </button>
+                <button id="title-menu-album" class="title-menu-button">
+                    <span class="title-menu-backing title-menu-backing-left"></span>
+                    <span class="title-menu-backing title-menu-backing-center"></span>
+                    <span class="title-menu-backing title-menu-backing-right"></span>
+                    <span class="title-menu-divider title-menu-divider-left"></span>
+                    <span class="title-menu-divider title-menu-divider-center"></span>
+                    <span class="title-menu-divider title-menu-divider-right"></span>
+                    <span class="title-menu-label">Album</span>
+                </button>
+                <button id="title-menu-settings" class="title-menu-button">
+                    <span class="title-menu-backing title-menu-backing-left"></span>
+                    <span class="title-menu-backing title-menu-backing-center"></span>
+                    <span class="title-menu-backing title-menu-backing-right"></span>
+                    <span class="title-menu-divider title-menu-divider-left"></span>
+                    <span class="title-menu-divider title-menu-divider-center"></span>
+                    <span class="title-menu-divider title-menu-divider-right"></span>
+                    <span class="title-menu-label">Settings</span>
+                </button>
+                <button id="title-menu-exit" class="title-menu-button">
+                    <span class="title-menu-backing title-menu-backing-left"></span>
+                    <span class="title-menu-backing title-menu-backing-center"></span>
+                    <span class="title-menu-backing title-menu-backing-right"></span>
+                    <span class="title-menu-divider title-menu-divider-left"></span>
+                    <span class="title-menu-divider title-menu-divider-center"></span>
+                    <span class="title-menu-divider title-menu-divider-right"></span>
+                    <span class="title-menu-label">Exit Game</span>
+                </button>
+            </div>
+
+            <div id="title-exit-dialog" class="hidden">
+                <div class="title-exit-shade">
+                    <span class="title-exit-shade-part left"></span>
+                    <span class="title-exit-shade-part center"></span>
+                    <span class="title-exit-shade-part right"></span>
+                </div>
+                <div class="ff-message-fill"></div>
+                <div class="ff-message-frame">
+                    <div class="ff-message-outer-horizontal top">
+                        <span class="ff-message-outer-fade left"></span>
+                        <span class="ff-message-outer-center"></span>
+                        <span class="ff-message-outer-fade right"></span>
+                    </div>
+                    <div class="ff-message-outer-horizontal bottom">
+                        <span class="ff-message-outer-fade left"></span>
+                        <span class="ff-message-outer-center"></span>
+                        <span class="ff-message-outer-fade right"></span>
+                    </div>
+                    <span class="ff-message-outer-vertical left"></span>
+                    <span class="ff-message-outer-vertical right"></span>
+                    <div class="ff-message-inner-horizontal top">
+                        <span class="ff-message-inner-fade left"></span>
+                        <span class="ff-message-inner-center"></span>
+                        <span class="ff-message-inner-fade right"></span>
+                    </div>
+                    <div class="ff-message-inner-horizontal bottom">
+                        <span class="ff-message-inner-fade left"></span>
+                        <span class="ff-message-inner-center"></span>
+                        <span class="ff-message-inner-fade right"></span>
+                    </div>
+                    <span class="ff-message-inner-vertical left"></span>
+                    <span class="ff-message-inner-vertical right"></span>
+                </div>
+                <div id="title-exit-message">Exit the game?</div>
+                <div id="title-exit-divider">
+                    <div class="title-exit-divider-edge left"></div>
+                    <div class="title-exit-divider-center"></div>
+                    <div class="title-exit-divider-edge right"></div>
+                </div>
+                <div id="title-exit-buttons">
+                    <button id="title-exit-yes" class="title-exit-button ff-prompt-button">
+                        <span class="ff-prompt-button-backing left"></span>
+                        <span class="ff-prompt-button-backing center"></span>
+                        <span class="ff-prompt-button-backing right"></span>
+                        <span class="ff-prompt-button-border top">
+                            <span class="ff-prompt-button-border-edge left"></span>
+                            <span class="ff-prompt-button-border-center"></span>
+                            <span class="ff-prompt-button-border-edge right"></span>
+                        </span>
+                        <span class="ff-prompt-button-border bottom">
+                            <span class="ff-prompt-button-border-edge left"></span>
+                            <span class="ff-prompt-button-border-center"></span>
+                            <span class="ff-prompt-button-border-edge right"></span>
+                        </span>
+                        <span class="ff-prompt-button-label">Yes</span>
+                    </button>
+                    <button id="title-exit-no" class="title-exit-button ff-prompt-button selected">
+                        <span class="ff-prompt-button-backing left"></span>
+                        <span class="ff-prompt-button-backing center"></span>
+                        <span class="ff-prompt-button-backing right"></span>
+                        <span class="ff-prompt-button-border top">
+                            <span class="ff-prompt-button-border-edge left"></span>
+                            <span class="ff-prompt-button-border-center"></span>
+                            <span class="ff-prompt-button-border-edge right"></span>
+                        </span>
+                        <span class="ff-prompt-button-border bottom">
+                            <span class="ff-prompt-button-border-edge left"></span>
+                            <span class="ff-prompt-button-border-center"></span>
+                            <span class="ff-prompt-button-border-edge right"></span>
+                        </span>
+                        <span class="ff-prompt-button-label">No</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="title-build-info"></div>
+        <div id="title-copyright">©TECMO, LTD. 2001-2002</div>
+    </div>
+</body>
+</rml>

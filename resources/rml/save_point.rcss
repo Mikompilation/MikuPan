@@ -1,0 +1,830 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    display: block;
+    nav: none;
+    width: 100%;
+    height: 100%;
+    margin: 0dp;
+    padding: 0dp;
+    font-family: MikuPanRml;
+    color: #d7c9ae;
+    background-color: transparent;
+}
+
+.hidden {
+    display: none;
+}
+
+#save-point-root {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 100%;
+    height: 100%;
+}
+
+#save-point-menu {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 640dp;
+    height: 448dp;
+    margin-left: -320dp;
+    margin-top: -224dp;
+}
+
+#save-point-title-board {
+    position: absolute;
+    left: 125dp;
+    top: 42dp;
+    width: 390dp;
+    height: 46dp;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.save-point-title-backing {
+    position: absolute;
+    top: 0dp;
+    height: 46dp;
+    pointer-events: none;
+}
+
+.save-point-title-backing.left {
+    left: 0dp;
+    width: 82dp;
+    decorator: horizontal-gradient(#00000000 #3b2c1b78);
+}
+
+.save-point-title-backing.center {
+    left: 82dp;
+    width: 226dp;
+    background-color: #3b2c1b78;
+}
+
+.save-point-title-backing.right {
+    right: 0dp;
+    width: 82dp;
+    decorator: horizontal-gradient(#3b2c1b78 #00000000);
+}
+
+.save-point-title-border {
+    position: absolute;
+    left: 34dp;
+    width: 322dp;
+    height: 2px;
+    pointer-events: none;
+}
+
+.save-point-title-border.top {
+    top: 0dp;
+}
+
+.save-point-title-border.bottom {
+    bottom: 0dp;
+}
+
+.save-point-title-border-edge,
+.save-point-title-border-center {
+    position: absolute;
+    top: 0dp;
+    height: 2px;
+}
+
+.save-point-title-border-edge.left {
+    left: 0dp;
+    width: 58dp;
+    decorator: horizontal-gradient(#00000000 #b7955fc4);
+}
+
+.save-point-title-border-center {
+    left: 58dp;
+    width: 194dp;
+    background-color: #b7955fc4;
+}
+
+.save-point-title-border-edge.right {
+    right: 0dp;
+    width: 70dp;
+    decorator: horizontal-gradient(#b7955fc4 #00000000);
+}
+
+#save-point-title {
+    position: absolute;
+    left: 20dp;
+    top: 2dp;
+    width: 350dp;
+    height: 46dp;
+    color: #f5e4b8;
+    font-size: 28dp;
+    line-height: 46dp;
+    letter-spacing: 7dp;
+    text-align: center;
+    font-effect: glow(1px 3px 0px 0px #c89a4654), shadow(0px 1px #000000e8);
+    pointer-events: none;
+}
+
+#save-point-controls {
+    position: absolute;
+    left: 355dp;
+    top: 91dp;
+    width: 240dp;
+    height: 22dp;
+    color: #ddcaa3;
+    font-size: 13dp;
+    line-height: 22dp;
+    letter-spacing: 1.6dp;
+    text-align: center;
+    font-effect: glow(1px 2px 0px 0px #aa7c3650), shadow(0px 1px #000000e8);
+    pointer-events: none;
+}
+
+.save-point-controls-text {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 240dp;
+    height: 22dp;
+    line-height: 22dp;
+    text-align: center;
+    pointer-events: none;
+}
+
+.save-point-option {
+    position: absolute;
+    top: 103dp;
+    width: 144dp;
+    height: 184dp;
+    margin: 0dp;
+    padding: 0dp;
+    color: #b9aa8c;
+    background-color: transparent;
+    border-width: 0dp;
+    font-family: MikuPanRml;
+    cursor: pointer;
+}
+
+#save-point-save {
+    left: 32dp;
+}
+
+#save-point-album {
+    left: 176dp;
+}
+
+#save-point-film {
+    left: 320dp;
+}
+
+#save-point-exit {
+    left: 464dp;
+}
+
+.three-options #save-point-save {
+    left: 72dp;
+}
+
+.three-options #save-point-album {
+    left: 248dp;
+}
+
+.three-options #save-point-exit {
+    left: 424dp;
+}
+
+.save-point-icon-box {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 144dp;
+    height: 155dp;
+    pointer-events: none;
+}
+
+.save-point-icon {
+    position: absolute;
+    display: block;
+    opacity: 0.58;
+    image-color: #d9c9a9;
+    pointer-events: none;
+}
+
+.save-point-icon-save {
+    left: 33dp;
+    top: 28dp;
+    width: 72dp;
+    height: 95dp;
+}
+
+.save-point-icon-album {
+    left: 7dp;
+    top: 14dp;
+    width: 128dp;
+    height: 128dp;
+}
+
+.save-point-icon-film {
+    left: 6dp;
+    top: 14dp;
+    width: 128dp;
+    height: 128dp;
+}
+
+.save-point-icon-exit {
+    left: 18dp;
+    top: 34dp;
+    width: 104dp;
+    height: 90dp;
+}
+
+.save-point-label {
+    position: absolute;
+    left: 0dp;
+    top: 148dp;
+    width: 144dp;
+    height: 31dp;
+    color: #c6b38f;
+    font-size: 15dp;
+    line-height: 31dp;
+    letter-spacing: 2dp;
+    text-align: center;
+    font-effect: glow(1px 2px 0px 0px #a8783150), shadow(0px 1px #000000e8);
+    pointer-events: none;
+}
+
+
+.save-point-label-border {
+    position: absolute;
+    left: 10dp;
+    width: 124dp;
+    height: 1px;
+    background-color: #a88755a0;
+    opacity: 0.42;
+    pointer-events: none;
+}
+
+.save-point-label-border.top {
+    top: 2dp;
+}
+
+.save-point-label-border.bottom {
+    bottom: 2dp;
+}
+
+.save-point-option:hover .save-point-label-border,
+.save-point-option.selected .save-point-label-border {
+    background-color: #d1aa68e0;
+    opacity: 0.9;
+}
+
+.save-point-label-text {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 144dp;
+    height: 31dp;
+    line-height: 31dp;
+    text-align: center;
+    pointer-events: none;
+}
+
+.save-point-text-backing {
+    position: absolute;
+    top: 3dp;
+    height: 25dp;
+    opacity: 0.72;
+    pointer-events: none;
+}
+
+.save-point-text-backing.left {
+    left: 0dp;
+    width: 30%;
+    decorator: horizontal-gradient(#00000000 #080706b8);
+}
+
+.save-point-text-backing.center {
+    left: 30%;
+    width: 40%;
+    background-color: #080706b8;
+}
+
+.save-point-text-backing.right {
+    right: 0dp;
+    width: 30%;
+    decorator: horizontal-gradient(#080706b8 #00000000);
+}
+
+#save-point-controls .save-point-text-backing {
+    top: 1dp;
+    height: 20dp;
+    opacity: 0.64;
+}
+
+.save-point-option:hover .save-point-icon,
+.save-point-option.selected .save-point-icon {
+    image-color: #f7e5ba;
+}
+
+.save-point-option:hover .save-point-label,
+.save-point-option.selected .save-point-label {
+    color: #f5dfae;
+    font-effect: glow(1px 4px 0px 0px #d5a65078), shadow(0px 1px #000000e8);
+}
+
+.save-point-option:hover .save-point-text-backing.left,
+.save-point-option.selected .save-point-text-backing.left {
+    decorator: horizontal-gradient(#00000000 #6f542cc8);
+}
+
+.save-point-option:hover .save-point-text-backing.center,
+.save-point-option.selected .save-point-text-backing.center {
+    background-color: #6f542cc8;
+}
+
+.save-point-option:hover .save-point-text-backing.right,
+.save-point-option.selected .save-point-text-backing.right {
+    decorator: horizontal-gradient(#6f542cc8 #00000000);
+}
+
+.save-point-option.disabled {
+    cursor: default;
+    pointer-events: none;
+}
+
+.save-point-option.disabled .save-point-icon {
+    opacity: 0.42;
+    image-color: #aa9b82;
+}
+
+.save-point-option.disabled .save-point-label {
+    color: #948873;
+    font-effect: glow(1px 2px 0px 0px #6f56373c), shadow(0px 1px #000000d0);
+}
+
+.save-point-option.disabled .save-point-label-border {
+    background-color: #a88755a0;
+    opacity: 0.42;
+}
+
+.save-point-option.disabled .save-point-text-backing.left {
+    decorator: horizontal-gradient(#00000000 #080706b8);
+}
+
+.save-point-option.disabled .save-point-text-backing.center {
+    background-color: #080706b8;
+}
+
+.save-point-option.disabled .save-point-text-backing.right {
+    decorator: horizontal-gradient(#080706b8 #00000000);
+}
+
+#save-point-selection-frame {
+    position: absolute;
+    left: 32dp;
+    top: 103dp;
+    width: 144dp;
+    height: 155dp;
+    pointer-events: none;
+}
+
+.save-point-corner {
+    position: absolute;
+    display: block;
+    width: 45dp;
+    height: 45dp;
+    image-color: #ffe3a1;
+    pointer-events: none;
+}
+
+.save-point-corner.lu {
+    left: 0dp;
+    top: 0dp;
+}
+
+.save-point-corner.ru {
+    right: 0dp;
+    top: 0dp;
+}
+
+.save-point-corner.ld {
+    left: 0dp;
+    bottom: 0dp;
+    transform: scaleY(-1);
+    transform-origin: center;
+}
+
+.save-point-corner.rd {
+    right: 0dp;
+    bottom: 0dp;
+    transform: scaleY(-1);
+    transform-origin: center;
+}
+
+#save-point-info-panel {
+    position: absolute;
+    left: 22dp;
+    top: 308dp;
+    width: 596dp;
+    height: 118dp;
+    background-color: transparent;
+    border-width: 0dp;
+}
+
+#save-point-message,
+#save-point-confirm {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+}
+
+#save-point-message {
+    pointer-events: none;
+}
+
+.save-point-message-page {
+    position: absolute;
+    left: 20dp;
+    width: 552dp;
+    color: #e0d7c2;
+    font-size: 16dp;
+    line-height: 24dp;
+    letter-spacing: 0.8dp;
+    text-align: center;
+    font-effect: glow(1px 2px 0px 0px #8c663542), shadow(0px 1px #000000f0);
+    pointer-events: none;
+}
+
+.save-point-message-page.one-line {
+    top: 37dp;
+    height: 28dp;
+}
+
+.save-point-message-page.two-line {
+    top: 25dp;
+    height: 52dp;
+}
+
+.save-point-message-page.three-line {
+    top: 13dp;
+    height: 76dp;
+}
+
+#save-point-confirm-message {
+    position: absolute;
+    left: 23dp;
+    top: 17dp;
+    width: 550dp;
+    height: 31dp;
+    color: #e1d6bd;
+    font-size: 16dp;
+    line-height: 31dp;
+    letter-spacing: 1dp;
+    text-align: center;
+    font-effect: glow(1px 2px 0px 0px #8c663542), shadow(0px 1px #000000e8);
+}
+
+#save-point-confirm-message span {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    display: block;
+    width: 550dp;
+    height: 31dp;
+    line-height: 31dp;
+    text-align: center;
+    pointer-events: none;
+}
+
+#save-point-confirm-message span.hidden {
+    display: none;
+}
+
+#save-point-confirm-divider {
+    position: absolute;
+    left: 148dp;
+    top: 51dp;
+    width: 300dp;
+    height: 2px;
+}
+
+.save-point-confirm-divider-side,
+.save-point-confirm-divider-center {
+    position: absolute;
+    top: 0dp;
+    height: 2px;
+}
+
+.save-point-confirm-divider-side.left {
+    left: 0dp;
+    width: 76dp;
+    decorator: horizontal-gradient(#00000000 #b39360dc);
+}
+
+.save-point-confirm-divider-center {
+    left: 76dp;
+    width: 148dp;
+    background-color: #b39360dc;
+}
+
+.save-point-confirm-divider-side.right {
+    right: 0dp;
+    width: 76dp;
+    decorator: horizontal-gradient(#b39360dc #00000000);
+}
+
+#save-point-confirm-buttons {
+    position: absolute;
+    left: 178dp;
+    top: 63dp;
+    width: 240dp;
+    height: 34dp;
+}
+
+.save-point-confirm-button {
+    position: relative;
+    display: inline-block;
+    width: 112dp;
+    height: 30dp;
+    margin: 0dp 4dp;
+    padding: 0dp;
+    color: #bdb09a;
+    font-family: MikuPanRml;
+    font-size: 14dp;
+    line-height: 30dp;
+    letter-spacing: 1.2dp;
+    text-align: center;
+    font-effect: shadow(0px 1px #000000e8);
+    cursor: pointer;
+}
+
+.locked .save-point-option,
+.locked .save-point-confirm-button {
+    pointer-events: none;
+}
+
+.ff-message-fill {
+    position: absolute;
+    left: 9dp;
+    top: 8dp;
+    right: 9dp;
+    bottom: 8dp;
+    background-color: #120e0be8;
+    pointer-events: none;
+}
+
+.ff-message-frame {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.ff-message-outer-horizontal {
+    position: absolute;
+    left: -10dp;
+    right: -10dp;
+    height: 8px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.ff-message-outer-horizontal.top {
+    top: 2dp;
+}
+
+.ff-message-outer-horizontal.bottom {
+    bottom: 2dp;
+}
+
+.ff-message-outer-fade,
+.ff-message-outer-center {
+    position: absolute;
+    top: 0dp;
+    height: 8px;
+}
+
+.ff-message-outer-fade.left {
+    left: 0dp;
+    width: 12dp;
+    decorator: horizontal-gradient(#00000000 #8f734c);
+}
+
+.ff-message-outer-center {
+    left: 12dp;
+    right: 12dp;
+    background-color: #8f734c;
+}
+
+.ff-message-outer-fade.right {
+    right: 0dp;
+    width: 12dp;
+    decorator: horizontal-gradient(#8f734c #00000000);
+}
+
+.ff-message-outer-vertical {
+    position: absolute;
+    top: 2dp;
+    bottom: 2dp;
+    width: 8px;
+    z-index: 1;
+    background-color: #8f734c;
+    pointer-events: none;
+}
+
+.ff-message-outer-vertical.left {
+    left: 3dp;
+}
+
+.ff-message-outer-vertical.right {
+    right: 3dp;
+}
+
+.ff-message-inner-horizontal {
+    position: absolute;
+    left: 3dp;
+    right: 3dp;
+    height: 4px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.ff-message-inner-horizontal.top {
+    top: 8dp;
+}
+
+.ff-message-inner-horizontal.bottom {
+    bottom: 8dp;
+}
+
+.ff-message-inner-fade,
+.ff-message-inner-center {
+    position: absolute;
+    top: 0dp;
+    height: 4px;
+    pointer-events: none;
+}
+
+.ff-message-inner-fade {
+    display: none;
+}
+
+.ff-message-inner-center {
+    left: 0dp;
+    right: 0dp;
+    background-color: #8f734c;
+}
+
+.ff-message-inner-vertical {
+    position: absolute;
+    top: 8dp;
+    bottom: 8dp;
+    width: 4px;
+    z-index: 1;
+    background-color: #8f734c;
+    pointer-events: none;
+}
+
+.ff-message-inner-vertical.left {
+    left: 9dp;
+}
+
+.ff-message-inner-vertical.right {
+    right: 9dp;
+}
+
+.ff-prompt-button {
+    position: relative;
+    overflow: hidden;
+    background-color: transparent;
+    border-width: 0dp;
+}
+
+.ff-prompt-button-backing {
+    position: absolute;
+    top: 0dp;
+    height: 100%;
+    pointer-events: none;
+}
+
+.ff-prompt-button-backing.left {
+    left: 0dp;
+    width: 28%;
+    decorator: horizontal-gradient(#00000000 #2d2015b8);
+}
+
+.ff-prompt-button-backing.center {
+    left: 28%;
+    width: 44%;
+    background-color: #2d2015b8;
+}
+
+.ff-prompt-button-backing.right {
+    right: 0dp;
+    width: 28%;
+    decorator: horizontal-gradient(#2d2015b8 #00000000);
+}
+
+.ff-prompt-button-border {
+    position: absolute;
+    left: 0dp;
+    right: 0dp;
+    height: 1px;
+    pointer-events: none;
+}
+
+.ff-prompt-button-border.top {
+    top: 0dp;
+}
+
+.ff-prompt-button-border.bottom {
+    bottom: 0dp;
+}
+
+.ff-prompt-button-border-edge,
+.ff-prompt-button-border-center {
+    position: absolute;
+    top: 0dp;
+    height: 1px;
+}
+
+.ff-prompt-button-border-edge.left {
+    left: 0dp;
+    width: 20dp;
+    decorator: horizontal-gradient(#00000000 #7d6847a8);
+}
+
+.ff-prompt-button-border-center {
+    left: 20dp;
+    right: 20dp;
+    background-color: #7d6847a8;
+}
+
+.ff-prompt-button-border-edge.right {
+    right: 0dp;
+    width: 20dp;
+    decorator: horizontal-gradient(#7d6847a8 #00000000);
+}
+
+.ff-prompt-button-label {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 100%;
+    height: 100%;
+    line-height: inherit;
+    text-align: center;
+    pointer-events: none;
+}
+
+.ff-prompt-button:hover,
+.ff-prompt-button:focus,
+.ff-prompt-button.selected {
+    color: #f1dfb6;
+    background-color: transparent;
+    border-width: 0dp;
+    font-effect: glow(1px 3px 0px 0px #bd914e68), shadow(0px 1px #000000e8);
+}
+
+.ff-prompt-button:hover .ff-prompt-button-backing.left,
+.ff-prompt-button:focus .ff-prompt-button-backing.left,
+.ff-prompt-button.selected .ff-prompt-button-backing.left {
+    decorator: horizontal-gradient(#00000000 #6f542cd8);
+}
+
+.ff-prompt-button:hover .ff-prompt-button-backing.center,
+.ff-prompt-button:focus .ff-prompt-button-backing.center,
+.ff-prompt-button.selected .ff-prompt-button-backing.center {
+    background-color: #6f542cd8;
+}
+
+.ff-prompt-button:hover .ff-prompt-button-backing.right,
+.ff-prompt-button:focus .ff-prompt-button-backing.right,
+.ff-prompt-button.selected .ff-prompt-button-backing.right {
+    decorator: horizontal-gradient(#6f542cd8 #00000000);
+}
+
+.ff-prompt-button:hover .ff-prompt-button-border-edge.left,
+.ff-prompt-button:focus .ff-prompt-button-border-edge.left,
+.ff-prompt-button.selected .ff-prompt-button-border-edge.left {
+    decorator: horizontal-gradient(#00000000 #8f734c);
+}
+
+.ff-prompt-button:hover .ff-prompt-button-border-center,
+.ff-prompt-button:focus .ff-prompt-button-border-center,
+.ff-prompt-button.selected .ff-prompt-button-border-center {
+    background-color: #8f734c;
+}
+
+.ff-prompt-button:hover .ff-prompt-button-border-edge.right,
+.ff-prompt-button:focus .ff-prompt-button-border-edge.right,
+.ff-prompt-button.selected .ff-prompt-button-border-edge.right {
+    decorator: horizontal-gradient(#8f734c #00000000);
+}
