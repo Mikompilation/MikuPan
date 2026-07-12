@@ -663,11 +663,6 @@ unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash)
                  static_cast<int>(tex0->PSM));
 
     *hash = MikuPan_GetTextureHash(tex0);
-    auto texture = MikuPan_GetTextureInfo(*hash);
-    if (texture != nullptr)
-    {
-        return nullptr;
-    }
 
     Uint64 t0 = SDL_GetPerformanceCounter();
 

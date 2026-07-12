@@ -95,6 +95,8 @@ static u_char dmg_step = 0;
 
 static u_char avoid_chk;
 static u_short hp_down_deg;
+static u_char plyr_spot_light_mode = 2;
+static u_char plyr_spot_light_applied = 0;
 
 #define PI 3.1415927f
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
@@ -1315,7 +1317,29 @@ void PlyrHPdwonCtrl()
 
 void PlyrSpotLightOnChk()
 {
-    SetPlyrSpotLight(1);
+    if (L1_PRESSED() == 1)
+    {
+        plyr_spot_light_mode++;
+
+        if (plyr_spot_light_mode > 2)
+        {
+            plyr_spot_light_mode = 0;
+        }
+    }
+
+    if (plyr_spot_light_mode == 0)
+    {
+        if (plyr_spot_light_applied != 0)
+        {
+            SetPlyrSpotLight(0);
+        }
+
+        plyr_spot_light_applied = 0;
+        return;
+    }
+
+    SetPlyrSpotLight(plyr_spot_light_mode);
+    plyr_spot_light_applied = 1;
 
     if (plyr_wrk.mode == PMODE_NORMAL && plyr_wrk.anime_no != PANI_CAM_SET_OUT)
     {
@@ -1325,8 +1349,8 @@ void PlyrSpotLightOnChk()
 
 void SetPlyrSpotLight(u_char id)
 {
-    SPOT_WRK ts0;
-    SPOT_WRK ts1;
+    SPOT_WRK ts0 = {};
+    SPOT_WRK ts1 = {};
     sceVu0FVECTOR tv;
     sceVu0FVECTOR rv;
     u_char i;
@@ -1431,6 +1455,11 @@ void SetPlyrSpotLight(u_char id)
 
         ts0.power = 7000000.0f;
         ts1.power = 7000000.0f;
+
+        if (id == 1)
+        {
+            ts1 = {};
+        }
     }
 
     for (i = 0; i < 2; i++)

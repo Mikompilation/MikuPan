@@ -32,7 +32,8 @@ MikuPan_Config mikupan_configuration = {
         1.0f,
         0,
         "",
-        0
+        0,
+        MIKUPAN_FINDER_VIEWPORT_MASK_BLUR
     },
     {
         0,
@@ -60,6 +61,7 @@ MikuPan_Config mikupan_configuration = {
     1,
     1.0f,
     0,
+    1,
     1,
     1,
     {
@@ -202,6 +204,10 @@ static void MikuPan_ConfigurationValidateRenderer(
     renderer->dither_mode = renderer->dither_mode <= 0 ? 0 : 1;
 
     renderer->gpu_debug = renderer->gpu_debug ? 1 : 0;
+    renderer->finder_viewport_mask_mode =
+        renderer->finder_viewport_mask_mode == MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR;
 }
 
 static void MikuPan_ConfigurationValidateCrt(MikuPan_ConfigCrt* crt)
@@ -316,6 +322,8 @@ void MikuPan_ConfigurationValidate(void)
     mikupan_configuration.font_scale =
         MikuPan_ClampFloat(mikupan_configuration.font_scale, 0.5f, 3.0f);
     mikupan_configuration.show_fps = mikupan_configuration.show_fps ? 1 : 0;
+    mikupan_configuration.minimap_enabled =
+        mikupan_configuration.minimap_enabled ? 1 : 0;
     mikupan_configuration.title_room_background =
         mikupan_configuration.title_room_background ? 1 : 0;
     mikupan_configuration.title_dither =

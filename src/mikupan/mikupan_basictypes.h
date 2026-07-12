@@ -95,6 +95,7 @@ typedef struct
      * applies on the next launch. */
     char gpu_driver[32];
     int gpu_debug;
+    int finder_viewport_mask_mode; /* MikuPan_FinderViewportMaskMode */
 } MikuPan_ConfigRenderer;
 
 /* Apply a window display mode to the SDL window.
@@ -116,6 +117,11 @@ enum MikuPan_RenderResolutionMode
     MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE = 2,
 };
 
+enum MikuPan_FinderViewportMaskMode
+{
+    MIKUPAN_FINDER_VIEWPORT_MASK_BLACK = 0,
+    MIKUPAN_FINDER_VIEWPORT_MASK_BLUR = 1,
+};
 
 typedef struct
 {
@@ -218,6 +224,7 @@ typedef struct
     int selected_font;
     float font_scale;
     int show_fps;
+    int minimap_enabled;
     int title_room_background;
     int title_dither;
     MikuPan_ConfigThirdPersonCamera third_person_camera;

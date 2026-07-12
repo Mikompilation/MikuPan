@@ -657,6 +657,57 @@ void MikuPan_RenderSprite2DDepthStateFiltered(sceGsTex0 *tex, float *buffer,
                                    nearest_sampler);
 }
 
+void MikuPan_RenderSpriteTextureId2DDepthStateFiltered(
+    unsigned int texture_id, int texture_width, int texture_height,
+    float *buffer, int depth_test, int depth_write, unsigned int depth_func,
+    int nearest_sampler)
+{
+    float upload_buffer[4][12];
+
+    MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
+
+    if (texture_id == 0 || texture_width <= 0 || texture_height <= 0 ||
+        buffer == NULL)
+    {
+        return;
+    }
+
+    MikuPan_FlushTexturedSpriteBatch();
+    MikuPan_SetCurrentShaderProgram(SPRITE_SHADER);
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+    MikuPan_BindTexture2DCached(texture_id);
+    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
+    MikuPan_SetUniform2fToCurrentShader((float)texture_width,
+                                        (float)texture_height,
+                                        "uTextureSize");
+    MikuPan_SetUniform1iToCurrentShader(0, "uDitherSoftMode");
+
+    if (depth_test)
+    {
+        MikuPan_CopyAndNormalizeSpriteDepth(upload_buffer, buffer);
+        MikuPan_SetRenderState2DDepth();
+        MikuPan_GPUSetDepthWrite(depth_write);
+        MikuPan_GPUSetDepthFunc(depth_func);
+    }
+    else
+    {
+        MikuPan_SetRenderState2D();
+    }
+
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr)sizeof(float[4][12]),
+                             depth_test ? &upload_buffer[0][0] : buffer);
+
+    MikuPan_GPUSetSamplerNearestOverride(nearest_sampler);
+    MikuPan_TimedDrawArrays(MikuPan_GetRenderMode(), 0, 4);
+    MikuPan_GPUSetSamplerNearestOverride(0);
+    MikuPan_SetUniform1iToCurrentShader(0, "uDitherSoftMode");
+}
+
 static void MikuPan_RenderSprite2DGSAlphaInternal(
     sceGsTex0 *tex, float *buffer, int depth_test, int depth_write,
     unsigned int depth_func, int nearest_sampler, unsigned long gs_alpha)
@@ -1618,6 +1669,54 @@ void MikuPan_RenderScreenCopyTriangles3DFeedbackModulate(sceGsTex0 *tex,
                                         g_screen_copy_content_uv_max[1],
                                         "uFramebufferContentUvMax");
     MikuPan_SetUniform1iToCurrentShader(3, "uUseScreenPos");
+    MikuPan_SetUniform2fToCurrentShader((float)g_screen_copy_w,
+                                        (float)g_screen_copy_h,
+                                        "uRenderSize");
+    MikuPan_PipelineInfo *pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+    MikuPan_BindTexture2DCached(g_screen_copy_texture);
+    MikuPan_ApplyHeatHazeTriangleState(depth_mode, blend_mode);
+    MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
+
+    MikuPan_StreamUploadFull(
+        GL_ARRAY_BUFFER,
+        pipeline->buffers[0].id,
+        (GLsizeiptr)(vertex_count * 12 * (int)sizeof(float)),
+        buffer);
+
+    MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, vertex_count);
+    MikuPan_PerfDrawCall();
+    MikuPan_RestoreParticleTriangleState();
+}
+
+void MikuPan_RenderFinderViewportBlurTriangles3D(sceGsTex0 *tex,
+                                                 float *buffer,
+                                                 int vertex_count,
+                                                 int depth_mode,
+                                                 MikuPan_GPUBlendMode blend_mode)
+{
+    if (vertex_count <= 0)
+    {
+        return;
+    }
+
+    if (MikuPan_ArePhotoCaptureScreenCopyEffectsSuppressed())
+    {
+        return;
+    }
+
+    MikuPan_FlushTexturedSpriteBatch();
+
+    if (!MikuPan_UpdateScreenCopyTexture(tex))
+    {
+        return;
+    }
+
+    MIKUPAN_PERF_SCOPE(PERF_SECT_SPRITE_RENDER);
+    MikuPan_SetCurrentShaderProgram(FINDER_VIEWPORT_BLUR_SHADER);
+    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
     MikuPan_SetUniform2fToCurrentShader((float)g_screen_copy_w,
                                         (float)g_screen_copy_h,
                                         "uRenderSize");

@@ -3,6 +3,7 @@
 #include "enums.h"
 #include "inf_disp.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_rng.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
@@ -36,6 +37,7 @@ static void SttsFade();
 static void FndrFade();
 static void MikuPan_DrawFinderViewportMask(u_char alpha, float padding_pixels, int force_solid);
 static void MikuPan_AddFinderMaskQuad(float *dst, int *vertex, float x0, float y0, float x1, float y1, float alpha);
+static void MikuPan_AddFinderBlurQuad(float *dst, int *vertex, float x0, float y0, float x1, float y1, float alpha);
 static void WeakPoint(short int pos_x, short int pos_y);
 static void DspBigCircle(u_short lu_chr, short int pos_x, short int pos_y, u_char alp, short int size_r, u_char cl_ptn);
 static void PointerNP(short int cx, short int cy, u_char red, u_char alp, float siz);
@@ -529,6 +531,35 @@ static void MikuPan_AddFinderMaskQuad(float *dst, int *vertex, float x0, float y
     }
 }
 
+static void MikuPan_AddFinderBlurQuad(float *dst, int *vertex, float x0, float y0, float x1, float y1, float alpha)
+{
+    const float colour[4] = {1.0f, 1.0f, 1.0f, alpha};
+    const float z = 0.0f;
+    const float w = 1.0f;
+    const float quad[6][2] = {
+        {x0, y0}, {x1, y0}, {x0, y1},
+        {x1, y0}, {x1, y1}, {x0, y1}
+    };
+
+    for (int i = 0; i < 6; i++)
+    {
+        float *v = dst + (*vertex * 12);
+        v[0] = 0.0f;
+        v[1] = 0.0f;
+        v[2] = 0.0f;
+        v[3] = 0.0f;
+        v[4] = colour[0];
+        v[5] = colour[1];
+        v[6] = colour[2];
+        v[7] = colour[3];
+        v[8] = quad[i][0];
+        v[9] = quad[i][1];
+        v[10] = z;
+        v[11] = w;
+        (*vertex)++;
+    }
+}
+
 static void MikuPan_DrawFinderViewportMask(u_char alpha, float padding_pixels, int force_solid)
 {
     if (alpha == 0)
@@ -585,6 +616,51 @@ static void MikuPan_DrawFinderViewportMask(u_char alpha, float padding_pixels, i
     const float bottom = 1.0f - mask_bottom / (float)render_h * 2.0f;
     const float mask_alpha = force_solid != 0 ? 1.0f :
         MikuPan_ConvertScaleColor((u_char)MikuPan_ClampInt((int)(alpha * 128.0f / 100.0f + 0.5f), 0, 128));
+
+    if (force_solid == 0 &&
+        mikupan_configuration.renderer.finder_viewport_mask_mode ==
+            MIKUPAN_FINDER_VIEWPORT_MASK_BLUR)
+    {
+        float blur_vertices[24 * 12];
+        int blur_vertex = 0;
+        const float blur_alpha = MikuPan_ClampFloat(alpha / 100.0f, 0.0f, 1.0f);
+        sceGsTex0 screen_copy_tex = {};
+
+        screen_copy_tex.TBP0 = 0x1a40;
+        screen_copy_tex.TW = 10;
+        screen_copy_tex.TH = 8;
+
+        if (left > -1.0f)
+        {
+            MikuPan_AddFinderBlurQuad(blur_vertices, &blur_vertex, -1.0f, 1.0f, left, -1.0f, blur_alpha);
+        }
+
+        if (right < 1.0f)
+        {
+            MikuPan_AddFinderBlurQuad(blur_vertices, &blur_vertex, right, 1.0f, 1.0f, -1.0f, blur_alpha);
+        }
+
+        if (top < 1.0f)
+        {
+            MikuPan_AddFinderBlurQuad(blur_vertices, &blur_vertex, left, 1.0f, right, top, blur_alpha);
+        }
+
+        if (bottom > -1.0f)
+        {
+            MikuPan_AddFinderBlurQuad(blur_vertices, &blur_vertex, left, bottom, right, -1.0f, blur_alpha);
+        }
+
+        if (blur_vertex > 0)
+        {
+            MikuPan_RenderFinderViewportBlurTriangles3D(&screen_copy_tex,
+                                                        blur_vertices,
+                                                        blur_vertex,
+                                                        MIKUPAN_DEPTH_ALWAYS,
+                                                        MIKUPAN_GPU_BLEND_NORMAL);
+        }
+
+        return;
+    }
 
     float vertices[24 * 8];
     int vertex = 0;

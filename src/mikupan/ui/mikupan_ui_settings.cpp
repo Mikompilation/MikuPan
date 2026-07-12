@@ -19,6 +19,7 @@
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/ui/mikupan_rml_options.h"
 #include "mikupan_ui_debug.h"
 #include "mikupan_ui_theme.h"
 #include "mikupan/gameplay/mikupan_title_scene.h"
@@ -1014,6 +1015,16 @@ void MikuPan_UiSettingsRender(void)
             MikuPan_UiDitherModeCombo();
             igTextDisabled("Save Configuration to keep Dither Filtering after restart.");
 
+            const char* finder_mask_modes[] = {"Black", "Blur"};
+            int finder_mask_mode =
+                mikupan_configuration.renderer.finder_viewport_mask_mode;
+            if (igCombo_Str_arr("Finder Surround", &finder_mask_mode,
+                                finder_mask_modes, 2, -1))
+            {
+                mikupan_configuration.renderer.finder_viewport_mask_mode =
+                    finder_mask_mode;
+            }
+
             igEndMenu();
         }
 
@@ -1034,8 +1045,7 @@ void MikuPan_UiSettingsRender(void)
             if (igCombo_Str_arr("Font", &selected_font, MikuPan_UiFontLabels,
                                 MIKUPAN_UI_FONT_COUNT, -1))
             {
-                mikupan_configuration.selected_font = selected_font;
-                MikuPan_ApplyUiFont(selected_font);
+                MikuPan_SelectFontOption(selected_font);
             }
 
             float font_scale = mikupan_configuration.font_scale;
@@ -1903,6 +1913,7 @@ int MikuPan_SelectThemeOption(int index)
 
     mikupan_configuration.selected_theme = index;
     MikuPan_ApplyFatalFrameStyle(index);
+    MikuPan_RmlOptionsApplyTheme(index);
     return 1;
 }
 
@@ -1937,6 +1948,7 @@ int MikuPan_SelectFontOption(int index)
 
     mikupan_configuration.selected_font = index;
     MikuPan_ApplyUiFont(index);
+    MikuPan_RmlOptionsApplyFont(index);
     return 1;
 }
 

@@ -1,11 +1,13 @@
 #include "typedefs.h"
 
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include "cimgui.h"
+#include "imgui.h"
+#include "implot.h"
 #include "mikupan_framegraph.h"
 
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_config.h"
+#include "mikupan/rendering/mikupan_gpu.h"
+#include "mikupan/rendering/mikupan_meshcache.h"
 #include "mikupan/rendering/mikupan_profiler.h"
 
 #include <string.h>
@@ -19,7 +21,66 @@ const int mikupan_perf_window_flags =
     | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize;
 
 const ImVec2 mikupan_style_origin = {0.0f, 0.0f};
-const ImVec2 mikupan_plot_size = {0.0f, 60.0f};
+const ImVec2 mikupan_plot_size = {0.0f, 180.0f};
+
+static ImPlotSpec MikuPan_FrameLineSpec(float r, float g, float b)
+{
+    ImPlotSpec spec;
+    spec.LineColor = ImVec4(r, g, b, 1.0f);
+    spec.LineWeight = 1.6f;
+    return spec;
+}
+
+static void FrameTimeGraph_DrawPlot(FrameTimeGraph* g, float scale)
+{
+    const double x_max = g->count > 1 ? (double) (g->count - 1) : 1.0;
+    const ImPlotFlags plot_flags =
+        ImPlotFlags_NoTitle | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect;
+    const ImPlotAxisFlags x_axis_flags =
+        ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels
+        | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoMenus
+        | ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax;
+    const ImPlotAxisFlags y_axis_flags =
+        ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_LockMin
+        | ImPlotAxisFlags_LockMax;
+
+    if (!ImPlot::BeginPlot("##frame_time_plot", mikupan_plot_size, plot_flags))
+    {
+        return;
+    }
+
+    ImPlot::SetupAxes(nullptr, "ms", x_axis_flags, y_axis_flags);
+    ImPlot::SetupAxisLimits(ImAxis_X1, 0.0, x_max, ImPlotCond_Always);
+    ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, (double) scale,
+                            ImPlotCond_Always);
+    ImPlot::SetupLegend(ImPlotLocation_NorthWest,
+                        ImPlotLegendFlags_NoMenus);
+
+    ImPlot::PlotLine("Total", g->times, g->count, 1.0, 0.0,
+                     MikuPan_FrameLineSpec(0.82f, 0.88f, 0.98f));
+    ImPlot::PlotLine("CPU", g->cpu, g->count, 1.0, 0.0,
+                     MikuPan_FrameLineSpec(0.96f, 0.62f, 0.32f));
+    ImPlot::PlotLine("GPU wait", g->gpu, g->count, 1.0, 0.0,
+                     MikuPan_FrameLineSpec(0.38f, 0.74f, 0.98f));
+
+    ImPlot::EndPlot();
+}
+
+static void FrameTimeGraph_DrawMeshCacheStats(void)
+{
+    unsigned long long mesh_cache_bytes = 0;
+    unsigned int mesh_cache_buffers = 0;
+    unsigned int mesh_cache_entries = 0;
+    MikuPan_MeshCache_GetStats(&mesh_cache_bytes, &mesh_cache_buffers,
+                               &mesh_cache_entries);
+
+    ImGui::Text("Cache: %u entries, %u buffers, %.1f MiB",
+                mesh_cache_entries, mesh_cache_buffers,
+                (double) mesh_cache_bytes / (1024.0 * 1024.0));
+    ImGui::Text("GPU buffers: %u live / %u max",
+                MikuPan_GPUGetLiveBufferCount(),
+                MikuPan_GPUGetMaxBufferCount());
+}
 
 void FrameTimeGraph_Update(FrameTimeGraph* g, float total_ms,
                                   float cpu_ms, float gpu_ms)
@@ -39,34 +100,34 @@ void FrameTimeGraph_Update(FrameTimeGraph* g, float total_ms,
 
 int PerfTableBegin(const char* id)
 {
-    if (!igBeginTable(id, 3, mikupan_frame_graph_window_style,
-                      mikupan_style_origin, 0.0f))
+    if (!ImGui::BeginTable(id, 3, mikupan_frame_graph_window_style,
+                           mikupan_style_origin, 0.0f))
     {
         return 0;
     }
 
-    igTableSetupColumn("Section", ImGuiTableColumnFlags_WidthStretch, 0.0f, 0);
-    igTableSetupColumn("ms", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
-    igTableSetupColumn("share", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+    ImGui::TableSetupColumn("Section", ImGuiTableColumnFlags_WidthStretch, 0.0f, 0);
+    ImGui::TableSetupColumn("ms", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+    ImGui::TableSetupColumn("share", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
     return 1;
 }
 
 void PerfRow(const char* label, float ms, float total)
 {
-    igTableNextRow(0, 0.0f);
-    igTableSetColumnIndex(0);
-    igTextUnformatted(label, NULL);
-    igTableSetColumnIndex(1);
-    igText("%6.2f", ms);
-    igTableSetColumnIndex(2);
+    ImGui::TableNextRow(0, 0.0f);
+    ImGui::TableSetColumnIndex(0);
+    ImGui::TextUnformatted(label, nullptr);
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("%6.2f", ms);
+    ImGui::TableSetColumnIndex(2);
 
     if (total > 0.001f)
     {
-        igText("%3.0f%%", 100.0f * ms / total);
+        ImGui::Text("%3.0f%%", 100.0f * ms / total);
     }
     else
     {
-        igTextUnformatted("--", NULL);
+        ImGui::TextUnformatted("--", nullptr);
     }
 }
 
@@ -74,11 +135,11 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
 {
     if (g->count == 0)
     {
-        igTextUnformatted("No frame data yet", NULL);
+        ImGui::TextUnformatted("No frame data yet", nullptr);
         return;
     }
 
-    igBegin("Frame Time Graph", NULL, mikupan_perf_window_flags);
+    ImGui::Begin("Frame Time Graph", nullptr, mikupan_perf_window_flags);
 
     float total_sum = 0.0f, total_max = g->times[0];
     float cpu_sum = 0.0f, cpu_max = g->cpu[0];
@@ -109,57 +170,70 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
     float total_latest = g->times[g->count - 1];
     float cpu_latest = g->cpu[g->count - 1];
     float gpu_latest = g->gpu[g->count - 1];
+    const int gpu_wait_enabled = MikuPan_PerfIsGpuWaitEnabled();
 
-    igText("%.2f ms   %.0f FPS", total_latest, total_latest > 0.0f ? 1000.0f / total_latest : 0.0f);
-    igSameLine(0.0f, -1.0f);
+    ImGui::Text("%.2f ms   %.0f FPS", total_latest, total_latest > 0.0f ? 1000.0f / total_latest : 0.0f);
+    ImGui::SameLine(0.0f, -1.0f);
 
-    if (gpu_latest < cpu_latest * 0.25f)
+    if (!gpu_wait_enabled)
     {
-        igTextColored(ImVec4{1.0f, 0.6f, 0.3f, 1.0f}, "   - CPU submit");
+        ImGui::TextColored(ImVec4{0.55f, 0.60f, 0.68f, 1.0f}, "   - GPU wait off");
+    }
+    else if (gpu_latest < cpu_latest * 0.25f)
+    {
+        ImGui::TextColored(ImVec4{1.0f, 0.6f, 0.3f, 1.0f}, "   - CPU submit");
     }
     else if (gpu_latest > cpu_latest)
     {
-        igTextColored(ImVec4{0.4f, 0.7f, 1.0f, 1.0f},"   - GPU/present wait");
+        ImGui::TextColored(ImVec4{0.4f, 0.7f, 1.0f, 1.0f},"   - GPU/present wait");
     }
     else
     {
-        igTextColored(ImVec4{0.6f, 0.9f, 0.6f, 1.0f}, "   - balanced");
+        ImGui::TextColored(ImVec4{0.6f, 0.9f, 0.6f, 1.0f}, "   - balanced");
     }
 
-    if (igBeginTable("##perf_summary", 4, mikupan_frame_graph_window_style,
-                     mikupan_style_origin, 0.0f))
+    if (ImGui::BeginTable("##perf_summary", 4, mikupan_frame_graph_window_style,
+                          mikupan_style_origin, 0.0f))
     {
-        igTableSetupColumn("", ImGuiTableColumnFlags_WidthStretch, 0.0f, 0);
-        igTableSetupColumn("now", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
-        igTableSetupColumn("avg", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
-        igTableSetupColumn("max", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+        ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch, 0.0f, 0);
+        ImGui::TableSetupColumn("now", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+        ImGui::TableSetupColumn("avg", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
+        ImGui::TableSetupColumn("max", ImGuiTableColumnFlags_WidthFixed, 0.0f, 0);
 
 #define MP_SUMMARY_ROW(name, now, avg, mx)                                     \
-    igTableNextRow(0, 0.0f);                                                   \
-    igTableSetColumnIndex(0);                                                  \
-    igTextUnformatted(name, NULL);                                             \
-    igTableSetColumnIndex(1);                                                  \
-    igText("%6.2f", now);                                                      \
-    igTableSetColumnIndex(2);                                                  \
-    igText("%6.2f", avg);                                                      \
-    igTableSetColumnIndex(3);                                                  \
-    igText("%6.2f", mx)
+    ImGui::TableNextRow(0, 0.0f);                                              \
+    ImGui::TableSetColumnIndex(0);                                             \
+    ImGui::TextUnformatted(name, nullptr);                                     \
+    ImGui::TableSetColumnIndex(1);                                             \
+    ImGui::Text("%6.2f", now);                                                 \
+    ImGui::TableSetColumnIndex(2);                                             \
+    ImGui::Text("%6.2f", avg);                                                 \
+    ImGui::TableSetColumnIndex(3);                                             \
+    ImGui::Text("%6.2f", mx)
 
         MP_SUMMARY_ROW("Frame", total_latest, total_avg, total_max);
         MP_SUMMARY_ROW("CPU", cpu_latest, cpu_avg, cpu_max);
-        MP_SUMMARY_ROW("GPU wait", gpu_latest, gpu_avg, gpu_max);
+        MP_SUMMARY_ROW(gpu_wait_enabled ? "GPU wait" : "GPU wait (off)",
+                       gpu_latest, gpu_avg, gpu_max);
 #undef MP_SUMMARY_ROW
-        igEndTable();
+        ImGui::EndTable();
     }
 
-    igTextDisabled("CPU = submit; GPU wait = SDL_WaitForGPUIdle after submit");
-
-    if (mikupan_configuration.renderer.vsync)
+    if (gpu_wait_enabled)
     {
-        igTextDisabled("VSync is on: wait can converge to the display interval.");
+        ImGui::TextDisabled("CPU = submit; GPU wait = SDL_WaitForGPUIdle after submit");
+    }
+    else
+    {
+        ImGui::TextDisabled("CPU = submit; GPU wait measurement is off");
     }
 
-    igSpacing();
+    if (gpu_wait_enabled && mikupan_configuration.renderer.vsync)
+    {
+        ImGui::TextDisabled("VSync is on: wait can converge to the display interval.");
+    }
+
+    ImGui::Spacing();
 
     float scale = total_max;
 
@@ -183,18 +257,10 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
         scale = 16.7f;
     }
 
-    char total_overlay[64], cpu_overlay[64], gpu_overlay[64];
-    snprintf(total_overlay, sizeof(total_overlay), "Total: %.2f ms", total_latest);
-    snprintf(cpu_overlay, sizeof(cpu_overlay), "CPU:   %.2f ms", cpu_latest);
-    snprintf(gpu_overlay, sizeof(gpu_overlay), "GPU wait: %.2f ms", gpu_latest);
+    FrameTimeGraph_DrawPlot(g, scale);
 
-
-    igPlotLines_FloatPtr("##frame_total", g->times, g->count, 0, total_overlay, 0.0f, scale, mikupan_plot_size, (int) sizeof(float));
-    igPlotLines_FloatPtr("##frame_cpu", g->cpu, g->count, 0, cpu_overlay, 0.0f, scale, mikupan_plot_size, (int) sizeof(float));
-    igPlotLines_FloatPtr("##frame_gpu", g->gpu, g->count, 0, gpu_overlay, 0.0f, scale, mikupan_plot_size, (int) sizeof(float));
-
-    igSpacing();
-    igSeparatorText("CPU breakdown (last frame)");
+    ImGui::Spacing();
+    ImGui::SeparatorText("CPU breakdown (last frame)");
 
     float perf_mesh = MikuPan_PerfGetSectionMs(MP_PERF_MESH_RENDER);
     float perf_sprite = MikuPan_PerfGetSectionMs(MP_PERF_SPRITE_RENDER);
@@ -231,10 +297,10 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
         PerfRow("Coord calc (SetLWS)", perf_coord, cpu_latest);
         PerfRow("Light setup", perf_light, cpu_latest);
         PerfRow("Other / unknown", perf_other, cpu_latest);
-        igEndTable();
+        ImGui::EndTable();
     }
 
-    if (igTreeNode_Str("Mesh types"))
+    if (ImGui::TreeNode("Mesh types"))
     {
         if (PerfTableBegin("##mesh_types"))
         {
@@ -250,13 +316,17 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
                     perf_mesh);
             PerfRow("0x82", MikuPan_PerfGetSectionMs(MP_PERF_MESH_0x82),
                     perf_mesh);
-            igEndTable();
+            ImGui::EndTable();
         }
-        igTextDisabled("share is relative to Mesh render total");
-        igTreePop();
+        ImGui::TextDisabled("share is relative to Mesh render total");
+        ImGui::TreePop();
     }
 
-    if (igTreeNode_Str("Cross-cutting & state changes"))
+    ImGui::Spacing();
+    ImGui::SeparatorText("Mesh cache");
+    FrameTimeGraph_DrawMeshCacheStats();
+
+    if (ImGui::TreeNode("Cross-cutting & state changes"))
     {
         float perf_draw = MikuPan_PerfGetSectionMs(MP_PERF_DRAW_SUBMIT);
         float perf_upload = MikuPan_PerfGetSectionMs(MP_PERF_BUFFER_UPLOAD);
@@ -289,22 +359,22 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
             PerfRow("    RenderState (depth/cull/blend)", perf_sc_rs3d,
                     cpu_latest);
             PerfRow("    VAO (glBindVertexArray)", perf_sc_vao, cpu_latest);
-            igEndTable();
+            ImGui::EndTable();
         }
-        igText("Texture L1: %d hits / %d misses  (miss -> XXH3 over GS memory)", l1_hits, l1_misses);
-        igTextDisabled("subsets of the buckets above — not additional time");
-        igTreePop();
+        ImGui::Text("Texture L1: %d hits / %d misses  (miss -> XXH3 over GS memory)", l1_hits, l1_misses);
+        ImGui::TextDisabled("subsets of the buckets above — not additional time");
+        ImGui::TreePop();
     }
 
-    igSpacing();
-    igSeparatorText("GS texture traffic (last frame)");
+    ImGui::Spacing();
+    ImGui::SeparatorText("GS texture traffic (last frame)");
 
     int ul_count = MikuPan_GsGetUploadCount();
     int ul_bytes = MikuPan_GsGetUploadBytes();
     int dl_count = MikuPan_GsGetDownloadCount();
     int dl_bytes = MikuPan_GsGetDownloadBytes();
 
-    igText("Up %d calls / %.1f KB     Down %d calls / %.1f KB", ul_count, ul_bytes / 1024.0f, dl_count, dl_bytes / 1024.0f);
+    ImGui::Text("Up %d calls / %.1f KB     Down %d calls / %.1f KB", ul_count, ul_bytes / 1024.0f, dl_count, dl_bytes / 1024.0f);
 
-    igEnd();
+    ImGui::End();
 }

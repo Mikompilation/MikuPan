@@ -2,9 +2,9 @@
 #include "mikupan/ui/mikupan_rml_options.h"
 #include "mikupan/ui/mikupan_ui.h"
 
-#include "glad/gl.h"
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
+#include "mikupan/rendering/mikupan_gl_compat.h"
 
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan/rendering/mikupan_pipeline.h"
@@ -450,13 +450,27 @@ struct MikuPanRmlPadActionState
     uint64_t next_repeat_ticks = 0;
 };
 
+struct MikuPanRmlFontFace
+{
+    const char* relative_path = nullptr;
+    const char* family = nullptr;
+};
+
+static constexpr MikuPanRmlFontFace kRmlFontFaces[] = {
+    {"resources/fonts/CenturyOldStyle.ttf", "MikuPanRml"},
+    {"resources/fonts/zapfchancer.ttf", "MikuPanRmlZapf"},
+};
+
+static constexpr int kRmlFontFaceCount =
+    static_cast<int>(sizeof(kRmlFontFaces) / sizeof(kRmlFontFaces[0]));
+
 struct MikuPanRmlState
 {
     SDL_Window* window = nullptr;
     std::unique_ptr<MikuPanRmlSystemInterface> system_interface;
     std::unique_ptr<MikuPanRmlRenderInterface> render_interface;
     Rml::Context* context = nullptr;
-    std::vector<Rml::byte> font_data;
+    std::array<std::vector<Rml::byte>, kRmlFontFaceCount> font_data;
     std::array<MikuPanRmlPadActionState, MIKUPAN_RML_PAD_COUNT> pad_actions;
     bool initialized = false;
 };
@@ -532,10 +546,15 @@ void UpdateContextDimensions(void)
     g_rml.context->SetDensityIndependentPixelRatio(dp_ratio);
 }
 
-bool LoadFont(void)
+bool LoadFontFace(int index)
 {
+    if (index < 0 || index >= kRmlFontFaceCount)
+    {
+        return false;
+    }
+
     char font_path[1024];
-    if (!MikuPan_ResolveBasePath("resources/fonts/CenturyOldStyle.ttf",
+    if (!MikuPan_ResolveBasePath(kRmlFontFaces[index].relative_path,
                                  font_path,
                                  sizeof(font_path)))
     {
@@ -548,16 +567,29 @@ bool LoadFont(void)
         return false;
     }
 
-    g_rml.font_data.resize(font_size);
+    std::vector<Rml::byte>& font_data = g_rml.font_data[index];
+    font_data.resize(font_size);
     MikuPan_ReadFullFile(font_path,
-                         reinterpret_cast<char*>(g_rml.font_data.data()));
+                         reinterpret_cast<char*>(font_data.data()));
 
     return Rml::LoadFontFace(
-        Rml::Span<const Rml::byte>(g_rml.font_data.data(),
-                                   g_rml.font_data.size()),
-        "MikuPanRml",
+        Rml::Span<const Rml::byte>(font_data.data(), font_data.size()),
+        kRmlFontFaces[index].family,
         Rml::Style::FontStyle::Normal,
         Rml::Style::FontWeight::Normal);
+}
+
+bool LoadFont(void)
+{
+    for (int i = 0; i < kRmlFontFaceCount; i++)
+    {
+        if (!LoadFontFace(i))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 int ConvertMouseButton(unsigned char button)
@@ -1010,6 +1042,7 @@ void DispatchPadAction(MikuPanRmlPadAction action)
             if (MikuPan_RmlOptionsAnySelectOpen())
             {
                 PulseKey(Rml::Input::KI_ESCAPE);
+                MikuPan_RmlOptionsClearNativeSelectOpen();
             }
             else
             {
