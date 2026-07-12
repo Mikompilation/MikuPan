@@ -12,10 +12,10 @@
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sglib.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/rendering/mikupan_gl_compat.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
 
-#include <glad/gl.h>
 #include <stdlib.h>
 
 // borrowed and adapted from FF2 symbols
@@ -1854,7 +1854,8 @@ void _ftoi4(int *out, float *in)
  * Used to render a 2D sprite onto the screen
  * @param s Sprite information to render on screen
  */
-void DispSprD(DISP_SPRT *s)
+static void DispSprDInternal(DISP_SPRT *s,
+                             const MikuPan_TextureInfo *texture_info)
 {
     //u_int ui;
     float ui;
@@ -2178,7 +2179,21 @@ void DispSprD(DISP_SPRT *s)
      */
     int nearest_sampler = ((sceGsTex1 *)&mtex1)->MMAG == SCE_GS_NEAREST;
 
-    if ((malpr & 0xff) == MIKUPAN_GS_ALPHA_NORMAL)
+    if (texture_info != NULL &&
+        texture_info->id != 0 &&
+        (malpr & 0xff) == MIKUPAN_GS_ALPHA_NORMAL)
+    {
+        MikuPan_RenderSpriteTextureId2DDepthStateFiltered(
+            texture_info->id,
+            width,
+            height,
+            render_buffer,
+            GsDepthTestEnabled(mtest),
+            GsDepthWriteEnabled(mzbuf),
+            GsDepthTestToGLFunc(mtest),
+            nearest_sampler);
+    }
+    else if ((malpr & 0xff) == MIKUPAN_GS_ALPHA_NORMAL)
     {
         MikuPan_RenderSprite2DDepthStateFiltered(
             (sceGsTex0 *)&tex0,
@@ -2200,6 +2215,16 @@ void DispSprD(DISP_SPRT *s)
             nearest_sampler,
             malpr);
     }
+}
+
+void DispSprD(DISP_SPRT *s)
+{
+    DispSprDInternal(s, NULL);
+}
+
+void DispSprDTextureInfo(DISP_SPRT *s, const MikuPan_TextureInfo *texture_info)
+{
+    DispSprDInternal(s, texture_info);
 }
 
 void CopySqrDToSqr(DISP_SQAR *s, SQAR_DAT *d)

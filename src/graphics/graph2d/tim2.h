@@ -6,6 +6,7 @@
 #include "typedefs.h"
 
 #include "sce/libgraph.h"
+#include "mikupan/mikupan_basictypes.h"
 
 enum TIM2_gattr_type {
 	TIM2_NONE = 0,
@@ -129,6 +130,7 @@ void CopySprDToSpr(DISP_SPRT *s, SPRT_DAT *d);
 
 void _ftoi4(int *out, float *in);
 void DispSprD(DISP_SPRT *s);
+void DispSprDTextureInfo(DISP_SPRT *s, const MikuPan_TextureInfo *texture_info);
 void CopySqrDToSqr(DISP_SQAR *s, SQAR_DAT *d);
 void CopyGSqDToSqr(DISP_SQAR *s, GSQR_DAT *d);
 void CopySq4DToSqr(DISP_SQAR *s, SQR4_DAT *d);

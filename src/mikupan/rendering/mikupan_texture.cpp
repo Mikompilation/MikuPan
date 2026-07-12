@@ -167,7 +167,8 @@ void MikuPan_TextureShutdown(void)
     g_photo_debug.negative_source_texture_id = 0;
 }
 
-MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
+static MikuPan_TextureInfo *MikuPan_CreateGLTextureInternal(sceGsTex0 *tex0,
+                                                            int add_to_cache)
 {
     int width = 1 << tex0->TW;
     int height = 1 << tex0->TH;
@@ -175,13 +176,29 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
     uint64_t hash = 0;
     void *pixels = MikuPan_GsDownloadTexture(tex0, &hash);
 
-    if (hash == 0)
+    if (hash == 0 || pixels == NULL)
     {
+        free(pixels);
         return NULL;
+    }
+
+    if (add_to_cache != 0)
+    {
+        MikuPan_TextureInfo *cached_texture = MikuPan_GetTextureInfo(hash);
+        if (cached_texture != NULL)
+        {
+            free(pixels);
+            return cached_texture;
+        }
     }
 
     unsigned int tex = MikuPan_GPUCreateTextureRGBA8(
         width, height, pixels, width * 4, 1, 0);
+    if (tex == 0)
+    {
+        free(pixels);
+        return NULL;
+    }
 
     MikuPan_TextureInfo *texture_info = (MikuPan_TextureInfo *)malloc(sizeof(MikuPan_TextureInfo));
     texture_info->height = height;
@@ -190,11 +207,24 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
     texture_info->tex0 = *(uint64_t*)tex0;
     texture_info->hash = hash;
 
-    MikuPan_AddTexture(hash, texture_info);
+    if (add_to_cache != 0)
+    {
+        MikuPan_AddTexture(hash, texture_info);
+    }
 
     free(pixels);
 
     return texture_info;
+}
+
+MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
+{
+    return MikuPan_CreateGLTextureInternal(tex0, 1);
+}
+
+MikuPan_TextureInfo *MikuPan_CreateStandaloneGLTexture(sceGsTex0 *tex0)
+{
+    return MikuPan_CreateGLTextureInternal(tex0, 0);
 }
 
 void MikuPan_SetTexture(sceGsTex0 *tex0)

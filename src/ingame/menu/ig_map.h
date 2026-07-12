@@ -54,9 +54,12 @@ extern MAP_SVP_POS map_svp_pos[];
 
 void NewgameMenuMapInit();
 void LoadgameMenuMapInit();
+void IngameMenuMapTextureCacheInit();
 void StartMapModeInit();
 void IngameMenuMap();
+void IngameMenuMapEnsureSpriteFiles();
 void IngameMenuMapDisp(u_char mod);
+void IngameMiniMapDisp();
 void AngleForWin(int pri, short int xo, short int yo, short int r, u_char ptn);
 
 #endif// INGAME_MENU_IG_MAP_H

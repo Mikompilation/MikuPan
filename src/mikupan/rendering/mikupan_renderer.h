@@ -232,6 +232,10 @@ void MikuPan_RenderSprite2DDepthStateFiltered(sceGsTex0 *tex, float *buffer,
                                              int depth_test, int depth_write,
                                              unsigned int depth_func,
                                              int nearest_sampler);
+void MikuPan_RenderSpriteTextureId2DDepthStateFiltered(
+    unsigned int texture_id, int texture_width, int texture_height,
+    float *buffer, int depth_test, int depth_write, unsigned int depth_func,
+    int nearest_sampler);
 void MikuPan_RenderSprite2DGSAlpha(sceGsTex0 *tex, float *buffer,
                                    unsigned long gs_alpha);
 void MikuPan_RenderSprite2DFilteredGSAlpha(sceGsTex0 *tex, float *buffer,
@@ -304,6 +308,11 @@ void MikuPan_RenderScreenCopyTriangles3DFeedbackModulate(sceGsTex0 *tex,
                                                          int vertex_count,
                                                          int depth_mode,
                                                          MikuPan_GPUBlendMode blend_mode);
+void MikuPan_RenderFinderViewportBlurTriangles3D(sceGsTex0 *tex,
+                                                 float *buffer,
+                                                 int vertex_count,
+                                                 int depth_mode,
+                                                 MikuPan_GPUBlendMode blend_mode);
 void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode);
 const MikuPan_TextureInfo *MikuPan_GetScreenCopyTextureInfo(void);
 const MikuPan_ScreenCopyDebugInfo *MikuPan_GetScreenCopyDebugInfo(void);
@@ -337,6 +346,7 @@ void MikuPan_SetMaterial(const sceVu0FVECTOR* ambient,
 void MikuPan_SetFontTexture(int fnt);
 void MikuPan_DeleteTexture(MikuPan_TextureInfo* texture_info);
 MikuPan_TextureInfo* MikuPan_CreateGLTexture(sceGsTex0 *tex0);
+MikuPan_TextureInfo* MikuPan_CreateStandaloneGLTexture(sceGsTex0 *tex0);
 void MikuPan_SetTexture(sceGsTex0 *tex0);
 void MikuPan_SetupCamera(MikuPan_Camera *camera);
 void MikuPan_SetupMirrorMtx(float* wv);

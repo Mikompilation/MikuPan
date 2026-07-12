@@ -37,6 +37,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)
 include(sdl3)
 include(rmlui)
 include(cimgui)
+include(implot)
 include(spdlog)
 include(cglm)
 include(ffmpeg)
@@ -330,7 +331,7 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui_settings.h
         src/mikupan/ui/mikupan_ui_theme.cpp
         src/mikupan/ui/mikupan_ui_theme.h
-)
+ "src/mikupan/mikupan_framelimiter.cpp")
 
 # The legacy game + SDK code (originally .c, now renamed to .cpp) is decompiled C
 # compiled as C++, so it needs the same C-ism relaxations on every compiler. The handful
@@ -455,7 +456,6 @@ target_include_directories(MikuPan PRIVATE
         "src"
         "src/iop"
         "extern/"
-        "extern/glad/include/"
         ${MIKUPAN_GENERATED_DIR}
         ${SDL3_INCLUDE_DIR}
         "${FFMPEG_ROOT}/include"
@@ -464,6 +464,7 @@ target_include_directories(MikuPan PRIVATE
 target_link_libraries(MikuPan PRIVATE
         RmlUi::RmlUi
         cimgui
+        implot
         SDL3::SDL3
         spdlog::spdlog
         cglm

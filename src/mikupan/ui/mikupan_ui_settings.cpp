@@ -19,6 +19,7 @@
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/ui/mikupan_rml_options.h"
 #include "mikupan_ui_debug.h"
 #include "mikupan_ui_theme.h"
 #include "mikupan/gameplay/mikupan_title_scene.h"
@@ -66,6 +67,9 @@ static float brightness = 1.0f;
 static float gamma_value = 1.0f;
 static float contrast = 1.0f;
 static float shadow_depth = 1.0f;
+static int hdr_enabled = 0;
+static float hdr_paper_white = 203.0f;
+static float hdr_peak_luminance = 1000.0f;
 
 static void MikuPan_RefreshWindowBackedRenderResolution(void);
 static int MikuPan_IsSuperSamplingEnabledInternal(void);
@@ -189,6 +193,9 @@ static void MikuPan_UiSyncSettingsFromConfiguration(void)
     gamma_value = mikupan_configuration.renderer.gamma;
     contrast = mikupan_configuration.renderer.contrast;
     shadow_depth = mikupan_configuration.renderer.shadow_depth;
+    hdr_enabled = mikupan_configuration.renderer.hdr_enabled;
+    hdr_paper_white = mikupan_configuration.renderer.hdr_paper_white;
+    hdr_peak_luminance = mikupan_configuration.renderer.hdr_peak_luminance;
     window_mode = mikupan_configuration.renderer.window_mode;
     is_fullscreen = mikupan_configuration.renderer.is_fullscreen;
     crt_settings = mikupan_configuration.crt;
@@ -246,6 +253,9 @@ static void MikuPan_UiStoreRuntimeConfiguration(void)
     mikupan_configuration.renderer.gamma = gamma_value;
     mikupan_configuration.renderer.contrast = contrast;
     mikupan_configuration.renderer.shadow_depth = shadow_depth;
+    mikupan_configuration.renderer.hdr_enabled = hdr_enabled;
+    mikupan_configuration.renderer.hdr_paper_white = hdr_paper_white;
+    mikupan_configuration.renderer.hdr_peak_luminance = hdr_peak_luminance;
     mikupan_configuration.crt = crt_settings;
     mikupan_configuration.third_person_camera.enabled =
         camera_third_person_enabled ? 1 : 0;
@@ -1014,6 +1024,16 @@ void MikuPan_UiSettingsRender(void)
             MikuPan_UiDitherModeCombo();
             igTextDisabled("Save Configuration to keep Dither Filtering after restart.");
 
+            const char* finder_mask_modes[] = {"Black", "Blur"};
+            int finder_mask_mode =
+                mikupan_configuration.renderer.finder_viewport_mask_mode;
+            if (igCombo_Str_arr("Finder Surround", &finder_mask_mode,
+                                finder_mask_modes, 2, -1))
+            {
+                mikupan_configuration.renderer.finder_viewport_mask_mode =
+                    finder_mask_mode;
+            }
+
             igEndMenu();
         }
 
@@ -1034,8 +1054,7 @@ void MikuPan_UiSettingsRender(void)
             if (igCombo_Str_arr("Font", &selected_font, MikuPan_UiFontLabels,
                                 MIKUPAN_UI_FONT_COUNT, -1))
             {
-                mikupan_configuration.selected_font = selected_font;
-                MikuPan_ApplyUiFont(selected_font);
+                MikuPan_SelectFontOption(selected_font);
             }
 
             float font_scale = mikupan_configuration.font_scale;
@@ -1475,6 +1494,44 @@ void MikuPan_SetShadowDepth(float value)
     shadow_depth = MikuPan_ClampFloat(value, 0.0f, 2.0f);
 }
 
+int MikuPan_IsHdrEnabled(void)
+{
+    return hdr_enabled;
+}
+
+void MikuPan_SetHdrEnabled(int enabled)
+{
+    hdr_enabled = enabled ? 1 : 0;
+}
+
+float MikuPan_GetHdrPaperWhite(void)
+{
+    return hdr_paper_white;
+}
+
+void MikuPan_SetHdrPaperWhite(float value)
+{
+    hdr_paper_white = MikuPan_ClampFloat(value, 80.0f, 400.0f);
+    if (hdr_peak_luminance < hdr_paper_white)
+    {
+        hdr_peak_luminance = hdr_paper_white;
+    }
+}
+
+float MikuPan_GetHdrPeakLuminance(void)
+{
+    return hdr_peak_luminance;
+}
+
+void MikuPan_SetHdrPeakLuminance(float value)
+{
+    hdr_peak_luminance = MikuPan_ClampFloat(value, 100.0f, 4000.0f);
+    if (hdr_peak_luminance < hdr_paper_white)
+    {
+        hdr_peak_luminance = hdr_paper_white;
+    }
+}
+
 const MikuPan_ConfigCrt* MikuPan_GetCrtSettings(void)
 {
     return &crt_settings;
@@ -1903,6 +1960,7 @@ int MikuPan_SelectThemeOption(int index)
 
     mikupan_configuration.selected_theme = index;
     MikuPan_ApplyFatalFrameStyle(index);
+    MikuPan_RmlOptionsApplyTheme(index);
     return 1;
 }
 
@@ -1937,6 +1995,7 @@ int MikuPan_SelectFontOption(int index)
 
     mikupan_configuration.selected_font = index;
     MikuPan_ApplyUiFont(index);
+    MikuPan_RmlOptionsApplyFont(index);
     return 1;
 }
 

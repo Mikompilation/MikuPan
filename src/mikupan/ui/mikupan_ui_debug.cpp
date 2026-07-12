@@ -3,11 +3,11 @@
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
-#include "glad/gl.h"
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "ingame/camera/camera.h"
 #include "ingame/camera/camera_types.h"
+#include "mikupan/rendering/mikupan_gl_compat.h"
 #include "main/glob.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_basictypes.h"
@@ -64,6 +64,7 @@ static int render_normals = 0;
 static int show_frame_time_graph = 0;
 static int show_perf_diag_window = 0;
 static int show_perf_diag_window_initialized = 0;
+static int measure_gpu_wait = 0;
 static FrameTimeGraph g_frame_graph = {.count = 0,
                                        .max_samples = 600,
                                        .ms_scale = -1.0f};
@@ -1946,6 +1947,7 @@ void MikuPan_UiDebugMenuRender(void)
 
             igCheckbox("Performance Diagnostics Window",
                        (bool*) &show_perf_diag_window);
+            igCheckbox("Measure GPU Wait", (bool*) &measure_gpu_wait);
             igEndMenu();
         }
 
@@ -1962,7 +1964,7 @@ void MikuPan_UiDebugWindowsRender(void)
     }
 
     ImGuiIO* io = igGetIO_Nil();
-    MikuPan_PerfSetGpuWaitEnabled(show_frame_time_graph);
+    MikuPan_PerfSetGpuWaitEnabled(show_frame_time_graph && measure_gpu_wait);
     FrameTimeGraph_Update(&g_frame_graph, 1000.0f / io->Framerate,
                           MikuPan_GetLastFrameCpuMs(),
                           MikuPan_GetLastFrameGpuMs());
@@ -1992,10 +1994,13 @@ void MikuPan_UiDebugWindowsRender(void)
 
     if (mikupan_configuration.show_fps)
     {
+        ImVec2 fps_window_pos = {16.0f,
+                                 16.0f};
+
+        igSetNextWindowPos(fps_window_pos, ImGuiCond_Always,
+                           {0.0f, 0.0f});
         igBegin("fps", (bool*) &mikupan_configuration.show_fps, mikupan_no_navigation_window);
-        //igPushFont(igGetFont(), 18.0f * ui_display_scale);
         igText("FPS %.2f", MikuPan_GetFrameRate());
-        //igPopFont();
         igEnd();
     }
 }

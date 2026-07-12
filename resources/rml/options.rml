@@ -2,10 +2,10 @@
 <head>
     <link type="text/rcss" href="options.rcss"/>
 </head>
-<body>
+<body id="options-root">
     <div id="window">
         <div id="side">
-            <div id="side-title">Options</div>
+            <div id="side-title">OPTIONS</div>
             <div id="category-list">
                 <button id="cat-display" class="category-button selected" autofocus="autofocus">Display</button>
                 <button id="cat-graphics" class="category-button">Graphics</button>
@@ -14,8 +14,8 @@
                 <button id="cat-advanced" class="category-button">Advanced</button>
             </div>
             <div id="side-actions">
-                <button id="save-return-button" class="side-action-button">Save and return</button>
-                <button id="cancel-options-button" class="side-action-button">Cancel</button>
+                <button id="save-return-button" class="side-action-button">Save</button>
+                <button id="cancel-options-button" class="side-action-button">Back</button>
             </div>
         </div>
 
@@ -36,7 +36,11 @@
                     </div>
                     <div class="setting-row">
                         <div class="setting-copy"><span class="setting-title">Image Calibration</span><p class="setting-desc">Open a scene preview with all image controls in one place.</p></div>
-                        <div class="setting-control"><button id="open-calibration-button">Adjust...</button></div>
+                        <div class="setting-control"><button id="open-calibration-button">Adjust</button></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="hdr-enabled-input">HDR Output</label><p class="setting-desc">Use extended-linear HDR presentation when the display supports it.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="hdr-enabled-input" class="checkbox" /></div>
                     </div>
                     <div class="setting-row compact">
                         <div class="setting-copy"><label class="setting-title" for="vsync-input">VSync</label><p class="setting-desc">Synchronise presentation to the display refresh.</p></div>
@@ -50,24 +54,28 @@
                         <div class="setting-control"><button id="resolution-picker" class="choice-picker"><span id="resolution-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="gpu-backend-select">GPU Backend</label><p class="setting-desc">Renderer backend selection. A restart may be required.</p><p id="active-gpu-label" class="note"></p><p id="gpu-restart-note" class="note"></p></div>
-                        <div class="setting-control"><select id="gpu-backend-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="gpu-backend-picker">GPU Backend</label><p class="setting-desc">Renderer backend selection. A restart may be required.</p><p id="active-gpu-label" class="note"></p><p id="gpu-restart-note" class="note"></p></div>
+                        <div class="setting-control"><button id="gpu-backend-picker" class="choice-picker"><span id="gpu-backend-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="msaa-select">MSAA</label><p class="setting-desc">Smooth geometry edges using multisampling.</p></div>
-                        <div class="setting-control"><select id="msaa-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="msaa-picker">MSAA</label><p class="setting-desc">Smooth geometry edges using multisampling.</p></div>
+                        <div class="setting-control"><button id="msaa-picker" class="choice-picker"><span id="msaa-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="shadow-resolution-select">Shadow Resolution</label><p class="setting-desc">Higher values sharpen shadows at a performance cost.</p></div>
-                        <div class="setting-control"><select id="shadow-resolution-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="shadow-resolution-picker">Shadow Resolution</label><p class="setting-desc">Higher values sharpen shadows at a performance cost.</p></div>
+                        <div class="setting-control"><button id="shadow-resolution-picker" class="choice-picker"><span id="shadow-resolution-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="lighting-mode-select">Lighting Mode</label><p class="setting-desc">Modern pixel lighting or PS2-style vertex lighting.</p></div>
-                        <div class="setting-control"><select id="lighting-mode-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="lighting-mode-picker">Lighting Mode</label><p class="setting-desc">Modern pixel lighting or PS2-style vertex lighting.</p></div>
+                        <div class="setting-control"><button id="lighting-mode-picker" class="choice-picker"><span id="lighting-mode-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row">
-                        <div class="setting-copy"><label class="setting-title" for="dither-mode-select">Dither Filtering</label><p class="setting-desc">Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays.</p></div>
-                        <div class="setting-control"><select id="dither-mode-select"></select></div>
+                        <div class="setting-copy"><label class="setting-title" for="dither-mode-picker">Dither Filtering</label><p class="setting-desc">Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays.</p></div>
+                        <div class="setting-control"><button id="dither-mode-picker" class="choice-picker"><span id="dither-mode-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="finder-surround-picker">Finder Surround</label><p class="setting-desc">Choose the area outside the Camera Obscura frame.</p></div>
+                        <div class="setting-control"><button id="finder-surround-picker" class="choice-picker"><span id="finder-surround-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                 </div>
 
@@ -93,11 +101,30 @@
                     <div id="controls-list"></div>
                     <div class="setting-row compact controls-actions-row">
                         <div class="setting-copy"><span class="setting-title">Defaults</span><p class="setting-desc">Restore keyboard and controller bindings.</p></div>
-                        <div class="setting-control"><button id="controls-reset-button">Reset Defaults</button></div>
+                        <div class="setting-control"><button id="controls-reset-button">Defaults</button></div>
                     </div>
                 </div>
                 <div id="page-advanced" class="page hidden">
+                    <div class="subsection-title">Interface</div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="theme-picker">Theme</label><p class="setting-desc">Use the same colour palette as the ImGui overlay.</p></div>
+                        <div class="setting-control"><button id="theme-picker" class="choice-picker"><span id="theme-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="font-picker">Font</label><p class="setting-desc">Choose the options-menu font.</p></div>
+                        <div class="setting-control"><button id="font-picker" class="choice-picker"><span id="font-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
+                    </div>
+                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="font-scale-stepper">Font Scale <span id="font-scale-value" class="value"></span></label><p class="setting-desc">Adjust interface text size.</p></div><div class="setting-control"><button id="font-scale-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="font-scale-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div></div>
+
                     <div class="subsection-title">Gameplay</div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="minimap-enabled-input">Mini Map</label><p class="setting-desc">Show the corner map while exploring.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="minimap-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="finder-dpad-film-swap-input">Quick Film Swap</label><p class="setting-desc">Use D-Pad Up / Down in finder mode to switch film.<br />D-Pad finder aim is disabled while enabled.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="finder-dpad-film-swap-input" class="checkbox" /></div>
+                    </div>
                     <div class="setting-row compact">
                         <div class="setting-copy"><label class="setting-title" for="mirror-stone-hud-input">Mirror Stone Indicator</label><p class="setting-desc">Show a Mirror Stone icon next to the filament.</p></div>
                         <div class="setting-control checkbox-control"><input type="checkbox" id="mirror-stone-hud-input" class="checkbox" /></div>
@@ -108,7 +135,7 @@
                     </div>
 
                     <div class="subsection-title">Video Filters</div>
-                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="open-crt-button">CRT Filter</label><p class="setting-desc">Open the CRT post-process tuning panel.</p></div><div class="setting-control"><button id="open-crt-button">Adjust...</button></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="open-crt-button">CRT Filter</label><p class="setting-desc">Open the CRT post-process tuning panel.</p></div><div class="setting-control"><button id="open-crt-button">Adjust</button></div></div>
 
                     <div class="subsection-title">Files</div>
                     <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="data-folder-input">Data Folder</label><p class="setting-desc">Folder containing extracted MikuPan game data.</p></div><div class="setting-control wide-control"><input type="text" id="data-folder-input" class="text" /><button id="browse-folder-button">Browse</button></div></div>
@@ -117,10 +144,27 @@
 
         </div>
 
+        <div id="ritual-overlay">
+            <div id="ritual-edge-top"></div>
+            <div id="ritual-edge-bottom"></div>
+            <div id="ritual-edge-left"></div>
+            <div id="ritual-edge-right"></div>
+            <div id="ritual-corner-tl" class="ritual-corner"></div>
+            <div id="ritual-corner-tr" class="ritual-corner"></div>
+            <div id="ritual-corner-bl" class="ritual-corner"></div>
+            <div id="ritual-corner-br" class="ritual-corner"></div>
+            <div id="ritual-scratch-a" class="ritual-scratch"></div>
+            <div id="ritual-scratch-b" class="ritual-scratch"></div>
+            <div id="ritual-scratch-c" class="ritual-scratch"></div>
+            <div id="ritual-speck-a" class="ritual-speck"></div>
+            <div id="ritual-speck-b" class="ritual-speck"></div>
+            <div id="ritual-speck-c" class="ritual-speck"></div>
+        </div>
+
         <div id="confirm-save-modal" class="modal hidden">
             <div id="confirm-save-card">
-                <div id="confirm-save-title">Settings have changed</div>
-                <div id="confirm-save-text">Would you like to save?</div>
+                <div id="confirm-save-title">Save Changes?</div>
+                <div id="confirm-save-text">Unsaved settings remain.</div>
                 <div id="confirm-save-buttons">
                     <button id="save-changes-yes-button">Yes</button>
                     <button id="save-changes-no-button">No</button>
@@ -131,7 +175,7 @@
 
         <div id="choice-picker-modal" class="modal hidden">
             <div id="choice-picker-card">
-                <div id="choice-picker-title">Choose Setting</div>
+                <div id="choice-picker-title">Select</div>
                 <div id="choice-picker-list"></div>
                 <div id="choice-picker-help">Up / Down to choose. Confirm applies. Back cancels.</div>
                 <div id="choice-picker-buttons">
@@ -169,6 +213,9 @@
         <div class="calibration-row"><label for="calibration-gamma-stepper">Gamma <span id="calibration-gamma-value" class="value"></span></label><button id="calibration-gamma-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-gamma-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
         <div class="calibration-row"><label for="calibration-contrast-stepper">Contrast <span id="calibration-contrast-value" class="value"></span></label><button id="calibration-contrast-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-contrast-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
         <div class="calibration-row"><label for="calibration-shadow-depth-stepper">Shadow Depth <span id="calibration-shadow-depth-value" class="value"></span></label><button id="calibration-shadow-depth-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-shadow-depth-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
+        <div class="calibration-row compact"><label for="calibration-hdr-enabled-input">HDR Output</label><input type="checkbox" id="calibration-hdr-enabled-input" class="checkbox" /></div>
+        <div class="calibration-row"><label for="calibration-hdr-paper-white-stepper">Paper White <span id="calibration-hdr-paper-white-value" class="value"></span></label><button id="calibration-hdr-paper-white-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-hdr-paper-white-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
+        <div class="calibration-row"><label for="calibration-hdr-peak-luminance-stepper">Peak <span id="calibration-hdr-peak-luminance-value" class="value"></span></label><button id="calibration-hdr-peak-luminance-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-hdr-peak-luminance-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
         <div id="calibration-actions">
             <button id="calibration-reset-button">Reset</button>
             <button id="calibration-ok-button">OK</button>

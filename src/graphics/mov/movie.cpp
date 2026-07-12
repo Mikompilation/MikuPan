@@ -47,9 +47,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <glad/gl.h>
 #include <mikupan/av/mikupan_audio_decoder_c.h>
 #include <mikupan/av/mikupan_video_decoder_c.h>
+#include <mikupan/rendering/mikupan_gl_compat.h>
 #include <mikupan/rendering/mikupan_gpu.h>
 #include <mikupan/rendering/mikupan_renderer.h>
 #include <stdlib.h>

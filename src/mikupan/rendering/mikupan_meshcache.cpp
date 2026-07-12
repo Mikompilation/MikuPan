@@ -3,7 +3,6 @@
 #include "mikupan_profiler.h"
 #include "mikupan_gpu.h"
 
-#include <glad/gl.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>

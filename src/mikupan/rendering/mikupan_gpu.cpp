@@ -5,7 +5,8 @@
 #include "mikupan_pipeline.h"
 #include "mikupan_shader.h"
 #include "mikupan_profiler.h"
-#include <glad/gl.h>
+#include "mikupan_gl_compat.h"
+#include "SDL3/SDL_properties.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -106,6 +107,9 @@ static SDL_GPUCommandBuffer* g_cmd = NULL;
 static SDL_GPURenderPass* g_pass = NULL;
 static SDL_GPUTexture* g_swapchain = NULL;
 static SDL_GPUTextureFormat g_swapchain_format = SDL_GPU_TEXTUREFORMAT_INVALID;
+static int g_swapchain_vsync = 1;
+static int g_swapchain_hdr_requested = 0;
+static int g_swapchain_hdr_active = 0;
 
 static SDL_GPUTexture* g_fallback_texture = NULL;
 static SDL_GPUSampler* g_fallback_sampler = NULL;
@@ -389,6 +393,7 @@ static void ReleaseDepthQueryPendingBatch(MikuPanDepthQueryPendingBatch *batch);
 static int EnsureDepthQueryTargets(void);
 static void BeginDepthQueryPass(void);
 static void RestoreSceneTargetAfterDepthQuery(void);
+static void ApplySwapchainParameters(void);
 
 static int CurrentTargetDrawable(void)
 {
@@ -618,6 +623,8 @@ static void SetDefaultUniforms(void)
     g_uniforms.uScreenNegative[1] = 0.5f;
     g_uniforms.uScreenNegative[2] = 0.5f;
     g_uniforms.uScreenNegative[3] = 0.0f;
+    g_uniforms.uHdrOutput[0] = 1.0f;
+    g_uniforms.uHdrOutput[1] = 1.0f;
     g_uniforms.uParams0[1] = 0.6f;
     g_uniforms.uParams0[2] = 1.0f;
     g_uniforms.uParams0[3] = 1.0f;
@@ -703,8 +710,8 @@ static void CreateFallbackTexture(void)
     SDL_ReleaseGPUTransferBuffer(g_device, transfer);
 }
 
-int MikuPan_GPUInit(SDL_Window* window, int vsync, const char* gpu_driver,
-                    int gpu_debug)
+int MikuPan_GPUInit(SDL_Window* window, int vsync, int hdr_enabled,
+                    const char* gpu_driver, int gpu_debug)
 {
     g_window = window;
 
@@ -736,10 +743,9 @@ int MikuPan_GPUInit(SDL_Window* window, int vsync, const char* gpu_driver,
         return 0;
     }
 
-    g_swapchain_format = SDL_GetGPUSwapchainTextureFormat(g_device, g_window);
     g_depth_format = PickSupportedDepthFormat();
     g_target_depth_format = g_depth_format;
-    MikuPan_GPUSetVsync(vsync);
+    MikuPan_GPUSetSwapchainOptions(vsync, hdr_enabled);
     CreateFallbackTexture();
     SetDefaultUniforms();
     SetDefaultRenderState();
@@ -803,14 +809,116 @@ void MikuPan_GPUWaitIdle(void)
 
 void MikuPan_GPUSetVsync(int vsync)
 {
+    MikuPan_GPUSetSwapchainOptions(vsync, g_swapchain_hdr_requested);
+}
+
+void MikuPan_GPUSetSwapchainOptions(int vsync, int hdr_enabled)
+{
     if (g_device == NULL || g_window == NULL)
     {
         return;
     }
 
-    SDL_SetGPUSwapchainParameters(
-        g_device, g_window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR,
-        vsync ? SDL_GPU_PRESENTMODE_VSYNC : SDL_GPU_PRESENTMODE_IMMEDIATE);
+    g_swapchain_vsync = vsync ? 1 : 0;
+    g_swapchain_hdr_requested = hdr_enabled ? 1 : 0;
+    ApplySwapchainParameters();
+}
+
+static void ApplySwapchainParameters(void)
+{
+    SDL_GPUPresentMode present_mode =
+        g_swapchain_vsync ? SDL_GPU_PRESENTMODE_VSYNC
+                          : SDL_GPU_PRESENTMODE_IMMEDIATE;
+    if (!SDL_WindowSupportsGPUPresentMode(g_device, g_window, present_mode))
+    {
+        present_mode = SDL_GPU_PRESENTMODE_VSYNC;
+    }
+
+    SDL_GPUSwapchainComposition composition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR;
+    if (g_swapchain_hdr_requested
+        && SDL_WindowSupportsGPUSwapchainComposition(
+               g_device,
+               g_window,
+               SDL_GPU_SWAPCHAINCOMPOSITION_HDR_EXTENDED_LINEAR))
+    {
+        composition = SDL_GPU_SWAPCHAINCOMPOSITION_HDR_EXTENDED_LINEAR;
+    }
+
+    if (!SDL_SetGPUSwapchainParameters(
+            g_device, g_window, composition, present_mode))
+    {
+        info_log("SDL_SetGPUSwapchainParameters failed: %s", SDL_GetError());
+        composition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR;
+        if (!SDL_SetGPUSwapchainParameters(
+                g_device, g_window, composition, SDL_GPU_PRESENTMODE_VSYNC))
+        {
+            info_log("SDL SDR swapchain fallback failed: %s", SDL_GetError());
+        }
+    }
+
+    g_swapchain_hdr_active =
+        composition == SDL_GPU_SWAPCHAINCOMPOSITION_HDR_EXTENDED_LINEAR;
+    g_swapchain_format = SDL_GetGPUSwapchainTextureFormat(g_device, g_window);
+}
+
+int MikuPan_GPUIsHdrSwapchainEnabled(void)
+{
+    return g_swapchain_hdr_active;
+}
+
+int MikuPan_GPUSupportsHdrOutput(void)
+{
+    if (g_device == NULL || g_window == NULL)
+    {
+        return 0;
+    }
+
+    return SDL_WindowSupportsGPUSwapchainComposition(
+               g_device,
+               g_window,
+               SDL_GPU_SWAPCHAINCOMPOSITION_HDR_EXTENDED_LINEAR)
+               ? 1
+               : 0;
+}
+
+int MikuPan_GPUIsHdrDisplayEnabled(void)
+{
+    if (g_window == NULL)
+    {
+        return 0;
+    }
+
+    SDL_PropertiesID props = SDL_GetWindowProperties(g_window);
+    return SDL_GetBooleanProperty(
+               props, SDL_PROP_WINDOW_HDR_ENABLED_BOOLEAN, false)
+               ? 1
+               : 0;
+}
+
+float MikuPan_GPUGetHdrSdrWhiteLevel(void)
+{
+    if (g_window == NULL)
+    {
+        return 1.0f;
+    }
+
+    SDL_PropertiesID props = SDL_GetWindowProperties(g_window);
+    float value = SDL_GetFloatProperty(
+        props, SDL_PROP_WINDOW_SDR_WHITE_LEVEL_FLOAT, 1.0f);
+    return value > 0.0f ? value : 1.0f;
+}
+
+float MikuPan_GPUGetHdrHeadroom(void)
+{
+    if (g_window == NULL)
+    {
+        return 1.0f;
+    }
+
+    SDL_PropertiesID props = SDL_GetWindowProperties(g_window);
+    float value = SDL_GetFloatProperty(
+        props, SDL_PROP_WINDOW_HDR_HEADROOM_FLOAT, 1.0f);
+    return value > 1.0f ? value : 1.0f;
 }
 
 SDL_GPUDevice* MikuPan_GPUGetDevice(void)
@@ -3833,6 +3941,10 @@ void MikuPan_GPUSetInt(const char* name, int value)
     {
         g_uniforms.uPadFlags[2] = value;
     }
+    else if (strcmp(name, "uHdrEnabled") == 0)
+    {
+        g_uniforms.uPadFlags[3] = value;
+    }
 
     (void) name;
     g_vertex_uniform_dirty = 1;
@@ -3952,6 +4064,14 @@ void MikuPan_GPUSetFloat(const char* name, float value)
     else if (strcmp(name, "uPs2FeedbackGhost") == 0)
     {
         g_uniforms.uPs2Feedback[3] = value;
+    }
+    else if (strcmp(name, "uHdrPaperWhite") == 0)
+    {
+        g_uniforms.uHdrOutput[0] = value;
+    }
+    else if (strcmp(name, "uHdrHeadroom") == 0)
+    {
+        g_uniforms.uHdrOutput[1] = value;
     }
 
     g_vertex_uniform_dirty = 1;

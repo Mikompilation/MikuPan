@@ -89,12 +89,16 @@ typedef struct
     float gamma;
     float contrast;
     float shadow_depth;
+    int hdr_enabled;
+    float hdr_paper_white;
+    float hdr_peak_luminance;
     int dither_mode; /* 0=native, 1=soft */
     /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
      * Empty = let SDL pick. The device is created once, so a change only
      * applies on the next launch. */
     char gpu_driver[32];
     int gpu_debug;
+    int finder_viewport_mask_mode; /* MikuPan_FinderViewportMaskMode */
 } MikuPan_ConfigRenderer;
 
 /* Apply a window display mode to the SDL window.
@@ -116,6 +120,11 @@ enum MikuPan_RenderResolutionMode
     MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE = 2,
 };
 
+enum MikuPan_FinderViewportMaskMode
+{
+    MIKUPAN_FINDER_VIEWPORT_MASK_BLACK = 0,
+    MIKUPAN_FINDER_VIEWPORT_MASK_BLUR = 1,
+};
 
 typedef struct
 {
@@ -218,6 +227,7 @@ typedef struct
     int selected_font;
     float font_scale;
     int show_fps;
+    int minimap_enabled;
     int title_room_background;
     int title_dither;
     MikuPan_ConfigThirdPersonCamera third_person_camera;
