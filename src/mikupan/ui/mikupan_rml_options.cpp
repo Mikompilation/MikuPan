@@ -145,6 +145,12 @@ enum MikuPanStepControlKind
     MIKUPAN_STEP_BLOOM_STRENGTH,
     MIKUPAN_STEP_BLOOM_THRESHOLD,
     MIKUPAN_STEP_BLOOM_RADIUS,
+    MIKUPAN_STEP_COLOR_GRADE_STRENGTH,
+    MIKUPAN_STEP_COLOR_GRADE_TEMPERATURE,
+    MIKUPAN_STEP_COLOR_GRADE_SATURATION,
+    MIKUPAN_STEP_ATMOSPHERIC_FOG_STRENGTH,
+    MIKUPAN_STEP_ATMOSPHERIC_FOG_DENSITY,
+    MIKUPAN_STEP_ATMOSPHERIC_FOG_HEIGHT,
     MIKUPAN_STEP_SOFT_SHADOW_RADIUS,
 };
 
@@ -271,6 +277,8 @@ struct MikuPanRmlOptionsState
     Rml::ElementFormControlInput* ssao_enabled_input = nullptr;
     Rml::ElementFormControlInput* volumetric_shafts_enabled_input = nullptr;
     Rml::ElementFormControlInput* bloom_enabled_input = nullptr;
+    Rml::ElementFormControlInput* color_grade_enabled_input = nullptr;
+    Rml::ElementFormControlInput* atmospheric_fog_enabled_input = nullptr;
     Rml::ElementFormControlInput* soft_shadows_enabled_input = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
     Rml::ElementFormControlInput* minimap_enabled_input = nullptr;
@@ -1919,6 +1927,18 @@ float GetStepValue(const MikuPanStepControl& control)
             return MikuPan_GetBloomThreshold();
         case MIKUPAN_STEP_BLOOM_RADIUS:
             return MikuPan_GetBloomRadius();
+        case MIKUPAN_STEP_COLOR_GRADE_STRENGTH:
+            return MikuPan_GetColorGradeStrength();
+        case MIKUPAN_STEP_COLOR_GRADE_TEMPERATURE:
+            return MikuPan_GetColorGradeTemperature();
+        case MIKUPAN_STEP_COLOR_GRADE_SATURATION:
+            return MikuPan_GetColorGradeSaturation();
+        case MIKUPAN_STEP_ATMOSPHERIC_FOG_STRENGTH:
+            return MikuPan_GetAtmosphericFogStrength();
+        case MIKUPAN_STEP_ATMOSPHERIC_FOG_DENSITY:
+            return MikuPan_GetAtmosphericFogDensity();
+        case MIKUPAN_STEP_ATMOSPHERIC_FOG_HEIGHT:
+            return MikuPan_GetAtmosphericFogHeight();
         case MIKUPAN_STEP_SOFT_SHADOW_RADIUS:
             return MikuPan_GetSoftShadowRadius();
         default:
@@ -1991,6 +2011,24 @@ void SetStepValue(const MikuPanStepControl& control, float value)
             break;
         case MIKUPAN_STEP_BLOOM_RADIUS:
             MikuPan_SetBloomRadius(clamped);
+            break;
+        case MIKUPAN_STEP_COLOR_GRADE_STRENGTH:
+            MikuPan_SetColorGradeStrength(clamped);
+            break;
+        case MIKUPAN_STEP_COLOR_GRADE_TEMPERATURE:
+            MikuPan_SetColorGradeTemperature(clamped);
+            break;
+        case MIKUPAN_STEP_COLOR_GRADE_SATURATION:
+            MikuPan_SetColorGradeSaturation(clamped);
+            break;
+        case MIKUPAN_STEP_ATMOSPHERIC_FOG_STRENGTH:
+            MikuPan_SetAtmosphericFogStrength(clamped);
+            break;
+        case MIKUPAN_STEP_ATMOSPHERIC_FOG_DENSITY:
+            MikuPan_SetAtmosphericFogDensity(clamped);
+            break;
+        case MIKUPAN_STEP_ATMOSPHERIC_FOG_HEIGHT:
+            MikuPan_SetAtmosphericFogHeight(clamped);
             break;
         case MIKUPAN_STEP_SOFT_SHADOW_RADIUS:
             MikuPan_SetSoftShadowRadius(clamped);
@@ -3729,7 +3767,8 @@ void AddStepControl(const char* control_id,
                        : (maximum - minimum) / 20.0f;
     control.precision = precision;
     control.segments = 21;
-    control.neutral_value = 1.0f;
+    control.neutral_value =
+        kind == MIKUPAN_STEP_COLOR_GRADE_TEMPERATURE ? 0.0f : 1.0f;
     control.has_neutral = minimum <= control.neutral_value
                           && maximum >= control.neutral_value
                           && kind != MIKUPAN_STEP_AUDIO_MASTER;
@@ -5055,6 +5094,10 @@ void SyncRmlSettingsValues(void)
     SetCheckbox(g_rml.volumetric_shafts_enabled_input,
                 MikuPan_IsVolumetricShaftsEnabled());
     SetCheckbox(g_rml.bloom_enabled_input, MikuPan_IsBloomEnabled());
+    SetCheckbox(g_rml.color_grade_enabled_input,
+                MikuPan_IsColorGradeEnabled());
+    SetCheckbox(g_rml.atmospheric_fog_enabled_input,
+                MikuPan_IsAtmosphericFogEnabled());
     SetCheckbox(g_rml.soft_shadows_enabled_input,
                 MikuPan_IsSoftShadowsEnabled());
     const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
@@ -5410,6 +5453,81 @@ bool LoadOptionsDocument(void)
                    16.0f,
                    0.5f,
                    1);
+
+    g_rml.color_grade_enabled_input = GetInput("color-grade-enabled-input");
+    AddListener(g_rml.color_grade_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetColorGradeEnabled(
+                            IsCheckboxChecked(input));
+                    }));
+    AddStepControl("color-grade-strength-stepper",
+                   "color-grade-strength-bars",
+                   "color-grade-strength-value",
+                   MIKUPAN_STEP_COLOR_GRADE_STRENGTH,
+                   -1,
+                   0.0f,
+                   1.0f,
+                   0.05f,
+                   2);
+    AddStepControl("color-grade-temperature-stepper",
+                   "color-grade-temperature-bars",
+                   "color-grade-temperature-value",
+                   MIKUPAN_STEP_COLOR_GRADE_TEMPERATURE,
+                   -1,
+                   -1.0f,
+                   1.0f,
+                   0.05f,
+                   2);
+    AddStepControl("color-grade-saturation-stepper",
+                   "color-grade-saturation-bars",
+                   "color-grade-saturation-value",
+                   MIKUPAN_STEP_COLOR_GRADE_SATURATION,
+                   -1,
+                   0.0f,
+                   1.5f,
+                   0.05f,
+                   2);
+
+    g_rml.atmospheric_fog_enabled_input =
+        GetInput("atmospheric-fog-enabled-input");
+    AddListener(g_rml.atmospheric_fog_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetAtmosphericFogEnabled(
+                            IsCheckboxChecked(input));
+                    }));
+    AddStepControl("atmospheric-fog-strength-stepper",
+                   "atmospheric-fog-strength-bars",
+                   "atmospheric-fog-strength-value",
+                   MIKUPAN_STEP_ATMOSPHERIC_FOG_STRENGTH,
+                   -1,
+                   0.0f,
+                   1.0f,
+                   0.05f,
+                   2);
+    AddStepControl("atmospheric-fog-density-stepper",
+                   "atmospheric-fog-density-bars",
+                   "atmospheric-fog-density-value",
+                   MIKUPAN_STEP_ATMOSPHERIC_FOG_DENSITY,
+                   -1,
+                   0.0f,
+                   1.5f,
+                   0.05f,
+                   2);
+    AddStepControl("atmospheric-fog-height-stepper",
+                   "atmospheric-fog-height-bars",
+                   "atmospheric-fog-height-value",
+                   MIKUPAN_STEP_ATMOSPHERIC_FOG_HEIGHT,
+                   -1,
+                   0.0f,
+                   1.0f,
+                   0.05f,
+                   2);
 
     g_rml.soft_shadows_enabled_input =
         GetInput("soft-shadows-enabled-input");

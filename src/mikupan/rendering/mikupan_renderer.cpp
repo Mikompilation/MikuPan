@@ -60,7 +60,7 @@ static int g_photo_capture_readback_texture_width = 0;
 static int g_photo_capture_readback_texture_height = 0;
 static unsigned int g_screen_negative_scene_copy_id = 0;
 static unsigned int g_ssao_scene_copy_id = 0;
-static unsigned int g_volumetric_scene_copy_id = 0;
+static unsigned int g_atmospheric_fog_scene_copy_id = 0;
 static unsigned int g_bloom_scene_copy_id = 0;
 static unsigned int g_pause_capture_texture_id = 0;
 static int g_pause_capture_valid = 0;
@@ -416,10 +416,10 @@ void MikuPan_DestroyInternalBuffer()
         g_ssao_scene_copy_id = 0;
     }
 
-    if (g_volumetric_scene_copy_id != 0)
+    if (g_atmospheric_fog_scene_copy_id != 0)
     {
-        MikuPan_GPUReleaseTexture(g_volumetric_scene_copy_id);
-        g_volumetric_scene_copy_id = 0;
+        MikuPan_GPUReleaseTexture(g_atmospheric_fog_scene_copy_id);
+        g_atmospheric_fog_scene_copy_id = 0;
     }
 
     if (g_bloom_scene_copy_id != 0)
@@ -1472,11 +1472,11 @@ void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
     }
     g_ssao_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
 
-    if (g_volumetric_scene_copy_id != 0)
+    if (g_atmospheric_fog_scene_copy_id != 0)
     {
-        MikuPan_GPUReleaseTexture(g_volumetric_scene_copy_id);
+        MikuPan_GPUReleaseTexture(g_atmospheric_fog_scene_copy_id);
     }
-    g_volumetric_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
+    g_atmospheric_fog_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
 
     if (g_bloom_scene_copy_id != 0)
     {
@@ -1780,16 +1780,123 @@ static int MikuPan_ShouldApplyVolumetricShafts(void)
            spot != NULL &&
            spot->valid != 0 &&
            render_back_msaa.texture.id != 0 &&
-           g_volumetric_scene_copy_id != 0 &&
            render_back_msaa.texture.width > 0 &&
-           render_back_msaa.texture.height > 0 &&
-           MikuPan_GPUGetSceneMSAA() <= 1 &&
-           MikuPan_GPUIsSceneDepthTextureSampleable() != 0 &&
-           MikuPan_GPUGetSceneDepthTextureId() != 0;
+           render_back_msaa.texture.height > 0;
+}
+
+enum
+{
+    MIKUPAN_VOLUMETRIC_CONE_SEGMENTS = 24,
+    MIKUPAN_VOLUMETRIC_CONE_SLICES = 11,
+    MIKUPAN_VOLUMETRIC_CONE_MAX_VERTICES =
+        MIKUPAN_VOLUMETRIC_CONE_SEGMENTS *
+        MIKUPAN_VOLUMETRIC_CONE_SLICES * 3,
+};
+
+static void MikuPan_AddVolumetricConeVertex(
+    float vertices[MIKUPAN_VOLUMETRIC_CONE_MAX_VERTICES][4],
+    int *vertex_count,
+    const vec3 pos)
+{
+    if (*vertex_count >= MIKUPAN_VOLUMETRIC_CONE_MAX_VERTICES)
+    {
+        return;
+    }
+
+    vertices[*vertex_count][0] = pos[0];
+    vertices[*vertex_count][1] = pos[1];
+    vertices[*vertex_count][2] = pos[2];
+    vertices[*vertex_count][3] = 1.0f;
+    (*vertex_count)++;
+}
+
+static int MikuPan_BuildVolumetricConeSlices(
+    float vertices[MIKUPAN_VOLUMETRIC_CONE_MAX_VERTICES][4],
+    vec3 source,
+    vec3 forward,
+    float range,
+    float far_radius)
+{
+    vec3 up_hint = {0.0f, 1.0f, 0.0f};
+    if (fabsf(glm_vec3_dot(forward, up_hint)) > 0.92f)
+    {
+        up_hint[0] = 1.0f;
+        up_hint[1] = 0.0f;
+        up_hint[2] = 0.0f;
+    }
+
+    vec3 right;
+    vec3 up;
+    glm_vec3_cross(up_hint, forward, right);
+    const float right_len2 =
+        right[0] * right[0] + right[1] * right[1] + right[2] * right[2];
+    if (right_len2 <= 0.000001f)
+    {
+        return 0;
+    }
+    glm_vec3_normalize(right);
+    glm_vec3_cross(forward, right, up);
+    glm_vec3_normalize(up);
+
+    const float start_distance =
+        MikuPan_ClampFloat(range * 0.018f, 36.0f, 140.0f);
+    int vertex_count = 0;
+
+    for (int slice = 1; slice <= MIKUPAN_VOLUMETRIC_CONE_SLICES; slice++)
+    {
+        const float t =
+            (float)slice / (float)MIKUPAN_VOLUMETRIC_CONE_SLICES;
+        const float distance =
+            start_distance + (range - start_distance) * t;
+        const float radius = far_radius * (distance / range);
+
+        vec3 center = {
+            source[0] + forward[0] * distance,
+            source[1] + forward[1] * distance,
+            source[2] + forward[2] * distance,
+        };
+
+        for (int seg = 0; seg < MIKUPAN_VOLUMETRIC_CONE_SEGMENTS; seg++)
+        {
+            const float a0 =
+                ((float)seg / (float)MIKUPAN_VOLUMETRIC_CONE_SEGMENTS) *
+                6.28318530718f;
+            const float a1 =
+                ((float)(seg + 1) /
+                 (float)MIKUPAN_VOLUMETRIC_CONE_SEGMENTS) *
+                6.28318530718f;
+            const float c0 = cosf(a0);
+            const float s0 = sinf(a0);
+            const float c1 = cosf(a1);
+            const float s1 = sinf(a1);
+
+            vec3 p0 = {
+                center[0] + (right[0] * c0 + up[0] * s0) * radius,
+                center[1] + (right[1] * c0 + up[1] * s0) * radius,
+                center[2] + (right[2] * c0 + up[2] * s0) * radius,
+            };
+            vec3 p1 = {
+                center[0] + (right[0] * c1 + up[0] * s1) * radius,
+                center[1] + (right[1] * c1 + up[1] * s1) * radius,
+                center[2] + (right[2] * c1 + up[2] * s1) * radius,
+            };
+
+            MikuPan_AddVolumetricConeVertex(vertices, &vertex_count, center);
+            MikuPan_AddVolumetricConeVertex(vertices, &vertex_count, p0);
+            MikuPan_AddVolumetricConeVertex(vertices, &vertex_count, p1);
+        }
+    }
+
+    return vertex_count;
 }
 
 static int MikuPan_PrepareVolumetricShaftUniforms(
-    float params[4], float light[4], float color[4])
+    float params[4],
+    float light[4],
+    float beam[4],
+    float color[4],
+    float vertices[MIKUPAN_VOLUMETRIC_CONE_MAX_VERTICES][4],
+    int *vertex_count)
 {
     const MikuPan_VolumetricSpotInfo* spot = MikuPan_GetVolumetricSpotInfo();
     if (spot == NULL || !spot->valid)
@@ -1809,56 +1916,50 @@ static int MikuPan_PrepareVolumetricShaftUniforms(
         return 0;
     }
     glm_vec3_normalize(dir);
+    vec3 forward = {-dir[0], -dir[1], -dir[2]};
 
     const float range =
         MikuPan_ClampFloat(spot->power * 1.35f, 650.0f, 6500.0f);
-    vec4 target_view = {
-        spot->pos_view[0] - dir[0] * range,
-        spot->pos_view[1] - dir[1] * range,
-        spot->pos_view[2] - dir[2] * range,
-        1.0f,
+    const float cone_focus =
+        MikuPan_ClampFloat(spot->intens, 0.05f, 0.985f);
+    const float tan_half =
+        sqrtf(fmaxf(1.0f - cone_focus, 0.015f) / cone_focus);
+    const float far_radius =
+        MikuPan_ClampFloat(
+            range * tan_half *
+                mikupan_configuration.renderer.volumetric_shafts_radius *
+                0.28f,
+            120.0f,
+            range * 0.55f);
+
+    vec3 source = {
+        spot->pos_view[0],
+        spot->pos_view[1],
+        spot->pos_view[2],
     };
-    vec4 clip;
-    glm_mat4_mulv(projection, target_view, clip);
-    if (clip[3] <= 0.001f)
+
+    *vertex_count =
+        MikuPan_BuildVolumetricConeSlices(vertices, source, forward, range,
+                                          far_radius);
+    if (*vertex_count <= 0)
     {
         return 0;
     }
-
-    const float inv_w = 1.0f / clip[3];
-    const float ndc_x = clip[0] * inv_w;
-    const float ndc_y = clip[1] * inv_w;
-    const float ndc_z = clip[2] * inv_w;
-    const float uv_x = ndc_x * 0.5f + 0.5f;
-    const float uv_y = 0.5f - ndc_y * 0.5f;
-    const float offscreen =
-        MikuPan_ClampFloat(
-            fmaxf(fmaxf(-uv_x, uv_x - 1.0f), fmaxf(-uv_y, uv_y - 1.0f)),
-            0.0f,
-            0.85f);
-    const float visibility = 1.0f - offscreen / 0.85f;
-    if (visibility <= 0.001f)
-    {
-        return 0;
-    }
-
-    const float cone_width = sqrtf(fmaxf(1.0f - spot->intens, 0.03f));
-    const float radius =
-        MikuPan_ClampFloat(
-            mikupan_configuration.renderer.volumetric_shafts_radius *
-                (0.65f + cone_width * 0.55f),
-            0.08f,
-            1.5f);
 
     params[0] = mikupan_configuration.renderer.volumetric_shafts_strength;
-    params[1] = radius;
+    params[1] = far_radius;
     params[2] = mikupan_configuration.renderer.volumetric_shafts_density;
-    params[3] = 0.92f;
+    params[3] = 0.050f;
 
-    light[0] = uv_x;
-    light[1] = uv_y;
-    light[2] = MikuPan_ClampFloat(ndc_z * 0.5f + 0.5f, 0.0f, 1.0f);
-    light[3] = visibility;
+    light[0] = source[0];
+    light[1] = source[1];
+    light[2] = source[2];
+    light[3] = 1.0f;
+
+    beam[0] = forward[0];
+    beam[1] = forward[1];
+    beam[2] = forward[2];
+    beam[3] = range;
 
     color[0] = MikuPan_ClampFloat(spot->color[0] * 1.35f, 0.0f, 1.0f);
     color[1] = MikuPan_ClampFloat(spot->color[1] * 1.35f, 0.0f, 1.0f);
@@ -1877,14 +1978,72 @@ static void MikuPan_ApplyVolumetricShaftsPass(void)
 
     float params[4];
     float light[4];
+    float beam[4];
     float color[4];
-    if (!MikuPan_PrepareVolumetricShaftUniforms(params, light, color))
+    float vertices[MIKUPAN_VOLUMETRIC_CONE_MAX_VERTICES][4];
+    int vertex_count = 0;
+    if (!MikuPan_PrepareVolumetricShaftUniforms(params, light, beam, color,
+                                                vertices, &vertex_count))
+    {
+        return;
+    }
+
+    MikuPan_SetViewportCached(0, 0,
+                              render_back_msaa.texture.width,
+                              render_back_msaa.texture.height);
+    MikuPan_FlushTexturedSpriteBatch();
+    MikuPan_SetRenderState3D();
+    MikuPan_GPUSetCullNone();
+    MikuPan_GPUSetDepthWrite(0);
+    MikuPan_GPUSetDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_ADDITIVE);
+    MikuPan_SetCurrentShaderProgram(VOLUMETRIC_SHAFTS_SHADER);
+
+    MikuPan_SetUniform1fToCurrentShader(
+        (float)((double)SDL_GetTicks() / 1000.0),
+        "uTime");
+    MikuPan_SetUniform4fvToCurrentShader(params, "uVolumetricParams");
+    MikuPan_SetUniform4fvToCurrentShader(light, "uVolumetricLight");
+    MikuPan_SetUniform4fvToCurrentShader(beam, "uVolumetricBeam");
+    MikuPan_SetUniform4fvToCurrentShader(color, "uVolumetricColor");
+
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(POSITION4);
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr)(vertex_count * sizeof(vertices[0])),
+                             vertices);
+    MikuPan_TimedDrawArrays(GL_TRIANGLES, 0, vertex_count);
+    MikuPan_PerfDrawCall();
+
+    MikuPan_GPUSetBlendMode(1, MIKUPAN_GPU_BLEND_NORMAL);
+    MikuPan_GPUSetDepthFunc(GL_LEQUAL);
+    MikuPan_GPUSetDepthWrite(1);
+    MikuPan_GPUSetCullBack();
+    MikuPan_ResetRenderStateCache();
+}
+
+static int MikuPan_ShouldApplyAtmosphericFog(void)
+{
+    return mikupan_configuration.renderer.atmospheric_fog_enabled != 0 &&
+           mikupan_configuration.renderer.atmospheric_fog_strength > 0.001f &&
+           render_back_msaa.texture.id != 0 &&
+           g_atmospheric_fog_scene_copy_id != 0 &&
+           render_back_msaa.texture.width > 0 &&
+           render_back_msaa.texture.height > 0 &&
+           MikuPan_GPUGetSceneMSAA() <= 1 &&
+           MikuPan_GPUIsSceneDepthTextureSampleable() != 0 &&
+           MikuPan_GPUGetSceneDepthTextureId() != 0;
+}
+
+static void MikuPan_ApplyAtmosphericFogPass(void)
+{
+    if (!MikuPan_ShouldApplyAtmosphericFog())
     {
         return;
     }
 
     MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
-                           g_volumetric_scene_copy_id,
+                           g_atmospheric_fog_scene_copy_id,
                            render_back_msaa.texture.width,
                            render_back_msaa.texture.height);
 
@@ -1895,6 +2054,13 @@ static void MikuPan_ApplyVolumetricShaftsPass(void)
         1,0,0,0,   1,1,1,1,    1, 1,0,1
     };
 
+    float fog_params[4] = {
+        mikupan_configuration.renderer.atmospheric_fog_strength,
+        mikupan_configuration.renderer.atmospheric_fog_density,
+        mikupan_configuration.renderer.atmospheric_fog_height,
+        1.0f,
+    };
+
     MikuPan_SetViewportCached(0, 0,
                               render_back_msaa.texture.width,
                               render_back_msaa.texture.height);
@@ -1903,10 +2069,10 @@ static void MikuPan_ApplyVolumetricShaftsPass(void)
                                    render_back_msaa.texture.height,
                                    0);
     MikuPan_SetRenderState2D();
-    MikuPan_SetCurrentShaderProgram(VOLUMETRIC_SHAFTS_SHADER);
+    MikuPan_SetCurrentShaderProgram(ATMOSPHERIC_FOG_SHADER);
 
     MikuPan_ActiveTextureCached(GL_TEXTURE0);
-    MikuPan_BindTexture2DCached(g_volumetric_scene_copy_id);
+    MikuPan_BindTexture2DCached(g_atmospheric_fog_scene_copy_id);
     MikuPan_ActiveTextureCached(GL_TEXTURE1);
     MikuPan_BindTexture2DCached(MikuPan_GPUGetSceneDepthTextureId());
     MikuPan_ActiveTextureCached(GL_TEXTURE0);
@@ -1919,9 +2085,8 @@ static void MikuPan_ApplyVolumetricShaftsPass(void)
     MikuPan_SetUniform1fToCurrentShader(
         (float)((double)SDL_GetTicks() / 1000.0),
         "uTime");
-    MikuPan_SetUniform4fvToCurrentShader(params, "uVolumetricParams");
-    MikuPan_SetUniform4fvToCurrentShader(light, "uVolumetricLight");
-    MikuPan_SetUniform4fvToCurrentShader(color, "uVolumetricColor");
+    MikuPan_SetUniform4fvToCurrentShader(fog_params,
+                                         "uAtmosphericFogParams");
 
     MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
     MikuPan_BindVAO(pipeline->vao);
@@ -1994,10 +2159,11 @@ static void MikuPan_ApplyBloomPass(void)
 
 void MikuPan_EndFrame()
 {
+    MikuPan_ApplyVolumetricShaftsPass();
     MikuPan_GPUFlushRenderPass();
     MikuPan_GPUResolveSceneForPresent();
     MikuPan_ApplySsaoPass();
-    MikuPan_ApplyVolumetricShaftsPass();
+    MikuPan_ApplyAtmosphericFogPass();
     MikuPan_ApplyBloomPass();
     MikuPan_SetViewportCached(
         0,
@@ -2119,6 +2285,17 @@ void MikuPan_EndFrame()
                                             "uOutputSize");
         MikuPan_SetUniform1fToCurrentShader((float) ((double) SDL_GetTicks() / 1000.0),
                                             "uTime");
+    }
+    {
+        const int color_grade_enabled = MikuPan_IsColorGradeEnabled();
+        float color_grade_params[4] = {
+            color_grade_enabled ? MikuPan_GetColorGradeStrength() : 0.0f,
+            MikuPan_GetColorGradeTemperature(),
+            MikuPan_GetColorGradeSaturation(),
+            color_grade_enabled ? 1.0f : 0.0f,
+        };
+        MikuPan_SetUniform4fvToCurrentShader(color_grade_params,
+                                             "uColorGradeParams");
     }
     {
         const MikuPan_PhotoDebugInfo *photo_debug = MikuPan_GetPhotoDebugInfo();
@@ -2588,6 +2765,9 @@ void MikuPan_RenderSetDebugValues()
     static int   last_mesh_lighting_mode = -1;
     static int   last_black_white_mode = -1;
     static float last_shadow_depth = -1.0f;
+    static int   last_material_highlights_enabled = -1;
+    static float last_material_highlights_strength = -1.0f;
+    static float last_material_highlights_roughness = -1.0f;
     static unsigned int last_shader_generation = 0;
 
     int   render_normals   = MikuPan_IsNormalsRendering();
@@ -2597,6 +2777,18 @@ void MikuPan_RenderSetDebugValues()
     int   mesh_lighting_mode = MikuPan_GetMeshLightingMode();
     int   black_white_mode = MikuPan_IsBlackWhiteModeActive();
     float shadow_depth = MikuPan_GetShadowDepth();
+    int material_highlights_enabled =
+        mikupan_configuration.renderer.material_highlights_enabled ? 1 : 0;
+    float material_highlights_strength =
+        MikuPan_ClampFloat(
+            mikupan_configuration.renderer.material_highlights_strength,
+            0.0f,
+            1.5f);
+    float material_highlights_roughness =
+        MikuPan_ClampFloat(
+            mikupan_configuration.renderer.material_highlights_roughness,
+            0.08f,
+            1.0f);
     unsigned int shader_generation = MikuPan_GetShaderGeneration();
 
     if (shader_generation != last_shader_generation)
@@ -2608,6 +2800,9 @@ void MikuPan_RenderSetDebugValues()
         last_mesh_lighting_mode = -1;
         last_black_white_mode = -1;
         last_shadow_depth = -1.0f;
+        last_material_highlights_enabled = -1;
+        last_material_highlights_strength = -1.0f;
+        last_material_highlights_roughness = -1.0f;
         last_shader_generation = shader_generation;
     }
 
@@ -2651,6 +2846,23 @@ void MikuPan_RenderSetDebugValues()
     {
         MikuPan_SetUniform1fToAllShaders(shadow_depth, "uShadowDepth");
         last_shadow_depth = shadow_depth;
+    }
+
+    if (material_highlights_enabled != last_material_highlights_enabled ||
+        material_highlights_strength != last_material_highlights_strength ||
+        material_highlights_roughness != last_material_highlights_roughness)
+    {
+        float material_fx_params[4] = {
+            material_highlights_enabled ? 1.0f : 0.0f,
+            material_highlights_strength,
+            material_highlights_roughness,
+            0.0f,
+        };
+        MikuPan_SetUniform4fvToAllShaders(material_fx_params,
+                                          "uMaterialFxParams");
+        last_material_highlights_enabled = material_highlights_enabled;
+        last_material_highlights_strength = material_highlights_strength;
+        last_material_highlights_roughness = material_highlights_roughness;
     }
 }
 

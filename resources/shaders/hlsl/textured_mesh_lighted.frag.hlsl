@@ -97,6 +97,123 @@ struct PSInput
     float3 oLitVertexColor : TEXCOORD5;
 };
 
+float MikuPan_Max3(float3 value)
+{
+    return max(max(value.x, value.y), value.z);
+}
+
+float3 MikuPan_MaterialSpecularTerm(
+    float3 normal,
+    float3 view_dir,
+    float3 light_dir,
+    float3 light_specular,
+    float attenuation,
+    float shininess,
+    float3 f0)
+{
+    float ndotl = saturate(dot(normal, light_dir));
+    if (ndotl <= 0.0001 || attenuation <= 0.0001)
+    {
+        return 0.0.xxx;
+    }
+
+    float3 half_vec = light_dir + view_dir;
+    float half_len2 = dot(half_vec, half_vec);
+    if (half_len2 <= 0.00001)
+    {
+        return 0.0.xxx;
+    }
+    half_vec *= rsqrt(half_len2);
+
+    float ndoth = saturate(dot(normal, half_vec));
+    float vdoth = saturate(dot(view_dir, half_vec));
+    float fresnel = pow(1.0 - vdoth, 5.0);
+    float3 F = f0 + (1.0.xxx - f0) * fresnel;
+
+    float spec = pow(ndoth, shininess) * ndotl * attenuation;
+    return light_specular * F * spec;
+}
+
+float3 MikuPan_CalcMaterialHighlights(
+    float3 normal,
+    float3 view_position,
+    float3 lit_color)
+{
+    float enabled = saturate(uMaterialFxParams.x);
+    float strength = max(uMaterialFxParams.y, 0.0) * enabled;
+    if (strength <= 0.0001)
+    {
+        return 0.0.xxx;
+    }
+
+    float3 N = normalize(normal);
+    float3 V = normalize(-view_position);
+    float roughness = clamp(uMaterialFxParams.z, 0.08, 1.0);
+    float shininess = lerp(96.0, 10.0, roughness);
+
+    float3 material_specular = saturate(abs(uMatSpecular.rgb));
+    float material_amount = saturate(MikuPan_Max3(material_specular));
+    float3 f0 = lerp(0.035.xxx,
+                     max(material_specular, 0.08.xxx),
+                     0.18 + material_amount * 0.32);
+
+    float surface_response =
+        lerp(0.45, 1.0, smoothstep(0.04, 0.65, MikuPan_Max3(lit_color)));
+    float3 highlight = 0.0.xxx;
+
+    for (int i = 0; i < uParCount.x; i++)
+    {
+        float3 L = normalize(uParDir[i].xyz);
+        highlight += MikuPan_MaterialSpecularTerm(
+            N, V, L, uParSpecular[i].rgb, 1.0, shininess, f0);
+    }
+
+    for (int j = 0; j < uPointCount.x; j++)
+    {
+        float3 to_light = uPointPos[j].xyz - view_position;
+        float dist2 = dot(to_light, to_light);
+        if (dist2 <= 0.0001)
+        {
+            continue;
+        }
+
+        float inv_dist = rsqrt(dist2);
+        float attenuation = saturate(uPointPower[j].x * inv_dist);
+        highlight += MikuPan_MaterialSpecularTerm(
+            N, V, to_light * inv_dist, uPointSpecular[j].rgb,
+            attenuation, shininess, f0);
+    }
+
+    for (int k = 0; k < uSpotCount.x; k++)
+    {
+        float3 to_light = uSpotPos[k].xyz - view_position;
+        float dist2 = dot(to_light, to_light);
+        if (dist2 <= 0.0001)
+        {
+            continue;
+        }
+
+        float inv_dist = rsqrt(dist2);
+        float3 L = to_light * inv_dist;
+        float3 Z = normalize(uSpotDir[k].xyz);
+        float cd = max(dot(L, Z), 0.0);
+        float cos2 = cd * cd;
+        if (cos2 <= uSpotIntens[k].x)
+        {
+            continue;
+        }
+
+        float gate =
+            saturate((cos2 - uSpotIntens[k].x) * uSpotIntens[k].y);
+        float attenuation = saturate(uSpotPower[k].x * inv_dist) * gate;
+        highlight += MikuPan_MaterialSpecularTerm(
+            N, V, L, uSpotSpecular[k].rgb, attenuation, shininess, f0);
+    }
+
+    highlight = ApplyBlackWhiteLightOnly(highlight);
+    return highlight * strength * surface_response;
+}
+
 float4 main(PSInput input) : SV_Target0
 {
     float4 color = uTexture.Sample(uTextureSampler, input.vUV);
@@ -156,6 +273,8 @@ float4 main(PSInput input) : SV_Target0
         : CalcPS2LitColor(input.vNormal, input.oViewPosition, input.oVertexColor);
     ps2LightColor = ApplyBlackWhiteLightOnly(ps2LightColor);
     color.rgb = ApplyGsModulate(color.rgb, ps2LightColor);
+    color.rgb += MikuPan_CalcMaterialHighlights(
+        input.vNormal.xyz, input.oViewPosition.xyz, color.rgb);
 
     if (uFlags1.x == 0)
     {

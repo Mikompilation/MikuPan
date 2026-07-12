@@ -213,7 +213,7 @@ void MikuPan_InitPipeline()
     curr_pipeline = &pipelines[POSITION4];
     MikuPan_CreateBufferObjectsInfo(curr_pipeline, 1);
     MikuPan_SetBufferObjectInfo(
-        &curr_pipeline->buffers[0], sizeof(float[4]) * 24, 1);
+        &curr_pipeline->buffers[0], sizeof(float[4]) * 4096, 1);
     MikuPan_SetVertexBufferAttributeInfo(
         &curr_pipeline->buffers[0].attributes[0], 4, 0,
         sizeof(float[4]), 0);

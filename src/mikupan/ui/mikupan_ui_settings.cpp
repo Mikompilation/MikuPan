@@ -1060,15 +1060,6 @@ void MikuPan_UiSettingsRender(void)
                     MikuPan_SetVolumetricShaftsEnabled(shafts_enabled ? 1 : 0);
                 }
 
-                if (MikuPan_GPUGetSceneMSAA() > 1)
-                {
-                    igTextDisabled("Volumetric shafts require MSAA Off; scene depth is multisampled.");
-                }
-                else if (!MikuPan_GPUIsSceneDepthTextureSampleable())
-                {
-                    igTextDisabled("Volumetric shafts unavailable: backend cannot sample the scene depth format.");
-                }
-
                 if (MikuPan_IsVolumetricShaftsEnabled())
                 {
                     float shaft_strength = MikuPan_GetVolumetricShaftsStrength();
@@ -1118,6 +1109,112 @@ void MikuPan_UiSettingsRender(void)
                                       16.0f, "%.1f", 0))
                     {
                         MikuPan_SetBloomRadius(bloom_radius);
+                    }
+                }
+            }
+
+            {
+                bool color_grade_enabled = MikuPan_IsColorGradeEnabled() != 0;
+                if (igCheckbox("Color Grade", &color_grade_enabled))
+                {
+                    MikuPan_SetColorGradeEnabled(
+                        color_grade_enabled ? 1 : 0);
+                }
+
+                if (MikuPan_IsColorGradeEnabled())
+                {
+                    float grade_strength = MikuPan_GetColorGradeStrength();
+                    float grade_temperature =
+                        MikuPan_GetColorGradeTemperature();
+                    float grade_saturation =
+                        MikuPan_GetColorGradeSaturation();
+                    if (igSliderFloat("Grade Strength", &grade_strength, 0.0f,
+                                      1.0f, "%.2f", 0))
+                    {
+                        MikuPan_SetColorGradeStrength(grade_strength);
+                    }
+                    if (igSliderFloat("Grade Temperature",
+                                      &grade_temperature, -1.0f,
+                                      1.0f, "%.2f", 0))
+                    {
+                        MikuPan_SetColorGradeTemperature(grade_temperature);
+                    }
+                    if (igSliderFloat("Grade Saturation",
+                                      &grade_saturation, 0.0f,
+                                      1.5f, "%.2f", 0))
+                    {
+                        MikuPan_SetColorGradeSaturation(grade_saturation);
+                    }
+                }
+            }
+
+            {
+                bool fog_enabled = MikuPan_IsAtmosphericFogEnabled() != 0;
+                if (igCheckbox("Atmospheric Fog", &fog_enabled))
+                {
+                    MikuPan_SetAtmosphericFogEnabled(fog_enabled ? 1 : 0);
+                }
+
+                if (MikuPan_GPUGetSceneMSAA() > 1)
+                {
+                    igTextDisabled("Atmospheric fog requires MSAA Off; scene depth is multisampled.");
+                }
+                else if (!MikuPan_GPUIsSceneDepthTextureSampleable())
+                {
+                    igTextDisabled("Atmospheric fog unavailable: backend cannot sample the scene depth format.");
+                }
+
+                if (MikuPan_IsAtmosphericFogEnabled())
+                {
+                    float fog_strength = MikuPan_GetAtmosphericFogStrength();
+                    float fog_density = MikuPan_GetAtmosphericFogDensity();
+                    float fog_height = MikuPan_GetAtmosphericFogHeight();
+                    if (igSliderFloat("Fog Strength", &fog_strength, 0.0f,
+                                      1.0f, "%.2f", 0))
+                    {
+                        MikuPan_SetAtmosphericFogStrength(fog_strength);
+                    }
+                    if (igSliderFloat("Fog Density", &fog_density, 0.0f,
+                                      1.5f, "%.2f", 0))
+                    {
+                        MikuPan_SetAtmosphericFogDensity(fog_density);
+                    }
+                    if (igSliderFloat("Fog Height", &fog_height, 0.0f,
+                                      1.0f, "%.2f", 0))
+                    {
+                        MikuPan_SetAtmosphericFogHeight(fog_height);
+                    }
+                }
+            }
+
+            {
+                bool highlights_enabled =
+                    MikuPan_IsMaterialHighlightsEnabled() != 0;
+                if (igCheckbox("Material Highlights", &highlights_enabled))
+                {
+                    MikuPan_SetMaterialHighlightsEnabled(
+                        highlights_enabled ? 1 : 0);
+                }
+
+                if (MikuPan_IsMaterialHighlightsEnabled())
+                {
+                    float highlight_strength =
+                        MikuPan_GetMaterialHighlightsStrength();
+                    float highlight_roughness =
+                        MikuPan_GetMaterialHighlightsRoughness();
+                    if (igSliderFloat("Highlight Strength",
+                                      &highlight_strength, 0.0f,
+                                      1.5f, "%.2f", 0))
+                    {
+                        MikuPan_SetMaterialHighlightsStrength(
+                            highlight_strength);
+                    }
+                    if (igSliderFloat("Highlight Roughness",
+                                      &highlight_roughness, 0.08f,
+                                      1.0f, "%.2f", 0))
+                    {
+                        MikuPan_SetMaterialHighlightsRoughness(
+                            highlight_roughness);
                     }
                 }
             }
@@ -2203,6 +2300,125 @@ void MikuPan_SetBloomRadius(float value)
 {
     mikupan_configuration.renderer.bloom_radius =
         MikuPan_ClampFloat(value, 0.5f, 16.0f);
+}
+
+int MikuPan_IsColorGradeEnabled(void)
+{
+    return mikupan_configuration.renderer.color_grade_enabled;
+}
+
+void MikuPan_SetColorGradeEnabled(int enabled)
+{
+    mikupan_configuration.renderer.color_grade_enabled = enabled ? 1 : 0;
+}
+
+float MikuPan_GetColorGradeStrength(void)
+{
+    return mikupan_configuration.renderer.color_grade_strength;
+}
+
+void MikuPan_SetColorGradeStrength(float value)
+{
+    mikupan_configuration.renderer.color_grade_strength =
+        MikuPan_ClampFloat(value, 0.0f, 1.0f);
+}
+
+float MikuPan_GetColorGradeTemperature(void)
+{
+    return mikupan_configuration.renderer.color_grade_temperature;
+}
+
+void MikuPan_SetColorGradeTemperature(float value)
+{
+    mikupan_configuration.renderer.color_grade_temperature =
+        MikuPan_ClampFloat(value, -1.0f, 1.0f);
+}
+
+float MikuPan_GetColorGradeSaturation(void)
+{
+    return mikupan_configuration.renderer.color_grade_saturation;
+}
+
+void MikuPan_SetColorGradeSaturation(float value)
+{
+    mikupan_configuration.renderer.color_grade_saturation =
+        MikuPan_ClampFloat(value, 0.0f, 1.5f);
+}
+
+int MikuPan_IsAtmosphericFogEnabled(void)
+{
+    return mikupan_configuration.renderer.atmospheric_fog_enabled;
+}
+
+void MikuPan_SetAtmosphericFogEnabled(int enabled)
+{
+    mikupan_configuration.renderer.atmospheric_fog_enabled = enabled ? 1 : 0;
+}
+
+float MikuPan_GetAtmosphericFogStrength(void)
+{
+    return mikupan_configuration.renderer.atmospheric_fog_strength;
+}
+
+void MikuPan_SetAtmosphericFogStrength(float value)
+{
+    mikupan_configuration.renderer.atmospheric_fog_strength =
+        MikuPan_ClampFloat(value, 0.0f, 1.0f);
+}
+
+float MikuPan_GetAtmosphericFogDensity(void)
+{
+    return mikupan_configuration.renderer.atmospheric_fog_density;
+}
+
+void MikuPan_SetAtmosphericFogDensity(float value)
+{
+    mikupan_configuration.renderer.atmospheric_fog_density =
+        MikuPan_ClampFloat(value, 0.0f, 1.5f);
+}
+
+float MikuPan_GetAtmosphericFogHeight(void)
+{
+    return mikupan_configuration.renderer.atmospheric_fog_height;
+}
+
+void MikuPan_SetAtmosphericFogHeight(float value)
+{
+    mikupan_configuration.renderer.atmospheric_fog_height =
+        MikuPan_ClampFloat(value, 0.0f, 1.0f);
+}
+
+int MikuPan_IsMaterialHighlightsEnabled(void)
+{
+    return mikupan_configuration.renderer.material_highlights_enabled;
+}
+
+void MikuPan_SetMaterialHighlightsEnabled(int enabled)
+{
+    mikupan_configuration.renderer.material_highlights_enabled =
+        enabled ? 1 : 0;
+}
+
+float MikuPan_GetMaterialHighlightsStrength(void)
+{
+    return mikupan_configuration.renderer.material_highlights_strength;
+}
+
+void MikuPan_SetMaterialHighlightsStrength(float value)
+{
+    mikupan_configuration.renderer.material_highlights_strength =
+        MikuPan_ClampFloat(value, 0.0f, 1.5f);
+}
+
+float MikuPan_GetMaterialHighlightsRoughness(void)
+{
+    return mikupan_configuration.renderer.material_highlights_roughness;
+}
+
+void MikuPan_SetMaterialHighlightsRoughness(float value)
+{
+    mikupan_configuration.renderer.material_highlights_roughness =
+        MikuPan_ClampFloat(value, 0.08f, 1.0f);
 }
 
 int MikuPan_GetThemeOptionCount(void)

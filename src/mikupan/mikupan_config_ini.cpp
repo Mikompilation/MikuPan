@@ -203,6 +203,17 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "bloom_strength", mikupan_configuration.renderer.bloom_strength);
     ApplyValue(ini, "renderer", "bloom_threshold", mikupan_configuration.renderer.bloom_threshold);
     ApplyValue(ini, "renderer", "bloom_radius", mikupan_configuration.renderer.bloom_radius);
+    ApplyValue(ini, "renderer", "color_grade_enabled", mikupan_configuration.renderer.color_grade_enabled);
+    ApplyValue(ini, "renderer", "color_grade_strength", mikupan_configuration.renderer.color_grade_strength);
+    ApplyValue(ini, "renderer", "color_grade_temperature", mikupan_configuration.renderer.color_grade_temperature);
+    ApplyValue(ini, "renderer", "color_grade_saturation", mikupan_configuration.renderer.color_grade_saturation);
+    ApplyValue(ini, "renderer", "atmospheric_fog_enabled", mikupan_configuration.renderer.atmospheric_fog_enabled);
+    ApplyValue(ini, "renderer", "atmospheric_fog_strength", mikupan_configuration.renderer.atmospheric_fog_strength);
+    ApplyValue(ini, "renderer", "atmospheric_fog_density", mikupan_configuration.renderer.atmospheric_fog_density);
+    ApplyValue(ini, "renderer", "atmospheric_fog_height", mikupan_configuration.renderer.atmospheric_fog_height);
+    ApplyValue(ini, "renderer", "material_highlights_enabled", mikupan_configuration.renderer.material_highlights_enabled);
+    ApplyValue(ini, "renderer", "material_highlights_strength", mikupan_configuration.renderer.material_highlights_strength);
+    ApplyValue(ini, "renderer", "material_highlights_roughness", mikupan_configuration.renderer.material_highlights_roughness);
     ApplyString(ini, "renderer", "gpu_driver",
                 mikupan_configuration.renderer.gpu_driver,
                 sizeof(mikupan_configuration.renderer.gpu_driver));
@@ -398,6 +409,17 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "bloom_strength", mikupan_configuration.renderer.bloom_strength);
     SetValue(ini, "renderer", "bloom_threshold", mikupan_configuration.renderer.bloom_threshold);
     SetValue(ini, "renderer", "bloom_radius", mikupan_configuration.renderer.bloom_radius);
+    SetValue(ini, "renderer", "color_grade_enabled", mikupan_configuration.renderer.color_grade_enabled);
+    SetValue(ini, "renderer", "color_grade_strength", mikupan_configuration.renderer.color_grade_strength);
+    SetValue(ini, "renderer", "color_grade_temperature", mikupan_configuration.renderer.color_grade_temperature);
+    SetValue(ini, "renderer", "color_grade_saturation", mikupan_configuration.renderer.color_grade_saturation);
+    SetValue(ini, "renderer", "atmospheric_fog_enabled", mikupan_configuration.renderer.atmospheric_fog_enabled);
+    SetValue(ini, "renderer", "atmospheric_fog_strength", mikupan_configuration.renderer.atmospheric_fog_strength);
+    SetValue(ini, "renderer", "atmospheric_fog_density", mikupan_configuration.renderer.atmospheric_fog_density);
+    SetValue(ini, "renderer", "atmospheric_fog_height", mikupan_configuration.renderer.atmospheric_fog_height);
+    SetValue(ini, "renderer", "material_highlights_enabled", mikupan_configuration.renderer.material_highlights_enabled);
+    SetValue(ini, "renderer", "material_highlights_strength", mikupan_configuration.renderer.material_highlights_strength);
+    SetValue(ini, "renderer", "material_highlights_roughness", mikupan_configuration.renderer.material_highlights_roughness);
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;
     SetValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);

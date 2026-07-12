@@ -107,14 +107,22 @@ typedef struct MikuPan_GPUUniformBlock
     float uScreenNegative[4];
     // x=strength, y=radius in pixels, z=depth bias, w=depth contrast scale
     float uSsaoParams[4];
-    // x=strength, y=screen radius, z=density, w=decay
+    // x=strength, y=far radius, z=density, w=slice scale
     float uVolumetricParams[4];
-    // xy=projected source UV, z=source depth, w=active
+    // xyz=view-space source, w=active
     float uVolumetricLight[4];
+    // xyz=view-space beam direction, w=range
+    float uVolumetricBeam[4];
     // rgb=shaft tint, a=light/fog tint mix
     float uVolumetricColor[4];
     // x=strength, y=threshold, z=radius pixels, w=soft knee
     float uBloomParams[4];
+    // x=strength, y=temperature, z=saturation, w=enabled
+    float uColorGradeParams[4];
+    // x=strength, y=density, z=height bias, w=enabled
+    float uAtmosphericFogParams[4];
+    // x=enabled, y=highlight strength, z=roughness, w=reserved
+    float uMaterialFxParams[4];
 
     int uFlags0[4];
     int uFlags1[4];

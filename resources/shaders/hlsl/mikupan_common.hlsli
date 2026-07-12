@@ -43,10 +43,14 @@ cbuffer MikuPanUniforms : register(b0, MIKUPAN_UNIFORM_SPACE)
     float4 uPs2Feedback; // x=strength, y=burn, z=saturation, w=ghost
     float4 uScreenNegative; // rgb=Himuro negative colour, a=strength
     float4 uSsaoParams; // x=strength, y=radius pixels, z=depth bias, w=depth scale
-    float4 uVolumetricParams; // x=strength, y=screen radius, z=density, w=decay
-    float4 uVolumetricLight; // xy=projected source UV, z=source depth, w=active
+    float4 uVolumetricParams; // x=strength, y=far radius, z=density, w=slice scale
+    float4 uVolumetricLight; // xyz=view-space source, w=active
+    float4 uVolumetricBeam; // xyz=view-space beam direction, w=range
     float4 uVolumetricColor; // rgb=shaft tint, a=light/fog tint mix
     float4 uBloomParams; // x=strength, y=threshold, z=radius pixels, w=soft knee
+    float4 uColorGradeParams; // x=strength, y=temperature, z=saturation, w=enabled
+    float4 uAtmosphericFogParams; // x=strength, y=density, z=height bias, w=enabled
+    float4 uMaterialFxParams; // x=enabled, y=highlight strength, z=roughness, w=reserved
 
     int4 uFlags0; // x=renderNormals, y=disableLighting, z=staticLighting, w=meshLightingMode
     int4 uFlags1; // x=mirrorSurfacePass, y=shadowEnabled, z=shadowDebugView, w=crtEnabled

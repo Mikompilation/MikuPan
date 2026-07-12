@@ -48,6 +48,17 @@ MikuPan_Config mikupan_configuration = {
         0.30f,
         0.72f,
         6.0f,
+        1,
+        0.35f,
+        -0.20f,
+        0.92f,
+        1,
+        0.18f,
+        0.42f,
+        0.55f,
+        1,
+        0.42f,
+        0.36f,
         "",
         0,
         MIKUPAN_FINDER_VIEWPORT_MASK_BLUR
@@ -257,6 +268,30 @@ static void MikuPan_ConfigurationValidateRenderer(
         MikuPan_ClampFloat(renderer->bloom_threshold, 0.0f, 1.0f);
     renderer->bloom_radius =
         MikuPan_ClampFloat(renderer->bloom_radius, 0.5f, 16.0f);
+
+    renderer->color_grade_enabled = renderer->color_grade_enabled ? 1 : 0;
+    renderer->color_grade_strength =
+        MikuPan_ClampFloat(renderer->color_grade_strength, 0.0f, 1.0f);
+    renderer->color_grade_temperature =
+        MikuPan_ClampFloat(renderer->color_grade_temperature, -1.0f, 1.0f);
+    renderer->color_grade_saturation =
+        MikuPan_ClampFloat(renderer->color_grade_saturation, 0.0f, 1.5f);
+
+    renderer->atmospheric_fog_enabled =
+        renderer->atmospheric_fog_enabled ? 1 : 0;
+    renderer->atmospheric_fog_strength =
+        MikuPan_ClampFloat(renderer->atmospheric_fog_strength, 0.0f, 1.0f);
+    renderer->atmospheric_fog_density =
+        MikuPan_ClampFloat(renderer->atmospheric_fog_density, 0.0f, 1.5f);
+    renderer->atmospheric_fog_height =
+        MikuPan_ClampFloat(renderer->atmospheric_fog_height, 0.0f, 1.0f);
+
+    renderer->material_highlights_enabled =
+        renderer->material_highlights_enabled ? 1 : 0;
+    renderer->material_highlights_strength =
+        MikuPan_ClampFloat(renderer->material_highlights_strength, 0.0f, 1.5f);
+    renderer->material_highlights_roughness =
+        MikuPan_ClampFloat(renderer->material_highlights_roughness, 0.08f, 1.0f);
 
     renderer->gpu_debug = renderer->gpu_debug ? 1 : 0;
     renderer->finder_viewport_mask_mode =

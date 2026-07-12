@@ -107,6 +107,17 @@ typedef struct
     float bloom_strength;
     float bloom_threshold;
     float bloom_radius;
+    int color_grade_enabled;
+    float color_grade_strength;
+    float color_grade_temperature;
+    float color_grade_saturation;
+    int atmospheric_fog_enabled;
+    float atmospheric_fog_strength;
+    float atmospheric_fog_density;
+    float atmospheric_fog_height;
+    int material_highlights_enabled;
+    float material_highlights_strength;
+    float material_highlights_roughness;
     /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
      * Empty = let SDL pick. The device is created once, so a change only
      * applies on the next launch. */

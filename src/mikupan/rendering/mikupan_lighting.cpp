@@ -184,10 +184,9 @@ static void MikuPan_RecordVolumetricSpotCandidate(int slot)
         return;
     }
 
-    const float cone_width = 1.0f - intens;
-    const float cone_weight =
-        cone_width > 0.0f ? (0.25f + cone_width) : 0.25f;
-    const float score = luminance * sqrtf(power) * cone_weight;
+    const float cone_focus = fminf(fmaxf(intens, 0.0f), 1.0f);
+    const float focus_weight = 0.65f + cone_focus * 0.60f;
+    const float score = luminance * sqrtf(power) * focus_weight;
     if (g_volumetric_spot.valid && score <= g_volumetric_spot.score)
     {
         return;

@@ -641,13 +641,17 @@ static void SetDefaultUniforms(void)
     g_uniforms.uSsaoParams[2] = 0.0025f;
     g_uniforms.uSsaoParams[3] = 120.0f;
     g_uniforms.uVolumetricParams[0] = 0.0f;
-    g_uniforms.uVolumetricParams[1] = 0.72f;
+    g_uniforms.uVolumetricParams[1] = 850.0f;
     g_uniforms.uVolumetricParams[2] = 0.85f;
-    g_uniforms.uVolumetricParams[3] = 0.92f;
-    g_uniforms.uVolumetricLight[0] = 0.5f;
-    g_uniforms.uVolumetricLight[1] = 0.5f;
-    g_uniforms.uVolumetricLight[2] = 1.0f;
+    g_uniforms.uVolumetricParams[3] = 0.035f;
+    g_uniforms.uVolumetricLight[0] = 0.0f;
+    g_uniforms.uVolumetricLight[1] = 0.0f;
+    g_uniforms.uVolumetricLight[2] = 0.0f;
     g_uniforms.uVolumetricLight[3] = 0.0f;
+    g_uniforms.uVolumetricBeam[0] = 0.0f;
+    g_uniforms.uVolumetricBeam[1] = 0.0f;
+    g_uniforms.uVolumetricBeam[2] = -1.0f;
+    g_uniforms.uVolumetricBeam[3] = 6500.0f;
     g_uniforms.uVolumetricColor[0] = 1.0f;
     g_uniforms.uVolumetricColor[1] = 1.0f;
     g_uniforms.uVolumetricColor[2] = 1.0f;
@@ -656,6 +660,18 @@ static void SetDefaultUniforms(void)
     g_uniforms.uBloomParams[1] = 0.72f;
     g_uniforms.uBloomParams[2] = 6.0f;
     g_uniforms.uBloomParams[3] = 0.18f;
+    g_uniforms.uColorGradeParams[0] = 0.0f;
+    g_uniforms.uColorGradeParams[1] = -0.20f;
+    g_uniforms.uColorGradeParams[2] = 0.92f;
+    g_uniforms.uColorGradeParams[3] = 0.0f;
+    g_uniforms.uAtmosphericFogParams[0] = 0.0f;
+    g_uniforms.uAtmosphericFogParams[1] = 0.42f;
+    g_uniforms.uAtmosphericFogParams[2] = 0.55f;
+    g_uniforms.uAtmosphericFogParams[3] = 0.0f;
+    g_uniforms.uMaterialFxParams[0] = 1.0f;
+    g_uniforms.uMaterialFxParams[1] = 0.42f;
+    g_uniforms.uMaterialFxParams[2] = 0.36f;
+    g_uniforms.uMaterialFxParams[3] = 0.0f;
 }
 
 static void SetDefaultRenderState(void)
@@ -3949,6 +3965,11 @@ void MikuPan_GPUSetVec4(const char* name, const float* vec)
         memcpy(g_uniforms.uVolumetricLight, vec,
                sizeof(g_uniforms.uVolumetricLight));
     }
+    else if (strcmp(name, "uVolumetricBeam") == 0)
+    {
+        memcpy(g_uniforms.uVolumetricBeam, vec,
+               sizeof(g_uniforms.uVolumetricBeam));
+    }
     else if (strcmp(name, "uVolumetricColor") == 0)
     {
         memcpy(g_uniforms.uVolumetricColor, vec,
@@ -3958,6 +3979,21 @@ void MikuPan_GPUSetVec4(const char* name, const float* vec)
     {
         memcpy(g_uniforms.uBloomParams, vec,
                sizeof(g_uniforms.uBloomParams));
+    }
+    else if (strcmp(name, "uColorGradeParams") == 0)
+    {
+        memcpy(g_uniforms.uColorGradeParams, vec,
+               sizeof(g_uniforms.uColorGradeParams));
+    }
+    else if (strcmp(name, "uAtmosphericFogParams") == 0)
+    {
+        memcpy(g_uniforms.uAtmosphericFogParams, vec,
+               sizeof(g_uniforms.uAtmosphericFogParams));
+    }
+    else if (strcmp(name, "uMaterialFxParams") == 0)
+    {
+        memcpy(g_uniforms.uMaterialFxParams, vec,
+               sizeof(g_uniforms.uMaterialFxParams));
     }
 
     g_vertex_uniform_dirty = 1;

@@ -78,7 +78,7 @@
                         <div class="setting-control"><button id="ssao-bias-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="ssao-bias-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
                     </div>
                     <div class="setting-row compact">
-                        <div class="setting-copy"><label class="setting-title" for="volumetric-shafts-enabled-input">Enable Volumetric Shafts</label><p class="setting-desc">Flashlight fog beams. Requires MSAA Off.</p></div>
+                        <div class="setting-copy"><label class="setting-title" for="volumetric-shafts-enabled-input">Enable Volumetric Shafts</label><p class="setting-desc">Depth-tested flashlight cone volume.</p></div>
                         <div class="setting-control checkbox-control"><input type="checkbox" id="volumetric-shafts-enabled-input" class="checkbox" /></div>
                     </div>
                     <div class="setting-row">
@@ -108,6 +108,38 @@
                     <div class="setting-row">
                         <div class="setting-copy"><label class="setting-title" for="bloom-radius-stepper">Bloom Radius <span id="bloom-radius-value" class="value"></span></label></div>
                         <div class="setting-control"><button id="bloom-radius-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="bloom-radius-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="color-grade-enabled-input">Enable Color Grade</label><p class="setting-desc">Applies a film-style tone pass to unify shadows and highlights.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="color-grade-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="color-grade-strength-stepper">Grade Strength <span id="color-grade-strength-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="color-grade-strength-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="color-grade-strength-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="color-grade-temperature-stepper">Grade Temperature <span id="color-grade-temperature-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="color-grade-temperature-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="color-grade-temperature-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="color-grade-saturation-stepper">Grade Saturation <span id="color-grade-saturation-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="color-grade-saturation-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="color-grade-saturation-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="atmospheric-fog-enabled-input">Enable Atmospheric Fog</label><p class="setting-desc">Layered depth haze and low fog pockets. Requires MSAA Off.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="atmospheric-fog-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="atmospheric-fog-strength-stepper">Fog Strength <span id="atmospheric-fog-strength-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="atmospheric-fog-strength-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="atmospheric-fog-strength-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="atmospheric-fog-density-stepper">Fog Density <span id="atmospheric-fog-density-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="atmospheric-fog-density-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="atmospheric-fog-density-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="atmospheric-fog-height-stepper">Fog Height <span id="atmospheric-fog-height-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="atmospheric-fog-height-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="atmospheric-fog-height-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
                     </div>
                     <div class="setting-row">
                         <div class="setting-copy"><label class="setting-title" for="shadow-resolution-picker">Shadow Resolution</label><p class="setting-desc">Higher values sharpen shadows at a performance cost.</p></div>

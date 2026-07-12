@@ -171,6 +171,38 @@ float3 ApplyPs2FeedbackGrade(float3 color, float2 uv)
     return color;
 }
 
+float3 ApplyColorGrade(float3 color)
+{
+    float enabled = uColorGradeParams.w > 0.5 ? 1.0 : 0.0;
+    float strength = saturate(uColorGradeParams.x) * enabled;
+    if (strength <= 0.001)
+    {
+        return color;
+    }
+
+    float luma = dot(color, float3(0.2126, 0.7152, 0.0722));
+    float saturation = clamp(uColorGradeParams.z, 0.0, 1.5);
+    float3 graded = lerp(luma.xxx, color, saturation);
+
+    float shadow = 1.0 - smoothstep(0.12, 0.58, luma);
+    float highlight = smoothstep(0.42, 1.05, luma);
+    graded *= lerp(1.0.xxx, float3(0.84, 0.94, 1.12), shadow * 0.30);
+    graded *= lerp(1.0.xxx, float3(1.10, 1.03, 0.86), highlight * 0.18);
+
+    float temperature = clamp(uColorGradeParams.y, -1.0, 1.0);
+    float3 temp_tint =
+        temperature < 0.0
+            ? lerp(1.0.xxx, float3(0.92, 0.98, 1.10), -temperature)
+            : lerp(1.0.xxx, float3(1.10, 1.02, 0.90), temperature);
+    graded *= temp_tint;
+
+    graded = (graded - 0.5.xxx) * 1.06 + 0.5.xxx;
+    graded += float3(shadow * 0.012, shadow * 0.012, shadow * 0.012);
+    graded = max(graded, 0.0.xxx);
+
+    return lerp(color, graded, strength);
+}
+
 float4 main(PSInput input) : SV_Target0
 {
     float4 source = uTexture.Sample(uTextureSampler, input.vUV) * input.uColor;
@@ -182,6 +214,8 @@ float4 main(PSInput input) : SV_Target0
     {
         color = lerp(color, ApplyCrt(input.vUV, input.position.xy), clamp(uCrt0.x, 0.0, 1.0));
     }
+
+    color = ApplyColorGrade(color);
 
     if (uFlags2.x != 0)
     {

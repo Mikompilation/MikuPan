@@ -1811,6 +1811,18 @@ void MikuPan_UiDebugMenuRender(void)
                     MikuPan_SetBloomEnabled(bloom_on);
                 }
 
+                int color_grade_on = MikuPan_IsColorGradeEnabled();
+                if (igCheckbox("Color Grade", (bool*) &color_grade_on))
+                {
+                    MikuPan_SetColorGradeEnabled(color_grade_on);
+                }
+
+                int fog_on = MikuPan_IsAtmosphericFogEnabled();
+                if (igCheckbox("Atmospheric Fog", (bool*) &fog_on))
+                {
+                    MikuPan_SetAtmosphericFogEnabled(fog_on);
+                }
+
                 int shafts_on = MikuPan_IsVolumetricShaftsEnabled();
                 if (igCheckbox("Volumetric Shafts", (bool*) &shafts_on))
                 {
