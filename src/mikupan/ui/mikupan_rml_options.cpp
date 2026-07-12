@@ -131,6 +131,8 @@ enum MikuPanStepControlKind
     MIKUPAN_STEP_GAMMA,
     MIKUPAN_STEP_CONTRAST,
     MIKUPAN_STEP_SHADOW_DEPTH,
+    MIKUPAN_STEP_HDR_PAPER_WHITE,
+    MIKUPAN_STEP_HDR_PEAK_LUMINANCE,
     MIKUPAN_STEP_FONT_SCALE,
     MIKUPAN_STEP_CRT_FIELD,
     MIKUPAN_STEP_AUDIO_MASTER,
@@ -252,6 +254,8 @@ struct MikuPanRmlOptionsState
     Rml::ElementFormControlSelect* theme_select = nullptr;
     Rml::ElementFormControlSelect* font_select = nullptr;
     Rml::ElementFormControlInput* vsync_input = nullptr;
+    Rml::ElementFormControlInput* hdr_enabled_input = nullptr;
+    Rml::ElementFormControlInput* calibration_hdr_enabled_input = nullptr;
     Rml::Element* active_gpu_label = nullptr;
     Rml::Element* gpu_restart_note = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
@@ -307,6 +311,9 @@ struct MikuPanRmlOptionsState
     float calibration_original_gamma = 1.0f;
     float calibration_original_contrast = 1.0f;
     float calibration_original_shadow_depth = 1.0f;
+    int calibration_original_hdr_enabled = 0;
+    float calibration_original_hdr_paper_white = 203.0f;
+    float calibration_original_hdr_peak_luminance = 1000.0f;
     bool calibration_original_dirty = false;
     bool crt_visible = false;
     MikuPan_ConfigCrt crt_original = {};
@@ -367,7 +374,13 @@ void SetCheckbox(Rml::ElementFormControlInput* input, int enabled)
         return;
     }
 
-    if (enabled)
+    const bool should_check = enabled != 0;
+    if (input->HasAttribute("checked") == should_check)
+    {
+        return;
+    }
+
+    if (should_check)
     {
         input->SetAttribute("checked", "");
     }
@@ -380,6 +393,12 @@ void SetCheckbox(Rml::ElementFormControlInput* input, int enabled)
 int IsCheckboxChecked(Rml::ElementFormControlInput* input)
 {
     return input != nullptr && input->HasAttribute("checked");
+}
+
+void SyncHdrCheckboxes(void)
+{
+    SetCheckbox(g_rml.hdr_enabled_input, MikuPan_IsHdrEnabled());
+    SetCheckbox(g_rml.calibration_hdr_enabled_input, MikuPan_IsHdrEnabled());
 }
 
 void AddListener(Rml::Element* element,
@@ -715,6 +734,10 @@ void OpenCalibrationPanel(void)
     g_rml.calibration_original_gamma = MikuPan_GetGamma();
     g_rml.calibration_original_contrast = MikuPan_GetContrast();
     g_rml.calibration_original_shadow_depth = MikuPan_GetShadowDepth();
+    g_rml.calibration_original_hdr_enabled = MikuPan_IsHdrEnabled();
+    g_rml.calibration_original_hdr_paper_white = MikuPan_GetHdrPaperWhite();
+    g_rml.calibration_original_hdr_peak_luminance =
+        MikuPan_GetHdrPeakLuminance();
     g_rml.calibration_original_dirty = g_rml.has_unsaved_changes;
     SetExitConfirmVisible(false);
     SetChoicePickerVisible(false);
@@ -723,6 +746,7 @@ void OpenCalibrationPanel(void)
     SetCrtPanelVisible(false);
     SetCalibrationVisible(true);
     UpdateStepControlVisuals();
+    SyncHdrCheckboxes();
     FocusElementById("calibration-brightness-stepper");
 }
 
@@ -750,6 +774,10 @@ void CancelCalibrationPanel(void)
     MikuPan_SetGamma(g_rml.calibration_original_gamma);
     MikuPan_SetContrast(g_rml.calibration_original_contrast);
     MikuPan_SetShadowDepth(g_rml.calibration_original_shadow_depth);
+    MikuPan_SetHdrEnabled(g_rml.calibration_original_hdr_enabled);
+    MikuPan_SetHdrPaperWhite(g_rml.calibration_original_hdr_paper_white);
+    MikuPan_SetHdrPeakLuminance(
+        g_rml.calibration_original_hdr_peak_luminance);
     g_rml.has_unsaved_changes = g_rml.calibration_original_dirty;
     SetCalibrationVisible(false);
     SyncRmlSettingsValues();
@@ -762,8 +790,12 @@ void ResetCalibrationDefaults(void)
     MikuPan_SetGamma(1.0f);
     MikuPan_SetContrast(1.0f);
     MikuPan_SetShadowDepth(1.0f);
+    MikuPan_SetHdrEnabled(0);
+    MikuPan_SetHdrPaperWhite(203.0f);
+    MikuPan_SetHdrPeakLuminance(1000.0f);
     MarkSettingsDirty();
     UpdateStepControlVisuals();
+    SyncHdrCheckboxes();
     FocusElementById("calibration-reset-button");
 }
 
@@ -1843,6 +1875,10 @@ float GetStepValue(const MikuPanStepControl& control)
             return MikuPan_GetContrast();
         case MIKUPAN_STEP_SHADOW_DEPTH:
             return MikuPan_GetShadowDepth();
+        case MIKUPAN_STEP_HDR_PAPER_WHITE:
+            return MikuPan_GetHdrPaperWhite();
+        case MIKUPAN_STEP_HDR_PEAK_LUMINANCE:
+            return MikuPan_GetHdrPeakLuminance();
         case MIKUPAN_STEP_FONT_SCALE:
             return MikuPan_GetUiFontScale();
         case MIKUPAN_STEP_CRT_FIELD:
@@ -1876,6 +1912,12 @@ void SetStepValue(const MikuPanStepControl& control, float value)
             break;
         case MIKUPAN_STEP_SHADOW_DEPTH:
             MikuPan_SetShadowDepth(clamped);
+            break;
+        case MIKUPAN_STEP_HDR_PAPER_WHITE:
+            MikuPan_SetHdrPaperWhite(clamped);
+            break;
+        case MIKUPAN_STEP_HDR_PEAK_LUMINANCE:
+            MikuPan_SetHdrPeakLuminance(clamped);
             break;
         case MIKUPAN_STEP_FONT_SCALE:
             MikuPan_SetUiFontScale(clamped);
@@ -4946,6 +4988,7 @@ void SyncRmlSettingsValues(void)
     SetCheckbox(g_rml.vsync_input, MikuPan_IsVsync());
     UpdateGpuDriverNotes();
     const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
+    SyncHdrCheckboxes();
     SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
     SetCheckbox(g_rml.minimap_enabled_input,
                 mikupan_configuration.minimap_enabled);
@@ -5101,6 +5144,33 @@ bool LoadOptionsDocument(void)
                    2.0f,
                    0.1f,
                    1);
+    g_rml.calibration_hdr_enabled_input =
+        GetInput("calibration-hdr-enabled-input");
+    AddListener(g_rml.calibration_hdr_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetHdrEnabled(IsCheckboxChecked(input));
+                    }));
+    AddStepControl("calibration-hdr-paper-white-stepper",
+                   "calibration-hdr-paper-white-bars",
+                   "calibration-hdr-paper-white-value",
+                   MIKUPAN_STEP_HDR_PAPER_WHITE,
+                   -1,
+                   80.0f,
+                   400.0f,
+                   10.0f,
+                   0);
+    AddStepControl("calibration-hdr-peak-luminance-stepper",
+                   "calibration-hdr-peak-luminance-bars",
+                   "calibration-hdr-peak-luminance-value",
+                   MIKUPAN_STEP_HDR_PEAK_LUMINANCE,
+                   -1,
+                   100.0f,
+                   4000.0f,
+                   50.0f,
+                   0);
 
     AddListener(GetElement("open-calibration-button"),
                 Rml::EventId::Click,
@@ -5130,6 +5200,15 @@ bool LoadOptionsDocument(void)
                     [](Rml::ElementFormControlInput* input) {
                         MarkSettingsDirty();
                         MikuPan_SetVsync(IsCheckboxChecked(input));
+                    }));
+
+    g_rml.hdr_enabled_input = GetInput("hdr-enabled-input");
+    AddListener(g_rml.hdr_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetHdrEnabled(IsCheckboxChecked(input));
                     }));
 
     g_rml.gpu_backend_select = GetSelect("gpu-backend-select");

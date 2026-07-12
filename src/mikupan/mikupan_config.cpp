@@ -31,6 +31,9 @@ MikuPan_Config mikupan_configuration = {
         1.0f,
         1.0f,
         0,
+        203.0f,
+        1000.0f,
+        0,
         "",
         0,
         MIKUPAN_FINDER_VIEWPORT_MASK_BLUR
@@ -198,6 +201,16 @@ static void MikuPan_ConfigurationValidateRenderer(
     if (renderer->shadow_depth < 0.0f || renderer->shadow_depth > 2.0f)
     {
         renderer->shadow_depth = 1.0f;
+    }
+
+    renderer->hdr_enabled = renderer->hdr_enabled ? 1 : 0;
+    renderer->hdr_paper_white =
+        MikuPan_ClampFloat(renderer->hdr_paper_white, 80.0f, 400.0f);
+    renderer->hdr_peak_luminance =
+        MikuPan_ClampFloat(renderer->hdr_peak_luminance, 100.0f, 4000.0f);
+    if (renderer->hdr_peak_luminance < renderer->hdr_paper_white)
+    {
+        renderer->hdr_peak_luminance = renderer->hdr_paper_white;
     }
 
     /* Older test builds used 1=Linear and 2=Soft. Both now collapse to Soft. */

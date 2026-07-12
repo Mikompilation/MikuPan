@@ -22,6 +22,20 @@ float3 ToneMap(float3 color)
     return pow(max(color, 0.0.xxx), (1.0 / max(uParams0.w, 0.01)).xxx);
 }
 
+float3 OutputColor(float3 color)
+{
+    color = max(color, 0.0.xxx);
+    if (uPadFlags.w == 0)
+    {
+        return clamp(color, 0.0.xxx, 1.0.xxx);
+    }
+
+    color = pow(color, 2.2.xxx);
+    float paper_white = max(uHdrOutput.x, 0.01);
+    float peak_white = paper_white * max(uHdrOutput.y, 1.0);
+    return min(color * paper_white, peak_white);
+}
+
 float2 ClampTexelUv(float2 uv)
 {
     float2 texel = 1.0 / max(uTextureSize.xy, 1.0.xx);
@@ -218,5 +232,5 @@ float4 main(PSInput input) : SV_Target0
         color = lerp(color, negative_color, strength);
     }
 
-    return float4(clamp(ToneMap(color), 0.0.xxx, 1.0.xxx), source.a);
+    return float4(OutputColor(ToneMap(color)), source.a);
 }

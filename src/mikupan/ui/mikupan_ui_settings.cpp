@@ -67,6 +67,9 @@ static float brightness = 1.0f;
 static float gamma_value = 1.0f;
 static float contrast = 1.0f;
 static float shadow_depth = 1.0f;
+static int hdr_enabled = 0;
+static float hdr_paper_white = 203.0f;
+static float hdr_peak_luminance = 1000.0f;
 
 static void MikuPan_RefreshWindowBackedRenderResolution(void);
 static int MikuPan_IsSuperSamplingEnabledInternal(void);
@@ -190,6 +193,9 @@ static void MikuPan_UiSyncSettingsFromConfiguration(void)
     gamma_value = mikupan_configuration.renderer.gamma;
     contrast = mikupan_configuration.renderer.contrast;
     shadow_depth = mikupan_configuration.renderer.shadow_depth;
+    hdr_enabled = mikupan_configuration.renderer.hdr_enabled;
+    hdr_paper_white = mikupan_configuration.renderer.hdr_paper_white;
+    hdr_peak_luminance = mikupan_configuration.renderer.hdr_peak_luminance;
     window_mode = mikupan_configuration.renderer.window_mode;
     is_fullscreen = mikupan_configuration.renderer.is_fullscreen;
     crt_settings = mikupan_configuration.crt;
@@ -247,6 +253,9 @@ static void MikuPan_UiStoreRuntimeConfiguration(void)
     mikupan_configuration.renderer.gamma = gamma_value;
     mikupan_configuration.renderer.contrast = contrast;
     mikupan_configuration.renderer.shadow_depth = shadow_depth;
+    mikupan_configuration.renderer.hdr_enabled = hdr_enabled;
+    mikupan_configuration.renderer.hdr_paper_white = hdr_paper_white;
+    mikupan_configuration.renderer.hdr_peak_luminance = hdr_peak_luminance;
     mikupan_configuration.crt = crt_settings;
     mikupan_configuration.third_person_camera.enabled =
         camera_third_person_enabled ? 1 : 0;
@@ -1483,6 +1492,44 @@ float MikuPan_GetShadowDepth(void)
 void MikuPan_SetShadowDepth(float value)
 {
     shadow_depth = MikuPan_ClampFloat(value, 0.0f, 2.0f);
+}
+
+int MikuPan_IsHdrEnabled(void)
+{
+    return hdr_enabled;
+}
+
+void MikuPan_SetHdrEnabled(int enabled)
+{
+    hdr_enabled = enabled ? 1 : 0;
+}
+
+float MikuPan_GetHdrPaperWhite(void)
+{
+    return hdr_paper_white;
+}
+
+void MikuPan_SetHdrPaperWhite(float value)
+{
+    hdr_paper_white = MikuPan_ClampFloat(value, 80.0f, 400.0f);
+    if (hdr_peak_luminance < hdr_paper_white)
+    {
+        hdr_peak_luminance = hdr_paper_white;
+    }
+}
+
+float MikuPan_GetHdrPeakLuminance(void)
+{
+    return hdr_peak_luminance;
+}
+
+void MikuPan_SetHdrPeakLuminance(float value)
+{
+    hdr_peak_luminance = MikuPan_ClampFloat(value, 100.0f, 4000.0f);
+    if (hdr_peak_luminance < hdr_paper_white)
+    {
+        hdr_peak_luminance = hdr_paper_white;
+    }
 }
 
 const MikuPan_ConfigCrt* MikuPan_GetCrtSettings(void)

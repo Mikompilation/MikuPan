@@ -39,6 +39,10 @@
                         <div class="setting-control"><button id="open-calibration-button">Adjust</button></div>
                     </div>
                     <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="hdr-enabled-input">HDR Output</label><p class="setting-desc">Use extended-linear HDR presentation when the display supports it.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="hdr-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row compact">
                         <div class="setting-copy"><label class="setting-title" for="vsync-input">VSync</label><p class="setting-desc">Synchronise presentation to the display refresh.</p></div>
                         <div class="setting-control checkbox-control"><input type="checkbox" id="vsync-input" class="checkbox" /></div>
                     </div>
@@ -209,6 +213,9 @@
         <div class="calibration-row"><label for="calibration-gamma-stepper">Gamma <span id="calibration-gamma-value" class="value"></span></label><button id="calibration-gamma-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-gamma-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
         <div class="calibration-row"><label for="calibration-contrast-stepper">Contrast <span id="calibration-contrast-value" class="value"></span></label><button id="calibration-contrast-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-contrast-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
         <div class="calibration-row"><label for="calibration-shadow-depth-stepper">Shadow Depth <span id="calibration-shadow-depth-value" class="value"></span></label><button id="calibration-shadow-depth-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-shadow-depth-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
+        <div class="calibration-row compact"><label for="calibration-hdr-enabled-input">HDR Output</label><input type="checkbox" id="calibration-hdr-enabled-input" class="checkbox" /></div>
+        <div class="calibration-row"><label for="calibration-hdr-paper-white-stepper">Paper White <span id="calibration-hdr-paper-white-value" class="value"></span></label><button id="calibration-hdr-paper-white-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-hdr-paper-white-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
+        <div class="calibration-row"><label for="calibration-hdr-peak-luminance-stepper">Peak <span id="calibration-hdr-peak-luminance-value" class="value"></span></label><button id="calibration-hdr-peak-luminance-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-hdr-peak-luminance-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
         <div id="calibration-actions">
             <button id="calibration-reset-button">Reset</button>
             <button id="calibration-ok-button">OK</button>

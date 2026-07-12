@@ -729,6 +729,7 @@ button.controller-focus {
 #window-size-picker,
 #resolution-picker,
 #open-calibration-button,
+#hdr-enabled-input,
 #vsync-input {
     nav-left: #cat-display;
 }
@@ -1223,11 +1224,26 @@ button.controller-focus {
 
 #calibration-shadow-depth-stepper {
     nav-up: #calibration-contrast-stepper;
+    nav-down: #calibration-hdr-enabled-input;
+}
+
+#calibration-hdr-enabled-input {
+    nav-up: #calibration-shadow-depth-stepper;
+    nav-down: #calibration-hdr-paper-white-stepper;
+}
+
+#calibration-hdr-paper-white-stepper {
+    nav-up: #calibration-hdr-enabled-input;
+    nav-down: #calibration-hdr-peak-luminance-stepper;
+}
+
+#calibration-hdr-peak-luminance-stepper {
+    nav-up: #calibration-hdr-paper-white-stepper;
     nav-down: #calibration-reset-button;
 }
 
 #calibration-reset-button {
-    nav-up: #calibration-shadow-depth-stepper;
+    nav-up: #calibration-hdr-peak-luminance-stepper;
     nav-right: #calibration-ok-button;
     nav-down: #calibration-brightness-stepper;
 }
@@ -1235,14 +1251,14 @@ button.controller-focus {
 #calibration-ok-button {
     nav-left: #calibration-reset-button;
     nav-right: #calibration-back-button;
-    nav-up: #calibration-shadow-depth-stepper;
+    nav-up: #calibration-hdr-peak-luminance-stepper;
     nav-down: #calibration-brightness-stepper;
 }
 
 #calibration-back-button {
     nav-left: #calibration-ok-button;
     nav-right: #calibration-reset-button;
-    nav-up: #calibration-shadow-depth-stepper;
+    nav-up: #calibration-hdr-peak-luminance-stepper;
     nav-down: #calibration-brightness-stepper;
 }
 

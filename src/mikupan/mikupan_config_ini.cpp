@@ -185,6 +185,9 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
     ApplyValue(ini, "renderer", "contrast", mikupan_configuration.renderer.contrast);
     ApplyValue(ini, "renderer", "shadow_depth", mikupan_configuration.renderer.shadow_depth);
+    ApplyValue(ini, "renderer", "hdr_enabled", mikupan_configuration.renderer.hdr_enabled);
+    ApplyValue(ini, "renderer", "hdr_paper_white", mikupan_configuration.renderer.hdr_paper_white);
+    ApplyValue(ini, "renderer", "hdr_peak_luminance", mikupan_configuration.renderer.hdr_peak_luminance);
     ApplyValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     ApplyString(ini, "renderer", "gpu_driver",
                 mikupan_configuration.renderer.gpu_driver,
@@ -363,6 +366,9 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
     SetValue(ini, "renderer", "contrast", mikupan_configuration.renderer.contrast);
     SetValue(ini, "renderer", "shadow_depth", mikupan_configuration.renderer.shadow_depth);
+    SetValue(ini, "renderer", "hdr_enabled", mikupan_configuration.renderer.hdr_enabled);
+    SetValue(ini, "renderer", "hdr_paper_white", mikupan_configuration.renderer.hdr_paper_white);
+    SetValue(ini, "renderer", "hdr_peak_luminance", mikupan_configuration.renderer.hdr_peak_luminance);
     SetValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;

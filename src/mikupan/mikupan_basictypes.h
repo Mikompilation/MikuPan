@@ -89,6 +89,9 @@ typedef struct
     float gamma;
     float contrast;
     float shadow_depth;
+    int hdr_enabled;
+    float hdr_paper_white;
+    float hdr_peak_luminance;
     int dither_mode; /* 0=native, 1=soft */
     /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
      * Empty = let SDL pick. The device is created once, so a change only
