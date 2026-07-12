@@ -44,6 +44,10 @@ MikuPan_Config mikupan_configuration = {
         0.35f,
         0.72f,
         0.85f,
+        1,
+        0.30f,
+        0.72f,
+        6.0f,
         "",
         0,
         MIKUPAN_FINDER_VIEWPORT_MASK_BLUR
@@ -245,6 +249,14 @@ static void MikuPan_ConfigurationValidateRenderer(
         MikuPan_ClampFloat(renderer->volumetric_shafts_radius, 0.15f, 1.5f);
     renderer->volumetric_shafts_density =
         MikuPan_ClampFloat(renderer->volumetric_shafts_density, 0.0f, 1.5f);
+
+    renderer->bloom_enabled = renderer->bloom_enabled ? 1 : 0;
+    renderer->bloom_strength =
+        MikuPan_ClampFloat(renderer->bloom_strength, 0.0f, 1.5f);
+    renderer->bloom_threshold =
+        MikuPan_ClampFloat(renderer->bloom_threshold, 0.0f, 1.0f);
+    renderer->bloom_radius =
+        MikuPan_ClampFloat(renderer->bloom_radius, 0.5f, 16.0f);
 
     renderer->gpu_debug = renderer->gpu_debug ? 1 : 0;
     renderer->finder_viewport_mask_mode =

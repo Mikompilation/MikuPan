@@ -52,6 +52,8 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
      "resources/shaders/hlsl/ssao.frag.hlsl"},
     {"resources/shaders/hlsl/sprite.vert.hlsl", NULL,
      "resources/shaders/hlsl/volumetric_shafts.frag.hlsl"},
+    {"resources/shaders/hlsl/sprite.vert.hlsl", NULL,
+     "resources/shaders/hlsl/bloom.frag.hlsl"},
     {"resources/shaders/hlsl/heat_haze.vert.hlsl", NULL,
      "resources/shaders/hlsl/finder_viewport_blur.frag.hlsl"},
     {"resources/shaders/hlsl/mesh_0x2_skinned.vert.hlsl", NULL,
@@ -70,6 +72,7 @@ static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
     "CAMERA_DEBUG", "HEAT_HAZE",
     "SSAO",
     "VOLUMETRIC_SHAFTS",
+    "BLOOM",
     "FINDER_VIEWPORT_BLUR",
     "MESH_0x2_SKINNED", "MESH_0xA_SKINNED",
 };

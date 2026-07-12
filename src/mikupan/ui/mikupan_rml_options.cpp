@@ -142,6 +142,9 @@ enum MikuPanStepControlKind
     MIKUPAN_STEP_VOLUMETRIC_SHAFTS_STRENGTH,
     MIKUPAN_STEP_VOLUMETRIC_SHAFTS_RADIUS,
     MIKUPAN_STEP_VOLUMETRIC_SHAFTS_DENSITY,
+    MIKUPAN_STEP_BLOOM_STRENGTH,
+    MIKUPAN_STEP_BLOOM_THRESHOLD,
+    MIKUPAN_STEP_BLOOM_RADIUS,
     MIKUPAN_STEP_SOFT_SHADOW_RADIUS,
 };
 
@@ -267,6 +270,7 @@ struct MikuPanRmlOptionsState
     Rml::Element* gpu_restart_note = nullptr;
     Rml::ElementFormControlInput* ssao_enabled_input = nullptr;
     Rml::ElementFormControlInput* volumetric_shafts_enabled_input = nullptr;
+    Rml::ElementFormControlInput* bloom_enabled_input = nullptr;
     Rml::ElementFormControlInput* soft_shadows_enabled_input = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
     Rml::ElementFormControlInput* minimap_enabled_input = nullptr;
@@ -1909,6 +1913,12 @@ float GetStepValue(const MikuPanStepControl& control)
             return MikuPan_GetVolumetricShaftsRadius();
         case MIKUPAN_STEP_VOLUMETRIC_SHAFTS_DENSITY:
             return MikuPan_GetVolumetricShaftsDensity();
+        case MIKUPAN_STEP_BLOOM_STRENGTH:
+            return MikuPan_GetBloomStrength();
+        case MIKUPAN_STEP_BLOOM_THRESHOLD:
+            return MikuPan_GetBloomThreshold();
+        case MIKUPAN_STEP_BLOOM_RADIUS:
+            return MikuPan_GetBloomRadius();
         case MIKUPAN_STEP_SOFT_SHADOW_RADIUS:
             return MikuPan_GetSoftShadowRadius();
         default:
@@ -1972,6 +1982,15 @@ void SetStepValue(const MikuPanStepControl& control, float value)
             break;
         case MIKUPAN_STEP_VOLUMETRIC_SHAFTS_DENSITY:
             MikuPan_SetVolumetricShaftsDensity(clamped);
+            break;
+        case MIKUPAN_STEP_BLOOM_STRENGTH:
+            MikuPan_SetBloomStrength(clamped);
+            break;
+        case MIKUPAN_STEP_BLOOM_THRESHOLD:
+            MikuPan_SetBloomThreshold(clamped);
+            break;
+        case MIKUPAN_STEP_BLOOM_RADIUS:
+            MikuPan_SetBloomRadius(clamped);
             break;
         case MIKUPAN_STEP_SOFT_SHADOW_RADIUS:
             MikuPan_SetSoftShadowRadius(clamped);
@@ -5035,6 +5054,7 @@ void SyncRmlSettingsValues(void)
     SetCheckbox(g_rml.ssao_enabled_input, MikuPan_IsSsaoEnabled());
     SetCheckbox(g_rml.volumetric_shafts_enabled_input,
                 MikuPan_IsVolumetricShaftsEnabled());
+    SetCheckbox(g_rml.bloom_enabled_input, MikuPan_IsBloomEnabled());
     SetCheckbox(g_rml.soft_shadows_enabled_input,
                 MikuPan_IsSoftShadowsEnabled());
     const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
@@ -5354,6 +5374,42 @@ bool LoadOptionsDocument(void)
                    1.5f,
                    0.05f,
                    2);
+
+    g_rml.bloom_enabled_input = GetInput("bloom-enabled-input");
+    AddListener(g_rml.bloom_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetBloomEnabled(IsCheckboxChecked(input));
+                    }));
+    AddStepControl("bloom-strength-stepper",
+                   "bloom-strength-bars",
+                   "bloom-strength-value",
+                   MIKUPAN_STEP_BLOOM_STRENGTH,
+                   -1,
+                   0.0f,
+                   1.5f,
+                   0.05f,
+                   2);
+    AddStepControl("bloom-threshold-stepper",
+                   "bloom-threshold-bars",
+                   "bloom-threshold-value",
+                   MIKUPAN_STEP_BLOOM_THRESHOLD,
+                   -1,
+                   0.0f,
+                   1.0f,
+                   0.05f,
+                   2);
+    AddStepControl("bloom-radius-stepper",
+                   "bloom-radius-bars",
+                   "bloom-radius-value",
+                   MIKUPAN_STEP_BLOOM_RADIUS,
+                   -1,
+                   0.5f,
+                   16.0f,
+                   0.5f,
+                   1);
 
     g_rml.soft_shadows_enabled_input =
         GetInput("soft-shadows-enabled-input");

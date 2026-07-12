@@ -113,6 +113,8 @@ typedef struct MikuPan_GPUUniformBlock
     float uVolumetricLight[4];
     // rgb=shaft tint, a=light/fog tint mix
     float uVolumetricColor[4];
+    // x=strength, y=threshold, z=radius pixels, w=soft knee
+    float uBloomParams[4];
 
     int uFlags0[4];
     int uFlags1[4];

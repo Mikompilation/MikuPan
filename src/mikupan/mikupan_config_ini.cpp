@@ -199,6 +199,10 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "volumetric_shafts_strength", mikupan_configuration.renderer.volumetric_shafts_strength);
     ApplyValue(ini, "renderer", "volumetric_shafts_radius", mikupan_configuration.renderer.volumetric_shafts_radius);
     ApplyValue(ini, "renderer", "volumetric_shafts_density", mikupan_configuration.renderer.volumetric_shafts_density);
+    ApplyValue(ini, "renderer", "bloom_enabled", mikupan_configuration.renderer.bloom_enabled);
+    ApplyValue(ini, "renderer", "bloom_strength", mikupan_configuration.renderer.bloom_strength);
+    ApplyValue(ini, "renderer", "bloom_threshold", mikupan_configuration.renderer.bloom_threshold);
+    ApplyValue(ini, "renderer", "bloom_radius", mikupan_configuration.renderer.bloom_radius);
     ApplyString(ini, "renderer", "gpu_driver",
                 mikupan_configuration.renderer.gpu_driver,
                 sizeof(mikupan_configuration.renderer.gpu_driver));
@@ -390,6 +394,10 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "volumetric_shafts_strength", mikupan_configuration.renderer.volumetric_shafts_strength);
     SetValue(ini, "renderer", "volumetric_shafts_radius", mikupan_configuration.renderer.volumetric_shafts_radius);
     SetValue(ini, "renderer", "volumetric_shafts_density", mikupan_configuration.renderer.volumetric_shafts_density);
+    SetValue(ini, "renderer", "bloom_enabled", mikupan_configuration.renderer.bloom_enabled);
+    SetValue(ini, "renderer", "bloom_strength", mikupan_configuration.renderer.bloom_strength);
+    SetValue(ini, "renderer", "bloom_threshold", mikupan_configuration.renderer.bloom_threshold);
+    SetValue(ini, "renderer", "bloom_radius", mikupan_configuration.renderer.bloom_radius);
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;
     SetValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);

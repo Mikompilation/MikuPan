@@ -103,6 +103,10 @@ typedef struct
     float volumetric_shafts_strength;
     float volumetric_shafts_radius;
     float volumetric_shafts_density;
+    int bloom_enabled;
+    float bloom_strength;
+    float bloom_threshold;
+    float bloom_radius;
     /* SDL_GPU driver to request at startup ("vulkan", "direct3d12", ...).
      * Empty = let SDL pick. The device is created once, so a change only
      * applies on the next launch. */

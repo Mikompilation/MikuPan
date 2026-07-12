@@ -46,6 +46,7 @@ cbuffer MikuPanUniforms : register(b0, MIKUPAN_UNIFORM_SPACE)
     float4 uVolumetricParams; // x=strength, y=screen radius, z=density, w=decay
     float4 uVolumetricLight; // xy=projected source UV, z=source depth, w=active
     float4 uVolumetricColor; // rgb=shaft tint, a=light/fog tint mix
+    float4 uBloomParams; // x=strength, y=threshold, z=radius pixels, w=soft knee
 
     int4 uFlags0; // x=renderNormals, y=disableLighting, z=staticLighting, w=meshLightingMode
     int4 uFlags1; // x=mirrorSurfacePass, y=shadowEnabled, z=shadowDebugView, w=crtEnabled

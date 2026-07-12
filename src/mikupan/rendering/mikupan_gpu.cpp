@@ -652,6 +652,10 @@ static void SetDefaultUniforms(void)
     g_uniforms.uVolumetricColor[1] = 1.0f;
     g_uniforms.uVolumetricColor[2] = 1.0f;
     g_uniforms.uVolumetricColor[3] = 0.65f;
+    g_uniforms.uBloomParams[0] = 0.0f;
+    g_uniforms.uBloomParams[1] = 0.72f;
+    g_uniforms.uBloomParams[2] = 6.0f;
+    g_uniforms.uBloomParams[3] = 0.18f;
 }
 
 static void SetDefaultRenderState(void)
@@ -3949,6 +3953,11 @@ void MikuPan_GPUSetVec4(const char* name, const float* vec)
     {
         memcpy(g_uniforms.uVolumetricColor, vec,
                sizeof(g_uniforms.uVolumetricColor));
+    }
+    else if (strcmp(name, "uBloomParams") == 0)
+    {
+        memcpy(g_uniforms.uBloomParams, vec,
+               sizeof(g_uniforms.uBloomParams));
     }
 
     g_vertex_uniform_dirty = 1;

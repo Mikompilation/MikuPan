@@ -93,6 +93,22 @@
                         <div class="setting-copy"><label class="setting-title" for="volumetric-shafts-density-stepper">Shaft Density <span id="volumetric-shafts-density-value" class="value"></span></label></div>
                         <div class="setting-control"><button id="volumetric-shafts-density-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="volumetric-shafts-density-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
                     </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="bloom-enabled-input">Enable Bloom</label><p class="setting-desc">Adds soft glow around bright highlights.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="bloom-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="bloom-strength-stepper">Bloom Strength <span id="bloom-strength-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="bloom-strength-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="bloom-strength-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="bloom-threshold-stepper">Bloom Threshold <span id="bloom-threshold-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="bloom-threshold-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="bloom-threshold-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-copy"><label class="setting-title" for="bloom-radius-stepper">Bloom Radius <span id="bloom-radius-value" class="value"></span></label></div>
+                        <div class="setting-control"><button id="bloom-radius-stepper" class="stepper-control"><span class="stepper-edge">&lt;</span><span id="bloom-radius-bars" class="stepper-bars"></span><span class="stepper-edge">&gt;</span></button></div>
+                    </div>
                     <div class="setting-row">
                         <div class="setting-copy"><label class="setting-title" for="shadow-resolution-picker">Shadow Resolution</label><p class="setting-desc">Higher values sharpen shadows at a performance cost.</p></div>
                         <div class="setting-control"><button id="shadow-resolution-picker" class="choice-picker"><span id="shadow-resolution-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>

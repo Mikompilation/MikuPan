@@ -21,6 +21,7 @@ enum ShaderPrograms
     HEAT_HAZE_SHADER,
     SSAO_SHADER,
     VOLUMETRIC_SHAFTS_SHADER,
+    BLOOM_SHADER,
     FINDER_VIEWPORT_BLUR_SHADER,
     MESH_0x2_SKINNED_SHADER, ///< GPU-skinned mesh 0x2 (2-bone LBS in the VS)
     MESH_0xA_SKINNED_SHADER, ///< GPU-skinned mesh 0xA (2-bone LBS in the VS)

@@ -61,6 +61,7 @@ static int g_photo_capture_readback_texture_height = 0;
 static unsigned int g_screen_negative_scene_copy_id = 0;
 static unsigned int g_ssao_scene_copy_id = 0;
 static unsigned int g_volumetric_scene_copy_id = 0;
+static unsigned int g_bloom_scene_copy_id = 0;
 static unsigned int g_pause_capture_texture_id = 0;
 static int g_pause_capture_valid = 0;
 static int g_pause_capture_addr = 0;
@@ -419,6 +420,12 @@ void MikuPan_DestroyInternalBuffer()
     {
         MikuPan_GPUReleaseTexture(g_volumetric_scene_copy_id);
         g_volumetric_scene_copy_id = 0;
+    }
+
+    if (g_bloom_scene_copy_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_bloom_scene_copy_id);
+        g_bloom_scene_copy_id = 0;
     }
 
     MikuPan_ReleaseEnemyOutCaptures();
@@ -1471,6 +1478,12 @@ void MikuPan_CreateInternalBuffer(int w, int h, int msaa)
     }
     g_volumetric_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
 
+    if (g_bloom_scene_copy_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_bloom_scene_copy_id);
+    }
+    g_bloom_scene_copy_id = MikuPan_GPUCreateRenderTextureRGBA8(w, h);
+
     MikuPan_ReleaseEnemyOutCaptures();
 
     MikuPan_SetViewportCached(0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height);
@@ -1917,12 +1930,75 @@ static void MikuPan_ApplyVolumetricShaftsPass(void)
     MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
+static int MikuPan_ShouldApplyBloom(void)
+{
+    return mikupan_configuration.renderer.bloom_enabled != 0 &&
+           mikupan_configuration.renderer.bloom_strength > 0.001f &&
+           render_back_msaa.texture.id != 0 &&
+           g_bloom_scene_copy_id != 0 &&
+           render_back_msaa.texture.width > 0 &&
+           render_back_msaa.texture.height > 0;
+}
+
+static void MikuPan_ApplyBloomPass(void)
+{
+    if (!MikuPan_ShouldApplyBloom())
+    {
+        return;
+    }
+
+    MikuPan_GPUCopyTexture(render_back_msaa.texture.id,
+                           g_bloom_scene_copy_id,
+                           render_back_msaa.texture.width,
+                           render_back_msaa.texture.height);
+
+    float quad[] = {
+        0,1,0,0,   1,1,1,1,   -1,-1,0,1,
+        1,1,0,0,   1,1,1,1,    1,-1,0,1,
+        0,0,0,0,   1,1,1,1,   -1, 1,0,1,
+        1,0,0,0,   1,1,1,1,    1, 1,0,1
+    };
+
+    float bloom_params[4] = {
+        mikupan_configuration.renderer.bloom_strength,
+        mikupan_configuration.renderer.bloom_threshold,
+        mikupan_configuration.renderer.bloom_radius,
+        0.18f,
+    };
+
+    MikuPan_SetViewportCached(0, 0,
+                              render_back_msaa.texture.width,
+                              render_back_msaa.texture.height);
+    MikuPan_GPUSetScreenCopyTarget(render_back_msaa.texture.id,
+                                   render_back_msaa.texture.width,
+                                   render_back_msaa.texture.height,
+                                   0);
+    MikuPan_SetRenderState2D();
+    MikuPan_SetCurrentShaderProgram(BLOOM_SHADER);
+
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+    MikuPan_BindTexture2DCached(g_bloom_scene_copy_id);
+
+    MikuPan_SetUniform1iToCurrentShader(0, "uTexture");
+    MikuPan_SetUniform2fToCurrentShader((float) render_back_msaa.texture.width,
+                                        (float) render_back_msaa.texture.height,
+                                        "uTextureSize");
+    MikuPan_SetUniform4fvToCurrentShader(bloom_params, "uBloomParams");
+
+    MikuPan_PipelineInfo* pipeline = MikuPan_GetPipelineInfo(UV4_COLOUR4_POSITION4);
+    MikuPan_BindVAO(pipeline->vao);
+    MikuPan_StreamUploadFull(GL_ARRAY_BUFFER, pipeline->buffers[0].id,
+                             (GLsizeiptr)sizeof(quad), quad);
+    MikuPan_TimedDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
 void MikuPan_EndFrame()
 {
     MikuPan_GPUFlushRenderPass();
     MikuPan_GPUResolveSceneForPresent();
     MikuPan_ApplySsaoPass();
     MikuPan_ApplyVolumetricShaftsPass();
+    MikuPan_ApplyBloomPass();
     MikuPan_SetViewportCached(
         0,
         0,

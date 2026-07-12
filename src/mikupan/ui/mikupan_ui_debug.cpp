@@ -1805,6 +1805,12 @@ void MikuPan_UiDebugMenuRender(void)
                     MikuPan_SetSsaoEnabled(ssao_on);
                 }
 
+                int bloom_on = MikuPan_IsBloomEnabled();
+                if (igCheckbox("Bloom", (bool*) &bloom_on))
+                {
+                    MikuPan_SetBloomEnabled(bloom_on);
+                }
+
                 int shafts_on = MikuPan_IsVolumetricShaftsEnabled();
                 if (igCheckbox("Volumetric Shafts", (bool*) &shafts_on))
                 {

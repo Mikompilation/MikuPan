@@ -1092,6 +1092,36 @@ void MikuPan_UiSettingsRender(void)
                 }
             }
 
+            {
+                bool bloom_enabled = MikuPan_IsBloomEnabled() != 0;
+                if (igCheckbox("Bloom", &bloom_enabled))
+                {
+                    MikuPan_SetBloomEnabled(bloom_enabled ? 1 : 0);
+                }
+
+                if (MikuPan_IsBloomEnabled())
+                {
+                    float bloom_strength = MikuPan_GetBloomStrength();
+                    float bloom_threshold = MikuPan_GetBloomThreshold();
+                    float bloom_radius = MikuPan_GetBloomRadius();
+                    if (igSliderFloat("Bloom Strength", &bloom_strength, 0.0f,
+                                      1.5f, "%.2f", 0))
+                    {
+                        MikuPan_SetBloomStrength(bloom_strength);
+                    }
+                    if (igSliderFloat("Bloom Threshold", &bloom_threshold, 0.0f,
+                                      1.0f, "%.2f", 0))
+                    {
+                        MikuPan_SetBloomThreshold(bloom_threshold);
+                    }
+                    if (igSliderFloat("Bloom Radius", &bloom_radius, 0.5f,
+                                      16.0f, "%.1f", 0))
+                    {
+                        MikuPan_SetBloomRadius(bloom_radius);
+                    }
+                }
+            }
+
             MikuPan_UiShadowResolutionCombo("Shadow Resolution");
 
             {
@@ -2130,6 +2160,49 @@ void MikuPan_SetVolumetricShaftsDensity(float value)
 {
     mikupan_configuration.renderer.volumetric_shafts_density =
         MikuPan_ClampFloat(value, 0.0f, 1.5f);
+}
+
+int MikuPan_IsBloomEnabled(void)
+{
+    return mikupan_configuration.renderer.bloom_enabled;
+}
+
+void MikuPan_SetBloomEnabled(int enabled)
+{
+    mikupan_configuration.renderer.bloom_enabled = enabled ? 1 : 0;
+}
+
+float MikuPan_GetBloomStrength(void)
+{
+    return mikupan_configuration.renderer.bloom_strength;
+}
+
+void MikuPan_SetBloomStrength(float value)
+{
+    mikupan_configuration.renderer.bloom_strength =
+        MikuPan_ClampFloat(value, 0.0f, 1.5f);
+}
+
+float MikuPan_GetBloomThreshold(void)
+{
+    return mikupan_configuration.renderer.bloom_threshold;
+}
+
+void MikuPan_SetBloomThreshold(float value)
+{
+    mikupan_configuration.renderer.bloom_threshold =
+        MikuPan_ClampFloat(value, 0.0f, 1.0f);
+}
+
+float MikuPan_GetBloomRadius(void)
+{
+    return mikupan_configuration.renderer.bloom_radius;
+}
+
+void MikuPan_SetBloomRadius(float value)
+{
+    mikupan_configuration.renderer.bloom_radius =
+        MikuPan_ClampFloat(value, 0.5f, 16.0f);
 }
 
 int MikuPan_GetThemeOptionCount(void)
