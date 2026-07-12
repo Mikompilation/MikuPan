@@ -79,11 +79,21 @@
                     <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="master-volume-stepper">Master Volume <span id="master-volume-value" class="value"></span></label><p class="setting-desc">Set the overall game volume.</p></div><div class="setting-control"><button id="master-volume-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="master-volume-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div></div>
                 </div>
                 <div id="page-controls" class="page hidden">
+                    <div id="controls-movement-style">
+                        <div class="controls-section-title">Movement Style</div>
+                        <div class="controls-bind-row controls-option-row"><span class="controls-bind-label">D-Pad / Arrow Keys</span><button id="movement-dpad-mode" class="controls-option-button">Objective</button></div>
+                        <div class="controls-bind-row controls-option-row"><span class="controls-bind-label">Left Stick / WASD</span><button id="movement-stick-mode" class="controls-option-button">Objective</button></div>
+                    </div>
+                    <div id="controls-viewfinder">
+                        <div class="controls-section-title">Viewfinder</div>
+                        <div class="controls-bind-row controls-option-row"><span class="controls-bind-label">Stick Layout</span><button id="finder-stick-layout-mode" class="controls-option-button">Modern</button></div>
+                        <div class="controls-bind-row controls-option-row"><span class="controls-bind-label">D-Pad Film Swap</span><button id="finder-dpad-film-swap-mode" class="controls-option-button">Off</button></div>
+                    </div>
                     <div id="controls-tabs">
                         <button id="controls-keyboard-tab" class="controls-tab selected">Keyboard</button>
                         <button id="controls-controller-tab" class="controls-tab">Controller</button>
                     </div>
-                    <div id="controls-help" class="setting-desc">Click a binding, then press the key or controller input to assign.</div>
+                    <div id="controls-help" class="setting-desc">Select a movement style, or click a binding then press the key or controller input to assign.</div>
                     <div id="controls-list"></div>
                     <div class="setting-row compact controls-actions-row">
                         <div class="setting-copy"><span class="setting-title">Defaults</span><p class="setting-desc">Restore keyboard and controller bindings.</p></div>
@@ -177,11 +187,7 @@
             <div id="binding-capture-card">
                 <div id="binding-capture-title">Bind Control</div>
                 <div id="binding-capture-text">Press input...</div>
-                <div id="binding-capture-help">Cancels in <span id="binding-capture-countdown">5</span> seconds.</div>
-                <div id="binding-capture-buttons">
-                    <button id="binding-capture-clear-button">Clear</button>
-                    <button id="binding-capture-cancel-button">Cancel</button>
-                </div>
+                <div id="binding-capture-help">Times out in <span id="binding-capture-countdown">5</span> seconds.</div>
             </div>
         </div>
 

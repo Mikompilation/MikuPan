@@ -176,6 +176,7 @@ typedef struct
     int action_profile_subjective_move;
     int action_profile_dpad_subjective_move;
     int action_profile_stick_subjective_move;
+    int movement_style_override_enabled;
     int action_profile_finder_reverse_y;
     int action_profile_finder_swap_sticks;
     int finder_dpad_film_swap_enabled;

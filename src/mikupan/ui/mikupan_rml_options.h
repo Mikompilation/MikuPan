@@ -21,6 +21,7 @@ int MikuPan_RmlOptionsConsumeExitRequest(void);
 int MikuPan_RmlOptionsIsOpen(void);
 int MikuPan_RmlOptionsIsCalibrationOpen(void);
 int MikuPan_RmlOptionsInputBlocked(void);
+int MikuPan_RmlOptionsBindingCaptureActive(void);
 void MikuPan_RmlOptionsRequestExit(void);
 void MikuPan_RmlOptionsHandleCancel(void);
 int MikuPan_RmlOptionsAnySelectOpen(void);

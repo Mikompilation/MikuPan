@@ -40,7 +40,7 @@ static int show_texture_list = 0;
 static int show_shader_reload = 0;
 static int show_draw_inspector = 0;
 static int show_effect_debug_window = 0;
-static int show_camera_debug = 0;
+static bool show_camera_debug = 0;
 static int show_photo_debug_window = 0;
 static int show_shadow_debug_window = 0;
 static int shadow_debug_auto_probe = 0;
@@ -1863,6 +1863,8 @@ void MikuPan_UiDebugMenuRender(void)
             bool first_person_r3_toggle =
                 mikupan_first_person_r3_toggle_enabled != 0;
             bool third_person_enabled = camera_third_person_enabled != 0;
+
+            igCheckbox("Show Camera World Info", &show_camera_debug);
 
             igSeparatorText("First Person");
 

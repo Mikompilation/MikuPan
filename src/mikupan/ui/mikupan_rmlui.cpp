@@ -1107,6 +1107,12 @@ void UpdateGamepadNavigation(void)
         return;
     }
 
+    if (MikuPan_RmlOptionsBindingCaptureActive())
+    {
+        ResetPadNavigationState();
+        return;
+    }
+
     SDL_Gamepad* gamepad = GetRmlNavigationGamepad();
     if (gamepad == nullptr)
     {
@@ -1321,7 +1327,8 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
             const Rml::Input::KeyIdentifier key = ConvertKey(event->key.key);
             if (MikuPan_RmlOptionsIsOpen())
             {
-                if (MikuPan_RmlOptionsInputBlocked())
+                if (MikuPan_RmlOptionsInputBlocked()
+                    || MikuPan_RmlOptionsBindingCaptureActive())
                 {
                     break;
                 }
@@ -1357,10 +1364,22 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
             break;
         }
         case SDL_EVENT_KEY_UP:
+            if (MikuPan_RmlOptionsIsOpen()
+                && (MikuPan_RmlOptionsInputBlocked()
+                    || MikuPan_RmlOptionsBindingCaptureActive()))
+            {
+                break;
+            }
             g_rml.context->ProcessKeyUp(ConvertKey(event->key.key),
                                         ConvertKeyModifiers());
             break;
         case SDL_EVENT_TEXT_INPUT:
+            if (MikuPan_RmlOptionsIsOpen()
+                && (MikuPan_RmlOptionsInputBlocked()
+                    || MikuPan_RmlOptionsBindingCaptureActive()))
+            {
+                break;
+            }
             g_rml.context->ProcessTextInput(Rml::String(event->text.text));
             break;
         case SDL_EVENT_WINDOW_MOUSE_LEAVE:
