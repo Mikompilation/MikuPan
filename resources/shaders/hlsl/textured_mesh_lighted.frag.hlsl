@@ -1,17 +1,13 @@
 #include "mikupan_common.hlsli"
 
-/* Scene-only PS2 presentation compensation. This is intentionally a
- * mild contrast/black-point test, not a gamma curve: the original hardware
- * image crushes dark scene detail, but the brightest native 3D highlights
- * should not blow out as hard as clean PC output. Keep this in the native
- * 3D mesh shader for now so HUD/menu sprites are not affected. */
 #define MIKUPAN_PS2_SCENE_BLACK_POINT      0.004
 #define MIKUPAN_PS2_SCENE_CONTRAST         1.08
 #define MIKUPAN_PS2_SCENE_PIVOT            0.22
 #define MIKUPAN_PS2_SCENE_HIGHLIGHT_START  0.62
 #define MIKUPAN_PS2_SCENE_HIGHLIGHT_GAIN   0.88
+#define MIKUPAN_PS2_SCENE_EXTRA_POWER      0.45
 
-float3 MikuPan_ApplyPs2SceneTone(float3 color)
+float3 MikuPan_ApplyPs2SceneToneBase(float3 color)
 {
     color = saturate(color);
     color = saturate((color - MIKUPAN_PS2_SCENE_BLACK_POINT) /
@@ -73,6 +69,23 @@ float MikuPan_SampleShadowOcclusion(float2 uv)
     return occlusion / total_weight;
 }
 
+float3 MikuPan_ApplyPs2SceneTone(float3 color)
+{
+    float strength = clamp(uParams1.w, 0.0, 2.0);
+    float3 neutral = saturate(color);
+    float3 ps2 = MikuPan_ApplyPs2SceneToneBase(neutral);
+
+    if (strength <= 1.0)
+    {
+        return saturate(lerp(neutral, ps2, strength));
+    }
+
+    float extra = saturate(strength - 1.0);
+    float3 shadowWeight = 1.0 - smoothstep(0.10.xxx, 0.55.xxx, ps2);
+    float3 deeper = pow(max(ps2, 0.0.xxx), (1.0 + MIKUPAN_PS2_SCENE_EXTRA_POWER * extra).xxx);
+    return saturate(lerp(ps2, deeper, shadowWeight * extra));
+}
+
 struct PSInput
 {
     float4 position : SV_Position;
@@ -90,6 +103,18 @@ float4 main(PSInput input) : SV_Target0
 
     float materialAlpha = clamp(uMaterialAlpha.x, 0.0, 1.0);
     color.a *= materialAlpha;
+
+    if (uFlags1.x == 2)
+    {
+        if (color.a <= (1.0 / 255.0))
+        {
+            discard;
+        }
+
+        float2 mirrorUv = saturate(input.position.xy / max(uRenderSize.xy, 1.0.xx));
+        float4 reflection = uAuxTexture.Sample(uAuxTextureSampler, mirrorUv);
+        return float4(reflection.rgb, 1.0);
+    }
 
     // Shadow caster pass. The original GS shadow setup alpha-tests caster
     // fragments, so paper/cloth cutouts must punch holes in the silhouette

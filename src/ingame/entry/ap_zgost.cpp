@@ -54,7 +54,7 @@ int ZeroHourAppearMain()
         {
             ap_wrk.zh_efct = 0;
 
-            SetEffects(16, 8, 180, 60, &ap_wrk.zh_efct);
+            SetMagatokiEffect(8, 180, 60, &ap_wrk.zh_efct);
 
             ZeroHourDataBackUp();
 

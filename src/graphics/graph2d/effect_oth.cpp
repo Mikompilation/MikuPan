@@ -431,7 +431,7 @@ int SearchEmptyRippleBuf()
 
 void* CallRipple(void *pos, void *rot, float scale, int num, int time)
 {
-    return SetEffects(EF_RIPPLE2, 8, 1, time, 0x80, 0x80, 0x80, 1.0f, scale, pos, rot, num);
+    return SetRipple2Effect(8, 1, time, 0x80, 0x80, 0x80, 1.0f, scale, pos, rot, num);
 }
 
 void SetRipple(EFFECT_CONT *ec)
@@ -1000,17 +1000,17 @@ void SetEffSQITex(int n, int *v, float depth_z, int tp, float w, float h, u_char
 void* CallFire(void *pos, u_char r, u_char g, u_char b, float scale)
 {
     static float rate = 1.0f;
-    return SetEffects(EF_TORCH , 2, 1, pos, &rate, &rate);
+    return SetTorchEffect(2, 1, pos, &rate, &rate);
 }
 
 void* CallFire2(void *pos, u_char r, u_char g, u_char b, float scl, u_char r2, u_char g2, u_char b2, float scl2)
 {
-    return SetEffects(EF_FIRE, 2, 3, pos, r, g, b, scl, r2, g2, b2, scl2);
+    return SetFireEffect(2, 3, pos, r, g, b, scl, r2, g2, b2, scl2);
 }
 
 void* CallFire3(void *pos, int type, u_char r, u_char g, u_char b, float scl, u_char r2, u_char g2, u_char b2, float scl2)
 {
-    return SetEffects(EF_FIRE, 2, type ? 0 : 3,pos, r, g, b, scl, r2, g2, b2, scl2);
+    return SetFireEffect(2, type ? 0 : 3, pos, r, g, b, scl, r2, g2, b2, scl2);
 }
 
 void SubFire1(EFFECT_CONT *ec)
@@ -4552,7 +4552,7 @@ void SetWaterdrop(EFFECT_CONT *ec)
                 Vu0CopyVector(wwpos[wwcnt], wpos);
                 wwpos[wwcnt][1] = wddely;
 
-                SetEffects(EF_RIPPLE2, 8, 1, (u_int)(vu0Rand() * 16.0f) + 8, 0x20, 0x20, 0x30, 0.3f, 4.5f, wwpos[wwcnt], dummy_rot, 2);
+                SetRipple2Effect(8, 1, (u_int)(vu0Rand() * 16.0f) + 8, 0x20, 0x20, 0x30, 0.3f, 4.5f, wwpos[wwcnt], dummy_rot, 2);
 
                 if (plyr_wrk.pr_info.room_no == R023_IKESU)
                 {
@@ -4575,7 +4575,7 @@ void SetWaterdrop(EFFECT_CONT *ec)
                 wwpos[wwcnt][1] = wddely;
                 wwpos[wwcnt][2] += (vu0Rand() * 128.0f - 64.0f);
 
-                SetEffects(EF_RIPPLE2, 8, 0x81, 0x10, 0x40, 0, 0, 0.002f, 0.3f, wwpos[wwcnt], dummy_rot, 1);
+                SetRipple2Effect(8, 0x81, 0x10, 0x40, 0, 0, 0.002f, 0.3f, wwpos[wwcnt], dummy_rot, 1);
 
                 if (plyr_wrk.pr_info.room_no == R001_FUSUMA || plyr_wrk.pr_info.room_no == RO26_OYASHIRO)
                 {
@@ -4601,11 +4601,11 @@ void SetWaterdrop(EFFECT_CONT *ec)
 
             if (ec->dat.uc8[7] != 0)
             {
-                SetEffects(EF_RIPPLE2, 8, 0x41, 0x20, 0x40, 0, 0, 0.05f, 4.0f, wwpos[wwcnt], dummy_rot, 2);
+                SetRipple2Effect(8, 0x41, 0x20, 0x40, 0, 0, 0.05f, 4.0f, wwpos[wwcnt], dummy_rot, 2);
             }
             else
             {
-                SetEffects(EF_RIPPLE2, 8, 1, (u_int)(vu0Rand() * 16.0f) + 8, 0x20, 0x20, 0x30, 0.3f, 4.5f, wwpos[wwcnt], dummy_rot, 2);
+                SetRipple2Effect(8, 1, (u_int)(vu0Rand() * 16.0f) + 8, 0x20, 0x20, 0x30, 0.3f, 4.5f, wwpos[wwcnt], dummy_rot, 2);
             }
             if (plyr_wrk.pr_info.room_no == R023_IKESU)
             {
@@ -7786,10 +7786,10 @@ void SetSpirit(EFFECT_CONT *ec)
     {
         sc = (float)(num - i) / (num + 1);
 
-        SetEffects(EF_FIRE2, 1, mf, &opos[tbl[i]], mr, mg, mb, msc * sc, mrh, mgh, mbh, msch * sc, sc * arate);
+        SetFire2Effect(1, mf, &opos[tbl[i]], mr, mg, mb, msc * sc, mrh, mgh, mbh, msch * sc, sc * arate);
     }
 
-    SetEffects(EF_FIRE, 1, mf,bpos, mr, mg, mb, msc, mrh, mgh, mbh, msch * arate);
+    SetFireEffect(1, mf, bpos, mr, mg, mb, msc, mrh, mgh, mbh, msch * arate);
 
     ec->cnt = num;
     ec->max = top;

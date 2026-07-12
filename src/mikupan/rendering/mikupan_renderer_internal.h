@@ -4,7 +4,7 @@
 #include "mikupan_renderer.h"
 #include "cglm/cglm.h"
 #include "SDL3/SDL_video.h"
-#include <glad/gl.h>
+#include "mikupan_gl_compat.h"
 
 typedef struct
 {

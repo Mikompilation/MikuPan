@@ -24,7 +24,8 @@ typedef enum MikuPan_GPUTarget
     MIKUPAN_GPU_TARGET_SCENE = 0,
     MIKUPAN_GPU_TARGET_WINDOW,
     MIKUPAN_GPU_TARGET_SHADOW,
-    MIKUPAN_GPU_TARGET_SCREEN_COPY
+    MIKUPAN_GPU_TARGET_SCREEN_COPY,
+    MIKUPAN_GPU_TARGET_MIRROR
 } MikuPan_GPUTarget;
 
 typedef enum MikuPan_GPUBufferKind
@@ -116,7 +117,11 @@ typedef struct MikuPan_GPUUniformBlock
     int uFlags0[4];
     int uFlags1[4];
     int uFlags2[4];
+    // w=HDR output enabled
     int uPadFlags[4];
+
+    // x=paper white in output colorspace, y=usable HDR headroom
+    float uHdrOutput[4];
 } MikuPan_GPUUniformBlock;
 
 /// Create the SDL_GPU device and claim the window. gpu_driver requests an
@@ -125,11 +130,17 @@ typedef struct MikuPan_GPUUniformBlock
 /// gpu_debug creates the device in debug mode (D3D12 debug layer / Vulkan
 /// validation): a huge per-command CPU cost, so it should stay off outside of
 /// debugging sessions.
-int  MikuPan_GPUInit(SDL_Window *window, int vsync, const char *gpu_driver,
-                     int gpu_debug);
+int  MikuPan_GPUInit(SDL_Window *window, int vsync, int hdr_enabled,
+                     const char *gpu_driver, int gpu_debug);
 void MikuPan_GPUShutdown(void);
 void MikuPan_GPUWaitIdle(void);
 void MikuPan_GPUSetVsync(int vsync);
+void MikuPan_GPUSetSwapchainOptions(int vsync, int hdr_enabled);
+int MikuPan_GPUIsHdrSwapchainEnabled(void);
+int MikuPan_GPUIsHdrDisplayEnabled(void);
+int MikuPan_GPUSupportsHdrOutput(void);
+float MikuPan_GPUGetHdrSdrWhiteLevel(void);
+float MikuPan_GPUGetHdrHeadroom(void);
 
 SDL_GPUDevice *MikuPan_GPUGetDevice(void);
 SDL_GPUCommandBuffer *MikuPan_GPUGetCommandBuffer(void);
@@ -164,6 +175,8 @@ void MikuPan_GPUUploadBuffer(unsigned int id, unsigned int size,
 void MikuPan_GPUUpdateUniformCPUBuffer(unsigned int id, unsigned int size,
                                        const void *data);
 
+unsigned int MikuPan_GPUCreateTextureFromSurface(SDL_Surface* surface);
+
 unsigned int MikuPan_GPUCreateTextureRGBA8(int width, int height,
                                            const void *pixels,
                                            int pitch,
@@ -171,6 +184,7 @@ unsigned int MikuPan_GPUCreateTextureRGBA8(int width, int height,
                                            int mipmaps);
 unsigned int MikuPan_GPUCreateTextureR8Target(int width, int height);
 unsigned int MikuPan_GPUCreateRenderTextureRGBA8(int width, int height);
+unsigned int MikuPan_GPUCreateDepthTexture(int width, int height);
 void MikuPan_GPUReleaseTexture(unsigned int id);
 /// Raw SDL_GPUTexture handle for a texture id, or NULL. Used as an ImGui
 /// ImTextureID (the SDL_GPU3 backend expects an SDL_GPUTexture*, not the id).
@@ -192,6 +206,12 @@ int MikuPan_GPUDepthQueryPointVisibleWorld(const float world_pos[4]);
 int MikuPan_GPUDepthQueryPointVisibleWorldScreen(const float world_pos[4],
                                                  float screen_x,
                                                  float screen_y);
+int MikuPan_GPUDepthQueryPointVisibleWorldScreenQueued(int kind,
+                                                       int object_id,
+                                                       int point_index,
+                                                       const float world_pos[4],
+                                                       float screen_x,
+                                                       float screen_y);
 void MikuPan_GPUCopyTexture(unsigned int src_texture_id,
                             unsigned int dst_texture_id,
                             int width,
@@ -241,6 +261,8 @@ void MikuPan_GPUSetShadowTarget(unsigned int texture_id, int size,
                                 int clear);
 void MikuPan_GPUSetScreenCopyTarget(unsigned int texture_id, int width,
                                     int height, int clear);
+void MikuPan_GPUSetMirrorTarget(unsigned int color_id, unsigned int depth_id,
+                                int clear);
 
 void MikuPan_GPUBindTextureSlot(int slot, unsigned int texture_id);
 unsigned int MikuPan_GPUGetBoundTexture0(void);

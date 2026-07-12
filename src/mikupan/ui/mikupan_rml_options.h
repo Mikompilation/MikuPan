@@ -19,15 +19,20 @@ void MikuPan_RmlOptionsOpenInGame(void);
 void MikuPan_RmlOptionsClose(void);
 int MikuPan_RmlOptionsConsumeExitRequest(void);
 int MikuPan_RmlOptionsIsOpen(void);
+int MikuPan_RmlOptionsIsCalibrationOpen(void);
 int MikuPan_RmlOptionsInputBlocked(void);
+int MikuPan_RmlOptionsBindingCaptureActive(void);
 void MikuPan_RmlOptionsRequestExit(void);
 void MikuPan_RmlOptionsHandleCancel(void);
 int MikuPan_RmlOptionsAnySelectOpen(void);
+void MikuPan_RmlOptionsClearNativeSelectOpen(void);
 int MikuPan_RmlOptionsActivateFocusedControl(void);
 int MikuPan_RmlOptionsHandleHorizontalInput(int direction);
 int MikuPan_RmlOptionsHandleVerticalInput(int direction);
 void MikuPan_RmlOptionsEnsureFocusedControlVisible(void);
 int MikuPan_RmlOptionsConsumeMoveSoundRequest(void);
+void MikuPan_RmlOptionsApplyTheme(int theme);
+void MikuPan_RmlOptionsApplyFont(int font);
 void MikuPan_RmlOptionsToggleDebug(void);
 
 #ifdef __cplusplus

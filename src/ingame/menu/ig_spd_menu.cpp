@@ -115,12 +115,7 @@ void SpdMapMain()
 
     if (yw2d.io_a[4] != 0.0f)
     {
-        SetSprFile(MikuPan_GetHostAddress(0x1ce0000));
-#ifdef BUILD_EU_VERSION
-        SetSprFile(MikuPan_GetHostAddress(0x1e04000));
-#else
-        SetSprFile(MikuPan_GetHostAddress(0x1e05b00));
-#endif
+        IngameMenuMapEnsureSpriteFiles();
     }
 
     if (spd_mnu.smap != 0)
@@ -296,15 +291,18 @@ static void SpdOptInit()
 
 void SpdOptMain()
 {
-    if (yw2d.io_x[0] == 0.0f)
+    if (!MikuPan_RmlOptionsIsCalibrationOpen())
     {
-        DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
-        BgFusumaYW(0x606060, yw2d.io_x[0], yw2d.io_a[0], 0x6e000);
-    }
-    else
-    {
-        DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
-        BgFusumaYW(0x606060, yw2d.io_x[0], yw2d.io_a[0], 0x6e000);
+        if (yw2d.io_x[0] == 0.0f)
+        {
+            DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
+            BgFusumaYW(0x606060, yw2d.io_x[0], yw2d.io_a[0], 0x6e000);
+        }
+        else
+        {
+            DrawScreen(0x7f000, 0x1a40, 0x80, 0x80, 0x80, 0x80);
+            BgFusumaYW(0x606060, yw2d.io_x[0], yw2d.io_a[0], 0x6e000);
+        }
     }
 
     SpdOptInOut();

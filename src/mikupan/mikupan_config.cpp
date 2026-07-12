@@ -30,6 +30,11 @@ MikuPan_Config mikupan_configuration = {
         2.25f,
         1.0f,
         1.0f,
+        1.0f,
+        1.0f,
+        0,
+        203.0f,
+        1000.0f,
         0,
         1,
         0.55f,
@@ -40,7 +45,8 @@ MikuPan_Config mikupan_configuration = {
         0.72f,
         0.85f,
         "",
-        0
+        0,
+        MIKUPAN_FINDER_VIEWPORT_MASK_BLUR
     },
     {
         0,
@@ -70,6 +76,7 @@ MikuPan_Config mikupan_configuration = {
     0,
     1,
     1,
+    1,
     {
         0,
         900.0f,
@@ -91,7 +98,8 @@ MikuPan_Config mikupan_configuration = {
         2.0f
     },
     {
-        -1
+        -1,
+        1
     },
     ""
 };
@@ -174,6 +182,12 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->msaa_index = MIKUPAN_CONFIG_DEFAULT_MSAA_INDEX;
     }
 
+    if (renderer->render_mode == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE
+        && renderer->render_scale_percent > 100)
+    {
+        renderer->msaa_index = 0;
+    }
+
     if (renderer->shadow_resolution <= 0)
     {
         renderer->shadow_resolution = 256;
@@ -187,9 +201,29 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->brightness = 1.0f;
     }
 
-    if (renderer->gamma < 0.0f || renderer->gamma > 3.0f)
+    if (renderer->gamma < 0.1f || renderer->gamma > 2.0f)
     {
         renderer->gamma = 1.0f;
+    }
+
+    if (renderer->contrast < 0.0f || renderer->contrast > 2.0f)
+    {
+        renderer->contrast = 1.0f;
+    }
+
+    if (renderer->shadow_depth < 0.0f || renderer->shadow_depth > 2.0f)
+    {
+        renderer->shadow_depth = 1.0f;
+    }
+
+    renderer->hdr_enabled = renderer->hdr_enabled ? 1 : 0;
+    renderer->hdr_paper_white =
+        MikuPan_ClampFloat(renderer->hdr_paper_white, 80.0f, 400.0f);
+    renderer->hdr_peak_luminance =
+        MikuPan_ClampFloat(renderer->hdr_peak_luminance, 100.0f, 4000.0f);
+    if (renderer->hdr_peak_luminance < renderer->hdr_paper_white)
+    {
+        renderer->hdr_peak_luminance = renderer->hdr_paper_white;
     }
 
     /* Older test builds used 1=Linear and 2=Soft. Both now collapse to Soft. */
@@ -213,6 +247,10 @@ static void MikuPan_ConfigurationValidateRenderer(
         MikuPan_ClampFloat(renderer->volumetric_shafts_density, 0.0f, 1.5f);
 
     renderer->gpu_debug = renderer->gpu_debug ? 1 : 0;
+    renderer->finder_viewport_mask_mode =
+        renderer->finder_viewport_mask_mode == MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR;
 }
 
 static void MikuPan_ConfigurationValidateCrt(MikuPan_ConfigCrt* crt)
@@ -277,6 +315,7 @@ static void MikuPan_ConfigurationValidateFirstPersonCamera(
 
 static void MikuPan_ConfigurationValidateInput(MikuPan_ConfigInput* input)
 {
+    input->rumble_enabled = input->rumble_enabled ? 1 : 0;
     input->bindings_saved = input->bindings_saved ? 1 : 0;
     input->action_profile_saved = input->action_profile_saved ? 1 : 0;
     input->action_profile_enabled = input->action_profile_enabled ? 1 : 0;
@@ -286,10 +325,18 @@ static void MikuPan_ConfigurationValidateInput(MikuPan_ConfigInput* input)
         input->action_profile_dpad_subjective_move ? 1 : 0;
     input->action_profile_stick_subjective_move =
         input->action_profile_stick_subjective_move ? 1 : 0;
+    input->movement_style_override_enabled =
+        input->movement_style_override_enabled ? 1 : 0;
     input->action_profile_finder_reverse_y =
         input->action_profile_finder_reverse_y ? 1 : 0;
     input->action_profile_finder_swap_sticks =
         input->action_profile_finder_swap_sticks ? 1 : 0;
+    input->finder_dpad_film_swap_enabled =
+        input->finder_dpad_film_swap_enabled ? 1 : 0;
+    input->mirror_stone_hud_enabled =
+        input->mirror_stone_hud_enabled ? 1 : 0;
+    input->improved_movement_collisions_enabled =
+        input->improved_movement_collisions_enabled ? 1 : 0;
     input->finder_mouse_enabled = input->finder_mouse_enabled ? 1 : 0;
 
     if (input->finder_mouse_sensitivity < 0.0f)
@@ -318,6 +365,8 @@ void MikuPan_ConfigurationValidate(void)
     mikupan_configuration.font_scale =
         MikuPan_ClampFloat(mikupan_configuration.font_scale, 0.5f, 3.0f);
     mikupan_configuration.show_fps = mikupan_configuration.show_fps ? 1 : 0;
+    mikupan_configuration.minimap_enabled =
+        mikupan_configuration.minimap_enabled ? 1 : 0;
     mikupan_configuration.title_room_background =
         mikupan_configuration.title_room_background ? 1 : 0;
     mikupan_configuration.title_dither =

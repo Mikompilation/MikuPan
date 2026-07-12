@@ -3,14 +3,19 @@
 #include "enums.h"
 #include "inf_disp.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_rng.h"
+#include "mikupan/mikupan_utils.h"
+#include "mikupan/gameplay/mikupan_item_icon_hud.h"
+#include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/ui/mikupan_ui.h"
 
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_ene.h"
 #include "graphics/graph2d/effect_sub.h"
 #include "graphics/graph2d/message.h"
 #include "graphics/graph2d/number.h"
-// #include "graphics/graph2d/tim2.h" // (miss) DispSprD
+#include "graphics/graph2d/tim2.h"
 #include "graphics/graph3d/sglib.h"
 #include "ingame/event/ev_main.h"
 #include "ingame/info/inf_disp.h"
@@ -19,14 +24,20 @@
 #include "ingame/plyr/plyr_ctl.h"
 #include "main/glob.h"
 #include "os/eeiop/eese.h"
+#include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
 #include "ingame/plyr/plyr_ctl.h"
 
 #include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 static void FndrInit();
 static void SttsFade();
 static void FndrFade();
+static void MikuPan_DrawFinderViewportMask(u_char alpha, float padding_pixels, int force_solid);
+static void MikuPan_AddFinderMaskQuad(float *dst, int *vertex, float x0, float y0, float x1, float y1, float alpha);
+static void MikuPan_AddFinderBlurQuad(float *dst, int *vertex, float x0, float y0, float x1, float y1, float alpha);
 static void WeakPoint(short int pos_x, short int pos_y);
 static void DspBigCircle(u_short lu_chr, short int pos_x, short int pos_y, u_char alp, short int size_r, u_char cl_ptn);
 static void PointerNP(short int cx, short int cy, u_char red, u_char alp, float siz);
@@ -87,7 +98,6 @@ static ZAN dmg_scr;
 static JET_SET jet1[25];
 static JET_SET jet2[25];
 static u_char znz[12][6];
-
 #define PI 3.1415927f
 #define DEG2RAD(x) ((float)(x)*PI/180.0f)
 
@@ -110,6 +120,7 @@ void InformationDispInit()
     memset(&jet2, 0, sizeof(jet2));
 
     point_get_end = 0;
+    MikuPan_ResetItemIconHud();
 }
 
 void InformationDispMain()
@@ -135,6 +146,7 @@ void InformationDispMain()
 
     if (inf_dsp.fndr_dsp_flg != 0)
     {
+        MikuPan_DrawFinderViewportMask(inf_dsp.fndr_fade_alp, 28.0f, 0);
         FinderDisp(fndr_mx, fndr_my);
     }
 
@@ -174,6 +186,17 @@ void InformationDispMain()
     {
         PhotoScoreDisp(plyr_wrk.ap_timer, plyr_wrk.sta & 0x1 ? 1 : 60);
     }
+
+    if (inf_dsp.fndr_dsp_flg != 0)
+    {
+        MikuPan_DrawFinderFilmIcon(fndr_mx, fndr_my, inf_dsp.fndr_fade_alp);
+        MikuPan_DrawHealingItemHudIcon(fndr_mx, fndr_my, inf_dsp.fndr_fade_alp);
+    }
+}
+
+
+void InformationDispLateFinderMask()
+{
 }
 
 void InformationDispModeCtrl()
@@ -480,6 +503,193 @@ static void FndrFade()
             inf_dsp.fndr_dsp_flg = 1;
         }
     break;
+    }
+}
+
+static void MikuPan_AddFinderMaskQuad(float *dst, int *vertex, float x0, float y0, float x1, float y1, float alpha)
+{
+    const float colour[4] = {0.0f, 0.0f, 0.0f, alpha};
+    const float z = 0.0f;
+    const float w = 1.0f;
+    const float quad[6][2] = {
+        {x0, y0}, {x1, y0}, {x0, y1},
+        {x1, y0}, {x1, y1}, {x0, y1}
+    };
+
+    for (int i = 0; i < 6; i++)
+    {
+        float *v = dst + (*vertex * 8);
+        v[0] = colour[0];
+        v[1] = colour[1];
+        v[2] = colour[2];
+        v[3] = colour[3];
+        v[4] = quad[i][0];
+        v[5] = quad[i][1];
+        v[6] = z;
+        v[7] = w;
+        (*vertex)++;
+    }
+}
+
+static void MikuPan_AddFinderBlurQuad(float *dst, int *vertex, float x0, float y0, float x1, float y1, float alpha)
+{
+    const float colour[4] = {1.0f, 1.0f, 1.0f, alpha};
+    const float z = 0.0f;
+    const float w = 1.0f;
+    const float quad[6][2] = {
+        {x0, y0}, {x1, y0}, {x0, y1},
+        {x1, y0}, {x1, y1}, {x0, y1}
+    };
+
+    for (int i = 0; i < 6; i++)
+    {
+        float *v = dst + (*vertex * 12);
+        v[0] = 0.0f;
+        v[1] = 0.0f;
+        v[2] = 0.0f;
+        v[3] = 0.0f;
+        v[4] = colour[0];
+        v[5] = colour[1];
+        v[6] = colour[2];
+        v[7] = colour[3];
+        v[8] = quad[i][0];
+        v[9] = quad[i][1];
+        v[10] = z;
+        v[11] = w;
+        (*vertex)++;
+    }
+}
+
+static void MikuPan_DrawFinderViewportMask(u_char alpha, float padding_pixels, int force_solid)
+{
+    if (alpha == 0)
+    {
+        return;
+    }
+
+    const int render_w = MikuPan_GetRenderResolutionWidth();
+    const int render_h = MikuPan_GetRenderResolutionHeight();
+
+    if (render_w <= 0 || render_h <= 0)
+    {
+        return;
+    }
+
+    float viewport_x = 0.0f;
+    float viewport_y = 0.0f;
+    float viewport_w = 0.0f;
+    float viewport_h = 0.0f;
+    float viewport_scale = 1.0f;
+
+    MikuPan_GetPS2Viewport(render_w, render_h,
+                           &viewport_x, &viewport_y,
+                           &viewport_w, &viewport_h,
+                           &viewport_scale);
+
+    float mask_left = viewport_x + padding_pixels;
+    float mask_right = viewport_x + viewport_w - padding_pixels;
+    float mask_top = viewport_y + padding_pixels;
+    float mask_bottom = viewport_y + viewport_h - padding_pixels;
+
+    mask_left = MikuPan_ClampFloat(mask_left, 0.0f, (float)render_w);
+    mask_right = MikuPan_ClampFloat(mask_right, 0.0f, (float)render_w);
+    mask_top = MikuPan_ClampFloat(mask_top, 0.0f, (float)render_h);
+    mask_bottom = MikuPan_ClampFloat(mask_bottom, 0.0f, (float)render_h);
+
+    if (mask_left > mask_right)
+    {
+        float center = (mask_left + mask_right) * 0.5f;
+        mask_left = center;
+        mask_right = center;
+    }
+
+    if (mask_top > mask_bottom)
+    {
+        float center = (mask_top + mask_bottom) * 0.5f;
+        mask_top = center;
+        mask_bottom = center;
+    }
+
+    const float left = mask_left / (float)render_w * 2.0f - 1.0f;
+    const float right = mask_right / (float)render_w * 2.0f - 1.0f;
+    const float top = 1.0f - mask_top / (float)render_h * 2.0f;
+    const float bottom = 1.0f - mask_bottom / (float)render_h * 2.0f;
+    const float mask_alpha = force_solid != 0 ? 1.0f :
+        MikuPan_ConvertScaleColor((u_char)MikuPan_ClampInt((int)(alpha * 128.0f / 100.0f + 0.5f), 0, 128));
+
+    if (force_solid == 0 &&
+        mikupan_configuration.renderer.finder_viewport_mask_mode ==
+            MIKUPAN_FINDER_VIEWPORT_MASK_BLUR)
+    {
+        float blur_vertices[24 * 12];
+        int blur_vertex = 0;
+        const float blur_alpha = MikuPan_ClampFloat(alpha / 100.0f, 0.0f, 1.0f);
+        sceGsTex0 screen_copy_tex = {};
+
+        screen_copy_tex.TBP0 = 0x1a40;
+        screen_copy_tex.TW = 10;
+        screen_copy_tex.TH = 8;
+
+        if (left > -1.0f)
+        {
+            MikuPan_AddFinderBlurQuad(blur_vertices, &blur_vertex, -1.0f, 1.0f, left, -1.0f, blur_alpha);
+        }
+
+        if (right < 1.0f)
+        {
+            MikuPan_AddFinderBlurQuad(blur_vertices, &blur_vertex, right, 1.0f, 1.0f, -1.0f, blur_alpha);
+        }
+
+        if (top < 1.0f)
+        {
+            MikuPan_AddFinderBlurQuad(blur_vertices, &blur_vertex, left, 1.0f, right, top, blur_alpha);
+        }
+
+        if (bottom > -1.0f)
+        {
+            MikuPan_AddFinderBlurQuad(blur_vertices, &blur_vertex, left, bottom, right, -1.0f, blur_alpha);
+        }
+
+        if (blur_vertex > 0)
+        {
+            MikuPan_RenderFinderViewportBlurTriangles3D(&screen_copy_tex,
+                                                        blur_vertices,
+                                                        blur_vertex,
+                                                        MIKUPAN_DEPTH_ALWAYS,
+                                                        MIKUPAN_GPU_BLEND_NORMAL);
+        }
+
+        return;
+    }
+
+    float vertices[24 * 8];
+    int vertex = 0;
+
+    if (left > -1.0f)
+    {
+        MikuPan_AddFinderMaskQuad(vertices, &vertex, -1.0f, 1.0f, left, -1.0f, mask_alpha);
+    }
+
+    if (right < 1.0f)
+    {
+        MikuPan_AddFinderMaskQuad(vertices, &vertex, right, 1.0f, 1.0f, -1.0f, mask_alpha);
+    }
+
+    if (top < 1.0f)
+    {
+        MikuPan_AddFinderMaskQuad(vertices, &vertex, left, 1.0f, right, top, mask_alpha);
+    }
+
+    if (bottom > -1.0f)
+    {
+        MikuPan_AddFinderMaskQuad(vertices, &vertex, left, bottom, right, -1.0f, mask_alpha);
+    }
+
+    if (vertex > 0)
+    {
+        MikuPan_RenderUntexturedTriangles3D(vertices, vertex,
+                                            MIKUPAN_DEPTH_ALWAYS,
+                                            MIKUPAN_GPU_BLEND_NORMAL);
     }
 }
 
@@ -790,7 +1000,7 @@ static void PointerNP(short int cx, short int cy, u_char red, u_char alp, float 
 
     if (red != 0)
     {
-        SetEffects(EF_NEGACIRCLE, 1, (float)cx, (float)cy, siz * 0.5f, alp, red, 0x80 - red, 0x80 - red);
+        SetNegaCircleEffect(1, (float)cx, (float)cy, siz * 0.5f, alp, red, 0x80 - red, 0x80 - red);
     }
 }
 
@@ -841,12 +1051,12 @@ static void FilmZansu(int number, short int pos_x, short int pos_y, short int nu
 
     number = number % multi10;
 
-    if (inf_dsp.fndr_mode_tmr == 1)
+    if (inf_dsp.fndr_mode_tmr == 1 || MikuPan_ConsumeFinderFilmCounterSnap() != 0)
     {
         info_wrk.film_bak = info_wrk.film_num;
+        inf_dsp.flm_cng_tmr = 0;
     }
-
-    if (info_wrk.film_num != info_wrk.film_bak)
+    else if (info_wrk.film_num != info_wrk.film_bak)
     {
         inf_dsp.flm_cng_tmr = 80;
 
@@ -1151,6 +1361,11 @@ static void EdogawaLamp(short int pos_x, short int pos_y, u_char out)
     }
 
     PutSpriteYW(FND_RMP_GRS, FND_RMP_GRS, pos_x, pos_y, 0.0f, 0x808080, (int)(cmn_alp / 2), 1.0f, 1.0f, 0, 0xff, 1, 1, 1);
+
+    if (out != 0)
+    {
+        MikuPan_DrawMirrorStoneHudIcon(pos_x, pos_y, cmn_alp);
+    }
 }
 
 static void NewFndrBase(short int pos_x, short int pos_y)

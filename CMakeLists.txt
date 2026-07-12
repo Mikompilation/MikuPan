@@ -3,7 +3,7 @@ project(MikuPan LANGUAGES C CXX)
 
 if (NOT MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-implicit-function-declaration -fno-fast-math -fno-trapping-math -Wno-int-conversion")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -fms-extensions")
 endif()
 
 if(WIN32)
@@ -37,6 +37,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/MikuPan)
 include(sdl3)
 include(rmlui)
 include(cimgui)
+include(implot)
 include(spdlog)
 include(cglm)
 include(ffmpeg)
@@ -58,6 +59,7 @@ set(MIKUPAN_SOURCES
         resources/shaders/normals_debug.frag
         "src/mikupan/io/mikupan_file.cpp"
         "src/mikupan/gameplay/mikupan_first_person.cpp"
+        "src/mikupan/gameplay/mikupan_item_icon_hud.cpp"
         "src/common/ul_math.cpp"
         "src/common/utility.cpp"
         "src/edit/map_data.cpp"
@@ -268,6 +270,8 @@ set(MIKUPAN_SOURCES
         "src/mikupan/mikupan_memory.cpp"
         "src/mikupan/av/mikupan_video_decoder.cpp"
         "src/mikupan/av/mikupan_video_decoder_c.cpp"
+        "src/mikupan/gameplay/mikupan_title_scene.cpp"
+        "src/mikupan/gameplay/mikupan_title_background.cpp"
         "src/mikupan/av/mikupan_audio_decoder.h"
         "src/mikupan/av/mikupan_audio_decoder.cpp"
         "src/mikupan/av/mikupan_audio_decoder_c.h"
@@ -303,6 +307,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/mikupan_config.cpp
         src/mikupan/mikupan_config_ini.cpp
         src/mikupan/mikupan_config.h
+        src/mikupan/mikupan_audio_bus.cpp
+        src/mikupan/mikupan_audio_bus.h
         "src/mikupan/io/mikupan_controller.cpp"
         "src/mikupan/io/mikupan_controller.h"
         src/mikupan/mikupan_screenshot.cpp
@@ -319,7 +325,7 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui_settings.h
         src/mikupan/ui/mikupan_ui_theme.cpp
         src/mikupan/ui/mikupan_ui_theme.h
-)
+ "src/mikupan/mikupan_framelimiter.cpp")
 
 # The legacy game + SDK code (originally .c, now renamed to .cpp) is decompiled C
 # compiled as C++, so it needs the same C-ism relaxations on every compiler. The handful
@@ -329,8 +335,10 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/av/mikupan_audio_decoder_c.cpp"
         "src/mikupan/av/mikupan_video_decoder.cpp"
         "src/mikupan/av/mikupan_video_decoder_c.cpp"
+        "src/mikupan/gameplay/mikupan_title_scene.cpp"
         "src/mikupan/gs/mikupan_gs.cpp"
         "src/mikupan/gs/mikupan_texture_manager.cpp"
+        "src/mikupan/mikupan_audio_bus.cpp"
         "src/mikupan/mikupan_config_ini.cpp"
         "src/mikupan/mikupan_file.cpp"
         "src/mikupan/mikupan_logging.cpp"
@@ -442,7 +450,6 @@ target_include_directories(MikuPan PRIVATE
         "src"
         "src/iop"
         "extern/"
-        "extern/glad/include/"
         ${MIKUPAN_GENERATED_DIR}
         ${SDL3_INCLUDE_DIR}
         "${FFMPEG_ROOT}/include"
@@ -451,6 +458,7 @@ target_include_directories(MikuPan PRIVATE
 target_link_libraries(MikuPan PRIVATE
         RmlUi::RmlUi
         cimgui
+        implot
         SDL3::SDL3
         spdlog::spdlog
         cglm

@@ -36,6 +36,7 @@
 #include "SDL3/SDL_timer.h"
 #include "graphics/graph2d/subtitles.h"
 #include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/mikupan_audio_bus.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -46,9 +47,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <glad/gl.h>
 #include <mikupan/av/mikupan_audio_decoder_c.h>
 #include <mikupan/av/mikupan_video_decoder_c.h>
+#include <mikupan/rendering/mikupan_gl_compat.h>
 #include <mikupan/rendering/mikupan_gpu.h>
 #include <mikupan/rendering/mikupan_renderer.h>
 #include <stdlib.h>
@@ -225,6 +226,7 @@ typedef struct AudioState
     uint8_t audio_buffer[16384];
     size_t audio_queued;
     int eof;
+    u_int audio_revision;
 } AudioState;
 
 //static int readMpeg(VideoDec *vd, ReadBuf *rb, StrFile *file);
@@ -552,12 +554,37 @@ static size_t audioHighWater()
     return audioBytesForMs(750);
 }
 
+static void applyMovieAudioGain(void)
+{
+    if (g_audio_state.stream == NULL)
+    {
+        return;
+    }
+
+    const u_int revision = MikuPan_AudioGetRevision();
+
+    if (g_audio_state.audio_revision == revision)
+    {
+        return;
+    }
+
+    if (!SDL_SetAudioStreamGain(g_audio_state.stream,
+                                MikuPan_AudioGetMasterScale()))
+    {
+        info_log("SDL_SetAudioStreamGain failed: %s", SDL_GetError());
+    }
+
+    g_audio_state.audio_revision = revision;
+}
+
 static void feedAudio(void)
 {
     if (!g_audio_state.decoder || !g_audio_state.stream)
     {
         return;
     }
+
+    applyMovieAudioGain();
 
     if (g_audio_state.eof)
     {
@@ -644,6 +671,7 @@ static int stepMovPlayback(void)
     }
 
     movVblankPad();
+    applyMovieAudioGain();
 
     if (START_PRESSED() != 0
         && g_movie_playback.tick >= 31
@@ -1026,7 +1054,7 @@ void initMov(char *bsfilename)
             info_log("[AUDIO] %d Hz %d ch", g_audio_state.rate,
                      g_audio_state.channels);
 
-            SDL_AudioSpec spec = {0};
+            SDL_AudioSpec spec;
             spec.freq = g_audio_state.rate;
             spec.format = SDL_AUDIO_S16;
             spec.channels = g_audio_state.channels;
@@ -1057,6 +1085,7 @@ void initMov(char *bsfilename)
                 {
                     SDL_BindAudioStream(g_audio_state.device,
                                         g_audio_state.stream);
+                    applyMovieAudioGain();
                     SDL_ResumeAudioDevice(g_audio_state.device);
 
                     for (int i = 0; i < 8; i++)
@@ -2325,7 +2354,7 @@ int strFileOpen(StrFile *file, char *filename)
     int dlen;
     int i;
     int len;
-    char *tail;
+    const char *tail;
     sceCdRMode mode;
     int ret;
 

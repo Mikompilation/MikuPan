@@ -9,6 +9,9 @@
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include <stdlib.h>
+#include <string>
+#include <format>
+#include <mikupan/io/mikupan_file.h>
 
 static MikuPan_TextureInfo *fnt_texture[6] = {0};
 static MikuPan_TextureInfo *curr_fnt_texture = NULL;
@@ -82,6 +85,30 @@ float MikuPan_GetPhotoDebugForceNegativePreviewStrength(void)
     return g_photo_debug.force_negative_preview_strength;
 }
 
+void MikuPan_ClearPhotoNegativeSourceTextureReference(void)
+{
+    g_photo_debug.negative_source_texture_valid = 0;
+    g_photo_debug.negative_source_texture_id = 0;
+    g_photo_debug.negative_source_texture_width = 0;
+    g_photo_debug.negative_source_texture_height = 0;
+}
+
+void MikuPan_SetPhotoNegativeSourceTextureReference(unsigned int texture_id,
+                                                    int width, int height)
+{
+    if (texture_id == 0 || width <= 0 || height <= 0)
+    {
+        MikuPan_ClearPhotoNegativeSourceTextureReference();
+        return;
+    }
+
+    g_photo_debug.negative_source_texture_valid = 1;
+    g_photo_debug.negative_source_texture_id = texture_id;
+    g_photo_debug.negative_source_texture_width = width;
+    g_photo_debug.negative_source_texture_height = height;
+    g_photo_debug.negative_source_texture_update_count++;
+}
+
 void MikuPan_SetPhotoDebugTargetRectEnabled(int enabled)
 {
     g_photo_debug.target_rect_enabled = enabled != 0;
@@ -140,7 +167,8 @@ void MikuPan_TextureShutdown(void)
     g_photo_debug.negative_source_texture_id = 0;
 }
 
-MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
+static MikuPan_TextureInfo *MikuPan_CreateGLTextureInternal(sceGsTex0 *tex0,
+                                                            int add_to_cache)
 {
     int width = 1 << tex0->TW;
     int height = 1 << tex0->TH;
@@ -148,13 +176,29 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
     uint64_t hash = 0;
     void *pixels = MikuPan_GsDownloadTexture(tex0, &hash);
 
-    if (hash == 0)
+    if (hash == 0 || pixels == NULL)
     {
+        free(pixels);
         return NULL;
+    }
+
+    if (add_to_cache != 0)
+    {
+        MikuPan_TextureInfo *cached_texture = MikuPan_GetTextureInfo(hash);
+        if (cached_texture != NULL)
+        {
+            free(pixels);
+            return cached_texture;
+        }
     }
 
     unsigned int tex = MikuPan_GPUCreateTextureRGBA8(
         width, height, pixels, width * 4, 1, 0);
+    if (tex == 0)
+    {
+        free(pixels);
+        return NULL;
+    }
 
     MikuPan_TextureInfo *texture_info = (MikuPan_TextureInfo *)malloc(sizeof(MikuPan_TextureInfo));
     texture_info->height = height;
@@ -163,11 +207,24 @@ MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
     texture_info->tex0 = *(uint64_t*)tex0;
     texture_info->hash = hash;
 
-    MikuPan_AddTexture(hash, texture_info);
+    if (add_to_cache != 0)
+    {
+        MikuPan_AddTexture(hash, texture_info);
+    }
 
     free(pixels);
 
     return texture_info;
+}
+
+MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
+{
+    return MikuPan_CreateGLTextureInternal(tex0, 1);
+}
+
+MikuPan_TextureInfo *MikuPan_CreateStandaloneGLTexture(sceGsTex0 *tex0)
+{
+    return MikuPan_CreateGLTextureInternal(tex0, 0);
 }
 
 void MikuPan_SetTexture(sceGsTex0 *tex0)
@@ -229,7 +286,22 @@ void MikuPan_SetupFntTexture()
     {
         if (fnt_texture[i] == NULL)
         {
-            fnt_texture[i] = MikuPan_CreateGLTexture((sceGsTex0 *) &fntdat[i].tex0);
+            std::string texture_path = std::format("./resources/fonts/hd_texture_font_{}.png", i);
+            fnt_texture[i] = MikuPan_CreateGLTexture((sceGsTex0*) &fntdat[i].tex0);
+            continue;
+
+            if (MikuPan_GetFileSize(texture_path.c_str()) == 0)
+            {
+                continue;
+            }
+
+            fnt_texture[i] = MikuPan_CreateGLTexture((sceGsTex0*) &fntdat[i].tex0);
+
+            SDL_Surface* surface = SDL_LoadPNG(texture_path.c_str());
+
+            fnt_texture[i]->id = MikuPan_GPUCreateTextureFromSurface(surface);
+
+            SDL_DestroySurface(surface);
         }
     }
 

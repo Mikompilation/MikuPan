@@ -15,6 +15,7 @@
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
 #include "ingame/info/inf_disp.h"
+#include "ingame/menu/ig_map.h"
 #include "ingame/menu/ig_spd_menu.h"
 #include "ingame/menu/pause.h"
 #include "ingame/photo/pht_make.h"
@@ -87,9 +88,11 @@ static void gra2dSubG3(int fl)
 {
     PhotoMakeSave();
     EffectControl(GRA2D_CALL_IG31);
+    IngameMiniMapDisp();
     InformationDispMain();
     PhotoMakeSave2();
     EffectControl(GRA2D_CALL_IG32);
+    InformationDispLateFinderMask();
     PauseDisp();
 #ifdef BUILD_EU_VERSION
     CallSubtitles();

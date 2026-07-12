@@ -10,8 +10,10 @@
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 static u_short MikuPan_PhotoPackRgb555(int r, int g, int b)
@@ -22,8 +24,6 @@ static u_short MikuPan_PhotoPackRgb555(int r, int g, int b)
 
 enum
 {
-    PHOTO_CAPTURE_SCREEN_W = 640,
-    PHOTO_CAPTURE_SCREEN_H = 224,
     PHOTO_CAPTURE_X = 128,
     PHOTO_CAPTURE_Y = 80,
     PHOTO_CAPTURE_W = 384,
@@ -37,7 +37,9 @@ enum
 };
 
 static u_short g_photo_capture_555[PHOTO_CAPTURE_PITCH * PHOTO_CAPTURE_FIELD_H];
-static unsigned char g_photo_preview_rgba[PHOTO_CAPTURE_W * PHOTO_CAPTURE_H * 4];
+static unsigned char *g_photo_preview_rgba = NULL;
+static int g_photo_preview_w = 0;
+static int g_photo_preview_h = 0;
 static int g_photo_capture_valid = 0;
 static int g_photo_hint3d_base_valid = 0;
 static int g_photo_frame_overlay_active = 0;
@@ -46,89 +48,226 @@ static int g_photo_preview_drawn_this_game_frame = 0;
 static void MikuPan_ActivateResolvedPhotoNegative(void);
 static void MikuPan_ClearResolvedPhotoHint3DBase(void);
 static void MikuPan_StageResolvedPhotoCaptureAsHint3DBase(void);
-static void MikuPan_ClearStagedPhotoCaptureForSave(void);
-
-int MikuPan_CapturePhotoForLater(void)
+static int MikuPan_EnsurePhotoPreviewBuffer(int width, int height)
 {
-    const int myy = PHOTO_CAPTURE_Y / 2;
-    unsigned char *rgba = (unsigned char *)GetEmptyBuffer(0);
+    const size_t bytes = (size_t)width * (size_t)height * 4u;
 
-    g_photo_capture_valid = 0;
-    g_photo_frame_overlay_active = 0;
-
-    MikuPan_CapturePhotoFramebuffer();
-
-    if (!MikuPan_ReadPhotoFramebufferRGBA8TopLeft(
-            PHOTO_CAPTURE_SCREEN_W,
-            PHOTO_CAPTURE_SCREEN_H,
-            rgba))
+    if (width <= 0 || height <= 0)
     {
-        MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(0);
         return 0;
     }
 
-    MikuPan_UpdatePhotoNegativeSourceTextureRGBA(
-        PHOTO_CAPTURE_SCREEN_W,
-        PHOTO_CAPTURE_SCREEN_H,
-        rgba);
-
+    if (g_photo_preview_rgba != NULL &&
+        g_photo_preview_w == width &&
+        g_photo_preview_h == height)
     {
-        long long dbg_sum = 0;
-        int dbg_n = 0;
-        int dbg_min = 255;
-        int dbg_max = 0;
+        return 1;
+    }
 
-        for (int dy = 0; dy < PHOTO_CAPTURE_FIELD_H; dy += 8)
+    free(g_photo_preview_rgba);
+    g_photo_preview_rgba = (unsigned char *)malloc(bytes);
+    if (g_photo_preview_rgba == NULL)
+    {
+        g_photo_preview_w = 0;
+        g_photo_preview_h = 0;
+        return 0;
+    }
+
+    g_photo_preview_w = width;
+    g_photo_preview_h = height;
+    return 1;
+}
+
+static void MikuPan_GetPhotoSourceRect(int src_w, int src_h,
+                                        int *crop_x, int *crop_y,
+                                        int *crop_w, int *crop_h)
+{
+    float viewport_x = 0.0f;
+    float viewport_y = 0.0f;
+    float viewport_w = 0.0f;
+    float viewport_h = 0.0f;
+    float viewport_scale = 1.0f;
+    int x0;
+    int y0;
+    int x1;
+    int y1;
+
+    MikuPan_GetPS2Viewport(src_w, src_h,
+                           &viewport_x, &viewport_y,
+                           &viewport_w, &viewport_h,
+                           &viewport_scale);
+
+    x0 = (int)(viewport_x + (float)PHOTO_CAPTURE_X * viewport_scale + 0.5f);
+    y0 = (int)(viewport_y + (float)PHOTO_CAPTURE_Y * viewport_scale + 0.5f);
+    x1 = (int)(viewport_x + (float)(PHOTO_CAPTURE_X + PHOTO_CAPTURE_W) * viewport_scale + 0.5f);
+    y1 = (int)(viewport_y + (float)(PHOTO_CAPTURE_Y + PHOTO_CAPTURE_H) * viewport_scale + 0.5f);
+
+    x0 = MikuPan_ClampInt(x0, 0, src_w - 1);
+    y0 = MikuPan_ClampInt(y0, 0, src_h - 1);
+    x1 = MikuPan_ClampInt(x1, x0 + 1, src_w);
+    y1 = MikuPan_ClampInt(y1, y0 + 1, src_h);
+
+    *crop_x = x0;
+    *crop_y = y0;
+    *crop_w = x1 - x0;
+    *crop_h = y1 - y0;
+}
+
+static void MikuPan_CopyPhotoSourceToPreview(const unsigned char *src_rgba,
+                                             int src_w,
+                                             int src_h)
+{
+    int crop_x = 0;
+    int crop_y = 0;
+    int crop_w = src_w;
+    int crop_h = src_h;
+
+    if (!MikuPan_EnsurePhotoPreviewBuffer(PHOTO_CAPTURE_W, PHOTO_CAPTURE_H))
+    {
+        return;
+    }
+
+    MikuPan_GetPhotoSourceRect(src_w, src_h, &crop_x, &crop_y, &crop_w, &crop_h);
+
+    for (int y = 0; y < PHOTO_CAPTURE_H; y++)
+    {
+        int sy = crop_y + (int)(((long long)y * crop_h) / PHOTO_CAPTURE_H);
+        if (sy < 0) sy = 0;
+        if (sy >= src_h) sy = src_h - 1;
+
+        for (int x = 0; x < PHOTO_CAPTURE_W; x++)
         {
-            for (int dx = 0; dx < PHOTO_CAPTURE_W; dx += 8)
-            {
-                const unsigned char *p =
-                    rgba + ((long long)((PHOTO_CAPTURE_X + dx) +
-                                   (myy + dy) * PHOTO_CAPTURE_SCREEN_W)) * 4;
-                const int lum = (p[0] + p[1] + p[2]) / 3;
-                dbg_sum += lum;
-                if (lum < dbg_min) dbg_min = lum;
-                if (lum > dbg_max) dbg_max = lum;
-                dbg_n++;
-            }
-        }
+            int sx = crop_x + (int)(((long long)x * crop_w) / PHOTO_CAPTURE_W);
+            if (sx < 0) sx = 0;
+            if (sx >= src_w) sx = src_w - 1;
 
-        info_log("[DIAG] photo staged read: avg_rgb=%lld min=%d max=%d region=%d,%d %dx%d count=%d",
-                 dbg_n ? dbg_sum / dbg_n : -1,
-                 dbg_n ? dbg_min : -1,
-                 dbg_n ? dbg_max : -1,
-                 PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
-                 PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
-                 (int)sys_wrk.count);
+            memcpy(g_photo_preview_rgba +
+                       ((size_t)y * PHOTO_CAPTURE_W + x) * 4u,
+                   src_rgba + ((size_t)sy * src_w + sx) * 4u,
+                   4);
+        }
+    }
+}
+
+static void MikuPan_UpdatePhotoSaveBufferFromPreview(void)
+{
+    if (g_photo_preview_rgba == NULL ||
+        g_photo_preview_w != PHOTO_CAPTURE_W ||
+        g_photo_preview_h != PHOTO_CAPTURE_H)
+    {
+        return;
     }
 
     for (int y = 0; y < PHOTO_CAPTURE_FIELD_H; y++)
     {
         for (int x = 0; x < PHOTO_CAPTURE_W; x++)
         {
-            const unsigned char *p =
-                rgba + ((long long)((PHOTO_CAPTURE_X + x) +
-                               (myy + y) * PHOTO_CAPTURE_SCREEN_W)) * 4;
+            const unsigned char *p = g_photo_preview_rgba +
+                ((size_t)(y * 2) * PHOTO_CAPTURE_W + x) * 4u;
             g_photo_capture_555[x + y * PHOTO_CAPTURE_PITCH] =
                 MikuPan_PhotoPackRgb555(p[0] >> 3, p[1] >> 3, p[2] >> 3);
-
-            for (int yy = 0; yy < 2; yy++)
-            {
-                unsigned char *preview =
-                    g_photo_preview_rgba +
-                    ((long long)(x + (y * 2 + yy) * PHOTO_CAPTURE_W)) * 4;
-                preview[0] = p[0];
-                preview[1] = p[1];
-                preview[2] = p[2];
-                preview[3] = 0xff;
-            }
         }
     }
+}
 
+int MikuPan_CapturePhotoForLater(void)
+{
+    int source_w;
+    int source_h;
+    unsigned char *rgba;
+
+    g_photo_capture_valid = 0;
+    g_photo_frame_overlay_active = 0;
+
+    if (MikuPan_EnsurePhotoPreviewBuffer(PHOTO_CAPTURE_W, PHOTO_CAPTURE_H) &&
+        MikuPan_ReadCurrentSceneCaptureRectRGBA8TopLeft(
+            PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
+            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
+            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
+            g_photo_preview_rgba))
+    {
+        MikuPan_CapturePhotoFramebuffer();
+        MikuPan_SetPhotoNegativeSourceTextureReference(
+            MikuPan_GetPhotoFramebufferTextureId(),
+            MikuPan_GetPhotoFramebufferWidth(),
+            MikuPan_GetPhotoFramebufferHeight());
+        MikuPan_UpdatePhotoSaveBufferFromPreview();
+        g_photo_capture_valid = 1;
+        MikuPan_UpdatePhotoPreviewTextureRGBA(
+            g_photo_preview_w,
+            g_photo_preview_h,
+            g_photo_preview_rgba);
+        MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(0);
+        return 1;
+    }
+
+    MikuPan_CapturePhotoFramebuffer();
+
+    source_w = MikuPan_GetPhotoFramebufferWidth();
+    source_h = MikuPan_GetPhotoFramebufferHeight();
+    if (source_w <= 0 || source_h <= 0)
+    {
+        source_w = MikuPan_GetWindowWidth();
+        source_h = MikuPan_GetWindowHeight();
+    }
+
+    if (source_w <= 0 || source_h <= 0)
+    {
+        MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(0);
+        return 0;
+    }
+
+    if (MikuPan_EnsurePhotoPreviewBuffer(PHOTO_CAPTURE_W, PHOTO_CAPTURE_H) &&
+        MikuPan_ReadPhotoCaptureRectRGBA8TopLeft(
+            PHOTO_CAPTURE_X, PHOTO_CAPTURE_Y,
+            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
+            PHOTO_CAPTURE_W, PHOTO_CAPTURE_H,
+            g_photo_preview_rgba))
+    {
+        MikuPan_SetPhotoNegativeSourceTextureReference(
+            MikuPan_GetPhotoFramebufferTextureId(),
+            MikuPan_GetPhotoFramebufferWidth(),
+            MikuPan_GetPhotoFramebufferHeight());
+        MikuPan_UpdatePhotoSaveBufferFromPreview();
+        g_photo_capture_valid = 1;
+        MikuPan_UpdatePhotoPreviewTextureRGBA(
+            g_photo_preview_w,
+            g_photo_preview_h,
+            g_photo_preview_rgba);
+        MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(0);
+        return 1;
+    }
+
+    rgba = (unsigned char *)malloc((size_t)source_w * (size_t)source_h * 4u);
+    if (rgba == NULL)
+    {
+        MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(0);
+        return 0;
+    }
+
+    if (!MikuPan_ReadPhotoFramebufferRGBA8TopLeft(source_w, source_h, rgba))
+    {
+        free(rgba);
+        MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(0);
+        return 0;
+    }
+
+    MikuPan_UpdatePhotoNegativeSourceTextureRGBA(source_w, source_h, rgba);
+
+    MikuPan_CopyPhotoSourceToPreview(rgba, source_w, source_h);
+    free(rgba);
+
+    if (g_photo_preview_rgba == NULL)
+    {
+        MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(0);
+        return 0;
+    }
+
+    MikuPan_UpdatePhotoSaveBufferFromPreview();
     g_photo_capture_valid = 1;
     MikuPan_UpdatePhotoPreviewTextureRGBA(
-        PHOTO_CAPTURE_W,
-        PHOTO_CAPTURE_H,
+        g_photo_preview_w,
+        g_photo_preview_h,
         g_photo_preview_rgba);
     MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(0);
     return 1;
@@ -142,15 +281,15 @@ static void MikuPan_ClearResolvedPhotoHint3DBase(void)
 
 static void MikuPan_StageResolvedPhotoCaptureAsHint3DBase(void)
 {
-    if (!g_photo_capture_valid)
+    if (!g_photo_capture_valid || g_photo_preview_rgba == NULL)
     {
         return;
     }
 
     g_photo_hint3d_base_valid = 1;
     MikuPan_UpdatePhotoBasePreviewTextureRGBA(
-        PHOTO_CAPTURE_W,
-        PHOTO_CAPTURE_H,
+        g_photo_preview_w,
+        g_photo_preview_h,
         g_photo_preview_rgba);
 }
 
@@ -200,8 +339,8 @@ void MikuPan_TakePhotoFromResolvedScreen(void)
            sizeof(g_photo_capture_555));
 
     MikuPan_UpdatePhotoPreviewTextureRGBA(
-        PHOTO_CAPTURE_W,
-        PHOTO_CAPTURE_H,
+        g_photo_preview_w,
+        g_photo_preview_h,
         g_photo_preview_rgba);
 }
 

@@ -25,6 +25,7 @@
 #include "os/pad.h"
 #include "os/eeiop/eese.h"
 #include "graphics/graph2d/g2d_debug.h"
+#include "mikupan/ui/mikupan_ui.h"
 
 int odev = 0;
 int stop_put_draw_env = 0;
@@ -72,23 +73,10 @@ static void InitIop()
 
 static void LoadDefModule()
 {
-#ifdef BUILD_EU_VERSION
-    while (!sceSifRebootIop("cdrom0:\\IOPRP23.IMG;1")) {};
-#else
-    while (!sceSifRebootIop("cdrom0:\\IOPRP224.IMG;1")) {};
-#endif
-    while (!sceSifSyncIop()) {};
 }
 
 void LoadIRX()
 {
-    while (sceSifLoadModule("cdrom0:\\LIBSD.IRX;1", 0, NULL) < 0) {};
-    while (sceSifLoadModule("cdrom0:\\SDRDRV.IRX;1", 0, NULL) < 0) {};
-    while (sceSifLoadModule("cdrom0:\\SIO2MAN.IRX;1", 0, NULL) < 0) {};
-    while (sceSifLoadModule("cdrom0:\\PADMAN.IRX;1", 0, NULL) < 0) {};
-    while (sceSifLoadModule("cdrom0:\\MCMAN.IRX;1", 0, NULL) < 0) {};
-    while (sceSifLoadModule("cdrom0:\\MCSERV.IRX;1", 0, NULL) < 0) {};
-    while (sceSifLoadModule("cdrom0:\\IOPSYS.IRX;1", 0, NULL) < 0) {};
 }
 
 void InitSysWrk()
@@ -116,10 +104,11 @@ void InitOptionWrk()
     opt_wrk.pad_mode = 0;
     opt_wrk.se_vol = 0x3fff;
     opt_wrk.bgm_vol = 0xccc;
-    opt_wrk.pad_move = 1;
+    opt_wrk.pad_move = 0;
     opt_wrk.key_type = 0;
     opt_wrk.sound_mode = 0;
-    SeSetMVol(0xccc);
+    //SeSetMVol(0xccc);
+    MikuPan_SetAudioMasterVolume(MikuPan_GetAudioMasterVolume());
     SeSetSteMono(opt_wrk.sound_mode);
 }
 
@@ -137,9 +126,6 @@ void InitGraphics()
 #else
     sceGsResetGraph(0, 1, 2, 1);
 #endif
-    
-    //*REG_RCNT0_MODE = 0x83;
-    //*REG_RCNT1_MODE = 0x83;
     
     sceDmaGetEnv(&env);
     
@@ -217,11 +203,6 @@ void vfunc()
     
     StopPerformanceCounter();
     
-    //if (count < *REG_RCNT1_COUNT)
-    //{
-    //    count = *REG_RCNT1_COUNT;
-    //}
-    
     if (count > 0xdc || (fr & 0xff) == 0)
     {
         count = 0;
@@ -235,8 +216,6 @@ void vfunc()
     }
     
     dfro = down_fr;
-    //*REG_RCNT0_COUNT = 0;
-    //*REG_RCNT1_COUNT = 0;
     
     if (sys_wrk.count & 1)
     {
@@ -258,7 +237,6 @@ void vfunc()
     PadSyncCallback();
     
     stop_put_draw_env = 0;
-    //*REG_RCNT1_COUNT = 0;
     
     StartPerformanceCounter();
 }

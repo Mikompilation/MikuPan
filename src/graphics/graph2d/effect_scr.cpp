@@ -27,9 +27,11 @@
 #include "main/glob.h"
 #include "mikupan/mikupan_rng.h"
 #include "mikupan/gameplay/mikupan_effect_compat.h"
+#include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/ui/mikupan_ui_debug.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
 #include <mikupan/mikupan_memory.h>
@@ -138,6 +140,32 @@ typedef struct { // 0xd0
 #define EFFECT_SCR_NOW_LOADING_MAX_VERTICES (16 * 16 * 6)
 #define EFFECT_SCR_GAME_OVER_MAX_VERTICES (48 * 36 * 6)
 
+
+static void EffectScrLogDeform(const char *stage, int type, float rate, int alp)
+{
+    static int last_sub_frame = -1000000;
+    int frame = (int)sys_wrk.count;
+
+    if (!MikuPan_ScreenCopyConsoleLogEnabled())
+    {
+        return;
+    }
+
+    if (stage[0] == 'S' && stage[1] == 'u')
+    {
+        if (last_sub_frame == frame)
+        {
+            return;
+        }
+
+        last_sub_frame = frame;
+    }
+
+    info_log("[SCREEN DEFORM] %s frame=%u type=%d rate=%.3f alp=%d init=%u pass=%u current=%u previous=%u",
+             stage, sys_wrk.count, type, (double)rate, alp, eff_deform.init,
+             eff_deform.pass, eff_deform.type, eff_deform.otype);
+}
+
 static u_char EffectScrClampColor(int value)
 {
     if (value < 0)
@@ -151,6 +179,89 @@ static u_char EffectScrClampColor(int value)
     }
 
     return (u_char)value;
+}
+
+static int EffectScrClipHasUsableW(const sceVu0FVECTOR clip)
+{
+    const float min_w = 0.00001f;
+
+    return MikuPan_IsFiniteFloat(clip[0]) &&
+           MikuPan_IsFiniteFloat(clip[1]) &&
+           MikuPan_IsFiniteFloat(clip[2]) &&
+           MikuPan_IsFiniteFloat(clip[3]) &&
+           clip[3] > min_w;
+}
+
+static int EffectScrClipToNDC(float *ndc, const sceVu0FVECTOR clip)
+{
+    float inv_w;
+
+    ndc[0] = 0.0f;
+    ndc[1] = 0.0f;
+    ndc[2] = 0.0f;
+
+    if (!EffectScrClipHasUsableW(clip))
+    {
+        return 0;
+    }
+
+    if (clip[0] < -clip[3] || clip[0] > clip[3] ||
+        clip[1] < -clip[3] || clip[1] > clip[3] ||
+        clip[2] < -clip[3] || clip[2] > clip[3])
+    {
+        return 0;
+    }
+
+    inv_w = 1.0f / clip[3];
+    ndc[0] = clip[0] * inv_w;
+    ndc[1] = clip[1] * inv_w;
+    ndc[2] = clip[2] * inv_w;
+
+    return MikuPan_IsFiniteFloat(ndc[0]) &&
+           MikuPan_IsFiniteFloat(ndc[1]) &&
+           MikuPan_IsFiniteFloat(ndc[2]);
+}
+
+static void EffectScrClipToScreenCopyUV(float *uv, const sceVu0FVECTOR clip)
+{
+    float inv_w;
+
+    if (!EffectScrClipHasUsableW(clip))
+    {
+        uv[0] = 0.0f;
+        uv[1] = 0.0f;
+        return;
+    }
+
+    inv_w = 1.0f / clip[3];
+    uv[0] = clip[0] * inv_w * 0.5f + 0.5f;
+    uv[1] = 0.5f - clip[1] * inv_w * 0.5f;
+
+    if (!MikuPan_IsFiniteFloat(uv[0]) || !MikuPan_IsFiniteFloat(uv[1]))
+    {
+        uv[0] = 0.0f;
+        uv[1] = 0.0f;
+    }
+}
+
+static void EffectScrWriteProjectedScreenCopyVertex(
+    float *dst,
+    const float *src_uv,
+    const float *dst_ndc,
+    int alpha)
+{
+    dst[0] = src_uv[0];
+    dst[1] = src_uv[1];
+    dst[2] = 0.0f;
+    dst[3] = 0.0f;
+    dst[4] = 1.0f;
+    dst[5] = 1.0f;
+    dst[6] = 1.0f;
+    dst[7] = MikuPan_ConvertScaleColor(EffectScrClampColor(alpha));
+    dst[8] = dst_ndc[0];
+    dst[9] = dst_ndc[1];
+    dst[10] = dst_ndc[2];
+    dst[11] = 1.0f;
 }
 
 static void EffectScrWriteScreenCopyVertex(
@@ -755,6 +866,13 @@ void CallFocus2(/* a0 4 */ int in, /* a1 5 */ int keep, /* a2 6 */ int out, /* a
 
 void SubDeform(int type, float rate, u_char alp)
 {
+    EffectScrLogDeform("SubDeform", type, rate, alp);
+
+    if (MikuPan_DisableScreenDeformEnabled())
+    {
+        return;
+    }
+
     switch(type)
     {
     case 1:
@@ -926,7 +1044,7 @@ void RunDeform(/* s0 16 */ EFFECT_CONT *ec)
 
 void CallDeform2(/* a0 4 */ int in, /* a1 5 */ int keep, /* t2 10 */ int out, /* a3 7 */ int type, /* t0 8 */ int max)
 {
-    SetEffects(EF_DEFORM, 4, type, max, in, keep, out);
+    SetDeformEffect(4, type, max, in, keep, out);
 }
 
 static void _SetScrData(/* a0 4 */ Q_WORDDATA *dst, /* a1 5 */ SCRDEF *src)
@@ -1068,6 +1186,7 @@ void MakeScrDeformPacket(/* s1 17 */ int pnumw, /* 0x0(sp) */ int pnumh, /* s2 1
 
 void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp) */ u_char alp)
 {
+    EffectScrLogDeform("SetDeform0", type, rate, alp);
 	/* sdata 35644c */ static float r = 0.0f;
 	/* sdata 356450 */ static float add = 6.0f;
 	/* sdata 356454 */ static int swch = 0;
@@ -1125,6 +1244,12 @@ void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp
     pnumh = 16;
     vnumw = 24;
     
+    if (MikuPan_ScreenCopyConsoleLogEnabled())
+    {
+        info_log("[SCREEN DEFORM CAPTURE] frame=%u path=SetDeform0 src_tbp=0x%x dst_tbp=0x1a40 type=%d rate=%.3f",
+                 sys_wrk.count, (sys_wrk.count & 1) * 0x8c0, type, (double)rate);
+    }
+
     LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
     
     yoff = GetYOffsetf();
@@ -1326,6 +1451,7 @@ void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp
 
 void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp) */ u_char alp)
 {
+    EffectScrLogDeform("SetDeform2", type, rate, alp);
 	/* bss 365610 */ static float rrr[825];
 	/* bss 3662f8 */ static float lll[825];
 	/* bss 366fe0 */ static float mm1[825];
@@ -1636,7 +1762,34 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
 
     {
         float render_buffer[EFFECT_SCR_DEFORM_MAX_VERTICES][12];
+        float src_uv[825][2];
+        float dst_ndc[825][3];
+        int visible[825];
         int render_vertices = 0;
+        sceVu0FMATRIX gl_slm;
+
+        sceVu0MulMatrix(gl_slm, *(sceVu0FMATRIX*)MikuPan_GetWorldClipView(), wlm);
+
+        for (i = 0; i < vnumw * vnumh; i++)
+        {
+            sceVu0FVECTOR src_local;
+            sceVu0FVECTOR src_clip;
+            sceVu0FVECTOR dst_clip;
+
+            wix = i % vnumw;
+            wiy = i / vnumw;
+
+            src_local[0] = wix * ts - cntw;
+            src_local[1] = wiy * ts - cnth;
+            src_local[2] = 0.0f;
+            src_local[3] = 1.0f;
+
+            sceVu0ApplyMatrix(src_clip, gl_slm, src_local);
+            EffectScrClipToScreenCopyUV(src_uv[i], src_clip);
+
+            sceVu0ApplyMatrix(dst_clip, gl_slm, vt[i]);
+            visible[i] = EffectScrClipToNDC(dst_ndc[i], dst_clip);
+        }
 
         for (int j = 0; j < pnumh; j++)
         {
@@ -1646,39 +1799,57 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
                 int bl = tl + vnumw;
                 int tr = tl + 1;
                 int br = bl + 1;
-                int tlc = swch ? (tl % 0xff) : 0x80;
-                int blc = swch ? (bl % 0xff) : 0x80;
-                int trc = swch ? (tr % 0xff) : 0x80;
-                int brc = swch ? (br % 0xff) : 0x80;
-                float src_x[4] = {tx[tl], tx[bl], tx[tr], tx[br]};
-                float src_y[4] = {ty[tl], ty[bl], ty[tr], ty[br]};
-                float dst_x[4] = {vtw[tl][0], vtw[bl][0], vtw[tr][0], vtw[br][0]};
-                float dst_y[4] = {vtw[tl][1], vtw[bl][1], vtw[tr][1], vtw[br][1]};
-                int rgba[4][4] = {
-                    {tlc, tlc, tlc, swch ? 0x80 : 0x80},
-                    {blc, blc, blc, swch ? 0x80 : alp},
-                    {trc, trc, trc, swch ? 0x80 : 0x80},
-                    {brc, brc, brc, swch ? 0x80 : alp},
-                };
 
-                render_vertices = EffectScrAppendScreenCopyQuad(
-                    &render_buffer[0][0],
-                    render_vertices,
-                    EFFECT_SCR_DEFORM_MAX_VERTICES,
-                    src_x,
-                    src_y,
-                    dst_x,
-                    dst_y,
-                    rgba);
+                if (render_vertices + 6 > EFFECT_SCR_DEFORM_MAX_VERTICES)
+                {
+                    break;
+                }
+
+                if (visible[tl] && visible[bl] && visible[tr])
+                {
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[tl],
+                        dst_ndc[tl],
+                        alp);
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[bl],
+                        dst_ndc[bl],
+                        alp);
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[tr],
+                        dst_ndc[tr],
+                        alp);
+                }
+
+                if (visible[tr] && visible[bl] && visible[br])
+                {
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[tr],
+                        dst_ndc[tr],
+                        alp);
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[bl],
+                        dst_ndc[bl],
+                        alp);
+                    EffectScrWriteProjectedScreenCopyVertex(
+                        render_buffer[render_vertices++],
+                        src_uv[br],
+                        dst_ndc[br],
+                        alp);
+                }
             }
         }
 
-        MikuPan_RenderScreenCopyTriangles3D(
+        MikuPan_RenderScreenCopyTriangles3DSTQ(
             &sd1.g_GsTex0,
             &render_buffer[0][0],
             render_vertices,
-            1,
-            MIKUPAN_GPU_BLEND_NORMAL);
+            MIKUPAN_DEPTH_ALWAYS);
     }
     
     pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
@@ -1689,6 +1860,7 @@ void SetDeform2(/* 0x81f8(sp) */ int type, /* f30 68 */ float rate, /* 0x81fc(sp
 
 void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp) */ u_char alp)
 {
+    EffectScrLogDeform("SetDeform3", type, rate, alp);
 	/* sdata 35646c */ static float r = 0.0f;
 	/* sdata 356470 */ static float add = 6.0f;
 	/* sdata 356474 */ static float ll = 0.0f;
@@ -1764,45 +1936,55 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
     vnumh = 25;
     vnumw = 33;
 
-    pszw = 640.0f; // $f30,0x4420
-	pszh = 224.0f; // $f29,0x4360
-    cntw = 320.0f; // $f28,0x43a0
-	cnth = 112.0f; // $f27,0x42e0
-
-    LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
-
-    yoff = GetYOffsetf();
-
-    for (j = 0; j < vnumh; j++)
     {
-        for (i = 0; i < vnumw; i++)
-        {
-            vt[j][i][0] = 2048.0f;
-            vt[j][i][1] = 2048.0f;
-            vt[j][i][2] = 0.0f;
-            vt[j][i][3] = 1.0f;
+        float eff_hw, eff_hh;
+        float tx_start;
+        float ty_start;
 
-            tx[j][i] = (float)(i * 640) / pnumw;
-            ty[j][i] = (float)(j * 224) / pnumh + yoff;
-            
-            if (i == 0)
+        MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);
+
+        pszw = eff_hw * 2.0f;
+        pszh = eff_hh;
+        cntw = eff_hw;
+        cnth = eff_hh * 0.5f;
+        tx_start = 320.0f - eff_hw;
+        ty_start = 112.0f - cnth;
+
+        LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
+
+        yoff = GetYOffsetf();
+
+        for (j = 0; j < vnumh; j++)
+        {
+            for (i = 0; i < vnumw; i++)
             {
-                tx[j][0] += 1.0f;
-            }
-            
-            if (i == vnumw-1)
-            {
-                tx[j][vnumw-1] -= 1.0f;
-            }
-            
-            if (j == 0)
-            {
-                ty[0][i] += 1.0f;
-            }
-            
-            if (j == vnumh-1)
-            {
-                ty[vnumh-1][i] -= 1.0f;
+                vt[j][i][0] = 2048.0f;
+                vt[j][i][1] = 2048.0f;
+                vt[j][i][2] = 0.0f;
+                vt[j][i][3] = 1.0f;
+
+                tx[j][i] = (float)(i * pszw) / pnumw + tx_start;
+                ty[j][i] = (float)(j * pszh) / pnumh + ty_start + yoff;
+
+                if (i == 0)
+                {
+                    tx[j][0] += 1.0f;
+                }
+
+                if (i == vnumw-1)
+                {
+                    tx[j][vnumw-1] -= 1.0f;
+                }
+
+                if (j == 0)
+                {
+                    ty[0][i] += 1.0f;
+                }
+
+                if (j == vnumh-1)
+                {
+                    ty[vnumh-1][i] -= 1.0f;
+                }
             }
         }
     }
@@ -1953,8 +2135,18 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
                 int blc = (i * 2 + 1) * c;
                 int trc = (i * 2 + 2) * c;
                 int brc = (i * 2 + 3) * c;
-                float src_x[4] = {tx[j][i], tx[j + 1][i], tx[j][i + 1], tx[j + 1][i + 1]};
-                float src_y[4] = {ty[j][i], ty[j + 1][i], ty[j][i + 1], ty[j + 1][i + 1]};
+                float src_x[4] = {
+                    tx[j][i], 
+                    tx[j + 1][i], 
+                    tx[j][i + 1], 
+                    tx[j + 1][i + 1]
+                };
+                float src_y[4] = {
+                    ty[j][i] - yoff,
+                    ty[j + 1][i] - yoff,
+                    ty[j][i + 1] - yoff,
+                    ty[j + 1][i + 1] - yoff,
+                };
                 float dst_x[4] = {
                     vt[j][i][0] + vtw[j][i][0],
                     vt[j + 1][i][0] + vtw[j + 1][i][0],
@@ -2000,6 +2192,7 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
 
 void SetDeform4(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp) */ u_char alp)
 {
+    EffectScrLogDeform("SetDeform4", type, rate, alp);
 	/* sdata 356480 */ static float r = 0.0f;
 	/* sdata 356484 */ static float add = 6.0f;
 	/* s1 17 */ int i;
@@ -2141,6 +2334,7 @@ void SetDeform4(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
 
 void SetDeform5(/* 0x6720(sp) */ int type, /* f21 59 */ float rate, /* 0x6724(sp) */ u_char alp)
 {
+    EffectScrLogDeform("SetDeform5", type, rate, alp);
 	/* sdata 356488 */ static float r = 0.0f;
 	/* sdata 35648c */ static float add = 6.0f;
 	/* s1 17 */ int i;
@@ -2286,6 +2480,7 @@ void SetDeform5(/* 0x6720(sp) */ int type, /* f21 59 */ float rate, /* 0x6724(sp
 
 void SetDeform6(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp) */ u_char alp)
 {
+    EffectScrLogDeform("SetDeform6", type, rate, alp);
     /* sdata 356490 */ static float r = 0.0f;
 	/* sdata 356494 */ static float add = 6.0f;
 	/* s2 18 */ int i;
@@ -2741,7 +2936,7 @@ void* CallNega2(/* a0 4 */ int in, /* a1 5 */ int keep, /* a2 6 */ int out)
 {
 	/* sdata 356498 */ static u_char alp = 0x80;
 
-    return SetEffects(EF_NEGA, 4, 64, 196, in, keep, out);
+    return SetNegaEffectTimed(4, 64, 196, in, keep, out);
 }
 
 void* CallNega(/* a0 4 */ int time)
@@ -2800,15 +2995,39 @@ void SetOverRap(/* s0 16 */ EFFECT_CONT *ec)
     
     if ((ret && alp <= 0.0f) || overlap_passflg[0] != overlap_passflg[1])
     {
-        LocalCopyLtoB2(1, (sys_wrk.count & 1) * 0x8c0);
-        
+        if (!MikuPan_CapturePauseScreen(0x1a40))
+        {
+            LocalCopyLtoB2(1, (sys_wrk.count & 1) * 0x8c0);
+        }
+
         alp = 128.0f;
     }
-    
+
     if (0.0f < alp)
     {
+        if (MikuPan_RenderPauseScreen(0x1a40, 0x80, 0x80, 0x80, (u_char)alp))
+        {
+            if (ec->dat.uc8[2] != 0)
+            {
+                fn = 128.0f / ec->dat.uc8[2];
+            }
+            else
+            {
+                fn = 8.0f;
+            }
+
+            alp = (alp - fn > 0.0f) ? alp - fn : 0.0f;
+
+            if (ec->dat.uc8[1] & 1)
+            {
+                ResetEffects(ec);
+            }
+
+            return;
+        }
+
         LocalCopyBtoL(1,0x1a40);
-        
+
         sd = SPRITE_DATA{
             .g_GsTex0 = {
                 .TBP0 = 0x1A40,
@@ -3192,7 +3411,10 @@ void SubDither3(/* s0 16 */ int type, /* f27 65 */ float alp, /* f28 66 */ float
     sceVu0CopyVector(old_cam_i, camera.i);
     
     
-    if (isnan(tx) || isnan(ty) || isnan(otx) || isnan(oty) || isinf(tx) || isinf(ty) || isinf(otx) || isinf(oty))
+    if (!MikuPan_IsFiniteFloat(tx) ||
+        !MikuPan_IsFiniteFloat(ty) ||
+        !MikuPan_IsFiniteFloat(otx) ||
+        !MikuPan_IsFiniteFloat(oty))
     {
         mvx = 0.0f;
         mvy = 0.0f;
@@ -3393,7 +3615,10 @@ void SubDither4(/* f27 65 */ float alp, /* f28 66 */ float spd)
     GetCamI2DPos(old_cam_i, &otx, &oty);
     sceVu0CopyVector(old_cam_i,camera.i);
     
-    if (isnan(tx) || isnan(ty) || isnan(otx) || isnan(oty))
+    if (!MikuPan_IsFiniteFloat(tx) ||
+        !MikuPan_IsFiniteFloat(ty) ||
+        !MikuPan_IsFiniteFloat(otx) ||
+        !MikuPan_IsFiniteFloat(oty))
     {
         mvx = 0.0f;
         mvy = 0.0f;
@@ -3553,18 +3778,18 @@ void SetMAGATOKI2()
         // floats are promoted do doubles due to SetEffects being a vararg function
         if (plyr_wrk.mode != 0x1)
         {
-            SetEffects(EF_BLUR_N, 1, &alpr, 1015, 1800, 320.0f, 112.0f);
-            SetEffects(EF_DEFORM, 1, 2, 12);
-            SetEffects(EF_NCONTRAST, 1, 70, 70);
-            SetEffects(EF_DITHER, 1, 2, 24.0f, 8.0f, 106 ,101);
-            SetEffects(EF_FADEFRAME, 1, 30, 0x80000);
+            SetBlurEffect(EF_BLUR_N, 1, &alpr, 1015, 1800, 320.0f, 112.0f);
+            SetDeformEffect(1, 2, 12);
+            SetContrastEffect(EF_NCONTRAST, 1, 70, 70);
+            SetDitherEffect(1, 2, 24.0f, 8.0f, 106, 101);
+            SetFadeFrameEffect(1, 30, 0x80000);
         }
         else
         {
-            SetEffects(EF_DEFORM, 1, 2, 12);
-            SetEffects(EF_NCONTRAST, 1, 70, 70);
-            SetEffects(EF_DITHER, 1, 2, 24.0f, 8.0f, 106, 101);
-            SetEffects(EF_FADEFRAME, 1, 30, 0x80000);
+            SetDeformEffect(1, 2, 12);
+            SetContrastEffect(EF_NCONTRAST, 1, 70, 70);
+            SetDitherEffect(1, 2, 24.0f, 8.0f, 106, 101);
+            SetFadeFrameEffect(1, 30, 0x80000);
         }
     }
 }
@@ -4368,8 +4593,6 @@ void SubGameOver(/* 0x11b60(sp) */ u_char alp, /* f20 58 */ float rate)
         vt[i][2] = 0.0f; // Line 5130
         vt[i][3] = 1.0f; // Line 5131
         
-        if (wfh) {} // HACK: fixes a stack disalignment
-        
         tx[i] = (int)(((f1 - f3)        + 320.0f) * 16.0f); // Line 5133
         ty[i] = (int)(((f2 - f4) * 0.5f + 112.0f) * 16.0f); // Line 5134
         
@@ -4607,7 +4830,7 @@ int SetGameOver()
 	/* s1 17 */ int alp3;
 	/* s5 21 */ int num;
 	/* f21 59 */ float scl;
-    int type;
+    int type = 0;
     // int ret;
 
     sec5 = 30;
@@ -4938,12 +5161,12 @@ int SetExFade1()
     break;
     }
     
-    SetEffects(EF_DITHER, 1, 3, (float)dalp, (float)dspd, 0x80, 0x40);
-    SetEffects(EF_NEGA, 1, 0x21, 0xff, &nalp);
-    SetEffects(EF_FADEFRAME, 1, msbtset.ff.alp, 0x80000);
+    SetDitherEffect(1, 3, (float)dalp, (float)dspd, 0x80, 0x40);
+    SetNegaEffect(1, 0x21, 0xff, &nalp);
+    SetFadeFrameEffect(1, msbtset.ff.alp, 0x80000);
 
 #ifdef BUILD_EU_VERSION
-    SetEffects(EF_BLACKFILTER, 1, 0x24);
+    SetBlackFilterEffect(1, 0x24);
 #else
 #endif
     
@@ -5052,12 +5275,12 @@ int SetExFade2()
     
     if (ef_exfade2_flow1 < 6)
     {
-        SetEffects(EF_FADEFRAME, 1, 0x1e, 0x80000);
-        SetEffects(EF_BLUR_N, 1, &balp, 1000, 1800, 320.0f, 112.0f);
-        SetEffects(EF_DEFORM, 1, 2, dfrt);
-        SetEffects(EF_DITHER, 1, 2, (float)dalp, 8.0f, 0x40, 0x80);
+        SetFadeFrameEffect(1, 0x1e, 0x80000);
+        SetBlurEffect(EF_BLUR_N, 1, &balp, 1000, 1800, 320.0f, 112.0f);
+        SetDeformEffect(1, 2, dfrt);
+        SetDitherEffect(1, 2, (float)dalp, 8.0f, 0x40, 0x80);
         
-        SetEffects(EF_NCONTRAST, 1, ccol, calp);
+        SetContrastEffect(EF_NCONTRAST, 1, ccol, calp);
     }
     
     return ef_exfade2_flow1 == 6;

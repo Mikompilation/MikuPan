@@ -1,6 +1,6 @@
 #include "mikupan_utils.h"
 
-#include <math.h>
+#include <cmath>
 #include <stdlib.h>
 
 void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float *out,
@@ -388,4 +388,9 @@ float MikuPan_ClampFloat(float value, float min_value, float max_value)
     }
 
     return value;
+}
+
+bool MikuPan_IsFiniteFloat(float value)
+{
+    return std::isfinite(value);
 }

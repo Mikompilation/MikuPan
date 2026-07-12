@@ -3,6 +3,7 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlgpu3.h"
 #include "imgui_internal.h"
+#include "implot.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 
 static void MikuPan_RemapGamepadWindowingTrigger(void)
@@ -92,6 +93,16 @@ static void MikuPan_RemapGamepadWindowingTrigger(void)
 }
 
 extern "C" {
+
+void MikuPan_ImPlot_CreateContext(void)
+{
+    ImPlot::CreateContext();
+}
+
+void MikuPan_ImPlot_DestroyContext(void)
+{
+    ImPlot::DestroyContext();
+}
 
 void MikuPan_ImGui_ImplInit(SDL_Window* window)
 {

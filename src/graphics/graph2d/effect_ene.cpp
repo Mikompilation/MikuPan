@@ -3137,6 +3137,7 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
     if (flag == 1)
     {
         flow[eneno] = 0;
+        MikuPan_CaptureEnemyOutScreen(eneno);
         LocalCopyLtoB2(0, (sys_wrk.count + 1 & 1) * 0x8c0);
         LocalCopyLtoL((sys_wrk.count + 1 & 1) * 0x8c0, (sys_wrk.count & 1) * 0x8c0);
 
@@ -3190,6 +3191,7 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
         }
     break;
     case 2:
+        MikuPan_ClearEnemyOutScreenCapture(eneno);
         flow[eneno] = 3;
     case 3:
         return 0xff;
@@ -3500,12 +3502,6 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
 
         pbuf[bak].ui32[0] = ndpkt + DMAend - bak - 1;
 
-        /* MikuPan GL render: rebuild the deformable grid as NDC triangle lists.
-         * NOTE: the original samples a frozen GS capture of the sealed enemy at
-         * 0x1a40 / 0x8c0. That capture is not wired up in the GL port, so this
-         * falls back to the live screen-copy: the grid warps the current frame
-         * instead of a frozen snapshot, and the pass-2 blue tint is not applied
-         * by the refraction shader. Placeholder pending freeze-frame texture. */
         {
             static float grid_tex[256 * 6][12];
             static float grid_ovl[256 * 6][12];
@@ -3515,11 +3511,13 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
             int gy;
             int c;
             int outn;
+            int use_capture_uv;
 
             sceVu0MulMatrix(slm_ndc, *(sceVu0FMATRIX *)MikuPan_GetWorldClipView(), wlm);
             sceVu0RotTransPersNF(gndc, slm_ndc, vt, vnumw * vnumh, 0);
 
             outn = 0;
+            use_capture_uv = MikuPan_GetEnemyOutScreenCaptureTexture(eneno, NULL, NULL, NULL);
 
             /* The original is a tristrip pairing each vertex with the one a row
              * below (i, i+vnumw), restarted each row. Emit the equivalent quads
@@ -3541,9 +3539,10 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
                     for (c = 0; c < 6; c++)
                     {
                         int g = idx[c];
-
-                        float u = (float) tx2[g] / (16.0f * 1024.0f);
-                        float v = (float) ty2[g] / (16.0f * 256.0f);
+                        float u = use_capture_uv ?
+                            src_uv[g][0] : (float)tx2[g] / (16.0f * 1024.0f);
+                        float v = use_capture_uv ?
+                            src_uv[g][1] : (float)ty2[g] / (16.0f * 256.0f);
 
                         EneWriteTexturedNdcVertex(
                             grid_tex[outn], u, v, gndc[g],
@@ -3569,11 +3568,23 @@ int SetNewEneOut(int flag, u_char eneno, u_char type, float *bpos, float sc)
                     (sys_wrk.count + 1 & 1) * 0x8c0, 10, SCE_GS_PSMCT32, 10, 8,
                     0, SCE_GS_MODULATE, 0, SCE_GS_PSMCT32, 0, 0, 1);
 
-                MikuPan_RenderTexturedTriangles3DWithState(
-                    (sceGsTex0*)&deform_tex0, &grid_tex[0][0], outn, MIKUPAN_DEPTH_ALWAYS, MIKUPAN_GPU_BLEND_NORMAL);
+                if (!MikuPan_RenderEnemyOutScreenCaptureTriangles(
+                        eneno, &grid_tex[0][0], outn, MIKUPAN_DEPTH_ALWAYS,
+                        MIKUPAN_GPU_BLEND_NORMAL))
+                {
+                    MikuPan_RenderTexturedTriangles3DWithState(
+                        (sceGsTex0*)&deform_tex0, &grid_tex[0][0], outn,
+                        MIKUPAN_DEPTH_ALWAYS, MIKUPAN_GPU_BLEND_NORMAL);
+                }
 
-                MikuPan_RenderTexturedTriangles3DWithState(
-                    (sceGsTex0*)&overlay_tex0, &grid_ovl[0][0], outn, MIKUPAN_DEPTH_ALWAYS, MIKUPAN_GPU_BLEND_NORMAL);
+                if (!MikuPan_RenderEnemyOutScreenCaptureTriangles(
+                        eneno, &grid_ovl[0][0], outn, MIKUPAN_DEPTH_ALWAYS,
+                        MIKUPAN_GPU_BLEND_NORMAL))
+                {
+                    MikuPan_RenderTexturedTriangles3DWithState(
+                        (sceGsTex0*)&overlay_tex0, &grid_ovl[0][0], outn,
+                        MIKUPAN_DEPTH_ALWAYS, MIKUPAN_GPU_BLEND_NORMAL);
+                }
             }
         }
     }
@@ -4002,7 +4013,7 @@ void SetEneSeal(EFFECT_CONT *ec)
         ec->fw[0] = 1.0f;
         ec->fw[1] = 0.0f;
 
-        spr_fire = SetEffects(EF_TORCH, 2, 1, &bpos[eneno], &ec->fw[0], &ec->fw[1]);
+        spr_fire = SetTorchEffect(2, 1, &bpos[eneno], &ec->fw[0], &ec->fw[1]);
 
         eff_filament_off = inifl = 1;
 

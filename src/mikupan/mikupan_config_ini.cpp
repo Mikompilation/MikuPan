@@ -185,6 +185,11 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "shadow_soft_radius", mikupan_configuration.renderer.shadow_soft_radius);
     ApplyValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     ApplyValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    ApplyValue(ini, "renderer", "contrast", mikupan_configuration.renderer.contrast);
+    ApplyValue(ini, "renderer", "shadow_depth", mikupan_configuration.renderer.shadow_depth);
+    ApplyValue(ini, "renderer", "hdr_enabled", mikupan_configuration.renderer.hdr_enabled);
+    ApplyValue(ini, "renderer", "hdr_paper_white", mikupan_configuration.renderer.hdr_paper_white);
+    ApplyValue(ini, "renderer", "hdr_peak_luminance", mikupan_configuration.renderer.hdr_peak_luminance);
     ApplyValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     ApplyValue(ini, "renderer", "ssao_enabled", mikupan_configuration.renderer.ssao_enabled);
     ApplyValue(ini, "renderer", "ssao_strength", mikupan_configuration.renderer.ssao_strength);
@@ -198,6 +203,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                 mikupan_configuration.renderer.gpu_driver,
                 sizeof(mikupan_configuration.renderer.gpu_driver));
     ApplyValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);
+    ApplyValue(ini, "renderer", "finder_viewport_mask_mode",
+               mikupan_configuration.renderer.finder_viewport_mask_mode);
     ApplyValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     ApplyValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     ApplyValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
@@ -220,6 +227,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     ApplyValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);
     ApplyValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
+    ApplyValue(ini, "ui", "minimap_enabled",
+               mikupan_configuration.minimap_enabled);
     ApplyValue(ini, "ui", "title_room_background",
                mikupan_configuration.title_room_background);
     ApplyValue(ini, "ui", "title_dither",
@@ -258,6 +267,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.first_person_camera.stick_pitch_speed_deg);
     ApplyValue(ini, "input", "selected_gamepad_index",
                mikupan_configuration.input.selected_gamepad_index);
+    ApplyValue(ini, "input", "rumble_enabled",
+               mikupan_configuration.input.rumble_enabled);
     ApplyValue(ini, "input", "bindings_saved",
                mikupan_configuration.input.bindings_saved);
     for (int i = 0; i < 16; i++)
@@ -294,10 +305,18 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.input.action_profile_dpad_subjective_move);
     ApplyValue(ini, "input.action_profile", "stick_subjective_move",
                mikupan_configuration.input.action_profile_stick_subjective_move);
+    ApplyValue(ini, "input", "movement_style_override_enabled",
+               mikupan_configuration.input.movement_style_override_enabled);
     ApplyValue(ini, "input.action_profile", "finder_reverse_y",
                mikupan_configuration.input.action_profile_finder_reverse_y);
     ApplyValue(ini, "input.action_profile", "finder_swap_sticks",
                mikupan_configuration.input.action_profile_finder_swap_sticks);
+    ApplyValue(ini, "input", "finder_dpad_film_swap_enabled",
+               mikupan_configuration.input.finder_dpad_film_swap_enabled);
+    ApplyValue(ini, "input", "mirror_stone_hud_enabled",
+               mikupan_configuration.input.mirror_stone_hud_enabled);
+    ApplyValue(ini, "input", "improved_movement_collisions_enabled",
+               mikupan_configuration.input.improved_movement_collisions_enabled);
     ApplyValue(ini, "input", "finder_mouse_enabled",
                mikupan_configuration.input.finder_mouse_enabled);
     ApplyValue(ini, "input", "finder_mouse_sensitivity",
@@ -357,6 +376,11 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "shadow_soft_radius", mikupan_configuration.renderer.shadow_soft_radius);
     SetValue(ini, "renderer", "brightness", mikupan_configuration.renderer.brightness);
     SetValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
+    SetValue(ini, "renderer", "contrast", mikupan_configuration.renderer.contrast);
+    SetValue(ini, "renderer", "shadow_depth", mikupan_configuration.renderer.shadow_depth);
+    SetValue(ini, "renderer", "hdr_enabled", mikupan_configuration.renderer.hdr_enabled);
+    SetValue(ini, "renderer", "hdr_paper_white", mikupan_configuration.renderer.hdr_paper_white);
+    SetValue(ini, "renderer", "hdr_peak_luminance", mikupan_configuration.renderer.hdr_peak_luminance);
     SetValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     SetValue(ini, "renderer", "ssao_enabled", mikupan_configuration.renderer.ssao_enabled);
     SetValue(ini, "renderer", "ssao_strength", mikupan_configuration.renderer.ssao_strength);
@@ -369,6 +393,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;
     SetValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);
+    SetValue(ini, "renderer", "finder_viewport_mask_mode",
+             mikupan_configuration.renderer.finder_viewport_mask_mode);
     SetValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     SetValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     SetValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
@@ -391,6 +417,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     SetValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);
     SetValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
+    SetValue(ini, "ui", "minimap_enabled",
+             mikupan_configuration.minimap_enabled);
     SetValue(ini, "ui", "title_room_background",
              mikupan_configuration.title_room_background);
     SetValue(ini, "ui", "title_dither",
@@ -429,6 +457,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
              mikupan_configuration.first_person_camera.stick_pitch_speed_deg);
     SetValue(ini, "input", "selected_gamepad_index",
              mikupan_configuration.input.selected_gamepad_index);
+    SetValue(ini, "input", "rumble_enabled",
+             mikupan_configuration.input.rumble_enabled);
     SetValue(ini, "input", "bindings_saved",
              mikupan_configuration.input.bindings_saved);
     if (mikupan_configuration.input.bindings_saved)
@@ -467,10 +497,18 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
                  mikupan_configuration.input.action_profile_dpad_subjective_move);
         SetValue(ini, "input.action_profile", "stick_subjective_move",
                  mikupan_configuration.input.action_profile_stick_subjective_move);
+        SetValue(ini, "input", "movement_style_override_enabled",
+                 mikupan_configuration.input.movement_style_override_enabled);
         SetValue(ini, "input.action_profile", "finder_reverse_y",
                  mikupan_configuration.input.action_profile_finder_reverse_y);
         SetValue(ini, "input.action_profile", "finder_swap_sticks",
                  mikupan_configuration.input.action_profile_finder_swap_sticks);
+        SetValue(ini, "input", "finder_dpad_film_swap_enabled",
+                 mikupan_configuration.input.finder_dpad_film_swap_enabled);
+        SetValue(ini, "input", "mirror_stone_hud_enabled",
+                 mikupan_configuration.input.mirror_stone_hud_enabled);
+        SetValue(ini, "input", "improved_movement_collisions_enabled",
+                 mikupan_configuration.input.improved_movement_collisions_enabled);
         SetValue(ini, "input", "finder_mouse_enabled",
                  mikupan_configuration.input.finder_mouse_enabled);
         SetValue(ini, "input", "finder_mouse_sensitivity",

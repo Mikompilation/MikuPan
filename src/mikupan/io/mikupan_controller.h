@@ -69,6 +69,8 @@ void MikuPan_ControllerSetPreferredGamepadIndex(int index);
 int MikuPan_ControllerGetPreferredGamepadIndex(void);
 void MikuPan_ControllerDrawDeviceSelectorUi(void);
 SDL_Gamepad* MikuPan_GetController(void);
+int MikuPan_ControllerRumbleEnabled(void);
+void MikuPan_SetControllerRumbleEnabled(int enabled);
 int MikuPan_ControllerRumble(const unsigned char* data);
 void MikuPan_ControllerDrawRemapWindow(void);
 
@@ -86,6 +88,8 @@ int MikuPan_FinderMouseLookEnabled(void);
 void MikuPan_SetFinderMouseLookEnabled(int enabled);
 float MikuPan_FinderMouseSensitivity(void);
 void MikuPan_SetFinderMouseSensitivity(float sensitivity);
+int MikuPan_ImprovedMovementCollisionsEnabled(void);
+void MikuPan_SetImprovedMovementCollisionsEnabled(int enabled);
 
 
 #ifdef __cplusplus

@@ -89,6 +89,7 @@ extern FOR_YW2D yw2d;
 extern INGAME_MENU_WRK ig_menu_wrk;
 extern MENU_ITEM_WRK menu_item_wrk[200];
 
+void ItemUse(u_char item_no);
 void NewgameItemInit();
 void NewgameItemInit2();
 void MissionSelectItemInit();

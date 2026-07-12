@@ -23,6 +23,7 @@
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #include <enums.h>
+#include <mikupan/ui/mikupan_ui_debug.h>
 
 static int write_flg = 0;
 static int write_counter = 0;
@@ -113,6 +114,11 @@ void DrawBoundingBox(sceVu0FVECTOR *box)
     static char boxmesh[24] = {
         1, 0, 3, 2, 7, 5, 3, 1, 6, 7, 2, 3, 4, 6, 0, 2, 5, 4, 1, 0, 4, 5, 6, 7,
     };
+
+    if (!MikuPan_IsBoundingBoxRendering())
+    {
+        return;
+    }
 
     LoadSgProg(VUPROG_SG_PRESET0);
 

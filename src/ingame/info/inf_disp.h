@@ -161,6 +161,7 @@ extern char point_get_end;
 
 void InformationDispInit();
 void InformationDispMain();
+void InformationDispLateFinderMask();
 void InformationDispModeCtrl();
 void InformationDispWrkSet();
 void PlayerInformationDisp(short int pos_x, short int pos_y);

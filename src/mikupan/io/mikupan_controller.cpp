@@ -3,6 +3,8 @@
 #include "mikupan/mikupan_config.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/gameplay/mikupan_item_icon_hud.h"
+#include "main/glob.h"
 #include "os/key_cnf.h"
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_mouse.h>
@@ -25,6 +27,19 @@ static int remap_stick_mode = 0;
 
 SDL_Gamepad *mikupan_gamepad = NULL;
 static int mikupan_preferred_gamepad_index = MIKUPAN_CONTROLLER_AUTO_INDEX;
+static unsigned short mikupan_rumble_low = 0;
+static unsigned short mikupan_rumble_high = 0;
+
+static void MikuPan_ControllerStopRumble(void)
+{
+    if (mikupan_gamepad != NULL && (mikupan_rumble_low != 0 || mikupan_rumble_high != 0))
+    {
+        SDL_RumbleGamepad(mikupan_gamepad, 0, 0, 0);
+    }
+
+    mikupan_rumble_low = 0;
+    mikupan_rumble_high = 0;
+}
 
 /* Which device's bindings the mapping UI shows: 1 = keyboard & mouse, 0 = the
  * selected gamepad. -1 until first drawn, then defaulted from whether a gamepad
@@ -173,9 +188,13 @@ static void MikuPan_CloseCurrentGamepad(void)
 {
     if (mikupan_gamepad != NULL)
     {
+        SDL_RumbleGamepad(mikupan_gamepad, 0, 0, 0);
         SDL_CloseGamepad(mikupan_gamepad);
         mikupan_gamepad = NULL;
     }
+
+    mikupan_rumble_low = 0;
+    mikupan_rumble_high = 0;
 }
 
 void MikuPan_ControllerSetPreferredGamepadIndex(int index)
@@ -374,6 +393,9 @@ void MikuPan_ControllerResetBindings(void)
     }
     finder_mouse_enabled = 1;
     finder_mouse_sensitivity = 1.0f;
+    MikuPan_SetControllerRumbleEnabled(1);
+    MikuPan_SetFinderDpadFilmSwapEnabled(0);
+    MikuPan_SetMirrorStoneHudEnabled(0);
     MikuPan_ResetCustomActionProfile();
     MikuPan_SetCustomActionProfileEnabled(0);
 }
@@ -405,12 +427,20 @@ void MikuPan_ControllerStoreBindingsToConfig(void)
         MikuPan_CustomActionProfileUsesDpadSubjectiveMove();
     cfg->action_profile_stick_subjective_move =
         MikuPan_CustomActionProfileUsesStickSubjectiveMove();
+    cfg->movement_style_override_enabled =
+        MikuPan_MovementStyleOverrideEnabled();
     cfg->action_profile_finder_reverse_y =
         MikuPan_CustomActionProfileUsesFinderReverseY();
     cfg->action_profile_finder_swap_sticks =
         MikuPan_CustomActionProfileSwapsFinderSticks();
+    cfg->finder_dpad_film_swap_enabled =
+        MikuPan_FinderDpadFilmSwapEnabled();
+    cfg->mirror_stone_hud_enabled = MikuPan_MirrorStoneHudEnabled();
+    cfg->improved_movement_collisions_enabled =
+        MikuPan_ImprovedMovementCollisionsEnabled();
     cfg->finder_mouse_enabled = finder_mouse_enabled;
     cfg->finder_mouse_sensitivity = finder_mouse_sensitivity;
+    cfg->rumble_enabled = MikuPan_ControllerRumbleEnabled();
     for (int i = 0; i < MIKUPAN_ACTION_PROFILE_ACTION_COUNT; i++)
     {
         cfg->action_profile_normal[i] =
@@ -428,6 +458,7 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
 {
     const MikuPan_ConfigInput *cfg = &mikupan_configuration.input;
 
+    MikuPan_SetControllerRumbleEnabled(cfg->rumble_enabled);
     MikuPan_ResetCustomActionProfile();
     MikuPan_SetCustomActionProfileEnabled(0);
 
@@ -458,6 +489,9 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
         finder_mouse_enabled = cfg->finder_mouse_enabled ? 1 : 0;
         MikuPan_SetFinderMouseSensitivity(cfg->finder_mouse_sensitivity);
     }
+    MikuPan_SetFinderDpadFilmSwapEnabled(
+        cfg->finder_dpad_film_swap_enabled);
+    MikuPan_SetMirrorStoneHudEnabled(cfg->mirror_stone_hud_enabled);
     if (cfg->action_profile_saved)
     {
         if (cfg->action_profile_layout >= 2)
@@ -472,6 +506,8 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
             MikuPan_SetCustomActionProfileSubjectiveMove(
                 cfg->action_profile_subjective_move);
         }
+        MikuPan_SetMovementStyleOverrideEnabled(
+            cfg->movement_style_override_enabled);
         MikuPan_SetCustomActionProfileFinderReverseY(
             cfg->action_profile_finder_reverse_y);
         MikuPan_SetCustomActionProfileFinderSwapSticks(
@@ -492,6 +528,17 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
     }
     MikuPan_SetCustomActionProfileEnabled(
         cfg->action_profile_saved ? cfg->action_profile_enabled : 0);
+}
+
+
+int MikuPan_ImprovedMovementCollisionsEnabled(void)
+{
+    return mikupan_configuration.input.improved_movement_collisions_enabled;
+}
+
+void MikuPan_SetImprovedMovementCollisionsEnabled(int enabled)
+{
+    mikupan_configuration.input.improved_movement_collisions_enabled = enabled ? 1 : 0;
 }
 
 int MikuPan_ReadController(unsigned char *rdata)
@@ -598,58 +645,251 @@ int MikuPan_ReadController(unsigned char *rdata)
     return 1;
 }
 
+static const char *MikuPan_GamepadButtonFaceLabel(SDL_Gamepad *gamepad, SDL_GamepadButton button)
+{
+    if (gamepad == NULL)
+    {
+        return NULL;
+    }
+
+    switch (SDL_GetGamepadButtonLabel(gamepad, button))
+    {
+        case SDL_GAMEPAD_BUTTON_LABEL_A:
+            return "A";
+        case SDL_GAMEPAD_BUTTON_LABEL_B:
+            return "B";
+        case SDL_GAMEPAD_BUTTON_LABEL_X:
+            return "X";
+        case SDL_GAMEPAD_BUTTON_LABEL_Y:
+            return "Y";
+        case SDL_GAMEPAD_BUTTON_LABEL_CROSS:
+            return "Cross";
+        case SDL_GAMEPAD_BUTTON_LABEL_CIRCLE:
+            return "Circle";
+        case SDL_GAMEPAD_BUTTON_LABEL_SQUARE:
+            return "Square";
+        case SDL_GAMEPAD_BUTTON_LABEL_TRIANGLE:
+            return "Triangle";
+        default:
+            return NULL;
+    }
+}
+
+static int MikuPan_GamepadHasPlayStationLabels(SDL_Gamepad *gamepad)
+{
+    if (gamepad == NULL)
+    {
+        return 0;
+    }
+
+    SDL_GamepadButtonLabel south = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
+    SDL_GamepadButtonLabel east = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_EAST);
+    return south == SDL_GAMEPAD_BUTTON_LABEL_CROSS || east == SDL_GAMEPAD_BUTTON_LABEL_CIRCLE;
+}
+
+static int MikuPan_GamepadHasNintendoLabels(SDL_Gamepad *gamepad)
+{
+    if (gamepad == NULL)
+    {
+        return 0;
+    }
+
+    SDL_GamepadButtonLabel south = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
+    SDL_GamepadButtonLabel east = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_EAST);
+    SDL_GamepadButtonLabel west = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_WEST);
+    SDL_GamepadButtonLabel north = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_NORTH);
+    return south == SDL_GAMEPAD_BUTTON_LABEL_B && east == SDL_GAMEPAD_BUTTON_LABEL_A &&
+           west == SDL_GAMEPAD_BUTTON_LABEL_Y && north == SDL_GAMEPAD_BUTTON_LABEL_X;
+}
+
+static int MikuPan_GamepadHasXboxLabels(SDL_Gamepad *gamepad)
+{
+    if (gamepad == NULL)
+    {
+        return 0;
+    }
+
+    SDL_GamepadButtonLabel south = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
+    SDL_GamepadButtonLabel east = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_EAST);
+    SDL_GamepadButtonLabel west = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_WEST);
+    SDL_GamepadButtonLabel north = SDL_GetGamepadButtonLabel(gamepad, SDL_GAMEPAD_BUTTON_NORTH);
+    return south == SDL_GAMEPAD_BUTTON_LABEL_A && east == SDL_GAMEPAD_BUTTON_LABEL_B &&
+           west == SDL_GAMEPAD_BUTTON_LABEL_X && north == SDL_GAMEPAD_BUTTON_LABEL_Y;
+}
+
+static const char *MikuPan_GamepadShoulderLabel(SDL_Gamepad *gamepad, SDL_GamepadButton button)
+{
+    if (MikuPan_GamepadHasPlayStationLabels(gamepad))
+    {
+        if (button == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)
+            return "L1";
+        if (button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+            return "R1";
+    }
+
+    if (MikuPan_GamepadHasNintendoLabels(gamepad))
+    {
+        if (button == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)
+            return "L";
+        if (button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+            return "R";
+    }
+
+    if (MikuPan_GamepadHasXboxLabels(gamepad))
+    {
+        if (button == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)
+            return "LB";
+        if (button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
+            return "RB";
+    }
+
+    return NULL;
+}
+
+static const char *MikuPan_GamepadTriggerAxisLabel(SDL_Gamepad *gamepad, SDL_GamepadAxis axis)
+{
+    if (MikuPan_GamepadHasPlayStationLabels(gamepad))
+    {
+        if (axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
+            return "L2";
+        if (axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
+            return "R2";
+    }
+
+    if (MikuPan_GamepadHasNintendoLabels(gamepad))
+    {
+        if (axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
+            return "ZL";
+        if (axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
+            return "ZR";
+    }
+
+    if (MikuPan_GamepadHasXboxLabels(gamepad))
+    {
+        if (axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
+            return "LT";
+        if (axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
+            return "RT";
+    }
+
+    return NULL;
+}
+
+static const char *MikuPan_GamepadButtonFallbackLabel(SDL_GamepadButton button)
+{
+    switch (button)
+    {
+        case SDL_GAMEPAD_BUTTON_NORTH:
+            return "Y / Triangle";
+        case SDL_GAMEPAD_BUTTON_SOUTH:
+            return "A / Cross";
+        case SDL_GAMEPAD_BUTTON_WEST:
+            return "X / Square";
+        case SDL_GAMEPAD_BUTTON_EAST:
+            return "B / Circle";
+        case SDL_GAMEPAD_BUTTON_DPAD_UP:
+            return "DPad Up";
+        case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
+            return "DPad Down";
+        case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
+            return "DPad Left";
+        case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
+            return "DPad Right";
+        case SDL_GAMEPAD_BUTTON_LEFT_STICK:
+            return "Left Stick (L3)";
+        case SDL_GAMEPAD_BUTTON_RIGHT_STICK:
+            return "Right Stick (R3)";
+        case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:
+            return "L1 / LB";
+        case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER:
+            return "R1 / RB";
+        case SDL_GAMEPAD_BUTTON_START:
+            return "Start";
+        case SDL_GAMEPAD_BUTTON_BACK:
+            return "Select / Back";
+        case SDL_GAMEPAD_BUTTON_GUIDE:
+            return "Guide";
+        case SDL_GAMEPAD_BUTTON_MISC1:
+            return "Misc 1";
+        case SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1:
+            return "Right Paddle 1";
+        case SDL_GAMEPAD_BUTTON_LEFT_PADDLE1:
+            return "Left Paddle 1";
+        case SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2:
+            return "Right Paddle 2";
+        case SDL_GAMEPAD_BUTTON_LEFT_PADDLE2:
+            return "Left Paddle 2";
+        case SDL_GAMEPAD_BUTTON_TOUCHPAD:
+            return "Touchpad";
+        case SDL_GAMEPAD_BUTTON_MISC2:
+            return "Misc 2";
+        case SDL_GAMEPAD_BUTTON_MISC3:
+            return "Misc 3";
+        case SDL_GAMEPAD_BUTTON_MISC4:
+            return "Misc 4";
+        case SDL_GAMEPAD_BUTTON_MISC5:
+            return "Misc 5";
+        case SDL_GAMEPAD_BUTTON_MISC6:
+            return "Misc 6";
+        default:
+            break;
+    }
+
+    const char *name = SDL_GetGamepadStringForButton(button);
+    return (name != NULL && name[0] != '\0') ? name : "Unknown Button";
+}
+
 const char *MikuPan_ControllerBindingLabel(MikuPan_ControllerBindings binding)
 {
+    SDL_Gamepad *gamepad = mikupan_gamepad;
+
     if (binding.kind == MIKUPAN_CONTROLLER_BIND_BUTTON)
     {
-        switch (binding.code)
+        SDL_GamepadButton button = (SDL_GamepadButton) binding.code;
+        const char *face_label = MikuPan_GamepadButtonFaceLabel(gamepad, button);
+        if (face_label != NULL)
         {
-            case SDL_GAMEPAD_BUTTON_NORTH:
-                return "Y / Triangle";
-            case SDL_GAMEPAD_BUTTON_SOUTH:
-                return "A / Cross";
-            case SDL_GAMEPAD_BUTTON_WEST:
-                return "X / Square";
-            case SDL_GAMEPAD_BUTTON_EAST:
-                return "B / Circle";
-            case SDL_GAMEPAD_BUTTON_DPAD_UP:
-                return "DPad Up";
-            case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
-                return "DPad Down";
-            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
-                return "DPad Left";
-            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
-                return "DPad Right";
-            case SDL_GAMEPAD_BUTTON_LEFT_STICK:
-                return "Left Stick (L3)";
-            case SDL_GAMEPAD_BUTTON_RIGHT_STICK:
-                return "Right Stick (R3)";
-            case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:
-                return "L1 / LB";
-            case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER:
-                return "R1 / RB";
-            case SDL_GAMEPAD_BUTTON_START:
-                return "Start";
-            case SDL_GAMEPAD_BUTTON_BACK:
-                return "Select / Back";
-            case SDL_GAMEPAD_BUTTON_GUIDE:
-                return "Guide";
-            default:
-                return "Unknown Button";
+            return face_label;
         }
+
+        const char *shoulder_label = MikuPan_GamepadShoulderLabel(gamepad, button);
+        if (shoulder_label != NULL)
+        {
+            return shoulder_label;
+        }
+
+        return MikuPan_GamepadButtonFallbackLabel(button);
     }
 
     if (binding.kind == MIKUPAN_CONTROLLER_BIND_AXIS)
     {
-        switch (binding.code)
+        SDL_GamepadAxis axis = (SDL_GamepadAxis) binding.code;
+        const char *trigger_label = MikuPan_GamepadTriggerAxisLabel(gamepad, axis);
+        if (trigger_label != NULL)
+        {
+            return trigger_label;
+        }
+
+        switch (axis)
         {
             case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:
                 return "L2 / LT (axis)";
             case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
                 return "R2 / RT (axis)";
+            case SDL_GAMEPAD_AXIS_LEFTX:
+                return "Left Stick X";
+            case SDL_GAMEPAD_AXIS_LEFTY:
+                return "Left Stick Y";
+            case SDL_GAMEPAD_AXIS_RIGHTX:
+                return "Right Stick X";
+            case SDL_GAMEPAD_AXIS_RIGHTY:
+                return "Right Stick Y";
             default:
-                return "Unknown Axis";
+                break;
         }
+
+        const char *name = SDL_GetGamepadStringForAxis(axis);
+        return (name != NULL && name[0] != '\0') ? name : "Unknown Axis";
     }
 
     return "<unmapped>";
@@ -688,14 +928,60 @@ SDL_Gamepad *MikuPan_GetController(void)
     return mikupan_gamepad;
 }
 
+int MikuPan_ControllerRumbleEnabled(void)
+{
+    return mikupan_configuration.input.rumble_enabled ? 1 : 0;
+}
+
+void MikuPan_SetControllerRumbleEnabled(int enabled)
+{
+    mikupan_configuration.input.rumble_enabled = enabled ? 1 : 0;
+    opt_wrk.pad_move = mikupan_configuration.input.rumble_enabled ? 0 : 1;
+
+    if (!mikupan_configuration.input.rumble_enabled)
+    {
+        MikuPan_ControllerStopRumble();
+    }
+}
+
 int MikuPan_ControllerRumble(const unsigned char *data)
 {
-    if (mikupan_gamepad == NULL)
+    if (data == NULL)
     {
         return 0;
     }
 
-    return SDL_RumbleGamepad(mikupan_gamepad, data[0] * 32896, data[1] * 257, 100);
+    if (!MikuPan_ControllerRumbleEnabled())
+    {
+        MikuPan_ControllerStopRumble();
+        return 1;
+    }
+
+    if (mikupan_gamepad == NULL)
+    {
+        MikuPan_OpenController();
+        if (mikupan_gamepad == NULL)
+        {
+            return 0;
+        }
+    }
+
+    unsigned short low = (unsigned short)((unsigned int)data[1] * 257u);
+    unsigned short high = data[0] != 0 ? 0xffffu : 0u;
+
+    if (low == 0 && high == 0 && mikupan_rumble_low == 0 && mikupan_rumble_high == 0)
+    {
+        return 1;
+    }
+
+    if (!SDL_RumbleGamepad(mikupan_gamepad, low, high, 120))
+    {
+        return 0;
+    }
+
+    mikupan_rumble_low = low;
+    mikupan_rumble_high = high;
+    return 1;
 }
 
 int MikuPan_FinderMouseLookEnabled(void)
@@ -1491,6 +1777,22 @@ static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
     }
     igTextDisabled("On (default): left stick / WASD move, right stick / mouse "
                    "aim. Off: classic (left stick aims, right stick moves).");
+
+    bool finder_film_swap = MikuPan_FinderDpadFilmSwapEnabled() != 0;
+    if (igCheckbox("D-Pad quick film swap", &finder_film_swap))
+    {
+        MikuPan_SetFinderDpadFilmSwapEnabled(finder_film_swap ? 1 : 0);
+    }
+    igTextDisabled("Use D-Pad Up / Down in finder mode to switch film.\n"
+                   "D-Pad finder aim is disabled while enabled.");
+
+    bool mirror_stone_hud = MikuPan_MirrorStoneHudEnabled() != 0;
+    if (igCheckbox("Mirror Stone HUD icon", &mirror_stone_hud))
+    {
+        MikuPan_SetMirrorStoneHudEnabled(mirror_stone_hud ? 1 : 0);
+    }
+    igTextDisabled("Shows a small Mirror Stone box next to the filament. It "
+                   "stays visible even when you do not have one.");
 
     if (igButton("Reset custom profile", ImVec2{0, 0}))
     {

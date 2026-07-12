@@ -48,6 +48,7 @@
 #include "main/glob.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/gameplay/mikupan_title_scene.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/ui/mikupan_ui_cheats.h"
 #include "os/system.h"
@@ -1424,6 +1425,7 @@ static void SceneSortRoomBackgroundUnit()
 static void Gra3dDrawMirrorRooms(SgCAMERA *render_camera, void (*render_func)())
 {
     int disp_room;
+    int draw_source_token;
 
     if (render_camera == NULL || render_func == NULL)
     {
@@ -1447,7 +1449,9 @@ static void Gra3dDrawMirrorRooms(SgCAMERA *render_camera, void (*render_func)())
         if (disp_room != R008_KAIROU || !(plyr_wrk.move_box.pos[1] > -300.0f))
         {
             mir_room_workno = 0;
+            draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_MIRROR_PASS, disp_room, 0);
             MirrorDraw(render_camera, room_addr_tbl[disp_room].near_sgd, render_func);
+            MikuPan_DrawSourcePop(draw_source_token);
 
             map_wrk.mirror_flg = 1;
 
@@ -1467,7 +1471,9 @@ static void Gra3dDrawMirrorRooms(SgCAMERA *render_camera, void (*render_func)())
         disp3d_mirror != 0
     )
     {
+        draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_MIRROR_PASS, disp_room, 1);
         MirrorDraw(render_camera, room_addr_tbl[disp_room].near_sgd, render_func);
+        MikuPan_DrawSourcePop(draw_source_token);
 
         map_wrk.mirror_flg = 1;
 
@@ -1576,6 +1582,7 @@ void DrawOneRoom(int no)
     void *mdl_addr;
     SgCOORDUNIT *cp;
     HeaderSection *hs;
+    int draw_source_token;
 
     disp_room = room_wrk.disp_no[no];
     mdl_addr = room_addr_tbl[disp_room].near_sgd;
@@ -1602,15 +1609,19 @@ void DrawOneRoom(int no)
     Vu0CopyVector(room_wrk.mylight[no].ambient, room_ambient_light);
 
     SetMyLightRoom(&room_wrk.mylight[no], GetCurrentCameraZDir());
+    draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_ROOM_NEAR, disp_room, no);
     SgSortUnitP(mdl_addr, -1);
     AppendSearchModel(mdl_addr, disp_room);
+    MikuPan_DrawSourcePop(draw_source_token);
 
     mdl_addr = room_addr_tbl[disp_room].ss_sgd;
 
     if (mdl_addr != NULL)
     {
+        draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_ROOM_SS, disp_room, no);
         SgSortUnitP(mdl_addr, -1);
         AppendSearchModel(mdl_addr, disp_room);
+        MikuPan_DrawSourcePop(draw_source_token);
     }
 }
 
@@ -1757,6 +1768,7 @@ void DrawRoomShadow()
 {
     int i;
     int disp_room;
+    int draw_source_token;
     SgCOORDUNIT *cp;
     SgCOORDUNIT oldcoord;
     ShadowHandle shandle;
@@ -1807,6 +1819,7 @@ void DrawRoomShadow()
     shandle.search_num = search_num;
     shandle.camera = nowcamera;
 
+    draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_ROOM_SHADOW, disp_room, 0);
     SgSortUnitP(hs, 0);
 
     pprim = (u_int **)&hs->primitives;
@@ -1831,6 +1844,7 @@ void DrawRoomShadow()
     nowcamera = shandle.camera;
 
     SetEnvironment();
+    MikuPan_DrawSourcePop(draw_source_token);
 }
 
 void DrawFurniture(int disp_room)
@@ -1844,6 +1858,7 @@ void DrawFurniture(int disp_room)
     float grot;
     static int old_frame_counter;
     u_char acs_flg;
+    int draw_source_token;
 
     if (disp3d_furn == 0)
     {
@@ -1884,6 +1899,7 @@ void DrawFurniture(int disp_room)
         {
             HeaderSection *hs;
 
+            draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_FURNITURE, disp_chodo, furn_wrk[j].id);
             hs = (HeaderSection *)tmpModelp;
             cp = GetCoordP(hs);
 
@@ -2022,6 +2038,7 @@ void DrawFurniture(int disp_room)
                     }
                 }
             }
+            MikuPan_DrawSourcePop(draw_source_token);
         }
     }
 
@@ -2187,6 +2204,7 @@ static void Gra3dReadRoomLightsToWork(int room_work_no, int disp_room)
         16);
 
     Gra3dCopyReadLightsToRoomWork(room_work_no);
+    MikuPan_TitleSceneAmendRoomLightPack(&room_wrk.mylight[room_work_no]);
 }
 
 static void Gra3dSetRoomBackgroundFog(int disp_room)
@@ -2220,6 +2238,7 @@ static void Gra3dDrawRoomBackground(SgCAMERA *render_camera, int flags, const sc
     int old_haze_pond_sw;
     int force_haze_pond;
     int i;
+    int draw_source_token;
 
     if (render_camera == NULL)
     {
@@ -2236,6 +2255,8 @@ static void Gra3dDrawRoomBackground(SgCAMERA *render_camera, int flags, const sc
     {
         return;
     }
+
+    draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_ROOM_BACKGROUND, disp_room, flags);
 
     old_disp3d_room = disp3d_room;
     old_disp3d_room_shadow = disp3d_room_shadow;
@@ -2360,6 +2381,8 @@ static void Gra3dDrawRoomBackground(SgCAMERA *render_camera, int flags, const sc
     {
         nowcamera = NULL;
     }
+
+    MikuPan_DrawSourcePop(draw_source_token);
 }
 
 void gra3dDrawRoomBackground(SgCAMERA *render_camera, int flags)
@@ -2377,6 +2400,7 @@ void gra3dDraw()
     int i;
     int j;
     int disp_room;
+    int draw_source_token;
     static float arad = 0.0f;
     static float adeg = 0.1f;
 
@@ -2389,6 +2413,8 @@ void gra3dDraw()
     {
         return;
     }
+
+    draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_MAIN_SCENE, room_wrk.disp_no[0], 0);
 
     if (dbg_wrk.disp_3d_textrans != 0)
     {
@@ -2431,7 +2457,9 @@ void gra3dDraw()
 
     if (disp3d_2ddraw != 0)
     {
+        int effect_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_EFFECT_2D, GRA2D_CALL_IG0, 0);
         gra2dDraw(GRA2D_CALL_IG0);
+        MikuPan_DrawSourcePop(effect_source_token);
     }
 
     PlyrAcsAlphaCtrl();
@@ -2442,7 +2470,9 @@ void gra3dDraw()
 
     if (disp3d_2ddraw != 0)
     {
+        int effect_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_EFFECT_2D, GRA2D_CALL_IG1, 0);
         gra2dDraw(GRA2D_CALL_IG1);
+        MikuPan_DrawSourcePop(effect_source_token);
     }
 
     SetEnvironment();
@@ -2460,6 +2490,7 @@ void gra3dDraw()
     CheckDMATrans();
     MikuPan_RenderMapEventHitboxes();
     MikuPan_RenderCameraDebug();
+    MikuPan_DrawSourcePop(draw_source_token);
 }
 
 int CheckModelBoundingBox(sceVu0FMATRIX lwmtx, sceVu0FVECTOR *bbox)
@@ -2871,8 +2902,13 @@ void DrawGirl(int in_mirror)
     sceVu0FVECTOR tmpvec;
     sceVu0FVECTOR tmpvec2;
     int hide_player_model;
+    int perf_drawgirl_rendered = 0;
+    int perf_drawgirl_tofu = 0;
+    int draw_source_token;
+    int shadow_source_token;
 
     dsearch_num = 0;
+    draw_source_token = MikuPan_DrawSourcePush(in_mirror != 0 ? MIKUPAN_DRAW_SOURCE_DRAWGIRL_MIRROR : MIKUPAN_DRAW_SOURCE_DRAWGIRL_NORMAL, 0, 0);
     hide_player_model =
         ((plyr_wrk.sta & 0x10) != 0) ||
         MikuPan_FirstPersonShouldHidePlayerModel();
@@ -2907,12 +2943,15 @@ void DrawGirl(int in_mirror)
 
         if (disp3d_girl == 0)
         {
+            MikuPan_PerfRecordDrawGirl(in_mirror, 0, hide_player_model, 0);
+            MikuPan_DrawSourcePop(draw_source_token);
             return;
         }
 
         ManTexflush();
         if (MikuPan_IsTofuModeEnabled())
         {
+            perf_drawgirl_tofu = 1;
             DrawPlayerTofu(cp);
         }
         else
@@ -2920,6 +2959,7 @@ void DrawGirl(int in_mirror)
             SgSortUnitKind(hs, -1);
             DrawGirlSubObj(ani_mdl[0].mpk_p, 0x7f);
         }
+        perf_drawgirl_rendered = 1;
 
         if (in_mirror != 0
             || (plyr_wrk.mode != 1 && !MikuPan_FirstPersonActive()))
@@ -2930,9 +2970,12 @@ void DrawGirl(int in_mirror)
         DispPlyrAcs(pgirlbase, pgirlacs[1], &plyracs_ctrl[1], 5);
     }
 
+    MikuPan_PerfRecordDrawGirl(in_mirror, perf_drawgirl_rendered, hide_player_model, perf_drawgirl_tofu);
+
     if (disp3d_girl == 0 || disp3d_girl_shadow == 0 || hide_player_model || in_mirror != 0
         || (plyr_wrk.sta & 0x1 && map_wrk.mirror_flg != 0x0))
     {
+        MikuPan_DrawSourcePop(draw_source_token);
         return;
     }
 
@@ -3005,12 +3048,15 @@ void DrawGirl(int in_mirror)
     shandle.color[3] = 0x40;
     shandle.camera = nowcamera;
 
+    shadow_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_PLAYER_SHADOW, 0, 0);
     DrawShadow(&shandle, SetEnvironment);
+    MikuPan_DrawSourcePop(shadow_source_token);
 
     nowcamera = shandle.camera;
 
     SetEnvironment();
     SetShadowAssignGroup(-1);
+    MikuPan_DrawSourcePop(draw_source_token);
 }
 
 int DrawEnemy(int no)
@@ -3032,6 +3078,7 @@ int DrawEnemy(int no)
     sceVu0FVECTOR vec;
     sceVu0FMATRIX m;
     HeaderSection *hs;
+    int draw_source_token;
 
     j = no;
 
@@ -3071,6 +3118,8 @@ int DrawEnemy(int no)
     {
         return 0;
     }
+
+    draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_ENEMY, no, mdl_no);
 
     mdat = &manmdl_dat[mdl_no];
 
@@ -3175,6 +3224,7 @@ int DrawEnemy(int no)
 
     old_frame_counter[j] = disp_frame_counter;
 
+    MikuPan_DrawSourcePop(draw_source_token);
     return 1;
 }
 
@@ -3185,6 +3235,7 @@ int DrawFlyMove(int work_no)
     u_int no;
     float grot;
     HeaderSection *hs;
+    int draw_source_token;
 
 
     if (fly_display[work_no] == 0)
@@ -3199,6 +3250,8 @@ int DrawFlyMove(int work_no)
     {
         return 0;
     }
+
+    draw_source_token = MikuPan_DrawSourcePush(MIKUPAN_DRAW_SOURCE_FLY_MOVE, work_no, no);
 
     hs = (HeaderSection *)tmpModelp;
     cp = GetCoordP(hs);
@@ -3222,5 +3275,6 @@ int DrawFlyMove(int work_no)
     SetMyLightObj(&enemy_light, &ene_wrk[fly_wrk[work_no].ene].mylight, GetCurrentCameraZDir(), ene_wrk[fly_wrk[work_no].ene].mpos.p0);
     SgSortUnitKind(tmpModelp, -1);
 
+    MikuPan_DrawSourcePop(draw_source_token);
     return 1;
 }

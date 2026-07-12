@@ -12,6 +12,7 @@
 #include "main/glob.h"
 #include "main/gamemain.h"
 #include "outgame/title.h"
+#include "mikupan/gameplay/mikupan_title_scene.h"
 #include "mc/mc_main.h"
 #include "outgame/btl_mode/btl_mode.h"
 #include "outgame/btl_mode/btl_dat.h"
@@ -295,16 +296,40 @@ void ModeSlctCtrl(u_char mode)
     break;
     }
     
-    if (dsp_ms.now_mode != 8 && dsp_ms.now_mode != 9 && dsp_ms.now_mode != 10 && cmn_tex_load != 0)
     {
-        ModeSlctDspBak(dsp_ms.bak_alp, mode);
-        ModeSlctDspFlm(dsp_ms.flm_lng, dsp_ms.flm_alp, mode);
-        ModeSlctDspChr(dsp_ms.chr_alp, mode);
-        if (dsp_ms.now_mode != 3)
+        static int calibration_preview_active = 0;
+        int calibration_open =
+            (dsp_ms.now_mode == 3 && MikuPan_RmlOptionsIsCalibrationOpen());
+
+        if (calibration_open != 0)
         {
-            ModeSlctDspWin(dsp_ms.win_alp);
+            if (calibration_preview_active == 0)
+            {
+                MikuPan_TitleCalibrationPreviewOpen();
+            }
+
+            calibration_preview_active = 1;
+            MikuPan_TitleCalibrationPreviewDraw();
         }
-        ModeSlctDspMsg(dsp_ms.win_alp, mode);
+        else
+        {
+            calibration_preview_active = 0;
+
+            if (dsp_ms.now_mode != 8
+                && dsp_ms.now_mode != 9
+                && dsp_ms.now_mode != 10
+                && cmn_tex_load != 0)
+            {
+                ModeSlctDspBak(dsp_ms.bak_alp, mode);
+                ModeSlctDspFlm(dsp_ms.flm_lng, dsp_ms.flm_alp, mode);
+                ModeSlctDspChr(dsp_ms.chr_alp, mode);
+                if (dsp_ms.now_mode != 3)
+                {
+                    ModeSlctDspWin(dsp_ms.win_alp);
+                }
+                ModeSlctDspMsg(dsp_ms.win_alp, mode);
+            }
+        }
     }
 }
 

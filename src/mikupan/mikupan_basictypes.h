@@ -89,6 +89,11 @@ typedef struct
     float shadow_soft_radius;
     float brightness;
     float gamma;
+    float contrast;
+    float shadow_depth;
+    int hdr_enabled;
+    float hdr_paper_white;
+    float hdr_peak_luminance;
     int dither_mode; /* 0=native, 1=soft */
     int ssao_enabled;
     float ssao_strength;
@@ -103,6 +108,7 @@ typedef struct
      * applies on the next launch. */
     char gpu_driver[32];
     int gpu_debug;
+    int finder_viewport_mask_mode; /* MikuPan_FinderViewportMaskMode */
 } MikuPan_ConfigRenderer;
 
 /* Apply a window display mode to the SDL window.
@@ -124,6 +130,11 @@ enum MikuPan_RenderResolutionMode
     MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE = 2,
 };
 
+enum MikuPan_FinderViewportMaskMode
+{
+    MIKUPAN_FINDER_VIEWPORT_MASK_BLACK = 0,
+    MIKUPAN_FINDER_VIEWPORT_MASK_BLUR = 1,
+};
 
 typedef struct
 {
@@ -155,6 +166,7 @@ typedef struct
 typedef struct
 {
     int selected_gamepad_index;
+    int rumble_enabled;
 
     /* Saved controller / keyboard bindings. Sizes mirror
      * MIKUPAN_CONTROLLER_LOGICAL_COUNT (16) and MIKUPAN_STICK_COUNT (4) from
@@ -177,8 +189,12 @@ typedef struct
     int action_profile_subjective_move;
     int action_profile_dpad_subjective_move;
     int action_profile_stick_subjective_move;
+    int movement_style_override_enabled;
     int action_profile_finder_reverse_y;
     int action_profile_finder_swap_sticks;
+    int finder_dpad_film_swap_enabled;
+    int mirror_stone_hud_enabled;
+    int improved_movement_collisions_enabled;
     int action_profile_normal[16];
     int action_profile_finder[16];
 
@@ -221,6 +237,7 @@ typedef struct
     int selected_font;
     float font_scale;
     int show_fps;
+    int minimap_enabled;
     int title_room_background;
     int title_dither;
     MikuPan_ConfigThirdPersonCamera third_person_camera;

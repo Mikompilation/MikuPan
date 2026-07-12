@@ -58,11 +58,19 @@ void MikuPanSkin(VSInput input, out float4 aPos, out float4 aNormal)
     float3 p1 = MikuPanSkinPos(b1, input.aBonePos1.xyz);
     aPos = float4(p0 * w0 + p1 * w1, 1.0);
 
+    float normalPackFloat = input.aBoneNorm1.w;
+    bool weightedNormal = normalPackFloat < 0.0;
+    float normalPackDecoded = weightedNormal ? (-normalPackFloat - 1.0) : normalPackFloat;
+    uint normalPacked = (uint)(normalPackDecoded + 0.5);
+    uint nb0 = normalPacked & 0xFFu;
+    uint nb1 = (normalPacked >> 8u) & 0xFFu;
+
+    float nw0 = weightedNormal ? input.aBoneNorm0.w : w0;
     float nw1 = 1.0 - input.aBoneNorm0.w;
-    float3 n0 = MikuPanSkinNrm(b0, input.aBoneNorm0.xyz);
-    float3 n1 = MikuPanSkinNrm(b1, input.aBoneNorm1.xyz);
-    float normScale = uBonePalette[b0 * 4u + 3u].w;
-    aNormal = float4((n0 * w0 + n1 * nw1) * normScale, 1.0);
+    float3 n0 = MikuPanSkinNrm(nb0, input.aBoneNorm0.xyz);
+    float3 n1 = MikuPanSkinNrm(nb1, input.aBoneNorm1.xyz);
+    float normScale = uBonePalette[nb0 * 4u + 3u].w;
+    aNormal = float4((n0 * nw0 + n1 * nw1) * normScale, 1.0);
 }
 
 VSOutput main(VSInput input)

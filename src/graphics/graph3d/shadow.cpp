@@ -363,6 +363,7 @@ void CalcVertexBufferShadow(u_int *prim)
 
 u_int *SetVUVNDataShadowModel(u_int *prim)
 {
+    MikuPan_ClearSkinMode();
     int i;
     VUVN_PRIM *vh;
     sceVu0FVECTOR *vp;

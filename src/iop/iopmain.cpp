@@ -18,12 +18,12 @@ IOP_STAT iop_stat;
 IOP_MASTER_VOL iop_mv;
 IOP_SYS_CTRL iop_sys_ctrl;
 
-static int IopMainLoop();
+static void IopMainLoop();
 void* IopDrvFunc(unsigned int command, void* data, int size);
 static void IopInitDevice();
 static int IopInitMain();
 static int IopSetTimer();
-static int IopMain();
+static void IopMain();
 static u_int IopIntrFunc(IOP_SYS_CTRL* iscp);
 
 int start(int argc, char** argv)
@@ -50,7 +50,7 @@ int start(int argc, char** argv)
     }
 }
 
-static int IopMainLoop()
+static void IopMainLoop()
 {
     sceSifQueueData qd;
     sceSifServeData sd;
@@ -63,8 +63,6 @@ static int IopMainLoop()
     sceSifSetRpcQueue(&qd, GetThreadId());
     sceSifRegisterRpc(&sd, 0x19740512, IopDrvFunc, &iop_sys_ctrl.get_cmd, 0, 0, &qd);
     sceSifRpcLoop(&qd);
-
-    return 0;
 }
 
 void* IopDrvFunc(unsigned int command, void* data, int size)
@@ -187,7 +185,7 @@ static void IopStereoChange(IOP_COMMAND* icp)
     IaSetSteMono();
 }
 
-static int IopMain()
+static void IopMain()
 {
     while (!MikuPan_IopHostShouldShutdown()) {
         if (SleepThread() < 0 || MikuPan_IopHostShouldShutdown()) {
@@ -198,8 +196,6 @@ static int IopMain()
         IAdpcmMain2();
         VoiceRun();
     }
-
-    return 0;
 }
 
 void IopShutDown()

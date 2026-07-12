@@ -175,15 +175,23 @@ void MikuPan_EndLate2DOverlayQueue(void);
 void MikuPan_FlushLate2DOverlayQueue(void);
 void MikuPan_RenderLine(float x1, float y1, float x2, float y2, u_char r, u_char g, u_char b, u_char a);
 void MikuPan_RenderLineLoop3D(const sceVu0FVECTOR* vertices, int count, u_char r, u_char g, u_char b, u_char a);
+void MikuPan_RenderWorldUntexturedTriangles3D(const sceVu0FVECTOR* vertices, int count, u_char r, u_char g, u_char b, u_char a, int depth_mode, MikuPan_GPUBlendMode blend_mode);
 void MikuPan_RenderBoundingBox(sceVu0FVECTOR* vertices);
 void MikuPan_RenderCameraDebug(void);
 void MikuPan_RenderSprite(MikuPan_Rect src, MikuPan_Rect dst, u_char r, u_char g, u_char b, u_char a, MikuPan_TextureInfo* texture_info);
+int MikuPan_CapturePauseScreen(u_int addr);
+int MikuPan_RenderPauseScreen(u_int addr, u_char r, u_char g, u_char b, u_char a);
+int MikuPan_GetPauseScreenCaptureTexture(u_int addr, unsigned int *texture_id, int *width, int *height);
+void MikuPan_ClearPauseScreenCapture(u_int addr);
 void MikuPan_UpdatePhotoPreviewTextureRGBA(int width, int height,
                                            const unsigned char *rgba);
 void MikuPan_UpdatePhotoBasePreviewTextureRGBA(int width, int height,
                                                const unsigned char *rgba);
 void MikuPan_UpdatePhotoNegativeSourceTextureRGBA(int width, int height,
                                                   const unsigned char *rgba);
+void MikuPan_SetPhotoNegativeSourceTextureReference(unsigned int texture_id,
+                                                    int width, int height);
+void MikuPan_ClearPhotoNegativeSourceTextureReference(void);
 void MikuPan_QueuePhotoPreviewTexture(int x, int y, int w, int h,
                                       u_char alpha);
 void MikuPan_SetPhotoPreviewOverlayActiveForFrame(int x, int y, int w, int h,
@@ -224,6 +232,10 @@ void MikuPan_RenderSprite2DDepthStateFiltered(sceGsTex0 *tex, float *buffer,
                                              int depth_test, int depth_write,
                                              unsigned int depth_func,
                                              int nearest_sampler);
+void MikuPan_RenderSpriteTextureId2DDepthStateFiltered(
+    unsigned int texture_id, int texture_width, int texture_height,
+    float *buffer, int depth_test, int depth_write, unsigned int depth_func,
+    int nearest_sampler);
 void MikuPan_RenderSprite2DGSAlpha(sceGsTex0 *tex, float *buffer,
                                    unsigned long gs_alpha);
 void MikuPan_RenderSprite2DFilteredGSAlpha(sceGsTex0 *tex, float *buffer,
@@ -258,6 +270,19 @@ void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex,
                                       int vertex_count,
                                       int depth_mode,
                                       MikuPan_GPUBlendMode blend_mode);
+void MikuPan_RenderScreenCopyTriangles3DResolve(sceGsTex0 *tex,
+                                                float *buffer,
+                                                int vertex_count,
+                                                int depth_mode,
+                                                MikuPan_GPUBlendMode blend_mode);
+int MikuPan_RenderPauseScreenDeformTriangles(u_int addr, float *buffer,
+                                             int vertex_count, int depth_mode,
+                                             MikuPan_GPUBlendMode blend_mode);
+int MikuPan_RenderEnemyOutScreenCaptureTriangles(int slot,
+                                                 float *buffer,
+                                                 int vertex_count,
+                                                 int depth_mode,
+                                                 MikuPan_GPUBlendMode blend_mode);
 void MikuPan_RenderScreenCopyTriangles3DGSAlpha(sceGsTex0 *tex,
                                                 float *buffer,
                                                 int vertex_count,
@@ -283,6 +308,11 @@ void MikuPan_RenderScreenCopyTriangles3DFeedbackModulate(sceGsTex0 *tex,
                                                          int vertex_count,
                                                          int depth_mode,
                                                          MikuPan_GPUBlendMode blend_mode);
+void MikuPan_RenderFinderViewportBlurTriangles3D(sceGsTex0 *tex,
+                                                 float *buffer,
+                                                 int vertex_count,
+                                                 int depth_mode,
+                                                 MikuPan_GPUBlendMode blend_mode);
 void MikuPan_RenderScreenCopyTriangles3DSTQ(sceGsTex0 *tex, float *buffer, int vertex_count, int depth_mode);
 const MikuPan_TextureInfo *MikuPan_GetScreenCopyTextureInfo(void);
 const MikuPan_ScreenCopyDebugInfo *MikuPan_GetScreenCopyDebugInfo(void);
@@ -328,6 +358,7 @@ void MikuPan_SetMaterial(const sceVu0FVECTOR* ambient,
 void MikuPan_SetFontTexture(int fnt);
 void MikuPan_DeleteTexture(MikuPan_TextureInfo* texture_info);
 MikuPan_TextureInfo* MikuPan_CreateGLTexture(sceGsTex0 *tex0);
+MikuPan_TextureInfo* MikuPan_CreateStandaloneGLTexture(sceGsTex0 *tex0);
 void MikuPan_SetTexture(sceGsTex0 *tex0);
 void MikuPan_SetupCamera(MikuPan_Camera *camera);
 void MikuPan_SetupMirrorMtx(float* wv);
@@ -335,6 +366,12 @@ void MikuPan_EnableMirrorScissorFromGsBounds(int xmin, int ymin, int xmax, int y
 void MikuPan_EnableMirrorScissorFromNdcBounds(float minx, float miny, float maxx, float maxy);
 void MikuPan_ClearMirrorScissorDepth(void);
 void MikuPan_DisableMirrorScissor(void);
+int MikuPan_ShouldUpdateMirrorTexture(int frame_counter);
+int MikuPan_BeginMirrorTextureUpdate(int xmin, int ymin, int xmax, int ymax);
+void MikuPan_EndMirrorTextureUpdate(void);
+int MikuPan_HasMirrorTexture(void);
+void MikuPan_BindMirrorTextureToAuxSlot(void);
+void MikuPan_UnbindMirrorTextureFromAuxSlot(void);
 /// Brackets the reflected-geometry render in MirrorRender so the mesh
 /// render-state setup knows to cull front faces (the reflection flips winding).
 void MikuPan_SetMirrorReflectionPass(int active);
@@ -366,8 +403,23 @@ int MikuPan_ReadSceneFeedbackFramebufferRGBA8TopLeft(int width, int height,
                                                      unsigned char *out_rgba);
 int MikuPan_ReadPhotoFramebufferRGBA8TopLeft(int width, int height,
                                              unsigned char *out_rgba);
+int MikuPan_ReadPhotoCaptureRectRGBA8TopLeft(int ps2_x, int ps2_y,
+                                             int ps2_w, int ps2_h,
+                                             int width, int height,
+                                             unsigned char *out_rgba);
+int MikuPan_ReadCurrentSceneCaptureRectRGBA8TopLeft(int ps2_x, int ps2_y,
+                                                   int ps2_w, int ps2_h,
+                                                   int width, int height,
+                                                   unsigned char *out_rgba);
+int MikuPan_CaptureEnemyOutScreen(int slot);
+void MikuPan_ClearEnemyOutScreenCapture(int slot);
+int MikuPan_GetEnemyOutScreenCaptureTexture(int slot, unsigned int *texture_id,
+                                            int *width, int *height);
 void MikuPan_SetPhotoCaptureScreenCopyEffectsSuppressed(int suppressed);
 int MikuPan_ArePhotoCaptureScreenCopyEffectsSuppressed(void);
+int MikuPan_ScreenCopyConsoleLogEnabled(void);
+int MikuPan_DisableScreenDeformEnabled(void);
+int MikuPan_DisablePartsDeformEnabled(void);
 void MikuPan_ClearSceneFeedbackFrameHistory(void);
 void MikuPan_SuppressNextSceneFeedbackFrameCapture(void);
 void MikuPan_CaptureSceneFeedbackFrame(void);
@@ -375,6 +427,8 @@ unsigned int MikuPan_GetSceneFeedbackTextureId(int age);
 int MikuPan_IsSceneFeedbackTextureValid(int age);
 void MikuPan_CapturePhotoFramebuffer(void);
 unsigned int MikuPan_GetPhotoFramebufferTextureId(void);
+int MikuPan_GetPhotoFramebufferWidth(void);
+int MikuPan_GetPhotoFramebufferHeight(void);
 int MikuPan_IsBlackWhiteModeActive(void);
 
 /// ----- Shadow pass --------------------------------------------------------
