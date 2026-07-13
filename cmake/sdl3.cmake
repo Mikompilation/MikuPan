@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
         sdl3
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG ec0066aa0b8de1e8fca9e179ad3e33c0607e9a97
+        GIT_TAG release-3.4.12
 )
 if(ANDROID)
     set(SDL_STATIC OFF)

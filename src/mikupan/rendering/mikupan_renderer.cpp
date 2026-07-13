@@ -38,8 +38,6 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
 #include "mikupan_meshcache.h"
 #include "mikupan_pipeline.h"
 
-#include <glad/gl.h>
-
 MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_MsaaBufferObject render_back_msaa = {0};
 static int g_mirror_scissor_enabled = 0;
@@ -212,7 +210,7 @@ SDL_AppResult MikuPan_Init()
 
     MikuPan_LoadConfiguration(NULL);
 
-    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
+    //SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60");
 
     info_log("Loading SDL_GameControllerDB");
 
@@ -347,6 +345,7 @@ SDL_AppResult MikuPan_Init()
 #endif
 
     if (!MikuPan_GPUInit(mikupan_render.window, desired_vsync,
+                         mikupan_configuration.renderer.hdr_enabled,
                          mikupan_configuration.renderer.gpu_driver,
                          mikupan_configuration.renderer.gpu_debug))
     {
@@ -1587,6 +1586,24 @@ static void MikuPan_ApplyWindowMode(int mode)
 
 void MikuPan_Clear()
 {
+    if (g_applied_window_mode != MikuPan_GetWindowMode())
+    {
+        MikuPan_ApplyWindowMode(MikuPan_GetWindowMode());
+        mikupan_configuration.renderer.window_mode = MikuPan_GetWindowMode();
+        mikupan_configuration.renderer.is_fullscreen =
+            (MikuPan_GetWindowMode() != MIKUPAN_WINDOW_WINDOWED);
+    }
+
+    if (mikupan_configuration.renderer.vsync != MikuPan_IsVsync()
+        || mikupan_configuration.renderer.hdr_enabled != MikuPan_IsHdrEnabled())
+    {
+        mikupan_configuration.renderer.vsync = MikuPan_IsVsync();
+        mikupan_configuration.renderer.hdr_enabled = MikuPan_IsHdrEnabled();
+        MikuPan_GPUSetSwapchainOptions(
+            mikupan_configuration.renderer.vsync,
+            mikupan_configuration.renderer.hdr_enabled);
+    }
+
     MikuPan_GPUBeginFrame();
     MikuPan_PerfBeginFrame();
     MikuPan_ShadowDebugBeginFrame();
@@ -1618,20 +1635,6 @@ void MikuPan_Clear()
     MikuPan_SetViewportCached(0, 0, render_back_msaa.texture.width, render_back_msaa.texture.height);
     MikuPan_GPUSetTarget(MIKUPAN_GPU_TARGET_SCENE, 1);
     MikuPan_GPUBeginRenderPass();
-
-    if (g_applied_window_mode != MikuPan_GetWindowMode())
-    {
-        MikuPan_ApplyWindowMode(MikuPan_GetWindowMode());
-        mikupan_configuration.renderer.window_mode = MikuPan_GetWindowMode();
-        mikupan_configuration.renderer.is_fullscreen =
-            (MikuPan_GetWindowMode() != MIKUPAN_WINDOW_WINDOWED);
-    }
-
-    if (mikupan_configuration.renderer.vsync != MikuPan_IsVsync())
-    {
-        mikupan_configuration.renderer.vsync = MikuPan_IsVsync();
-        MikuPan_GPUSetVsync(mikupan_configuration.renderer.vsync);
-    }
 }
 
 static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
@@ -1720,6 +1723,43 @@ void MikuPan_EndFrame()
     MikuPan_SetUniform1fToCurrentShader(MikuPan_GetBrightness(), "uBrightness");
     MikuPan_SetUniform1fToCurrentShader(MikuPan_GetGamma(),      "uGamma");
     MikuPan_SetUniform1fToCurrentShader(MikuPan_GetContrast(),   "uContrast");
+    {
+        const int hdr_swapchain =
+            MikuPan_IsHdrEnabled()
+            && MikuPan_GPUIsHdrSwapchainEnabled();
+        const int hdr_display =
+            hdr_swapchain && MikuPan_GPUIsHdrDisplayEnabled();
+        const float sdr_white = MikuPan_GPUGetHdrSdrWhiteLevel();
+        const float display_peak = sdr_white * MikuPan_GPUGetHdrHeadroom();
+        const float paper_nits = MikuPan_GetHdrPaperWhite();
+        const float peak_nits = MikuPan_GetHdrPeakLuminance();
+        float paper_scale = sdr_white * (paper_nits / 203.0f);
+        float peak_scale = paper_scale * (peak_nits / paper_nits);
+        float headroom = 1.0f;
+
+        if (paper_scale <= 0.0f)
+        {
+            paper_scale = 1.0f;
+        }
+
+        if (hdr_display && display_peak > 0.0f && peak_scale > display_peak)
+        {
+            peak_scale = display_peak;
+        }
+        else if (!hdr_display)
+        {
+            peak_scale = paper_scale;
+        }
+
+        if (peak_scale > paper_scale)
+        {
+            headroom = peak_scale / paper_scale;
+        }
+
+        MikuPan_SetUniform1iToCurrentShader(hdr_swapchain, "uHdrEnabled");
+        MikuPan_SetUniform1fToCurrentShader(paper_scale, "uHdrPaperWhite");
+        MikuPan_SetUniform1fToCurrentShader(headroom, "uHdrHeadroom");
+    }
     {
         const MikuPan_ConfigCrt *crt = MikuPan_GetCrtSettings();
         MikuPan_SetUniform1iToCurrentShader(crt->enabled, "uCrtEnabled");

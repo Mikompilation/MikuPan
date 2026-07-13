@@ -31,8 +31,12 @@ MikuPan_Config mikupan_configuration = {
         1.0f,
         1.0f,
         0,
+        203.0f,
+        1000.0f,
+        0,
         "",
-        0
+        0,
+        MIKUPAN_FINDER_VIEWPORT_MASK_BLUR
     },
     {
         0,
@@ -60,6 +64,7 @@ MikuPan_Config mikupan_configuration = {
     1,
     1.0f,
     0,
+    1,
     1,
     1,
     {
@@ -198,10 +203,24 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->shadow_depth = 1.0f;
     }
 
+    renderer->hdr_enabled = renderer->hdr_enabled ? 1 : 0;
+    renderer->hdr_paper_white =
+        MikuPan_ClampFloat(renderer->hdr_paper_white, 80.0f, 400.0f);
+    renderer->hdr_peak_luminance =
+        MikuPan_ClampFloat(renderer->hdr_peak_luminance, 100.0f, 4000.0f);
+    if (renderer->hdr_peak_luminance < renderer->hdr_paper_white)
+    {
+        renderer->hdr_peak_luminance = renderer->hdr_paper_white;
+    }
+
     /* Older test builds used 1=Linear and 2=Soft. Both now collapse to Soft. */
     renderer->dither_mode = renderer->dither_mode <= 0 ? 0 : 1;
 
     renderer->gpu_debug = renderer->gpu_debug ? 1 : 0;
+    renderer->finder_viewport_mask_mode =
+        renderer->finder_viewport_mask_mode == MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR;
 }
 
 static void MikuPan_ConfigurationValidateCrt(MikuPan_ConfigCrt* crt)
@@ -316,6 +335,8 @@ void MikuPan_ConfigurationValidate(void)
     mikupan_configuration.font_scale =
         MikuPan_ClampFloat(mikupan_configuration.font_scale, 0.5f, 3.0f);
     mikupan_configuration.show_fps = mikupan_configuration.show_fps ? 1 : 0;
+    mikupan_configuration.minimap_enabled =
+        mikupan_configuration.minimap_enabled ? 1 : 0;
     mikupan_configuration.title_room_background =
         mikupan_configuration.title_room_background ? 1 : 0;
     mikupan_configuration.title_dither =

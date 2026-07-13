@@ -30,10 +30,12 @@
 #include <SDL3/SDL_main.h>
 #include <mikupan/mikupan_memory.h>
 #include <sce/libpad.h>
+#include <mikupan/mikupan_framelimiter.h>
 
 static int mikupan_game_initialized = 0;
 static int mikupan_missing_data_prompted = 0;
 static char mikupan_missing_data_file[256] = "";
+MikuPan_FrameLimiter frame_limiter;
 
 static int MikuPan_TryInitializeGame(void)
 {
@@ -86,6 +88,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
     MikuPan_TryInitializeGame();
 
+    MikuPan_FrameLimiter_Init(&frame_limiter, 60.0);
+
     return result;
 }
 
@@ -135,7 +139,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             return SDL_APP_CONTINUE;
         }
     }
-
+    
     if (!SoftResetChk())
     {
         if (!PlayMpegEvent())
@@ -167,6 +171,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     MikuPan_FinderMouseUpdate();
 
     MikuPan_EndFrame();
+
+    MikuPan_FrameLimiter_Wait(&frame_limiter);
 
     return SDL_APP_CONTINUE;
 }

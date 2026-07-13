@@ -2,7 +2,7 @@
 
 #include "mikupan/mikupan_types.h"
 #include "mikupan_gpu.h"
-#include <glad/gl.h>
+#include "mikupan_gl_compat.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>

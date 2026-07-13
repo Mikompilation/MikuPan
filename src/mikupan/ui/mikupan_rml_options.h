@@ -25,11 +25,14 @@ int MikuPan_RmlOptionsBindingCaptureActive(void);
 void MikuPan_RmlOptionsRequestExit(void);
 void MikuPan_RmlOptionsHandleCancel(void);
 int MikuPan_RmlOptionsAnySelectOpen(void);
+void MikuPan_RmlOptionsClearNativeSelectOpen(void);
 int MikuPan_RmlOptionsActivateFocusedControl(void);
 int MikuPan_RmlOptionsHandleHorizontalInput(int direction);
 int MikuPan_RmlOptionsHandleVerticalInput(int direction);
 void MikuPan_RmlOptionsEnsureFocusedControlVisible(void);
 int MikuPan_RmlOptionsConsumeMoveSoundRequest(void);
+void MikuPan_RmlOptionsApplyTheme(int theme);
+void MikuPan_RmlOptionsApplyFont(int font);
 void MikuPan_RmlOptionsToggleDebug(void);
 
 #ifdef __cplusplus

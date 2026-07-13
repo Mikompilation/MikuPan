@@ -48,6 +48,8 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
      "resources/shaders/hlsl/untextured_coloured_sprite.frag.hlsl"},
     {"resources/shaders/hlsl/heat_haze.vert.hlsl", NULL,
      "resources/shaders/hlsl/heat_haze.frag.hlsl"},
+    {"resources/shaders/hlsl/heat_haze.vert.hlsl", NULL,
+     "resources/shaders/hlsl/finder_viewport_blur.frag.hlsl"},
     {"resources/shaders/hlsl/mesh_0x2_skinned.vert.hlsl", NULL,
      "resources/shaders/hlsl/textured_mesh_lighted.frag.hlsl"},
     {"resources/shaders/hlsl/mesh_0xA_skinned.vert.hlsl", NULL,
@@ -61,7 +63,7 @@ static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
     "NORMALS_0x12", "NORMALS_0x2",
     "POSTPROCESS", "SHADOW_BLOB",
     "SHADOW_SILHOUETTE", "SHADOW_RECEIVER",
-    "CAMERA_DEBUG", "HEAT_HAZE",
+    "CAMERA_DEBUG", "HEAT_HAZE", "FINDER_VIEWPORT_BLUR",
     "MESH_0x2_SKINNED", "MESH_0xA_SKINNED",
 };
 
@@ -173,6 +175,7 @@ static Uint8 *ReadShaderBytecode(const char *path,
 static SDL_GPUShader *CompileStageFromFile(const char *path,
                                            SDL_GPUShaderStage stage,
                                            int num_storage_buffers,
+                                           int num_uniform_buffers,
                                            char *err_buf,
                                            int err_buf_size)
 {
@@ -219,7 +222,7 @@ static SDL_GPUShader *CompileStageFromFile(const char *path,
         stage == SDL_GPU_SHADERSTAGE_FRAGMENT ? 2u : 0u;
     create_info.num_storage_textures = 0;
     create_info.num_storage_buffers = (Uint32)num_storage_buffers;
-    create_info.num_uniform_buffers = 3;
+    create_info.num_uniform_buffers = (Uint32)num_uniform_buffers;
 
     SDL_GPUShader *shader =
         SDL_CreateGPUShader(MikuPan_GPUGetDevice(), &create_info);
@@ -246,12 +249,14 @@ static int BuildShaderProgram(int idx,
 
     /// The GPU-skinned mesh shaders read the bone-matrix palette from one
     /// vertex storage buffer; every other shader uses none.
-    int vert_storage_buffers =
-        (idx == MESH_0x2_SKINNED_SHADER || idx == MESH_0xA_SKINNED_SHADER) ? 1 : 0;
+    int is_skinned =
+        (idx == MESH_0x2_SKINNED_SHADER || idx == MESH_0xA_SKINNED_SHADER);
+    int vert_storage_buffers = is_skinned ? 1 : 0;
+    int vert_uniform_buffers = is_skinned ? 2 : 3;
 
     SDL_GPUShader *vs = CompileStageFromFile(
         vert_path, SDL_GPU_SHADERSTAGE_VERTEX,
-        vert_storage_buffers, err_buf, err_buf_size);
+        vert_storage_buffers, vert_uniform_buffers, err_buf, err_buf_size);
     if (vs == NULL)
     {
         return -1;
@@ -259,7 +264,7 @@ static int BuildShaderProgram(int idx,
 
     SDL_GPUShader *fs = CompileStageFromFile(
         frag_path, SDL_GPU_SHADERSTAGE_FRAGMENT,
-        0, err_buf, err_buf_size);
+        0, 3, err_buf, err_buf_size);
     if (fs == NULL)
     {
         SDL_ReleaseGPUShader(MikuPan_GPUGetDevice(), vs);

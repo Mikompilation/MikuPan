@@ -108,7 +108,11 @@ typedef struct MikuPan_GPUUniformBlock
     int uFlags0[4];
     int uFlags1[4];
     int uFlags2[4];
+    // w=HDR output enabled
     int uPadFlags[4];
+
+    // x=paper white in output colorspace, y=usable HDR headroom
+    float uHdrOutput[4];
 } MikuPan_GPUUniformBlock;
 
 /// Create the SDL_GPU device and claim the window. gpu_driver requests an
@@ -117,11 +121,17 @@ typedef struct MikuPan_GPUUniformBlock
 /// gpu_debug creates the device in debug mode (D3D12 debug layer / Vulkan
 /// validation): a huge per-command CPU cost, so it should stay off outside of
 /// debugging sessions.
-int  MikuPan_GPUInit(SDL_Window *window, int vsync, const char *gpu_driver,
-                     int gpu_debug);
+int  MikuPan_GPUInit(SDL_Window *window, int vsync, int hdr_enabled,
+                     const char *gpu_driver, int gpu_debug);
 void MikuPan_GPUShutdown(void);
 void MikuPan_GPUWaitIdle(void);
 void MikuPan_GPUSetVsync(int vsync);
+void MikuPan_GPUSetSwapchainOptions(int vsync, int hdr_enabled);
+int MikuPan_GPUIsHdrSwapchainEnabled(void);
+int MikuPan_GPUIsHdrDisplayEnabled(void);
+int MikuPan_GPUSupportsHdrOutput(void);
+float MikuPan_GPUGetHdrSdrWhiteLevel(void);
+float MikuPan_GPUGetHdrHeadroom(void);
 
 SDL_GPUDevice *MikuPan_GPUGetDevice(void);
 SDL_GPUCommandBuffer *MikuPan_GPUGetCommandBuffer(void);

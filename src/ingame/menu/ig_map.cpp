@@ -8,6 +8,7 @@
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sglib.h"
+#include "ingame/event/ev_main.h"
 #include "ingame/info/inf_disp.h"
 #include "ingame/map/door_ctl.h"
 #include "ingame/map/map_ctrl.h"
@@ -15,7 +16,12 @@
 #include "ingame/menu/ig_spd_menu.h"
 #include "ingame/menu/item.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_config.h"
+#include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_utils.h"
+#include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/ui/mikupan_ui.h"
 #include "os/eeiop/eese.h"
 
 static void MapCntInit();
@@ -27,7 +33,17 @@ static void MapScoop();
 static void MapMove(u_char alp);
 static void MapInfo1(u_char alp);
 static void MapInfo2(u_char alp);
-static void MapPrint(short int mov_px, short int mov_py, u_char alp);
+static void MapPrint(short int mov_px, short int mov_py, u_char alp, u_char mini);
+static void EnsureCommonMapSpriteFileUploaded();
+static u_char EnsureMapSpriteTextures();
+static void ClearMapSpriteTextures();
+static MikuPan_TextureInfo *EnsureMapTextureForLabel(u_short label);
+static MikuPan_TextureInfo *FindCachedMapTextureByTex0(uint64_t tex0_value);
+static MikuPan_TextureInfo *LookupMapTextureForLabel(u_short label);
+static void MiniMapPanel(u_char alp);
+static void MiniMapFrame(u_char alp);
+static void MiniMapClipBegin();
+static void MiniMapClipEnd();
 static void DrawMapExtendedShroud(u_char alp);
 static u_short MapExtendedShroudSize(float value);
 static void MapPlayer(short int mov_px, short int mov_py, u_char alp);
@@ -65,6 +81,32 @@ static MAP_CTRL map = {0};
 
 #define PI 3.1415927f
 
+static const int MAP_COMMON_SPRITE_ADDRESS = 0x1ce0000;
+
+#ifdef BUILD_EU_VERSION
+static const int MAP_SPRITE_ADDRESS = 0x1e04000;
+#else
+static const int MAP_SPRITE_ADDRESS = PL_SMAP_PK2_ADDRESS;
+#endif
+
+static const short int MINIMAP_CENTER_X = 560;
+static const short int MINIMAP_CENTER_Y = 80;
+static const u_short MINIMAP_PANEL_W = 96;
+static const u_short MINIMAP_PANEL_H = 96;
+static const u_short MINIMAP_FRAME_THICKNESS = 1;
+static const short int MINIMAP_PANEL_X = MINIMAP_CENTER_X - (MINIMAP_PANEL_W / 2);
+static const short int MINIMAP_PANEL_Y = MINIMAP_CENTER_Y - (MINIMAP_PANEL_H / 2);
+static const short int MINIMAP_CLIP_X = MINIMAP_PANEL_X + MINIMAP_FRAME_THICKNESS;
+static const short int MINIMAP_CLIP_Y = MINIMAP_PANEL_Y + MINIMAP_FRAME_THICKNESS;
+static const u_short MINIMAP_CLIP_W = MINIMAP_PANEL_W - MINIMAP_FRAME_THICKNESS * 2;
+static const u_short MINIMAP_CLIP_H = MINIMAP_PANEL_H - MINIMAP_FRAME_THICKNESS * 2;
+static const int MINIMAP_CLIP_PACKET_PRI = 0x55000;
+static const u_char MINIMAP_ALPHA = 86;
+static const u_char MINIMAP_SCL_NOW = 2;
+static u_char map_common_sprite_file_uploaded = 0;
+static u_char map_sprite_textures_ready = 0;
+static MikuPan_TextureInfo *map_sprite_textures[MAP_END + 1] = {0};
+
 void NewgameMenuMapInit()
 {
     return;
@@ -73,6 +115,12 @@ void NewgameMenuMapInit()
 void LoadgameMenuMapInit()
 {
     return;
+}
+
+void IngameMenuMapTextureCacheInit()
+{
+    EnsureCommonMapSpriteFileUploaded();
+    EnsureMapSpriteTextures();
 }
 
 void StartMapModeInit()
@@ -214,6 +262,190 @@ void IngameMenuMapDisp(u_char mod)
     MapCntRenew();
 }
 
+void IngameMenuMapEnsureSpriteFiles()
+{
+    IngameMenuMapTextureCacheInit();
+}
+
+void IngameMiniMapDisp()
+{
+    MAP_CTRL map_bak;
+    FLSH_CORE flsh_bak;
+
+    if (mikupan_configuration.minimap_enabled == 0)
+    {
+        return;
+    }
+
+    if (ingame_wrk.mode != INGAME_MODE_NOMAL)
+    {
+        return;
+    }
+
+    if (ingame_wrk.game == 1 || (ingame_wrk.stts & 0x20) != 0 || ev_wrk.movie_on != 0)
+    {
+        return;
+    }
+
+    if (plyr_wrk.mode == PMODE_FINDER ||
+        plyr_wrk.mode == PMODE_FINDER_IN ||
+        plyr_wrk.mode == PMODE_FINDER_END ||
+        MesStatusCheck() != 0)
+    {
+        return;
+    }
+
+    if (EnsureMapSpriteTextures() == 0)
+    {
+        return;
+    }
+
+    map_bak = map;
+    flsh_bak = flsh[0];
+
+    map.flr = map_wrk.floor;
+    map.mvx = 0;
+    map.mvy = 0;
+    map.scl_now = MINIMAP_SCL_NOW;
+    map.scl_mod = 0;
+    map.line_alp = 0;
+
+    MapInfo1(MINIMAP_ALPHA);
+    map.here_bak = map.here_id;
+    MapPrint(0, 0, MINIMAP_ALPHA, 1);
+
+    flsh[0] = flsh_bak;
+    map = map_bak;
+}
+
+static void EnsureCommonMapSpriteFileUploaded()
+{
+    if (map_common_sprite_file_uploaded != 0)
+    {
+        return;
+    }
+
+    SetSprFile(MikuPan_GetHostAddress(MAP_COMMON_SPRITE_ADDRESS));
+    map_common_sprite_file_uploaded = 1;
+}
+
+static u_char EnsureMapSpriteTextures()
+{
+    int label;
+    u_char missing_texture;
+
+    if (map_sprite_textures_ready != 0)
+    {
+        return 1;
+    }
+
+    SetSprFile(MikuPan_GetHostAddress(MAP_SPRITE_ADDRESS));
+
+    missing_texture = 0;
+
+    for (label = MAP_BACK_MASK1; label <= MAP_END; label++)
+    {
+        if (spr_dat[label].tex0 != 0 &&
+            EnsureMapTextureForLabel((u_short)label) == NULL)
+        {
+            missing_texture = 1;
+        }
+    }
+
+    if (missing_texture != 0 || map_sprite_textures[MAP_ID_00] == NULL)
+    {
+        ClearMapSpriteTextures();
+        return 0;
+    }
+
+    map_sprite_textures_ready = 1;
+    return 1;
+}
+
+static void ClearMapSpriteTextures()
+{
+    int label;
+    int other_label;
+    MikuPan_TextureInfo *texture_info;
+
+    for (label = MAP_BACK_MASK1; label <= MAP_END; label++)
+    {
+        texture_info = map_sprite_textures[label];
+        if (texture_info == NULL)
+        {
+            continue;
+        }
+
+        for (other_label = label + 1; other_label <= MAP_END; other_label++)
+        {
+            if (map_sprite_textures[other_label] == texture_info)
+            {
+                map_sprite_textures[other_label] = NULL;
+            }
+        }
+
+        map_sprite_textures[label] = NULL;
+        MikuPan_DeleteTexture(texture_info);
+    }
+
+    map_sprite_textures_ready = 0;
+}
+
+static MikuPan_TextureInfo *EnsureMapTextureForLabel(u_short label)
+{
+    uint64_t tex0_value;
+    sceGsTex0 tex0;
+    MikuPan_TextureInfo *texture_info;
+
+    if (label > MAP_END || spr_dat[label].tex0 == 0)
+    {
+        return NULL;
+    }
+
+    if (map_sprite_textures[label] != NULL)
+    {
+        return map_sprite_textures[label];
+    }
+
+    tex0_value = spr_dat[label].tex0;
+    texture_info = FindCachedMapTextureByTex0(tex0_value);
+
+    if (texture_info == NULL)
+    {
+        tex0 = *(sceGsTex0 *)&spr_dat[label].tex0;
+        texture_info = MikuPan_CreateStandaloneGLTexture(&tex0);
+    }
+
+    map_sprite_textures[label] = texture_info;
+    return texture_info;
+}
+
+static MikuPan_TextureInfo *FindCachedMapTextureByTex0(uint64_t tex0_value)
+{
+    int label;
+
+    for (label = MAP_BACK_MASK1; label <= MAP_END; label++)
+    {
+        if (map_sprite_textures[label] != NULL &&
+            spr_dat[label].tex0 == tex0_value)
+        {
+            return map_sprite_textures[label];
+        }
+    }
+
+    return NULL;
+}
+
+static MikuPan_TextureInfo *LookupMapTextureForLabel(u_short label)
+{
+    if (label > MAP_END)
+    {
+        return NULL;
+    }
+
+    return map_sprite_textures[label];
+}
+
 static void MapCntInit()
 {
     return;
@@ -349,7 +581,7 @@ static void DspPlyrInMap(u_char alp)
     MapScoop();
     MapInfo1(alp);
     MapMove(alp);
-    MapPrint((map.mvx * map.scl_now) / 10.0f, (map.mvy * map.scl_now) / 10.0f, alp);
+    MapPrint((map.mvx * map.scl_now) / 10.0f, (map.mvy * map.scl_now) / 10.0f, alp, 0);
     MapInfo2(alp);
 }
 
@@ -549,11 +781,13 @@ static void MapInfo2(u_char alp)
     }
 }
 
-static void MapPrint(short int mov_px, short int mov_py, u_char alp)
+static void MapPrint(short int mov_px, short int mov_py, u_char alp, u_char mini)
 {
     int i;
     int j;
     int id;
+    short int center_x;
+    short int center_y;
     short int map_ox;
     short int map_oy;
     short int door_mx;
@@ -570,25 +804,36 @@ static void MapPrint(short int mov_px, short int mov_py, u_char alp)
     short int x1;
     short int y1;
 
-    map_ox = (mov_px + 321) - (short)((map.scl_now / 10.0f) * plyr_wrk.move_box.pos[0] / 100.0f);
-    map_oy = (mov_py + 214) - (short)((map.scl_now / 10.0f) * (512.0f - (plyr_wrk.move_box.pos[2] * 0.99f) / 100.0f));
+    center_x = mini != 0 ? MINIMAP_CENTER_X : 321;
+    center_y = mini != 0 ? MINIMAP_CENTER_Y : 214;
+
+    map_ox = (mov_px + center_x) - (short)((map.scl_now / 10.0f) * plyr_wrk.move_box.pos[0] / 100.0f);
+    map_oy = (mov_py + center_y) - (short)((map.scl_now / 10.0f) * (512.0f - (plyr_wrk.move_box.pos[2] * 0.99f) / 100.0f));
 
     bg_scl = map.scl_now / 15.0f;
 
-    start_x = map_ox % (short)(bg_scl * 160);
-    start_y = map_oy % (short)(bg_scl * 112);
-
-    num_i = (u_char)(640 / (bg_scl * 160)) + 1;
-    num_j = (u_char)(448 / (bg_scl * 112)) + 1;
-
-    for (j = -1; j < num_j + 1; j++)
+    if (mini != 0)
     {
-        for (i = -1; i < num_i + 1; i++)
+        MiniMapPanel(alp);
+        MiniMapClipBegin();
+    }
+    else
+    {
+        start_x = map_ox % (short)(bg_scl * 160);
+        start_y = map_oy % (short)(bg_scl * 112);
+
+        num_i = (u_char)(640 / (bg_scl * 160)) + 1;
+        num_j = (u_char)(448 / (bg_scl * 112)) + 1;
+
+        for (j = -1; j < num_j + 1; j++)
         {
-            PutChrForMap(MAP_SEAT_PAPER,
-                         start_x + (short)((i * 160) * bg_scl),
-                         start_y + (short)((j * 112) * bg_scl),
-                         0x808080, alp, bg_scl , 0x64000);
+            for (i = -1; i < num_i + 1; i++)
+            {
+                PutChrForMap(MAP_SEAT_PAPER,
+                             start_x + (short)((i * 160) * bg_scl),
+                             start_y + (short)((j * 112) * bg_scl),
+                             0x808080, alp, bg_scl , 0x64000);
+            }
         }
     }
 
@@ -671,7 +916,14 @@ static void MapPrint(short int mov_px, short int mov_py, u_char alp)
 
     if (map.flr == map_wrk.floor)
     {
-        MapPlayer(mov_px, mov_py, alp);
+        MapPlayer((mov_px + center_x) - 321, (mov_py + center_y) - 214, alp);
+    }
+
+    if (mini != 0)
+    {
+        MiniMapClipEnd();
+        MiniMapFrame(alp);
+        return;
     }
 
     {
@@ -680,6 +932,83 @@ static void MapPrint(short int mov_px, short int mov_py, u_char alp)
         PolySquareYW(320.0f - eff_hw, 224.0f - eff_hh, (u_short)(eff_hw * 2.0f), (u_short)(eff_hh * 2.0f), 0, 128.0f - yw2d.io_a[6], 1.0f, 1.0f, 0x4b000, 0, 0, 0);
     }
     PutSpriteYW(MAP_BACK_MASK1, MAP_BACK_MASK4, 0.0f, 0.0f, 0.0f, 0x808080, 128.0f, 2.6890757f, 2.698795f, 1, 0xff, 1, 0, 0);
+}
+
+static void MiniMapPanel(u_char alp)
+{
+    const float panel_alp = alp * 0.55f;
+
+    PolySquareYW(MINIMAP_PANEL_X, MINIMAP_PANEL_Y, MINIMAP_PANEL_W, MINIMAP_PANEL_H,
+                 0x000000, panel_alp, 1.0f, 1.0f, 0x65000, 0, 0, 0);
+}
+
+static void MiniMapFrame(u_char alp)
+{
+    PolySquareYW(MINIMAP_PANEL_X, MINIMAP_PANEL_Y, MINIMAP_PANEL_W, MINIMAP_FRAME_THICKNESS,
+                 0x808080, alp, 1.0f, 1.0f, 0x54000, 0, 0, 0);
+    PolySquareYW(MINIMAP_PANEL_X, MINIMAP_PANEL_Y + MINIMAP_PANEL_H - MINIMAP_FRAME_THICKNESS,
+                 MINIMAP_PANEL_W, MINIMAP_FRAME_THICKNESS,
+                 0x808080, alp, 1.0f, 1.0f, 0x54000, 0, 0, 0);
+    PolySquareYW(MINIMAP_PANEL_X, MINIMAP_PANEL_Y, MINIMAP_FRAME_THICKNESS, MINIMAP_PANEL_H,
+                 0x808080, alp, 1.0f, 1.0f, 0x54000, 0, 0, 0);
+    PolySquareYW(MINIMAP_PANEL_X + MINIMAP_PANEL_W - MINIMAP_FRAME_THICKNESS, MINIMAP_PANEL_Y,
+                 MINIMAP_FRAME_THICKNESS, MINIMAP_PANEL_H,
+                 0x808080, alp, 1.0f, 1.0f, 0x54000, 0, 0, 0);
+}
+
+static void MiniMapClipBegin()
+{
+    int render_w;
+    int render_h;
+    float viewport_x;
+    float viewport_y;
+    float viewport_w;
+    float viewport_h;
+    float viewport_scale;
+    int x0;
+    int y0;
+    int x1;
+    int y1;
+
+    render_w = MikuPan_GetRenderResolutionWidth();
+    render_h = MikuPan_GetRenderResolutionHeight();
+
+    if (render_w <= 0 || render_h <= 0)
+    {
+        return;
+    }
+
+    MikuPan_GetPS2Viewport(render_w, render_h, &viewport_x, &viewport_y,
+                           &viewport_w, &viewport_h, &viewport_scale);
+    (void)viewport_w;
+    (void)viewport_h;
+
+    x0 = (int)(viewport_x + MINIMAP_CLIP_X * viewport_scale);
+    y0 = (int)(viewport_y + MINIMAP_CLIP_Y * viewport_scale);
+    x1 = (int)(viewport_x + (MINIMAP_CLIP_X + MINIMAP_CLIP_W) * viewport_scale + 0.999f);
+    y1 = (int)(viewport_y + (MINIMAP_CLIP_Y + MINIMAP_CLIP_H) * viewport_scale + 0.999f);
+
+    x0 = MikuPan_ClampInt(x0, 0, render_w);
+    y0 = MikuPan_ClampInt(y0, 0, render_h);
+    x1 = MikuPan_ClampInt(x1, 0, render_w);
+    y1 = MikuPan_ClampInt(y1, 0, render_h);
+
+    if (x1 <= x0 || y1 <= y0)
+    {
+        return;
+    }
+
+    MikuPan_FlushTexturedSpriteBatch();
+    MikuPan_GPUSetScissor(x0, y0, x1 - x0, y1 - y0);
+    SetScissor(MINIMAP_CLIP_PACKET_PRI, MINIMAP_CLIP_X, MINIMAP_CLIP_Y / 2,
+               MINIMAP_CLIP_W, (MINIMAP_CLIP_H + 1) / 2);
+}
+
+static void MiniMapClipEnd()
+{
+    MikuPan_FlushTexturedSpriteBatch();
+    MikuPan_GPUDisableScissor();
+    ResetScissor(MINIMAP_CLIP_PACKET_PRI);
 }
 
 static void DrawMapExtendedShroud(u_char alp)
@@ -889,6 +1218,7 @@ static void MapChrSet(u_char id, short int pos_x, short int pos_y, int rgb, u_ch
 static void PutChrForMap(u_short chr_lbl, short int pos_x, short int pos_y, int rgb, u_char alp, float scl, int pri)
 {
     DISP_SPRT ds;
+    MikuPan_TextureInfo *texture_info;
 
     CopySprDToSpr(&ds, &spr_dat[chr_lbl]);
 
@@ -911,12 +1241,21 @@ static void PutChrForMap(u_short chr_lbl, short int pos_x, short int pos_y, int 
 
     ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
 
-    DispSprD(&ds);
+    texture_info = LookupMapTextureForLabel(chr_lbl);
+    if (texture_info != NULL)
+    {
+        DispSprDTextureInfo(&ds, texture_info);
+    }
+    else
+    {
+        DispSprD(&ds);
+    }
 }
 
 static void PutIcnForMap(u_short chr_lbl, short int pos_x, short int pos_y, short int rot, u_char alp, float scl)
 {
     DISP_SPRT ds;
+    MikuPan_TextureInfo *texture_info;
 
     CopySprDToSpr(&ds, &spr_dat[chr_lbl]);
 
@@ -941,7 +1280,15 @@ static void PutIcnForMap(u_short chr_lbl, short int pos_x, short int pos_y, shor
 
     ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
 
-    DispSprD(&ds);
+    texture_info = LookupMapTextureForLabel(chr_lbl);
+    if (texture_info != NULL)
+    {
+        DispSprDTextureInfo(&ds, texture_info);
+    }
+    else
+    {
+        DispSprD(&ds);
+    }
 }
 
 static void PutIcnForMap2(u_char type, short int pos_x, short int pos_y, short int rot, u_char alp, float scl, u_char sz_ptn)

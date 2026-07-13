@@ -185,11 +185,16 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
     ApplyValue(ini, "renderer", "contrast", mikupan_configuration.renderer.contrast);
     ApplyValue(ini, "renderer", "shadow_depth", mikupan_configuration.renderer.shadow_depth);
+    ApplyValue(ini, "renderer", "hdr_enabled", mikupan_configuration.renderer.hdr_enabled);
+    ApplyValue(ini, "renderer", "hdr_paper_white", mikupan_configuration.renderer.hdr_paper_white);
+    ApplyValue(ini, "renderer", "hdr_peak_luminance", mikupan_configuration.renderer.hdr_peak_luminance);
     ApplyValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     ApplyString(ini, "renderer", "gpu_driver",
                 mikupan_configuration.renderer.gpu_driver,
                 sizeof(mikupan_configuration.renderer.gpu_driver));
     ApplyValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);
+    ApplyValue(ini, "renderer", "finder_viewport_mask_mode",
+               mikupan_configuration.renderer.finder_viewport_mask_mode);
     ApplyValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     ApplyValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     ApplyValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
@@ -212,6 +217,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     ApplyValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);
     ApplyValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
+    ApplyValue(ini, "ui", "minimap_enabled",
+               mikupan_configuration.minimap_enabled);
     ApplyValue(ini, "ui", "title_room_background",
                mikupan_configuration.title_room_background);
     ApplyValue(ini, "ui", "title_dither",
@@ -359,10 +366,15 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "gamma", mikupan_configuration.renderer.gamma);
     SetValue(ini, "renderer", "contrast", mikupan_configuration.renderer.contrast);
     SetValue(ini, "renderer", "shadow_depth", mikupan_configuration.renderer.shadow_depth);
+    SetValue(ini, "renderer", "hdr_enabled", mikupan_configuration.renderer.hdr_enabled);
+    SetValue(ini, "renderer", "hdr_paper_white", mikupan_configuration.renderer.hdr_paper_white);
+    SetValue(ini, "renderer", "hdr_peak_luminance", mikupan_configuration.renderer.hdr_peak_luminance);
     SetValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;
     SetValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);
+    SetValue(ini, "renderer", "finder_viewport_mask_mode",
+             mikupan_configuration.renderer.finder_viewport_mask_mode);
     SetValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     SetValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     SetValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
@@ -385,6 +397,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "ui", "selected_font", mikupan_configuration.selected_font);
     SetValue(ini, "ui", "font_scale", mikupan_configuration.font_scale);
     SetValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
+    SetValue(ini, "ui", "minimap_enabled",
+             mikupan_configuration.minimap_enabled);
     SetValue(ini, "ui", "title_room_background",
              mikupan_configuration.title_room_background);
     SetValue(ini, "ui", "title_dither",

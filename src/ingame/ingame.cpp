@@ -14,6 +14,7 @@
 #include "ingame/map/find_ctl.h"
 #include "ingame/map/furn_ctl.h"//
 #include "ingame/map/map_ctrl.h"
+#include "ingame/menu/ig_map.h"
 #include "ingame/menu/ig_menu.h"
 #include "ingame/photo/pht_main.h"
 #include "main/glob.h"// *
@@ -163,6 +164,7 @@ int InGameFirstLoad(void)
         if (IsLoadEnd(init_load_id) == 0) {
           return 0;
         }
+        IngameMenuMapTextureCacheInit();
         sys_wrk.load_mode = INGAME_INIT_LOAD_EFCT;
       
     case INGAME_INIT_LOAD_EFCT:

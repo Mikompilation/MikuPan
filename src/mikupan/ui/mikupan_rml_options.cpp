@@ -1,6 +1,7 @@
 #include "mikupan/ui/mikupan_rml_options.h"
 
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/mikupan_config.h"
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
@@ -130,6 +131,8 @@ enum MikuPanStepControlKind
     MIKUPAN_STEP_GAMMA,
     MIKUPAN_STEP_CONTRAST,
     MIKUPAN_STEP_SHADOW_DEPTH,
+    MIKUPAN_STEP_HDR_PAPER_WHITE,
+    MIKUPAN_STEP_HDR_PEAK_LUMINANCE,
     MIKUPAN_STEP_FONT_SCALE,
     MIKUPAN_STEP_CRT_FIELD,
     MIKUPAN_STEP_AUDIO_MASTER,
@@ -161,6 +164,14 @@ enum MikuPanChoicePickerKind
     MIKUPAN_PICKER_WINDOW_MODE,
     MIKUPAN_PICKER_WINDOW_SIZE,
     MIKUPAN_PICKER_RESOLUTION,
+    MIKUPAN_PICKER_GPU_BACKEND,
+    MIKUPAN_PICKER_MSAA,
+    MIKUPAN_PICKER_SHADOW_RESOLUTION,
+    MIKUPAN_PICKER_LIGHTING_MODE,
+    MIKUPAN_PICKER_DITHER_MODE,
+    MIKUPAN_PICKER_FINDER_SURROUND,
+    MIKUPAN_PICKER_THEME,
+    MIKUPAN_PICKER_FONT,
 };
 
 enum MikuPanDisplayConfirmKind
@@ -198,6 +209,7 @@ struct MikuPanRmlOptionsState
     Rml::Context* context = nullptr;
     std::vector<std::unique_ptr<Rml::EventListener>> listeners;
     Rml::ElementDocument* document = nullptr;
+    Rml::Element* root = nullptr;
     Rml::Element* window = nullptr;
     Rml::Element* window_mode_picker = nullptr;
     Rml::Element* window_mode_choice = nullptr;
@@ -211,6 +223,22 @@ struct MikuPanRmlOptionsState
     Rml::Element* resolution_choice = nullptr;
     Rml::Element* resolution_value = nullptr;
     Rml::Element* resolution_pending_note = nullptr;
+    Rml::Element* gpu_backend_picker = nullptr;
+    Rml::Element* gpu_backend_choice = nullptr;
+    Rml::Element* msaa_picker = nullptr;
+    Rml::Element* msaa_choice = nullptr;
+    Rml::Element* shadow_resolution_picker = nullptr;
+    Rml::Element* shadow_resolution_choice = nullptr;
+    Rml::Element* lighting_mode_picker = nullptr;
+    Rml::Element* lighting_mode_choice = nullptr;
+    Rml::Element* dither_mode_picker = nullptr;
+    Rml::Element* dither_mode_choice = nullptr;
+    Rml::Element* finder_surround_picker = nullptr;
+    Rml::Element* finder_surround_choice = nullptr;
+    Rml::Element* theme_picker = nullptr;
+    Rml::Element* theme_choice = nullptr;
+    Rml::Element* font_picker = nullptr;
+    Rml::Element* font_choice = nullptr;
     Rml::Element* choice_picker_modal = nullptr;
     Rml::Element* choice_picker_title = nullptr;
     Rml::Element* choice_picker_list = nullptr;
@@ -222,12 +250,17 @@ struct MikuPanRmlOptionsState
     Rml::ElementFormControlSelect* shadow_resolution_select = nullptr;
     Rml::ElementFormControlSelect* lighting_mode_select = nullptr;
     Rml::ElementFormControlSelect* dither_mode_select = nullptr;
+    Rml::ElementFormControlSelect* finder_surround_select = nullptr;
     Rml::ElementFormControlSelect* theme_select = nullptr;
     Rml::ElementFormControlSelect* font_select = nullptr;
     Rml::ElementFormControlInput* vsync_input = nullptr;
+    Rml::ElementFormControlInput* hdr_enabled_input = nullptr;
+    Rml::ElementFormControlInput* calibration_hdr_enabled_input = nullptr;
     Rml::Element* active_gpu_label = nullptr;
     Rml::Element* gpu_restart_note = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
+    Rml::ElementFormControlInput* minimap_enabled_input = nullptr;
+    Rml::ElementFormControlInput* finder_dpad_film_swap_input = nullptr;
     Rml::ElementFormControlInput* mirror_stone_hud_input = nullptr;
     Rml::ElementFormControlInput* improved_movement_collisions_input = nullptr;
     Rml::ElementFormControlInput* controller_remap_input = nullptr;
@@ -259,6 +292,7 @@ struct MikuPanRmlOptionsState
     int original_window_size_index = 0;
     int pending_resolution_index = 0;
     int original_resolution_index = 0;
+    int pending_picker_index = 0;
     bool window_mode_pending_dirty = false;
     bool window_size_pending_dirty = false;
     bool resolution_pending_dirty = false;
@@ -277,6 +311,9 @@ struct MikuPanRmlOptionsState
     float calibration_original_gamma = 1.0f;
     float calibration_original_contrast = 1.0f;
     float calibration_original_shadow_depth = 1.0f;
+    int calibration_original_hdr_enabled = 0;
+    float calibration_original_hdr_paper_white = 203.0f;
+    float calibration_original_hdr_peak_luminance = 1000.0f;
     bool calibration_original_dirty = false;
     bool crt_visible = false;
     MikuPan_ConfigCrt crt_original = {};
@@ -294,6 +331,7 @@ struct MikuPanRmlOptionsState
     bool ui_move_sound_requested = false;
     Rml::Element* controller_focus_element = nullptr;
     Rml::Element* controller_focus_row = nullptr;
+    Rml::ElementFormControlSelect* controller_open_select = nullptr;
 };
 MikuPanRmlOptionsState g_rml;
 
@@ -336,7 +374,13 @@ void SetCheckbox(Rml::ElementFormControlInput* input, int enabled)
         return;
     }
 
-    if (enabled)
+    const bool should_check = enabled != 0;
+    if (input->HasAttribute("checked") == should_check)
+    {
+        return;
+    }
+
+    if (should_check)
     {
         input->SetAttribute("checked", "");
     }
@@ -349,6 +393,12 @@ void SetCheckbox(Rml::ElementFormControlInput* input, int enabled)
 int IsCheckboxChecked(Rml::ElementFormControlInput* input)
 {
     return input != nullptr && input->HasAttribute("checked");
+}
+
+void SyncHdrCheckboxes(void)
+{
+    SetCheckbox(g_rml.hdr_enabled_input, MikuPan_IsHdrEnabled());
+    SetCheckbox(g_rml.calibration_hdr_enabled_input, MikuPan_IsHdrEnabled());
 }
 
 void AddListener(Rml::Element* element,
@@ -411,7 +461,7 @@ static constexpr const char* kCategoryFirstControlIds[] = {
     "resolution-picker",
     "master-volume-stepper",
     "movement-dpad-mode",
-    "mirror-stone-hud-input",
+    "theme-picker",
 };
 
 static constexpr const char* kWindowModeLabels[] = {
@@ -427,6 +477,51 @@ static constexpr int kWindowModeValues[] = {
 static constexpr int kWindowModeCount =
     static_cast<int>(sizeof(kWindowModeLabels) / sizeof(kWindowModeLabels[0]));
 
+static constexpr const char* kLightingModeLabels[] = {
+    "Pixel (Modern)",
+    "Vertex (PS2)",
+};
+
+static constexpr int kLightingModeCount =
+    static_cast<int>(sizeof(kLightingModeLabels) / sizeof(kLightingModeLabels[0]));
+
+static constexpr const char* kFinderSurroundLabels[] = {
+    "Black",
+    "Blur",
+};
+
+static constexpr int kFinderSurroundCount =
+    static_cast<int>(sizeof(kFinderSurroundLabels) / sizeof(kFinderSurroundLabels[0]));
+
+static constexpr const char* kRmlThemeClasses[] = {
+    "theme-moonlit",
+    "theme-ghost-cyan",
+    "theme-crimson",
+    "theme-ff1-ritual",
+    "theme-mist-teal",
+    "theme-sepia",
+};
+
+static constexpr const char* kRmlFontClasses[] = {
+    "rml-font-imgui-default",
+    "rml-font-century",
+    "rml-font-zapf",
+};
+
+int ClampRmlThemeIndex(int theme)
+{
+    const int count =
+        static_cast<int>(sizeof(kRmlThemeClasses) / sizeof(kRmlThemeClasses[0]));
+    return theme >= 0 && theme < count ? theme : 0;
+}
+
+int ClampRmlFontIndex(int font)
+{
+    const int count =
+        static_cast<int>(sizeof(kRmlFontClasses) / sizeof(kRmlFontClasses[0]));
+    return font >= 0 && font < count ? font : 1;
+}
+
 void ScrollFocusedContentRowIntoView(void);
 void ScrollChoicePickerSelectionIntoView(void);
 bool FocusElementById(const char* id);
@@ -434,6 +529,9 @@ void QueueFocusElementById(const char* id);
 void ApplyQueuedFocus(void);
 const Rml::String GetFocusedElementId(void);
 void FocusButtonGroup(const char* const* ids, int count, int direction);
+bool HandleContentVerticalInput(int direction);
+bool HandleCalibrationVerticalInput(int direction);
+bool HandleCrtVerticalInput(int direction);
 bool HandleControlsTabHorizontalInput(int direction);
 bool HandleControlsVerticalInput(int direction);
 bool HandleControlsBindingHorizontalInput(int direction);
@@ -463,6 +561,8 @@ void UpdateControllerFocusVisual(void);
 void ClearControllerFocusVisual(void);
 void ClearControllerFocusReferences(void);
 std::string EscapeRmlText(const char* text);
+void ApplyRmlThemeClass(int theme);
+void ApplyRmlFontClass(int font);
 
 void SetCalibrationVisible(bool visible);
 void OpenCalibrationPanel(void);
@@ -495,6 +595,48 @@ void MarkSettingsDirty(void)
 void RequestUiMoveSound(void)
 {
     g_rml.ui_move_sound_requested = true;
+}
+
+void ApplyRmlThemeClass(int theme)
+{
+    if (g_rml.root == nullptr)
+    {
+        return;
+    }
+
+    theme = ClampRmlThemeIndex(theme);
+    for (int i = 0;
+         i < static_cast<int>(sizeof(kRmlThemeClasses) / sizeof(kRmlThemeClasses[0]));
+         i++)
+    {
+        g_rml.root->SetClass(kRmlThemeClasses[i], i == theme);
+    }
+
+    if (g_rml.document != nullptr)
+    {
+        g_rml.document->UpdateDocument();
+    }
+}
+
+void ApplyRmlFontClass(int font)
+{
+    if (g_rml.root == nullptr)
+    {
+        return;
+    }
+
+    font = ClampRmlFontIndex(font);
+    for (int i = 0;
+         i < static_cast<int>(sizeof(kRmlFontClasses) / sizeof(kRmlFontClasses[0]));
+         i++)
+    {
+        g_rml.root->SetClass(kRmlFontClasses[i], i == font);
+    }
+
+    if (g_rml.document != nullptr)
+    {
+        g_rml.document->UpdateDocument();
+    }
 }
 
 bool IsOptionsInputBlocked(void)
@@ -592,6 +734,10 @@ void OpenCalibrationPanel(void)
     g_rml.calibration_original_gamma = MikuPan_GetGamma();
     g_rml.calibration_original_contrast = MikuPan_GetContrast();
     g_rml.calibration_original_shadow_depth = MikuPan_GetShadowDepth();
+    g_rml.calibration_original_hdr_enabled = MikuPan_IsHdrEnabled();
+    g_rml.calibration_original_hdr_paper_white = MikuPan_GetHdrPaperWhite();
+    g_rml.calibration_original_hdr_peak_luminance =
+        MikuPan_GetHdrPeakLuminance();
     g_rml.calibration_original_dirty = g_rml.has_unsaved_changes;
     SetExitConfirmVisible(false);
     SetChoicePickerVisible(false);
@@ -600,6 +746,7 @@ void OpenCalibrationPanel(void)
     SetCrtPanelVisible(false);
     SetCalibrationVisible(true);
     UpdateStepControlVisuals();
+    SyncHdrCheckboxes();
     FocusElementById("calibration-brightness-stepper");
 }
 
@@ -627,6 +774,10 @@ void CancelCalibrationPanel(void)
     MikuPan_SetGamma(g_rml.calibration_original_gamma);
     MikuPan_SetContrast(g_rml.calibration_original_contrast);
     MikuPan_SetShadowDepth(g_rml.calibration_original_shadow_depth);
+    MikuPan_SetHdrEnabled(g_rml.calibration_original_hdr_enabled);
+    MikuPan_SetHdrPaperWhite(g_rml.calibration_original_hdr_paper_white);
+    MikuPan_SetHdrPeakLuminance(
+        g_rml.calibration_original_hdr_peak_luminance);
     g_rml.has_unsaved_changes = g_rml.calibration_original_dirty;
     SetCalibrationVisible(false);
     SyncRmlSettingsValues();
@@ -639,8 +790,12 @@ void ResetCalibrationDefaults(void)
     MikuPan_SetGamma(1.0f);
     MikuPan_SetContrast(1.0f);
     MikuPan_SetShadowDepth(1.0f);
+    MikuPan_SetHdrEnabled(0);
+    MikuPan_SetHdrPaperWhite(203.0f);
+    MikuPan_SetHdrPeakLuminance(1000.0f);
     MarkSettingsDirty();
     UpdateStepControlVisuals();
+    SyncHdrCheckboxes();
     FocusElementById("calibration-reset-button");
 }
 
@@ -950,6 +1105,8 @@ void ToggleFinderDpadFilmSwap(void)
         !MikuPan_FinderDpadFilmSwapEnabled());
     MarkSettingsDirty();
     SyncViewfinderButtons();
+    SetCheckbox(g_rml.finder_dpad_film_swap_input,
+                MikuPan_FinderDpadFilmSwapEnabled());
     FocusElementById("finder-dpad-film-swap-mode");
     RequestUiMoveSound();
 }
@@ -1718,6 +1875,10 @@ float GetStepValue(const MikuPanStepControl& control)
             return MikuPan_GetContrast();
         case MIKUPAN_STEP_SHADOW_DEPTH:
             return MikuPan_GetShadowDepth();
+        case MIKUPAN_STEP_HDR_PAPER_WHITE:
+            return MikuPan_GetHdrPaperWhite();
+        case MIKUPAN_STEP_HDR_PEAK_LUMINANCE:
+            return MikuPan_GetHdrPeakLuminance();
         case MIKUPAN_STEP_FONT_SCALE:
             return MikuPan_GetUiFontScale();
         case MIKUPAN_STEP_CRT_FIELD:
@@ -1751,6 +1912,12 @@ void SetStepValue(const MikuPanStepControl& control, float value)
             break;
         case MIKUPAN_STEP_SHADOW_DEPTH:
             MikuPan_SetShadowDepth(clamped);
+            break;
+        case MIKUPAN_STEP_HDR_PAPER_WHITE:
+            MikuPan_SetHdrPaperWhite(clamped);
+            break;
+        case MIKUPAN_STEP_HDR_PEAK_LUMINANCE:
+            MikuPan_SetHdrPeakLuminance(clamped);
             break;
         case MIKUPAN_STEP_FONT_SCALE:
             MikuPan_SetUiFontScale(clamped);
@@ -2205,6 +2372,37 @@ const char* WindowModeLabel(int index)
     return kWindowModeLabels[index];
 }
 
+int GetFinderSurroundIndex(void)
+{
+    return mikupan_configuration.renderer.finder_viewport_mask_mode
+                   == MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+               ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+               : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR;
+}
+
+bool PickerUsesSharedPendingIndex(MikuPanChoicePickerKind kind)
+{
+    switch (kind)
+    {
+        case MIKUPAN_PICKER_GPU_BACKEND:
+        case MIKUPAN_PICKER_MSAA:
+        case MIKUPAN_PICKER_SHADOW_RESOLUTION:
+        case MIKUPAN_PICKER_LIGHTING_MODE:
+        case MIKUPAN_PICKER_DITHER_MODE:
+        case MIKUPAN_PICKER_FINDER_SURROUND:
+        case MIKUPAN_PICKER_THEME:
+        case MIKUPAN_PICKER_FONT:
+            return true;
+        default:
+            return false;
+    }
+}
+
+const char* SafePickerLabel(const char* label)
+{
+    return label != nullptr ? label : "";
+}
+
 int GetPickerCount(MikuPanChoicePickerKind kind)
 {
     switch (kind)
@@ -2215,6 +2413,22 @@ int GetPickerCount(MikuPanChoicePickerKind kind)
             return MikuPan_GetWindowSizeOptionCount();
         case MIKUPAN_PICKER_RESOLUTION:
             return MikuPan_GetRenderResolutionOptionCount();
+        case MIKUPAN_PICKER_GPU_BACKEND:
+            return MikuPan_GetGpuDriverOptionCount();
+        case MIKUPAN_PICKER_MSAA:
+            return MikuPan_GetMSAAOptionCount();
+        case MIKUPAN_PICKER_SHADOW_RESOLUTION:
+            return MikuPan_GetShadowResolutionOptionCount();
+        case MIKUPAN_PICKER_LIGHTING_MODE:
+            return kLightingModeCount;
+        case MIKUPAN_PICKER_DITHER_MODE:
+            return MikuPan_GetDitherModeOptionCount();
+        case MIKUPAN_PICKER_FINDER_SURROUND:
+            return kFinderSurroundCount;
+        case MIKUPAN_PICKER_THEME:
+            return MikuPan_GetThemeOptionCount();
+        case MIKUPAN_PICKER_FONT:
+            return MikuPan_GetFontOptionCount();
         default:
             return 0;
     }
@@ -2231,7 +2445,7 @@ int GetPickerPendingIndex(void)
         case MIKUPAN_PICKER_RESOLUTION:
             return g_rml.pending_resolution_index;
         default:
-            return 0;
+            return g_rml.pending_picker_index;
     }
 }
 
@@ -2245,6 +2459,22 @@ int GetPickerAppliedIndex(MikuPanChoicePickerKind kind)
             return MikuPan_GetSelectedWindowSizeOption();
         case MIKUPAN_PICKER_RESOLUTION:
             return MikuPan_GetSelectedRenderResolutionOption();
+        case MIKUPAN_PICKER_GPU_BACKEND:
+            return MikuPan_GetSelectedGpuDriverOption();
+        case MIKUPAN_PICKER_MSAA:
+            return MikuPan_GetSelectedMSAAOption();
+        case MIKUPAN_PICKER_SHADOW_RESOLUTION:
+            return MikuPan_GetSelectedShadowResolutionOption();
+        case MIKUPAN_PICKER_LIGHTING_MODE:
+            return MikuPan_GetLightingMode();
+        case MIKUPAN_PICKER_DITHER_MODE:
+            return MikuPan_GetSelectedDitherModeOption();
+        case MIKUPAN_PICKER_FINDER_SURROUND:
+            return GetFinderSurroundIndex();
+        case MIKUPAN_PICKER_THEME:
+            return MikuPan_GetSelectedThemeOption();
+        case MIKUPAN_PICKER_FONT:
+            return MikuPan_GetSelectedFontOption();
         default:
             return 0;
     }
@@ -2257,12 +2487,155 @@ const char* GetPickerLabel(MikuPanChoicePickerKind kind, int index)
         case MIKUPAN_PICKER_WINDOW_MODE:
             return WindowModeLabel(index);
         case MIKUPAN_PICKER_WINDOW_SIZE:
-            return MikuPan_GetWindowSizeOptionLabel(index);
+            return SafePickerLabel(MikuPan_GetWindowSizeOptionLabel(index));
         case MIKUPAN_PICKER_RESOLUTION:
-            return MikuPan_GetRenderResolutionOptionLabel(index);
+            return SafePickerLabel(MikuPan_GetRenderResolutionOptionLabel(index));
+        case MIKUPAN_PICKER_GPU_BACKEND:
+            return SafePickerLabel(MikuPan_GetGpuDriverOptionLabel(index));
+        case MIKUPAN_PICKER_MSAA:
+            return SafePickerLabel(MikuPan_GetMSAAOptionLabel(index));
+        case MIKUPAN_PICKER_SHADOW_RESOLUTION:
+            return SafePickerLabel(MikuPan_GetShadowResolutionOptionLabel(index));
+        case MIKUPAN_PICKER_LIGHTING_MODE:
+            return index >= 0 && index < kLightingModeCount
+                       ? kLightingModeLabels[index]
+                       : "";
+        case MIKUPAN_PICKER_DITHER_MODE:
+            return SafePickerLabel(MikuPan_GetDitherModeOptionLabel(index));
+        case MIKUPAN_PICKER_FINDER_SURROUND:
+            return index >= 0 && index < kFinderSurroundCount
+                       ? kFinderSurroundLabels[index]
+                       : "";
+        case MIKUPAN_PICKER_THEME:
+            return SafePickerLabel(MikuPan_GetThemeOptionLabel(index));
+        case MIKUPAN_PICKER_FONT:
+            return SafePickerLabel(MikuPan_GetFontOptionLabel(index));
         default:
             return "";
     }
+}
+
+const char* GetPickerTitle(MikuPanChoicePickerKind kind)
+{
+    switch (kind)
+    {
+        case MIKUPAN_PICKER_WINDOW_MODE:
+            return "DISPLAY MODE";
+        case MIKUPAN_PICKER_WINDOW_SIZE:
+            return "WINDOW SIZE";
+        case MIKUPAN_PICKER_RESOLUTION:
+            return "RENDER SCALE";
+        case MIKUPAN_PICKER_GPU_BACKEND:
+            return "GPU BACKEND";
+        case MIKUPAN_PICKER_MSAA:
+            return "MSAA";
+        case MIKUPAN_PICKER_SHADOW_RESOLUTION:
+            return "SHADOW RESOLUTION";
+        case MIKUPAN_PICKER_LIGHTING_MODE:
+            return "LIGHTING MODE";
+        case MIKUPAN_PICKER_DITHER_MODE:
+            return "DITHER FILTERING";
+        case MIKUPAN_PICKER_FINDER_SURROUND:
+            return "FINDER SURROUND";
+        case MIKUPAN_PICKER_THEME:
+            return "THEME";
+        case MIKUPAN_PICKER_FONT:
+            return "FONT";
+        default:
+            return "SELECT";
+    }
+}
+
+const char* GetPickerFocusId(MikuPanChoicePickerKind kind)
+{
+    switch (kind)
+    {
+        case MIKUPAN_PICKER_WINDOW_MODE:
+            return "window-mode-picker";
+        case MIKUPAN_PICKER_WINDOW_SIZE:
+            return "window-size-picker";
+        case MIKUPAN_PICKER_RESOLUTION:
+            return "resolution-picker";
+        case MIKUPAN_PICKER_GPU_BACKEND:
+            return "gpu-backend-picker";
+        case MIKUPAN_PICKER_MSAA:
+            return "msaa-picker";
+        case MIKUPAN_PICKER_SHADOW_RESOLUTION:
+            return "shadow-resolution-picker";
+        case MIKUPAN_PICKER_LIGHTING_MODE:
+            return "lighting-mode-picker";
+        case MIKUPAN_PICKER_DITHER_MODE:
+            return "dither-mode-picker";
+        case MIKUPAN_PICKER_FINDER_SURROUND:
+            return "finder-surround-picker";
+        case MIKUPAN_PICKER_THEME:
+            return "theme-picker";
+        case MIKUPAN_PICKER_FONT:
+            return "font-picker";
+        default:
+            return nullptr;
+    }
+}
+
+Rml::Element* GetPickerElement(MikuPanChoicePickerKind kind)
+{
+    switch (kind)
+    {
+        case MIKUPAN_PICKER_WINDOW_MODE:
+            return g_rml.window_mode_picker;
+        case MIKUPAN_PICKER_WINDOW_SIZE:
+            return g_rml.window_size_picker;
+        case MIKUPAN_PICKER_RESOLUTION:
+            return g_rml.resolution_picker;
+        case MIKUPAN_PICKER_GPU_BACKEND:
+            return g_rml.gpu_backend_picker;
+        case MIKUPAN_PICKER_MSAA:
+            return g_rml.msaa_picker;
+        case MIKUPAN_PICKER_SHADOW_RESOLUTION:
+            return g_rml.shadow_resolution_picker;
+        case MIKUPAN_PICKER_LIGHTING_MODE:
+            return g_rml.lighting_mode_picker;
+        case MIKUPAN_PICKER_DITHER_MODE:
+            return g_rml.dither_mode_picker;
+        case MIKUPAN_PICKER_FINDER_SURROUND:
+            return g_rml.finder_surround_picker;
+        case MIKUPAN_PICKER_THEME:
+            return g_rml.theme_picker;
+        case MIKUPAN_PICKER_FONT:
+            return g_rml.font_picker;
+        default:
+            return nullptr;
+    }
+}
+
+Rml::Element* GetPickerChoiceElement(MikuPanChoicePickerKind kind)
+{
+    switch (kind)
+    {
+        case MIKUPAN_PICKER_GPU_BACKEND:
+            return g_rml.gpu_backend_choice;
+        case MIKUPAN_PICKER_MSAA:
+            return g_rml.msaa_choice;
+        case MIKUPAN_PICKER_SHADOW_RESOLUTION:
+            return g_rml.shadow_resolution_choice;
+        case MIKUPAN_PICKER_LIGHTING_MODE:
+            return g_rml.lighting_mode_choice;
+        case MIKUPAN_PICKER_DITHER_MODE:
+            return g_rml.dither_mode_choice;
+        case MIKUPAN_PICKER_FINDER_SURROUND:
+            return g_rml.finder_surround_choice;
+        case MIKUPAN_PICKER_THEME:
+            return g_rml.theme_choice;
+        case MIKUPAN_PICKER_FONT:
+            return g_rml.font_choice;
+        default:
+            return nullptr;
+    }
+}
+
+bool PickerIsDisabled(MikuPanChoicePickerKind kind)
+{
+    return kind == MIKUPAN_PICKER_MSAA && MikuPan_IsSuperSamplingEnabled();
 }
 
 void SetPickerPendingIndex(int index)
@@ -2298,6 +2671,10 @@ void SetPickerPendingIndex(int index)
                 != MikuPan_GetSelectedRenderResolutionOption();
             break;
         default:
+            if (PickerUsesSharedPendingIndex(g_rml.active_picker))
+            {
+                g_rml.pending_picker_index = index;
+            }
             break;
     }
 }
@@ -2364,16 +2741,8 @@ void UpdateChoicePickerVisual(void)
                                  std::max(count - 1, 0));
     SetPickerPendingIndex(pending);
 
-    const char* picker_title = "RENDER SCALE";
-    if (g_rml.active_picker == MIKUPAN_PICKER_WINDOW_MODE)
-    {
-        picker_title = "DISPLAY MODE";
-    }
-    else if (g_rml.active_picker == MIKUPAN_PICKER_WINDOW_SIZE)
-    {
-        picker_title = "WINDOW SIZE";
-    }
-    SetElementText(g_rml.choice_picker_title, picker_title);
+    SetElementText(g_rml.choice_picker_title,
+                   GetPickerTitle(g_rml.active_picker));
 
     if (count <= 0)
     {
@@ -2501,36 +2870,98 @@ void UpdateResolutionPicker(void)
                        : "");
 }
 
+void SetPickerDisabled(Rml::Element* picker, bool disabled)
+{
+    if (picker == nullptr)
+    {
+        return;
+    }
+
+    picker->SetClass("disabled", disabled);
+    if (disabled)
+    {
+        picker->SetAttribute("disabled", "");
+    }
+    else
+    {
+        picker->RemoveAttribute("disabled");
+    }
+}
+
+void UpdateImmediateChoicePicker(MikuPanChoicePickerKind kind)
+{
+    Rml::Element* choice = GetPickerChoiceElement(kind);
+    if (choice != nullptr)
+    {
+        const int count = GetPickerCount(kind);
+        if (count <= 0)
+        {
+            SetElementText(choice, "Unavailable");
+        }
+        else
+        {
+            const int selected = ClampInt(GetPickerAppliedIndex(kind), 0, count - 1);
+            SetElementText(choice, GetPickerLabel(kind, selected));
+        }
+    }
+
+    SetPickerDisabled(GetPickerElement(kind), PickerIsDisabled(kind));
+}
+
+void UpdateImmediateChoicePickers(void)
+{
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_GPU_BACKEND);
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_MSAA);
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_SHADOW_RESOLUTION);
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_LIGHTING_MODE);
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_DITHER_MODE);
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_FINDER_SURROUND);
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_THEME);
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_FONT);
+}
+
 void UpdateDisplayPickers(void)
 {
     UpdateWindowModePicker();
     UpdateWindowSizePicker();
     UpdateResolutionPicker();
+    UpdateImmediateChoicePickers();
     UpdateChoicePickerVisual();
     UpdateMsaaSelectState();
 }
 
 void UpdateMsaaSelectState(void)
 {
-    if (g_rml.msaa_select == nullptr)
+    if (g_rml.msaa_select != nullptr)
     {
-        return;
+        const int selected = MikuPan_GetSelectedMSAAOption();
+        if (g_rml.msaa_select->GetSelection() != selected)
+        {
+            g_rml.msaa_select->SetSelection(selected);
+        }
+
+        if (MikuPan_IsSuperSamplingEnabled())
+        {
+            g_rml.msaa_select->SetAttribute("disabled", "");
+        }
+        else
+        {
+            g_rml.msaa_select->RemoveAttribute("disabled");
+        }
     }
 
-    const int selected = MikuPan_GetSelectedMSAAOption();
-    if (g_rml.msaa_select->GetSelection() != selected)
-    {
-        g_rml.msaa_select->SetSelection(selected);
-    }
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_MSAA);
+}
 
-    if (MikuPan_IsSuperSamplingEnabled())
-    {
-        g_rml.msaa_select->SetAttribute("disabled", "");
-    }
-    else
-    {
-        g_rml.msaa_select->RemoveAttribute("disabled");
-    }
+void UpdateGpuDriverNotes(void)
+{
+    SetElementText(g_rml.active_gpu_label,
+                   std::string("Active: ")
+                       + MikuPan_GetActiveGpuDriverLabel());
+    SetElementText(g_rml.gpu_restart_note,
+                   MikuPan_IsGpuDriverRestartPending()
+                       ? "Save Configuration and restart to apply"
+                       : "");
 }
 
 void SetChoicePickerVisible(bool visible)
@@ -2550,17 +2981,13 @@ void SetChoicePickerVisible(bool visible)
         {
             FocusElementById("choice-picker-apply-button");
         }
-        else if (g_rml.active_picker == MIKUPAN_PICKER_WINDOW_MODE)
+        else
         {
-            FocusElementById("window-mode-picker");
-        }
-        else if (g_rml.active_picker == MIKUPAN_PICKER_WINDOW_SIZE)
-        {
-            FocusElementById("window-size-picker");
-        }
-        else if (g_rml.active_picker == MIKUPAN_PICKER_RESOLUTION)
-        {
-            FocusElementById("resolution-picker");
+            const char* focus_id = GetPickerFocusId(g_rml.active_picker);
+            if (focus_id != nullptr)
+            {
+                FocusElementById(focus_id);
+            }
         }
     }
 }
@@ -2568,6 +2995,10 @@ void SetChoicePickerVisible(bool visible)
 void OpenChoicePicker(MikuPanChoicePickerKind kind)
 {
     if (kind == MIKUPAN_PICKER_NONE)
+    {
+        return;
+    }
+    if (PickerIsDisabled(kind) || GetPickerCount(kind) <= 0)
     {
         return;
     }
@@ -2598,6 +3029,13 @@ void OpenChoicePicker(MikuPanChoicePickerKind kind)
                                  count - 1)
                       : 0;
         g_rml.resolution_pending_dirty = false;
+    }
+    else if (PickerUsesSharedPendingIndex(kind))
+    {
+        const int count = GetPickerCount(kind);
+        g_rml.pending_picker_index =
+            count > 0 ? ClampInt(GetPickerAppliedIndex(kind), 0, count - 1)
+                      : 0;
     }
 
     SetChoicePickerVisible(true);
@@ -2638,6 +3076,13 @@ void CloseChoicePicker(void)
         g_rml.resolution_pending_dirty = false;
         FocusElementById("resolution-picker");
     }
+    else if (PickerUsesSharedPendingIndex(old_picker))
+    {
+        const int count = GetPickerCount(old_picker);
+        g_rml.pending_picker_index =
+            count > 0 ? ClampInt(GetPickerAppliedIndex(old_picker), 0, count - 1)
+                      : 0;
+    }
     UpdateDisplayPickers();
 }
 
@@ -2676,9 +3121,14 @@ bool HandleVerticalInput(int direction)
         return true;
     }
 
-    if (g_rml.calibration_visible || g_rml.crt_visible)
+    if (g_rml.calibration_visible)
     {
-        return false;
+        return HandleCalibrationVerticalInput(direction);
+    }
+
+    if (g_rml.crt_visible)
+    {
+        return HandleCrtVerticalInput(direction);
     }
 
     if (g_rml.exit_confirm_visible || g_rml.resolution_confirm_visible)
@@ -2696,9 +3146,13 @@ bool HandleVerticalInput(int direction)
         return false;
     }
 
-    if (HandleControlsVerticalInput(direction))
+    if (g_rml.control_scope == MIKUPAN_CONTROL_SCOPE_CONTENT)
     {
-        return true;
+        if (HandleControlsVerticalInput(direction))
+        {
+            return true;
+        }
+        return HandleContentVerticalInput(direction);
     }
 
     return false;
@@ -3016,6 +3470,107 @@ bool ApplyPendingResolution(void)
     return true;
 }
 
+bool ApplyImmediateChoicePicker(MikuPanChoicePickerKind kind)
+{
+    const int count = GetPickerCount(kind);
+    if (count <= 0 || PickerIsDisabled(kind))
+    {
+        return false;
+    }
+
+    const int index = ClampInt(g_rml.pending_picker_index, 0, count - 1);
+    switch (kind)
+    {
+        case MIKUPAN_PICKER_GPU_BACKEND:
+            if (index == MikuPan_GetSelectedGpuDriverOption())
+            {
+                return true;
+            }
+            if (MikuPan_SelectGpuDriverOption(index))
+            {
+                MarkSettingsDirty();
+                UpdateGpuDriverNotes();
+                return true;
+            }
+            return false;
+        case MIKUPAN_PICKER_MSAA:
+            if (index == MikuPan_GetSelectedMSAAOption())
+            {
+                return true;
+            }
+            if (MikuPan_SelectMSAAOption(index))
+            {
+                MarkSettingsDirty();
+                return true;
+            }
+            return false;
+        case MIKUPAN_PICKER_SHADOW_RESOLUTION:
+            if (index == MikuPan_GetSelectedShadowResolutionOption())
+            {
+                return true;
+            }
+            if (MikuPan_SelectShadowResolutionOption(index))
+            {
+                MarkSettingsDirty();
+                return true;
+            }
+            return false;
+        case MIKUPAN_PICKER_LIGHTING_MODE:
+            if (index != MikuPan_GetLightingMode())
+            {
+                MikuPan_SetLightingMode(index);
+                MarkSettingsDirty();
+            }
+            return true;
+        case MIKUPAN_PICKER_DITHER_MODE:
+            if (index == MikuPan_GetSelectedDitherModeOption())
+            {
+                return true;
+            }
+            if (MikuPan_SelectDitherModeOption(index))
+            {
+                MarkSettingsDirty();
+                return true;
+            }
+            return false;
+        case MIKUPAN_PICKER_FINDER_SURROUND:
+            if (index != GetFinderSurroundIndex())
+            {
+                mikupan_configuration.renderer.finder_viewport_mask_mode =
+                    index == MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                        ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                        : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR;
+                MarkSettingsDirty();
+            }
+            return true;
+        case MIKUPAN_PICKER_THEME:
+            if (index == MikuPan_GetSelectedThemeOption())
+            {
+                return true;
+            }
+            if (MikuPan_SelectThemeOption(index))
+            {
+                ApplyRmlThemeClass(index);
+                MarkSettingsDirty();
+                return true;
+            }
+            return false;
+        case MIKUPAN_PICKER_FONT:
+            if (index == MikuPan_GetSelectedFontOption())
+            {
+                return true;
+            }
+            if (MikuPan_SelectFontOption(index))
+            {
+                MarkSettingsDirty();
+                return true;
+            }
+            return false;
+        default:
+            return false;
+    }
+}
+
 void ApplyChoicePicker(void)
 {
     const MikuPanChoicePickerKind kind = g_rml.active_picker;
@@ -3037,6 +3592,10 @@ void ApplyChoicePicker(void)
     else if (kind == MIKUPAN_PICKER_RESOLUTION)
     {
         (void) ApplyPendingResolution();
+    }
+    else if (PickerUsesSharedPendingIndex(kind))
+    {
+        (void) ApplyImmediateChoicePicker(kind);
     }
     UpdateDisplayPickers();
 }
@@ -3306,6 +3865,218 @@ void FocusButtonGroup(const char* const* ids, int count, int direction)
     }
 }
 
+bool FocusSubmenuControlList(const char* const* ids, int count, int direction)
+{
+    if (count <= 0 || ids == nullptr || direction == 0)
+    {
+        return false;
+    }
+
+    int index = GetFocusedIdIndex(ids, count);
+    if (index < 0)
+    {
+        index = direction < 0 ? count - 1 : 0;
+    }
+    else
+    {
+        index = (index + direction + count) % count;
+    }
+
+    const Rml::String old_focus_id = GetFocusedElementId();
+    FocusElementById(ids[index]);
+
+    Rml::Element* focus = g_rml.context != nullptr
+                              ? g_rml.context->GetFocusElement()
+                              : nullptr;
+    if (focus != nullptr)
+    {
+        focus->ScrollIntoView(false);
+    }
+
+    if (old_focus_id != ids[index])
+    {
+        RequestUiMoveSound();
+    }
+
+    return true;
+}
+
+bool IsFocusableContentElement(Rml::Element* element)
+{
+    if (element == nullptr || element->HasAttribute("disabled")
+        || element->IsClassSet("hidden"))
+    {
+        return false;
+    }
+
+    const Rml::String tag = element->GetTagName();
+    return tag == "button" || tag == "select" || tag == "input";
+}
+
+Rml::ElementFormControlSelect* ElementAsNativeSelect(Rml::Element* element)
+{
+    while (element != nullptr)
+    {
+        auto* select =
+            rmlui_dynamic_cast<Rml::ElementFormControlSelect*>(element);
+        if (select != nullptr)
+        {
+            return select;
+        }
+        element = element->GetParentNode();
+    }
+
+    return nullptr;
+}
+
+Rml::ElementFormControlSelect* GetFocusedNativeSelect(void)
+{
+    return g_rml.context != nullptr
+               ? ElementAsNativeSelect(g_rml.context->GetFocusElement())
+               : nullptr;
+}
+
+bool ControllerNativeSelectOpen(void)
+{
+    if (g_rml.controller_open_select == nullptr)
+    {
+        return false;
+    }
+
+    if (g_rml.context == nullptr)
+    {
+        g_rml.controller_open_select = nullptr;
+        return false;
+    }
+
+    Rml::Element* focus = g_rml.context->GetFocusElement();
+    while (focus != nullptr)
+    {
+        if (focus == g_rml.controller_open_select)
+        {
+            return true;
+        }
+        focus = focus->GetParentNode();
+    }
+
+    g_rml.controller_open_select = nullptr;
+    return false;
+}
+
+void CollectFocusableContentElements(Rml::Element* element,
+                                     std::vector<Rml::Element*>& elements)
+{
+    if (element == nullptr || element->IsClassSet("hidden"))
+    {
+        return;
+    }
+
+    if (IsFocusableContentElement(element))
+    {
+        elements.push_back(element);
+    }
+
+    const int child_count = element->GetNumChildren(true);
+    for (int i = 0; i < child_count; i++)
+    {
+        CollectFocusableContentElements(element->GetChild(i), elements);
+    }
+}
+
+bool ElementContainsDescendant(Rml::Element* ancestor, Rml::Element* element)
+{
+    while (element != nullptr)
+    {
+        if (element == ancestor)
+        {
+            return true;
+        }
+        element = element->GetParentNode();
+    }
+    return false;
+}
+
+Rml::Element* FindFocusableContentAncestor(Rml::Element* root,
+                                           Rml::Element* element)
+{
+    while (element != nullptr && ElementContainsDescendant(root, element))
+    {
+        if (IsFocusableContentElement(element))
+        {
+            return element;
+        }
+        if (element == root)
+        {
+            break;
+        }
+        element = element->GetParentNode();
+    }
+    return nullptr;
+}
+
+float ElementCenterX(Rml::Element* element)
+{
+    const Rml::Vector2f offset = element->GetAbsoluteOffset();
+    return offset.x + static_cast<float>(element->GetOffsetWidth()) * 0.5f;
+}
+
+float ElementCenterY(Rml::Element* element)
+{
+    const Rml::Vector2f offset = element->GetAbsoluteOffset();
+    return offset.y + static_cast<float>(element->GetOffsetHeight()) * 0.5f;
+}
+
+Rml::Element* FindVisualEdgeElement(const std::vector<Rml::Element*>& elements,
+                                    int direction)
+{
+    if (elements.empty())
+    {
+        return nullptr;
+    }
+
+    Rml::Element* best = elements.front();
+    for (Rml::Element* element : elements)
+    {
+        const float y = ElementCenterY(element);
+        const float best_y = ElementCenterY(best);
+        const float x = ElementCenterX(element);
+        const float best_x = ElementCenterX(best);
+        if (direction > 0)
+        {
+            if (y < best_y - 1.0f
+                || (std::abs(y - best_y) <= 1.0f && x < best_x))
+            {
+                best = element;
+            }
+        }
+        else if (y > best_y + 1.0f
+                 || (std::abs(y - best_y) <= 1.0f && x > best_x))
+        {
+            best = element;
+        }
+    }
+    return best;
+}
+
+bool FocusElement(Rml::Element* element)
+{
+    if (element == nullptr || g_rml.context == nullptr)
+    {
+        return false;
+    }
+
+    Rml::Element* old_focus = g_rml.context->GetFocusElement();
+    element->Focus();
+    UpdateControllerFocusVisual();
+    ScrollFocusedContentRowIntoView();
+    element->ScrollIntoView(false);
+    if (old_focus != element)
+    {
+        RequestUiMoveSound();
+    }
+    return true;
+}
+
 struct ControlsFocusRow
 {
     std::string primary;
@@ -3498,6 +4269,133 @@ bool HandleControlsBindingHorizontalInput(int direction)
     return true;
 }
 
+bool HandleContentVerticalInput(int direction)
+{
+    if (direction == 0 || g_rml.context == nullptr || g_rml.document == nullptr)
+    {
+        return false;
+    }
+
+    const int category = ClampInt(g_rml.selected_category,
+                                  0,
+                                  static_cast<int>(g_rml.category_pages.size()) - 1);
+    Rml::Element* page = g_rml.category_pages[category];
+    if (page == nullptr)
+    {
+        return false;
+    }
+
+    g_rml.document->UpdateDocument();
+
+    std::vector<Rml::Element*> elements;
+    CollectFocusableContentElements(page, elements);
+    if (elements.empty())
+    {
+        return false;
+    }
+
+    Rml::Element* focus =
+        FindFocusableContentAncestor(page, g_rml.context->GetFocusElement());
+    if (ControllerNativeSelectOpen())
+    {
+        return false;
+    }
+
+    if (focus == nullptr)
+    {
+        return FocusElement(FindVisualEdgeElement(elements, direction));
+    }
+
+    constexpr float kSameRowTolerance = 1.0f;
+    const float focus_x = ElementCenterX(focus);
+    const float focus_y = ElementCenterY(focus);
+    Rml::Element* best = nullptr;
+    float best_score = 1000000000.0f;
+
+    for (Rml::Element* element : elements)
+    {
+        if (element == focus)
+        {
+            continue;
+        }
+
+        const float candidate_x = ElementCenterX(element);
+        const float candidate_y = ElementCenterY(element);
+        const float delta_y = candidate_y - focus_y;
+        if ((direction > 0 && delta_y <= kSameRowTolerance)
+            || (direction < 0 && delta_y >= -kSameRowTolerance))
+        {
+            continue;
+        }
+
+        const float row_distance = std::abs(delta_y);
+        const float column_distance = std::abs(candidate_x - focus_x);
+        const float score = row_distance * 10000.0f + column_distance;
+        if (score < best_score)
+        {
+            best_score = score;
+            best = element;
+        }
+    }
+
+    if (best == nullptr)
+    {
+        best = FindVisualEdgeElement(elements, direction);
+    }
+
+    return FocusElement(best);
+}
+
+bool HandleCalibrationVerticalInput(int direction)
+{
+    static constexpr const char* kCalibrationControls[] = {
+        "calibration-brightness-stepper",
+        "calibration-gamma-stepper",
+        "calibration-contrast-stepper",
+        "calibration-shadow-depth-stepper",
+        "calibration-reset-button",
+        "calibration-ok-button",
+        "calibration-back-button",
+    };
+
+    return FocusSubmenuControlList(
+        kCalibrationControls,
+        static_cast<int>(sizeof(kCalibrationControls)
+                         / sizeof(kCalibrationControls[0])),
+        direction);
+}
+
+bool HandleCrtVerticalInput(int direction)
+{
+    static constexpr const char* kCrtControls[] = {
+        "crt-enabled-input",
+        "crt-0-stepper",
+        "crt-1-stepper",
+        "crt-2-stepper",
+        "crt-3-stepper",
+        "crt-4-stepper",
+        "crt-5-stepper",
+        "crt-6-stepper",
+        "crt-7-stepper",
+        "crt-8-stepper",
+        "crt-9-stepper",
+        "crt-10-stepper",
+        "crt-11-stepper",
+        "crt-12-stepper",
+        "crt-13-stepper",
+        "crt-14-stepper",
+        "crt-15-stepper",
+        "reset-crt-button",
+        "crt-ok-button",
+        "crt-back-button",
+    };
+
+    return FocusSubmenuControlList(
+        kCrtControls,
+        static_cast<int>(sizeof(kCrtControls) / sizeof(kCrtControls[0])),
+        direction);
+}
+
 bool HandleControlsTabHorizontalInput(int direction)
 {
     static constexpr const char* kControlsTabs[] = {
@@ -3550,12 +4448,18 @@ void EnterContentScope(void)
 
 bool AnySelectOpen(void)
 {
+    if (ControllerNativeSelectOpen())
+    {
+        return true;
+    }
+
     Rml::ElementFormControlSelect* selects[] = {
         g_rml.gpu_backend_select,
         g_rml.msaa_select,
         g_rml.shadow_resolution_select,
         g_rml.lighting_mode_select,
         g_rml.dither_mode_select,
+        g_rml.finder_surround_select,
         g_rml.theme_select,
         g_rml.font_select,
     };
@@ -3586,6 +4490,8 @@ bool FocusedControlWantsSpaceConfirm(void)
 
     if (focus == g_rml.vsync_input
         || focus == g_rml.crt_enabled_input
+        || focus == g_rml.minimap_enabled_input
+        || focus == g_rml.finder_dpad_film_swap_input
         || focus == g_rml.mirror_stone_hud_input
         || focus == g_rml.improved_movement_collisions_input
         || focus == g_rml.controller_remap_input)
@@ -3632,6 +4538,19 @@ bool ActivateFocusedControl(void)
     if (BindingCaptureIsVisible())
     {
         return true;
+    }
+
+    if (Rml::ElementFormControlSelect* select = GetFocusedNativeSelect())
+    {
+        if (g_rml.controller_open_select == select)
+        {
+            g_rml.controller_open_select = nullptr;
+        }
+        else
+        {
+            g_rml.controller_open_select = select;
+        }
+        return false;
     }
 
     if (g_rml.crt_visible)
@@ -3730,6 +4649,54 @@ bool ActivateFocusedControl(void)
     if (focus == g_rml.resolution_picker)
     {
         OpenChoicePicker(MIKUPAN_PICKER_RESOLUTION);
+        return true;
+    }
+
+    if (focus == g_rml.gpu_backend_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_GPU_BACKEND);
+        return true;
+    }
+
+    if (focus == g_rml.msaa_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_MSAA);
+        return true;
+    }
+
+    if (focus == g_rml.shadow_resolution_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_SHADOW_RESOLUTION);
+        return true;
+    }
+
+    if (focus == g_rml.lighting_mode_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_LIGHTING_MODE);
+        return true;
+    }
+
+    if (focus == g_rml.dither_mode_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_DITHER_MODE);
+        return true;
+    }
+
+    if (focus == g_rml.finder_surround_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_FINDER_SURROUND);
+        return true;
+    }
+
+    if (focus == g_rml.theme_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_THEME);
+        return true;
+    }
+
+    if (focus == g_rml.font_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_FONT);
         return true;
     }
 
@@ -3861,6 +4828,7 @@ void UpdateSelectArrows(void)
     SetSelectArrow(g_rml.shadow_resolution_select);
     SetSelectArrow(g_rml.lighting_mode_select);
     SetSelectArrow(g_rml.dither_mode_select);
+    SetSelectArrow(g_rml.finder_surround_select);
     SetSelectArrow(g_rml.theme_select);
     SetSelectArrow(g_rml.font_select);
 }
@@ -3994,29 +4962,38 @@ void SyncRmlSettingsValues(void)
         g_rml.dither_mode_select->SetSelection(
             MikuPan_GetSelectedDitherModeOption());
     }
+    if (g_rml.finder_surround_select != nullptr)
+    {
+        g_rml.finder_surround_select->SetSelection(
+            mikupan_configuration.renderer.finder_viewport_mask_mode ==
+                    MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR);
+    }
     if (g_rml.theme_select != nullptr)
     {
         g_rml.theme_select->SetSelection(MikuPan_GetSelectedThemeOption());
     }
+    ApplyRmlThemeClass(MikuPan_GetSelectedThemeOption());
     if (g_rml.font_select != nullptr)
     {
         g_rml.font_select->SetSelection(MikuPan_GetSelectedFontOption());
     }
+    ApplyRmlFontClass(MikuPan_GetSelectedFontOption());
 
     UpdateStepControlVisuals();
     RebuildControlsList();
     SyncMovementStyleButtons();
     SyncViewfinderButtons();
     SetCheckbox(g_rml.vsync_input, MikuPan_IsVsync());
-    SetElementText(g_rml.active_gpu_label,
-                   std::string("Active: ")
-                       + MikuPan_GetActiveGpuDriverLabel());
-    SetElementText(g_rml.gpu_restart_note,
-                   MikuPan_IsGpuDriverRestartPending()
-                       ? "Save Configuration and restart to apply"
-                       : "");
+    UpdateGpuDriverNotes();
     const MikuPan_ConfigCrt* crt = MikuPan_GetCrtSettings();
+    SyncHdrCheckboxes();
     SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
+    SetCheckbox(g_rml.minimap_enabled_input,
+                mikupan_configuration.minimap_enabled);
+    SetCheckbox(g_rml.finder_dpad_film_swap_input,
+                MikuPan_FinderDpadFilmSwapEnabled());
     SetCheckbox(g_rml.mirror_stone_hud_input,
                 MikuPan_MirrorStoneHudEnabled());
     SetCheckbox(g_rml.improved_movement_collisions_input,
@@ -4052,10 +5029,7 @@ bool LoadOptionsDocument(void)
         return false;
     }
 
-    static constexpr const char* kLightingModeLabels[] = {
-        "Pixel (Modern)",
-        "Vertex (PS2)",
-    };
+    g_rml.root = GetElement("options-root");
 
     g_rml.window_mode_picker = GetElement("window-mode-picker");
     g_rml.window_mode_choice = GetElement("window-mode-choice");
@@ -4090,6 +5064,49 @@ bool LoadOptionsDocument(void)
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>(
                     []() { OpenChoicePicker(MIKUPAN_PICKER_RESOLUTION); }));
+
+    g_rml.gpu_backend_picker = GetElement("gpu-backend-picker");
+    g_rml.gpu_backend_choice = GetElement("gpu-backend-choice");
+    AddListener(g_rml.gpu_backend_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenChoicePicker(MIKUPAN_PICKER_GPU_BACKEND); }));
+
+    g_rml.msaa_picker = GetElement("msaa-picker");
+    g_rml.msaa_choice = GetElement("msaa-choice");
+    AddListener(g_rml.msaa_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenChoicePicker(MIKUPAN_PICKER_MSAA); }));
+
+    g_rml.shadow_resolution_picker = GetElement("shadow-resolution-picker");
+    g_rml.shadow_resolution_choice = GetElement("shadow-resolution-choice");
+    AddListener(g_rml.shadow_resolution_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>([]() {
+                    OpenChoicePicker(MIKUPAN_PICKER_SHADOW_RESOLUTION);
+                }));
+
+    g_rml.lighting_mode_picker = GetElement("lighting-mode-picker");
+    g_rml.lighting_mode_choice = GetElement("lighting-mode-choice");
+    AddListener(g_rml.lighting_mode_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenChoicePicker(MIKUPAN_PICKER_LIGHTING_MODE); }));
+
+    g_rml.dither_mode_picker = GetElement("dither-mode-picker");
+    g_rml.dither_mode_choice = GetElement("dither-mode-choice");
+    AddListener(g_rml.dither_mode_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenChoicePicker(MIKUPAN_PICKER_DITHER_MODE); }));
+
+    g_rml.finder_surround_picker = GetElement("finder-surround-picker");
+    g_rml.finder_surround_choice = GetElement("finder-surround-choice");
+    AddListener(g_rml.finder_surround_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenChoicePicker(MIKUPAN_PICKER_FINDER_SURROUND); }));
 
     AddStepControl("calibration-brightness-stepper",
                    "calibration-brightness-bars",
@@ -4127,6 +5144,33 @@ bool LoadOptionsDocument(void)
                    2.0f,
                    0.1f,
                    1);
+    g_rml.calibration_hdr_enabled_input =
+        GetInput("calibration-hdr-enabled-input");
+    AddListener(g_rml.calibration_hdr_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetHdrEnabled(IsCheckboxChecked(input));
+                    }));
+    AddStepControl("calibration-hdr-paper-white-stepper",
+                   "calibration-hdr-paper-white-bars",
+                   "calibration-hdr-paper-white-value",
+                   MIKUPAN_STEP_HDR_PAPER_WHITE,
+                   -1,
+                   80.0f,
+                   400.0f,
+                   10.0f,
+                   0);
+    AddStepControl("calibration-hdr-peak-luminance-stepper",
+                   "calibration-hdr-peak-luminance-bars",
+                   "calibration-hdr-peak-luminance-value",
+                   MIKUPAN_STEP_HDR_PEAK_LUMINANCE,
+                   -1,
+                   100.0f,
+                   4000.0f,
+                   50.0f,
+                   0);
 
     AddListener(GetElement("open-calibration-button"),
                 Rml::EventId::Click,
@@ -4156,6 +5200,15 @@ bool LoadOptionsDocument(void)
                     [](Rml::ElementFormControlInput* input) {
                         MarkSettingsDirty();
                         MikuPan_SetVsync(IsCheckboxChecked(input));
+                    }));
+
+    g_rml.hdr_enabled_input = GetInput("hdr-enabled-input");
+    AddListener(g_rml.hdr_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetHdrEnabled(IsCheckboxChecked(input));
                     }));
 
     g_rml.gpu_backend_select = GetSelect("gpu-backend-select");
@@ -4201,6 +5254,22 @@ bool LoadOptionsDocument(void)
                           MikuPan_GetSelectedDitherModeOption(),
                           [](int index) { MikuPan_SelectDitherModeOption(index); });
 
+    g_rml.finder_surround_select = GetSelect("finder-surround-select");
+    PopulateStaticSelect(
+        g_rml.finder_surround_select,
+        kFinderSurroundLabels,
+        2,
+        mikupan_configuration.renderer.finder_viewport_mask_mode ==
+                MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+            : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR,
+        [](int index) {
+            mikupan_configuration.renderer.finder_viewport_mask_mode =
+                index == MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                    ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
+                    : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR;
+        });
+
     AddStepControl("master-volume-stepper",
                    "master-volume-bars",
                    "master-volume-value",
@@ -4212,6 +5281,20 @@ bool LoadOptionsDocument(void)
                    0,
                    false,
                    true);
+
+    g_rml.theme_picker = GetElement("theme-picker");
+    g_rml.theme_choice = GetElement("theme-choice");
+    AddListener(g_rml.theme_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenChoicePicker(MIKUPAN_PICKER_THEME); }));
+
+    g_rml.font_picker = GetElement("font-picker");
+    g_rml.font_choice = GetElement("font-choice");
+    AddListener(g_rml.font_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>(
+                    []() { OpenChoicePicker(MIKUPAN_PICKER_FONT); }));
 
     g_rml.theme_select = GetSelect("theme-select");
     PopulateIndexedSelect(g_rml.theme_select,
@@ -4281,6 +5364,27 @@ bool LoadOptionsDocument(void)
                 std::make_unique<MikuPanButtonListener>(
                     []() { CancelCrtPanel(); }));
 
+    g_rml.minimap_enabled_input = GetInput("minimap-enabled-input");
+    AddListener(g_rml.minimap_enabled_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        mikupan_configuration.minimap_enabled =
+                            IsCheckboxChecked(input) ? 1 : 0;
+                    }));
+
+    g_rml.finder_dpad_film_swap_input = GetInput("finder-dpad-film-swap-input");
+    AddListener(g_rml.finder_dpad_film_swap_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetFinderDpadFilmSwapEnabled(
+                            IsCheckboxChecked(input));
+                        SyncViewfinderButtons();
+                    }));
+
     g_rml.mirror_stone_hud_input = GetInput("mirror-stone-hud-input");
     AddListener(g_rml.mirror_stone_hud_input,
                 Rml::EventId::Change,
@@ -4345,7 +5449,10 @@ bool LoadOptionsDocument(void)
                 std::make_unique<MikuPanButtonListener>([]() {
                     MarkSettingsDirty();
                     MikuPan_ResetControllerBindingsFromUi();
+                    SyncMovementStyleButtons();
                     SyncViewfinderButtons();
+                    SetCheckbox(g_rml.finder_dpad_film_swap_input,
+                                MikuPan_FinderDpadFilmSwapEnabled());
                     SetCheckbox(g_rml.mirror_stone_hud_input,
                                 MikuPan_MirrorStoneHudEnabled());
                     RebuildControlsList();
@@ -4513,6 +5620,7 @@ void MikuPan_RmlOptionsPrepareShutdown(void)
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
     g_rml.resolution_confirm_visible = false;
     g_rml.crt_visible = false;
+    g_rml.controller_open_select = nullptr;
 }
 
 void MikuPan_RmlOptionsShutdown(void)
@@ -4533,6 +5641,7 @@ static void MikuPan_RmlOptionsOpenInternal(bool in_game)
     g_rml.option_exit_requested = false;
     g_rml.has_unsaved_changes = false;
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
+    g_rml.controller_open_select = nullptr;
     g_rml.control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
     g_rml.window_mode_pending_dirty = false;
     g_rml.window_size_pending_dirty = false;
@@ -4579,6 +5688,7 @@ void MikuPan_RmlOptionsClose(void)
     g_rml.option_exit_requested = false;
     g_rml.has_unsaved_changes = false;
     g_rml.active_picker = MIKUPAN_PICKER_NONE;
+    g_rml.controller_open_select = nullptr;
     g_rml.control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
     g_rml.window_mode_pending_dirty = false;
     g_rml.window_size_pending_dirty = false;
@@ -4654,6 +5764,11 @@ int MikuPan_RmlOptionsAnySelectOpen(void)
     return AnySelectOpen() ? 1 : 0;
 }
 
+void MikuPan_RmlOptionsClearNativeSelectOpen(void)
+{
+    g_rml.controller_open_select = nullptr;
+}
+
 
 int MikuPan_RmlOptionsActivateFocusedControl(void)
 {
@@ -4703,6 +5818,16 @@ int MikuPan_RmlOptionsConsumeMoveSoundRequest(void)
     const int requested = g_rml.ui_move_sound_requested ? 1 : 0;
     g_rml.ui_move_sound_requested = false;
     return requested;
+}
+
+void MikuPan_RmlOptionsApplyTheme(int theme)
+{
+    ApplyRmlThemeClass(theme);
+}
+
+void MikuPan_RmlOptionsApplyFont(int font)
+{
+    ApplyRmlFontClass(font);
 }
 
 void MikuPan_RmlOptionsToggleDebug(void)
