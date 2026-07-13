@@ -931,7 +931,6 @@ static void SavePointMenuRmlAction(int action)
     switch (action)
     {
         case MIKUPAN_RML_SAVE_POINT_ACTION_SAVE:
-            MikuPan_RmlSaveLoadCapturePreview();
 #ifdef BUILD_EU_VERSION
             sp_load_id = LoadReqLanguage(PL_SAVE_E_PK2, LOAD_ADDRESS_2);
 #else

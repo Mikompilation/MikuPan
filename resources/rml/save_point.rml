@@ -2,6 +2,7 @@
 <head>
     <title>Save Point</title>
     <link type="text/rcss" href="save_point.rcss"/>
+    <link type="text/rcss" href="message_box.rcss"/>
 </head>
 <body>
     <div id="save-point-root" class="hidden">

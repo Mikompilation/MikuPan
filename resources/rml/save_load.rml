@@ -2,6 +2,7 @@
 <head>
     <title>Save and Load</title>
     <link type="text/rcss" href="save_load.rcss"/>
+    <link type="text/rcss" href="message_box.rcss"/>
 </head>
 <body>
     <div id="save-load-root" class="hidden">
@@ -26,6 +27,10 @@
                 <div id="save-load-title">Save File</div>
             </div>
 
+            <div id="save-load-status-board">
+                <div id="save-load-status"></div>
+            </div>
+
             <div id="save-load-list-frame">
                 <div id="save-load-list-backdrop">
                     <span class="save-load-list-backdrop-part left"></span>
@@ -45,13 +50,26 @@
                 <div id="save-load-list"></div>
             </div>
 
-            <div id="save-load-footer">
-                <div id="save-load-status-board">
-                    <span class="save-load-status-backing left"></span>
-                    <span class="save-load-status-backing center"></span>
-                    <span class="save-load-status-backing right"></span>
-                    <div id="save-load-status"></div>
+            <div id="save-load-detail-frame">
+                <div id="save-load-detail-backdrop">
+                    <span class="save-load-detail-backdrop-part left"></span>
+                    <span class="save-load-detail-backdrop-part center"></span>
+                    <span class="save-load-detail-backdrop-part right"></span>
+                    <div class="save-load-detail-border top">
+                        <span class="save-load-detail-border-edge left"></span>
+                        <span class="save-load-detail-border-center"></span>
+                        <span class="save-load-detail-border-edge right"></span>
+                    </div>
+                    <div class="save-load-detail-border bottom">
+                        <span class="save-load-detail-border-edge left"></span>
+                        <span class="save-load-detail-border-center"></span>
+                        <span class="save-load-detail-border-edge right"></span>
+                    </div>
                 </div>
+                <div id="save-load-detail"></div>
+            </div>
+
+            <div id="save-load-footer">
                 <div id="save-load-controls">Move: D-Pad / Stick&#160;&#160;&#160; Select: A / Enter</div>
                 <button id="save-load-exit">
                     <span class="save-load-exit-backing left"></span>

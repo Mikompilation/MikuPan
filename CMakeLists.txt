@@ -278,6 +278,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui_c.cpp
         src/mikupan/ui/mikupan_rmlui.cpp
+        src/mikupan/ui/mikupan_rml_message_box.cpp
+        src/mikupan/ui/mikupan_rml_message_box.h
         src/mikupan/ui/mikupan_rml_options.cpp
         src/mikupan/ui/mikupan_rml_options.h
         src/mikupan/ui/mikupan_rml_title.cpp

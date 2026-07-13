@@ -120,8 +120,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     MikuPan_ServiceMissingDataFolderDialog();
 
-    MikuPan_StartFrameUi();
     MikuPan_Clear();
+    MikuPan_StartFrameUi();
 
     MikuPan_FlushTextureCache();
 

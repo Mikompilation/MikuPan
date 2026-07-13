@@ -1,4 +1,5 @@
 #include "mikupan/ui/mikupan_rmlui.h"
+#include "mikupan/ui/mikupan_rml_message_box.h"
 #include "mikupan/ui/mikupan_rml_options.h"
 #include "mikupan/ui/mikupan_rml_save_load.h"
 #include "mikupan/ui/mikupan_rml_save_point.h"
@@ -13,6 +14,7 @@
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/mikupan_memory.h"
+#include "os/eeiop/cdvd/eecdvd.h"
 
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan/rendering/mikupan_pipeline.h"
@@ -37,6 +39,8 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max,
@@ -49,6 +53,12 @@ struct MikuPanRmlGeometry
 {
     std::vector<Rml::Vertex> vertices;
     std::vector<int> indices;
+};
+
+struct MikuPanRmlCachedTexture
+{
+    unsigned int id = 0;
+    Rml::Vector2i dimensions = {0, 0};
 };
 
 enum class MikuPanTm2TextureMode
@@ -118,6 +128,206 @@ bool ParseMikuPanSpriteSource(const std::string& source, int& sprite_index)
     const char* end = source.data() + source.size();
     const auto result = std::from_chars(begin, end, sprite_index);
     return result.ec == std::errc() && result.ptr == end && sprite_index >= 0;
+}
+
+bool ParseMikuPanItemIconSource(const std::string& source, int& item_no)
+{
+    static constexpr std::string_view scheme = "mikupan-item-icon:";
+    const size_t scheme_offset = source.find(scheme);
+    if (scheme_offset == std::string::npos)
+    {
+        return false;
+    }
+
+    size_t index_begin = scheme_offset + scheme.size();
+    while (index_begin < source.size() && source[index_begin] == '/')
+    {
+        index_begin++;
+    }
+
+    const char* begin = source.data() + index_begin;
+    const char* end = source.data() + source.size();
+    const auto result = std::from_chars(begin, end, item_no);
+    return result.ec == std::errc() && result.ptr == end
+        && item_no >= 0 && item_no <= 70;
+}
+
+struct MikuPanRmlItemIconAsset
+{
+    explicit MikuPanRmlItemIconAsset(int in_item_no)
+        : item_no(in_item_no)
+    {
+    }
+
+    int item_no = -1;
+    std::vector<unsigned char> data;
+    int load_id = -1;
+    bool ready = false;
+    bool failed = false;
+};
+
+std::array<MikuPanRmlItemIconAsset, 7> g_rml_item_icon_assets = {
+    MikuPanRmlItemIconAsset{1},
+    MikuPanRmlItemIconAsset{2},
+    MikuPanRmlItemIconAsset{3},
+    MikuPanRmlItemIconAsset{4},
+    MikuPanRmlItemIconAsset{6},
+    MikuPanRmlItemIconAsset{7},
+    MikuPanRmlItemIconAsset{8}
+};
+bool g_rml_item_icons_requested = false;
+int g_rml_item_icon_active = -1;
+
+MikuPanRmlItemIconAsset* FindMikuPanItemIconAsset(int item_no)
+{
+    const auto found = std::find_if(
+        g_rml_item_icon_assets.begin(),
+        g_rml_item_icon_assets.end(),
+        [item_no](const MikuPanRmlItemIconAsset& asset) {
+            return asset.item_no == item_no;
+        });
+    return found != g_rml_item_icon_assets.end() ? &*found : nullptr;
+}
+
+bool ValidateMikuPanItemIconAsset(const MikuPanRmlItemIconAsset& asset)
+{
+    if (asset.data.size() < sizeof(TIM2_FILEHEADER)
+        || Tim2CheckFileHeaer(
+               const_cast<unsigned char*>(asset.data.data())) == 0)
+    {
+        return false;
+    }
+
+    TIM2_PICTUREHEADER* picture = Tim2GetPictureHeader(
+        const_cast<unsigned char*>(asset.data.data()), 0);
+    return picture != nullptr
+        && picture->TotalSize != 0
+        && picture->TotalSize <= asset.data.size()
+        && picture->ImageWidth != 0
+        && picture->ImageHeight != 0
+        && picture->ImageWidth <= 4096
+        && picture->ImageHeight <= 4096;
+}
+
+void UpdateMikuPanItemIconAssets()
+{
+    if (!g_rml_item_icons_requested)
+    {
+        return;
+    }
+
+    if (g_rml_item_icon_active >= 0)
+    {
+        MikuPanRmlItemIconAsset& asset =
+            g_rml_item_icon_assets[g_rml_item_icon_active];
+        if (IsLoadEnd(asset.load_id) == 0)
+        {
+            return;
+        }
+
+        asset.load_id = -1;
+        asset.ready = ValidateMikuPanItemIconAsset(asset);
+        asset.failed = !asset.ready;
+        g_rml_item_icon_active = -1;
+    }
+
+    for (size_t index = 0; index < g_rml_item_icon_assets.size(); index++)
+    {
+        MikuPanRmlItemIconAsset& asset = g_rml_item_icon_assets[index];
+        if (asset.ready || asset.failed)
+        {
+            continue;
+        }
+
+        const int file_no = ITEM_00_TM2 + asset.item_no;
+        IMG_ARRANGEMENT* arrangement = GetImgArrangementP(file_no);
+        if (arrangement == nullptr || arrangement->size <= 0
+            || arrangement->size > 16 * 1024 * 1024)
+        {
+            asset.failed = true;
+            continue;
+        }
+
+        asset.data.assign(static_cast<size_t>(arrangement->size), 0);
+        asset.load_id = LoadReqToHostPointer(file_no, asset.data.data());
+        if (asset.load_id < 0)
+        {
+            asset.data.clear();
+            return;
+        }
+
+        g_rml_item_icon_active = static_cast<int>(index);
+        return;
+    }
+}
+
+bool MikuPanItemIconAssetsReady()
+{
+    if (!g_rml_item_icons_requested)
+    {
+        return false;
+    }
+
+    return std::all_of(
+        g_rml_item_icon_assets.begin(),
+        g_rml_item_icon_assets.end(),
+        [](const MikuPanRmlItemIconAsset& asset) {
+            return asset.ready || asset.failed;
+        });
+}
+
+unsigned int LoadMikuPanItemIconTexture(int item_no,
+                                        Rml::Vector2i& texture_dimensions)
+{
+    MikuPanRmlItemIconAsset* asset = FindMikuPanItemIconAsset(item_no);
+    if (asset == nullptr || !asset->ready)
+    {
+        return 0;
+    }
+
+    TIM2_PICTUREHEADER* picture =
+        Tim2GetPictureHeader(asset->data.data(), 0);
+    if (picture == nullptr || picture->ImageWidth == 0
+        || picture->ImageHeight == 0)
+    {
+        return 0;
+    }
+
+    const int width = picture->ImageWidth;
+    const int height = picture->ImageHeight;
+    std::vector<unsigned char> pixels(
+        static_cast<size_t>(width) * static_cast<size_t>(height) * 4u);
+
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            const u_int color = Tim2GetTextureColor(picture, 0, 0, x, y);
+            const size_t destination =
+                static_cast<size_t>((y * width + x) * 4);
+            pixels[destination + 0] =
+                static_cast<unsigned char>(color & 0xff);
+            pixels[destination + 1] =
+                static_cast<unsigned char>((color >> 16) & 0xff);
+            pixels[destination + 2] =
+                static_cast<unsigned char>((color >> 8) & 0xff);
+            pixels[destination + 3] = static_cast<unsigned char>(
+                std::min(255u, ((color >> 24) & 0xffu) * 2u));
+        }
+    }
+
+    const unsigned int texture_id = MikuPan_GPUCreateTextureRGBA8(
+        width,
+        height,
+        pixels.data(),
+        width * 4,
+        0,
+        0);
+    if (texture_id != 0)
+    {
+        texture_dimensions = {width, height};
+    }
+    return texture_id;
 }
 
 unsigned int LoadMikuPanTm2Texture(int texture_index,
@@ -474,6 +684,28 @@ class MikuPanRmlRenderInterface final : public Rml::RenderInterface
 public:
     ~MikuPanRmlRenderInterface() override
     {
+        for (const auto& [source, texture] : save_preview_textures)
+        {
+            (void) source;
+            if (texture.id != 0)
+            {
+                MikuPan_GPUReleaseTexture(texture.id);
+            }
+        }
+        save_preview_textures.clear();
+        save_preview_texture_ids.clear();
+
+        for (const auto& [item_no, texture] : item_icon_textures)
+        {
+            (void) item_no;
+            if (texture.id != 0)
+            {
+                MikuPan_GPUReleaseTexture(texture.id);
+            }
+        }
+        item_icon_textures.clear();
+        item_icon_texture_ids.clear();
+
         if (white_texture_id != 0)
         {
             MikuPan_GPUReleaseTexture(white_texture_id);
@@ -648,8 +880,50 @@ public:
     {
         texture_dimensions = {0, 0};
         std::string normalized_source = source;
+        std::replace(normalized_source.begin(), normalized_source.end(), '\\', '/');
+        const bool save_preview = normalized_source.find(
+            "mikupan-save-preview:") != std::string::npos;
+        const std::string save_preview_key = save_preview
+            ? normalized_source
+            : std::string();
+        if (save_preview)
+        {
+            const auto cached = save_preview_textures.find(save_preview_key);
+            if (cached != save_preview_textures.end())
+            {
+                texture_dimensions = cached->second.dimensions;
+                return static_cast<Rml::TextureHandle>(
+                    static_cast<uintptr_t>(cached->second.id));
+            }
+        }
+
         const bool mirror_x = ExtractMirrorX(normalized_source);
         StripTextureVersion(normalized_source);
+
+        int item_no = -1;
+        if (ParseMikuPanItemIconSource(normalized_source, item_no))
+        {
+            const auto cached = item_icon_textures.find(item_no);
+            if (cached != item_icon_textures.end())
+            {
+                texture_dimensions = cached->second.dimensions;
+                return static_cast<Rml::TextureHandle>(
+                    static_cast<uintptr_t>(cached->second.id));
+            }
+
+            const unsigned int texture_id = LoadMikuPanItemIconTexture(
+                item_no,
+                texture_dimensions);
+            if (texture_id != 0)
+            {
+                item_icon_textures.emplace(
+                    item_no,
+                    MikuPanRmlCachedTexture{texture_id, texture_dimensions});
+                item_icon_texture_ids.insert(texture_id);
+            }
+            return static_cast<Rml::TextureHandle>(
+                static_cast<uintptr_t>(texture_id));
+        }
 
         int sprite_index = -1;
         if (ParseMikuPanSpriteSource(normalized_source, sprite_index))
@@ -699,6 +973,13 @@ public:
         if (texture_id != 0)
         {
             texture_dimensions = {surface->w, surface->h};
+            if (save_preview)
+            {
+                save_preview_textures.emplace(
+                    save_preview_key,
+                    MikuPanRmlCachedTexture{texture_id, texture_dimensions});
+                save_preview_texture_ids.insert(texture_id);
+            }
         }
         SDL_DestroySurface(surface);
 
@@ -736,7 +1017,11 @@ public:
     {
         const unsigned int texture_id =
             static_cast<unsigned int>(static_cast<uintptr_t>(texture));
-        if (texture_id != 0)
+        if (texture_id != 0
+            && save_preview_texture_ids.find(texture_id)
+                   == save_preview_texture_ids.end()
+            && item_icon_texture_ids.find(texture_id)
+                   == item_icon_texture_ids.end())
         {
             MikuPan_GPUReleaseTexture(texture_id);
         }
@@ -874,7 +1159,19 @@ private:
         std::string normalized = source;
         std::replace(normalized.begin(), normalized.end(), '\\', '/');
 
-        if (normalized.rfind("file://", 0) == 0)
+        static constexpr std::string_view save_preview_scheme =
+            "mikupan-save-preview:";
+        const size_t save_preview_offset = normalized.find(save_preview_scheme);
+        if (save_preview_offset != std::string::npos)
+        {
+            normalized.erase(
+                0, save_preview_offset + save_preview_scheme.size());
+            if (normalized.rfind("//", 0) == 0)
+            {
+                normalized.erase(0, 2);
+            }
+        }
+        else if (normalized.rfind("file://", 0) == 0)
         {
             normalized.erase(0, 7);
         }
@@ -968,6 +1265,11 @@ private:
     int scissor_w = 1;
     int scissor_h = 1;
     std::vector<float> scratch_vertices;
+    std::unordered_map<std::string, MikuPanRmlCachedTexture>
+        save_preview_textures;
+    std::unordered_set<unsigned int> save_preview_texture_ids;
+    std::unordered_map<int, MikuPanRmlCachedTexture> item_icon_textures;
+    std::unordered_set<unsigned int> item_icon_texture_ids;
     unsigned int white_texture_id = 0;
 };
 
@@ -1758,6 +2060,16 @@ void UpdateGamepadNavigation(void)
 
 extern "C" {
 
+void MikuPan_RmlUiRequestItemIcons(void)
+{
+    g_rml_item_icons_requested = true;
+}
+
+int MikuPan_RmlUiItemIconsReady(void)
+{
+    return MikuPanItemIconAssetsReady() ? 1 : 0;
+}
+
 void MikuPan_RmlUiInit(SDL_Window* window)
 {
     if (g_rml.initialized)
@@ -1773,6 +2085,15 @@ void MikuPan_RmlUiInit(SDL_Window* window)
 
     if (!Rml::Initialise())
     {
+        g_rml.render_interface.reset();
+        g_rml.window = nullptr;
+        return;
+    }
+
+    if (!MikuPan_RmlMessageBoxInit(g_rml.render_interface.get()))
+    {
+        Rml::Shutdown();
+        MikuPan_RmlMessageBoxShutdown();
         g_rml.render_interface.reset();
         g_rml.window = nullptr;
         return;
@@ -1834,6 +2155,7 @@ void MikuPan_RmlUiInit(SDL_Window* window)
         MikuPan_RmlOptionsPrepareShutdown();
         MikuPan_RmlTitlePrepareShutdown();
         Rml::Shutdown();
+        MikuPan_RmlMessageBoxShutdown();
         MikuPan_RmlSavePointShutdown();
         MikuPan_RmlSaveLoadShutdown();
         MikuPan_RmlOptionsShutdown();
@@ -1857,6 +2179,7 @@ void MikuPan_RmlUiStartFrame(void)
     }
 
     UpdateContextDimensions();
+    UpdateMikuPanItemIconAssets();
     MikuPan_RmlOptionsStartFrame();
     MikuPan_RmlSaveLoadStartFrame();
     MikuPan_RmlSavePointStartFrame();
@@ -2114,6 +2437,7 @@ void MikuPan_RmlUiShutdown(void)
     MikuPan_RmlOptionsPrepareShutdown();
     MikuPan_RmlTitlePrepareShutdown();
     Rml::Shutdown();
+    MikuPan_RmlMessageBoxShutdown();
     MikuPan_RmlSavePointShutdown();
     MikuPan_RmlSaveLoadShutdown();
     MikuPan_RmlOptionsShutdown();

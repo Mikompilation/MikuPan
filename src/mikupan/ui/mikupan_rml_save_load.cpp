@@ -1,4 +1,5 @@
 #include "mikupan/ui/mikupan_rml_save_load.h"
+#include "mikupan/ui/mikupan_rmlui.h"
 
 #include "common.h"
 #include "enums.h"
@@ -7,6 +8,7 @@
 #include "ingame/info/inf_disp.h"
 #include "ingame/menu/ig_menu.h"
 #include "main/glob.h"
+#include "mc/mc.h"
 #include "mc/mc_exec.h"
 #include "mc/mc_main.h"
 #include "mikupan/mikupan_memory.h"
@@ -18,6 +20,7 @@
 #include "RmlUi/Core/EventListener.h"
 
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <chrono>
 #include <cstdio>
@@ -34,6 +37,14 @@ int MikuPan_ReadResolvedFramebufferRGBA8TopLeft(int width,
                                                 int height,
                                                 unsigned char* out_rgba);
 
+struct MikuPanSaveGameplayData
+{
+    INGAME_WRK ingame{};
+    CAM_CUSTOM_WRK camera{};
+    std::array<u_char, sizeof(poss_item)> items{};
+    bool available = false;
+};
+
 struct MikuPanSaveEntry
 {
     std::filesystem::path path;
@@ -42,6 +53,7 @@ struct MikuPanSaveEntry
     std::string room_name;
     std::string saved_at;
     MC_GAME_HEADER header{};
+    MikuPanSaveGameplayData gameplay{};
     std::time_t modified_time = 0;
     int file_number = -1;
     int display_slot_number = -1;
@@ -107,6 +119,7 @@ struct MikuPanRmlSaveLoadState
     Rml::Element* exit_button = nullptr;
     Rml::Element* exit_label = nullptr;
     Rml::Element* list = nullptr;
+    Rml::Element* detail = nullptr;
     Rml::Element* status = nullptr;
     Rml::Element* confirm_dialog = nullptr;
     Rml::Element* confirm_message = nullptr;
@@ -118,6 +131,7 @@ struct MikuPanRmlSaveLoadState
     std::vector<std::unique_ptr<Rml::EventListener>> dynamic_listeners;
     std::vector<unsigned char> preview_pixels;
     int selected = 0;
+    int detail_selection = -2;
     int confirm_entry = -1;
     int confirm_selection = 1;
     int queued_result = MIKUPAN_RML_SAVE_LOAD_RESULT_NONE;
@@ -127,6 +141,7 @@ struct MikuPanRmlSaveLoadState
     MikuPanSaveLoadDialogMode dialog_mode = MikuPanSaveLoadDialogMode::None;
     bool exit_selected = false;
     bool mc_active = false;
+    bool detail_icons_ready = false;
 };
 
 static MikuPanRmlSaveLoadState g_save_load;
@@ -341,6 +356,91 @@ static bool MikuPan_RmlSaveLoadReadHeader(const std::filesystem::path& path,
     input.seekg(16, std::ios::beg);
     input.read(reinterpret_cast<char*>(&header), sizeof(header));
     return input.good() && header.map_flg == 1;
+}
+
+static bool MikuPan_RmlSaveLoadReadGameplayData(
+    const std::filesystem::path& path,
+    MikuPanSaveGameplayData& gameplay)
+{
+    gameplay = MikuPanSaveGameplayData();
+
+    std::ifstream input(path, std::ios::binary);
+    if (!input)
+    {
+        return false;
+    }
+
+    input.seekg(16, std::ios::beg);
+    if (!input)
+    {
+        return false;
+    }
+
+    bool found_ingame = false;
+    bool found_camera = false;
+    bool found_items = false;
+
+    for (u_long index = 0; index < mc_gamedata_str_num; index++)
+    {
+        const MC_DATA_STR& section = mc_gamedata_str[index];
+        if (section.size < 0)
+        {
+            return false;
+        }
+
+        void* destination = nullptr;
+        size_t destination_size = 0;
+        if (section.addr == reinterpret_cast<uintptr_t>(&ingame_wrk))
+        {
+            destination = &gameplay.ingame;
+            destination_size = sizeof(gameplay.ingame);
+            found_ingame = true;
+        }
+        else if (section.addr == reinterpret_cast<uintptr_t>(&cam_custom_wrk))
+        {
+            destination = &gameplay.camera;
+            destination_size = sizeof(gameplay.camera);
+            found_camera = true;
+        }
+        else if (section.addr == reinterpret_cast<uintptr_t>(poss_item))
+        {
+            destination = gameplay.items.data();
+            destination_size = gameplay.items.size();
+            found_items = true;
+        }
+
+        if (destination == nullptr)
+        {
+            input.seekg(section.size, std::ios::cur);
+        }
+        else
+        {
+            const size_t copy_size = std::min(
+                static_cast<size_t>(section.size), destination_size);
+            input.read(static_cast<char*>(destination),
+                       static_cast<std::streamsize>(copy_size));
+            if (static_cast<size_t>(section.size) > copy_size)
+            {
+                input.seekg(
+                    static_cast<std::streamoff>(
+                        static_cast<size_t>(section.size) - copy_size),
+                    std::ios::cur);
+            }
+        }
+
+        if (!input)
+        {
+            return false;
+        }
+
+        if (found_ingame && found_camera && found_items)
+        {
+            gameplay.available = true;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 static char MikuPan_RmlSaveLoadGlyphToAscii(u_char glyph)
@@ -730,6 +830,7 @@ static void MikuPan_RmlSaveLoadScan(void)
         }
 
         entry.path = directory_entry.path();
+        MikuPan_RmlSaveLoadReadGameplayData(entry.path, entry.gameplay);
         entry.mikupan_save = MikuPan_RmlSaveLoadIsMikuPanSaveFilename(
             entry.path);
         entry.file_number = MikuPan_RmlSaveLoadFileNumber(directory, entry.path);
@@ -774,31 +875,25 @@ static void MikuPan_RmlSaveLoadScan(void)
         g_save_load.entries.push_back(std::move(entry));
     }
 
-    int first_mikupan_display_slot = 3;
-    for (const MikuPanSaveEntry& entry : g_save_load.entries)
-    {
-        if (!entry.mikupan_save && entry.file_number >= 0)
-        {
-            first_mikupan_display_slot = std::max(
-                first_mikupan_display_slot, entry.file_number + 1);
-        }
-    }
-
     for (MikuPanSaveEntry& entry : g_save_load.entries)
     {
-        if (entry.file_number < 0)
-        {
-            continue;
-        }
-
-        entry.display_slot_number = entry.mikupan_save
-            ? first_mikupan_display_slot + std::max(entry.file_number - 1, 0)
-            : entry.file_number;
+        entry.display_slot_number = entry.mikupan_save && entry.file_number >= 0
+            ? entry.file_number
+            : -1;
     }
 
     std::sort(g_save_load.entries.begin(),
               g_save_load.entries.end(),
               [](const MikuPanSaveEntry& left, const MikuPanSaveEntry& right) {
+                  if (left.mikupan_save != right.mikupan_save)
+                  {
+                      return left.mikupan_save;
+                  }
+                  if (left.mikupan_save
+                      && left.file_number != right.file_number)
+                  {
+                      return left.file_number > right.file_number;
+                  }
                   return left.modified_time > right.modified_time;
               });
 }
@@ -828,6 +923,83 @@ static std::string MikuPan_RmlSaveLoadDifficulty(const MC_GAME_HEADER& header)
     }
 }
 
+static std::string MikuPan_RmlSaveLoadFormatNumber(uint64_t value)
+{
+    std::string result = std::to_string(value);
+    for (size_t position = result.size(); position > 3; position -= 3)
+    {
+        result.insert(position - 3, 1, ',');
+    }
+    return result;
+}
+
+static unsigned int MikuPan_RmlSaveLoadItemCount(
+    const MikuPanSaveEntry& entry,
+    int item_no)
+{
+    if (!entry.gameplay.available || item_no < 0
+        || item_no >= static_cast<int>(entry.gameplay.items.size()))
+    {
+        return 0;
+    }
+    return entry.gameplay.items[static_cast<size_t>(item_no)];
+}
+
+static std::string MikuPan_RmlSaveLoadItemCell(
+    const MikuPanSaveEntry& entry,
+    int item_no,
+    bool icons_ready)
+{
+    const unsigned int count = MikuPan_RmlSaveLoadItemCount(entry, item_no);
+    std::string classes = "save-detail-item";
+    if (count == 0)
+    {
+        classes += " empty";
+    }
+
+    std::string rml = "<span class=\"" + classes + "\">";
+    if (icons_ready)
+    {
+        rml += "<img class=\"save-detail-item-icon\" src=\""
+            "mikupan-item-icon://"
+            + std::to_string(item_no)
+            + "\"/>";
+    }
+    else
+    {
+        rml += "<span class=\"save-detail-item-icon loading\"></span>";
+    }
+
+    rml += "<span class=\"save-detail-item-count\">&#215;"
+        + std::to_string(count)
+        + "</span></span>";
+    return rml;
+}
+
+static std::string MikuPan_RmlSaveLoadItemRows(
+    const MikuPanSaveEntry& entry,
+    bool icons_ready)
+{
+    std::string rml =
+        "<div class=\"save-detail-items-panel\">"
+        "<span class=\"save-detail-items-backing "
+        "save-detail-items-backing-left\"></span>"
+        "<span class=\"save-detail-items-backing "
+        "save-detail-items-backing-center\"></span>"
+        "<span class=\"save-detail-items-backing "
+        "save-detail-items-backing-right\"></span>"
+        "<div class=\"save-detail-items-row\">";
+    rml += MikuPan_RmlSaveLoadItemCell(entry, 6, icons_ready);
+    rml += MikuPan_RmlSaveLoadItemCell(entry, 7, icons_ready);
+    rml += MikuPan_RmlSaveLoadItemCell(entry, 8, icons_ready);
+    rml += MikuPan_RmlSaveLoadItemCell(entry, 1, icons_ready);
+    rml += MikuPan_RmlSaveLoadItemCell(entry, 2, icons_ready);
+    rml += MikuPan_RmlSaveLoadItemCell(entry, 3, icons_ready);
+    rml += MikuPan_RmlSaveLoadItemCell(entry, 4, icons_ready);
+    rml += "</div></div>";
+    return rml;
+}
+
 static std::string MikuPan_RmlSaveLoadThumbnailSource(
     const MikuPanSaveEntry& entry)
 {
@@ -840,7 +1012,7 @@ static std::string MikuPan_RmlSaveLoadThumbnailSource(
     std::error_code absolute_error;
     const std::filesystem::path absolute = std::filesystem::absolute(
         entry.thumbnail_path, absolute_error);
-    std::string source = "file://"
+    std::string source = "mikupan-save-preview://"
         + (absolute_error ? entry.thumbnail_path : absolute).generic_string();
     const auto modified = std::filesystem::last_write_time(entry.thumbnail_path,
                                                             error);
@@ -898,72 +1070,42 @@ static void MikuPan_RmlSaveLoadBuildList(void)
         selection = 1;
     }
 
-    for (size_t i = 0; i < g_save_load.entries.size(); i++, selection++)
+    for (const MikuPanSaveEntry& entry : g_save_load.entries)
     {
-        const MikuPanSaveEntry& entry = g_save_load.entries[i];
-        const std::string thumbnail = MikuPan_RmlSaveLoadThumbnailSource(entry);
-        const std::string new_game_plus = entry.header.clear_flg != 0
-            ? " new-game-plus"
-            : "";
-        std::string slot_rml;
-        if (entry.display_slot_number >= 0)
+        std::string save_label;
+        if (entry.mikupan_save && entry.display_slot_number >= 0)
         {
             char slot_label[32];
             std::snprintf(slot_label,
                           sizeof(slot_label),
                           "Save %03d",
                           entry.display_slot_number);
-            slot_rml = "<span class=\"save-thumbnail-slot\">"
-                + std::string(slot_label)
-                + "</span>";
-        }
-        std::string thumbnail_rml;
-        if (thumbnail.empty())
-        {
-            thumbnail_rml =
-                "<div class=\"save-thumbnail-frame"
-                + new_game_plus
-                + "\"><div class=\"save-thumbnail-crop "
-                  "save-thumbnail-empty\"><div "
-                  "class=\"save-thumbnail-mark\">"
-                + MikuPan_RmlSaveLoadEscape(entry.room_name, false)
-                + "</div></div><span class=\"save-thumbnail-border\"></span>"
-                + slot_rml
-                + "</div>";
-        }
-        else
-        {
-            thumbnail_rml =
-                "<div class=\"save-thumbnail-frame"
-                + new_game_plus
-                + "\"><div class=\"save-thumbnail-crop\"><img src=\""
-                + MikuPan_RmlSaveLoadEscape(thumbnail, true)
-                + "\"/></div><span class=\"save-thumbnail-border\"></span>"
-                + slot_rml
-                + "</div>";
+            save_label = slot_label;
         }
 
+        const std::string item_class = entry.mikupan_save
+            ? "save-list-item"
+            : "save-list-item legacy-save";
         rml += "<button id=\"save-entry-"
             + std::to_string(selection)
-            + "\" class=\"save-list-item\">"
-            + entry_backing
-            + thumbnail_rml
-            + "<div class=\"save-entry-copy\">"
-            + "<div class=\"save-entry-top\">"
-            + "<span class=\"save-entry-night\">"
+            + "\" class=\""
+            + item_class
+            + "\">"
+            + entry_backing;
+        if (!save_label.empty())
+        {
+            rml += "<span class=\"save-entry-index\">"
+                + save_label
+                + "</span>";
+        }
+        rml += "<span class=\"save-entry-night-row\">"
             + MikuPan_RmlSaveLoadEscape(entry.night_name, false)
-            + "</span><span class=\"save-entry-date\">"
-            + MikuPan_RmlSaveLoadEscape(entry.saved_at, false)
-            + "</span></div>"
-            + "<div class=\"save-entry-location\">"
+            + "</span><span class=\"save-entry-room-row\">"
             + MikuPan_RmlSaveLoadEscape(entry.room_name, false)
-            + "</div>"
-            + "<div class=\"save-entry-bottom\">"
-            + "<span class=\"save-entry-difficulty\">"
-            + MikuPan_RmlSaveLoadDifficulty(entry.header)
-            + "</span><span class=\"save-entry-time\">Play Time  "
-            + MikuPan_RmlSaveLoadPlayTime(entry.header)
-            + "</span></div></div></button>";
+            + "</span><span class=\"save-entry-date-row\">"
+            + MikuPan_RmlSaveLoadEscape(entry.saved_at, false)
+            + "</span></button>";
+        selection++;
     }
 
     if (g_save_load.entries.empty() && !g_save_load.save_mode)
@@ -973,6 +1115,7 @@ static void MikuPan_RmlSaveLoadBuildList(void)
 
     g_save_load.list->SetInnerRML(rml);
     g_save_load.dynamic_listeners.clear();
+    g_save_load.detail_selection = -2;
 
     const int total = static_cast<int>(g_save_load.entries.size())
         + (g_save_load.save_mode ? 1 : 0);
@@ -993,6 +1136,165 @@ static void MikuPan_RmlSaveLoadBuildList(void)
             Rml::EventId::Click,
             std::make_unique<MikuPanSaveLoadSelectionListener>(i, true));
     }
+}
+
+static void MikuPan_RmlSaveLoadSetDetailPlaceholder(
+    const std::string& title,
+    const std::string& copy)
+{
+    if (g_save_load.detail == nullptr)
+    {
+        return;
+    }
+
+    std::string classes = "save-detail-placeholder";
+    if (copy.empty())
+    {
+        classes += " single-line";
+    }
+
+    std::string rml =
+        "<div class=\"" + classes + "\">"
+        "<div class=\"save-detail-placeholder-title\">"
+        + MikuPan_RmlSaveLoadEscape(title, false)
+        + "</div>";
+    if (!copy.empty())
+    {
+        rml +=
+            "<div class=\"save-detail-placeholder-copy\">"
+            + MikuPan_RmlSaveLoadEscape(copy, false)
+            + "</div>";
+    }
+    rml += "</div>";
+    g_save_load.detail->SetInnerRML(rml);
+}
+
+static void MikuPan_RmlSaveLoadSyncDetail(void)
+{
+    if (g_save_load.detail == nullptr
+        || g_save_load.detail_selection == g_save_load.selected)
+    {
+        return;
+    }
+
+    g_save_load.detail_selection = g_save_load.selected;
+    if (g_save_load.save_mode && g_save_load.selected == 0)
+    {
+        MikuPan_RmlSaveLoadSetDetailPlaceholder(
+            "Create a new save file",
+            {});
+        return;
+    }
+
+    const int entry_index = g_save_load.selected
+        - (g_save_load.save_mode ? 1 : 0);
+    if (entry_index < 0
+        || entry_index >= static_cast<int>(g_save_load.entries.size()))
+    {
+        MikuPan_RmlSaveLoadSetDetailPlaceholder(
+            "No save selected",
+            "Select a save from the list above.");
+        return;
+    }
+
+    const MikuPanSaveEntry& entry = g_save_load.entries[entry_index];
+    const std::string thumbnail = MikuPan_RmlSaveLoadThumbnailSource(entry);
+    const std::string new_game_plus = entry.header.clear_flg != 0
+        ? " new-game-plus"
+        : "";
+    const std::string legacy_class = entry.mikupan_save
+        ? ""
+        : " legacy-save";
+
+    std::string save_label = "Legacy Save";
+    if (entry.mikupan_save && entry.display_slot_number >= 0)
+    {
+        char slot_label[32];
+        std::snprintf(slot_label,
+                      sizeof(slot_label),
+                      "Save %03d",
+                      entry.display_slot_number);
+        save_label = slot_label;
+    }
+
+    std::string thumbnail_rml;
+    if (thumbnail.empty())
+    {
+        thumbnail_rml =
+            "<div class=\"save-detail-thumbnail-crop "
+            "save-detail-thumbnail-empty\">"
+            + MikuPan_RmlSaveLoadEscape(entry.room_name, false)
+            + "</div>";
+    }
+    else
+    {
+        thumbnail_rml =
+            "<div class=\"save-detail-thumbnail-crop\"><img src=\""
+            + MikuPan_RmlSaveLoadEscape(thumbnail, true)
+            + "\"/></div>";
+    }
+
+    const unsigned int clear_count = entry.gameplay.available
+        ? entry.gameplay.ingame.clear_count
+        : entry.header.clear_flg;
+    const std::string clear_rml = clear_count != 0
+        ? "<span class=\"save-detail-clear\">Clear &#215;"
+            + std::to_string(clear_count)
+            + "</span>"
+        : "";
+
+    const std::string shots = entry.gameplay.available
+        ? MikuPan_RmlSaveLoadFormatNumber(entry.gameplay.ingame.pht_cnt)
+        : "--";
+    const std::string points = entry.gameplay.available
+        ? MikuPan_RmlSaveLoadFormatNumber(entry.gameplay.camera.point)
+        : "--";
+
+    const std::string item_rows = entry.gameplay.available
+        ? MikuPan_RmlSaveLoadItemRows(entry, g_save_load.detail_icons_ready)
+        : "<div class=\"save-detail-items-unavailable\">"
+          "Item data unavailable"
+          "</div>";
+
+    g_save_load.detail->SetInnerRML(
+        "<div class=\"save-detail-content"
+        + legacy_class
+        + "\"><div class=\"save-detail-thumbnail-frame"
+        + new_game_plus
+        + "\">"
+        + thumbnail_rml
+        + "<span class=\"save-detail-thumbnail-border\"></span></div>"
+        "<div class=\"save-detail-copy\">"
+        "<div class=\"save-detail-heading\">"
+        "<span class=\"save-detail-label\">"
+        + MikuPan_RmlSaveLoadEscape(save_label, false)
+        + "</span><span class=\"save-detail-date\">"
+        + MikuPan_RmlSaveLoadEscape(entry.saved_at, false)
+        + "</span></div>"
+        "<div class=\"save-detail-location-line\">"
+        "<span class=\"save-detail-location\">"
+        + MikuPan_RmlSaveLoadEscape(entry.night_name, false)
+        + "  -  "
+        + MikuPan_RmlSaveLoadEscape(entry.room_name, false)
+        + "</span>"
+        + clear_rml
+        + "</div>"
+        "<div class=\"save-detail-stats\">"
+        "<span class=\"save-detail-difficulty\">"
+        + MikuPan_RmlSaveLoadDifficulty(entry.header)
+        + "</span>"
+        "<span class=\"save-detail-time\">Play "
+        + MikuPan_RmlSaveLoadPlayTime(entry.header)
+        + "</span>"
+        "<span class=\"save-detail-shots\">Shots "
+        + shots
+        + "</span>"
+        "<span class=\"save-detail-points\">Points "
+        + points
+        + "</span>"
+        "</div><div class=\"save-detail-rule\"></div>"
+        + item_rows
+        + "</div></div>");
 }
 
 static int MikuPan_RmlSaveLoadTotalItems(void)
@@ -1022,6 +1324,8 @@ static void MikuPan_RmlSaveLoadSyncSelection(bool scroll)
                                           g_save_load.exit_selected);
     }
 
+    MikuPan_RmlSaveLoadSyncDetail();
+
     if (scroll && total > 0 && !g_save_load.exit_selected)
     {
         Rml::Element* selected = MikuPan_RmlSaveLoadGetElement(
@@ -1050,6 +1354,10 @@ static void MikuPan_RmlSaveLoadSyncConfirm(void)
     const bool notice = g_save_load.dialog_mode
         == MikuPanSaveLoadDialogMode::SaveComplete;
 
+    if (g_save_load.root != nullptr)
+    {
+        g_save_load.root->SetClass("modal-open", open);
+    }
     MikuPan_RmlSaveLoadSetHidden(g_save_load.confirm_dialog, !open);
     if (g_save_load.confirm_dialog != nullptr)
     {
@@ -1123,6 +1431,10 @@ static void MikuPan_RmlSaveLoadCloseInternal(void)
     g_save_load.dialog_mode = MikuPanSaveLoadDialogMode::None;
     g_save_load.confirm_entry = -1;
     g_save_load.exit_selected = false;
+    if (g_save_load.root != nullptr)
+    {
+        g_save_load.root->SetClass("modal-open", false);
+    }
     MikuPan_RmlSaveLoadSetHidden(g_save_load.root, true);
     if (g_save_load.document != nullptr)
     {
@@ -1293,6 +1605,7 @@ static bool MikuPan_RmlSaveLoadLoadDocument(void)
     g_save_load.exit_label =
         MikuPan_RmlSaveLoadGetElement("save-load-exit-label");
     g_save_load.list = MikuPan_RmlSaveLoadGetElement("save-load-list");
+    g_save_load.detail = MikuPan_RmlSaveLoadGetElement("save-load-detail");
     g_save_load.status = MikuPan_RmlSaveLoadGetElement("save-load-status");
     g_save_load.confirm_dialog =
         MikuPan_RmlSaveLoadGetElement("save-load-confirm");
@@ -1336,6 +1649,11 @@ static bool MikuPan_RmlSaveLoadLoadDocument(void)
 void MikuPanSaveLoadSelectionListener::ProcessEvent(Rml::Event& event)
 {
     (void) event;
+    if (g_save_load.dialog_mode != MikuPanSaveLoadDialogMode::None)
+    {
+        return;
+    }
+
     g_save_load.selected = selection;
     g_save_load.exit_selected = false;
     MikuPan_RmlSaveLoadSyncSelection(false);
@@ -1348,12 +1666,22 @@ void MikuPanSaveLoadSelectionListener::ProcessEvent(Rml::Event& event)
 void MikuPanSaveLoadCancelListener::ProcessEvent(Rml::Event& event)
 {
     (void) event;
+    if (g_save_load.dialog_mode != MikuPanSaveLoadDialogMode::None)
+    {
+        return;
+    }
+
     MikuPan_RmlSaveLoadHandleCancel();
 }
 
 void MikuPanSaveLoadExitSelectionListener::ProcessEvent(Rml::Event& event)
 {
     (void) event;
+    if (g_save_load.dialog_mode != MikuPanSaveLoadDialogMode::None)
+    {
+        return;
+    }
+
     g_save_load.exit_selected = true;
     MikuPan_RmlSaveLoadSyncSelection(false);
 }
@@ -1361,6 +1689,11 @@ void MikuPanSaveLoadExitSelectionListener::ProcessEvent(Rml::Event& event)
 void MikuPanSaveLoadConfirmListener::ProcessEvent(Rml::Event& event)
 {
     (void) event;
+    if (g_save_load.dialog_mode == MikuPanSaveLoadDialogMode::None)
+    {
+        return;
+    }
+
     g_save_load.confirm_selection = confirm ? 0 : 1;
     MikuPan_RmlSaveLoadActivate();
 }
@@ -1388,6 +1721,13 @@ void MikuPan_RmlSaveLoadStartFrame(void)
     if (!g_save_load.initialized || !g_save_load.open)
     {
         return;
+    }
+
+    const bool icons_ready = MikuPan_RmlUiItemIconsReady() != 0;
+    if (icons_ready != g_save_load.detail_icons_ready)
+    {
+        g_save_load.detail_icons_ready = icons_ready;
+        g_save_load.detail_selection = -2;
     }
 
     MikuPan_RmlSaveLoadSyncSelection(false);
@@ -1425,6 +1765,8 @@ void MikuPan_RmlSaveLoadOpenSave(int mission_flag)
            static_cast<u_int*>(MikuPan_GetHostPointer(MC_WORK_ADDRESS)),
            static_cast<u_char>(mission_flag));
     g_save_load.mc_active = true;
+    MikuPan_RmlUiRequestItemIcons();
+    g_save_load.detail_icons_ready = MikuPan_RmlUiItemIconsReady() != 0;
     g_save_load.save_mode = true;
     g_save_load.open = true;
     g_save_load.selected = 0;
@@ -1468,6 +1810,8 @@ void MikuPan_RmlSaveLoadOpenLoad(void)
            static_cast<u_int*>(MikuPan_GetHostPointer(MC_WORK_ADDRESS)),
            0);
     g_save_load.mc_active = true;
+    MikuPan_RmlUiRequestItemIcons();
+    g_save_load.detail_icons_ready = MikuPan_RmlUiItemIconsReady() != 0;
     g_save_load.save_mode = false;
     g_save_load.open = true;
     g_save_load.selected = 0;
