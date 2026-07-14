@@ -500,6 +500,7 @@ static constexpr const char* kRmlThemeClasses[] = {
     "theme-ff1-ritual",
     "theme-mist-teal",
     "theme-sepia",
+    "theme-mikupan-classic",
 };
 
 static constexpr const char* kRmlFontClasses[] = {

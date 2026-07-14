@@ -1,5 +1,6 @@
 #include "mikupan/ui/mikupan_rmlui.h"
 #include "mikupan/ui/mikupan_rml_message_box.h"
+#include "mikupan/ui/mikupan_rml_mode_select.h"
 #include "mikupan/ui/mikupan_rml_options.h"
 #include "mikupan/ui/mikupan_rml_save_load.h"
 #include "mikupan/ui/mikupan_rml_save_point.h"
@@ -2185,12 +2186,14 @@ void MikuPan_RmlUiInit(SDL_Window* window)
     {
         MikuPan_RmlSavePointPrepareShutdown();
         MikuPan_RmlSaveLoadPrepareShutdown();
+        MikuPan_RmlModeSelectPrepareShutdown();
         MikuPan_RmlOptionsPrepareShutdown();
         MikuPan_RmlTitlePrepareShutdown();
         Rml::Shutdown();
         MikuPan_RmlMessageBoxShutdown();
         MikuPan_RmlSavePointShutdown();
         MikuPan_RmlSaveLoadShutdown();
+        MikuPan_RmlModeSelectShutdown();
         MikuPan_RmlOptionsShutdown();
         MikuPan_RmlTitleShutdown();
         g_rml = MikuPanRmlState();
@@ -2199,6 +2202,7 @@ void MikuPan_RmlUiInit(SDL_Window* window)
 
     (void) MikuPan_RmlSaveLoadInit(g_rml.context);
     (void) MikuPan_RmlSavePointInit(g_rml.context);
+    (void) MikuPan_RmlModeSelectInit(g_rml.context);
     (void) MikuPan_RmlTitleInit(g_rml.context);
 
     g_rml.initialized = true;
@@ -2216,6 +2220,7 @@ void MikuPan_RmlUiStartFrame(void)
     MikuPan_RmlOptionsStartFrame();
     MikuPan_RmlSaveLoadStartFrame();
     MikuPan_RmlSavePointStartFrame();
+    MikuPan_RmlModeSelectStartFrame();
     MikuPan_RmlTitleStartFrame();
     UpdateGamepadNavigation();
     g_rml.context->Update();
@@ -2467,12 +2472,14 @@ void MikuPan_RmlUiShutdown(void)
 
     MikuPan_RmlSavePointPrepareShutdown();
     MikuPan_RmlSaveLoadPrepareShutdown();
+    MikuPan_RmlModeSelectPrepareShutdown();
     MikuPan_RmlOptionsPrepareShutdown();
     MikuPan_RmlTitlePrepareShutdown();
     Rml::Shutdown();
     MikuPan_RmlMessageBoxShutdown();
     MikuPan_RmlSavePointShutdown();
     MikuPan_RmlSaveLoadShutdown();
+    MikuPan_RmlModeSelectShutdown();
     MikuPan_RmlOptionsShutdown();
     MikuPan_RmlTitleShutdown();
     g_rml = MikuPanRmlState();

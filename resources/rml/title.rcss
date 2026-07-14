@@ -398,38 +398,57 @@ body {
 
 #title-exit-buttons {
     position: absolute;
-    left: 39dp;
+    left: 67dp;
     top: 68dp;
     display: block;
-    width: 228dp;
-    height: 34dp;
+    width: 176dp;
+    height: 24dp;
     margin: 0dp;
 }
 
-.title-exit-button {
-    display: inline-block;
-    width: 104dp;
-    height: 30dp;
-    margin: 0dp 5dp;
-    padding: 0dp 0dp 2dp 0dp;
+#title-exit-buttons .title-exit-button {
+    position: absolute;
+    top: 0dp;
+    display: block;
+    width: 80dp;
+    height: 24dp;
+    margin: 0dp;
+    padding: 0dp;
     color: #c9beb0;
-    background-color: #050505c8;
-    border: 2px #5d4c38d8;
+    background-color: transparent;
+    border-width: 0dp;
     font-family: MikuPanRml;
-    font-size: 12dp;
-    line-height: 26dp;
+    font-size: 14dp;
+    line-height: 24dp;
     letter-spacing: 0.8dp;
     text-align: center;
     font-effect: shadow(0dp 1dp #000000dc);
     cursor: pointer;
 }
 
+#title-exit-yes {
+    left: 0dp;
+}
+
+#title-exit-no {
+    right: 0dp;
+}
+
+#title-exit-buttons .ff-prompt-button-label {
+    left: 0dp;
+    top: 0dp;
+    width: 100%;
+    height: 24dp;
+    margin: 0dp;
+    line-height: 24dp;
+}
+
 .title-exit-button:hover,
 .title-exit-button:focus,
 .title-exit-button.selected {
     color: #fff1d3;
-    background-color: #5f431fd8;
-    border-color: #b0935fe8;
+    background-color: transparent;
+    border-width: 0dp;
     font-effect: glow(1px 3px 0px 0px #c89a4668), shadow(0dp 1dp #000000e8);
 }
 

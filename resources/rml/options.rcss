@@ -4355,3 +4355,575 @@ button.controller-focus {
     border-top-color: #281613;
     border-bottom-color: #281613;
 }
+
+#options-root.theme-mikupan-classic,
+#options-root.theme-mikupan-classic .calibration-panel,
+#options-root.theme-mikupan-classic .crt-panel,
+#options-root.theme-mikupan-classic .calibration-level-panel {
+    color: #d8d0c1;
+}
+
+#options-root.theme-mikupan-classic #window {
+    background-color: #030302f2;
+    border-color: #8f734c99;
+    border-top-color: #c6a66fcc;
+    border-bottom-color: #5f4a31cc;
+}
+
+#options-root.theme-mikupan-classic #side {
+    background-color: #040403e6;
+    border-right-color: #5f4a3188;
+}
+
+#options-root.theme-mikupan-classic #content {
+    background-color: #07050338;
+}
+
+#options-root.theme-mikupan-classic #header {
+    border-bottom-color: #8f734c80;
+}
+
+#options-root.theme-mikupan-classic #side-title,
+#options-root.theme-mikupan-classic h1,
+#options-root.theme-mikupan-classic #panel-title,
+#options-root.theme-mikupan-classic #choice-picker-title,
+#options-root.theme-mikupan-classic #confirm-save-title,
+#options-root.theme-mikupan-classic #resolution-confirm-title,
+#options-root.theme-mikupan-classic #calibration-title,
+#options-root.theme-mikupan-classic #crt-title,
+#options-root.theme-mikupan-classic #calibration-level-title,
+#options-root.theme-mikupan-classic #binding-capture-title {
+    color: #f0e6d2;
+    font-effect: shadow(0dp 1dp #000000e8);
+}
+
+#options-root.theme-mikupan-classic .subsection-title,
+#options-root.theme-mikupan-classic .controls-section-title {
+    color: #c6a66f;
+    border-bottom-color: #8f734c70;
+}
+
+#options-root.theme-mikupan-classic .setting-title,
+#options-root.theme-mikupan-classic .calibration-row label,
+#options-root.theme-mikupan-classic .crt-row label,
+#options-root.theme-mikupan-classic .controls-bind-label {
+    color: #ddd2bd;
+}
+
+#options-root.theme-mikupan-classic .value,
+#options-root.theme-mikupan-classic .note,
+#options-root.theme-mikupan-classic p.note,
+#options-root.theme-mikupan-classic #gpu-restart-note,
+#options-root.theme-mikupan-classic #save-status,
+#options-root.theme-mikupan-classic .picker-option.applied,
+#options-root.theme-mikupan-classic #calibration-level-labels {
+    color: #c6a66f;
+}
+
+#options-root.theme-mikupan-classic #ritual-edge-top,
+#options-root.theme-mikupan-classic #ritual-edge-bottom,
+#options-root.theme-mikupan-classic #ritual-edge-left,
+#options-root.theme-mikupan-classic #ritual-edge-right {
+    background-color: #00000028;
+    border-color: #8f734c88;
+}
+
+#options-root.theme-mikupan-classic .ritual-corner {
+    border-color: #c6a66fa8;
+}
+
+#options-root.theme-mikupan-classic .ritual-scratch,
+#options-root.theme-mikupan-classic .ritual-speck {
+    display: none;
+}
+
+#options-root.theme-mikupan-classic .setting-row,
+#options-root.theme-mikupan-classic .controls-bind-row,
+#options-root.theme-mikupan-classic .placeholder {
+    background-color: transparent;
+    border-left-color: transparent;
+    border-bottom-color: #5f4a315c;
+}
+
+#options-root.theme-mikupan-classic .setting-row:hover,
+#options-root.theme-mikupan-classic .setting-row.controller-focus,
+#options-root.theme-mikupan-classic .controls-bind-row:hover,
+#options-root.theme-mikupan-classic .controls-bind-row.controller-focus {
+    color: #f0e6d2;
+    background-color: transparent;
+    border-left-color: #c6a66f;
+    border-bottom-color: #8f734c;
+    decorator: horizontal-gradient(#5f431fb8 #00000000);
+}
+
+#options-root.theme-mikupan-classic .category-button,
+#options-root.theme-mikupan-classic .side-action-button {
+    color: #c9beb0;
+    background-color: transparent;
+    border-left-color: transparent;
+    border-bottom-color: #5f4a3150;
+}
+
+#options-root.theme-mikupan-classic .category-button:hover,
+#options-root.theme-mikupan-classic .category-button.selected,
+#options-root.theme-mikupan-classic .category-button:focus,
+#options-root.theme-mikupan-classic .category-button:focus-visible,
+#options-root.theme-mikupan-classic .category-button.controller-focus,
+#options-root.theme-mikupan-classic .side-action-button:hover,
+#options-root.theme-mikupan-classic .side-action-button:focus,
+#options-root.theme-mikupan-classic .side-action-button:focus-visible,
+#options-root.theme-mikupan-classic .side-action-button.controller-focus {
+    color: #fff1d3;
+    background-color: transparent;
+    border-left-color: #c6a66f;
+    border-bottom-color: #8f734c;
+    decorator: horizontal-gradient(#5f431fd0 #00000000);
+}
+
+#options-root.theme-mikupan-classic select,
+#options-root.theme-mikupan-classic input.text,
+#options-root.theme-mikupan-classic .stepper-control,
+#options-root.theme-mikupan-classic .choice-picker,
+#options-root.theme-mikupan-classic button,
+#options-root.theme-mikupan-classic .controls-bind-value {
+    color: #e8ddc7;
+    background-color: #0505059c;
+    border: 0dp transparent;
+    border-top: 1dp #3f332770;
+    border-bottom: 1dp #8f734c88;
+}
+
+#options-root.theme-mikupan-classic select:hover,
+#options-root.theme-mikupan-classic select:focus,
+#options-root.theme-mikupan-classic select:focus-visible,
+#options-root.theme-mikupan-classic select.controller-focus,
+#options-root.theme-mikupan-classic select:checked,
+#options-root.theme-mikupan-classic input.text:hover,
+#options-root.theme-mikupan-classic input.text:focus,
+#options-root.theme-mikupan-classic input.text:focus-visible,
+#options-root.theme-mikupan-classic input.text.controller-focus,
+#options-root.theme-mikupan-classic .stepper-control:hover,
+#options-root.theme-mikupan-classic .stepper-control:focus,
+#options-root.theme-mikupan-classic .stepper-control:focus-visible,
+#options-root.theme-mikupan-classic .stepper-control.controller-focus,
+#options-root.theme-mikupan-classic .choice-picker:hover,
+#options-root.theme-mikupan-classic .choice-picker:focus,
+#options-root.theme-mikupan-classic .choice-picker:focus-visible,
+#options-root.theme-mikupan-classic .choice-picker.controller-focus,
+#options-root.theme-mikupan-classic button:hover,
+#options-root.theme-mikupan-classic button:focus,
+#options-root.theme-mikupan-classic button:focus-visible,
+#options-root.theme-mikupan-classic button.controller-focus {
+    color: #fff1d3;
+    background-color: transparent;
+    border-top-color: #8f734c;
+    border-bottom-color: #c6a66f;
+    decorator: horizontal-gradient(#5f431fd0 #00000000);
+}
+
+#options-root.theme-mikupan-classic input.checkbox {
+    color: #fff1d3;
+    background-color: #050505c8;
+    border: 1dp #8f734c88;
+}
+
+#options-root.theme-mikupan-classic input.checkbox:hover,
+#options-root.theme-mikupan-classic input.checkbox:focus,
+#options-root.theme-mikupan-classic input.checkbox:focus-visible,
+#options-root.theme-mikupan-classic input.checkbox.controller-focus {
+    background-color: #5f431f88;
+    border-color: #c6a66f;
+}
+
+#options-root.theme-mikupan-classic input.checkbox:checked {
+    background-color: #8f734c;
+    border-color: #f0e6d2;
+}
+
+#options-root.theme-mikupan-classic .choice-text,
+#options-root.theme-mikupan-classic select selectvalue {
+    color: #e8ddc7;
+}
+
+#options-root.theme-mikupan-classic .choice-picker:hover .choice-text,
+#options-root.theme-mikupan-classic .choice-picker:focus .choice-text,
+#options-root.theme-mikupan-classic .choice-picker:focus-visible .choice-text,
+#options-root.theme-mikupan-classic .choice-picker.controller-focus .choice-text,
+#options-root.theme-mikupan-classic select:hover selectvalue,
+#options-root.theme-mikupan-classic select:focus selectvalue,
+#options-root.theme-mikupan-classic select:focus-visible selectvalue,
+#options-root.theme-mikupan-classic select.controller-focus selectvalue,
+#options-root.theme-mikupan-classic select:checked selectvalue {
+    color: #fff1d3;
+}
+
+#options-root.theme-mikupan-classic .stepper-edge,
+#options-root.theme-mikupan-classic select selectarrow,
+#options-root.theme-mikupan-classic .picker-arrow-shape {
+    color: #c6a66f;
+    border-top-color: #c6a66f;
+    border-bottom-color: #c6a66f;
+}
+
+#options-root.theme-mikupan-classic .stepper-segment {
+    background-color: #30281e;
+}
+
+#options-root.theme-mikupan-classic .stepper-segment.neutral {
+    background-color: #6d5b42;
+}
+
+#options-root.theme-mikupan-classic .stepper-segment.filled,
+#options-root.theme-mikupan-classic input.checkbox:checked,
+#options-root.theme-mikupan-classic scrollbarvertical sliderbar {
+    background-color: #8f734c;
+}
+
+#options-root.theme-mikupan-classic .stepper-segment.filled.neutral,
+#options-root.theme-mikupan-classic .stepper-control:focus .stepper-segment.filled,
+#options-root.theme-mikupan-classic .stepper-control:focus-visible .stepper-segment.filled,
+#options-root.theme-mikupan-classic .stepper-control.controller-focus .stepper-segment.filled {
+    background-color: #c6a66f;
+}
+
+#options-root.theme-mikupan-classic scrollbarvertical slidertrack {
+    background-color: #050403c8;
+    border-color: #3f332777;
+}
+
+#options-root.theme-mikupan-classic scrollbarvertical sliderbar:hover,
+#options-root.theme-mikupan-classic scrollbarvertical sliderbar:active {
+    background-color: #c6a66f;
+}
+
+#options-root.theme-mikupan-classic select selectbox,
+#options-root.theme-mikupan-classic #choice-picker-list {
+    color: #e8ddc7;
+    background-color: #030302ff;
+    border-color: #8f734c88;
+}
+
+#options-root.theme-mikupan-classic select selectbox option,
+#options-root.theme-mikupan-classic .picker-option {
+    color: #bdb2a2;
+    background-color: transparent;
+    border-left-color: transparent;
+}
+
+#options-root.theme-mikupan-classic select selectbox option {
+    background-color: #030302ff;
+}
+
+#options-root.theme-mikupan-classic select selectbox option:hover,
+#options-root.theme-mikupan-classic select selectbox option:focus,
+#options-root.theme-mikupan-classic select selectbox option:focus-visible,
+#options-root.theme-mikupan-classic select selectbox option:checked,
+#options-root.theme-mikupan-classic .picker-option:hover,
+#options-root.theme-mikupan-classic .picker-option:focus,
+#options-root.theme-mikupan-classic .picker-option:focus-visible,
+#options-root.theme-mikupan-classic .picker-option.controller-focus,
+#options-root.theme-mikupan-classic .picker-option.selected {
+    color: #fff1d3;
+    background-color: transparent;
+    border-left-color: #c6a66f;
+    decorator: horizontal-gradient(#5f431fd0 #00000000);
+}
+
+#options-root.theme-mikupan-classic select selectbox option:hover,
+#options-root.theme-mikupan-classic select selectbox option:focus,
+#options-root.theme-mikupan-classic select selectbox option:focus-visible,
+#options-root.theme-mikupan-classic select selectbox option:checked {
+    background-color: #030302ff;
+}
+
+#options-root.theme-mikupan-classic .modal {
+    background-color: #000000c0;
+    z-index: 20;
+}
+
+#options-root.theme-mikupan-classic #confirm-save-card,
+#options-root.theme-mikupan-classic #resolution-confirm-card,
+#options-root.theme-mikupan-classic #binding-capture-card,
+#options-root.theme-mikupan-classic .calibration-panel,
+#options-root.theme-mikupan-classic .crt-panel,
+#options-root.theme-mikupan-classic .calibration-level-panel {
+    background-color: #070503f4;
+    border-color: #8f734ca8;
+    border-top-color: #c6a66fcc;
+    border-bottom-color: #5f4a31cc;
+}
+
+#options-root.theme-mikupan-classic #choice-picker-card {
+    background-color: #070503ff;
+    border: 0dp transparent;
+    border-top: 1dp #c6a66fcc;
+    border-bottom: 1dp #8f734ca8;
+}
+
+#options-root.theme-mikupan-classic .choice-picker.disabled,
+#options-root.theme-mikupan-classic .choice-picker.disabled:hover,
+#options-root.theme-mikupan-classic .choice-picker.disabled:focus,
+#options-root.theme-mikupan-classic .choice-picker.disabled:focus-visible,
+#options-root.theme-mikupan-classic .choice-picker.disabled.controller-focus {
+    color: #776c5d;
+    background-color: #05040366;
+    border-top-color: #33291f66;
+    border-bottom-color: #33291f88;
+    decorator: horizontal-gradient(#17110b66 #00000000);
+}
+
+#classic-window-backdrop,
+.classic-window-backdrop-part,
+.classic-edge-part {
+    display: none;
+    position: absolute;
+    pointer-events: none;
+}
+
+#options-root.theme-mikupan-classic #window {
+    background-color: transparent;
+    border: 0dp transparent;
+}
+
+#options-root.theme-mikupan-classic #classic-window-backdrop {
+    display: block;
+    left: 0dp;
+    top: 0dp;
+    width: 536dp;
+    height: 306dp;
+    z-index: 0;
+}
+
+#options-root.theme-mikupan-classic .classic-window-backdrop-part {
+    display: block;
+    top: 0dp;
+    height: 306dp;
+}
+
+#options-root.theme-mikupan-classic .classic-window-backdrop-part.left {
+    left: 0dp;
+    width: 48dp;
+    decorator: horizontal-gradient(#00000000 #050403e8);
+}
+
+#options-root.theme-mikupan-classic .classic-window-backdrop-part.center {
+    left: 48dp;
+    width: 440dp;
+    background-color: #050403e8;
+}
+
+#options-root.theme-mikupan-classic .classic-window-backdrop-part.right {
+    right: 0dp;
+    width: 48dp;
+    decorator: horizontal-gradient(#050403e8 #00000000);
+}
+
+#options-root.theme-mikupan-classic #side,
+#options-root.theme-mikupan-classic #content {
+    position: relative;
+    z-index: 1;
+    background-color: transparent;
+}
+
+#options-root.theme-mikupan-classic #ritual-overlay {
+    z-index: 2;
+}
+
+#options-root.theme-mikupan-classic #side {
+    border-right-color: #8f734c40;
+}
+
+#options-root.theme-mikupan-classic #ritual-edge-left,
+#options-root.theme-mikupan-classic #ritual-edge-right,
+#options-root.theme-mikupan-classic .ritual-corner {
+    display: none;
+}
+
+#options-root.theme-mikupan-classic #ritual-edge-top,
+#options-root.theme-mikupan-classic #ritual-edge-bottom {
+    display: block;
+    width: 536dp;
+    height: 1dp;
+    background-color: transparent;
+    border: 0dp transparent;
+}
+
+#options-root.theme-mikupan-classic .classic-edge-part {
+    display: block;
+    top: 0dp;
+    height: 1dp;
+}
+
+#options-root.theme-mikupan-classic .classic-edge-part.left {
+    left: 0dp;
+    width: 48dp;
+    decorator: horizontal-gradient(#00000000 #b39360c8);
+}
+
+#options-root.theme-mikupan-classic .classic-edge-part.center {
+    left: 48dp;
+    width: 440dp;
+    background-color: #b39360c8;
+}
+
+#options-root.theme-mikupan-classic .classic-edge-part.right {
+    right: 0dp;
+    width: 48dp;
+    decorator: horizontal-gradient(#b39360c8 #00000000);
+}
+
+#options-root.theme-mikupan-classic .setting-row,
+#options-root.theme-mikupan-classic .controls-bind-row,
+#options-root.theme-mikupan-classic .placeholder {
+    background-color: #07050378;
+    border: 0dp transparent;
+    border-top: 1dp #2d21165a;
+    border-bottom: 1dp #5f4a314c;
+    decorator: none;
+}
+
+#options-root.theme-mikupan-classic .setting-row:hover,
+#options-root.theme-mikupan-classic .setting-row.controller-focus,
+#options-root.theme-mikupan-classic .controls-bind-row:hover,
+#options-root.theme-mikupan-classic .controls-bind-row.controller-focus {
+    color: #f0e6d2;
+    background-color: #21170d8c;
+    border-top-color: #8f734c78;
+    border-bottom-color: #c6a66f9c;
+    decorator: horizontal-gradient(#6f542c88 #00000000);
+}
+
+#options-root.theme-mikupan-classic .setting-row .setting-control select,
+#options-root.theme-mikupan-classic .setting-row .setting-control input.text,
+#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control,
+#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker,
+#options-root.theme-mikupan-classic .setting-row .setting-control button,
+#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value,
+#options-root.theme-mikupan-classic .controls-bind-row button {
+    color: #e8ddc7;
+    background-color: #00000030;
+    border: 0dp transparent;
+    border-top: 1dp #3f332750;
+    border-bottom: 1dp #8f734c68;
+    decorator: none;
+}
+
+#options-root.theme-mikupan-classic .setting-row .setting-control select:hover,
+#options-root.theme-mikupan-classic .setting-row .setting-control select:focus,
+#options-root.theme-mikupan-classic .setting-row .setting-control select:focus-visible,
+#options-root.theme-mikupan-classic .setting-row .setting-control select.controller-focus,
+#options-root.theme-mikupan-classic .setting-row .setting-control select:checked,
+#options-root.theme-mikupan-classic .setting-row .setting-control input.text:hover,
+#options-root.theme-mikupan-classic .setting-row .setting-control input.text:focus,
+#options-root.theme-mikupan-classic .setting-row .setting-control input.text:focus-visible,
+#options-root.theme-mikupan-classic .setting-row .setting-control input.text.controller-focus,
+#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control:hover,
+#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control:focus,
+#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control:focus-visible,
+#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control.controller-focus,
+#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker:hover,
+#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker:focus,
+#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker:focus-visible,
+#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker.controller-focus,
+#options-root.theme-mikupan-classic .setting-row .setting-control button:hover,
+#options-root.theme-mikupan-classic .setting-row .setting-control button:focus,
+#options-root.theme-mikupan-classic .setting-row .setting-control button:focus-visible,
+#options-root.theme-mikupan-classic .setting-row .setting-control button.controller-focus,
+#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value:hover,
+#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value:focus,
+#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value:focus-visible,
+#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value.controller-focus,
+#options-root.theme-mikupan-classic .controls-bind-row button:hover,
+#options-root.theme-mikupan-classic .controls-bind-row button:focus,
+#options-root.theme-mikupan-classic .controls-bind-row button:focus-visible,
+#options-root.theme-mikupan-classic .controls-bind-row button.controller-focus {
+    color: #fff1d3;
+    background-color: #00000030;
+    border-top-color: #3f332750;
+    border-bottom-color: #8f734c68;
+    decorator: none;
+}
+
+#options-root.theme-mikupan-classic .setting-row input.checkbox {
+    background-color: #00000030;
+    border-color: #8f734c88;
+}
+
+#options-root.theme-mikupan-classic .setting-row input.checkbox:hover,
+#options-root.theme-mikupan-classic .setting-row input.checkbox:focus,
+#options-root.theme-mikupan-classic .setting-row input.checkbox:focus-visible,
+#options-root.theme-mikupan-classic .setting-row input.checkbox.controller-focus {
+    background-color: #00000030;
+    border-color: #8f734c88;
+}
+
+#options-root.theme-mikupan-classic .setting-row input.checkbox:checked {
+    background-color: #8f734c;
+    border-color: #f0e6d2;
+}
+
+#options-root.theme-mikupan-classic #category-list .category-button,
+#options-root.theme-mikupan-classic #side-actions .side-action-button {
+    color: #c9beb0;
+    background-color: transparent;
+    border: 0dp transparent;
+    border-top: 1dp transparent;
+    border-bottom: 1dp #5f4a3148;
+    text-align: center;
+    decorator: none;
+}
+
+#options-root.theme-mikupan-classic #category-list .category-button:hover,
+#options-root.theme-mikupan-classic #category-list .category-button.selected,
+#options-root.theme-mikupan-classic #category-list .category-button:focus,
+#options-root.theme-mikupan-classic #category-list .category-button:focus-visible,
+#options-root.theme-mikupan-classic #category-list .category-button.controller-focus,
+#options-root.theme-mikupan-classic #side-actions .side-action-button:hover,
+#options-root.theme-mikupan-classic #side-actions .side-action-button:focus,
+#options-root.theme-mikupan-classic #side-actions .side-action-button:focus-visible,
+#options-root.theme-mikupan-classic #side-actions .side-action-button.controller-focus {
+    color: #fff1d3;
+    background-color: #1c130b7a;
+    border-left-color: transparent;
+    border-top-color: #8f734c60;
+    border-bottom-color: #c6a66f98;
+    decorator: horizontal-gradient(#6f542c98 #00000000);
+}
+
+#options-root.theme-mikupan-classic select selectvalue,
+#options-root.theme-mikupan-classic .choice-text,
+#options-root.theme-mikupan-classic input.text,
+#options-root.theme-mikupan-classic .controls-bind-value,
+#options-root.theme-mikupan-classic select selectbox option,
+#options-root.theme-mikupan-classic .picker-option {
+    text-align: center;
+}
+
+
+#options-root.theme-mikupan-classic .controls-tab {
+    color: #c9beb0;
+    background-color: #00000030;
+    border: 0dp transparent;
+    border-top: 1dp #3f332750;
+    border-bottom: 1dp #8f734c68;
+    decorator: none;
+}
+
+#options-root.theme-mikupan-classic .controls-tab:hover,
+#options-root.theme-mikupan-classic .controls-tab.selected,
+#options-root.theme-mikupan-classic .controls-tab:focus,
+#options-root.theme-mikupan-classic .controls-tab:focus-visible,
+#options-root.theme-mikupan-classic .controls-tab.controller-focus,
+#options-root.theme-mikupan-classic .controls-tab.selected:focus,
+#options-root.theme-mikupan-classic .controls-tab.selected:focus-visible,
+#options-root.theme-mikupan-classic .controls-tab.selected.controller-focus {
+    color: #fff1d3;
+    background-color: #1c130b7a;
+    border-top-color: #8f734c60;
+    border-bottom-color: #c6a66f98;
+    decorator: horizontal-gradient(#6f542c98 #00000000);
+}
+
+#options-root.theme-mikupan-classic .picker-option.applied {
+    border-left-color: #8f734c70;
+}

@@ -4,6 +4,12 @@
 </head>
 <body id="options-root">
     <div id="window">
+        <div id="classic-window-backdrop">
+            <div class="classic-window-backdrop-part left"></div>
+            <div class="classic-window-backdrop-part center"></div>
+            <div class="classic-window-backdrop-part right"></div>
+        </div>
+
         <div id="side">
             <div id="side-title">OPTIONS</div>
             <div id="category-list">
@@ -145,8 +151,16 @@
         </div>
 
         <div id="ritual-overlay">
-            <div id="ritual-edge-top"></div>
-            <div id="ritual-edge-bottom"></div>
+            <div id="ritual-edge-top">
+                <div class="classic-edge-part left"></div>
+                <div class="classic-edge-part center"></div>
+                <div class="classic-edge-part right"></div>
+            </div>
+            <div id="ritual-edge-bottom">
+                <div class="classic-edge-part left"></div>
+                <div class="classic-edge-part center"></div>
+                <div class="classic-edge-part right"></div>
+            </div>
             <div id="ritual-edge-left"></div>
             <div id="ritual-edge-right"></div>
             <div id="ritual-corner-tl" class="ritual-corner"></div>

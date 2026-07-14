@@ -283,6 +283,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_rml_message_box.h
         src/mikupan/ui/mikupan_rml_options.cpp
         src/mikupan/ui/mikupan_rml_options.h
+        src/mikupan/ui/mikupan_rml_mode_select.cpp
+        src/mikupan/ui/mikupan_rml_mode_select.h
         src/mikupan/ui/mikupan_rml_title.cpp
         src/mikupan/ui/mikupan_rml_title.h
         src/mikupan/ui/mikupan_rml_save_load.cpp

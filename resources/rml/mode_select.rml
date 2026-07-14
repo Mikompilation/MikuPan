@@ -1,0 +1,178 @@
+<rml>
+<head>
+    <title>Mode Select</title>
+    <link type="text/rcss" href="mode_select.rcss"/>
+    <link type="text/rcss" href="message_box.rcss"/>
+</head>
+<body>
+    <div id="mode-select-root" class="hidden">
+        <div id="mode-select-main-panel">
+            <div id="mode-select-main-menu">
+                <button id="mode-select-main-0" class="mode-select-main-button">Story Mode</button>
+                <button id="mode-select-main-1" class="mode-select-main-button">Battle Mode</button>
+                <button id="mode-select-main-2" class="mode-select-main-button">Option</button>
+                <button id="mode-select-main-3" class="mode-select-main-button">Sound Test</button>
+                <button id="mode-select-main-4" class="mode-select-main-button">Exit</button>
+            </div>
+        </div>
+
+        <div id="mode-select-story-panel" class="hidden">
+            <div id="mode-select-story-menu">
+                <div id="mode-select-story-row-0" class="mode-select-story-row selector-row">
+                    <div class="mode-select-story-board">
+                        <span class="mode-select-story-board-backing left"></span>
+                        <span class="mode-select-story-board-backing center"></span>
+                        <span class="mode-select-story-board-backing right"></span>
+                        <span class="mode-select-story-board-line top left"></span>
+                        <span class="mode-select-story-board-line top center"></span>
+                        <span class="mode-select-story-board-line top right"></span>
+                        <span class="mode-select-story-board-line bottom left"></span>
+                        <span class="mode-select-story-board-line bottom center"></span>
+                        <span class="mode-select-story-board-line bottom right"></span>
+                    </div>
+                    <button id="mode-select-story-hit-0" class="mode-select-story-hit"></button>
+                    <span class="mode-select-story-label">Chapter</span>
+                    <span class="mode-select-story-selector">
+                        <span class="mode-select-story-bracket left">[</span>
+                        <span class="mode-select-story-value">
+                            <span id="mode-select-story-value-0-0" class="mode-select-story-value-option">Continue</span>
+                            <span id="mode-select-story-value-0-1" class="mode-select-story-value-option hidden">Prologue</span>
+                            <span id="mode-select-story-value-0-2" class="mode-select-story-value-option hidden">Night 1</span>
+                            <span id="mode-select-story-value-0-3" class="mode-select-story-value-option hidden">Night 2</span>
+                            <span id="mode-select-story-value-0-4" class="mode-select-story-value-option hidden">Night 3</span>
+                            <span id="mode-select-story-value-0-5" class="mode-select-story-value-option hidden">Final Night</span>
+                        </span>
+                        <span class="mode-select-story-bracket right">]</span>
+                    </span>
+                    <button id="mode-select-story-left-0" class="mode-select-story-arrow left"><span class="mode-select-story-arrow-glyph">&lt;</span></button>
+                    <button id="mode-select-story-right-0" class="mode-select-story-arrow right"><span class="mode-select-story-arrow-glyph">&gt;</span></button>
+                </div>
+                <div id="mode-select-story-row-1" class="mode-select-story-row selector-row">
+                    <div class="mode-select-story-board">
+                        <span class="mode-select-story-board-backing left"></span>
+                        <span class="mode-select-story-board-backing center"></span>
+                        <span class="mode-select-story-board-backing right"></span>
+                        <span class="mode-select-story-board-line top left"></span>
+                        <span class="mode-select-story-board-line top center"></span>
+                        <span class="mode-select-story-board-line top right"></span>
+                        <span class="mode-select-story-board-line bottom left"></span>
+                        <span class="mode-select-story-board-line bottom center"></span>
+                        <span class="mode-select-story-board-line bottom right"></span>
+                    </div>
+                    <button id="mode-select-story-hit-1" class="mode-select-story-hit"></button>
+                    <span class="mode-select-story-label">Difficulty</span>
+                    <span class="mode-select-story-selector">
+                        <span class="mode-select-story-bracket left">[</span>
+                        <span class="mode-select-story-value">
+                            <span id="mode-select-story-value-1-0" class="mode-select-story-value-option">Normal</span>
+                            <span id="mode-select-story-value-1-1" class="mode-select-story-value-option hidden">Nightmare</span>
+                        </span>
+                        <span class="mode-select-story-bracket right">]</span>
+                    </span>
+                    <button id="mode-select-story-left-1" class="mode-select-story-arrow left"><span class="mode-select-story-arrow-glyph">&lt;</span></button>
+                    <button id="mode-select-story-right-1" class="mode-select-story-arrow right"><span class="mode-select-story-arrow-glyph">&gt;</span></button>
+                </div>
+                <div id="mode-select-story-row-2" class="mode-select-story-row selector-row">
+                    <div class="mode-select-story-board">
+                        <span class="mode-select-story-board-backing left"></span>
+                        <span class="mode-select-story-board-backing center"></span>
+                        <span class="mode-select-story-board-backing right"></span>
+                        <span class="mode-select-story-board-line top left"></span>
+                        <span class="mode-select-story-board-line top center"></span>
+                        <span class="mode-select-story-board-line top right"></span>
+                        <span class="mode-select-story-board-line bottom left"></span>
+                        <span class="mode-select-story-board-line bottom center"></span>
+                        <span class="mode-select-story-board-line bottom right"></span>
+                    </div>
+                    <button id="mode-select-story-hit-2" class="mode-select-story-hit"></button>
+                    <span class="mode-select-story-label">Costume</span>
+                    <span class="mode-select-story-selector">
+                        <span class="mode-select-story-bracket left">[</span>
+                        <span class="mode-select-story-value">
+                            <span id="mode-select-story-value-2-0" class="mode-select-story-value-option">Normal</span>
+                            <span id="mode-select-story-value-2-1" class="mode-select-story-value-option hidden">Special 1</span>
+                            <span id="mode-select-story-value-2-2" class="mode-select-story-value-option hidden">Special 2</span>
+                            <span id="mode-select-story-value-2-3" class="mode-select-story-value-option hidden">Special 3</span>
+                        </span>
+                        <span class="mode-select-story-bracket right">]</span>
+                    </span>
+                    <button id="mode-select-story-left-2" class="mode-select-story-arrow left"><span class="mode-select-story-arrow-glyph">&lt;</span></button>
+                    <button id="mode-select-story-right-2" class="mode-select-story-arrow right"><span class="mode-select-story-arrow-glyph">&gt;</span></button>
+                </div>
+                <div id="mode-select-story-row-3" class="mode-select-story-row action-row">
+                    <div class="mode-select-story-board">
+                        <span class="mode-select-story-board-backing left"></span>
+                        <span class="mode-select-story-board-backing center"></span>
+                        <span class="mode-select-story-board-backing right"></span>
+                        <span class="mode-select-story-board-line top left"></span>
+                        <span class="mode-select-story-board-line top center"></span>
+                        <span class="mode-select-story-board-line top right"></span>
+                        <span class="mode-select-story-board-line bottom left"></span>
+                        <span class="mode-select-story-board-line bottom center"></span>
+                        <span class="mode-select-story-board-line bottom right"></span>
+                    </div>
+                    <button id="mode-select-story-hit-3" class="mode-select-story-hit"></button>
+                    <span class="mode-select-story-action">Game Start</span>
+                </div>
+                <div id="mode-select-story-row-4" class="mode-select-story-row action-row">
+                    <div class="mode-select-story-board">
+                        <span class="mode-select-story-board-backing left"></span>
+                        <span class="mode-select-story-board-backing center"></span>
+                        <span class="mode-select-story-board-backing right"></span>
+                        <span class="mode-select-story-board-line top left"></span>
+                        <span class="mode-select-story-board-line top center"></span>
+                        <span class="mode-select-story-board-line top right"></span>
+                        <span class="mode-select-story-board-line bottom left"></span>
+                        <span class="mode-select-story-board-line bottom center"></span>
+                        <span class="mode-select-story-board-line bottom right"></span>
+                    </div>
+                    <button id="mode-select-story-hit-4" class="mode-select-story-hit"></button>
+                    <span class="mode-select-story-action">Exit</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="mode-select-message-box">
+            <div class="ff-message-fill"></div>
+            <div class="ff-message-frame">
+                <div class="ff-message-outer-horizontal top">
+                    <span class="ff-message-outer-fade left"></span>
+                    <span class="ff-message-outer-center"></span>
+                    <span class="ff-message-outer-fade right"></span>
+                </div>
+                <div class="ff-message-outer-horizontal bottom">
+                    <span class="ff-message-outer-fade left"></span>
+                    <span class="ff-message-outer-center"></span>
+                    <span class="ff-message-outer-fade right"></span>
+                </div>
+                <span class="ff-message-outer-vertical left"></span>
+                <span class="ff-message-outer-vertical right"></span>
+                <div class="ff-message-inner-horizontal top">
+                    <span class="ff-message-inner-fade left"></span>
+                    <span class="ff-message-inner-center"></span>
+                    <span class="ff-message-inner-fade right"></span>
+                </div>
+                <div class="ff-message-inner-horizontal bottom">
+                    <span class="ff-message-inner-fade left"></span>
+                    <span class="ff-message-inner-center"></span>
+                    <span class="ff-message-inner-fade right"></span>
+                </div>
+                <span class="ff-message-inner-vertical left"></span>
+                <span class="ff-message-inner-vertical right"></span>
+            </div>
+            <div id="mode-select-message-text">
+                <span id="mode-select-message-main-0" class="mode-select-message-copy">Regular game mode. Start from the chapter of your choice.</span>
+                <span id="mode-select-message-main-1" class="mode-select-message-copy hidden">Battle against ghosts in a series of missions.</span>
+                <span id="mode-select-message-main-2" class="mode-select-message-copy hidden">Change the game settings.</span>
+                <span id="mode-select-message-main-3" class="mode-select-message-copy hidden">Listen to music and sound effects.</span>
+                <span id="mode-select-message-main-4" class="mode-select-message-copy hidden">Return to the title screen.</span>
+                <span id="mode-select-message-story-0" class="mode-select-message-copy hidden">Choose the chapter to start from.</span>
+                <span id="mode-select-message-story-1" class="mode-select-message-copy hidden">Choose the game difficulty.</span>
+                <span id="mode-select-message-story-2" class="mode-select-message-copy hidden">Choose Miku's costume.</span>
+                <span id="mode-select-message-story-3" class="mode-select-message-copy hidden">Start the game with these settings.</span>
+                <span id="mode-select-message-story-4" class="mode-select-message-copy hidden">Return to Mode Select.</span>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>
