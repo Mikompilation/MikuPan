@@ -1909,12 +1909,20 @@ void SetSpeFurnLight(FURN_WRK *furn)
     }
 
     SgReadLights(room_addr_tbl[room_no].near_sgd, lit_dat, ambient, lights, 3, plights, 16, slights, 16);
+    SgSetAmbient(ambient);
+    SgSetInfiniteLights(camera.zd, lights, lights[0].num);
 
     num = plights[0].num < 0 || plights[0].num > 3 ? 3 : plights[0].num;
 
     SgSetPointLights(plights, num);
 
     light_pack = &furn->mylight;
+
+    if (light_pack->spot_num <= 0)
+    {
+        SgSetSpotLights(slights, 0);
+        return;
+    }
 
     slights[0].num = 1;
 
