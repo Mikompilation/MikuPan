@@ -253,6 +253,11 @@ enum MikuPan_PipelineType
     /// 0x32 uploads can avoid the per-vertex CPU interleaving step.
     POSITION3_NORMAL3_UV2_SOA,
 
+    /// Standard glTF skinned mesh stream. This keeps glTF JOINTS_0/WEIGHTS_0
+    /// separate from the PS2 two-position skinning layout so exported assets
+    /// can stay structurally valid glTF.
+    GLTF_SKIN_POSITION3_NORMAL3_UV2_JOINTS4_WEIGHTS4,
+
     /// MESH 0x2 SHADER
     POSITION4_NORMAL4_UV2,
 

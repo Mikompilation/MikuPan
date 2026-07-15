@@ -3215,6 +3215,12 @@ void MikuPan_GPUSetRenderState3DMirror(void)
     g_state.cull_mode = SDL_GPU_CULLMODE_FRONT;
 }
 
+void MikuPan_GPUSetRenderState3DDoubleSided(void)
+{
+    MikuPan_GPUSetRenderState3D();
+    g_state.cull_mode = SDL_GPU_CULLMODE_NONE;
+}
+
 void MikuPan_GPUSetRenderState2D(void)
 {
     g_state.depth_test = 0;

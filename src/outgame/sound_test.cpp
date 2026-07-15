@@ -321,7 +321,7 @@ char SoundTestForModeSlect()
 void SoundTestForModeSlectDisp(u_char alp, float flsh)
 {
     int i;
-    u_char dir;
+    u_char dir = 0;
 
     for (i = 0; i < 6; i++)
     {
@@ -708,7 +708,7 @@ void SlotNum(int number, u_char digit, u_char timer, u_char tim_lmt, short int p
 {
     int i;
     int multi10;
-    int multi10_bak;
+    int multi10_bak = 0;
     int dsp_num;
     u_char dsp_mode;
     int disp_digit;

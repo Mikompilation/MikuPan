@@ -50,6 +50,8 @@ set(MIKUPAN_HLSL_DIR ${CMAKE_SOURCE_DIR}/resources/shaders/hlsl)
 # without a manual re-configure.
 file(GLOB MIKUPAN_HLSL_SHADERS  CONFIGURE_DEPENDS ${MIKUPAN_HLSL_DIR}/*.hlsl)
 file(GLOB MIKUPAN_HLSL_INCLUDES CONFIGURE_DEPENDS ${MIKUPAN_HLSL_DIR}/*.hlsli)
+set(MIKUPAN_OPTIONAL_HLSL_SHADER_NAMES
+        gltf_skinned.vert.hlsl)
 
 # One "<directory>=<extension>" entry per SDL_GPU shader format the game can
 # load at runtime. Android only consumes SPIR-V through Vulkan, and the shader
@@ -72,6 +74,14 @@ if(NOT MIKUPAN_COMPILE_SHADERS)
             set(out_src ${CMAKE_SOURCE_DIR}/resources/shaders/${format_dir}/${out_name})
 
             if(NOT EXISTS ${out_src})
+                list(FIND MIKUPAN_OPTIONAL_HLSL_SHADER_NAMES ${hlsl_name} optional_shader_index)
+                if(NOT optional_shader_index EQUAL -1)
+                    message(WARNING
+                            "Missing optional precompiled shader bytecode: ${out_src}\n"
+                            "  Skinned glTF rendering will be disabled until this shader "
+                            "is compiled with -DMIKUPAN_COMPILE_SHADERS=ON.")
+                    continue()
+                endif()
                 message(FATAL_ERROR
                         "Missing precompiled shader bytecode: ${out_src}\n"
                         "Configure with -DMIKUPAN_COMPILE_SHADERS=ON or download "

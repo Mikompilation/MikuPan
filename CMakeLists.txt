@@ -12,6 +12,7 @@ if(WIN32)
 endif()
 
 option(BUILD_EU_VERSION "Build the PAL/EU version data and code paths." OFF)
+option(MIKUPAN_ENABLE_ASSIMP_GLTF "Enable Assimp-backed glTF/OBJ model loading." ON)
 
 if(ANDROID)
     set(MIKUPAN_ANDROID_PAGE_SIZE "16384"
@@ -44,6 +45,9 @@ include(ffmpeg)
 include(xxhash)
 include(inipp)
 include(shadercross)
+if(MIKUPAN_ENABLE_ASSIMP_GLTF)
+    include(assimp)
+endif()
 
 set(MIKUPAN_SOURCES
         resources/shaders/textured_mesh_lighted.frag
@@ -327,6 +331,12 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui_theme.h
  "src/mikupan/mikupan_framelimiter.cpp")
 
+if(MIKUPAN_ENABLE_ASSIMP_GLTF)
+    list(APPEND MIKUPAN_SOURCES
+            src/mikupan/model/mikupan_gltf_model.h
+            src/mikupan/model/mikupan_gltf_model.cpp)
+endif()
+
 # The legacy game + SDK code (originally .c, now renamed to .cpp) is decompiled C
 # compiled as C++, so it needs the same C-ism relaxations on every compiler. The handful
 # of files below were authored as conforming C++ and are kept OUT of those relaxations.
@@ -336,6 +346,7 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/av/mikupan_video_decoder.cpp"
         "src/mikupan/av/mikupan_video_decoder_c.cpp"
         "src/mikupan/gameplay/mikupan_title_scene.cpp"
+        "src/mikupan/model/mikupan_gltf_model.cpp"
         "src/mikupan/gs/mikupan_gs.cpp"
         "src/mikupan/gs/mikupan_texture_manager.cpp"
         "src/mikupan/mikupan_audio_bus.cpp"
@@ -344,6 +355,7 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/mikupan_logging.cpp"
         "src/mikupan/ui/mikupan_ui.cpp"
 )
+
 set(MIKUPAN_CXX_SOURCES)
 foreach(mikupan_source IN LISTS MIKUPAN_SOURCES)
     if(mikupan_source MATCHES "^(src|sdk)/.*\\.cpp$"
@@ -351,6 +363,7 @@ foreach(mikupan_source IN LISTS MIKUPAN_SOURCES)
         list(APPEND MIKUPAN_CXX_SOURCES "${mikupan_source}")
     endif()
 endforeach()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set_source_files_properties(${MIKUPAN_CXX_SOURCES} PROPERTIES
             COMPILE_OPTIONS "-fpermissive;-Wno-narrowing;-Wno-write-strings")
@@ -444,6 +457,12 @@ if(BUILD_EU_VERSION)
     target_compile_definitions(MikuPan PRIVATE BUILD_EU_VERSION=1)
 endif()
 
+if(MIKUPAN_ENABLE_ASSIMP_GLTF)
+    target_compile_definitions(MikuPan PRIVATE MIKUPAN_ENABLE_ASSIMP_GLTF=1)
+else()
+    target_compile_definitions(MikuPan PRIVATE MIKUPAN_ENABLE_ASSIMP_GLTF=0)
+endif()
+
 target_include_directories(MikuPan PRIVATE
         ${MIKUPAN_DATA_INCLUDE_DIR}
         "sdk/"
@@ -470,6 +489,14 @@ target_link_libraries(MikuPan PRIVATE
         xxHash::xxhash
         inipp::inipp
 )
+
+if(MIKUPAN_ENABLE_ASSIMP_GLTF)
+    if(TARGET assimp::assimp)
+        target_link_libraries(MikuPan PRIVATE assimp::assimp)
+    else()
+        target_link_libraries(MikuPan PRIVATE assimp)
+    endif()
+endif()
 
 if(NOT MSVC)
     target_link_libraries(MikuPan PRIVATE m)

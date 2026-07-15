@@ -339,6 +339,7 @@ void MikuPan_SetBakedLighting(int parallel_count,
                               const sceVu0FVECTOR spot_intens_b);
 float MikuPan_GetCurrentMaterialAlpha(void);
 int MikuPan_IsCurrentMaterialFullyTransparent(void);
+void MikuPan_SetCurrentMaterialAlpha(float alpha);
 void MikuPan_SetMaterial(const sceVu0FVECTOR* ambient,
                          const sceVu0FVECTOR* diffuse,
                          const sceVu0FVECTOR* specular,

@@ -26,6 +26,8 @@ static float g_raw_spot_pos[MIKUPAN_MAX_SOURCE_LIGHTS][4] = {0};
 static float g_raw_spot_dir[MIKUPAN_MAX_SOURCE_LIGHTS][4] = {0};
 static float g_current_material_alpha = 1.0f;
 
+static void MikuPan_UploadLightData(void);
+
 static int MikuPan_ClampLightCount(int count)
 {
     if (count < 0)
@@ -135,6 +137,27 @@ static float MikuPan_Ps2AlphaToUnit(float alpha)
 float MikuPan_GetCurrentMaterialAlpha(void)
 {
     return g_current_material_alpha;
+}
+
+void MikuPan_SetCurrentMaterialAlpha(float alpha)
+{
+    if (alpha < 0.0f)
+    {
+        alpha = 0.0f;
+    }
+    else if (alpha > 1.0f)
+    {
+        alpha = 1.0f;
+    }
+
+    if (g_current_material_alpha == alpha)
+    {
+        return;
+    }
+
+    mikupan_light_data.uMaterialAlpha[0] = alpha;
+    g_current_material_alpha = alpha;
+    MikuPan_UploadLightData();
 }
 
 int MikuPan_IsCurrentMaterialFullyTransparent(void)

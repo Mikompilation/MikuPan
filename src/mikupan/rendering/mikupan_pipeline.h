@@ -14,6 +14,7 @@ void MikuPan_SetUniformBufferObjectInfo(MikuPan_BufferObjectInfo *object_info,
                                 int buffer_length, u_int num_attributes);
 void MikuPan_SetRenderState3D();
 void MikuPan_SetRenderState3DMirror();
+void MikuPan_SetRenderState3DDoubleSided();
 void MikuPan_SetRenderState2D();
 void MikuPan_SetRenderState2DDepth();
 void MikuPan_SetRenderStateSprite3D();

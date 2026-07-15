@@ -226,6 +226,7 @@ void MikuPan_GPUInvalidatePipelines(void);
 
 void MikuPan_GPUSetRenderState3D(void);
 void MikuPan_GPUSetRenderState3DMirror(void);
+void MikuPan_GPUSetRenderState3DDoubleSided(void);
 void MikuPan_GPUSetRenderState2D(void);
 void MikuPan_GPUSetRenderState2DDepth(void);
 void MikuPan_GPUSetRenderStateSprite3D(void);

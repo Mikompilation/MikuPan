@@ -22,6 +22,7 @@ enum ShaderPrograms
     FINDER_VIEWPORT_BLUR_SHADER,
     MESH_0x2_SKINNED_SHADER, ///< GPU-skinned mesh 0x2 (2-bone LBS in the VS)
     MESH_0xA_SKINNED_SHADER, ///< GPU-skinned mesh 0xA (2-bone LBS in the VS)
+    GLTF_SKINNED_SHADER,     ///< Standard glTF JOINTS_0/WEIGHTS_0 skinning
     MAX_SHADER_PROGRAMS
 };
 
@@ -36,6 +37,7 @@ extern u_int shader_list[MAX_SHADER_PROGRAMS];
 int MikuPan_InitShaders();
 u_int MikuPan_SetCurrentShaderProgram(int shader_program);
 u_int MikuPan_GetCurrentShaderProgram();
+int MikuPan_IsShaderAvailable(int shader_program);
 void MikuPan_SetUniformMatrix4fvToAllShaders(float* mat, char* name);
 void MikuPan_SetUniformMatrix3fvToAllShaders(float* mat, char* name);
 void MikuPan_SetUniformMatrix4fvToCurrentShader(float* mat, char* name);

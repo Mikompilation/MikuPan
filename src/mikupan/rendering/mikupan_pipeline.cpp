@@ -40,11 +40,18 @@ typedef struct MikuPanSkinnedVertex
     float bone_norm1[4];
 } MikuPanSkinnedVertex;
 
+typedef struct MikuPanGltfSkinVertex
+{
+    float joints[4];
+    float weights[4];
+} MikuPanGltfSkinVertex;
+
 typedef enum
 {
     MIKUPAN_RS_UNINIT = 0,
     MIKUPAN_RS_3D,
     MIKUPAN_RS_3D_MIRROR,
+    MIKUPAN_RS_3D_DOUBLE_SIDED,
     MIKUPAN_RS_2D,
     MIKUPAN_RS_2D_DEPTH,
     MIKUPAN_RS_SPRITE_3D,
@@ -133,6 +140,45 @@ void MikuPan_InitPipeline()
     curr_pipeline->ibo = MikuPan_GPUCreateBuffer(
         sizeof(u_int) * 1024 * 1024, MIKUPAN_GPU_BUFFER_INDEX);
     MikuPan_FinalizePipeline(POSITION3_NORMAL3_UV2_SOA);
+
+    ///////// STANDARD GLTF SKINNED MESH /////////
+    curr_pipeline =
+        &pipelines[GLTF_SKIN_POSITION3_NORMAL3_UV2_JOINTS4_WEIGHTS4];
+    MikuPan_CreateBufferObjectsInfo(curr_pipeline, 4);
+
+    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[0], 4 * 1024 * 1024, 2);
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[0].attributes[0], 3, 0,
+        (int) sizeof(MikuPanPosition3Normal3Vertex),
+        (u_int) offsetof(MikuPanPosition3Normal3Vertex, position));
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[0].attributes[1], 3, 1,
+        (int) sizeof(MikuPanPosition3Normal3Vertex),
+        (u_int) offsetof(MikuPanPosition3Normal3Vertex, normal));
+
+    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[1], 4 * 1024 * 1024, 1);
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[1].attributes[0], 2, 2,
+        sizeof(float[2]), 0);
+
+    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[2], 4 * 1024 * 1024, 1);
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[2].attributes[0], 3, 3,
+        sizeof(float[3]), 0);
+
+    MikuPan_SetBufferObjectInfo(&curr_pipeline->buffers[3], 4 * 1024 * 1024, 2);
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[3].attributes[0], 4, 4,
+        (int) sizeof(MikuPanGltfSkinVertex),
+        (u_int) offsetof(MikuPanGltfSkinVertex, joints));
+    MikuPan_SetVertexBufferAttributeInfo(
+        &curr_pipeline->buffers[3].attributes[1], 4, 5,
+        (int) sizeof(MikuPanGltfSkinVertex),
+        (u_int) offsetof(MikuPanGltfSkinVertex, weights));
+
+    curr_pipeline->ibo = MikuPan_GPUCreateBuffer(
+        sizeof(u_int) * 1024 * 1024, MIKUPAN_GPU_BUFFER_INDEX);
+    MikuPan_FinalizePipeline(GLTF_SKIN_POSITION3_NORMAL3_UV2_JOINTS4_WEIGHTS4);
 
     ///////// MESH_0x2_SHADER /////////
     curr_pipeline = &pipelines[POSITION4_NORMAL4_UV2];
@@ -335,6 +381,13 @@ void MikuPan_SetRenderState3DMirror()
     MikuPan_GPUSetRenderState3DMirror();
 }
 
+void MikuPan_SetRenderState3DDoubleSided()
+{
+    if (g_current_render_state == MIKUPAN_RS_3D_DOUBLE_SIDED) return;
+    g_current_render_state = MIKUPAN_RS_3D_DOUBLE_SIDED;
+    MikuPan_GPUSetRenderState3DDoubleSided();
+}
+
 void MikuPan_SetRenderState2D()
 {
     if (g_current_render_state == MIKUPAN_RS_2D) return;
@@ -390,6 +443,9 @@ void MikuPan_ApplyRenderStateMode(int mode)
     {
         case MIKUPAN_RS_3D:        MikuPan_SetRenderState3D();        break;
         case MIKUPAN_RS_3D_MIRROR: MikuPan_SetRenderState3DMirror();  break;
+        case MIKUPAN_RS_3D_DOUBLE_SIDED:
+            MikuPan_SetRenderState3DDoubleSided();
+            break;
         case MIKUPAN_RS_2D:        MikuPan_SetRenderState2D();        break;
         case MIKUPAN_RS_2D_DEPTH:  MikuPan_SetRenderState2DDepth();   break;
         case MIKUPAN_RS_SPRITE_3D: MikuPan_SetRenderStateSprite3D();  break;

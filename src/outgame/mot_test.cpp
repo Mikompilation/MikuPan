@@ -23,6 +23,17 @@
 #include "graphics/motion/mime.h"
 #include "graphics/motion/motion.h"
 
+#if MIKUPAN_ENABLE_ASSIMP_GLTF
+#include "mikupan/debug/mikupan_logging_c.h"
+#include "mikupan/mikupan_config.h"
+#include "mikupan/model/mikupan_gltf_model.h"
+#include "mikupan/rendering/mikupan_renderer.h"
+#include <filesystem>
+#include <string>
+#include <system_error>
+#include <vector>
+#endif
+
 #include <string.h>
 
 #define PI 3.1415927f
@@ -316,6 +327,120 @@ static void MotTestAdvanceFrame(void)
     }
 }
 
+#if MIKUPAN_ENABLE_ASSIMP_GLTF
+static MikuPan_GltfModel *mot_test_gltf_override = NULL;
+static char mot_test_gltf_override_path[1024] = {0};
+
+static int MotTestFindMikuGltfOverride(char *out_path, size_t out_path_size)
+{
+    if (out_path == NULL || out_path_size == 0)
+    {
+        return 0;
+    }
+
+    out_path[0] = '\0';
+
+    if (mikupan_configuration.data_folder[0] == '\0')
+    {
+        return 0;
+    }
+
+    std::filesystem::path folder =
+        std::filesystem::path(mikupan_configuration.data_folder) / "m000_miku";
+    std::error_code ec;
+    if (!std::filesystem::is_directory(folder, ec))
+    {
+        return 0;
+    }
+
+    std::filesystem::path preferred = folder / "m000_miku.gltf";
+    std::filesystem::path selected;
+    if (std::filesystem::is_regular_file(preferred, ec))
+    {
+        selected = preferred;
+    }
+    else
+    {
+        std::filesystem::directory_iterator it(folder, ec);
+        std::filesystem::directory_iterator end;
+        for (; !ec && it != end; it.increment(ec))
+        {
+            if (!it->is_regular_file(ec))
+            {
+                continue;
+            }
+
+            std::string ext = it->path().extension().string();
+            if (ext == ".gltf" || ext == ".GLTF")
+            {
+                selected = it->path();
+                break;
+            }
+        }
+    }
+
+    if (selected.empty())
+    {
+        return 0;
+    }
+
+    std::string path = selected.string();
+    if (path.size() + 1 > out_path_size)
+    {
+        warn_log("[GLTF] m000_miku path is too long: %s", path.c_str());
+        return 0;
+    }
+
+    strcpy(out_path, path.c_str());
+    return 1;
+}
+
+static MikuPan_GltfModel *MotTestGetGltfOverride(void)
+{
+    char path[1024];
+    if (!MotTestFindMikuGltfOverride(path, sizeof(path)))
+    {
+        return NULL;
+    }
+
+    if (mot_test_gltf_override != NULL &&
+        strcmp(mot_test_gltf_override_path, path) == 0)
+    {
+        return mot_test_gltf_override;
+    }
+
+    if (mot_test_gltf_override != NULL)
+    {
+        MikuPan_FreeGltfModel(mot_test_gltf_override);
+        mot_test_gltf_override = NULL;
+    }
+
+    strncpy(mot_test_gltf_override_path,
+            path,
+            sizeof(mot_test_gltf_override_path) - 1);
+    mot_test_gltf_override_path[sizeof(mot_test_gltf_override_path) - 1] = '\0';
+
+    mot_test_gltf_override = MikuPan_LoadGltfModel(mot_test_gltf_override_path);
+    if (mot_test_gltf_override != NULL)
+    {
+        MikuPan_GltfModelInfo info = {};
+        if (MikuPan_GetGltfModelInfo(mot_test_gltf_override, &info))
+        {
+            info_log("[GLTF] Mot Test override ready: %s (%d meshes, %d skinned, %d bones, %d textures, %d node-mapped, %d static)",
+                     mot_test_gltf_override_path,
+                     info.mesh_count,
+                     info.skinned_mesh_count,
+                     info.bone_count,
+                     info.texture_count,
+                     info.node_mapped_mesh_count,
+                     info.node_unmapped_mesh_count);
+        }
+    }
+
+    return mot_test_gltf_override;
+}
+#endif
+
 static void MotTestDrawModel(void)
 {
     HeaderSection *hs;
@@ -361,6 +486,35 @@ static void MotTestDrawModel(void)
     cp->matrix[3][1] = 0.0f;
     cp->matrix[3][2] = 0.0f;
     cp->matrix[3][3] = 1.0f;
+
+#if MIKUPAN_ENABLE_ASSIMP_GLTF
+    if (MikuPan_GltfModel *gltf_override = MotTestGetGltfOverride())
+    {
+        int coord_count = hs->blocks > 0 ? (int)hs->blocks - 1 : 0;
+        if (coord_count > 0)
+        {
+            CalcCoordinate(cp, coord_count);
+
+            std::vector<float> node_matrices((size_t)coord_count * 16u);
+            for (int i = 0; i < coord_count; i++)
+            {
+                memcpy(&node_matrices[(size_t)i * 16u],
+                       cp[i].lwmtx,
+                       sizeof(sceVu0FMATRIX));
+            }
+
+            MikuPan_RenderGltfModelWithNodeMatrices(gltf_override,
+                                                    node_matrices.data(),
+                                                    coord_count);
+        }
+        else
+        {
+            MikuPan_RenderGltfModel(gltf_override);
+        }
+        MotTestAdvanceFrame();
+        return;
+    }
+#endif
 
     CalcCoordinate(cp, hs->blocks - 1);
 

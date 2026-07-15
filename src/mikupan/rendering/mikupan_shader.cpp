@@ -54,6 +54,8 @@ const char *shader_file_name[MAX_SHADER_PROGRAMS][3] = {
      "resources/shaders/hlsl/textured_mesh_lighted.frag.hlsl"},
     {"resources/shaders/hlsl/mesh_0xA_skinned.vert.hlsl", NULL,
      "resources/shaders/hlsl/textured_mesh_lighted.frag.hlsl"},
+    {"resources/shaders/hlsl/gltf_skinned.vert.hlsl", NULL,
+     "resources/shaders/hlsl/textured_mesh_lighted.frag.hlsl"},
 };
 
 static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
@@ -64,7 +66,7 @@ static const char *kShaderNames[MAX_SHADER_PROGRAMS] = {
     "POSTPROCESS", "SHADOW_BLOB",
     "SHADOW_SILHOUETTE", "SHADOW_RECEIVER",
     "CAMERA_DEBUG", "HEAT_HAZE", "FINDER_VIEWPORT_BLUR",
-    "MESH_0x2_SKINNED", "MESH_0xA_SKINNED",
+    "MESH_0x2_SKINNED", "MESH_0xA_SKINNED", "GLTF_SKINNED",
 };
 
 typedef struct
@@ -83,6 +85,18 @@ static const MikuPan_ShaderFormatInfo kShaderFormats[] = {
     {SDL_GPU_SHADERFORMAT_DXIL, "dxil", ".dxil", "main"},
     {SDL_GPU_SHADERFORMAT_MSL, "msl", ".msl", "main0"},
 };
+
+static int MikuPan_IsSkinnedShader(int idx)
+{
+    return idx == MESH_0x2_SKINNED_SHADER ||
+           idx == MESH_0xA_SKINNED_SHADER ||
+           idx == GLTF_SKINNED_SHADER;
+}
+
+static int MikuPan_IsOptionalShader(int idx)
+{
+    return idx == GLTF_SKINNED_SHADER;
+}
 
 static const MikuPan_ShaderFormatInfo *PickShaderFormat(void)
 {
@@ -249,8 +263,7 @@ static int BuildShaderProgram(int idx,
 
     /// The GPU-skinned mesh shaders read the bone-matrix palette from one
     /// vertex storage buffer; every other shader uses none.
-    int is_skinned =
-        (idx == MESH_0x2_SKINNED_SHADER || idx == MESH_0xA_SKINNED_SHADER);
+    int is_skinned = MikuPan_IsSkinnedShader(idx);
     int vert_storage_buffers = is_skinned ? 1 : 0;
     int vert_uniform_buffers = is_skinned ? 2 : 3;
 
@@ -331,7 +344,10 @@ int MikuPan_InitShaders()
             info_log("Failed to load shader %s: %s",
                      MikuPan_GetShaderName(i),
                      err_buf[0] != '\0' ? err_buf : "unknown error");
-            failed = 1;
+            if (!MikuPan_IsOptionalShader(i))
+            {
+                failed = 1;
+            }
             continue;
         }
 
@@ -415,6 +431,10 @@ int MikuPan_ReloadAllShaders(char *err_buf, int err_buf_size)
         local_err[0] = '\0';
         if (MikuPan_ReloadShader(i, local_err, (int)sizeof(local_err)) != 0)
         {
+            if (MikuPan_IsOptionalShader(i))
+            {
+                continue;
+            }
             if (!any_failed && err_buf && err_buf_size > 0)
             {
                 snprintf(err_buf, err_buf_size, "%s", local_err);
@@ -435,7 +455,8 @@ u_int MikuPan_SetCurrentShaderProgram(int shader_program)
              shader_program == MESH_0xA_SHADER ||
              shader_program == MESH_0x12_SHADER ||
              shader_program == MESH_0x2_SKINNED_SHADER ||
-             shader_program == MESH_0xA_SKINNED_SHADER))
+             shader_program == MESH_0xA_SKINNED_SHADER ||
+             shader_program == GLTF_SKINNED_SHADER))
         {
             // Keep requested textured mesh shader c:
         }
@@ -446,6 +467,11 @@ u_int MikuPan_SetCurrentShaderProgram(int shader_program)
     }
 
     if (shader_program < 0 || shader_program >= MAX_SHADER_PROGRAMS)
+    {
+        return (u_int)-1;
+    }
+
+    if (!MikuPan_IsShaderAvailable(shader_program))
     {
         return (u_int)-1;
     }
@@ -468,6 +494,18 @@ int MikuPan_GetShaderOverride(void)
 u_int MikuPan_GetCurrentShaderProgram()
 {
     return current_program;
+}
+
+int MikuPan_IsShaderAvailable(int shader_program)
+{
+    if (shader_program < 0 || shader_program >= MAX_SHADER_PROGRAMS)
+    {
+        return 0;
+    }
+
+    return shader_list[shader_program] != 0 &&
+           g_vertex_shaders[shader_program] != NULL &&
+           g_fragment_shaders[shader_program] != NULL;
 }
 
 void MikuPan_SetUniformMatrix4fvToAllShaders(float *mat, char *name)
