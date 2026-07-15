@@ -126,6 +126,13 @@ enum MikuPan_FinderViewportMaskMode
     MIKUPAN_FINDER_VIEWPORT_MASK_BLUR = 1,
 };
 
+enum MikuPan_FlashlightStyle
+{
+    MIKUPAN_FLASHLIGHT_STYLE_PS2 = 0,
+    MIKUPAN_FLASHLIGHT_STYLE_XBOX = 1,
+    MIKUPAN_FLASHLIGHT_STYLE_OFF = 2,
+};
+
 typedef struct
 {
     int enabled;
@@ -192,6 +199,12 @@ typedef struct
      * to 1.0 at runtime; these are only read back when bindings_saved is set. */
     int finder_mouse_enabled;
     float finder_mouse_sensitivity;
+
+    int special_bindings_saved;
+    int special_bindings_count;
+    int special_bind_kind[6];
+    int special_bind_code[6];
+    int camera_activation_mode;
 } MikuPan_ConfigInput;
 
 typedef struct
@@ -228,6 +241,8 @@ typedef struct
     float font_scale;
     int show_fps;
     int minimap_enabled;
+    int flashlight_style;
+    int keep_finder_raised_for_apparitions;
     int title_room_background;
     int title_dither;
     MikuPan_ConfigThirdPersonCamera third_person_camera;

@@ -16,6 +16,32 @@ body {
     background-color: transparent;
 }
 
+#options-film-title {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 20;
+    display: block;
+    width: 505dp;
+    height: 54dp;
+    margin-left: -252dp;
+    margin-top: -201dp;
+    color: #f7ecb6;
+    font-family: MikuPanRmlZapf;
+    font-size: 27dp;
+    line-height: 54dp;
+    letter-spacing: 3dp;
+    text-align: center;
+    text-transform: uppercase;
+    white-space: nowrap;
+    font-effect: glow(4px 14px 0px 0px #7f481f78), glow(2px 7px 0px 0px #c77d3598), glow(1px 3px 0px 0px #f0bb5bb0);
+    pointer-events: none;
+}
+
+#options-film-title.ingame {
+    display: none;
+}
+
 #window {
     position: absolute;
     left: 50%;
@@ -785,6 +811,8 @@ button.controller-focus {
 #theme-picker,
 #font-picker,
 #font-scale-stepper,
+#flashlight-style-picker,
+#keep-finder-raised-input,
 #minimap-enabled-input,
 #finder-dpad-film-swap-input,
 #mirror-stone-hud-input,
@@ -1372,7 +1400,7 @@ button.controller-focus {
     display: flex;
     flex-direction: row;
     width: 351dp;
-    margin: 0dp 0dp 6dp 0dp;
+    margin: 4dp 0dp 6dp 0dp;
 }
 
 .controls-tab {

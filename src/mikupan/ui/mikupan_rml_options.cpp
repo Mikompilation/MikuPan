@@ -31,6 +31,10 @@
 
 namespace
 {
+bool ElementUsesPageScroll(Rml::Element* element);
+float GetPageAreaScrollTop(void);
+void RestorePageAreaScrollTop(float scroll_top);
+
 class MikuPanSelectListener final : public Rml::EventListener
 {
 public:
@@ -53,7 +57,13 @@ public:
             return;
         }
 
+        const bool preserve_scroll = ElementUsesPageScroll(select);
+        const float scroll_top = preserve_scroll ? GetPageAreaScrollTop() : 0.0f;
         on_change(select->GetSelection());
+        if (preserve_scroll)
+        {
+            RestorePageAreaScrollTop(scroll_top);
+        }
     }
 
 private:
@@ -83,7 +93,13 @@ public:
             return;
         }
 
+        const bool preserve_scroll = ElementUsesPageScroll(input);
+        const float scroll_top = preserve_scroll ? GetPageAreaScrollTop() : 0.0f;
         on_change(input);
+        if (preserve_scroll)
+        {
+            RestorePageAreaScrollTop(scroll_top);
+        }
     }
 
 private:
@@ -100,8 +116,14 @@ public:
 
     void ProcessEvent(Rml::Event& event) override
     {
-        (void) event;
+        Rml::Element* element = event.GetCurrentElement();
+        const bool preserve_scroll = ElementUsesPageScroll(element);
+        const float scroll_top = preserve_scroll ? GetPageAreaScrollTop() : 0.0f;
         on_click();
+        if (preserve_scroll)
+        {
+            RestorePageAreaScrollTop(scroll_top);
+        }
     }
 
 private:
@@ -170,6 +192,7 @@ enum MikuPanChoicePickerKind
     MIKUPAN_PICKER_LIGHTING_MODE,
     MIKUPAN_PICKER_DITHER_MODE,
     MIKUPAN_PICKER_FINDER_SURROUND,
+    MIKUPAN_PICKER_FLASHLIGHT_STYLE,
     MIKUPAN_PICKER_THEME,
     MIKUPAN_PICKER_FONT,
 };
@@ -197,6 +220,7 @@ enum MikuPanControlsTab
 enum MikuPanBindingCaptureKind
 {
     MIKUPAN_BIND_CAPTURE_NONE = 0,
+    MIKUPAN_BIND_CAPTURE_SPECIAL_ACTION,
     MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON,
     MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG,
     MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS,
@@ -211,6 +235,8 @@ struct MikuPanRmlOptionsState
     Rml::ElementDocument* document = nullptr;
     Rml::Element* root = nullptr;
     Rml::Element* window = nullptr;
+    Rml::Element* page_area = nullptr;
+    Rml::Element* film_title = nullptr;
     Rml::Element* window_mode_picker = nullptr;
     Rml::Element* window_mode_choice = nullptr;
     Rml::Element* window_mode_value = nullptr;
@@ -235,6 +261,8 @@ struct MikuPanRmlOptionsState
     Rml::Element* dither_mode_choice = nullptr;
     Rml::Element* finder_surround_picker = nullptr;
     Rml::Element* finder_surround_choice = nullptr;
+    Rml::Element* flashlight_style_picker = nullptr;
+    Rml::Element* flashlight_style_choice = nullptr;
     Rml::Element* theme_picker = nullptr;
     Rml::Element* theme_choice = nullptr;
     Rml::Element* font_picker = nullptr;
@@ -260,6 +288,7 @@ struct MikuPanRmlOptionsState
     Rml::Element* gpu_restart_note = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
     Rml::ElementFormControlInput* minimap_enabled_input = nullptr;
+    Rml::ElementFormControlInput* keep_finder_raised_input = nullptr;
     Rml::ElementFormControlInput* finder_dpad_film_swap_input = nullptr;
     Rml::ElementFormControlInput* mirror_stone_hud_input = nullptr;
     Rml::ElementFormControlInput* improved_movement_collisions_input = nullptr;
@@ -526,6 +555,7 @@ int ClampRmlFontIndex(int font)
 void ScrollFocusedContentRowIntoView(void);
 void ScrollChoicePickerSelectionIntoView(void);
 bool FocusElementById(const char* id);
+bool FocusElementByIdPreservePageScroll(const char* id);
 void QueueFocusElementById(const char* id);
 void ApplyQueuedFocus(void);
 const Rml::String GetFocusedElementId(void);
@@ -997,6 +1027,29 @@ std::string BuildControllerRumbleRow(void)
     return rml;
 }
 
+std::string BuildSpecialActionRow(int index)
+{
+    const std::string index_text = std::to_string(index);
+    std::string rml = "<div class=\"controls-bind-row\"><span class=\"controls-bind-label\">";
+    rml += EscapeRmlText(MikuPan_SpecialActionLabel(index));
+    rml += "</span>";
+    rml += BuildBindingButton(("bind-special-" + index_text).c_str(),
+                              MikuPan_InputBindingLabel(mikupan_special_action_map[index]));
+    rml += "<button id=\"clear-special-" + index_text + "\" class=\"controls-clear-button\">Clear</button></div>";
+    return rml;
+}
+
+std::string BuildCameraActivationRow(void)
+{
+    std::string rml = "<div class=\"controls-bind-row controls-option-row\"><span class=\"controls-bind-label\">Camera Activation</span>";
+    rml += "<button id=\"camera-activation-toggle\" class=\"controls-option-button\">";
+    rml += MikuPan_CameraActivationMode() == MIKUPAN_CAMERA_ACTIVATION_TOGGLE
+               ? "Toggle"
+               : "Hold";
+    rml += "</button></div>";
+    return rml;
+}
+
 int CurrentDpadMovementUsesSubjective(void)
 {
     if (MikuPan_IsCustomActionProfileEnabled() || MikuPan_MovementStyleOverrideEnabled())
@@ -1049,6 +1102,7 @@ void SeedMovementStyleOverride(void)
 
 void ToggleMovementStyle(int dpad)
 {
+    const float scroll_top = GetPageAreaScrollTop();
     SeedMovementStyleOverride();
     if (dpad)
     {
@@ -1064,6 +1118,7 @@ void ToggleMovementStyle(int dpad)
     }
     MarkSettingsDirty();
     SyncMovementStyleButtons();
+    RestorePageAreaScrollTop(scroll_top);
     RequestUiMoveSound();
 }
 
@@ -1092,16 +1147,19 @@ void SyncViewfinderButtons(void)
 
 void ToggleFinderStickLayout(void)
 {
+    const float scroll_top = GetPageAreaScrollTop();
     MikuPan_SetCustomActionProfileFinderSwapSticks(
         !MikuPan_CustomActionProfileSwapsFinderSticks());
     MarkSettingsDirty();
     SyncViewfinderButtons();
     FocusElementById("finder-stick-layout-mode");
+    RestorePageAreaScrollTop(scroll_top);
     RequestUiMoveSound();
 }
 
 void ToggleFinderDpadFilmSwap(void)
 {
+    const float scroll_top = GetPageAreaScrollTop();
     MikuPan_SetFinderDpadFilmSwapEnabled(
         !MikuPan_FinderDpadFilmSwapEnabled());
     MarkSettingsDirty();
@@ -1109,6 +1167,7 @@ void ToggleFinderDpadFilmSwap(void)
     SetCheckbox(g_rml.finder_dpad_film_swap_input,
                 MikuPan_FinderDpadFilmSwapEnabled());
     FocusElementById("finder-dpad-film-swap-mode");
+    RestorePageAreaScrollTop(scroll_top);
     RequestUiMoveSound();
 }
 
@@ -1119,10 +1178,21 @@ void RebuildControlsList(void)
         return;
     }
 
+    const float scroll_top = GetPageAreaScrollTop();
     std::string rml;
     if (g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD)
     {
-        rml += "<div class=\"controls-section-title\">Buttons</div>";
+        rml += "<div class=\"controls-section-title\">Gameplay Actions</div>";
+        for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+        {
+            rml += BuildSpecialActionRow(i);
+            if (i == MIKUPAN_SPECIAL_ACTION_RAISE_CAMERA)
+            {
+                rml += BuildCameraActivationRow();
+            }
+        }
+
+        rml += "<div class=\"controls-section-title\">Keyboard Buttons</div>";
         for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
         {
             rml += BuildControlButtonRow(i,
@@ -1207,6 +1277,7 @@ void RebuildControlsList(void)
     }
 
     SetElementText(g_rml.controls_list, rml);
+    RestorePageAreaScrollTop(scroll_top);
 }
 
 void SelectControlsTab(MikuPanControlsTab tab)
@@ -1256,6 +1327,8 @@ const char* BindingCaptureDeviceText(MikuPanBindingCaptureKind kind)
 {
     switch (kind)
     {
+        case MIKUPAN_BIND_CAPTURE_SPECIAL_ACTION:
+            return "Press a key, mouse button, or scroll wheel...";
         case MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON:
         case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG:
         case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS:
@@ -1279,6 +1352,8 @@ std::string BindingCaptureFocusId(MikuPanBindingCaptureKind kind, int target)
     const std::string index = std::to_string(target);
     switch (kind)
     {
+        case MIKUPAN_BIND_CAPTURE_SPECIAL_ACTION:
+            return "bind-special-" + index;
         case MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON:
             return "bind-key-" + index;
         case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG:
@@ -1308,21 +1383,26 @@ void RestoreBindingCaptureFocus(void)
     g_rml.binding_capture_restore_focus_id.clear();
     if (!restore_id.empty())
     {
-        FocusElementById(restore_id.c_str());
-        QueueFocusElementById(restore_id.c_str());
+        if (!FocusElementByIdPreservePageScroll(restore_id.c_str()))
+        {
+            QueueFocusElementById(restore_id.c_str());
+        }
         return;
     }
 
     const char* tab_id = g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD
                              ? "controls-keyboard-tab"
                              : "controls-controller-tab";
-    FocusElementById(tab_id);
-    QueueFocusElementById(tab_id);
+    if (!FocusElementByIdPreservePageScroll(tab_id))
+    {
+        QueueFocusElementById(tab_id);
+    }
 }
 
 void BeginBindingCapture(MikuPanBindingCaptureKind kind, int target)
 {
     const uint64_t now = SDL_GetTicks();
+    MikuPan_InputBindingCaptureReset();
     g_rml.binding_capture_kind = kind;
     g_rml.binding_capture_target = target;
     g_rml.binding_capture_restore_focus_id = BindingCaptureFocusId(kind, target);
@@ -1347,6 +1427,7 @@ void CancelBindingCapture(void)
     g_rml.binding_capture_after_ticks = 0;
     g_rml.binding_capture_deadline_ticks = 0;
     g_rml.binding_capture_waiting_for_release = false;
+    MikuPan_InputBindingCaptureReset();
     SetElementText(g_rml.binding_capture_countdown, "0");
     SetBindingCaptureVisible(false);
     if (was_visible)
@@ -1364,6 +1445,7 @@ void FinishBindingCapture(void)
     g_rml.binding_capture_after_ticks = 0;
     g_rml.binding_capture_deadline_ticks = 0;
     g_rml.binding_capture_waiting_for_release = false;
+    MikuPan_InputBindingCaptureReset();
     SetElementText(g_rml.binding_capture_countdown, "0");
     SetBindingCaptureVisible(false);
     BlockOptionsInputBriefly();
@@ -1534,13 +1616,17 @@ void UpdateBindingCapture(void)
 
     if (g_rml.binding_capture_waiting_for_release)
     {
+        const bool waiting_for_special =
+            g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_SPECIAL_ACTION;
         const bool waiting_for_keyboard =
             g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON
             || g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG
             || g_rml.binding_capture_kind == MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS;
-        const bool input_down = waiting_for_keyboard
-                                    ? AnyKeyboardCaptureInputDown()
-                                    : AnyControllerCaptureInputDown(MikuPan_GetController());
+        const bool input_down = waiting_for_special
+                                    ? MikuPan_InputBindingCaptureAnyDown() != 0
+                                    : waiting_for_keyboard
+                                          ? AnyKeyboardCaptureInputDown()
+                                          : AnyControllerCaptureInputDown(MikuPan_GetController());
         if (input_down)
         {
             return;
@@ -1558,6 +1644,20 @@ void UpdateBindingCapture(void)
 
     switch (g_rml.binding_capture_kind)
     {
+        case MIKUPAN_BIND_CAPTURE_SPECIAL_ACTION:
+        {
+            MikuPan_InputBinding binding = {};
+            if (!MikuPan_InputBindingCapturePoll(&binding))
+            {
+                return;
+            }
+            if (target < MIKUPAN_SPECIAL_ACTION_COUNT)
+            {
+                mikupan_special_action_map[target] = binding;
+            }
+            FinishBindingCapture();
+            break;
+        }
         case MIKUPAN_BIND_CAPTURE_KEYBOARD_BUTTON:
         case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_NEG:
         case MIKUPAN_BIND_CAPTURE_KEYBOARD_STICK_POS:
@@ -1657,7 +1757,7 @@ void HandledControlsListEvent(Rml::Event& event)
 void FocusGeneratedControlsButton(const char* prefix, int index)
 {
     const std::string id = std::string(prefix) + std::to_string(index);
-    FocusElementById(id.c_str());
+    FocusElementByIdPreservePageScroll(id.c_str());
 }
 
 void HandleControlsListClick(Rml::Event& event)
@@ -1679,12 +1779,46 @@ void HandleControlsListClick(Rml::Event& event)
             !MikuPan_ControllerRumbleEnabled());
         MarkSettingsDirty();
         RebuildControlsList();
-        FocusElementById("controller-rumble-toggle");
+        FocusElementByIdPreservePageScroll("controller-rumble-toggle");
         RequestUiMoveSound();
         return;
     }
 
-    int index = ParseGeneratedIndex(id, "bind-key-stick-neg-");
+    if (id == "camera-activation-toggle")
+    {
+        HandledControlsListEvent(event);
+        MikuPan_SetCameraActivationMode(
+            MikuPan_CameraActivationMode() == MIKUPAN_CAMERA_ACTIVATION_TOGGLE
+                ? MIKUPAN_CAMERA_ACTIVATION_HOLD
+                : MIKUPAN_CAMERA_ACTIVATION_TOGGLE);
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusElementByIdPreservePageScroll("camera-activation-toggle");
+        RequestUiMoveSound();
+        return;
+    }
+
+    int index = ParseGeneratedIndex(id, "bind-special-");
+    if (index >= 0)
+    {
+        HandledControlsListEvent(event);
+        BeginBindingCapture(MIKUPAN_BIND_CAPTURE_SPECIAL_ACTION, index);
+        return;
+    }
+    index = ParseGeneratedIndex(id, "clear-special-");
+    if (index >= 0 && index < MIKUPAN_SPECIAL_ACTION_COUNT)
+    {
+        HandledControlsListEvent(event);
+        mikupan_special_action_map[index].kind = MIKUPAN_INPUT_BIND_NONE;
+        mikupan_special_action_map[index].code = 0;
+        MarkSettingsDirty();
+        RebuildControlsList();
+        FocusGeneratedControlsButton("clear-special-", index);
+        RequestUiMoveSound();
+        return;
+    }
+
+    index = ParseGeneratedIndex(id, "bind-key-stick-neg-");
     if (index >= 0)
     {
         HandledControlsListEvent(event);
@@ -2391,6 +2525,7 @@ bool PickerUsesSharedPendingIndex(MikuPanChoicePickerKind kind)
         case MIKUPAN_PICKER_LIGHTING_MODE:
         case MIKUPAN_PICKER_DITHER_MODE:
         case MIKUPAN_PICKER_FINDER_SURROUND:
+        case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
         case MIKUPAN_PICKER_THEME:
         case MIKUPAN_PICKER_FONT:
             return true;
@@ -2426,6 +2561,8 @@ int GetPickerCount(MikuPanChoicePickerKind kind)
             return MikuPan_GetDitherModeOptionCount();
         case MIKUPAN_PICKER_FINDER_SURROUND:
             return kFinderSurroundCount;
+        case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
+            return MikuPan_GetFlashlightStyleOptionCount();
         case MIKUPAN_PICKER_THEME:
             return MikuPan_GetThemeOptionCount();
         case MIKUPAN_PICKER_FONT:
@@ -2472,6 +2609,8 @@ int GetPickerAppliedIndex(MikuPanChoicePickerKind kind)
             return MikuPan_GetSelectedDitherModeOption();
         case MIKUPAN_PICKER_FINDER_SURROUND:
             return GetFinderSurroundIndex();
+        case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
+            return MikuPan_GetSelectedFlashlightStyleOption();
         case MIKUPAN_PICKER_THEME:
             return MikuPan_GetSelectedThemeOption();
         case MIKUPAN_PICKER_FONT:
@@ -2507,6 +2646,8 @@ const char* GetPickerLabel(MikuPanChoicePickerKind kind, int index)
             return index >= 0 && index < kFinderSurroundCount
                        ? kFinderSurroundLabels[index]
                        : "";
+        case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
+            return SafePickerLabel(MikuPan_GetFlashlightStyleOptionLabel(index));
         case MIKUPAN_PICKER_THEME:
             return SafePickerLabel(MikuPan_GetThemeOptionLabel(index));
         case MIKUPAN_PICKER_FONT:
@@ -2538,6 +2679,8 @@ const char* GetPickerTitle(MikuPanChoicePickerKind kind)
             return "DITHER FILTERING";
         case MIKUPAN_PICKER_FINDER_SURROUND:
             return "FINDER SURROUND";
+        case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
+            return "FLASHLIGHT STYLE";
         case MIKUPAN_PICKER_THEME:
             return "THEME";
         case MIKUPAN_PICKER_FONT:
@@ -2569,6 +2712,8 @@ const char* GetPickerFocusId(MikuPanChoicePickerKind kind)
             return "dither-mode-picker";
         case MIKUPAN_PICKER_FINDER_SURROUND:
             return "finder-surround-picker";
+        case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
+            return "flashlight-style-picker";
         case MIKUPAN_PICKER_THEME:
             return "theme-picker";
         case MIKUPAN_PICKER_FONT:
@@ -2600,6 +2745,8 @@ Rml::Element* GetPickerElement(MikuPanChoicePickerKind kind)
             return g_rml.dither_mode_picker;
         case MIKUPAN_PICKER_FINDER_SURROUND:
             return g_rml.finder_surround_picker;
+        case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
+            return g_rml.flashlight_style_picker;
         case MIKUPAN_PICKER_THEME:
             return g_rml.theme_picker;
         case MIKUPAN_PICKER_FONT:
@@ -2625,6 +2772,8 @@ Rml::Element* GetPickerChoiceElement(MikuPanChoicePickerKind kind)
             return g_rml.dither_mode_choice;
         case MIKUPAN_PICKER_FINDER_SURROUND:
             return g_rml.finder_surround_choice;
+        case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
+            return g_rml.flashlight_style_choice;
         case MIKUPAN_PICKER_THEME:
             return g_rml.theme_choice;
         case MIKUPAN_PICKER_FONT:
@@ -2917,6 +3066,7 @@ void UpdateImmediateChoicePickers(void)
     UpdateImmediateChoicePicker(MIKUPAN_PICKER_LIGHTING_MODE);
     UpdateImmediateChoicePicker(MIKUPAN_PICKER_DITHER_MODE);
     UpdateImmediateChoicePicker(MIKUPAN_PICKER_FINDER_SURROUND);
+    UpdateImmediateChoicePicker(MIKUPAN_PICKER_FLASHLIGHT_STYLE);
     UpdateImmediateChoicePicker(MIKUPAN_PICKER_THEME);
     UpdateImmediateChoicePicker(MIKUPAN_PICKER_FONT);
 }
@@ -3544,6 +3694,17 @@ bool ApplyImmediateChoicePicker(MikuPanChoicePickerKind kind)
                 MarkSettingsDirty();
             }
             return true;
+        case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
+            if (index == MikuPan_GetSelectedFlashlightStyleOption())
+            {
+                return true;
+            }
+            if (MikuPan_SelectFlashlightStyleOption(index))
+            {
+                MarkSettingsDirty();
+                return true;
+            }
+            return false;
         case MIKUPAN_PICKER_THEME:
             if (index == MikuPan_GetSelectedThemeOption())
             {
@@ -3760,6 +3921,38 @@ void ScrollFocusedContentRowIntoView(void)
     }
 }
 
+bool ElementUsesPageScroll(Rml::Element* element)
+{
+    while (element != nullptr)
+    {
+        if (element == g_rml.page_area)
+        {
+            return true;
+        }
+        element = element->GetParentNode();
+    }
+    return false;
+}
+
+float GetPageAreaScrollTop(void)
+{
+    return g_rml.page_area != nullptr ? g_rml.page_area->GetScrollTop() : 0.0f;
+}
+
+void RestorePageAreaScrollTop(float scroll_top)
+{
+    if (g_rml.page_area == nullptr)
+    {
+        return;
+    }
+
+    if (g_rml.document != nullptr)
+    {
+        g_rml.document->UpdateDocument();
+    }
+    g_rml.page_area->SetScrollTop(scroll_top);
+}
+
 bool FocusElementById(const char* id)
 {
     if (g_rml.document == nullptr || g_rml.context == nullptr || id == nullptr)
@@ -3777,6 +3970,14 @@ bool FocusElementById(const char* id)
     UpdateControllerFocusVisual();
     ScrollFocusedContentRowIntoView();
     return g_rml.context->GetFocusElement() == element;
+}
+
+bool FocusElementByIdPreservePageScroll(const char* id)
+{
+    const float scroll_top = GetPageAreaScrollTop();
+    const bool focused = FocusElementById(id);
+    RestorePageAreaScrollTop(scroll_top);
+    return focused;
 }
 
 void QueueFocusElementById(const char* id)
@@ -3798,7 +3999,7 @@ void ApplyQueuedFocus(void)
     }
 
     const std::string id = g_rml.queued_focus_id;
-    if (FocusElementById(id.c_str()))
+    if (FocusElementByIdPreservePageScroll(id.c_str()))
     {
         g_rml.queued_focus_id.clear();
         g_rml.queued_focus_attempts = 0;
@@ -4105,6 +4306,18 @@ std::vector<ControlsFocusRow> BuildControlsFocusRows(void)
 
     if (g_rml.controls_tab == MIKUPAN_CONTROLS_TAB_KEYBOARD)
     {
+        for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+        {
+            const std::string index = std::to_string(i);
+            AddControlsFocusRow(rows,
+                                "bind-special-" + index,
+                                "clear-special-" + index);
+            if (i == MIKUPAN_SPECIAL_ACTION_RAISE_CAMERA)
+            {
+                AddControlsFocusRow(rows, "camera-activation-toggle");
+            }
+        }
+
         for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
         {
             const std::string index = std::to_string(i);
@@ -4492,6 +4705,7 @@ bool FocusedControlWantsSpaceConfirm(void)
     if (focus == g_rml.vsync_input
         || focus == g_rml.crt_enabled_input
         || focus == g_rml.minimap_enabled_input
+        || focus == g_rml.keep_finder_raised_input
         || focus == g_rml.finder_dpad_film_swap_input
         || focus == g_rml.mirror_stone_hud_input
         || focus == g_rml.improved_movement_collisions_input
@@ -4686,6 +4900,12 @@ bool ActivateFocusedControl(void)
     if (focus == g_rml.finder_surround_picker)
     {
         OpenChoicePicker(MIKUPAN_PICKER_FINDER_SURROUND);
+        return true;
+    }
+
+    if (focus == g_rml.flashlight_style_picker)
+    {
+        OpenChoicePicker(MIKUPAN_PICKER_FLASHLIGHT_STYLE);
         return true;
     }
 
@@ -4993,6 +5213,8 @@ void SyncRmlSettingsValues(void)
     SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
     SetCheckbox(g_rml.minimap_enabled_input,
                 mikupan_configuration.minimap_enabled);
+    SetCheckbox(g_rml.keep_finder_raised_input,
+                MikuPan_KeepFinderRaisedForApparitionsEnabled());
     SetCheckbox(g_rml.finder_dpad_film_swap_input,
                 MikuPan_FinderDpadFilmSwapEnabled());
     SetCheckbox(g_rml.mirror_stone_hud_input,
@@ -5031,6 +5253,7 @@ bool LoadOptionsDocument(void)
     }
 
     g_rml.root = GetElement("options-root");
+    g_rml.page_area = GetElement("page-area");
 
     g_rml.window_mode_picker = GetElement("window-mode-picker");
     g_rml.window_mode_choice = GetElement("window-mode-choice");
@@ -5283,6 +5506,14 @@ bool LoadOptionsDocument(void)
                    false,
                    true);
 
+    g_rml.flashlight_style_picker = GetElement("flashlight-style-picker");
+    g_rml.flashlight_style_choice = GetElement("flashlight-style-choice");
+    AddListener(g_rml.flashlight_style_picker,
+                Rml::EventId::Click,
+                std::make_unique<MikuPanButtonListener>([]() {
+                    OpenChoicePicker(MIKUPAN_PICKER_FLASHLIGHT_STYLE);
+                }));
+
     g_rml.theme_picker = GetElement("theme-picker");
     g_rml.theme_choice = GetElement("theme-choice");
     AddListener(g_rml.theme_picker,
@@ -5375,15 +5606,27 @@ bool LoadOptionsDocument(void)
                             IsCheckboxChecked(input) ? 1 : 0;
                     }));
 
+    g_rml.keep_finder_raised_input = GetInput("keep-finder-raised-input");
+    AddListener(g_rml.keep_finder_raised_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        MikuPan_SetKeepFinderRaisedForApparitionsEnabled(
+                            IsCheckboxChecked(input));
+                    }));
+
     g_rml.finder_dpad_film_swap_input = GetInput("finder-dpad-film-swap-input");
     AddListener(g_rml.finder_dpad_film_swap_input,
                 Rml::EventId::Change,
                 std::make_unique<MikuPanInputListener>(
                     [](Rml::ElementFormControlInput* input) {
+                        const float scroll_top = GetPageAreaScrollTop();
                         MarkSettingsDirty();
                         MikuPan_SetFinderDpadFilmSwapEnabled(
                             IsCheckboxChecked(input));
                         SyncViewfinderButtons();
+                        RestorePageAreaScrollTop(scroll_top);
                     }));
 
     g_rml.mirror_stone_hud_input = GetInput("mirror-stone-hud-input");
@@ -5414,14 +5657,14 @@ bool LoadOptionsDocument(void)
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>([]() {
                     SelectControlsTab(MIKUPAN_CONTROLS_TAB_KEYBOARD);
-                    FocusElementById("controls-keyboard-tab");
+                    FocusElementByIdPreservePageScroll("controls-keyboard-tab");
                     RequestUiMoveSound();
                 }));
     AddListener(g_rml.controls_controller_tab,
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>([]() {
                     SelectControlsTab(MIKUPAN_CONTROLS_TAB_CONTROLLER);
-                    FocusElementById("controls-controller-tab");
+                    FocusElementByIdPreservePageScroll("controls-controller-tab");
                     RequestUiMoveSound();
                 }));
     AddListener(GetElement("movement-dpad-mode"),
@@ -5448,6 +5691,7 @@ bool LoadOptionsDocument(void)
     AddListener(GetElement("controls-reset-button"),
                 Rml::EventId::Click,
                 std::make_unique<MikuPanButtonListener>([]() {
+                    const float scroll_top = GetPageAreaScrollTop();
                     MarkSettingsDirty();
                     MikuPan_ResetControllerBindingsFromUi();
                     SyncMovementStyleButtons();
@@ -5457,6 +5701,7 @@ bool LoadOptionsDocument(void)
                     SetCheckbox(g_rml.mirror_stone_hud_input,
                                 MikuPan_MirrorStoneHudEnabled());
                     RebuildControlsList();
+                    RestorePageAreaScrollTop(scroll_top);
                     RequestUiMoveSound();
                 }));
 
@@ -5503,6 +5748,7 @@ bool LoadOptionsDocument(void)
                 std::make_unique<MikuPanButtonListener>(
                     []() { SetExitConfirmVisible(false); }));
     g_rml.window = GetElement("window");
+    g_rml.film_title = GetElement("options-film-title");
     g_rml.calibration_panel = GetElement("calibration-panel");
     g_rml.calibration_level_panel = GetElement("calibration-level-panel");
     for (size_t i = 0; i < g_rml.calibration_level_swatches.size(); i++)
@@ -5668,6 +5914,10 @@ static void MikuPan_RmlOptionsOpenInternal(bool in_game)
     {
         g_rml.window->SetClass("ingame", in_game);
     }
+    if (g_rml.film_title != nullptr)
+    {
+        g_rml.film_title->SetClass("ingame", in_game);
+    }
     SelectCategory(0);
     g_rml.control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
     g_rml.visible = true;
@@ -5705,6 +5955,10 @@ void MikuPan_RmlOptionsClose(void)
     if (g_rml.window != nullptr)
     {
         g_rml.window->SetClass("ingame", false);
+    }
+    if (g_rml.film_title != nullptr)
+    {
+        g_rml.film_title->SetClass("ingame", false);
     }
     g_rml.document->Hide();
 }

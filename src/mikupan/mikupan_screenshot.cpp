@@ -75,8 +75,12 @@ static int write_chunk(FILE *f, const char *type4, const unsigned char *data, si
     return fwrite(crc_be, 1, 4, f) == 4;
 }
 
-int MikuPan_ScreenshotWritePng(const char *path, const unsigned char *rgba,
-                               int width, int height)
+static int MikuPan_ScreenshotWritePngInternal(
+    const char *path,
+    const unsigned char *rgba,
+    int width,
+    int height,
+    int preserve_alpha)
 {
     if (path == NULL || rgba == NULL || width <= 0 || height <= 0)
     {
@@ -95,16 +99,17 @@ int MikuPan_ScreenshotWritePng(const char *path, const unsigned char *rgba,
     put_u32_be(ihdr + 0, (unsigned int) width);
     put_u32_be(ihdr + 4, (unsigned int) height);
     ihdr[8]  = 8;  // bit depth
-    ihdr[9]  = 2;  // color type: truecolor
+    ihdr[9]  = preserve_alpha ? 6 : 2;
     ihdr[10] = 0;  // compression method (must be 0)
     ihdr[11] = 0;  // filter method (must be 0)
     ihdr[12] = 0;  // interlace: none
     if (!write_chunk(f, "IHDR", ihdr, sizeof(ihdr))) { fclose(f); return 0; }
 
     // Build the filtered scan-line buffer (filter byte 0 = "None" per row).
-    const size_t src_row_bytes  = (size_t) width * 4u;
-    const size_t row_bytes      = (size_t) width * 3u;
-    const size_t filtered_size  = (size_t) height * (1u + row_bytes);
+    const size_t channel_count = preserve_alpha ? 4u : 3u;
+    const size_t src_row_bytes = (size_t) width * 4u;
+    const size_t row_bytes = (size_t) width * channel_count;
+    const size_t filtered_size = (size_t) height * (1u + row_bytes);
     unsigned char *filtered = (unsigned char *) malloc(filtered_size);
     if (filtered == NULL) { fclose(f); return 0; }
     for (int y = 0; y < height; y++)
@@ -114,19 +119,26 @@ int MikuPan_ScreenshotWritePng(const char *path, const unsigned char *rgba,
         dst[0] = 0;
         for (int x = 0; x < width; x++)
         {
-            dst[1 + (size_t) x * 3u + 0u] = src[(size_t) x * 4u + 0u];
-            dst[1 + (size_t) x * 3u + 1u] = src[(size_t) x * 4u + 1u];
-            dst[1 + (size_t) x * 3u + 2u] = src[(size_t) x * 4u + 2u];
+            const size_t source = (size_t) x * 4u;
+            const size_t destination = 1u + (size_t) x * channel_count;
+            dst[destination + 0u] = src[source + 0u];
+            dst[destination + 1u] = src[source + 1u];
+            dst[destination + 2u] = src[source + 2u];
+            if (preserve_alpha)
+            {
+                dst[destination + 3u] = src[source + 3u];
+            }
         }
     }
 
     // Wrap filtered data in a zlib stream of stored (uncompressed) DEFLATE
     // blocks. Each stored block carries up to 65535 bytes.
-    const size_t MAX_BLOCK = 65535u;
-    size_t num_blocks = (filtered_size + MAX_BLOCK - 1) / MAX_BLOCK;
+    const size_t max_block = 65535u;
+    size_t num_blocks = (filtered_size + max_block - 1) / max_block;
     if (num_blocks == 0) num_blocks = 1;
 
-    size_t zlib_cap = 2 /* CMF+FLG */ + filtered_size + num_blocks * 5u + 4 /* adler */;
+    size_t zlib_cap = 2 /* CMF+FLG */ + filtered_size
+        + num_blocks * 5u + 4 /* adler */;
     unsigned char *zlib = (unsigned char *) malloc(zlib_cap);
     if (zlib == NULL) { free(filtered); fclose(f); return 0; }
 
@@ -135,16 +147,16 @@ int MikuPan_ScreenshotWritePng(const char *path, const unsigned char *rgba,
     zlib[zo++] = 0x78;
     zlib[zo++] = 0x01;
 
-    size_t in_pos   = 0;
+    size_t in_pos = 0;
     size_t remaining = filtered_size;
     do
     {
-        size_t chunk = remaining > MAX_BLOCK ? MAX_BLOCK : remaining;
-        int last = (chunk == remaining);
+        size_t chunk = remaining > max_block ? max_block : remaining;
+        int last = chunk == remaining;
         zlib[zo++] = (unsigned char)(last ? 0x01 : 0x00); // BFINAL + BTYPE=00
         zlib[zo++] = (unsigned char)(chunk & 0xff);
         zlib[zo++] = (unsigned char)((chunk >> 8) & 0xff);
-        unsigned short nlen = (unsigned short) (~((unsigned short) chunk));
+        unsigned short nlen = (unsigned short)(~((unsigned short)chunk));
         zlib[zo++] = (unsigned char)(nlen & 0xff);
         zlib[zo++] = (unsigned char)((nlen >> 8) & 0xff);
         if (chunk > 0)
@@ -169,6 +181,22 @@ int MikuPan_ScreenshotWritePng(const char *path, const unsigned char *rgba,
 
     fclose(f);
     return ok;
+}
+
+int MikuPan_ScreenshotWritePng(const char *path, const unsigned char *rgba,
+                               int width, int height)
+{
+    return MikuPan_ScreenshotWritePngInternal(
+        path, rgba, width, height, 0);
+}
+
+int MikuPan_ScreenshotWritePngRgba(const char *path,
+                                   const unsigned char *rgba,
+                                   int width,
+                                   int height)
+{
+    return MikuPan_ScreenshotWritePngInternal(
+        path, rgba, width, height, 1);
 }
 
 void MikuPan_ScreenshotRequest(void)

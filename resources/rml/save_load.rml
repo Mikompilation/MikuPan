@@ -13,18 +13,9 @@
             <span class="save-load-reflect-band inner"></span>
         </div>
         <div id="save-load-panel">
-            <div id="save-load-header-board">
-                <div class="save-load-header-border top">
-                    <span class="save-load-header-border-edge left"></span>
-                    <span class="save-load-header-border-center"></span>
-                    <span class="save-load-header-border-edge right"></span>
-                </div>
-                <div class="save-load-header-border bottom">
-                    <span class="save-load-header-border-edge left"></span>
-                    <span class="save-load-header-border-center"></span>
-                    <span class="save-load-header-border-edge right"></span>
-                </div>
-                <div id="save-load-title">Save File</div>
+            <div id="save-load-film-header">
+                <img id="save-load-film-strip" class="hidden" />
+                <div id="save-load-title">SAVE FILE</div>
             </div>
 
             <div id="save-load-status-board">

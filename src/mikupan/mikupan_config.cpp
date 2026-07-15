@@ -65,6 +65,8 @@ MikuPan_Config mikupan_configuration = {
     1.0f,
     0,
     1,
+    MIKUPAN_FLASHLIGHT_STYLE_PS2,
+    0,
     1,
     1,
     {
@@ -308,6 +310,17 @@ static void MikuPan_ConfigurationValidateInput(MikuPan_ConfigInput* input)
     input->improved_movement_collisions_enabled =
         input->improved_movement_collisions_enabled ? 1 : 0;
     input->finder_mouse_enabled = input->finder_mouse_enabled ? 1 : 0;
+    input->special_bindings_saved = input->special_bindings_saved ? 1 : 0;
+    input->special_bindings_count =
+        MikuPan_ClampInt(input->special_bindings_count, 0, 6);
+    input->camera_activation_mode =
+        MikuPan_ClampInt(input->camera_activation_mode, 0, 1);
+
+    for (int i = 0; i < 6; i++)
+    {
+        input->special_bind_kind[i] =
+            MikuPan_ClampInt(input->special_bind_kind[i], 0, 3);
+    }
 
     if (input->finder_mouse_sensitivity < 0.0f)
     {
@@ -337,6 +350,13 @@ void MikuPan_ConfigurationValidate(void)
     mikupan_configuration.show_fps = mikupan_configuration.show_fps ? 1 : 0;
     mikupan_configuration.minimap_enabled =
         mikupan_configuration.minimap_enabled ? 1 : 0;
+    if (mikupan_configuration.flashlight_style < MIKUPAN_FLASHLIGHT_STYLE_PS2
+        || mikupan_configuration.flashlight_style > MIKUPAN_FLASHLIGHT_STYLE_OFF)
+    {
+        mikupan_configuration.flashlight_style = MIKUPAN_FLASHLIGHT_STYLE_PS2;
+    }
+    mikupan_configuration.keep_finder_raised_for_apparitions =
+        mikupan_configuration.keep_finder_raised_for_apparitions ? 1 : 0;
     mikupan_configuration.title_room_background =
         mikupan_configuration.title_room_background ? 1 : 0;
     mikupan_configuration.title_dither =

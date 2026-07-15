@@ -56,6 +56,17 @@ struct ModeSelectState
     bool initialized = false;
     bool visible = false;
     bool shown_last_frame = false;
+    int active_panel = -1;
+    int main_selection = -1;
+    int story_selection = -1;
+    int story_editing = -1;
+    int story_first_enabled = -1;
+    int message_panel = -1;
+    int message_selection = -1;
+    std::array<int, 3> story_values = {-1, -1, -1};
+    float main_opacity = -1.0f;
+    float story_opacity = -1.0f;
+    float message_opacity = -1.0f;
 };
 
 ModeSelectState g_mode_select;
@@ -69,12 +80,22 @@ Rml::Element* GetElement(const char* id)
         : nullptr;
 }
 
+void SetClass(Rml::Element* element, const char* class_name, bool enabled)
+{
+    if (element != nullptr && element->IsClassSet(class_name) != enabled)
+    {
+        element->SetClass(class_name, enabled);
+    }
+}
+
 void SetHidden(Rml::Element* element, bool hidden)
 {
-    if (element != nullptr)
-    {
-        element->SetClass("hidden", hidden);
-    }
+    SetClass(element, "hidden", hidden);
+}
+
+void SetPanelHidden(Rml::Element* element, bool hidden)
+{
+    SetClass(element, "mode-select-panel-hidden", hidden);
 }
 
 void SetOpacity(Rml::Element* element, float opacity)
@@ -160,8 +181,17 @@ void SetActiveElement(const std::array<Rml::Element*, N>& elements, int active_i
 
 void SetMessage(bool story, int selection)
 {
+    const int panel = story ? 1 : 0;
+    if (g_mode_select.message_panel == panel
+        && g_mode_select.message_selection == selection)
+    {
+        return;
+    }
+
     SetActiveElement(g_mode_select.main_messages, story ? -1 : selection);
     SetActiveElement(g_mode_select.story_messages, story ? selection : -1);
+    g_mode_select.message_panel = panel;
+    g_mode_select.message_selection = selection;
 }
 
 void SetStoryValue(int row, int value)
@@ -173,10 +203,16 @@ void SetStoryValue(int row, int value)
 
     const int count = story_value_counts[row];
     const int selected = std::clamp(value, 0, count - 1);
+    if (g_mode_select.story_values[row] == selected)
+    {
+        return;
+    }
+
     for (int index = 0; index < count; index++)
     {
         SetHidden(g_mode_select.story_value_options[row][index], index != selected);
     }
+    g_mode_select.story_values[row] = selected;
 }
 
 bool LoadDocument()
@@ -305,17 +341,45 @@ void SyncMain(int selected_index, float opacity)
 {
     const int selection = std::clamp(selected_index, 0, 4);
     RequestVisible();
-    SetHidden(g_mode_select.main_panel, false);
-    SetHidden(g_mode_select.story_panel, true);
-    SetOpacity(g_mode_select.main_menu, opacity);
-    SetOpacity(g_mode_select.message_box, opacity);
 
-    for (int index = 0; index < 5; index++)
+    if (g_mode_select.active_panel != 0)
     {
-        if (g_mode_select.main_buttons[index] != nullptr)
+        for (int index = 0; index < 5; index++)
         {
-            g_mode_select.main_buttons[index]->SetClass("selected", index == selection);
+            SetClass(g_mode_select.story_rows[index], "selected", false);
+            SetClass(g_mode_select.story_rows[index], "editing", false);
         }
+        for (int index = 0; index < 3; index++)
+        {
+            SetClass(g_mode_select.story_left_arrows[index], "active", false);
+            SetClass(g_mode_select.story_right_arrows[index], "active", false);
+        }
+        SetPanelHidden(g_mode_select.main_panel, false);
+        SetPanelHidden(g_mode_select.story_panel, true);
+        g_mode_select.active_panel = 0;
+        g_mode_select.main_selection = -1;
+        g_mode_select.story_selection = -1;
+        g_mode_select.story_editing = -1;
+    }
+
+    if (g_mode_select.main_opacity != opacity)
+    {
+        SetOpacity(g_mode_select.main_menu, opacity);
+        g_mode_select.main_opacity = opacity;
+    }
+    if (g_mode_select.message_opacity != opacity)
+    {
+        SetOpacity(g_mode_select.message_box, opacity);
+        g_mode_select.message_opacity = opacity;
+    }
+
+    if (g_mode_select.main_selection != selection)
+    {
+        for (int index = 0; index < 5; index++)
+        {
+            SetClass(g_mode_select.main_buttons[index], "selected", index == selection);
+        }
+        g_mode_select.main_selection = selection;
     }
 
     SetMessage(false, selection);
@@ -331,48 +395,68 @@ void SyncStory(int selected_index,
 {
     const int first_enabled = std::clamp(first_enabled_index, 0, 4);
     const int selection = std::clamp(selected_index, first_enabled, 4);
+    const int editing_state = editing != 0 ? 1 : 0;
     RequestVisible();
-    SetHidden(g_mode_select.main_panel, true);
-    SetHidden(g_mode_select.story_panel, false);
-    SetOpacity(g_mode_select.story_menu, opacity);
-    SetOpacity(g_mode_select.message_box, opacity);
 
-    for (int index = 0; index < 5; index++)
+    if (g_mode_select.active_panel != 1)
     {
-        const bool disabled = index < first_enabled;
-        const bool selected = index == selection;
-        const bool is_editing = selected && editing != 0 && index < 3;
-        if (g_mode_select.story_rows[index] != nullptr)
+        for (int index = 0; index < 5; index++)
         {
-            g_mode_select.story_rows[index]->SetClass("disabled", disabled);
-            g_mode_select.story_rows[index]->SetClass("selected", selected);
-            g_mode_select.story_rows[index]->SetClass("editing", is_editing);
+            SetClass(g_mode_select.main_buttons[index], "selected", false);
         }
-        if (g_mode_select.story_hits[index] != nullptr)
+        SetPanelHidden(g_mode_select.main_panel, true);
+        SetPanelHidden(g_mode_select.story_panel, false);
+        g_mode_select.active_panel = 1;
+        g_mode_select.main_selection = -1;
+        g_mode_select.story_selection = -1;
+        g_mode_select.story_editing = -1;
+        g_mode_select.story_first_enabled = -1;
+    }
+
+    if (g_mode_select.story_opacity != opacity)
+    {
+        SetOpacity(g_mode_select.story_menu, opacity);
+        g_mode_select.story_opacity = opacity;
+    }
+    if (g_mode_select.message_opacity != opacity)
+    {
+        SetOpacity(g_mode_select.message_box, opacity);
+        g_mode_select.message_opacity = opacity;
+    }
+
+    if (g_mode_select.story_selection != selection
+        || g_mode_select.story_editing != editing_state
+        || g_mode_select.story_first_enabled != first_enabled)
+    {
+        for (int index = 0; index < 5; index++)
         {
-            g_mode_select.story_hits[index]->SetClass("disabled", disabled);
+            const bool disabled = index < first_enabled;
+            const bool selected = index == selection;
+            const bool is_editing = selected && editing_state != 0 && index < 3;
+            SetClass(g_mode_select.story_rows[index], "disabled", disabled);
+            SetClass(g_mode_select.story_rows[index], "selected", selected);
+            SetClass(g_mode_select.story_rows[index], "editing", is_editing);
+            SetClass(g_mode_select.story_hits[index], "disabled", disabled);
         }
+
+        for (int index = 0; index < 3; index++)
+        {
+            const bool active = index == selection && editing_state != 0;
+            const bool disabled = index < first_enabled;
+            SetClass(g_mode_select.story_left_arrows[index], "active", active);
+            SetClass(g_mode_select.story_left_arrows[index], "disabled", disabled);
+            SetClass(g_mode_select.story_right_arrows[index], "active", active);
+            SetClass(g_mode_select.story_right_arrows[index], "disabled", disabled);
+        }
+
+        g_mode_select.story_selection = selection;
+        g_mode_select.story_editing = editing_state;
+        g_mode_select.story_first_enabled = first_enabled;
     }
 
     SetStoryValue(0, chapter);
     SetStoryValue(1, difficulty);
     SetStoryValue(2, costume);
-
-    for (int index = 0; index < 3; index++)
-    {
-        const bool active = index == selection && editing != 0;
-        if (g_mode_select.story_left_arrows[index] != nullptr)
-        {
-            g_mode_select.story_left_arrows[index]->SetClass("active", active);
-            g_mode_select.story_left_arrows[index]->SetClass("disabled", index < first_enabled);
-        }
-        if (g_mode_select.story_right_arrows[index] != nullptr)
-        {
-            g_mode_select.story_right_arrows[index]->SetClass("active", active);
-            g_mode_select.story_right_arrows[index]->SetClass("disabled", index < first_enabled);
-        }
-    }
-
     SetMessage(true, selection);
 }
 

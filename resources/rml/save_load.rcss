@@ -87,77 +87,55 @@ body {
     margin-top: -224dp;
 }
 
-#save-load-header-board {
+#save-load-film-header {
     position: absolute;
-    left: 20dp;
-    top: 20dp;
-    width: 205dp;
-    height: 28dp;
-    overflow: hidden;
-    background-color: transparent;
-}
-
-.save-load-header-border {
-    position: absolute;
-    left: 10dp;
-    width: 166dp;
-    height: 3px;
+    left: 50%;
+    top: 12dp;
+    width: 548dp;
+    height: 70dp;
+    margin-left: -274dp;
     pointer-events: none;
 }
 
-.save-load-header-border.top {
-    top: 0dp;
-}
-
-.save-load-header-border.bottom {
-    bottom: 0dp;
-}
-
-.save-load-header-border-edge,
-.save-load-header-border-center {
+#save-load-film-strip {
     position: absolute;
-    top: 0dp;
-    height: 3px;
-}
-
-.save-load-header-border-edge.left {
+    display: block;
     left: 0dp;
-    width: 26dp;
-    decorator: horizontal-gradient(#00000000 #c6a66fe0);
+    top: 0dp;
+    width: 548dp;
+    height: 70dp;
+    pointer-events: none;
 }
 
-.save-load-header-border-center {
-    left: 26dp;
-    width: 92dp;
-    background-color: #c6a66fe0;
-}
-
-.save-load-header-border-edge.right {
-    right: 0dp;
-    width: 48dp;
-    decorator: horizontal-gradient(#c6a66fe0 #00000000);
+#save-load-film-strip.hidden {
+    display: none;
 }
 
 #save-load-title {
     position: absolute;
-    left: 20dp;
-    top: 0dp;
-    width: 164dp;
-    height: 28dp;
-    color: #f0e6d2;
-    font-size: 16dp;
-    line-height: 28dp;
-    letter-spacing: 1.6dp;
-    font-effect: shadow(0dp 1dp #000000e8);
+    display: block;
+    left: 43dp;
+    top: 6dp;
+    width: 505dp;
+    height: 54dp;
+    color: #f7ecb6;
+    font-family: MikuPanRmlZapf;
+    font-size: 27dp;
+    line-height: 54dp;
+    letter-spacing: 3dp;
+    text-align: center;
+    text-transform: uppercase;
+    white-space: nowrap;
+    font-effect: glow(4px 14px 0px 0px #7f481f78), glow(2px 7px 0px 0px #c77d3598), glow(1px 3px 0px 0px #f0bb5bb0);
     pointer-events: none;
 }
 
 #save-load-list-frame {
     position: absolute;
     left: 12dp;
-    top: 58dp;
+    top: 100dp;
     width: 616dp;
-    height: 150dp;
+    height: 146dp;
 }
 
 #save-load-list-backdrop {
@@ -165,14 +143,14 @@ body {
     left: 0dp;
     top: 0dp;
     width: 616dp;
-    height: 150dp;
+    height: 146dp;
     pointer-events: none;
 }
 
 .save-load-list-backdrop-part {
     position: absolute;
     top: 0dp;
-    height: 150dp;
+    height: 146dp;
 }
 
 .save-load-list-backdrop-part.left {
@@ -239,7 +217,7 @@ body {
     left: 14dp;
     top: 7dp;
     width: 588dp;
-    height: 136dp;
+    height: 132dp;
     padding: 0dp 12dp 0dp 0dp;
     overflow-y: scroll;
     overflow-x: hidden;
@@ -493,9 +471,9 @@ body {
 #save-load-detail-frame {
     position: absolute;
     left: 12dp;
-    top: 214dp;
+    top: 252dp;
     width: 616dp;
-    height: 166dp;
+    height: 132dp;
 }
 
 #save-load-detail-backdrop {
@@ -503,14 +481,14 @@ body {
     left: 0dp;
     top: 0dp;
     width: 616dp;
-    height: 166dp;
+    height: 132dp;
     pointer-events: none;
 }
 
 .save-load-detail-backdrop-part {
     position: absolute;
     top: 0dp;
-    height: 166dp;
+    height: 132dp;
 }
 
 .save-load-detail-backdrop-part.left {
@@ -574,9 +552,9 @@ body {
 #save-load-detail {
     position: absolute;
     left: 14dp;
-    top: 8dp;
+    top: 6dp;
     width: 588dp;
-    height: 150dp;
+    height: 120dp;
     overflow: hidden;
 }
 
@@ -584,16 +562,16 @@ body {
     position: relative;
     display: block;
     width: 588dp;
-    height: 150dp;
+    height: 120dp;
 }
 
 .save-detail-thumbnail-frame {
     position: absolute;
     display: block;
     left: 0dp;
-    top: 7dp;
-    width: 240dp;
-    height: 135dp;
+    top: 3dp;
+    width: 204dp;
+    height: 115dp;
     background-color: #050504;
 }
 
@@ -627,7 +605,7 @@ body {
 .save-detail-thumbnail-empty {
     color: #81786b;
     font-size: 9dp;
-    line-height: 131dp;
+    line-height: 111dp;
     text-align: center;
     background-color: #0d0c0add;
 }
@@ -651,10 +629,10 @@ body {
 .save-detail-copy {
     position: absolute;
     display: block;
-    left: 254dp;
-    top: 8dp;
-    width: 326dp;
-    height: 134dp;
+    left: 218dp;
+    top: 4dp;
+    width: 362dp;
+    height: 112dp;
     overflow: hidden;
 }
 
@@ -662,8 +640,8 @@ body {
     position: absolute;
     left: 0dp;
     top: 0dp;
-    width: 326dp;
-    height: 24dp;
+    width: 362dp;
+    height: 21dp;
     border-bottom: 1px #806f526f;
 }
 
@@ -671,11 +649,11 @@ body {
     position: absolute;
     left: 0dp;
     top: 0dp;
-    width: 142dp;
-    height: 23dp;
+    width: 150dp;
+    height: 20dp;
     color: #f0e6d2;
     font-size: 11.5dp;
-    line-height: 22dp;
+    line-height: 19dp;
     letter-spacing: 0.55dp;
     font-effect: shadow(0dp 1dp #000000d8);
 }
@@ -688,33 +666,44 @@ body {
     position: absolute;
     right: 0dp;
     top: 0dp;
-    width: 178dp;
-    height: 23dp;
+    width: 200dp;
+    height: 20dp;
     color: #bda57c;
     font-size: 7.8dp;
-    line-height: 22dp;
+    line-height: 19dp;
     text-align: right;
 }
 
 .save-detail-location-line {
     position: absolute;
     left: 0dp;
-    top: 27dp;
-    width: 326dp;
-    height: 22dp;
+    top: 23dp;
+    width: 362dp;
+    height: 20dp;
 }
 
 .save-detail-location {
     position: absolute;
     left: 0dp;
     top: 0dp;
-    width: 254dp;
-    height: 22dp;
+    width: 286dp;
+    height: 20dp;
     color: #e4dac8;
     font-size: 9.2dp;
-    line-height: 21dp;
+    line-height: 19dp;
     letter-spacing: 0.2dp;
     overflow: hidden;
+}
+
+.save-detail-night {
+    color: #caa978;
+    font-size: 8.2dp;
+    letter-spacing: 0.35dp;
+    white-space: nowrap;
+}
+
+.save-detail-location-copy {
+    color: #e4dac8;
 }
 
 .save-detail-clear {
@@ -722,10 +711,10 @@ body {
     right: 0dp;
     top: 0dp;
     width: 70dp;
-    height: 22dp;
+    height: 20dp;
     color: #caa978;
     font-size: 8dp;
-    line-height: 21dp;
+    line-height: 19dp;
     text-align: right;
     white-space: nowrap;
 }
@@ -733,12 +722,12 @@ body {
 .save-detail-stats {
     position: absolute;
     left: 0dp;
-    top: 50dp;
-    width: 326dp;
-    height: 19dp;
+    top: 43dp;
+    width: 362dp;
+    height: 18dp;
     color: #bdb3a4;
     font-size: 7.2dp;
-    line-height: 18dp;
+    line-height: 17dp;
     white-space: nowrap;
 }
 
@@ -748,7 +737,7 @@ body {
 .save-detail-points {
     position: absolute;
     top: 0dp;
-    height: 19dp;
+    height: 18dp;
     overflow: hidden;
 }
 
@@ -759,26 +748,26 @@ body {
 }
 
 .save-detail-time {
-    left: 61dp;
-    width: 88dp;
+    left: 65dp;
+    width: 96dp;
 }
 
 .save-detail-shots {
-    left: 151dp;
-    width: 72dp;
+    left: 164dp;
+    width: 78dp;
 }
 
 .save-detail-points {
     right: 0dp;
-    width: 101dp;
+    width: 112dp;
     text-align: right;
 }
 
 .save-detail-rule {
     position: absolute;
     left: 0dp;
-    top: 71dp;
-    width: 326dp;
+    top: 63dp;
+    width: 362dp;
     height: 1px;
     decorator: horizontal-gradient(#806f5288 #00000000);
 }
@@ -787,9 +776,9 @@ body {
     position: absolute;
     display: block;
     left: 0dp;
-    top: 97dp;
-    width: 326dp;
-    height: 34dp;
+    top: 72dp;
+    width: 362dp;
+    height: 31dp;
     overflow: hidden;
 }
 
@@ -797,7 +786,7 @@ body {
     position: absolute;
     display: block;
     left: 0dp;
-    width: 326dp;
+    width: 362dp;
     height: 1px;
     opacity: 0.82;
     pointer-events: none;
@@ -821,29 +810,29 @@ body {
 
 .save-detail-items-border-edge.left {
     left: 0dp;
-    width: 54dp;
+    width: 60dp;
     decorator: horizontal-gradient(#00000000 #9d8868c0);
 }
 
 .save-detail-items-border-center {
-    left: 54dp;
-    width: 218dp;
+    left: 60dp;
+    width: 242dp;
     background-color: #9d8868c0;
 }
 
 .save-detail-items-border-edge.right {
     right: 0dp;
-    width: 54dp;
+    width: 60dp;
     decorator: horizontal-gradient(#9d8868c0 #00000000);
 }
 
 .save-detail-items-row {
     position: absolute;
     display: block;
-    left: 5dp;
-    top: 4dp;
-    width: 316dp;
-    height: 26dp;
+    left: 8dp;
+    top: 3dp;
+    width: 346dp;
+    height: 25dp;
     overflow: hidden;
     white-space: nowrap;
 }
@@ -895,12 +884,12 @@ body {
 .save-detail-items-unavailable {
     position: absolute;
     left: 0dp;
-    top: 100dp;
-    width: 326dp;
-    height: 28dp;
+    top: 75dp;
+    width: 362dp;
+    height: 26dp;
     color: #81786b;
     font-size: 8dp;
-    line-height: 27dp;
+    line-height: 25dp;
     text-align: center;
 }
 
@@ -908,14 +897,14 @@ body {
     position: relative;
     display: block;
     width: 588dp;
-    height: 150dp;
+    height: 120dp;
     text-align: center;
 }
 
 .save-detail-placeholder-title {
     position: absolute;
     left: 44dp;
-    top: 45dp;
+    top: 31dp;
     width: 500dp;
     height: 30dp;
     color: #e8decc;
@@ -925,13 +914,13 @@ body {
 }
 
 .save-detail-placeholder.single-line .save-detail-placeholder-title {
-    top: 60dp;
+    top: 45dp;
 }
 
 .save-detail-placeholder-copy {
     position: absolute;
     left: 44dp;
-    top: 78dp;
+    top: 63dp;
     width: 500dp;
     height: 24dp;
     color: #93897c;
@@ -942,9 +931,9 @@ body {
 #save-load-status-board {
     position: absolute;
     right: 20dp;
-    top: 20dp;
+    top: 78dp;
     width: 340dp;
-    height: 28dp;
+    height: 18dp;
 }
 
 #save-load-status {
@@ -953,10 +942,10 @@ body {
     top: 0dp;
     display: block;
     width: 340dp;
-    height: 28dp;
+    height: 18dp;
     color: #b7ad9d;
-    font-size: 8.5dp;
-    line-height: 27dp;
+    font-size: 8dp;
+    line-height: 17dp;
     letter-spacing: 0.25dp;
     text-align: right;
     font-effect: shadow(0dp 1dp #000000dc);

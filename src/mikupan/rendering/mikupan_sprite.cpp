@@ -1384,7 +1384,8 @@ static int MikuPan_RenderTextureIdTriangles3DWithState(unsigned int texture_id,
                                                        float *buffer,
                                                        int vertex_count,
                                                        int depth_mode,
-                                                       MikuPan_GPUBlendMode blend_mode)
+                                                       MikuPan_GPUBlendMode blend_mode,
+                                                       int normalize_depth)
 {
     if (texture_id == 0 || texture_w <= 0 || texture_h <= 0 ||
         buffer == NULL || vertex_count <= 0)
@@ -1412,7 +1413,10 @@ static int MikuPan_RenderTextureIdTriangles3DWithState(unsigned int texture_id,
     MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_BindTexture2DCached(texture_id);
     MikuPan_ApplyParticleTriangleState(depth_mode, blend_mode);
-    MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
+    if (normalize_depth)
+    {
+        MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
+    }
 
     MikuPan_StreamUploadFull(
         GL_ARRAY_BUFFER,
@@ -1424,6 +1428,26 @@ static int MikuPan_RenderTextureIdTriangles3DWithState(unsigned int texture_id,
     MikuPan_PerfDrawCall();
     MikuPan_RestoreParticleTriangleState();
     return 1;
+}
+
+int MikuPan_RenderTextureIdClipTriangles3DRaw(
+    unsigned int texture_id,
+    int texture_width,
+    int texture_height,
+    float *buffer,
+    int vertex_count,
+    int depth_mode,
+    MikuPan_GPUBlendMode blend_mode)
+{
+    return MikuPan_RenderTextureIdTriangles3DWithState(
+        texture_id,
+        texture_width,
+        texture_height,
+        buffer,
+        vertex_count,
+        depth_mode,
+        blend_mode,
+        0);
 }
 
 int MikuPan_RenderEnemyOutScreenCaptureTriangles(int slot,
@@ -1450,7 +1474,8 @@ int MikuPan_RenderEnemyOutScreenCaptureTriangles(int slot,
                                                        buffer,
                                                        vertex_count,
                                                        depth_mode,
-                                                       blend_mode);
+                                                       blend_mode,
+                                                       1);
 }
 
 

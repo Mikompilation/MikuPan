@@ -84,8 +84,12 @@ static MAP_CTRL map = {0};
 static const int MAP_COMMON_SPRITE_ADDRESS = 0x1ce0000;
 
 #ifdef BUILD_EU_VERSION
+static const int MAP_MENU_TOP_SPRITE_ADDRESS = 0x1d10000;
+static const int MAP_PLAY_DATA_SPRITE_ADDRESS = 0x1d210c0;
 static const int MAP_SPRITE_ADDRESS = 0x1e04000;
 #else
+static const int MAP_MENU_TOP_SPRITE_ADDRESS = 0x1d15600;
+static const int MAP_PLAY_DATA_SPRITE_ADDRESS = 0x1d266c0;
 static const int MAP_SPRITE_ADDRESS = PL_SMAP_PK2_ADDRESS;
 #endif
 
@@ -264,7 +268,11 @@ void IngameMenuMapDisp(u_char mod)
 
 void IngameMenuMapEnsureSpriteFiles()
 {
-    IngameMenuMapTextureCacheInit();
+    SetSprFile(MikuPan_GetHostAddress(MAP_COMMON_SPRITE_ADDRESS));
+    SetSprFile(MikuPan_GetHostAddress(MAP_MENU_TOP_SPRITE_ADDRESS));
+    SetSprFile(MikuPan_GetHostAddress(MAP_PLAY_DATA_SPRITE_ADDRESS));
+    SetSprFile(MikuPan_GetHostAddress(MAP_SPRITE_ADDRESS));
+    EnsureMapSpriteTextures();
 }
 
 void IngameMiniMapDisp()

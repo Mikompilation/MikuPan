@@ -324,14 +324,29 @@ void ModeSlctCtrl(u_char mode)
                 const bool rml_mode_select =
                     (mode == 0 || mode == 1)
                     && MikuPan_RmlModeSelectIsAvailable() != 0;
+                const bool rml_options =
+                    mode == 3 && MikuPan_RmlOptionsIsOpen() != 0;
 
                 ModeSlctDspBak(dsp_ms.bak_alp, mode);
-                ModeSlctDspFlm(dsp_ms.flm_lng, dsp_ms.flm_alp, mode);
+                ModeSlctDspFlm(
+                    dsp_ms.flm_lng,
+                    dsp_ms.flm_alp,
+                    mode,
+                    (rml_mode_select || rml_options) ? 1 : 0);
 
                 if (rml_mode_select)
                 {
-                    const float opacity =
+                    float opacity =
                         static_cast<float>(dsp_ms.chr_alp) / 128.0f;
+                    if (dsp_ms.main_step == 5 || dsp_ms.main_step == 6)
+                    {
+                        const float film_opacity =
+                            static_cast<float>(dsp_ms.flm_lng) / 100.0f;
+                        if (film_opacity < opacity)
+                        {
+                            opacity = film_opacity;
+                        }
+                    }
                     if (mode == 0)
                     {
                         MikuPan_RmlModeSelectShowMain(dsp_ms.csr[0], opacity);
@@ -1578,7 +1593,7 @@ void PutChrOneRGB(u_short chr, short int px, short int py, u_int rgb, u_char alp
     DispSprD(&ds);
 }
 
-void ModeSlctDspFlm(u_char per, u_char alp, u_char mode)
+void ModeSlctDspFlm(u_char per, u_char alp, u_char mode, u_char hide_title)
 {
     short int mx;
     DISP_SPRT ds;
@@ -1590,39 +1605,34 @@ void ModeSlctDspFlm(u_char per, u_char alp, u_char mode)
 
     mx = ((100 - per) * 0x1f9) / 100.0f;
 
-    switch (mode)
+    FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
+
+    if (hide_title == 0)
     {
-    case 0:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(3, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 1:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(4, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 2:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(2, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 3:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(6, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 4:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(5, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 7:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(1, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
+        switch (mode)
+        {
+        case 0:
+            FilmCutter(3, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 1:
+            FilmCutter(4, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 2:
+            FilmCutter(2, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 3:
+            FilmCutter(6, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 4:
+            FilmCutter(5, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 7:
+            FilmCutter(1, -mx, 0, 0x59, 0x80, alp);
+        break;
+        }
     }
+
+    PutChrOne(7, 0, 0, 0x80, alp, 0x0);
 }
 
 void FilmCutter(u_short chr, short int px, short int py, short int ex, u_char rgb, u_char alp)

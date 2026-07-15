@@ -2,6 +2,7 @@
 #define MIKUPAN_MIKUPAN_CONTROLLER_H
 
 #include <SDL3/SDL_gamepad.h>
+#include <SDL3/SDL_events.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,13 +49,37 @@ typedef struct
     int pos_scancode;
 } MikuPan_StickKeyboardBinding;
 
+#define MIKUPAN_INPUT_BIND_NONE         (0)
+#define MIKUPAN_INPUT_BIND_KEYBOARD     (1)
+#define MIKUPAN_INPUT_BIND_MOUSE_BUTTON (2)
+#define MIKUPAN_INPUT_BIND_MOUSE_WHEEL  (3)
+
+#define MIKUPAN_SPECIAL_ACTION_RAISE_CAMERA    (0)
+#define MIKUPAN_SPECIAL_ACTION_TAKE_PHOTO      (1)
+#define MIKUPAN_SPECIAL_ACTION_FILM_PREVIOUS   (2)
+#define MIKUPAN_SPECIAL_ACTION_FILM_NEXT       (3)
+#define MIKUPAN_SPECIAL_ACTION_SPECIAL_ABILITY (4)
+#define MIKUPAN_SPECIAL_ACTION_RUN             (5)
+#define MIKUPAN_SPECIAL_ACTION_COUNT           (6)
+
+#define MIKUPAN_CAMERA_ACTIVATION_HOLD   (0)
+#define MIKUPAN_CAMERA_ACTIVATION_TOGGLE (1)
+
+typedef struct
+{
+    int kind;
+    int code;
+} MikuPan_InputBinding;
+
 extern MikuPan_ControllerBindings   mikupan_controller_map[MIKUPAN_CONTROLLER_LOGICAL_COUNT];
 extern int                          mikupan_keyboard_map[MIKUPAN_CONTROLLER_LOGICAL_COUNT];
 extern MikuPan_StickGamepadBinding  mikupan_stick_controller_map[MIKUPAN_STICK_COUNT];
 extern MikuPan_StickKeyboardBinding mikupan_stick_keyboard_map[MIKUPAN_STICK_COUNT];
+extern MikuPan_InputBinding         mikupan_special_action_map[MIKUPAN_SPECIAL_ACTION_COUNT];
 
 int MikuPan_OpenController();
 int MikuPan_ReadController(unsigned char* rdata);
+void MikuPan_ControllerProcessEvent(const SDL_Event* event);
 void MikuPan_ControllerResetBindings(void);
 /// Copy the live controller/keyboard bindings into mikupan_configuration.input
 /// (and mark them saved) so MikuPan_SaveConfiguration persists them.
@@ -65,6 +90,14 @@ void MikuPan_ControllerLoadBindingsFromConfig(void);
 const char *MikuPan_ControllerBindingLabel(MikuPan_ControllerBindings binding);
 const char *MikuPan_ControllerScanCodeLabel(int scancode);
 const char *MikuPan_ControllerStickAxisLabel(int sdl_axis);
+const char *MikuPan_InputBindingLabel(MikuPan_InputBinding binding);
+const char *MikuPan_SpecialActionLabel(int action);
+void MikuPan_InputBindingCaptureReset(void);
+int MikuPan_InputBindingCaptureAnyDown(void);
+int MikuPan_InputBindingCapturePoll(MikuPan_InputBinding* binding);
+int MikuPan_CameraActivationMode(void);
+void MikuPan_SetCameraActivationMode(int mode);
+int MikuPan_ConsumeSpecialFilmSwapDirection(void);
 void MikuPan_ControllerSetPreferredGamepadIndex(int index);
 int MikuPan_ControllerGetPreferredGamepadIndex(void);
 void MikuPan_ControllerDrawDeviceSelectorUi(void);

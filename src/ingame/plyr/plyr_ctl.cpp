@@ -38,6 +38,7 @@
 #include "ingame/plyr/unit_ctl.h"
 #include "main/glob.h"
 #include "mikupan/debug/mikupan_logging_c.h"
+#include "mikupan/mikupan_config.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
 #include "mikupan/gameplay/mikupan_point_depth.h"
@@ -95,7 +96,6 @@ static u_char dmg_step = 0;
 
 static u_char avoid_chk;
 static u_short hp_down_deg;
-static u_char plyr_spot_light_mode = 2;
 static u_char plyr_spot_light_applied = 0;
 
 #define PI 3.1415927f
@@ -1317,17 +1317,22 @@ void PlyrHPdwonCtrl()
 
 void PlyrSpotLightOnChk()
 {
-    if (L1_PRESSED() == 1)
+    u_char spot_light_mode = 2;
+    switch (mikupan_configuration.flashlight_style)
     {
-        plyr_spot_light_mode++;
-
-        if (plyr_spot_light_mode > 2)
-        {
-            plyr_spot_light_mode = 0;
-        }
+    case MIKUPAN_FLASHLIGHT_STYLE_XBOX:
+        spot_light_mode = 1;
+        break;
+    case MIKUPAN_FLASHLIGHT_STYLE_OFF:
+        spot_light_mode = 0;
+        break;
+    case MIKUPAN_FLASHLIGHT_STYLE_PS2:
+    default:
+        spot_light_mode = 2;
+        break;
     }
 
-    if (plyr_spot_light_mode == 0)
+    if (spot_light_mode == 0)
     {
         if (plyr_spot_light_applied != 0)
         {
@@ -1338,7 +1343,7 @@ void PlyrSpotLightOnChk()
         return;
     }
 
-    SetPlyrSpotLight(plyr_spot_light_mode);
+    SetPlyrSpotLight(spot_light_mode);
     plyr_spot_light_applied = 1;
 
     if (plyr_wrk.mode == PMODE_NORMAL && plyr_wrk.anime_no != PANI_CAM_SET_OUT)

@@ -16,6 +16,7 @@
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/rendering/mikupan_flashlight_dust.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -1034,6 +1035,165 @@ void MikuPan_UiSettingsRender(void)
                     finder_mask_mode;
             }
 
+            igSeparatorText("Atmosphere Test");
+
+            MikuPan_FlashlightDustSettings* dust_settings =
+                MikuPan_GetFlashlightDustSettings();
+            bool dust_enabled = dust_settings->enabled != 0;
+            if (igCheckbox("Dust Particles (Test)", &dust_enabled))
+            {
+                dust_settings->enabled = dust_enabled ? 1 : 0;
+            }
+
+            if (dust_settings->enabled)
+            {
+                const char* dust_levels[] = {"Low", "Normal", "High"};
+                igCombo_Str_arr("Dust Level", &dust_settings->level,
+                                dust_levels, 3, -1);
+
+                bool ambient_enabled = dust_settings->ambient_enabled != 0;
+                if (igCheckbox("Flashlight Dust", &ambient_enabled))
+                {
+                    dust_settings->ambient_enabled = ambient_enabled ? 1 : 0;
+                }
+
+                if (dust_settings->ambient_enabled)
+                {
+                    bool room_filter_enabled =
+                        dust_settings->room_filter_enabled != 0;
+                    if (igCheckbox("Dusty Rooms Only", &room_filter_enabled))
+                    {
+                        dust_settings->room_filter_enabled =
+                            room_filter_enabled ? 1 : 0;
+                    }
+                }
+
+                bool door_disturbance_enabled =
+                    dust_settings->door_disturbance_enabled != 0;
+                if (igCheckbox("Door Disturbance", &door_disturbance_enabled))
+                {
+                    dust_settings->door_disturbance_enabled =
+                        door_disturbance_enabled ? 1 : 0;
+                }
+
+                if (dust_settings->door_disturbance_enabled)
+                {
+                    igSliderFloat("Door Dust Strength",
+                                  &dust_settings->door_disturbance_strength,
+                                  0.25f, 3.0f, "%.2fx", 0);
+                    igSliderFloat("Door Dust Lifetime",
+                                  &dust_settings->door_disturbance_duration,
+                                  2.0f, 12.0f, "%.1f sec", 0);
+                    if (igButton("Trigger Door Dust", ImVec2{0.0f, 0.0f}))
+                    {
+                        MikuPan_TriggerDoorDustAtPlayer();
+                    }
+                }
+
+                const MikuPan_FlashlightDustDebugInfo* dust_debug =
+                    MikuPan_GetFlashlightDustDebugInfo();
+                igTextDisabled("Room %d%s, power %.2fx", dust_debug->room_no,
+                               dust_debug->room_allowed ? " (dust room)" : "",
+                               dust_debug->room_density);
+                igTextDisabled("Ambient %d/%d, door %d, bursts %d",
+                               dust_debug->ambient_particle_count,
+                               dust_debug->ambient_particle_budget,
+                               dust_debug->door_particle_count,
+                               dust_debug->active_door_bursts);
+
+                if (dust_debug->last_door_trigger_valid)
+                {
+                    igTextDisabled("Last door %d, work %d, distance %.0f",
+                                   dust_debug->last_door_id,
+                                   dust_debug->last_door_work_index,
+                                   dust_debug->last_door_distance);
+                    if (dust_debug->last_door_target_room_no == 0xff)
+                    {
+                        igTextDisabled("Next room unknown, burst skipped");
+                    }
+                    else
+                    {
+                        igTextDisabled("Next room %d (%s), burst %s",
+                                       dust_debug->last_door_target_room_no,
+                                       dust_debug->last_door_target_room_allowed
+                                           ? "dust"
+                                           : "no dust",
+                                       dust_debug->last_door_spawned
+                                           ? "spawned"
+                                           : "skipped");
+                    }
+                    igTextDisabled("Player-front origin %.0f, %.0f, %.0f",
+                                   dust_debug->last_door_position[0],
+                                   dust_debug->last_door_position[1],
+                                   dust_debug->last_door_position[2]);
+                    if (dust_debug->last_door_target_room_allowed
+                        && igButton("Trigger Last Door Dust",
+                                    ImVec2{0.0f, 0.0f}))
+                    {
+                        MikuPan_TriggerDoorDustAtLastDoor();
+                    }
+                }
+
+                if (igCollapsingHeader_TreeNodeFlags("Room Dust Power", 0))
+                {
+                    const int table_flags =
+                        ImGuiTableFlags_RowBg
+                        | ImGuiTableFlags_BordersInnerH
+                        | ImGuiTableFlags_BordersOuter
+                        | ImGuiTableFlags_ScrollY;
+
+                    if (igBeginTable("##dust_room_table", 2, table_flags,
+                                     ImVec2{0.0f, 220.0f}, 0.0f))
+                    {
+                        igTableSetupColumn("Room",
+                                           ImGuiTableColumnFlags_WidthStretch,
+                                           1.0f, 0);
+                        igTableSetupColumn("Power",
+                                           ImGuiTableColumnFlags_WidthFixed,
+                                           72.0f, 0);
+                        igTableHeadersRow();
+
+                        const int room_count =
+                            MikuPan_GetFlashlightDustRoomCount();
+                        for (int room_index = 0;
+                             room_index < room_count;
+                             room_index++)
+                        {
+                            const MikuPan_FlashlightDustRoomInfo* room =
+                                MikuPan_GetFlashlightDustRoomInfo(room_index);
+                            if (room == nullptr)
+                            {
+                                continue;
+                            }
+
+                            igTableNextRow(0, 0.0f);
+                            igTableNextColumn();
+                            if (room->room_no == dust_debug->room_no)
+                            {
+                                igTextColored(ImVec4{0.95f, 0.78f, 0.42f, 1.0f},
+                                              "%s (current)", room->name);
+                            }
+                            else
+                            {
+                                igText("%s", room->name);
+                            }
+
+                            igTableNextColumn();
+                            if (room->density > 0.0f)
+                            {
+                                igText("%.2fx", room->density);
+                            }
+                            else
+                            {
+                                igTextDisabled("Off");
+                            }
+                        }
+
+                        igEndTable();
+                    }
+                }
+            }
+
             igEndMenu();
         }
 
@@ -1962,6 +2122,54 @@ int MikuPan_SelectThemeOption(int index)
     MikuPan_ApplyFatalFrameStyle(index);
     MikuPan_RmlOptionsApplyTheme(index);
     return 1;
+}
+
+int MikuPan_GetFlashlightStyleOptionCount(void)
+{
+    return 3;
+}
+
+int MikuPan_GetSelectedFlashlightStyleOption(void)
+{
+    MikuPan_ConfigurationValidate();
+    return mikupan_configuration.flashlight_style;
+}
+
+const char* MikuPan_GetFlashlightStyleOptionLabel(int index)
+{
+    static const char* labels[] = {
+        "PS2 Style",
+        "Xbox Style",
+        "Off",
+    };
+
+    if (index < 0 || index >= MikuPan_GetFlashlightStyleOptionCount())
+    {
+        return "";
+    }
+
+    return labels[index];
+}
+
+int MikuPan_SelectFlashlightStyleOption(int index)
+{
+    if (index < 0 || index >= MikuPan_GetFlashlightStyleOptionCount())
+    {
+        return 0;
+    }
+
+    mikupan_configuration.flashlight_style = index;
+    return 1;
+}
+
+int MikuPan_KeepFinderRaisedForApparitionsEnabled(void)
+{
+    return mikupan_configuration.keep_finder_raised_for_apparitions != 0;
+}
+
+void MikuPan_SetKeepFinderRaisedForApparitionsEnabled(int enabled)
+{
+    mikupan_configuration.keep_finder_raised_for_apparitions = enabled ? 1 : 0;
 }
 
 int MikuPan_GetFontOptionCount(void)

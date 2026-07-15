@@ -6,12 +6,16 @@
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
 #include "main/glob.h"
 #include "os/key_cnf.h"
+#include "enums.h"
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_mouse.h>
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "mikupan/ui/mikupan_ui.h"
+#include "mikupan/ui/mikupan_rml_options.h"
+#include "mikupan/ui/mikupan_rml_save_load.h"
+#include "mikupan/ui/mikupan_rml_save_point.h"
 
 #include <stdio.h>
 
@@ -55,6 +59,15 @@ static int finder_mouse_enabled = 1;
 static float finder_mouse_sensitivity = 1.0f;
 static int finder_mouse_requested = 0;
 static int finder_mouse_active = 0;
+static int camera_activation_mode = MIKUPAN_CAMERA_ACTIVATION_HOLD;
+static int special_action_previous_down[MIKUPAN_SPECIAL_ACTION_COUNT] = {};
+static int camera_toggle_press_pending = 0;
+static int camera_hold_engaged = 0;
+static int camera_hold_release_pending = 0;
+static int special_film_swap_direction = 0;
+static int runtime_wheel_steps = 0;
+static MikuPan_InputBinding pending_capture_binding = {};
+static int pending_capture_binding_valid = 0;
 
 static int MikuPan_ControllerConfigActionProfileTarget(int layout, int target);
 
@@ -75,6 +88,15 @@ static const char *mikupan_controller_labels[MIKUPAN_CONTROLLER_LOGICAL_COUNT] =
     "L2 / LT",
     "R2 / RT",
     "L1 / LB",
+};
+
+static const char *mikupan_special_action_labels[MIKUPAN_SPECIAL_ACTION_COUNT] = {
+    "Raise Camera",
+    "Take Photo",
+    "Previous Film",
+    "Next Film",
+    "Special Ability",
+    "Run",
 };
 
 static const MikuPan_ControllerBindings mikupan_controller_map_defaults[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
@@ -99,14 +121,14 @@ static const MikuPan_ControllerBindings mikupan_controller_map_defaults[MIKUPAN_
 /* Keyboard defaults clustered around the left hand so they pair with WASD
  * movement (the stick defaults below) and mouse aiming. Order matches
  * mikupan_controller_labels:
- *   Triangle=E  Cross=Space  Square=Q  Circle=C
- *   DPad=Arrows  R3=V  Select=Tab  Start=Esc  L3=LShift
+ *   Triangle=E  Cross=Space  Square=Unbound  Circle=C
+ *   DPad=Arrows  R3=V  Select=Tab  Start=Esc  L3=Unbound
  *   R1=F (finder)  L2=Z / R2=X (finder zoom out/in)  L1=R */
 static const int mikupan_keyboard_map_defaults[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
-    SDL_SCANCODE_E,    SDL_SCANCODE_SPACE,  SDL_SCANCODE_Q,
+    SDL_SCANCODE_E,    SDL_SCANCODE_SPACE,  0,
     SDL_SCANCODE_C,    SDL_SCANCODE_UP,     SDL_SCANCODE_DOWN,
     SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,  SDL_SCANCODE_V,
-    SDL_SCANCODE_TAB,  SDL_SCANCODE_ESCAPE, SDL_SCANCODE_LSHIFT,
+    SDL_SCANCODE_TAB,  SDL_SCANCODE_ESCAPE, 0,
     SDL_SCANCODE_F,    SDL_SCANCODE_Z,      SDL_SCANCODE_X,
     SDL_SCANCODE_R,
 };
@@ -134,10 +156,10 @@ MikuPan_ControllerBindings mikupan_controller_map[MIKUPAN_CONTROLLER_LOGICAL_COU
 static const int mikupan_stick_rdata_byte[MIKUPAN_STICK_COUNT] = {6, 7, 4, 5};
 
 int mikupan_keyboard_map[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
-    SDL_SCANCODE_E,    SDL_SCANCODE_SPACE,  SDL_SCANCODE_Q,
+    SDL_SCANCODE_E,    SDL_SCANCODE_SPACE,  0,
     SDL_SCANCODE_C,    SDL_SCANCODE_UP,     SDL_SCANCODE_DOWN,
     SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,  SDL_SCANCODE_V,
-    SDL_SCANCODE_TAB,  SDL_SCANCODE_ESCAPE, SDL_SCANCODE_LSHIFT,
+    SDL_SCANCODE_TAB,  SDL_SCANCODE_ESCAPE, 0,
     SDL_SCANCODE_F,    SDL_SCANCODE_Z,      SDL_SCANCODE_X,
     SDL_SCANCODE_R,
 };
@@ -176,6 +198,48 @@ MikuPan_StickKeyboardBinding mikupan_stick_keyboard_map[MIKUPAN_STICK_COUNT] = {
     {0,              0             },
     {0,              0             },
 };
+
+static const MikuPan_InputBinding mikupan_special_action_map_defaults[MIKUPAN_SPECIAL_ACTION_COUNT] = {
+    {MIKUPAN_INPUT_BIND_MOUSE_BUTTON, SDL_BUTTON_RIGHT},
+    {MIKUPAN_INPUT_BIND_MOUSE_BUTTON, SDL_BUTTON_LEFT},
+    {MIKUPAN_INPUT_BIND_MOUSE_WHEEL, 1},
+    {MIKUPAN_INPUT_BIND_MOUSE_WHEEL, -1},
+    {MIKUPAN_INPUT_BIND_MOUSE_BUTTON, SDL_BUTTON_MIDDLE},
+    {MIKUPAN_INPUT_BIND_KEYBOARD, SDL_SCANCODE_LSHIFT},
+};
+
+MikuPan_InputBinding mikupan_special_action_map[MIKUPAN_SPECIAL_ACTION_COUNT] = {
+    {MIKUPAN_INPUT_BIND_MOUSE_BUTTON, SDL_BUTTON_RIGHT},
+    {MIKUPAN_INPUT_BIND_MOUSE_BUTTON, SDL_BUTTON_LEFT},
+    {MIKUPAN_INPUT_BIND_MOUSE_WHEEL, 1},
+    {MIKUPAN_INPUT_BIND_MOUSE_WHEEL, -1},
+    {MIKUPAN_INPUT_BIND_MOUSE_BUTTON, SDL_BUTTON_MIDDLE},
+    {MIKUPAN_INPUT_BIND_KEYBOARD, SDL_SCANCODE_LSHIFT},
+};
+
+static MikuPan_InputBinding MikuPan_NormalizeInputBinding(
+    MikuPan_InputBinding binding)
+{
+    if (binding.kind == MIKUPAN_INPUT_BIND_KEYBOARD
+        && binding.code > 0 && binding.code < SDL_SCANCODE_COUNT)
+    {
+        return binding;
+    }
+
+    if (binding.kind == MIKUPAN_INPUT_BIND_MOUSE_BUTTON
+        && binding.code >= SDL_BUTTON_LEFT && binding.code <= SDL_BUTTON_X2)
+    {
+        return binding;
+    }
+
+    if (binding.kind == MIKUPAN_INPUT_BIND_MOUSE_WHEEL && binding.code != 0)
+    {
+        binding.code = binding.code > 0 ? 1 : -1;
+        return binding;
+    }
+
+    return {MIKUPAN_INPUT_BIND_NONE, 0};
+}
 
 u_short mikupan_controller_game_bitmask[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
     0x1000,  0x4000,  0x8000,  0x2000,
@@ -217,6 +281,110 @@ void MikuPan_ControllerSetPreferredGamepadIndex(int index)
 int MikuPan_ControllerGetPreferredGamepadIndex(void)
 {
     return mikupan_preferred_gamepad_index;
+}
+
+void MikuPan_ControllerProcessEvent(const SDL_Event *event)
+{
+    if (event == NULL)
+    {
+        return;
+    }
+
+    if (event->type == SDL_EVENT_KEY_DOWN && !event->key.repeat)
+    {
+        pending_capture_binding.kind = MIKUPAN_INPUT_BIND_KEYBOARD;
+        pending_capture_binding.code = event->key.scancode;
+        pending_capture_binding_valid = 1;
+    }
+    else if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+    {
+        pending_capture_binding.kind = MIKUPAN_INPUT_BIND_MOUSE_BUTTON;
+        pending_capture_binding.code = event->button.button;
+        pending_capture_binding_valid = 1;
+    }
+    else if (event->type == SDL_EVENT_MOUSE_WHEEL && event->wheel.y != 0.0f)
+    {
+        const int direction = event->wheel.y > 0.0f ? 1 : -1;
+        runtime_wheel_steps += direction;
+        if (runtime_wheel_steps > 8)
+        {
+            runtime_wheel_steps = 8;
+        }
+        else if (runtime_wheel_steps < -8)
+        {
+            runtime_wheel_steps = -8;
+        }
+        pending_capture_binding.kind = MIKUPAN_INPUT_BIND_MOUSE_WHEEL;
+        pending_capture_binding.code = direction;
+        pending_capture_binding_valid = 1;
+    }
+}
+
+void MikuPan_InputBindingCaptureReset(void)
+{
+    pending_capture_binding = {};
+    pending_capture_binding_valid = 0;
+    runtime_wheel_steps = 0;
+}
+
+int MikuPan_InputBindingCaptureAnyDown(void)
+{
+    const bool *keys = SDL_GetKeyboardState(NULL);
+    if (keys != NULL)
+    {
+        for (int i = 4; i < SDL_SCANCODE_COUNT; i++)
+        {
+            if (keys[i])
+            {
+                return 1;
+            }
+        }
+    }
+
+    const SDL_MouseButtonFlags buttons = SDL_GetMouseState(NULL, NULL);
+    return buttons != 0 ? 1 : 0;
+}
+
+int MikuPan_InputBindingCapturePoll(MikuPan_InputBinding *binding)
+{
+    if (binding == NULL)
+    {
+        return 0;
+    }
+
+    if (pending_capture_binding_valid)
+    {
+        *binding = pending_capture_binding;
+        pending_capture_binding_valid = 0;
+        return 1;
+    }
+
+    const bool *keys = SDL_GetKeyboardState(NULL);
+    if (keys != NULL)
+    {
+        for (int i = 4; i < SDL_SCANCODE_COUNT; i++)
+        {
+            if (keys[i])
+            {
+                binding->kind = MIKUPAN_INPUT_BIND_KEYBOARD;
+                binding->code = i;
+                return 1;
+            }
+        }
+    }
+
+    const SDL_MouseButtonFlags buttons = SDL_GetMouseState(NULL, NULL);
+    for (int button = SDL_BUTTON_LEFT; button <= SDL_BUTTON_X2; button++)
+    {
+        if ((buttons & SDL_BUTTON_MASK(button)) != 0)
+        {
+            binding->kind = MIKUPAN_INPUT_BIND_MOUSE_BUTTON;
+            binding->code = button;
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 static const char *MikuPan_ControllerNameForId(SDL_JoystickID id)
@@ -391,6 +559,18 @@ void MikuPan_ControllerResetBindings(void)
         mikupan_stick_controller_map[i] = mikupan_stick_controller_map_defaults[i];
         mikupan_stick_keyboard_map[i] = mikupan_stick_keyboard_map_defaults[i];
     }
+    for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+    {
+        mikupan_special_action_map[i] = mikupan_special_action_map_defaults[i];
+        special_action_previous_down[i] = 0;
+    }
+    camera_activation_mode = MIKUPAN_CAMERA_ACTIVATION_HOLD;
+    camera_toggle_press_pending = 0;
+    camera_hold_engaged = 0;
+    camera_hold_release_pending = 0;
+    special_film_swap_direction = 0;
+    runtime_wheel_steps = 0;
+    MikuPan_InputBindingCaptureReset();
     finder_mouse_enabled = 1;
     finder_mouse_sensitivity = 1.0f;
     MikuPan_SetControllerRumbleEnabled(1);
@@ -440,6 +620,14 @@ void MikuPan_ControllerStoreBindingsToConfig(void)
         MikuPan_ImprovedMovementCollisionsEnabled();
     cfg->finder_mouse_enabled = finder_mouse_enabled;
     cfg->finder_mouse_sensitivity = finder_mouse_sensitivity;
+    cfg->special_bindings_saved = 1;
+    cfg->special_bindings_count = MIKUPAN_SPECIAL_ACTION_COUNT;
+    cfg->camera_activation_mode = camera_activation_mode;
+    for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+    {
+        cfg->special_bind_kind[i] = mikupan_special_action_map[i].kind;
+        cfg->special_bind_code[i] = mikupan_special_action_map[i].code;
+    }
     cfg->rumble_enabled = MikuPan_ControllerRumbleEnabled();
     for (int i = 0; i < MIKUPAN_ACTION_PROFILE_ACTION_COUNT; i++)
     {
@@ -482,6 +670,64 @@ void MikuPan_ControllerLoadBindingsFromConfig(void)
         mikupan_stick_keyboard_map[i].neg_scancode   = cfg->stick_kb_neg[i];
         mikupan_stick_keyboard_map[i].pos_scancode   = cfg->stick_kb_pos[i];
     }
+    if (cfg->special_bindings_saved)
+    {
+        int saved_count = cfg->special_bindings_count;
+        if (saved_count <= 0)
+        {
+            saved_count = MIKUPAN_SPECIAL_ACTION_RUN;
+        }
+        if (saved_count > MIKUPAN_SPECIAL_ACTION_COUNT)
+        {
+            saved_count = MIKUPAN_SPECIAL_ACTION_COUNT;
+        }
+
+        for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+        {
+            if (i < saved_count)
+            {
+                mikupan_special_action_map[i] = MikuPan_NormalizeInputBinding({
+                    cfg->special_bind_kind[i],
+                    cfg->special_bind_code[i],
+                });
+            }
+            else
+            {
+                mikupan_special_action_map[i] = mikupan_special_action_map_defaults[i];
+            }
+        }
+
+        if (saved_count <= MIKUPAN_SPECIAL_ACTION_RUN)
+        {
+            if (mikupan_keyboard_map[2] == SDL_SCANCODE_Q
+                || mikupan_keyboard_map[2] == SDL_SCANCODE_R)
+            {
+                mikupan_keyboard_map[2] = 0;
+            }
+            if (mikupan_keyboard_map[11] == SDL_SCANCODE_LSHIFT)
+            {
+                mikupan_keyboard_map[11] = 0;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+        {
+            mikupan_special_action_map[i] = mikupan_special_action_map_defaults[i];
+        }
+
+        if (mikupan_keyboard_map[2] == SDL_SCANCODE_Q
+            || mikupan_keyboard_map[2] == SDL_SCANCODE_R)
+        {
+            mikupan_keyboard_map[2] = 0;
+        }
+        if (mikupan_keyboard_map[11] == SDL_SCANCODE_LSHIFT)
+        {
+            mikupan_keyboard_map[11] = 0;
+        }
+    }
+    MikuPan_SetCameraActivationMode(cfg->camera_activation_mode);
     /* A sensitivity of 0 means the config predates this option, so keep the
      * runtime defaults instead of disabling mouse-look on older configs. */
     if (cfg->finder_mouse_sensitivity > 0.0f)
@@ -541,6 +787,294 @@ void MikuPan_SetImprovedMovementCollisionsEnabled(int enabled)
     mikupan_configuration.input.improved_movement_collisions_enabled = enabled ? 1 : 0;
 }
 
+int MikuPan_CameraActivationMode(void)
+{
+    return camera_activation_mode;
+}
+
+void MikuPan_SetCameraActivationMode(int mode)
+{
+    camera_activation_mode = mode == MIKUPAN_CAMERA_ACTIVATION_TOGGLE
+                                 ? MIKUPAN_CAMERA_ACTIVATION_TOGGLE
+                                 : MIKUPAN_CAMERA_ACTIVATION_HOLD;
+    camera_toggle_press_pending = 0;
+    camera_hold_engaged = 0;
+    camera_hold_release_pending = 0;
+}
+
+int MikuPan_ConsumeSpecialFilmSwapDirection(void)
+{
+    const int direction = special_film_swap_direction;
+    special_film_swap_direction = 0;
+    return direction;
+}
+
+static int MikuPan_ScancodeBoundToSpecialAction(int scancode)
+{
+    for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+    {
+        const MikuPan_InputBinding binding = mikupan_special_action_map[i];
+        if (binding.kind == MIKUPAN_INPUT_BIND_KEYBOARD
+            && binding.code == scancode)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int MikuPan_InputBindingDown(MikuPan_InputBinding binding,
+                                    const bool *key_states,
+                                    SDL_MouseButtonFlags mouse_buttons)
+{
+    if (binding.kind == MIKUPAN_INPUT_BIND_KEYBOARD)
+    {
+        return key_states != NULL && binding.code > 0
+               && binding.code < SDL_SCANCODE_COUNT
+               && key_states[binding.code];
+    }
+
+    if (binding.kind == MIKUPAN_INPUT_BIND_MOUSE_BUTTON)
+    {
+        return binding.code >= SDL_BUTTON_LEFT && binding.code <= SDL_BUTTON_X2
+               && (mouse_buttons & SDL_BUTTON_MASK(binding.code)) != 0;
+    }
+
+    return 0;
+}
+
+static int MikuPan_IsFinderInputMode(void)
+{
+    return plyr_wrk.mode == PMODE_FINDER
+           || plyr_wrk.mode == PMODE_FINDER_IN
+           || plyr_wrk.mode == PMODE_FINDER_END
+           || plyr_wrk.mode == PMODE_FIN_CAM;
+}
+
+static int MikuPan_SpecialActionsEnabled(void)
+{
+    if (sys_wrk.game_mode != GAME_MODE_INGAME
+        || ingame_wrk.mode != INGAME_MODE_NOMAL
+        || MikuPan_UiIsMenuOpen()
+        || MikuPan_RmlOptionsIsOpen()
+        || MikuPan_RmlSaveLoadIsOpen()
+        || MikuPan_RmlSavePointInputEnabled())
+    {
+        return 0;
+    }
+
+    ImGuiIO *io = igGetIO_Nil();
+    return io == NULL
+           || (!io->WantCaptureMouse && !io->WantCaptureKeyboard
+               && !io->WantTextInput);
+}
+
+static int MikuPan_ActionTargetToControllerLogical(int target)
+{
+    static const int target_to_logical[MIKUPAN_ACTION_PROFILE_ACTION_COUNT] = {
+        4, 5, 6, 7, 0, 1, 2, 3, 15, 13, 12, 14, 10, 9, 11, 8,
+    };
+
+    if (target < 0 || target >= MIKUPAN_ACTION_PROFILE_ACTION_COUNT)
+    {
+        return -1;
+    }
+
+    return target_to_logical[target];
+}
+
+static void MikuPan_InjectSpecialAction(int *pressed_buttons, int action)
+{
+    const int mode = MikuPan_IsFinderInputMode()
+                         ? MIKUPAN_ACTION_PROFILE_MODE_FINDER
+                         : MIKUPAN_ACTION_PROFILE_MODE_NORMAL;
+    const int target = MikuPan_IsCustomActionProfileEnabled()
+                           ? MikuPan_GetCustomActionProfileTarget(mode, action)
+                           : MikuPan_GetDefaultActionProfileTarget(action);
+    const int logical = MikuPan_ActionTargetToControllerLogical(target);
+    if (logical >= 0 && logical < MIKUPAN_CONTROLLER_LOGICAL_COUNT)
+    {
+        pressed_buttons[logical] = 1;
+    }
+}
+
+static void MikuPan_ApplySpecialActions(int *pressed_buttons,
+                                        const bool *key_states)
+{
+    const SDL_MouseButtonFlags mouse_buttons = SDL_GetMouseState(NULL, NULL);
+    int wheel_direction = 0;
+    if (runtime_wheel_steps > 0)
+    {
+        wheel_direction = 1;
+        runtime_wheel_steps--;
+    }
+    else if (runtime_wheel_steps < 0)
+    {
+        wheel_direction = -1;
+        runtime_wheel_steps++;
+    }
+
+    int down[MIKUPAN_SPECIAL_ACTION_COUNT] = {};
+    int activated[MIKUPAN_SPECIAL_ACTION_COUNT] = {};
+    for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+    {
+        const MikuPan_InputBinding binding = mikupan_special_action_map[i];
+        down[i] = MikuPan_InputBindingDown(binding, key_states, mouse_buttons);
+        activated[i] = (down[i] && !special_action_previous_down[i])
+                       || (binding.kind == MIKUPAN_INPUT_BIND_MOUSE_WHEEL
+                           && binding.code == wheel_direction);
+    }
+
+    const MikuPan_InputBinding camera_binding =
+        mikupan_special_action_map[MIKUPAN_SPECIAL_ACTION_RAISE_CAMERA];
+    const int camera_released =
+        special_action_previous_down[MIKUPAN_SPECIAL_ACTION_RAISE_CAMERA]
+        && !down[MIKUPAN_SPECIAL_ACTION_RAISE_CAMERA];
+
+    if (!MikuPan_SpecialActionsEnabled())
+    {
+        if (camera_activation_mode == MIKUPAN_CAMERA_ACTIVATION_HOLD
+            && camera_binding.kind != MIKUPAN_INPUT_BIND_MOUSE_WHEEL
+            && camera_hold_engaged && camera_released)
+        {
+            if (MikuPan_IsFinderInputMode())
+            {
+                camera_hold_release_pending = 1;
+            }
+            else
+            {
+                camera_hold_engaged = 0;
+                camera_hold_release_pending = 0;
+            }
+        }
+
+        if (sys_wrk.game_mode != GAME_MODE_INGAME
+            || (!MikuPan_IsFinderInputMode()
+                && plyr_wrk.mode != PMODE_NORMAL))
+        {
+            camera_hold_engaged = 0;
+            camera_hold_release_pending = 0;
+        }
+
+        for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+        {
+            special_action_previous_down[i] = down[i];
+        }
+        camera_toggle_press_pending = 0;
+        special_film_swap_direction = 0;
+        runtime_wheel_steps = 0;
+        return;
+    }
+    int camera_pressed = 0;
+    if (camera_activation_mode == MIKUPAN_CAMERA_ACTIVATION_TOGGLE
+        || camera_binding.kind == MIKUPAN_INPUT_BIND_MOUSE_WHEEL)
+    {
+        camera_hold_engaged = 0;
+        camera_hold_release_pending = 0;
+        if (activated[MIKUPAN_SPECIAL_ACTION_RAISE_CAMERA])
+        {
+            camera_toggle_press_pending = 1;
+        }
+        if (camera_toggle_press_pending)
+        {
+            camera_pressed = 1;
+            camera_toggle_press_pending = 0;
+        }
+    }
+    else
+    {
+        const int camera_down =
+            down[MIKUPAN_SPECIAL_ACTION_RAISE_CAMERA];
+        if (activated[MIKUPAN_SPECIAL_ACTION_RAISE_CAMERA])
+        {
+            camera_hold_engaged = 1;
+            camera_hold_release_pending = 0;
+            if (plyr_wrk.mode == PMODE_NORMAL)
+            {
+                camera_pressed = 1;
+            }
+        }
+
+        if (camera_hold_engaged && camera_released)
+        {
+            if (plyr_wrk.mode == PMODE_FINDER)
+            {
+                camera_pressed = 1;
+                camera_hold_engaged = 0;
+            }
+            else if (MikuPan_IsFinderInputMode())
+            {
+                camera_hold_release_pending = 1;
+            }
+            else
+            {
+                camera_hold_engaged = 0;
+            }
+        }
+
+        if (camera_hold_release_pending)
+        {
+            if (plyr_wrk.mode == PMODE_FINDER)
+            {
+                camera_pressed = 1;
+                camera_hold_engaged = 0;
+                camera_hold_release_pending = 0;
+            }
+            else if (!MikuPan_IsFinderInputMode())
+            {
+                camera_hold_engaged = 0;
+                camera_hold_release_pending = 0;
+            }
+        }
+    }
+
+    if (camera_pressed
+        && (plyr_wrk.mode == PMODE_NORMAL || MikuPan_IsFinderInputMode()))
+    {
+        MikuPan_InjectSpecialAction(
+            pressed_buttons,
+            MikuPan_KeyProfileUsesFinderShoulderToggle() ? 10 : 7);
+    }
+
+    if (plyr_wrk.mode == PMODE_NORMAL
+        && down[MIKUPAN_SPECIAL_ACTION_RUN])
+    {
+        MikuPan_InjectSpecialAction(pressed_buttons, 6);
+    }
+
+    if (plyr_wrk.mode == PMODE_FINDER)
+    {
+        if (down[MIKUPAN_SPECIAL_ACTION_TAKE_PHOTO]
+            || activated[MIKUPAN_SPECIAL_ACTION_TAKE_PHOTO])
+        {
+            MikuPan_InjectSpecialAction(
+                pressed_buttons,
+                MikuPan_KeyProfileUsesFinderShoulderToggle() ? 7 : 10);
+        }
+
+        if (down[MIKUPAN_SPECIAL_ACTION_SPECIAL_ABILITY]
+            || activated[MIKUPAN_SPECIAL_ACTION_SPECIAL_ABILITY])
+        {
+            MikuPan_InjectSpecialAction(pressed_buttons, 8);
+        }
+
+        if (activated[MIKUPAN_SPECIAL_ACTION_FILM_PREVIOUS])
+        {
+            special_film_swap_direction = -1;
+        }
+        if (activated[MIKUPAN_SPECIAL_ACTION_FILM_NEXT])
+        {
+            special_film_swap_direction = 1;
+        }
+    }
+
+    for (int i = 0; i < MIKUPAN_SPECIAL_ACTION_COUNT; i++)
+    {
+        special_action_previous_down[i] = down[i];
+    }
+}
+
 int MikuPan_ReadController(unsigned char *rdata)
 {
     MikuPan_ControllerDrawRemapWindow();
@@ -561,6 +1095,7 @@ int MikuPan_ReadController(unsigned char *rdata)
      * value the keyboard path rests at). */
     const int stick_center = 127;
     const bool *key_states = SDL_GetKeyboardState(NULL);
+    int pressed_buttons[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {};
 
     /* Buttons: OR the two sources per logical button, then flip the bit once.
      * XOR-ing per source would cancel out when both press the same button. */
@@ -589,13 +1124,22 @@ int MikuPan_ReadController(unsigned char *rdata)
         if (!pressed && key_states != NULL)
         {
             int sc = mikupan_keyboard_map[i];
-            if (sc >= 0 && sc < SDL_SCANCODE_COUNT && key_states[sc])
+            if (sc >= 0 && sc < SDL_SCANCODE_COUNT
+                && !MikuPan_ScancodeBoundToSpecialAction(sc)
+                && key_states[sc])
             {
                 pressed = 1;
             }
         }
 
-        data[1] ^= pressed ? mikupan_controller_game_bitmask[i] : 0;
+        pressed_buttons[i] = pressed;
+    }
+
+    MikuPan_ApplySpecialActions(pressed_buttons, key_states);
+
+    for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
+    {
+        data[1] ^= pressed_buttons[i] ? mikupan_controller_game_bitmask[i] : 0;
     }
 
     /* Sticks: combine both sources per axis, keeping whichever is deflected
@@ -909,6 +1453,50 @@ const char *MikuPan_ControllerScanCodeLabel(int scancode)
     }
 
     return name;
+}
+
+const char *MikuPan_InputBindingLabel(MikuPan_InputBinding binding)
+{
+    if (binding.kind == MIKUPAN_INPUT_BIND_KEYBOARD)
+    {
+        return MikuPan_ControllerScanCodeLabel(binding.code);
+    }
+
+    if (binding.kind == MIKUPAN_INPUT_BIND_MOUSE_BUTTON)
+    {
+        switch (binding.code)
+        {
+            case SDL_BUTTON_LEFT:
+                return "Left Mouse";
+            case SDL_BUTTON_MIDDLE:
+                return "Middle Mouse";
+            case SDL_BUTTON_RIGHT:
+                return "Right Mouse";
+            case SDL_BUTTON_X1:
+                return "Mouse 4";
+            case SDL_BUTTON_X2:
+                return "Mouse 5";
+            default:
+                return "<unknown mouse button>";
+        }
+    }
+
+    if (binding.kind == MIKUPAN_INPUT_BIND_MOUSE_WHEEL)
+    {
+        return binding.code > 0 ? "Wheel Up" : "Wheel Down";
+    }
+
+    return "<unmapped>";
+}
+
+const char *MikuPan_SpecialActionLabel(int action)
+{
+    if (action < 0 || action >= MIKUPAN_SPECIAL_ACTION_COUNT)
+    {
+        return "<unknown action>";
+    }
+
+    return mikupan_special_action_labels[action];
 }
 
 const char *MikuPan_ControllerStickAxisLabel(int sdl_axis)

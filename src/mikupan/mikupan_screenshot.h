@@ -19,5 +19,8 @@ void MikuPan_ScreenshotCaptureIfRequested(int drawable_w, int drawable_h);
 int MikuPan_ScreenshotWritePng(const char *path,
                                const unsigned char *rgba,
                                int width, int height);
+int MikuPan_ScreenshotWritePngRgba(const char *path,
+                                   const unsigned char *rgba,
+                                   int width, int height);
 
 #endif //MIKUPAN_MIKUPAN_SCREENSHOT_H

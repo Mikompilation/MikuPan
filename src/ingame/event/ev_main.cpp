@@ -3,6 +3,7 @@
 #include "typedefs.h"
 #include "ev_main.h"
 
+#include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_memory.h"
 
 #include <string.h>
@@ -954,11 +955,18 @@ u_char EventOpenJudge(short int event_no)
         }
     }
 
-    if (((u_char *)addr)[3] < 190 && plyr_wrk.mode == PMODE_FINDER)
+    const u_char event_type = ((u_char *)addr)[3];
+    const int keep_finder_raised =
+        mikupan_configuration.keep_finder_raised_for_apparitions != 0
+        && event_type == 20;
+
+    if (!keep_finder_raised && event_type < 190
+        && plyr_wrk.mode == PMODE_FINDER)
     {
         FinderEndSet();
     }
-    else if ((((u_char *)addr)[3] == 0xff) && plyr_wrk.mode == PMODE_FINDER)
+    else if (!keep_finder_raised && event_type == 0xff
+             && plyr_wrk.mode == PMODE_FINDER)
     {
         FinderEndSet();
     }

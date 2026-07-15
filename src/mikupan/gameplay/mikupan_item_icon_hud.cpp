@@ -8,6 +8,7 @@
 #include "ingame/plyr/plyr_ctl.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_utils.h"
+#include "mikupan/io/mikupan_controller.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -465,6 +466,12 @@ static void MikuPanDrawItemIconSlotFrame(float x, float y, float outer_w, float 
 
 static int MikuPanFinderFilmSwapInputDirection()
 {
+    const int special_direction = MikuPan_ConsumeSpecialFilmSwapDirection();
+    if (special_direction != 0)
+    {
+        return special_direction;
+    }
+
     if (!MikuPan_FinderDpadFilmSwapEnabled())
     {
         return 0;

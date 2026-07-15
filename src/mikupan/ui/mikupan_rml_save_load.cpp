@@ -5,6 +5,7 @@
 #include "enums.h"
 #include "graphics/graph2d/message.h"
 #include "graphics/graph2d/tim2.h"
+#include "ingame/event/ev_load.h"
 #include "ingame/info/inf_disp.h"
 #include "ingame/menu/ig_menu.h"
 #include "main/glob.h"
@@ -14,6 +15,7 @@
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_screenshot.h"
 #include "mikupan/io/mikupan_file.h"
+#include "os/eeiop/cdvd/eecdvd.h"
 
 #include "RmlUi/Core.h"
 #include "RmlUi/Core/ElementDocument.h"
@@ -28,6 +30,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -37,12 +40,34 @@ int MikuPan_ReadResolvedFramebufferRGBA8TopLeft(int width,
                                                 int height,
                                                 unsigned char* out_rgba);
 
+extern SPRT_DAT msel_sprt[148];
+
 struct MikuPanSaveGameplayData
 {
     INGAME_WRK ingame{};
     CAM_CUSTOM_WRK camera{};
     std::array<u_char, sizeof(poss_item)> items{};
     bool available = false;
+};
+
+struct MikuPanChapterCardRequest
+{
+    std::filesystem::path cache_path;
+    std::vector<unsigned char> package_data;
+    int mission = -1;
+    int language = 0;
+    int load_id = -1;
+    bool complete = false;
+    bool failed = false;
+};
+
+struct MikuPanSaveLoadFilmHeaderRequest
+{
+    std::filesystem::path cache_path;
+    std::vector<unsigned char> package_data;
+    int load_id = -1;
+    bool complete = false;
+    bool failed = false;
 };
 
 struct MikuPanSaveEntry
@@ -114,7 +139,7 @@ struct MikuPanRmlSaveLoadState
     Rml::Context* context = nullptr;
     Rml::ElementDocument* document = nullptr;
     Rml::Element* root = nullptr;
-    Rml::Element* header_board = nullptr;
+    Rml::Element* film_strip = nullptr;
     Rml::Element* title = nullptr;
     Rml::Element* exit_button = nullptr;
     Rml::Element* exit_label = nullptr;
@@ -145,8 +170,13 @@ struct MikuPanRmlSaveLoadState
 };
 
 static MikuPanRmlSaveLoadState g_save_load;
+static std::vector<MikuPanChapterCardRequest> g_chapter_card_requests;
+static int g_chapter_card_active_request = -1;
+static MikuPanSaveLoadFilmHeaderRequest g_film_header_request;
 static constexpr int kPreviewWidth = 320;
 static constexpr int kPreviewHeight = 180;
+static constexpr int kChapterCardWidth = 640;
+static constexpr int kChapterCardHeight = 448;
 static bool MikuPan_RmlSaveLoadPreviewUsable(
     const std::vector<unsigned char>& pixels)
 {
@@ -191,16 +221,6 @@ static void MikuPan_RmlSaveLoadSetHidden(Rml::Element* element, bool hidden)
     if (element != nullptr)
     {
         element->SetClass("hidden", hidden);
-    }
-}
-
-static void MikuPan_RmlSaveLoadApplyHeaderTexture(void)
-{
-    if (g_save_load.header_board != nullptr)
-    {
-        g_save_load.header_board->SetProperty(
-            "decorator",
-            "image(\"mikupan-tm2-header://pl_stts/0005.tm2\")");
     }
 }
 
@@ -572,6 +592,26 @@ static std::string MikuPan_RmlSaveLoadNightName(
     return "Night " + std::to_string(mission);
 }
 
+static std::string MikuPan_RmlSaveLoadNightLabel(
+    const MC_GAME_HEADER& header)
+{
+    switch (header.msn_no)
+    {
+    case 0:
+        return "Intro";
+    case 1:
+        return "1st Night";
+    case 2:
+        return "2nd Night";
+    case 3:
+        return "3rd Night";
+    case 4:
+        return "4th Night";
+    default:
+        return "Clear Data";
+    }
+}
+
 static std::string MikuPan_RmlSaveLoadRoomName(
     const MC_GAME_HEADER& header)
 {
@@ -584,6 +624,731 @@ static std::string MikuPan_RmlSaveLoadRoomName(
     char buffer[64];
     std::snprintf(buffer, sizeof(buffer), "Room %03u", header.room_no);
     return buffer;
+}
+
+static bool MikuPan_RmlSaveLoadIsChapterSave(
+    const MC_GAME_HEADER& header)
+{
+    return header.msn_flg != 0 && header.msn_no <= 4;
+}
+
+static int MikuPan_RmlSaveLoadChapterLanguage(
+    const MC_GAME_HEADER& header)
+{
+#ifdef BUILD_EU_VERSION
+    return std::clamp<int>(header.language & 0x7f, 0, 4);
+#else
+    (void)header;
+    return 0;
+#endif
+}
+
+static int MikuPan_RmlSaveLoadChapterFileNumber(int mission, int language)
+{
+#ifdef BUILD_EU_VERSION
+    return MSN00TTL_E_PK2 + mission * 5 + language;
+#else
+    (void)language;
+    return MSN00TTL_PK2 + mission;
+#endif
+}
+
+static std::filesystem::path MikuPan_RmlSaveLoadChapterCardPath(
+    const std::filesystem::path& directory,
+    int mission,
+    int language)
+{
+    char filename[80];
+#ifdef BUILD_EU_VERSION
+    std::snprintf(filename,
+                  sizeof(filename),
+                  "chapter_card_%02d_lang_%d.png",
+                  mission,
+                  language);
+#else
+    (void)language;
+    std::snprintf(filename,
+                  sizeof(filename),
+                  "chapter_card_%02d.png",
+                  mission);
+#endif
+    return directory / "MikuPanPreviewCache" / filename;
+}
+
+static MikuPanChapterCardRequest* MikuPan_RmlSaveLoadFindChapterCardRequest(
+    int mission,
+    int language)
+{
+    const auto request = std::find_if(
+        g_chapter_card_requests.begin(),
+        g_chapter_card_requests.end(),
+        [mission, language](const MikuPanChapterCardRequest& entry) {
+            return entry.mission == mission && entry.language == language;
+        });
+    return request != g_chapter_card_requests.end() ? &*request : nullptr;
+}
+
+static void MikuPan_RmlSaveLoadRequestChapterCard(
+    const std::filesystem::path& directory,
+    const MC_GAME_HEADER& header)
+{
+    if (!MikuPan_RmlSaveLoadIsChapterSave(header))
+    {
+        return;
+    }
+
+    const int mission = static_cast<int>(header.msn_no);
+    const int language = MikuPan_RmlSaveLoadChapterLanguage(header);
+    if (MikuPan_RmlSaveLoadFindChapterCardRequest(mission, language) != nullptr)
+    {
+        return;
+    }
+
+    MikuPanChapterCardRequest request;
+    request.mission = mission;
+    request.language = language;
+    request.cache_path = MikuPan_RmlSaveLoadChapterCardPath(
+        directory, mission, language);
+    g_chapter_card_requests.push_back(std::move(request));
+}
+
+static void MikuPan_RmlSaveLoadRequestAllChapterCards(
+    const std::filesystem::path& directory)
+{
+#ifdef BUILD_EU_VERSION
+    const int language = std::clamp<int>(sys_wrk.language, 0, 4);
+#else
+    const int language = 0;
+#endif
+
+    for (int mission = 0; mission <= 4; mission++)
+    {
+        MC_GAME_HEADER header{};
+        header.msn_flg = 1;
+        header.msn_no = static_cast<u_int>(mission);
+#ifdef BUILD_EU_VERSION
+        header.language = static_cast<u_char>(language);
+#endif
+        MikuPan_RmlSaveLoadRequestChapterCard(directory, header);
+    }
+}
+
+static std::filesystem::path MikuPan_RmlSaveLoadFilmHeaderPath(
+    const std::filesystem::path& directory)
+{
+    return directory / "MikuPanPreviewCache" / "film_header_full.png";
+}
+
+static int MikuPan_RmlSaveLoadFilmHeaderFileNumber(void)
+{
+#ifdef BUILD_EU_VERSION
+    return M_SLCT_CMN_E_PK2 + std::clamp<int>(sys_wrk.language, 0, 4);
+#else
+    return M_SLCT_CMN_PK2;
+#endif
+}
+
+static TIM2_PICTUREHEADER* MikuPan_RmlSaveLoadFindFilmHeaderPicture(
+    std::vector<unsigned char>& package_data,
+    const SPRT_DAT& sprite)
+{
+    if (package_data.size() < 20)
+    {
+        return nullptr;
+    }
+
+    const auto* package = reinterpret_cast<const uint32_t*>(
+        package_data.data());
+    const int texture_count = static_cast<int>(package[0]);
+    if (texture_count <= 0 || texture_count > 256)
+    {
+        return nullptr;
+    }
+
+    const auto* sprite_tex0 = reinterpret_cast<const sceGsTex0*>(&sprite.tex0);
+    for (int texture_index = 0; texture_index < texture_count; texture_index++)
+    {
+        const size_t table_offset = static_cast<size_t>(4 + texture_index)
+            * sizeof(uint32_t);
+        if (table_offset + sizeof(uint32_t) > package_data.size())
+        {
+            break;
+        }
+
+        const uint32_t offset = package[4 + texture_index];
+        if (offset < 16 || offset >= package_data.size())
+        {
+            continue;
+        }
+
+        void* tim2 = package_data.data() + offset;
+        if (Tim2CheckFileHeaer(tim2) == 0)
+        {
+            continue;
+        }
+
+        const auto* file_header = reinterpret_cast<const TIM2_FILEHEADER*>(tim2);
+        const int picture_count = std::clamp<int>(file_header->Pictures, 0, 64);
+        for (int picture_index = 0; picture_index < picture_count; picture_index++)
+        {
+            TIM2_PICTUREHEADER* picture = Tim2GetPictureHeader(
+                tim2, picture_index);
+            if (picture == nullptr || picture->TotalSize == 0
+                || picture->TotalSize > package_data.size() - offset
+                || picture->ImageWidth == 0 || picture->ImageHeight == 0
+                || static_cast<int>(sprite.u) + static_cast<int>(sprite.w)
+                       > picture->ImageWidth
+                || static_cast<int>(sprite.v) + static_cast<int>(sprite.h)
+                       > picture->ImageHeight)
+            {
+                continue;
+            }
+
+            const auto* picture_tex0 = reinterpret_cast<const sceGsTex0*>(
+                &picture->GsTex0);
+            if (picture_tex0->TBP0 == sprite_tex0->TBP0
+                && picture_tex0->TBW == sprite_tex0->TBW
+                && picture_tex0->PSM == sprite_tex0->PSM
+                && picture_tex0->TW == sprite_tex0->TW
+                && picture_tex0->TH == sprite_tex0->TH
+                && picture_tex0->CBP == sprite_tex0->CBP)
+            {
+                return picture;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+static void MikuPan_RmlSaveLoadBlendFilmHeaderPixel(
+    unsigned char* destination,
+    u_int color)
+{
+    const unsigned int source_alpha = std::min(
+        255u, ((color >> 24) & 0xffu) * 2u);
+    if (source_alpha == 0)
+    {
+        return;
+    }
+
+    const unsigned int source_red = color & 0xffu;
+    const unsigned int source_green = (color >> 16) & 0xffu;
+    const unsigned int source_blue = (color >> 8) & 0xffu;
+    const unsigned int destination_alpha = destination[3];
+    const unsigned int inverse_alpha = 255u - source_alpha;
+    const unsigned int output_alpha = source_alpha
+        + (destination_alpha * inverse_alpha + 127u) / 255u;
+
+    const auto blend_channel = [&](unsigned int source_channel,
+                                   unsigned int destination_channel) {
+        const unsigned int source_premultiplied =
+            source_channel * source_alpha;
+        const unsigned int destination_premultiplied =
+            (destination_channel * destination_alpha * inverse_alpha + 127u)
+            / 255u;
+        return static_cast<unsigned char>(
+            (source_premultiplied + destination_premultiplied
+             + output_alpha / 2u)
+            / output_alpha);
+    };
+
+    destination[0] = blend_channel(source_red, destination[0]);
+    destination[1] = blend_channel(source_green, destination[1]);
+    destination[2] = blend_channel(source_blue, destination[2]);
+    destination[3] = static_cast<unsigned char>(output_alpha);
+}
+
+static bool MikuPan_RmlSaveLoadWriteFilmHeader(void)
+{
+    static constexpr std::array<int, 2> sprite_indices = {0, 7};
+
+    int minimum_x = std::numeric_limits<int>::max();
+    int minimum_y = std::numeric_limits<int>::max();
+    int maximum_x = std::numeric_limits<int>::min();
+    int maximum_y = std::numeric_limits<int>::min();
+    for (const int sprite_index : sprite_indices)
+    {
+        const SPRT_DAT& sprite = msel_sprt[sprite_index];
+        minimum_x = std::min(minimum_x, static_cast<int>(sprite.x));
+        minimum_y = std::min(minimum_y, static_cast<int>(sprite.y));
+        maximum_x = std::max(
+            maximum_x, static_cast<int>(sprite.x) + sprite.w);
+        maximum_y = std::max(
+            maximum_y, static_cast<int>(sprite.y) + sprite.h);
+    }
+
+    const int width = maximum_x - minimum_x;
+    const int height = maximum_y - minimum_y;
+    if (width <= 0 || height <= 0)
+    {
+        return false;
+    }
+
+    std::vector<unsigned char> pixels(
+        static_cast<size_t>(width * height * 4), 0);
+
+    for (const int sprite_index : sprite_indices)
+    {
+        const SPRT_DAT& sprite = msel_sprt[sprite_index];
+        TIM2_PICTUREHEADER* picture = MikuPan_RmlSaveLoadFindFilmHeaderPicture(
+            g_film_header_request.package_data, sprite);
+        if (picture == nullptr || sprite.w <= 0 || sprite.h <= 0)
+        {
+            return false;
+        }
+
+        const int destination_x = static_cast<int>(sprite.x) - minimum_x;
+        const int destination_y = static_cast<int>(sprite.y) - minimum_y;
+        for (int y = 0; y < sprite.h; y++)
+        {
+            for (int x = 0; x < sprite.w; x++)
+            {
+                const u_int color = Tim2GetTextureColor(
+                    picture, 0, 0, sprite.u + x, sprite.v + y);
+                const size_t destination = static_cast<size_t>(
+                    ((destination_y + y) * width + destination_x + x) * 4);
+                MikuPan_RmlSaveLoadBlendFilmHeaderPixel(
+                    pixels.data() + destination, color);
+            }
+        }
+    }
+
+    std::error_code error;
+    std::filesystem::create_directories(
+        g_film_header_request.cache_path.parent_path(), error);
+    if (error)
+    {
+        return false;
+    }
+
+    return MikuPan_ScreenshotWritePngRgba(
+        g_film_header_request.cache_path.string().c_str(),
+        pixels.data(),
+        width,
+        height) != 0;
+}
+
+static void MikuPan_RmlSaveLoadApplyFilmHeader(void)
+{
+    if (g_save_load.film_strip == nullptr
+        || g_film_header_request.cache_path.empty())
+    {
+        return;
+    }
+
+    std::string source = "mikupan-save-preview://"
+        + g_film_header_request.cache_path.generic_string()
+        + "?v=film-header-full";
+    g_save_load.film_strip->SetAttribute("src", source);
+    MikuPan_RmlSaveLoadSetHidden(g_save_load.film_strip, false);
+}
+
+static void MikuPan_RmlSaveLoadRequestFilmHeader(
+    const std::filesystem::path& directory)
+{
+    const std::filesystem::path cache_path =
+        MikuPan_RmlSaveLoadFilmHeaderPath(directory);
+    if (g_film_header_request.cache_path != cache_path)
+    {
+        g_film_header_request = MikuPanSaveLoadFilmHeaderRequest();
+        g_film_header_request.cache_path = cache_path;
+    }
+
+    std::error_code error;
+    if (std::filesystem::is_regular_file(cache_path, error))
+    {
+        g_film_header_request.complete = true;
+        MikuPan_RmlSaveLoadApplyFilmHeader();
+        return;
+    }
+
+    if (g_film_header_request.load_id >= 0
+        || g_film_header_request.failed)
+    {
+        return;
+    }
+
+    const int file_number = MikuPan_RmlSaveLoadFilmHeaderFileNumber();
+    IMG_ARRANGEMENT* arrangement = GetImgArrangementP(file_number);
+    if (arrangement == nullptr || arrangement->size == 0
+        || arrangement->size > 32 * 1024 * 1024)
+    {
+        g_film_header_request.failed = true;
+        return;
+    }
+
+    g_film_header_request.package_data.assign(arrangement->size, 0);
+    g_film_header_request.load_id = LoadReqToHostPointer(
+        file_number, g_film_header_request.package_data.data());
+    if (g_film_header_request.load_id < 0)
+    {
+        g_film_header_request.package_data.clear();
+        g_film_header_request.failed = true;
+    }
+}
+
+static void MikuPan_RmlSaveLoadUpdateFilmHeader(void)
+{
+    if (g_film_header_request.complete || g_film_header_request.failed
+        || g_film_header_request.load_id < 0)
+    {
+        return;
+    }
+
+    if (IsLoadEnd(g_film_header_request.load_id) == 0)
+    {
+        return;
+    }
+
+    g_film_header_request.load_id = -1;
+    g_film_header_request.complete = MikuPan_RmlSaveLoadWriteFilmHeader();
+    g_film_header_request.failed = !g_film_header_request.complete;
+    g_film_header_request.package_data.clear();
+    if (g_film_header_request.complete)
+    {
+        MikuPan_RmlSaveLoadApplyFilmHeader();
+    }
+}
+
+static TIM2_PICTUREHEADER* MikuPan_RmlSaveLoadChapterPicture(
+    std::vector<unsigned char>& package_data,
+    int texture_index)
+{
+    if (package_data.size() < 20 || texture_index < 0)
+    {
+        return nullptr;
+    }
+
+    const auto* package = reinterpret_cast<const uint32_t*>(
+        package_data.data());
+    const int texture_count = static_cast<int>(package[0]);
+    if (texture_count <= texture_index || texture_count > 128)
+    {
+        return nullptr;
+    }
+
+    const size_t table_offset = static_cast<size_t>(4 + texture_index)
+        * sizeof(uint32_t);
+    if (table_offset + sizeof(uint32_t) > package_data.size())
+    {
+        return nullptr;
+    }
+
+    const uint32_t offset = package[4 + texture_index];
+    if (offset < 16 || offset >= package_data.size())
+    {
+        return nullptr;
+    }
+
+    void* tim2 = package_data.data() + offset;
+    if (Tim2CheckFileHeaer(tim2) == 0)
+    {
+        return nullptr;
+    }
+
+    TIM2_PICTUREHEADER* picture = Tim2GetPictureHeader(tim2, 0);
+    if (picture == nullptr || picture->TotalSize == 0
+        || picture->TotalSize > package_data.size() - offset
+        || picture->ImageWidth == 0 || picture->ImageHeight == 0
+        || picture->ImageWidth > 2048 || picture->ImageHeight > 2048)
+    {
+        return nullptr;
+    }
+    return picture;
+}
+
+static void MikuPan_RmlSaveLoadBlendChapterSprite(
+    std::vector<unsigned char>& canvas,
+    TIM2_PICTUREHEADER* picture,
+    const SPRT_SDAT& sprite,
+    unsigned int opacity)
+{
+    if (picture == nullptr || opacity == 0)
+    {
+        return;
+    }
+
+    for (int y = 0; y < sprite.h; y++)
+    {
+        const int destination_y = sprite.y + y;
+        const int source_y = sprite.v + y;
+        if (destination_y < 0 || destination_y >= kChapterCardHeight
+            || source_y < 0 || source_y >= picture->ImageHeight)
+        {
+            continue;
+        }
+
+        for (int x = 0; x < sprite.w; x++)
+        {
+            const int destination_x = sprite.x + x;
+            const int source_x = sprite.u + x;
+            if (destination_x < 0 || destination_x >= kChapterCardWidth
+                || source_x < 0 || source_x >= picture->ImageWidth)
+            {
+                continue;
+            }
+
+            const u_int color = Tim2GetTextureColor(
+                picture, 0, 0, source_x, source_y);
+            const unsigned int texture_alpha = std::min(
+                255u, ((color >> 24) & 0xffu) * 2u);
+            const unsigned int alpha = texture_alpha * opacity / 255u;
+            if (alpha == 0)
+            {
+                continue;
+            }
+
+            const unsigned int source_red = color & 0xffu;
+            const unsigned int source_green = (color >> 16) & 0xffu;
+            const unsigned int source_blue = (color >> 8) & 0xffu;
+            const size_t destination = static_cast<size_t>(
+                (destination_y * kChapterCardWidth + destination_x) * 4);
+            const unsigned int inverse_alpha = 255u - alpha;
+            canvas[destination + 0] = static_cast<unsigned char>(
+                (source_red * alpha
+                 + canvas[destination + 0] * inverse_alpha + 127u) / 255u);
+            canvas[destination + 1] = static_cast<unsigned char>(
+                (source_green * alpha
+                 + canvas[destination + 1] * inverse_alpha + 127u) / 255u);
+            canvas[destination + 2] = static_cast<unsigned char>(
+                (source_blue * alpha
+                 + canvas[destination + 2] * inverse_alpha + 127u) / 255u);
+        }
+    }
+}
+
+static void MikuPan_RmlSaveLoadScaleChapterCard(
+    const std::vector<unsigned char>& source,
+    std::vector<unsigned char>& destination)
+{
+    destination.assign(
+        static_cast<size_t>(kPreviewWidth * kPreviewHeight * 4), 0);
+    for (size_t alpha = 3; alpha < destination.size(); alpha += 4)
+    {
+        destination[alpha] = 255;
+    }
+
+    int output_width = kPreviewWidth;
+    int output_height = kChapterCardHeight * kPreviewWidth
+        / kChapterCardWidth;
+    if (output_height > kPreviewHeight)
+    {
+        output_height = kPreviewHeight;
+        output_width = kChapterCardWidth * kPreviewHeight
+            / kChapterCardHeight;
+    }
+    output_width = std::max(output_width, 1);
+    output_height = std::max(output_height, 1);
+
+    const int output_x = (kPreviewWidth - output_width) / 2;
+    const int output_y = (kPreviewHeight - output_height) / 2;
+    for (int y = 0; y < output_height; y++)
+    {
+        const float source_y = ((static_cast<float>(y) + 0.5f)
+            * static_cast<float>(kChapterCardHeight)
+            / static_cast<float>(output_height)) - 0.5f;
+        const int y0 = std::clamp(static_cast<int>(source_y),
+                                  0,
+                                  kChapterCardHeight - 1);
+        const int y1 = std::min(y0 + 1, kChapterCardHeight - 1);
+        const float fy = std::clamp(source_y - static_cast<float>(y0),
+                                    0.0f,
+                                    1.0f);
+
+        for (int x = 0; x < output_width; x++)
+        {
+            const float source_x = ((static_cast<float>(x) + 0.5f)
+                * static_cast<float>(kChapterCardWidth)
+                / static_cast<float>(output_width)) - 0.5f;
+            const int x0 = std::clamp(static_cast<int>(source_x),
+                                      0,
+                                      kChapterCardWidth - 1);
+            const int x1 = std::min(x0 + 1, kChapterCardWidth - 1);
+            const float fx = std::clamp(source_x - static_cast<float>(x0),
+                                        0.0f,
+                                        1.0f);
+
+            const size_t top_left = static_cast<size_t>(
+                (y0 * kChapterCardWidth + x0) * 4);
+            const size_t top_right = static_cast<size_t>(
+                (y0 * kChapterCardWidth + x1) * 4);
+            const size_t bottom_left = static_cast<size_t>(
+                (y1 * kChapterCardWidth + x0) * 4);
+            const size_t bottom_right = static_cast<size_t>(
+                (y1 * kChapterCardWidth + x1) * 4);
+            const size_t output = static_cast<size_t>(
+                ((output_y + y) * kPreviewWidth + output_x + x) * 4);
+
+            for (int channel = 0; channel < 3; channel++)
+            {
+                const float top = source[top_left + channel]
+                    + (source[top_right + channel]
+                       - source[top_left + channel]) * fx;
+                const float bottom = source[bottom_left + channel]
+                    + (source[bottom_right + channel]
+                       - source[bottom_left + channel]) * fx;
+                destination[output + channel] = static_cast<unsigned char>(
+                    std::clamp(top + (bottom - top) * fy, 0.0f, 255.0f));
+            }
+        }
+    }
+}
+
+static bool MikuPan_RmlSaveLoadWriteChapterCard(
+    MikuPanChapterCardRequest& request)
+{
+    if (request.mission < 0 || request.mission > 4)
+    {
+        return false;
+    }
+
+    std::vector<unsigned char> canvas(
+        static_cast<size_t>(kChapterCardWidth * kChapterCardHeight * 4), 0);
+    for (size_t alpha = 3; alpha < canvas.size(); alpha += 4)
+    {
+        canvas[alpha] = 255;
+    }
+
+    for (int index = 0; index < 11; index++)
+    {
+        MikuPan_RmlSaveLoadBlendChapterSprite(
+            canvas,
+            MikuPan_RmlSaveLoadChapterPicture(request.package_data, index),
+            msn_title_sp_bak[index],
+            255);
+    }
+
+    const int mission = request.mission;
+    TIM2_PICTUREHEADER* floor_picture = MikuPan_RmlSaveLoadChapterPicture(
+        request.package_data, msn_title_sp_flr_no[mission]);
+    for (int index = 0; index < msn_title_flr_sp_num[mission]; index++)
+    {
+        MikuPan_RmlSaveLoadBlendChapterSprite(
+            canvas,
+            floor_picture,
+            msn_title_sp_flr[mission][index],
+            140);
+    }
+
+    TIM2_PICTUREHEADER* title_picture = MikuPan_RmlSaveLoadChapterPicture(
+        request.package_data, msn_title_sp_ttl_no[mission]);
+    for (int index = 0; index < msn_title_ttl_sp_num[mission]; index++)
+    {
+        MikuPan_RmlSaveLoadBlendChapterSprite(
+            canvas,
+            title_picture,
+            msn_title_sp_ttl[mission][index],
+            255);
+    }
+
+    std::vector<unsigned char> preview;
+    MikuPan_RmlSaveLoadScaleChapterCard(canvas, preview);
+
+    std::error_code error;
+    std::filesystem::create_directories(
+        request.cache_path.parent_path(), error);
+    if (error)
+    {
+        return false;
+    }
+
+    return MikuPan_ScreenshotWritePng(request.cache_path.string().c_str(),
+                                      preview.data(),
+                                      kPreviewWidth,
+                                      kPreviewHeight) != 0;
+}
+
+static void MikuPan_RmlSaveLoadApplyChapterCard(
+    const MikuPanChapterCardRequest& request)
+{
+    bool changed = false;
+    for (MikuPanSaveEntry& entry : g_save_load.entries)
+    {
+        if (!MikuPan_RmlSaveLoadIsChapterSave(entry.header)
+            || static_cast<int>(entry.header.msn_no) != request.mission
+            || MikuPan_RmlSaveLoadChapterLanguage(entry.header)
+                   != request.language)
+        {
+            continue;
+        }
+
+        entry.thumbnail_path = request.cache_path;
+        changed = true;
+    }
+
+    if (changed)
+    {
+        g_save_load.detail_selection = -2;
+    }
+}
+
+static void MikuPan_RmlSaveLoadUpdateChapterCards(void)
+{
+    if (g_chapter_card_active_request >= 0)
+    {
+        MikuPanChapterCardRequest& request =
+            g_chapter_card_requests[g_chapter_card_active_request];
+        if (IsLoadEnd(request.load_id) == 0)
+        {
+            return;
+        }
+
+        request.load_id = -1;
+        request.complete = MikuPan_RmlSaveLoadWriteChapterCard(request);
+        request.failed = !request.complete;
+        request.package_data.clear();
+        if (request.complete)
+        {
+            MikuPan_RmlSaveLoadApplyChapterCard(request);
+        }
+        g_chapter_card_active_request = -1;
+    }
+
+    for (size_t index = 0; index < g_chapter_card_requests.size(); index++)
+    {
+        MikuPanChapterCardRequest& request = g_chapter_card_requests[index];
+        if (request.complete || request.failed || request.load_id >= 0)
+        {
+            continue;
+        }
+
+        std::error_code error;
+        if (std::filesystem::is_regular_file(request.cache_path, error))
+        {
+            request.complete = true;
+            MikuPan_RmlSaveLoadApplyChapterCard(request);
+            continue;
+        }
+
+        const int file_number = MikuPan_RmlSaveLoadChapterFileNumber(
+            request.mission, request.language);
+        IMG_ARRANGEMENT* arrangement = GetImgArrangementP(file_number);
+        if (arrangement == nullptr || arrangement->size == 0
+            || arrangement->size > 32 * 1024 * 1024)
+        {
+            request.failed = true;
+            continue;
+        }
+
+        request.package_data.assign(arrangement->size, 0);
+        request.load_id = LoadReqToHostPointer(
+            file_number, request.package_data.data());
+        if (request.load_id < 0)
+        {
+            request.package_data.clear();
+            return;
+        }
+
+        g_chapter_card_active_request = static_cast<int>(index);
+        return;
+    }
+}
+
+static bool MikuPan_RmlSaveLoadShouldPreferOriginalPreview(
+    const MC_GAME_HEADER& header)
+{
+    return header.clear_flg != 0 || header.msn_flg != 0;
 }
 
 static int MikuPan_RmlSaveLoadOriginalPreviewSprite(
@@ -810,6 +1575,9 @@ static void MikuPan_RmlSaveLoadScan(void)
     std::filesystem::create_directories(directory, error);
     error.clear();
 
+    MikuPan_RmlSaveLoadRequestAllChapterCards(directory);
+    MikuPan_RmlSaveLoadRequestFilmHeader(directory);
+
     std::filesystem::directory_iterator iterator(directory, error);
     std::filesystem::directory_iterator end;
     for (; !error && iterator != end; iterator.increment(error))
@@ -840,23 +1608,55 @@ static void MikuPan_RmlSaveLoadScan(void)
         std::filesystem::path captured_preview = entry.path;
         captured_preview.replace_extension(".png");
 
+        const std::filesystem::path original_preview =
+            MikuPan_RmlSaveLoadOriginalPreviewPath(directory, entry.header);
+        const bool chapter_save =
+            MikuPan_RmlSaveLoadIsChapterSave(entry.header);
+        const int chapter_language =
+            MikuPan_RmlSaveLoadChapterLanguage(entry.header);
+        const std::filesystem::path chapter_preview = chapter_save
+            ? MikuPan_RmlSaveLoadChapterCardPath(
+                  directory,
+                  static_cast<int>(entry.header.msn_no),
+                  chapter_language)
+            : std::filesystem::path();
+        const bool prefer_original_preview =
+            MikuPan_RmlSaveLoadShouldPreferOriginalPreview(entry.header);
+
         error.clear();
-        if (entry.mikupan_save
+        if (chapter_save
+            && std::filesystem::is_regular_file(chapter_preview, error))
+        {
+            entry.thumbnail_path = chapter_preview;
+        }
+        else if (chapter_save)
+        {
+            MikuPan_RmlSaveLoadRequestChapterCard(directory, entry.header);
+        }
+
+        error.clear();
+        if (entry.thumbnail_path.empty() && prefer_original_preview
+            && (std::filesystem::is_regular_file(original_preview, error)
+                || MikuPan_RmlSaveLoadWriteOriginalPreview(original_preview,
+                                                           entry.header)))
+        {
+            entry.thumbnail_path = original_preview;
+        }
+
+        error.clear();
+        if (entry.thumbnail_path.empty() && entry.mikupan_save
             && std::filesystem::is_regular_file(captured_preview, error))
         {
             entry.thumbnail_path = captured_preview;
         }
-        else
-        {
-            const std::filesystem::path original_preview =
-                MikuPan_RmlSaveLoadOriginalPreviewPath(directory, entry.header);
-            error.clear();
-            if (std::filesystem::is_regular_file(original_preview, error)
+
+        error.clear();
+        if (entry.thumbnail_path.empty()
+            && (std::filesystem::is_regular_file(original_preview, error)
                 || MikuPan_RmlSaveLoadWriteOriginalPreview(original_preview,
-                                                           entry.header))
-            {
-                entry.thumbnail_path = original_preview;
-            }
+                                                           entry.header)))
+        {
+            entry.thumbnail_path = original_preview;
         }
         error.clear();
 
@@ -1273,10 +2073,13 @@ static void MikuPan_RmlSaveLoadSyncDetail(void)
         + "</span></div>"
         "<div class=\"save-detail-location-line\">"
         "<span class=\"save-detail-location\">"
+        "<span class=\"save-detail-night\">"
+        + MikuPan_RmlSaveLoadNightLabel(entry.header)
+        + "</span><span class=\"save-detail-location-copy\">  ·  "
         + MikuPan_RmlSaveLoadEscape(entry.night_name, false)
         + "  -  "
         + MikuPan_RmlSaveLoadEscape(entry.room_name, false)
-        + "</span>"
+        + "</span></span>"
         + clear_rml
         + "</div>"
         "<div class=\"save-detail-stats\">"
@@ -1597,8 +2400,8 @@ static bool MikuPan_RmlSaveLoadLoadDocument(void)
     }
 
     g_save_load.root = MikuPan_RmlSaveLoadGetElement("save-load-root");
-    g_save_load.header_board =
-        MikuPan_RmlSaveLoadGetElement("save-load-header-board");
+    g_save_load.film_strip =
+        MikuPan_RmlSaveLoadGetElement("save-load-film-strip");
     g_save_load.title = MikuPan_RmlSaveLoadGetElement("save-load-title");
     g_save_load.exit_button =
         MikuPan_RmlSaveLoadGetElement("save-load-exit");
@@ -1723,6 +2526,12 @@ void MikuPan_RmlSaveLoadStartFrame(void)
         return;
     }
 
+    MikuPan_RmlSaveLoadUpdateFilmHeader();
+    if (g_film_header_request.load_id < 0)
+    {
+        MikuPan_RmlSaveLoadUpdateChapterCards();
+    }
+
     const bool icons_ready = MikuPan_RmlUiItemIconsReady() != 0;
     if (icons_ready != g_save_load.detail_icons_ready)
     {
@@ -1775,14 +2584,13 @@ void MikuPan_RmlSaveLoadOpenSave(int mission_flag)
     g_save_load.confirm_selection = 1;
     g_save_load.exit_selected = false;
     g_save_load.queued_result = MIKUPAN_RML_SAVE_LOAD_RESULT_NONE;
-    MikuPan_RmlSaveLoadApplyHeaderTexture();
     MikuPan_RmlSaveLoadScan();
     MikuPan_RmlSaveLoadBuildList();
     MikuPan_RmlSaveLoadSetStatus(
         "Create a new save or select an existing save to replace.", false);
     if (g_save_load.title != nullptr)
     {
-        g_save_load.title->SetInnerRML("Save File");
+        g_save_load.title->SetInnerRML("SAVE FILE");
     }
     if (g_save_load.exit_label != nullptr)
     {
@@ -1820,7 +2628,6 @@ void MikuPan_RmlSaveLoadOpenLoad(void)
     g_save_load.confirm_selection = 1;
     g_save_load.exit_selected = false;
     g_save_load.queued_result = MIKUPAN_RML_SAVE_LOAD_RESULT_NONE;
-    MikuPan_RmlSaveLoadApplyHeaderTexture();
     MikuPan_RmlSaveLoadScan();
     MikuPan_RmlSaveLoadBuildList();
     MikuPan_RmlSaveLoadSetStatus(
@@ -1830,7 +2637,7 @@ void MikuPan_RmlSaveLoadOpenLoad(void)
         false);
     if (g_save_load.title != nullptr)
     {
-        g_save_load.title->SetInnerRML("Load File");
+        g_save_load.title->SetInnerRML("LOAD FILE");
     }
     if (g_save_load.exit_label != nullptr)
     {

@@ -295,6 +295,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/rendering/mikupan_gpu.cpp
         src/mikupan/rendering/mikupan_camera.cpp
         src/mikupan/rendering/mikupan_debug_draw.cpp
+        src/mikupan/rendering/mikupan_flashlight_dust.cpp
+        src/mikupan/rendering/mikupan_flashlight_dust.h
         src/mikupan/rendering/mikupan_lighting.cpp
         src/mikupan/rendering/mikupan_mesh_render.cpp
         src/mikupan/rendering/mikupan_renderer.cpp

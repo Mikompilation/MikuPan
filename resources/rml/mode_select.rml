@@ -8,16 +8,83 @@
     <div id="mode-select-root" class="hidden">
         <div id="mode-select-main-panel">
             <div id="mode-select-main-menu">
-                <button id="mode-select-main-0" class="mode-select-main-button">Story Mode</button>
-                <button id="mode-select-main-1" class="mode-select-main-button">Battle Mode</button>
-                <button id="mode-select-main-2" class="mode-select-main-button">Option</button>
-                <button id="mode-select-main-3" class="mode-select-main-button">Sound Test</button>
-                <button id="mode-select-main-4" class="mode-select-main-button">Exit</button>
+                <div class="mode-select-film-title">MODE SELECT</div>
+                <button id="mode-select-main-0" class="mode-select-main-button">
+                    <span class="mode-select-main-board">
+                        <span class="mode-select-main-board-backing left"></span>
+                        <span class="mode-select-main-board-backing center"></span>
+                        <span class="mode-select-main-board-backing right"></span>
+                        <span class="mode-select-main-board-line top left"></span>
+                        <span class="mode-select-main-board-line top center"></span>
+                        <span class="mode-select-main-board-line top right"></span>
+                        <span class="mode-select-main-board-line bottom left"></span>
+                        <span class="mode-select-main-board-line bottom center"></span>
+                        <span class="mode-select-main-board-line bottom right"></span>
+                    </span>
+                    <span class="mode-select-main-label">Story Mode</span>
+                </button>
+                <button id="mode-select-main-1" class="mode-select-main-button">
+                    <span class="mode-select-main-board">
+                        <span class="mode-select-main-board-backing left"></span>
+                        <span class="mode-select-main-board-backing center"></span>
+                        <span class="mode-select-main-board-backing right"></span>
+                        <span class="mode-select-main-board-line top left"></span>
+                        <span class="mode-select-main-board-line top center"></span>
+                        <span class="mode-select-main-board-line top right"></span>
+                        <span class="mode-select-main-board-line bottom left"></span>
+                        <span class="mode-select-main-board-line bottom center"></span>
+                        <span class="mode-select-main-board-line bottom right"></span>
+                    </span>
+                    <span class="mode-select-main-label">Battle Mode</span>
+                </button>
+                <button id="mode-select-main-2" class="mode-select-main-button">
+                    <span class="mode-select-main-board">
+                        <span class="mode-select-main-board-backing left"></span>
+                        <span class="mode-select-main-board-backing center"></span>
+                        <span class="mode-select-main-board-backing right"></span>
+                        <span class="mode-select-main-board-line top left"></span>
+                        <span class="mode-select-main-board-line top center"></span>
+                        <span class="mode-select-main-board-line top right"></span>
+                        <span class="mode-select-main-board-line bottom left"></span>
+                        <span class="mode-select-main-board-line bottom center"></span>
+                        <span class="mode-select-main-board-line bottom right"></span>
+                    </span>
+                    <span class="mode-select-main-label">Option</span>
+                </button>
+                <button id="mode-select-main-3" class="mode-select-main-button">
+                    <span class="mode-select-main-board">
+                        <span class="mode-select-main-board-backing left"></span>
+                        <span class="mode-select-main-board-backing center"></span>
+                        <span class="mode-select-main-board-backing right"></span>
+                        <span class="mode-select-main-board-line top left"></span>
+                        <span class="mode-select-main-board-line top center"></span>
+                        <span class="mode-select-main-board-line top right"></span>
+                        <span class="mode-select-main-board-line bottom left"></span>
+                        <span class="mode-select-main-board-line bottom center"></span>
+                        <span class="mode-select-main-board-line bottom right"></span>
+                    </span>
+                    <span class="mode-select-main-label">Sound Test</span>
+                </button>
+                <button id="mode-select-main-4" class="mode-select-main-button">
+                    <span class="mode-select-main-board">
+                        <span class="mode-select-main-board-backing left"></span>
+                        <span class="mode-select-main-board-backing center"></span>
+                        <span class="mode-select-main-board-backing right"></span>
+                        <span class="mode-select-main-board-line top left"></span>
+                        <span class="mode-select-main-board-line top center"></span>
+                        <span class="mode-select-main-board-line top right"></span>
+                        <span class="mode-select-main-board-line bottom left"></span>
+                        <span class="mode-select-main-board-line bottom center"></span>
+                        <span class="mode-select-main-board-line bottom right"></span>
+                    </span>
+                    <span class="mode-select-main-label">Exit</span>
+                </button>
             </div>
         </div>
 
-        <div id="mode-select-story-panel" class="hidden">
+        <div id="mode-select-story-panel" class="mode-select-panel-hidden">
             <div id="mode-select-story-menu">
+                <div class="mode-select-film-title">STORY MODE</div>
                 <div id="mode-select-story-row-0" class="mode-select-story-row selector-row">
                     <div class="mode-select-story-board">
                         <span class="mode-select-story-board-backing left"></span>

@@ -33,6 +33,7 @@
 #include "os/eeiop/se_trans.h"
 
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/rendering/mikupan_flashlight_dust.h"
 
 #include <math.h>
 #include <string.h>
@@ -1037,6 +1038,7 @@ void DoorCtrlMain()
     DoorCtrlOpen();
     DoorCtrlAutoClose();
     DoorCtrlNoClose();
+    MikuPan_UpdateDoorDustTriggers();
 }
 
 u_char IsDoorOpenCtrlMode()

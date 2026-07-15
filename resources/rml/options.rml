@@ -3,6 +3,7 @@
     <link type="text/rcss" href="options.rcss"/>
 </head>
 <body id="options-root">
+    <div id="options-film-title">OPTIONS</div>
     <div id="window">
         <div id="classic-window-backdrop">
             <div class="classic-window-backdrop-part left"></div>
@@ -100,13 +101,13 @@
                         <div class="controls-bind-row controls-option-row"><span class="controls-bind-label">D-Pad Film Swap</span><button id="finder-dpad-film-swap-mode" class="controls-option-button">Off</button></div>
                     </div>
                     <div id="controls-tabs">
-                        <button id="controls-keyboard-tab" class="controls-tab selected">Keyboard</button>
+                        <button id="controls-keyboard-tab" class="controls-tab selected">Keyboard / Mouse</button>
                         <button id="controls-controller-tab" class="controls-tab">Controller</button>
                     </div>
-                    <div id="controls-help" class="setting-desc">Select a movement style, or click a binding then press the key or controller input to assign.</div>
+                    <div id="controls-help" class="setting-desc">Select a movement style, or click a binding then press a key, mouse input, or controller input to assign.</div>
                     <div id="controls-list"></div>
                     <div class="setting-row compact controls-actions-row">
-                        <div class="setting-copy"><span class="setting-title">Defaults</span><p class="setting-desc">Restore keyboard and controller bindings.</p></div>
+                        <div class="setting-copy"><span class="setting-title">Defaults</span><p class="setting-desc">Restore keyboard, mouse, and controller bindings.</p></div>
                         <div class="setting-control"><button id="controls-reset-button">Defaults</button></div>
                     </div>
                 </div>
@@ -123,6 +124,14 @@
                     <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="font-scale-stepper">Font Scale <span id="font-scale-value" class="value"></span></label><p class="setting-desc">Adjust interface text size.</p></div><div class="setting-control"><button id="font-scale-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="font-scale-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div></div>
 
                     <div class="subsection-title">Gameplay</div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="flashlight-style-picker">Flashlight Style</label><p class="setting-desc">Choose the original PS2 light, the simpler Xbox light, or disable it.</p></div>
+                        <div class="setting-control"><button id="flashlight-style-picker" class="choice-picker"><span id="flashlight-style-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="keep-finder-raised-input">Keep Finder Raised</label><p class="setting-desc">Do not lower the Camera Obscura when an apparition event begins.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="keep-finder-raised-input" class="checkbox" /></div>
+                    </div>
                     <div class="setting-row compact">
                         <div class="setting-copy"><label class="setting-title" for="minimap-enabled-input">Mini Map</label><p class="setting-desc">Show the corner map while exploring.</p></div>
                         <div class="setting-control checkbox-control"><input type="checkbox" id="minimap-enabled-input" class="checkbox" /></div>
