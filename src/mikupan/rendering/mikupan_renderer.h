@@ -265,6 +265,15 @@ void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex,
                                            int depth_mode,
                                            MikuPan_GPUBlendMode blend_mode);
 
+int MikuPan_RenderTextureIdClipTriangles3DRaw(
+    unsigned int texture_id,
+    int texture_width,
+    int texture_height,
+    float *buffer,
+    int vertex_count,
+    int depth_mode,
+    MikuPan_GPUBlendMode blend_mode);
+
 void MikuPan_RenderScreenCopyTriangles3D(sceGsTex0 *tex,
                                       float *buffer,
                                       int vertex_count,
@@ -275,6 +284,11 @@ void MikuPan_RenderScreenCopyTriangles3DResolve(sceGsTex0 *tex,
                                                 int vertex_count,
                                                 int depth_mode,
                                                 MikuPan_GPUBlendMode blend_mode);
+void MikuPan_RenderScreenCopyTriangles3DFullDeform(sceGsTex0 *tex,
+                                                   float *buffer,
+                                                   int vertex_count,
+                                                   int depth_mode,
+                                                   MikuPan_GPUBlendMode blend_mode);
 int MikuPan_RenderPauseScreenDeformTriangles(u_int addr, float *buffer,
                                              int vertex_count, int depth_mode,
                                              MikuPan_GPUBlendMode blend_mode);

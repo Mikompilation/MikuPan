@@ -1617,6 +1617,46 @@ void MikuPan_RenderScreenCopyTriangles3DResolve(sceGsTex0 *tex,
         MIKUPAN_SCREEN_COPY_SCREEN_POS_RESOLVE);
 }
 
+void MikuPan_RenderScreenCopyTriangles3DFullDeform(sceGsTex0 *tex,
+                                                   float *buffer,
+                                                   int vertex_count,
+                                                   int depth_mode,
+                                                   MikuPan_GPUBlendMode blend_mode)
+{
+    float half_w;
+    float half_h;
+    float source_x0;
+    float source_y0;
+    int i;
+
+    if (buffer == NULL || vertex_count <= 0)
+    {
+        return;
+    }
+
+    MikuPan_GetFullScreenHalfExtent(&half_w, &half_h);
+    if (half_w <= 0.0f || half_h <= 0.0f)
+    {
+        return;
+    }
+
+    source_x0 = PS2_CENTER_X - half_w;
+    source_y0 = (PS2_CENTER_Y - half_h) * 0.5f;
+
+    for (i = 0; i < vertex_count; i++)
+    {
+        float *vertex = buffer + i * 12;
+        float source_x = vertex[0] * 1024.0f;
+        float source_y = vertex[1] * 256.0f;
+
+        vertex[0] = (source_x - source_x0) / (half_w * 2.0f);
+        vertex[1] = (source_y - source_y0) / half_h;
+    }
+
+    MikuPan_RenderScreenCopyTriangles3DResolve(
+        tex, buffer, vertex_count, depth_mode, blend_mode);
+}
+
 void MikuPan_RenderScreenCopyTriangles3DScreenPosGSAlpha(sceGsTex0 *tex,
                                                          float *buffer,
                                                          int vertex_count,
