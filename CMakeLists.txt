@@ -352,8 +352,11 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/gs/mikupan_texture_manager.cpp"
         "src/mikupan/mikupan_audio_bus.cpp"
         "src/mikupan/mikupan_config_ini.cpp"
-        "src/mikupan/mikupan_file.cpp"
-        "src/mikupan/mikupan_logging.cpp"
+        "src/mikupan/debug/mikupan_logging.cpp"
+        "src/mikupan/io/mikupan_file.cpp"
+        "src/mikupan/rendering/mikupan_flashlight_dust.cpp"
+        "src/mikupan/ui/mikupan_rml_message_box.cpp"
+        "src/mikupan/ui/mikupan_rml_mode_select.cpp"
         "src/mikupan/ui/mikupan_ui.cpp"
 )
 set(MIKUPAN_CXX_SOURCES)
