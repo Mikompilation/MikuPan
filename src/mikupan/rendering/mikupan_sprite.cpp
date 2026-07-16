@@ -1384,7 +1384,8 @@ static int MikuPan_RenderTextureIdTriangles3DWithState(unsigned int texture_id,
                                                        float *buffer,
                                                        int vertex_count,
                                                        int depth_mode,
-                                                       MikuPan_GPUBlendMode blend_mode)
+                                                       MikuPan_GPUBlendMode blend_mode,
+                                                       int normalize_depth)
 {
     if (texture_id == 0 || texture_w <= 0 || texture_h <= 0 ||
         buffer == NULL || vertex_count <= 0)
@@ -1412,7 +1413,10 @@ static int MikuPan_RenderTextureIdTriangles3DWithState(unsigned int texture_id,
     MikuPan_ActiveTextureCached(GL_TEXTURE0);
     MikuPan_BindTexture2DCached(texture_id);
     MikuPan_ApplyParticleTriangleState(depth_mode, blend_mode);
-    MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
+    if (normalize_depth)
+    {
+        MikuPan_NormalizeTexturedTriangleDepths(buffer, vertex_count);
+    }
 
     MikuPan_StreamUploadFull(
         GL_ARRAY_BUFFER,
@@ -1424,6 +1428,26 @@ static int MikuPan_RenderTextureIdTriangles3DWithState(unsigned int texture_id,
     MikuPan_PerfDrawCall();
     MikuPan_RestoreParticleTriangleState();
     return 1;
+}
+
+int MikuPan_RenderTextureIdClipTriangles3DRaw(
+    unsigned int texture_id,
+    int texture_width,
+    int texture_height,
+    float *buffer,
+    int vertex_count,
+    int depth_mode,
+    MikuPan_GPUBlendMode blend_mode)
+{
+    return MikuPan_RenderTextureIdTriangles3DWithState(
+        texture_id,
+        texture_width,
+        texture_height,
+        buffer,
+        vertex_count,
+        depth_mode,
+        blend_mode,
+        0);
 }
 
 int MikuPan_RenderEnemyOutScreenCaptureTriangles(int slot,
@@ -1450,7 +1474,8 @@ int MikuPan_RenderEnemyOutScreenCaptureTriangles(int slot,
                                                        buffer,
                                                        vertex_count,
                                                        depth_mode,
-                                                       blend_mode);
+                                                       blend_mode,
+                                                       1);
 }
 
 
@@ -1615,6 +1640,46 @@ void MikuPan_RenderScreenCopyTriangles3DResolve(sceGsTex0 *tex,
     MikuPan_RenderScreenCopyTriangles3DScreenPosMode(
         tex, buffer, vertex_count, depth_mode, blend_mode,
         MIKUPAN_SCREEN_COPY_SCREEN_POS_RESOLVE);
+}
+
+void MikuPan_RenderScreenCopyTriangles3DFullDeform(sceGsTex0 *tex,
+                                                   float *buffer,
+                                                   int vertex_count,
+                                                   int depth_mode,
+                                                   MikuPan_GPUBlendMode blend_mode)
+{
+    float half_w;
+    float half_h;
+    float source_x0;
+    float source_y0;
+    int i;
+
+    if (buffer == NULL || vertex_count <= 0)
+    {
+        return;
+    }
+
+    MikuPan_GetFullScreenHalfExtent(&half_w, &half_h);
+    if (half_w <= 0.0f || half_h <= 0.0f)
+    {
+        return;
+    }
+
+    source_x0 = PS2_CENTER_X - half_w;
+    source_y0 = (PS2_CENTER_Y - half_h) * 0.5f;
+
+    for (i = 0; i < vertex_count; i++)
+    {
+        float *vertex = buffer + i * 12;
+        float source_x = vertex[0] * 1024.0f;
+        float source_y = vertex[1] * 256.0f;
+
+        vertex[0] = (source_x - source_x0) / (half_w * 2.0f);
+        vertex[1] = (source_y - source_y0) / half_h;
+    }
+
+    MikuPan_RenderScreenCopyTriangles3DResolve(
+        tex, buffer, vertex_count, depth_mode, blend_mode);
 }
 
 void MikuPan_RenderScreenCopyTriangles3DScreenPosGSAlpha(sceGsTex0 *tex,

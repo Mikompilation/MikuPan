@@ -115,6 +115,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         scePadPortOpen(0, 0 ,0);
     }
 
+    MikuPan_ControllerProcessEvent(event);
     MikuPan_ProcessEventUi(event);
 
     return SDL_APP_CONTINUE;
@@ -124,8 +125,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     MikuPan_ServiceMissingDataFolderDialog();
 
-    MikuPan_StartFrameUi();
     MikuPan_Clear();
+    MikuPan_StartFrameUi();
 
     MikuPan_FlushTextureCache();
 

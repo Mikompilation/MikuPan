@@ -1,0 +1,153 @@
+<rml>
+<head>
+    <title>Save and Load</title>
+    <link type="text/rcss" href="save_load.rcss"/>
+    <link type="text/rcss" href="message_box.rcss"/>
+</head>
+<body>
+    <div id="save-load-root" class="hidden">
+        <div id="save-load-backdrop"></div>
+        <div id="save-load-reflect">
+            <span class="save-load-reflect-band outer"></span>
+            <span class="save-load-reflect-band middle"></span>
+            <span class="save-load-reflect-band inner"></span>
+        </div>
+        <div id="save-load-panel">
+            <div id="save-load-film-header">
+                <img id="save-load-film-strip" class="hidden" />
+                <div id="save-load-title">SAVE FILE</div>
+            </div>
+
+            <div id="save-load-status-board">
+                <div id="save-load-status"></div>
+            </div>
+
+            <div id="save-load-list-frame">
+                <div id="save-load-list-backdrop">
+                    <span class="save-load-list-backdrop-part left"></span>
+                    <span class="save-load-list-backdrop-part center"></span>
+                    <span class="save-load-list-backdrop-part right"></span>
+                    <div class="save-load-list-border top">
+                        <span class="save-load-list-border-edge left"></span>
+                        <span class="save-load-list-border-center"></span>
+                        <span class="save-load-list-border-edge right"></span>
+                    </div>
+                    <div class="save-load-list-border bottom">
+                        <span class="save-load-list-border-edge left"></span>
+                        <span class="save-load-list-border-center"></span>
+                        <span class="save-load-list-border-edge right"></span>
+                    </div>
+                </div>
+                <div id="save-load-list"></div>
+            </div>
+
+            <div id="save-load-detail-frame">
+                <div id="save-load-detail-backdrop">
+                    <span class="save-load-detail-backdrop-part left"></span>
+                    <span class="save-load-detail-backdrop-part center"></span>
+                    <span class="save-load-detail-backdrop-part right"></span>
+                    <div class="save-load-detail-border top">
+                        <span class="save-load-detail-border-edge left"></span>
+                        <span class="save-load-detail-border-center"></span>
+                        <span class="save-load-detail-border-edge right"></span>
+                    </div>
+                    <div class="save-load-detail-border bottom">
+                        <span class="save-load-detail-border-edge left"></span>
+                        <span class="save-load-detail-border-center"></span>
+                        <span class="save-load-detail-border-edge right"></span>
+                    </div>
+                </div>
+                <div id="save-load-detail"></div>
+            </div>
+
+            <div id="save-load-footer">
+                <div id="save-load-controls">Move: D-Pad / Stick&#160;&#160;&#160; Select: A / Enter</div>
+                <button id="save-load-exit">
+                    <span class="save-load-exit-backing left"></span>
+                    <span class="save-load-exit-backing center"></span>
+                    <span class="save-load-exit-backing right"></span>
+                    <span class="save-load-exit-divider left"></span>
+                    <span class="save-load-exit-divider center"></span>
+                    <span class="save-load-exit-divider right"></span>
+                    <span id="save-load-exit-label">Back: Y / Esc</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="save-load-confirm" class="hidden">
+            <div class="save-load-confirm-shade">
+                <span class="save-load-confirm-shade-part left"></span>
+                <span class="save-load-confirm-shade-part center"></span>
+                <span class="save-load-confirm-shade-part right"></span>
+            </div>
+            <div class="ff-message-fill"></div>
+            <div class="ff-message-frame">
+                    <div class="ff-message-outer-horizontal top">
+                        <span class="ff-message-outer-fade left"></span>
+                        <span class="ff-message-outer-center"></span>
+                        <span class="ff-message-outer-fade right"></span>
+                    </div>
+                    <div class="ff-message-outer-horizontal bottom">
+                        <span class="ff-message-outer-fade left"></span>
+                        <span class="ff-message-outer-center"></span>
+                        <span class="ff-message-outer-fade right"></span>
+                    </div>
+                    <span class="ff-message-outer-vertical left"></span>
+                    <span class="ff-message-outer-vertical right"></span>
+                    <div class="ff-message-inner-horizontal top">
+                        <span class="ff-message-inner-fade left"></span>
+                        <span class="ff-message-inner-center"></span>
+                        <span class="ff-message-inner-fade right"></span>
+                    </div>
+                    <div class="ff-message-inner-horizontal bottom">
+                        <span class="ff-message-inner-fade left"></span>
+                        <span class="ff-message-inner-center"></span>
+                        <span class="ff-message-inner-fade right"></span>
+                    </div>
+                    <span class="ff-message-inner-vertical left"></span>
+                    <span class="ff-message-inner-vertical right"></span>
+                </div>
+            <div id="save-load-confirm-message">Replace this save?</div>
+            <div id="save-load-confirm-divider">
+                <span class="save-load-confirm-divider-edge left"></span>
+                <span class="save-load-confirm-divider-center"></span>
+                <span class="save-load-confirm-divider-edge right"></span>
+            </div>
+            <div id="save-load-confirm-buttons">
+                <button id="save-load-confirm-yes" class="save-load-confirm-button ff-prompt-button">
+                    <span class="ff-prompt-button-backing left"></span>
+                    <span class="ff-prompt-button-backing center"></span>
+                    <span class="ff-prompt-button-backing right"></span>
+                    <span class="ff-prompt-button-border top">
+                        <span class="ff-prompt-button-border-edge left"></span>
+                        <span class="ff-prompt-button-border-center"></span>
+                        <span class="ff-prompt-button-border-edge right"></span>
+                    </span>
+                    <span class="ff-prompt-button-border bottom">
+                        <span class="ff-prompt-button-border-edge left"></span>
+                        <span class="ff-prompt-button-border-center"></span>
+                        <span class="ff-prompt-button-border-edge right"></span>
+                    </span>
+                    <span id="save-load-confirm-yes-label" class="ff-prompt-button-label">Yes</span>
+                </button>
+                <button id="save-load-confirm-no" class="save-load-confirm-button ff-prompt-button selected">
+                    <span class="ff-prompt-button-backing left"></span>
+                    <span class="ff-prompt-button-backing center"></span>
+                    <span class="ff-prompt-button-backing right"></span>
+                    <span class="ff-prompt-button-border top">
+                        <span class="ff-prompt-button-border-edge left"></span>
+                        <span class="ff-prompt-button-border-center"></span>
+                        <span class="ff-prompt-button-border-edge right"></span>
+                    </span>
+                    <span class="ff-prompt-button-border bottom">
+                        <span class="ff-prompt-button-border-edge left"></span>
+                        <span class="ff-prompt-button-border-center"></span>
+                        <span class="ff-prompt-button-border-edge right"></span>
+                    </span>
+                    <span class="ff-prompt-button-label">No</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

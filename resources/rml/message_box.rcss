@@ -1,0 +1,269 @@
+@decorator ff-message-border : mikupan-message-border {
+}
+
+@decorator ff-message-border-left : mikupan-message-border-left {
+}
+
+@decorator ff-message-border-right : mikupan-message-border-right {
+}
+
+.ff-message-fill {
+    position: absolute;
+    left: 9dp;
+    top: 8dp;
+    right: 9dp;
+    bottom: 8dp;
+    background-color: #120e0be8;
+    pointer-events: none;
+}
+
+.ff-message-frame {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.ff-message-outer-horizontal {
+    position: absolute;
+    left: -10dp;
+    right: -10dp;
+    height: 8px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.ff-message-outer-horizontal.top {
+    top: 2dp;
+}
+
+.ff-message-outer-horizontal.bottom {
+    bottom: 2dp;
+}
+
+.ff-message-outer-fade,
+.ff-message-outer-center {
+    position: absolute;
+    top: 0dp;
+    height: 8px;
+}
+
+.ff-message-outer-fade.left {
+    left: 0dp;
+    width: 12dp;
+    decorator: ff-message-border-left;
+}
+
+.ff-message-outer-center {
+    left: 12dp;
+    right: 12dp;
+    decorator: ff-message-border;
+}
+
+.ff-message-outer-fade.right {
+    right: 0dp;
+    width: 12dp;
+    decorator: ff-message-border-right;
+}
+
+.ff-message-outer-vertical {
+    position: absolute;
+    top: 2dp;
+    bottom: 2dp;
+    width: 8px;
+    z-index: 1;
+    decorator: ff-message-border;
+    pointer-events: none;
+}
+
+.ff-message-outer-vertical.left {
+    left: 3dp;
+}
+
+.ff-message-outer-vertical.right {
+    right: 3dp;
+}
+
+.ff-message-inner-horizontal {
+    position: absolute;
+    left: 3dp;
+    right: 3dp;
+    height: 4px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.ff-message-inner-horizontal.top {
+    top: 8dp;
+}
+
+.ff-message-inner-horizontal.bottom {
+    bottom: 8dp;
+}
+
+.ff-message-inner-fade,
+.ff-message-inner-center {
+    position: absolute;
+    top: 0dp;
+    height: 4px;
+    pointer-events: none;
+}
+
+.ff-message-inner-fade {
+    display: none;
+}
+
+.ff-message-inner-center {
+    left: 0dp;
+    right: 0dp;
+    decorator: ff-message-border;
+}
+
+.ff-message-inner-vertical {
+    position: absolute;
+    top: 8dp;
+    bottom: 8dp;
+    width: 4px;
+    z-index: 1;
+    decorator: ff-message-border;
+    pointer-events: none;
+}
+
+.ff-message-inner-vertical.left {
+    left: 9dp;
+}
+
+.ff-message-inner-vertical.right {
+    right: 9dp;
+}
+
+.ff-prompt-button {
+    position: relative;
+    overflow: hidden;
+    background-color: transparent;
+    border-width: 0dp;
+}
+
+.ff-prompt-button-backing {
+    position: absolute;
+    top: 0dp;
+    height: 100%;
+    pointer-events: none;
+}
+
+.ff-prompt-button-backing.left {
+    left: 0dp;
+    width: 28%;
+    decorator: horizontal-gradient(#00000000 #2d2015b8);
+}
+
+.ff-prompt-button-backing.center {
+    left: 28%;
+    width: 44%;
+    background-color: #2d2015b8;
+}
+
+.ff-prompt-button-backing.right {
+    right: 0dp;
+    width: 28%;
+    decorator: horizontal-gradient(#2d2015b8 #00000000);
+}
+
+.ff-prompt-button-border {
+    position: absolute;
+    left: 0dp;
+    right: 0dp;
+    height: 1px;
+    pointer-events: none;
+}
+
+.ff-prompt-button-border.top {
+    top: 0dp;
+}
+
+.ff-prompt-button-border.bottom {
+    bottom: 0dp;
+}
+
+.ff-prompt-button-border-edge,
+.ff-prompt-button-border-center {
+    position: absolute;
+    top: 0dp;
+    height: 1px;
+}
+
+.ff-prompt-button-border-edge.left {
+    left: 0dp;
+    width: 20dp;
+    decorator: horizontal-gradient(#00000000 #7d6847a8);
+}
+
+.ff-prompt-button-border-center {
+    left: 20dp;
+    right: 20dp;
+    background-color: #7d6847a8;
+}
+
+.ff-prompt-button-border-edge.right {
+    right: 0dp;
+    width: 20dp;
+    decorator: horizontal-gradient(#7d6847a8 #00000000);
+}
+
+.ff-prompt-button-label {
+    position: absolute;
+    left: 0dp;
+    top: 0dp;
+    width: 100%;
+    height: 100%;
+    line-height: inherit;
+    text-align: center;
+    pointer-events: none;
+}
+
+.ff-prompt-button:hover,
+.ff-prompt-button:focus,
+.ff-prompt-button.selected {
+    color: #f1dfb6;
+    background-color: transparent;
+    border-width: 0dp;
+    font-effect: glow(1px 3px 0px 0px #bd914e68), shadow(0px 1px #000000e8);
+}
+
+.ff-prompt-button:hover .ff-prompt-button-backing.left,
+.ff-prompt-button:focus .ff-prompt-button-backing.left,
+.ff-prompt-button.selected .ff-prompt-button-backing.left {
+    decorator: horizontal-gradient(#00000000 #6f542cd8);
+}
+
+.ff-prompt-button:hover .ff-prompt-button-backing.center,
+.ff-prompt-button:focus .ff-prompt-button-backing.center,
+.ff-prompt-button.selected .ff-prompt-button-backing.center {
+    background-color: #6f542cd8;
+}
+
+.ff-prompt-button:hover .ff-prompt-button-backing.right,
+.ff-prompt-button:focus .ff-prompt-button-backing.right,
+.ff-prompt-button.selected .ff-prompt-button-backing.right {
+    decorator: horizontal-gradient(#6f542cd8 #00000000);
+}
+
+.ff-prompt-button:hover .ff-prompt-button-border-edge.left,
+.ff-prompt-button:focus .ff-prompt-button-border-edge.left,
+.ff-prompt-button.selected .ff-prompt-button-border-edge.left {
+    decorator: horizontal-gradient(#00000000 #8f734c);
+}
+
+.ff-prompt-button:hover .ff-prompt-button-border-center,
+.ff-prompt-button:focus .ff-prompt-button-border-center,
+.ff-prompt-button.selected .ff-prompt-button-border-center {
+    background-color: #8f734c;
+}
+
+.ff-prompt-button:hover .ff-prompt-button-border-edge.right,
+.ff-prompt-button:focus .ff-prompt-button-border-edge.right,
+.ff-prompt-button.selected .ff-prompt-button-border-edge.right {
+    decorator: horizontal-gradient(#8f734c #00000000);
+}

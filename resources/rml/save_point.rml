@@ -1,0 +1,215 @@
+<rml>
+<head>
+    <title>Save Point</title>
+    <link type="text/rcss" href="save_point.rcss"/>
+    <link type="text/rcss" href="message_box.rcss"/>
+</head>
+<body>
+    <div id="save-point-root" class="hidden">
+        <div id="save-point-menu">
+            <div id="save-point-title-board">
+                <span class="save-point-title-backing left"></span>
+                <span class="save-point-title-backing center"></span>
+                <span class="save-point-title-backing right"></span>
+                <div class="save-point-title-border top">
+                    <span class="save-point-title-border-edge left"></span>
+                    <span class="save-point-title-border-center"></span>
+                    <span class="save-point-title-border-edge right"></span>
+                </div>
+                <div class="save-point-title-border bottom">
+                    <span class="save-point-title-border-edge left"></span>
+                    <span class="save-point-title-border-center"></span>
+                    <span class="save-point-title-border-edge right"></span>
+                </div>
+                <div id="save-point-title">SAVE POINT</div>
+            </div>
+            <div id="save-point-controls">
+                <span class="save-point-text-backing left"></span>
+                <span class="save-point-text-backing center"></span>
+                <span class="save-point-text-backing right"></span>
+                <span class="save-point-controls-text">A Select&#160;&#160;&#160;&#160;Y Exit</span>
+            </div>
+
+            <button id="save-point-save" class="save-point-option selected">
+                <div class="save-point-icon-box save-point-icon-box-save">
+                    <img id="save-point-icon-save" class="save-point-icon save-point-icon-save"/>
+                </div>
+                <div id="save-point-label-save" class="save-point-label">
+                    <span class="save-point-text-backing left"></span>
+                    <span class="save-point-text-backing center"></span>
+                    <span class="save-point-text-backing right"></span>
+                    <span class="save-point-label-border top"></span>
+                    <span class="save-point-label-border bottom"></span>
+                    <span class="save-point-label-text">Save Game</span>
+                </div>
+            </button>
+
+            <button id="save-point-album" class="save-point-option">
+                <div class="save-point-icon-box save-point-icon-box-album">
+                    <img id="save-point-icon-album" class="save-point-icon save-point-icon-album"/>
+                </div>
+                <div id="save-point-label-album" class="save-point-label">
+                    <span class="save-point-text-backing left"></span>
+                    <span class="save-point-text-backing center"></span>
+                    <span class="save-point-text-backing right"></span>
+                    <span class="save-point-label-border top"></span>
+                    <span class="save-point-label-border bottom"></span>
+                    <span class="save-point-label-text">Save Album</span>
+                </div>
+            </button>
+
+            <button id="save-point-film" class="save-point-option">
+                <div class="save-point-icon-box save-point-icon-box-film">
+                    <img id="save-point-icon-film" class="save-point-icon save-point-icon-film"/>
+                </div>
+                <div id="save-point-label-film" class="save-point-label">
+                    <span class="save-point-text-backing left"></span>
+                    <span class="save-point-text-backing center"></span>
+                    <span class="save-point-text-backing right"></span>
+                    <span class="save-point-label-border top"></span>
+                    <span class="save-point-label-border bottom"></span>
+                    <span class="save-point-label-text">Load Film</span>
+                </div>
+            </button>
+
+            <button id="save-point-exit" class="save-point-option">
+                <div class="save-point-icon-box save-point-icon-box-exit">
+                    <img id="save-point-icon-exit" class="save-point-icon save-point-icon-exit"/>
+                </div>
+                <div id="save-point-label-exit" class="save-point-label">
+                    <span class="save-point-text-backing left"></span>
+                    <span class="save-point-text-backing center"></span>
+                    <span class="save-point-text-backing right"></span>
+                    <span class="save-point-label-border top"></span>
+                    <span class="save-point-label-border bottom"></span>
+                    <span class="save-point-label-text">Exit</span>
+                </div>
+            </button>
+
+            <div id="save-point-selection-frame">
+                <img id="save-point-corner-lu" class="save-point-corner lu"/>
+                <img id="save-point-corner-ru" class="save-point-corner ru"/>
+                <img id="save-point-corner-ld" class="save-point-corner ld"/>
+                <img id="save-point-corner-rd" class="save-point-corner rd"/>
+            </div>
+
+            <div id="save-point-info-panel">
+                <div id="save-point-message">
+                    <div class="ff-message-fill"></div>
+                    <div class="ff-message-frame">
+                    <div class="ff-message-outer-horizontal top">
+                        <span class="ff-message-outer-fade left"></span>
+                        <span class="ff-message-outer-center"></span>
+                        <span class="ff-message-outer-fade right"></span>
+                    </div>
+                    <div class="ff-message-outer-horizontal bottom">
+                        <span class="ff-message-outer-fade left"></span>
+                        <span class="ff-message-outer-center"></span>
+                        <span class="ff-message-outer-fade right"></span>
+                    </div>
+                    <span class="ff-message-outer-vertical left"></span>
+                    <span class="ff-message-outer-vertical right"></span>
+                    <div class="ff-message-inner-horizontal top">
+                        <span class="ff-message-inner-fade left"></span>
+                        <span class="ff-message-inner-center"></span>
+                        <span class="ff-message-inner-fade right"></span>
+                    </div>
+                    <div class="ff-message-inner-horizontal bottom">
+                        <span class="ff-message-inner-fade left"></span>
+                        <span class="ff-message-inner-center"></span>
+                        <span class="ff-message-inner-fade right"></span>
+                    </div>
+                    <span class="ff-message-inner-vertical left"></span>
+                    <span class="ff-message-inner-vertical right"></span>
+                </div>
+                    <div id="save-point-message-save" class="save-point-message-page one-line">
+                        Save game data.
+                    </div>
+                    <div id="save-point-message-album" class="save-point-message-page two-line hidden">
+                        Register the PhotoData inside &quot;Photograph&quot;<br/>
+                        into an album for them to be saved.
+                    </div>
+                    <div id="save-point-message-film" class="save-point-message-page one-line hidden">
+                        Load Type-14 Film into the Camera Obscura.
+                    </div>
+                    <div id="save-point-message-exit" class="save-point-message-page one-line hidden">
+                        Leave the save point.
+                    </div>
+                </div>
+                <div id="save-point-confirm" class="hidden">
+                    <div class="ff-message-fill"></div>
+                    <div class="ff-message-frame">
+                    <div class="ff-message-outer-horizontal top">
+                        <span class="ff-message-outer-fade left"></span>
+                        <span class="ff-message-outer-center"></span>
+                        <span class="ff-message-outer-fade right"></span>
+                    </div>
+                    <div class="ff-message-outer-horizontal bottom">
+                        <span class="ff-message-outer-fade left"></span>
+                        <span class="ff-message-outer-center"></span>
+                        <span class="ff-message-outer-fade right"></span>
+                    </div>
+                    <span class="ff-message-outer-vertical left"></span>
+                    <span class="ff-message-outer-vertical right"></span>
+                    <div class="ff-message-inner-horizontal top">
+                        <span class="ff-message-inner-fade left"></span>
+                        <span class="ff-message-inner-center"></span>
+                        <span class="ff-message-inner-fade right"></span>
+                    </div>
+                    <div class="ff-message-inner-horizontal bottom">
+                        <span class="ff-message-inner-fade left"></span>
+                        <span class="ff-message-inner-center"></span>
+                        <span class="ff-message-inner-fade right"></span>
+                    </div>
+                    <span class="ff-message-inner-vertical left"></span>
+                    <span class="ff-message-inner-vertical right"></span>
+                </div>
+                    <div id="save-point-confirm-message">
+                        <span id="save-point-confirm-message-film">Load film?</span>
+                        <span id="save-point-confirm-message-exit" class="hidden">Exit the save point?</span>
+                    </div>
+                    <div id="save-point-confirm-divider">
+                        <span class="save-point-confirm-divider-side left"></span>
+                        <span class="save-point-confirm-divider-center"></span>
+                        <span class="save-point-confirm-divider-side right"></span>
+                    </div>
+                    <div id="save-point-confirm-buttons">
+                        <button id="save-point-confirm-yes" class="save-point-confirm-button ff-prompt-button">
+                            <span class="ff-prompt-button-backing left"></span>
+                            <span class="ff-prompt-button-backing center"></span>
+                            <span class="ff-prompt-button-backing right"></span>
+                            <span class="ff-prompt-button-border top">
+                                <span class="ff-prompt-button-border-edge left"></span>
+                                <span class="ff-prompt-button-border-center"></span>
+                                <span class="ff-prompt-button-border-edge right"></span>
+                            </span>
+                            <span class="ff-prompt-button-border bottom">
+                                <span class="ff-prompt-button-border-edge left"></span>
+                                <span class="ff-prompt-button-border-center"></span>
+                                <span class="ff-prompt-button-border-edge right"></span>
+                            </span>
+                            <span class="ff-prompt-button-label">Yes</span>
+                        </button>
+                        <button id="save-point-confirm-no" class="save-point-confirm-button ff-prompt-button selected">
+                            <span class="ff-prompt-button-backing left"></span>
+                            <span class="ff-prompt-button-backing center"></span>
+                            <span class="ff-prompt-button-backing right"></span>
+                            <span class="ff-prompt-button-border top">
+                                <span class="ff-prompt-button-border-edge left"></span>
+                                <span class="ff-prompt-button-border-center"></span>
+                                <span class="ff-prompt-button-border-edge right"></span>
+                            </span>
+                            <span class="ff-prompt-button-border bottom">
+                                <span class="ff-prompt-button-border-edge left"></span>
+                                <span class="ff-prompt-button-border-center"></span>
+                                <span class="ff-prompt-button-border-edge right"></span>
+                            </span>
+                            <span class="ff-prompt-button-label">No</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

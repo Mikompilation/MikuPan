@@ -35,6 +35,7 @@
 #include "ingame/menu/ig_camra.h"
 #include "ingame/menu/ig_glst.h"
 #include "ingame/menu/ig_menu.h"
+#include "ingame/menu/item.h"
 #include "main/gamemain.h"
 #include "main/glob.h"
 #include "mc/mc_at.h"
@@ -59,7 +60,11 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/ui/mikupan_ui_theme.h"
+#include "mikupan/ui/mikupan_rml_options.h"
+#include "mikupan/ui/mikupan_rml_save_load.h"
+#include "mikupan/ui/mikupan_rml_title.h"
 
+#include <algorithm>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,6 +86,87 @@ static int TitleDebugSelectionMenuActive(void)
 {
     return ttl_dsp.mode == 0 &&
         (title_wrk.mode == TITLE_TITLE_SEL || title_wrk.mode == TITLE_MODE_SEL);
+}
+
+static int TitleRmlScreenActive(void)
+{
+    return MikuPan_TitleUseRoomBackground() != 0
+           && MikuPan_RmlTitleIsAvailable() != 0;
+}
+
+static int TitleRmlMenuCommandSelection(int command)
+{
+    switch (command)
+    {
+    case MIKUPAN_RML_TITLE_COMMAND_NEW_GAME:
+        return 0;
+    case MIKUPAN_RML_TITLE_COMMAND_LOAD_GAME:
+        return 1;
+    case MIKUPAN_RML_TITLE_COMMAND_ALBUM:
+        return 2;
+    case MIKUPAN_RML_TITLE_COMMAND_SETTINGS:
+        return 3;
+    case MIKUPAN_RML_TITLE_COMMAND_EXIT_GAME:
+        return 4;
+    default:
+        return -1;
+    }
+}
+
+static int TitleRmlVisualSelectionToTitleSelection(int selection)
+{
+    switch (selection)
+    {
+    case 0:
+        return 0;
+    case 1:
+        return 1;
+    case 2:
+        return 2;
+    default:
+        return -1;
+    }
+}
+
+static int TitleRmlCommandConfirmsOriginalMenuItem(int command)
+{
+    return command == MIKUPAN_RML_TITLE_COMMAND_NEW_GAME
+           || command == MIKUPAN_RML_TITLE_COMMAND_LOAD_GAME
+           || command == MIKUPAN_RML_TITLE_COMMAND_ALBUM;
+}
+
+static void TitleOpenSettingsMode(void)
+{
+    MikuPan_RmlTitleNotifySettingsOpened(title_wrk.csr);
+    ModeSlctInit(3, 5);
+    title_wrk.mode = TITLE_TITLE_SEL_BGMREQ;
+    OutGameModeChange(OUTGAME_MODE_MODESEL);
+    EAdpcmFadeOut(60);
+}
+
+static int TitleConfirmSettingsOrExit(int rml_title)
+{
+    if (rml_title == 0)
+    {
+        return 0;
+    }
+
+    if (title_wrk.csr == 3)
+    {
+        TitleOpenSettingsMode();
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+        return 1;
+    }
+
+    if (title_wrk.csr == 4)
+    {
+        exit_prompt_open = 1;
+        exit_prompt_sel = 1;
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+        return 1;
+    }
+
+    return 0;
 }
 
 #include "data/title_sprt.h" // data 342c90 */ SPRT_DAT title_sprt[11];
@@ -359,7 +445,7 @@ static void TitleDrawGameTitle(void)
     ImVec2 top_pos;
     ImVec2 bottom_pos;
 
-    if (MikuPan_TitleUseRoomBackground() == 0)
+    if (MikuPan_TitleUseRoomBackground() == 0 || TitleRmlScreenActive() != 0)
     {
         return;
     }
@@ -558,6 +644,16 @@ void TitleCtrl()
 
         SeStopAll();
 
+        {
+            int restored_selection = MikuPan_RmlTitleConsumeSettingsReturnSelection();
+            if (restored_selection >= 0 && TitleRmlScreenActive() != 0)
+            {
+                title_wrk.csr = restored_selection;
+                title_wrk.mode = TITLE_TITLE_SEL;
+                break;
+            }
+        }
+
         title_wrk.csr = 0;
         title_wrk.mode = TITLE_TITLE_SEL;
     case TITLE_TITLE_SEL_BGMREQ:
@@ -569,7 +665,7 @@ void TitleCtrl()
         }
     break;
     case TITLE_TITLE_SEL_INIT:
-        title_wrk.csr = 1;
+        title_wrk.csr = TitleRmlScreenActive() != 0 ? 0 : 1;
         title_wrk.mode = TITLE_TITLE_SEL;
     case TITLE_TITLE_SEL:
         if (L1_PRESSED() >= 1 && R1_PRESSED()  >= 1)
@@ -614,53 +710,77 @@ void TitleCtrl()
         }
     break;
     case TITLE_MEMCA_LOAD:
+    {
+        int load_result = 0;
+
         if (title_wrk.sub_mode == 0)
         {
-            mcInit(1, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
-            title_wrk.sub_mode = 7;
+            MikuPan_RmlSaveLoadOpenLoad();
+            if (MikuPan_RmlSaveLoadIsOpen() != 0)
+            {
+                title_wrk.sub_mode = 8;
+            }
+            else
+            {
+                mcInit(1, (u_int *)MikuPan_GetHostPointer(MC_WORK_ADDRESS), 0);
+                title_wrk.sub_mode = 7;
+            }
         }
 
-        SetSprFile(MikuPan_GetHostAddress(SPRITE_ADDR_4));
-        SetSprFile(MikuPan_GetHostAddress(SPRITE_ADDR_2));
-        SetSprFile(MikuPan_GetHostAddress(SPRITE_ADDR_3));
-
-        switch (McAtLoadChk(1))
+        if (title_wrk.sub_mode == 8)
         {
-            case 0:
-                // do nothing ...
-            break;
-            case 1:
-                ingame_wrk.stts &= (0x80 | 0x40 | 0x10 | 0x8 | 0x4 | 0x2 | 0x1);
+            BgFusumaYW(0x606060, 0.0f, 128.0f, 0x7d000);
+            DispOutDither();
 
-                InitialDmaBuffer();
+            switch (MikuPan_RmlSaveLoadConsumeResult())
+            {
+            case MIKUPAN_RML_SAVE_LOAD_RESULT_LOADED:
+                load_result = 1;
+                break;
+            case MIKUPAN_RML_SAVE_LOAD_RESULT_CANCELLED:
+                load_result = 2;
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            SetSprFile(MikuPan_GetHostAddress(SPRITE_ADDR_4));
+            SetSprFile(MikuPan_GetHostAddress(SPRITE_ADDR_2));
+            SetSprFile(MikuPan_GetHostAddress(SPRITE_ADDR_3));
+            load_result = McAtLoadChk(1);
+        }
 
-                if (ingame_wrk.clear_count != 0)
-                {
-                    ModeSlctInit(0, 0);
+        switch (load_result)
+        {
+        case 1:
+            ingame_wrk.stts &= (0x80 | 0x40 | 0x10 | 0x8 | 0x4 | 0x2 | 0x1);
+            InitialDmaBuffer();
 
-                    OutGameModeChange(OUTGAME_MODE_MODESEL);
-                }
-                else
-                {
-                    EAdpcmFadeOut(0x3c);
-
-                    LoadGameInit();
-
-                    ingame_wrk.game = 0;
-
-                    GameModeChange(GAME_MODE_INIT);
-                }
-            break;
-            case 2:
+            if (ingame_wrk.clear_count != 0)
+            {
+                ModeSlctInit(0, 0);
+                OutGameModeChange(OUTGAME_MODE_MODESEL);
+            }
+            else
+            {
                 EAdpcmFadeOut(0x3c);
-
-                title_wrk.mode = TITLE_TITLE_SEL_BGMREQ;
-
-                ingame_wrk.stts &= (0x80 | 0x40 | 0x10 | 0x8 | 0x4 | 0x2 | 0x1);
-
-                InitialDmaBuffer();
+                LoadGameInit();
+                ingame_wrk.game = 0;
+                GameModeChange(GAME_MODE_INIT);
+            }
+            break;
+        case 2:
+            EAdpcmFadeOut(0x3c);
+            title_wrk.mode = TITLE_TITLE_SEL_BGMREQ;
+            ingame_wrk.stts &= (0x80 | 0x40 | 0x10 | 0x8 | 0x4 | 0x2 | 0x1);
+            InitialDmaBuffer();
+            break;
+        default:
             break;
         }
+    }
     break;
     case TITLE_MODE_SEL_BGMREQ:
         if (IsEndAdpcmFadeOut() != 0)
@@ -1079,32 +1199,70 @@ static int TitleExitPromptButton(const char *label, int selected)
 
 static void TitleExitPrompt()
 {
-    ImGuiIO *io = igGetIO_Nil();
-    ImGuiWindowFlags flags =
-        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize
-        | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
-        | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize
-        | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus;
+    ImGuiIO *io;
+    ImGuiWindowFlags flags;
     int left;
     int right;
     int confirm;
     int yes_clicked;
     int no_clicked;
+    int rml_title;
+    int rml_command;
+    int rml_selection;
 
-    igSetNextWindowPos(
-        ImVec2{io->DisplaySize.x * 0.5f, io->DisplaySize.y * 0.5f},
-        ImGuiCond_Always, ImVec2{0.5f, 0.5f});
+    yes_clicked = 0;
+    no_clicked = 0;
+    rml_title = TitleRmlScreenActive();
 
-    igBegin("##title_exit_prompt", NULL, flags);
+    if (rml_title != 0)
+    {
+        MikuPan_RmlTitleShowExitPrompt(exit_prompt_sel);
 
-    igText("Exit the game?");
-    igDummy(ImVec2{0.0f, 6.0f});
+        rml_selection = MikuPan_RmlTitleConsumeSelection();
+        if (rml_selection == 0 || rml_selection == 1)
+        {
+            if (exit_prompt_sel != rml_selection)
+            {
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
+            }
+            exit_prompt_sel = rml_selection;
+        }
 
-    yes_clicked = TitleExitPromptButton("Yes", exit_prompt_sel == 0);
-    igSameLine(0.0f, 16.0f);
-    no_clicked = TitleExitPromptButton("No", exit_prompt_sel == 1);
+        rml_command = MikuPan_RmlTitleConsumeCommand();
+        if (rml_command == MIKUPAN_RML_TITLE_COMMAND_EXIT_YES)
+        {
+            exit_prompt_sel = 0;
+            yes_clicked = 1;
+        }
+        else if (rml_command == MIKUPAN_RML_TITLE_COMMAND_EXIT_NO)
+        {
+            exit_prompt_sel = 1;
+            no_clicked = 1;
+        }
+    }
+    else
+    {
+        io = igGetIO_Nil();
+        flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize
+            | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
+            | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize
+            | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus;
 
-    igEnd();
+        igSetNextWindowPos(
+            ImVec2{io->DisplaySize.x * 0.5f, io->DisplaySize.y * 0.5f},
+            ImGuiCond_Always, ImVec2{0.5f, 0.5f});
+
+        igBegin("##title_exit_prompt", NULL, flags);
+
+        igText("Exit the game?");
+        igDummy(ImVec2{0.0f, 6.0f});
+
+        yes_clicked = TitleExitPromptButton("Yes", exit_prompt_sel == 0);
+        igSameLine(0.0f, 16.0f);
+        no_clicked = TitleExitPromptButton("No", exit_prompt_sel == 1);
+
+        igEnd();
+    }
 
     left = (DPAD_LEFT_PRESSED() == 1) || (Ana2PadDirCnt(3) == 1);
     right = (DPAD_RIGHT_PRESSED() == 1) || (Ana2PadDirCnt(1) == 1);
@@ -1152,35 +1310,50 @@ void TitleWaitMode()
     /* f20 58 */ float alp;
     /* 0x0(sp) */ DISP_SPRT ds;
     int f;
+    int rml_title;
+    int rml_command;
 
     TitleDrawClassicBackground(0, 0);
     TitleDrawGameTitle();
 
+    rml_title = TitleRmlScreenActive();
+
     if (title_wrk.mode == TITLE_TITLE_WAIT)
     {
+        if (rml_title != 0)
+        {
+            MikuPan_RmlTitleShowPress(0.0f);
+        }
         return;
     }
 
     f = ttl_dsp.timer % 120;
     alp = (SgSinf(f / 120.0f * (3.1415927f * 2)) + 1.0f) * 64.0f;
 
-    CopySprDToSpr(&ds, &font_sprt[17]);
+    if (rml_title != 0)
+    {
+        MikuPan_RmlTitleShowPress(alp / 128.0f);
+    }
+    else
+    {
+        CopySprDToSpr(&ds, &font_sprt[17]);
 
-    ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
-    ds.alpha = alp;
-    ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
+        ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+        ds.alpha = alp;
+        ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
 
-    DispSprD(&ds);
+        DispSprD(&ds);
 
-    float message_y = PS2_RESOLUTION_Y_FLOAT - PS2_RESOLUTION_Y_FLOAT / 6 + 3;
-    float message_x = PS2_RESOLUTION_X_FLOAT / 2 - 120;
+        float message_y = PS2_RESOLUTION_Y_FLOAT - PS2_RESOLUTION_Y_FLOAT / 6 + 3;
+        float message_x = PS2_RESOLUTION_X_FLOAT / 2 - 120;
 
-    u_char r_message = 77;
-    u_char g_message = 63;
-    u_char b_message = 68;
+        u_char r_message = 77;
+        u_char g_message = 63;
+        u_char b_message = 68;
 
-    SetASCIIString3(0x10, message_x, message_y, 0, r_message, g_message, b_message, alp, (char *) "PRESS   TO LEAVE");
-    SetASCIIString3(0x10, message_x + (7*12)+2, message_y, 2, r_message, g_message, b_message, alp, (char *) "\xD8");
+        SetASCIIString3(0x10, message_x, message_y, 0, r_message, g_message, b_message, alp, (char *) "PRESS   TO LEAVE");
+        SetASCIIString3(0x10, message_x + (7*12)+2, message_y, 2, r_message, g_message, b_message, alp, (char *) "\xD8");
+    }
 
     ttl_dsp.mode = 0;
 
@@ -1190,7 +1363,11 @@ void TitleWaitMode()
         return;
     }
 
-    if (CROSS_PRESSED() == 1 || START_PRESSED() == 1)
+    rml_command = rml_title != 0 ? MikuPan_RmlTitleConsumeCommand()
+                                 : MIKUPAN_RML_TITLE_COMMAND_NONE;
+
+    if (CROSS_PRESSED() == 1 || START_PRESSED() == 1
+        || rml_command == MIKUPAN_RML_TITLE_COMMAND_PRESS_START)
     {
         ttl_dsp.mode = 1;
 
@@ -1325,6 +1502,182 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
     adj = 28;
 
+    if (TitleRmlScreenActive() != 0)
+    {
+        int rml_menu_count = 5;
+        int rml_selection;
+        int rml_command;
+        int rml_command_selection;
+        int confirm_pressed;
+        int down_pressed;
+        int up_pressed;
+
+        if (title_wrk.csr >= rml_menu_count)
+        {
+            title_wrk.csr = 0;
+        }
+
+        rml_selection = MikuPan_RmlTitleConsumeSelection();
+        if (rml_selection >= 0 && rml_selection < rml_menu_count
+            && rml_selection != title_wrk.csr)
+        {
+            title_wrk.csr = rml_selection;
+            SeStartFix(0, 0, 0x1000, 0x1000, 0);
+        }
+
+        MikuPan_RmlTitleShowMenu(title_wrk.csr, rml_menu_count);
+
+        if (pad_off != 0)
+        {
+            return;
+        }
+
+        if (MikuPan_RmlTitleIsInputCooldownActive() != 0)
+        {
+            return;
+        }
+
+        if (MikuPan_RmlOptionsIsOpen() != 0)
+        {
+            return;
+        }
+
+        if (exit_prompt_open)
+        {
+            TitleExitPrompt();
+            return;
+        }
+
+        rml_command = MikuPan_RmlTitleConsumeCommand();
+        rml_command_selection = TitleRmlMenuCommandSelection(rml_command);
+        if (rml_command_selection >= 0 && rml_command_selection < rml_menu_count)
+        {
+            title_wrk.csr = rml_command_selection;
+        }
+
+        if (rml_command == MIKUPAN_RML_TITLE_COMMAND_SETTINGS)
+        {
+            (void) TitleConfirmSettingsOrExit(1);
+            return;
+        }
+
+        if (rml_command == MIKUPAN_RML_TITLE_COMMAND_EXIT_GAME)
+        {
+            (void) TitleConfirmSettingsOrExit(1);
+            return;
+        }
+
+        confirm_pressed = *key_now[5] == 1 || *key_now[0xc] == 1;
+        if (confirm_pressed && TitleConfirmSettingsOrExit(1) != 0)
+        {
+            return;
+        }
+
+        if (confirm_pressed || TitleRmlCommandConfirmsOriginalMenuItem(rml_command) != 0)
+        {
+            ingame_wrk.clear_count = 0;
+            ingame_wrk.ghost_cnt = 0;
+            ingame_wrk.rg_pht_cnt = 0;
+            ingame_wrk.pht_cnt = 0;
+            ingame_wrk.high_score = 0;
+            ingame_wrk.difficult = 0;
+
+            cribo.costume = 0;
+            cribo.clear_info = 0;
+
+            NewgameMenuAlbumInit();
+
+            realtime_scene_flg = 0;
+
+            MovieInitWrk();
+
+            motInitMsn();
+
+            switch (TitleRmlVisualSelectionToTitleSelection(title_wrk.csr))
+            {
+            case 0:
+                NewGameInit();
+                EAdpcmFadeOut(60);
+                ingame_wrk.game = 0;
+                GameModeChange(GAME_MODE_INIT);
+                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+            break;
+            case 1:
+                title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
+                title_wrk.load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
+                title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReq(SV_PHT_PK2, SPRITE_ADDR_3);
+
+                ingame_wrk.stts |= 0x20;
+
+                InitialDmaBuffer();
+
+                title_wrk.mode = 6;
+
+                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                EAdpcmFadeOut(60);
+            break;
+            case 2:
+                title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
+                title_wrk.load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
+                title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
+                title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
+                title_wrk.load_id = LoadReqLanguage(PL_ALBM_SAVE_E_PK2, SPRITE_ADDR_3);
+
+                ingame_wrk.stts |= 0x20;
+
+                InitialDmaBuffer();
+
+                title_wrk.mode = 14;
+
+                SeStartFix(1, 0, 0x1000, 0x1000, 0);
+                EAdpcmFadeOut(60);
+            break;
+            }
+
+            return;
+        }
+
+        if (*key_now[4] == 1)
+        {
+            ttl_dsp.timer = 0;
+            title_wrk.mode = 2;
+
+            SeStartFix(3, 0, 0x1000, 0x1000, 0);
+            return;
+        }
+
+        down_pressed = *key_now[1] == 1 ||
+            (*key_now[1] > 25 && (*key_now[1] % 5) == 1) ||
+            Ana2PadDirCnt(2) == 1 ||
+            (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1);
+
+        up_pressed = *key_now[0] == 1 ||
+            (*key_now[0] > 25 && (*key_now[0] % 5) == 1) ||
+            Ana2PadDirCnt(0) == 1 ||
+            (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1);
+
+        if (down_pressed)
+        {
+            if (title_wrk.csr < rml_menu_count - 1)
+            {
+                title_wrk.csr++;
+                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            }
+        }
+        else if (up_pressed)
+        {
+            if (title_wrk.csr > 0)
+            {
+                title_wrk.csr--;
+                SeStartFix(0, 0, 0x1000, 0x1000, 0);
+            }
+        }
+
+        return;
+    }
+
     if (
         title_wrk.csr == 3 && (
             *key_now[3] == 1 ||
@@ -1434,6 +1787,11 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
     }
 
     if (pad_off != 0)
+    {
+        return;
+    }
+
+    if (rml_title != 0 && MikuPan_RmlTitleIsInputCooldownActive() != 0)
     {
         return;
     }
@@ -1562,103 +1920,113 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 	/* v0 2 */ u_char alp;
 	/* s0 16 */ u_char rgb;
 	/* 0x0(sp) */ DISP_SPRT ds;
+    int rml_title;
+    int rml_menu_count;
+    int rml_selection;
+    int rml_command;
+    int rml_command_selection;
+    int confirm_pressed;
+    int down_pressed;
+    int up_pressed;
 
-    TitleDrawClassicBackground(1, alp_max);
+    rml_title = TitleRmlScreenActive();
+    rml_menu_count = rml_title != 0 ? 5 : 3;
 
-    for (mode = 0; mode < 3; mode++)
+    if (title_wrk.csr >= rml_menu_count)
     {
-        switch (mode)
+        title_wrk.csr = 0;
+    }
+
+    if (rml_title != 0)
+    {
+        rml_selection = MikuPan_RmlTitleConsumeSelection();
+        if (rml_selection >= 0 && rml_selection < rml_menu_count
+            && rml_selection != title_wrk.csr)
         {
-        case 0:
-            chr1 = 8;
-            chr2 = 4;
-
-            switch (title_wrk.csr)
-            {
-            case 0:
-                adj = 0;
-                dsp = 1;
-            break;
-            case 1:
-                adj = 0;
-                dsp = 0;
-            break;
-            case 2:
-                adj = 0;
-                dsp = 0;
-            break;
-            }
-        break;
-        case 1:
-            chr1 = 0;
-            chr2 = 5;
-
-            switch (title_wrk.csr)
-            {
-            case 0:
-                adj = 35;
-                dsp = 0;
-            break;
-            case 1:
-                adj = 35;
-                dsp = 1;
-            break;
-            case 2:
-                adj = 35;
-                dsp = 0;
-            break;
-            }
-        break;
-        case 2:
-            chr1 = 7;
-            chr2 = 0xff;
-
-            switch (title_wrk.csr)
-            {
-            case 0:
-                adj = 70;
-                dsp = 0;
-            break;
-            case 1:
-                adj = 70;
-                dsp = 0;
-            break;
-            case 2:
-                adj = 70;
-                dsp = 1;
-            break;
-            }
-        break;
+            title_wrk.csr = rml_selection;
+            SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
 
-        CopySprDToSpr(&ds, &font_sprt[chr1]);
+        MikuPan_RmlTitleShowMenu(title_wrk.csr, rml_menu_count);
+    }
+    else
+    {
+        TitleDrawClassicBackground(1, alp_max);
 
-        ds.y += adj;
-
-        alp = rgb = dsp * (alp_max / 2) + (alp_max / 2);
-
-        ds.alpha = alp;
-        ds.r = rgb; ds.g = rgb; ds.b = rgb;
-
-        if (dsp != 0)
+        for (mode = 0; mode < 3; mode++)
         {
-            ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
-        }
+            switch (mode)
+            {
+            case 0:
+                chr1 = 8;
+                chr2 = 4;
 
-        ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
+                switch (title_wrk.csr)
+                {
+                case 0:
+                    adj = 0;
+                    dsp = 1;
+                break;
+                case 1:
+                    adj = 0;
+                    dsp = 0;
+                break;
+                case 2:
+                    adj = 0;
+                    dsp = 0;
+                break;
+                }
+            break;
+            case 1:
+                chr1 = 0;
+                chr2 = 5;
 
-        DispSprD(&ds);
+                switch (title_wrk.csr)
+                {
+                case 0:
+                    adj = 35;
+                    dsp = 0;
+                break;
+                case 1:
+                    adj = 35;
+                    dsp = 1;
+                break;
+                case 2:
+                    adj = 35;
+                    dsp = 0;
+                break;
+                }
+            break;
+            case 2:
+                chr1 = 7;
+                chr2 = 0xff;
 
-        if (chr2 != 0xff)
-        {
-            CopySprDToSpr(&ds, &font_sprt[chr2]);
+                switch (title_wrk.csr)
+                {
+                case 0:
+                    adj = 70;
+                    dsp = 0;
+                break;
+                case 1:
+                    adj = 70;
+                    dsp = 0;
+                break;
+                case 2:
+                    adj = 70;
+                    dsp = 1;
+                break;
+                }
+            break;
+            }
+
+            CopySprDToSpr(&ds, &font_sprt[chr1]);
 
             ds.y += adj;
 
-            alp = rgb;
+            alp = rgb = dsp * (alp_max / 2) + (alp_max / 2);
 
             ds.alpha = alp;
-            ds.r = alp; ds.g = alp; ds.b = alp;
+            ds.r = rgb; ds.g = rgb; ds.b = rgb;
 
             if (dsp != 0)
             {
@@ -1668,6 +2036,27 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
             ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
 
             DispSprD(&ds);
+
+            if (chr2 != 0xff)
+            {
+                CopySprDToSpr(&ds, &font_sprt[chr2]);
+
+                ds.y += adj;
+
+                alp = rgb;
+
+                ds.alpha = alp;
+                ds.r = alp; ds.g = alp; ds.b = alp;
+
+                if (dsp != 0)
+                {
+                    ds.alphar = SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0);
+                }
+
+                ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
+
+                DispSprD(&ds);
+            }
         }
     }
 
@@ -1676,7 +2065,44 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         return;
     }
 
-    if (CROSS_PRESSED() == 1 || START_PRESSED() == 1)
+    if (MikuPan_RmlOptionsIsOpen() != 0)
+    {
+        return;
+    }
+
+    if (exit_prompt_open)
+    {
+        TitleExitPrompt();
+        return;
+    }
+
+    rml_command = rml_title != 0 ? MikuPan_RmlTitleConsumeCommand()
+                                 : MIKUPAN_RML_TITLE_COMMAND_NONE;
+    rml_command_selection = TitleRmlMenuCommandSelection(rml_command);
+    if (rml_command_selection >= 0 && rml_command_selection < rml_menu_count)
+    {
+        title_wrk.csr = rml_command_selection;
+    }
+
+    if (rml_command == MIKUPAN_RML_TITLE_COMMAND_SETTINGS)
+    {
+        (void) TitleConfirmSettingsOrExit(rml_title);
+        return;
+    }
+
+    if (rml_command == MIKUPAN_RML_TITLE_COMMAND_EXIT_GAME)
+    {
+        (void) TitleConfirmSettingsOrExit(rml_title);
+        return;
+    }
+
+    confirm_pressed = CROSS_PRESSED() == 1 || START_PRESSED() == 1;
+    if (confirm_pressed && TitleConfirmSettingsOrExit(rml_title) != 0)
+    {
+        return;
+    }
+
+    if (confirm_pressed || TitleRmlCommandConfirmsOriginalMenuItem(rml_command) != 0)
     {
         ingame_wrk.clear_count = 0;
         ingame_wrk.ghost_cnt = 0;
@@ -1696,14 +2122,13 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
         motInitMsn();
 
-        switch (title_wrk.csr)
+        switch (rml_title != 0 ? TitleRmlVisualSelectionToTitleSelection(title_wrk.csr) : title_wrk.csr)
         {
         case 0:
             NewGameInit();
-
-            title_wrk.mode = 9;
-            title_wrk.csr = 0;
-
+            EAdpcmFadeOut(60);
+            ingame_wrk.game = 0;
+            GameModeChange(GAME_MODE_INIT);
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         break;
         case 1:
@@ -1747,41 +2172,34 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
-    else if (
-        DPAD_DOWN_PRESSED() == 1 ||
-        (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
-        Ana2PadDirCnt(2) == 1 ||
-        (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
-    )
+    else
     {
-        if (title_wrk.csr < 2)
-        {
-            title_wrk.csr++;
-        }
-        else
-        {
-            title_wrk.csr = 0;
-        }
+        down_pressed = DPAD_DOWN_PRESSED() == 1 ||
+            (DPAD_DOWN_PRESSED() > 25 && (DPAD_DOWN_PRESSED() % 5) == 1) ||
+            Ana2PadDirCnt(2) == 1 ||
+            (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1);
 
-        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
-    }
-    else if (
-        DPAD_UP_PRESSED() == 1 ||
-        (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
-        Ana2PadDirCnt(0) == 1 ||
-        (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
-    )
-    {
-        if (title_wrk.csr > 0)
-        {
-            title_wrk.csr--;
-        }
-        else
-        {
-            title_wrk.csr = 2;
-        }
+        up_pressed = DPAD_UP_PRESSED() == 1 ||
+            (DPAD_UP_PRESSED() > 25 && (DPAD_UP_PRESSED() % 5) == 1) ||
+            Ana2PadDirCnt(0) == 1 ||
+            (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1);
 
-        SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
+        if (down_pressed)
+        {
+            if (title_wrk.csr < rml_menu_count - 1)
+            {
+                title_wrk.csr++;
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
+            }
+        }
+        else if (up_pressed)
+        {
+            if (title_wrk.csr > 0)
+            {
+                title_wrk.csr--;
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
+            }
+        }
     }
 }
 #endif

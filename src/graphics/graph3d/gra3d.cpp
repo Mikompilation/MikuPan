@@ -47,6 +47,7 @@
 #include "ingame/camera/camera.h"
 #include "main/glob.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
+#include "mikupan/rendering/mikupan_flashlight_dust.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/gameplay/mikupan_title_scene.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -2488,6 +2489,7 @@ void gra3dDraw()
     }
 
     CheckDMATrans();
+    MikuPan_RenderFlashlightDust();
     MikuPan_RenderMapEventHitboxes();
     MikuPan_RenderCameraDebug();
     MikuPan_DrawSourcePop(draw_source_token);

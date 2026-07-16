@@ -54,7 +54,7 @@ void DspBattleMode(u_char alp, float flsh);
 void DspMissionSelect(u_char alp);
 void PutChrOne(u_short chr, short int px, short int py, u_char rgb, u_char alp, u_char flp);
 void PutChrOneRGB(u_short chr, short int px, short int py, u_int rgb, u_char alp, u_char flp);
-void ModeSlctDspFlm(u_char per, u_char alp, u_char mode);
+void ModeSlctDspFlm(u_char per, u_char alp, u_char mode, u_char hide_title);
 void FilmCutter(u_short chr, short int px, short int py, short int ex, u_char rgb, u_char alp);
 void ModeSlctDspWin(u_char alp);
 void MsLoadCtrl(u_char mode);

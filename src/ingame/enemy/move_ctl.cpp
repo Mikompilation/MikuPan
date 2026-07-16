@@ -6,6 +6,7 @@
 #include "sce/libvu0.h"
 
 #include "main/glob.h"
+#include "mikupan/mikupan_config.h"
 #include "os/eeiop/eese.h"
 #include "os/eeiop/se_foot.h"
 #include "common/ul_math.h"
@@ -3221,11 +3222,19 @@ void EJob062(MOVE_BOX *mb)
     switch (req)
     {
     case 0:
+    {
+        const bool keep_finder_raised =
+            mikupan_configuration.keep_finder_raised_for_apparitions != 0
+            && ene_wrk[mb->idx].type == 2
+            && plyr_wrk.mode == PMODE_FINDER;
+
         plyr_wrk.sta &= ~0x1000;
 
-        FinderEndSet();
-
-        plyr_wrk.mode = 0;
+        if (!keep_finder_raised)
+        {
+            FinderEndSet();
+            plyr_wrk.mode = PMODE_NORMAL;
+        }
 
         ReqEneStop(0, 0);
 
@@ -3246,6 +3255,7 @@ void EJob062(MOVE_BOX *mb)
                 break;
             }
         }
+    }
     break;
     case 1:
         plyr_wrk.mode = 1;

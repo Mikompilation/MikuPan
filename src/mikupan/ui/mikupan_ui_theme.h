@@ -3,7 +3,7 @@
 
 #include "SDL3/SDL_video.h"
 
-#define MIKUPAN_UI_THEME_COUNT 6
+#define MIKUPAN_UI_THEME_COUNT 7
 #define MIKUPAN_UI_FONT_COUNT 3
 
 typedef struct ImFont ImFont;

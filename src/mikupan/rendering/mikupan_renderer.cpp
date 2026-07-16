@@ -6,6 +6,7 @@
 #include "cglm/cglm.h"
 #include "graphics/graph2d/message.h"
 #include "graphics/graph3d/sgsu.h"
+#include "mikupan/gameplay/mikupan_effect_compat.h"
 #include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/io/mikupan_file_c.h"
@@ -1665,6 +1666,7 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
 
 void MikuPan_EndFrame()
 {
+    MikuPan_DrawQueuedGusObjects();
     MikuPan_GPUFlushRenderPass();
     MikuPan_GPUResolveSceneForPresent();
     MikuPan_SetViewportCached(

@@ -66,10 +66,12 @@ void MikuPan_TitleResetSceneColourState(void)
 /* Frames to wait for the room background to load before giving up, so a stuck
  * CDVD load can never leave the title on an infinite black screen. */
 #define TITLE_BG_LOAD_TIMEOUT (60 * 8)
-#define TITLE_BG_FADE_FRAMES 30
+#define TITLE_BG_TRANSITION_FADE_FRAMES 120
+#define TITLE_BG_TRANSITION_LEAD_FRAMES 180
+#define TITLE_BG_INITIAL_FADE_FRAMES 60
 #define TITLE_BG_FADE_ALPHA_MAX 0x80
-#define TITLE_BGM_FADE_OUT_FRAMES 0x1e
-#define TITLE_BGM_FADE_IN_FRAMES 0x1e
+#define TITLE_BGM_FADE_OUT_FRAMES 60
+#define TITLE_BGM_FADE_IN_FRAMES 60
 #define TITLE_BGM_DEFAULT_FILE_NO AB013_STR
 #define TITLE_AUDIO_FILE_MAX RSHADE_SGD
 
@@ -111,228 +113,131 @@ typedef struct {
 static const TITLE_BG_PRESET title_bg_presets[] = {
     {
         .msn_no = 0,
-        .room_no = R000_GENKAN,
-        .audio_file_no = AB013_STR,
-        .cycle_seconds = 120,
+        .room_no = 0,
+        .audio_file_no = 1540,
+        .cycle_seconds = 20,
         .camera = {
-            .camera_p = {2960.0f, -526.0f, 978.0f},
-            .camera_i = {2870.0f, -550.0f, 1303.0f},
+            .camera_p = {2853.2f, -526.0f, 1363.5f},
+            .camera_i = {2763.2f, -550.0f, 1688.5f},
             .fov_deg = 44.0f,
         },
-        .lerp_enabled = 0,
-        .lerp_seconds = 0.0f,
+        .lerp_enabled = 1,
+        .lerp_seconds = 20.0f,
         .lerp_t = 0.0f,
         .lerp_a = {
-            .camera_p = {2960.0f, -526.0f, 978.0f},
-            .camera_i = {2870.0f, -550.0f, 1303.0f},
+            .camera_p = {2986.7f, -526.0f, 881.6f},
+            .camera_i = {2896.7f, -550.0f, 1206.6f},
             .fov_deg = 44.0f,
         },
         .lerp_b = {
-            .camera_p = {2960.0f, -526.0f, 978.0f},
-            .camera_i = {2870.0f, -550.0f, 1303.0f},
+            .camera_p = {2853.2f, -526.0f, 1363.5f},
+            .camera_i = {2763.2f, -550.0f, 1688.5f},
             .fov_deg = 44.0f,
         },
     },
     {
-        .msn_no = 3,
-        .room_no = R014,
-        .audio_file_no = AB012_STR,
-        .cycle_seconds = 120,
+        .msn_no = 0,
+        .room_no = 2,
+        .audio_file_no = 1540,
+        .cycle_seconds = 50,
         .camera = {
-            .camera_p = {2272.5f, -50.0f, -12.4f},
-            .camera_i = {2288.7f, -365.0f, 892.0f},
-            .fov_deg = 100.0f,
+            .camera_p = {500.0f, -495.9f, 2246.1f},
+            .camera_i = {500.0f, -750.0f, 3868.2f},
+            .fov_deg = 44.0f,
         },
         .lerp_enabled = 1,
-        .lerp_seconds = 115.0f,
+        .lerp_seconds = 50.0f,
         .lerp_t = 0.0f,
         .lerp_a = {
-            .camera_p = {2272.5f, -50.0f, -12.4f},
-            .camera_i = {2288.7f, -365.0f, 892.0f},
-            .fov_deg = 100.0f,
+            .camera_p = {500.0f, -495.9f, -18.1f},
+            .camera_i = {500.0f, -750.0f, 1604.0f},
+            .fov_deg = 44.0f,
         },
         .lerp_b = {
-            .camera_p = {2322.6f, -1150.0f, 2787.1f},
-            .camera_i = {2338.8f, -1165.0f, 3691.5f},
-            .fov_deg = 45.0f,
+            .camera_p = {500.0f, -495.9f, 6481.9f},
+            .camera_i = {500.0f, -750.0f, 8104.0f},
+            .fov_deg = 44.0f,
         },
     },
     {
-        .msn_no = 3,
-        .room_no = R010_NINGYO,
-        .audio_file_no = AB013_STR,
-        .cycle_seconds = 120,
+        .msn_no = 0,
+        .room_no = 10,
+        .audio_file_no = 1540,
+        .cycle_seconds = 50,
         .camera = {
-            .camera_p = {1402.7f, -450.0f, 2767.5f},
-            .camera_i = {1394.6f, -350.0f, 1233.7f},
-            .fov_deg = 43.4f,
+            .camera_p = {1386.4f, -457.7f, 3307.6f},
+            .camera_i = {1903.9f, -11.9f, 1185.3f},
+            .fov_deg = 44.0f,
         },
         .lerp_enabled = 1,
-        .lerp_seconds = 115.0f,
+        .lerp_seconds = 50.0f,
         .lerp_t = 0.0f,
         .lerp_a = {
-            .camera_p = {1402.7f, -450.0f, 2767.5f},
-            .camera_i = {1394.6f, -350.0f, 1233.7f},
-            .fov_deg = 43.4f,
+            .camera_p = {2649.6f, -457.7f, 3314.4f},
+            .camera_i = {920.9f, -11.9f, 1421.5f},
+            .fov_deg = 44.0f,
         },
         .lerp_b = {
-            .camera_p = {1402.7f, -450.0f, 2767.5f},
-            .camera_i = {1394.6f, -350.0f, 1233.7f},
-            .fov_deg = 10.0f,
+            .camera_p = {880.4f, -457.7f, 3304.9f},
+            .camera_i = {2297.6f, -11.9f, 1090.7f},
+            .fov_deg = 44.0f,
         },
     },
     {
-        .msn_no = 3,
-        .room_no = R010_NINGYO,
-        .audio_file_no = AB014_STR,
-        .cycle_seconds = 60,
+        .msn_no = 0,
+        .room_no = 25,
+        .audio_file_no = 1540,
+        .cycle_seconds = 40,
         .camera = {
-            .camera_p = {1509.8f, -595.0f, 1254.6f},
-            .camera_i = {481.6f, -480.0f, 1218.4f},
-            .fov_deg = 32.1f,
+            .camera_p = {5210.0f, -1324.0f, 3939.8f},
+            .camera_i = {5210.0f, -2232.0f, 6823.8f},
+            .fov_deg = 44.0f,
         },
         .lerp_enabled = 1,
-        .lerp_seconds = 51.0f,
+        .lerp_seconds = 40.0f,
         .lerp_t = 0.0f,
         .lerp_a = {
-            .camera_p = {1509.8f, -595.0f, 1254.6f},
-            .camera_i = {481.6f, -480.0f, 1218.4f},
-            .fov_deg = 32.1f,
+            .camera_p = {5210.0f, -803.8f, 2090.5f},
+            .camera_i = {5210.0f, -1711.9f, 4974.5f},
+            .fov_deg = 44.0f,
         },
         .lerp_b = {
-            .camera_p = {1450.0f, -595.0f, 2953.5f},
-            .camera_i = {421.8f, -480.0f, 2917.3f},
-            .fov_deg = 32.1f,
-        },
-    },
-    {
-        .msn_no = 3,
-        .room_no = R006_HAKONIWA,
-        .audio_file_no = AK007_KAMINARIFAR_STR,
-        .cycle_seconds = 120,
-        .camera = {
-            .camera_p = {5311.4f, -20.0f, 955.7f},
-            .camera_i = {4619.5f, -135.0f, 1534.4f},
-            .fov_deg = 64.1f,
-        },
-        .lerp_enabled = 1,
-        .lerp_seconds = 115.0f,
-        .lerp_t = 0.0f,
-        .lerp_a = {
-            .camera_p = {5311.4f, -20.0f, 955.7f},
-            .camera_i = {4619.5f, -135.0f, 1534.4f},
-            .fov_deg = 64.1f,
-        },
-        .lerp_b = {
-            .camera_p = {5311.4f, -1120.0f, 955.7f},
-            .camera_i = {4619.5f, -835.0f, 1534.4f},
-            .fov_deg = 64.1f,
-        },
-    },
-    {
-        .msn_no = 3,
-        .room_no = R025_SANDO,
-        .audio_file_no = AK004_SANDOU_STR,
-        .cycle_seconds = 120,
-        .camera = {
-            .camera_p = {5267.4f, -1850.0f, 6140.8f},
-            .camera_i = {5281.3f, -2150.0f, 7393.6f},
-            .fov_deg = 79.4f,
-        },
-        .lerp_enabled = 1,
-        .lerp_seconds = 120.0f,
-        .lerp_t = 0.0f,
-        .lerp_a = {
-            .camera_p = {5206.2f, -650.0f, 641.2f},
-            .camera_i = {5220.1f, -950.0f, 1893.9f},
-            .fov_deg = 100.0f,
-        },
-        .lerp_b = {
-            .camera_p = {5267.4f, -1850.0f, 6140.8f},
-            .camera_i = {5281.3f, -2150.0f, 7393.6f},
-            .fov_deg = 79.4f,
-        },
-    },
-    {
-        .msn_no = 3,
-        .room_no = R022_NAKASU,
-        .audio_file_no = AB014_STR,
-        .cycle_seconds = 120,
-        .camera = {
-            .camera_p = {0.0f, 120.0f, -8000.0f},
-            .camera_i = {0.0f, 540.0f, 0.0f},
-            .fov_deg = 70.0f,
-        },
-        .lerp_enabled = 1,
-        .lerp_seconds = 120.0f,
-        .lerp_t = 0.0f,
-        .lerp_a = {
-            .camera_p = {-2000.0f, 120.0f, -8500.0f},
-            .camera_i = {0.0f, 540.0f, 0.0f},
-            .fov_deg = 78.0f,
-        },
-        .lerp_b = {
-            .camera_p = {2200.0f, 260.0f, -5800.0f},
-            .camera_i = {0.0f, 540.0f, 1000.0f},
-            .fov_deg = 62.0f,
-        },
-    },
-    {
-        .msn_no = 3,
-        .room_no = R033,
-        .audio_file_no = AB001_STR,
-        .cycle_seconds = 120,
-        .camera = {
-            .camera_p = {783.3f, -450.0f, 986.5f},
-            .camera_i = {155.1f, -450.0f, 1657.4f},
-            .fov_deg = 100.0f,
-        },
-        .lerp_enabled = 1,
-        .lerp_seconds = 120.0f,
-        .lerp_t = 0.0f,
-        .lerp_a = {
-            .camera_p = {1076.4f, -450.0f, 760.3f},
-            .camera_i = {418.5f, -450.0f, 1390.5f},
-            .fov_deg = 100.0f,
-        },
-        .lerp_b = {
-            .camera_p = {-2429.4f, -450.0f, 3465.9f},
-            .camera_i = {-2731.7f, -450.0f, 4583.3f},
-            .fov_deg = 100.0f,
+            .camera_p = {5210.0f, -1703.8f, 5290.5f},
+            .camera_i = {5210.0f, -2611.9f, 8174.5f},
+            .fov_deg = 44.0f,
         },
     },
 };
-
 #define TITLE_BG_PRESET_COUNT ((int)(sizeof(title_bg_presets) / sizeof(title_bg_presets[0])))
 
 static TITLE_BG_ROOM_STATE title_bg_room_state = TITLE_BG_ROOM_UNLOADED;
 static SgCAMERA title_bg_camera;
 static int title_bg_msn_no = TITLE_BG_MSN_NO;
 static int title_bg_room_no = TITLE_BG_ROOM_NO;
-static float title_bg_camera_p[3] = {2960.0f, -526.0f, 978.0f};
-static float title_bg_camera_i[3] = {2870.0f, -550.0f, 1303.0f};
+static float title_bg_camera_p[3] = {2986.7f, -526.0f, 881.6f};
+static float title_bg_camera_i[3] = {2896.7f, -550.0f, 1206.6f};
 static float title_bg_camera_fov_deg = 44.0f;
 static float title_bg_camera_move_step = 100.0f;
-static int title_bg_auto_cycle = 0;
-static int title_bg_auto_cycle_seconds = 10;
+static int title_bg_auto_cycle = 1;
+static int title_bg_auto_cycle_seconds = 20;
 static int title_bg_auto_cycle_timer = 0;
 static int title_bg_preset_index = 0;
 static TITLE_BG_CAMERA_POINT title_bg_camera_lerp_a = {
-    .camera_p = {2960.0f, -526.0f, 978.0f},
-    .camera_i = {2870.0f, -550.0f, 1303.0f},
+    .camera_p = {2986.7f, -526.0f, 881.6f},
+    .camera_i = {2896.7f, -550.0f, 1206.6f},
     .fov_deg = 44.0f,
 };
 static TITLE_BG_CAMERA_POINT title_bg_camera_lerp_b = {
-    .camera_p = {2960.0f, -526.0f, 978.0f},
-    .camera_i = {2870.0f, -550.0f, 1303.0f},
+    .camera_p = {2853.2f, -526.0f, 1363.5f},
+    .camera_i = {2763.2f, -550.0f, 1688.5f},
     .fov_deg = 44.0f,
 };
 static float title_bg_camera_lerp_t = 0.0f;
-static float title_bg_camera_lerp_seconds = 0.0f;
-static int title_bg_camera_lerp_enabled = 0;
+static float title_bg_camera_lerp_seconds = 20.0f;
+static int title_bg_camera_lerp_enabled = 1;
 static int title_bg_camera_lerp_timer = 0;
 static int title_debug_window_visible = 0;
-static int title_bgm_file_no = TITLE_BGM_DEFAULT_FILE_NO;
+static int title_bgm_file_no = 1540;
 static int title_bgm_playing_file_no = -1;
 static int title_bg_effect_load_id = -1;
 static int title_bg_map_load_id = -1;
@@ -348,6 +253,7 @@ static int title_bg_load_failed = 0;
 static TITLE_BG_FADE_STATE title_bg_fade_state = TITLE_BG_FADE_IDLE;
 static int title_bg_fade_timer = 0;
 static int title_bg_fade_alpha = 0;
+static int title_bg_fade_frame_count = TITLE_BG_TRANSITION_FADE_FRAMES;
 static int title_bg_pending_preset_index = -1;
 static int title_bg_pending_msn_no = -1;
 static int title_bg_pending_room_no = -1;
@@ -387,26 +293,6 @@ static void TitleBgSetVector(sceVu0FVECTOR vector, float x, float y, float z, fl
     vector[3] = w;
 }
 
-static int TitleBgClampInt(int value, int min_value, int max_value)
-{
-    if (value < min_value)
-    {
-        return min_value;
-    }
-
-    return value > max_value ? max_value : value;
-}
-
-static float TitleBgClampFloat(float value, float min_value, float max_value)
-{
-    if (value < min_value)
-    {
-        return min_value;
-    }
-
-    return value > max_value ? max_value : value;
-}
-
 static float TitleBgLerpFloat(float a, float b, float t)
 {
     return a + (b - a) * t;
@@ -414,7 +300,23 @@ static float TitleBgLerpFloat(float a, float b, float t)
 
 static int TitleBgFadeFrameCount(void)
 {
-    return TitleBgClampInt(TITLE_BG_FADE_FRAMES, 1, 180);
+    return MikuPan_ClampInt(title_bg_fade_frame_count, 1, 240);
+}
+
+static void TitleBgBeginFadeOut(void)
+{
+    title_bg_fade_frame_count = TITLE_BG_TRANSITION_FADE_FRAMES;
+    title_bg_fade_state = TITLE_BG_FADE_OUT;
+    title_bg_fade_timer = 0;
+    title_bg_fade_alpha = 0;
+}
+
+static void TitleBgBeginInitialFadeIn(void)
+{
+    title_bg_fade_frame_count = TITLE_BG_INITIAL_FADE_FRAMES;
+    title_bg_fade_state = TITLE_BG_FADE_WAIT_READY;
+    title_bg_fade_timer = 0;
+    title_bg_fade_alpha = TITLE_BG_FADE_ALPHA_MAX;
 }
 
 static const char *TitleBgRoomName(int room_no)
@@ -497,6 +399,7 @@ static void TitleBgResetFade(void)
     title_bg_fade_state = TITLE_BG_FADE_IDLE;
     title_bg_fade_timer = 0;
     title_bg_fade_alpha = 0;
+    title_bg_fade_frame_count = TITLE_BG_TRANSITION_FADE_FRAMES;
     title_bg_pending_preset_index = -1;
     title_bg_pending_msn_no = -1;
     title_bg_pending_room_no = -1;
@@ -582,7 +485,7 @@ static void TitleBgCopyPresetCamera(const TITLE_BG_PRESET *preset)
 
 static void TitleBgApplyCameraLerp(void)
 {
-    float t = TitleBgClampFloat(title_bg_camera_lerp_t, 0.0f, 1.0f);
+    float t = MikuPan_ClampFloat(title_bg_camera_lerp_t, 0.0f, 1.0f);
 
     title_bg_camera_lerp_t = t;
     title_bg_camera_p[0] = TitleBgLerpFloat(title_bg_camera_lerp_a.camera_p[0], title_bg_camera_lerp_b.camera_p[0], t);
@@ -598,7 +501,7 @@ static int TitleBgCameraLerpFrameCount(void)
 {
     int frames;
 
-    title_bg_camera_lerp_seconds = TitleBgClampFloat(title_bg_camera_lerp_seconds, 0.1f, 120.0f);
+    title_bg_camera_lerp_seconds = MikuPan_ClampFloat(title_bg_camera_lerp_seconds, 0.1f, 120.0f);
     frames = (int)(title_bg_camera_lerp_seconds * 60.0f);
 
     if (frames < 1)
@@ -613,7 +516,7 @@ static void TitleBgSetCameraLerpTimerFromT(void)
 {
     int frames = TitleBgCameraLerpFrameCount();
 
-    title_bg_camera_lerp_t = TitleBgClampFloat(title_bg_camera_lerp_t, 0.0f, 1.0f);
+    title_bg_camera_lerp_t = MikuPan_ClampFloat(title_bg_camera_lerp_t, 0.0f, 1.0f);
     title_bg_camera_lerp_timer = (int)(title_bg_camera_lerp_t * frames);
 
     if (title_bg_camera_lerp_timer > frames)
@@ -652,7 +555,7 @@ static void TitleBgApplyPresetNow(int preset_index)
     const TITLE_BG_PRESET *preset;
     int reload_room;
 
-    preset_index = TitleBgClampInt(preset_index, 0, TITLE_BG_PRESET_COUNT - 1);
+    preset_index = MikuPan_ClampInt(preset_index, 0, TITLE_BG_PRESET_COUNT - 1);
     preset = &title_bg_presets[preset_index];
     reload_room = title_bg_msn_no != preset->msn_no || title_bg_room_no != preset->room_no;
 
@@ -688,8 +591,8 @@ static void TitleBgApplyPresetNow(int preset_index)
 
 static void TitleBgApplyRoomNow(int msn_no, int room_no)
 {
-    msn_no = TitleBgClampInt(msn_no, 0, TITLE_BG_MSN_MAX);
-    room_no = TitleBgClampInt(room_no, 0, TITLE_BG_ROOM_MAX);
+    msn_no = MikuPan_ClampInt(msn_no, 0, TITLE_BG_MSN_MAX);
+    room_no = MikuPan_ClampInt(room_no, 0, TITLE_BG_ROOM_MAX);
 
     if (title_bg_msn_no == msn_no && title_bg_room_no == room_no)
     {
@@ -727,7 +630,7 @@ static void TitleBgBeginPresetTransition(int preset_index)
 {
     const TITLE_BG_PRESET *preset;
 
-    preset_index = TitleBgClampInt(preset_index, 0, TITLE_BG_PRESET_COUNT - 1);
+    preset_index = MikuPan_ClampInt(preset_index, 0, TITLE_BG_PRESET_COUNT - 1);
     preset = &title_bg_presets[preset_index];
 
     if (TitleBgShouldFadeRoomChange(preset->msn_no, preset->room_no) == 0)
@@ -739,9 +642,7 @@ static void TitleBgBeginPresetTransition(int preset_index)
     title_bg_pending_preset_index = preset_index;
     title_bg_pending_msn_no = -1;
     title_bg_pending_room_no = -1;
-    title_bg_fade_state = TITLE_BG_FADE_OUT;
-    title_bg_fade_timer = 0;
-    title_bg_fade_alpha = 0;
+    TitleBgBeginFadeOut();
 
     if (title_bgm_playing_file_no != -1 && title_bgm_playing_file_no != preset->audio_file_no)
     {
@@ -752,8 +653,8 @@ static void TitleBgBeginPresetTransition(int preset_index)
 
 static void TitleBgBeginRoomTransition(int msn_no, int room_no)
 {
-    msn_no = TitleBgClampInt(msn_no, 0, TITLE_BG_MSN_MAX);
-    room_no = TitleBgClampInt(room_no, 0, TITLE_BG_ROOM_MAX);
+    msn_no = MikuPan_ClampInt(msn_no, 0, TITLE_BG_MSN_MAX);
+    room_no = MikuPan_ClampInt(room_no, 0, TITLE_BG_ROOM_MAX);
 
     if (TitleBgShouldFadeRoomChange(msn_no, room_no) == 0)
     {
@@ -764,9 +665,7 @@ static void TitleBgBeginRoomTransition(int msn_no, int room_no)
     title_bg_pending_preset_index = -1;
     title_bg_pending_msn_no = msn_no;
     title_bg_pending_room_no = room_no;
-    title_bg_fade_state = TITLE_BG_FADE_OUT;
-    title_bg_fade_timer = 0;
-    title_bg_fade_alpha = 0;
+    TitleBgBeginFadeOut();
     TitleBgPauseCameraAnimations();
 }
 
@@ -799,20 +698,51 @@ static void TitleBgApplyPrevPreset(void)
     TitleBgApplyPreset(prev_index);
 }
 
-static void TitleBgAutoCycleUpdate(void)
+static int TitleBgAutoCycleLeadFrameCount(void)
+{
+    return MikuPan_ClampInt(TITLE_BG_TRANSITION_LEAD_FRAMES, 1, 240);
+}
+
+static int TitleBgAutoCycleShouldAdvance(void)
 {
     int cycle_frames;
+    int cycle_trigger_frames;
+    int lead_frames = TitleBgAutoCycleLeadFrameCount();
 
+    title_bg_auto_cycle_seconds = MikuPan_ClampInt(title_bg_auto_cycle_seconds, 1, 120);
+    cycle_frames = title_bg_auto_cycle_seconds * 60;
+    cycle_trigger_frames = MikuPan_ClampInt(cycle_frames - lead_frames, 1, cycle_frames);
+
+    if (title_bg_auto_cycle_timer >= cycle_trigger_frames)
+    {
+        return 1;
+    }
+
+    if (title_bg_camera_lerp_enabled != 0)
+    {
+        int lerp_frames = TitleBgCameraLerpFrameCount();
+        int lerp_trigger_frames = MikuPan_ClampInt(lerp_frames - lead_frames, 1, lerp_frames);
+
+        if (title_bg_camera_lerp_timer >= lerp_trigger_frames)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static void TitleBgAutoCycleUpdate(void)
+{
     if (title_bg_auto_cycle == 0 || title_bg_room_state != TITLE_BG_ROOM_READY
         || title_bg_fade_state != TITLE_BG_FADE_IDLE)
     {
         return;
     }
 
-    title_bg_auto_cycle_seconds = TitleBgClampInt(title_bg_auto_cycle_seconds, 1, 120);
-    cycle_frames = title_bg_auto_cycle_seconds * 60;
+    title_bg_auto_cycle_timer++;
 
-    if (++title_bg_auto_cycle_timer >= cycle_frames)
+    if (TitleBgAutoCycleShouldAdvance() != 0)
     {
         TitleBgApplyNextPreset();
     }
@@ -1329,6 +1259,11 @@ void MikuPan_TitleBackgroundBeginRoomLoad(void)
 {
     InitModelLoad();
 
+    if (title_bg_fade_state == TITLE_BG_FADE_IDLE)
+    {
+        TitleBgBeginInitialFadeIn();
+    }
+
     title_bg_load_timer = 0;
     title_bg_load_failed = 0;
     title_bg_model_load_num = 0;
@@ -1540,24 +1475,15 @@ static void TitleBgFadeUpdate(int room_ready)
 static void TitleBgDrawFadeOverlay(void)
 {
     u_char ps2_alpha;
-    int imgui_alpha;
     float alpha;
     float vertices[4][8];
-    ImGuiIO *io;
-    ImDrawList *draw_list;
-    float viewport_x;
-    float viewport_y;
-    float viewport_w;
-    float viewport_h;
-    float viewport_scale;
-    ImU32 bar_color;
 
     if (title_bg_fade_alpha <= 0)
     {
         return;
     }
 
-    ps2_alpha = (u_char)TitleBgClampInt(
+    ps2_alpha = (u_char)MikuPan_ClampInt(
         title_bg_fade_alpha, 0, TITLE_BG_FADE_ALPHA_MAX);
     alpha = MikuPan_ConvertScaleColor(ps2_alpha);
 
@@ -1571,64 +1497,6 @@ static void TitleBgDrawFadeOverlay(void)
     vertices[3][4] = 1.0f; vertices[3][5] = 1.0f; vertices[3][6] = 0.0f; vertices[3][7] = 1.0f;
 
     MikuPan_RenderUntexturedSprite(&vertices[0][0]);
-
-    io = igGetIO_Nil();
-    draw_list = igGetBackgroundDrawList_Nil();
-
-    if (io == NULL || draw_list == NULL)
-    {
-        return;
-    }
-
-    imgui_alpha = TitleBgClampInt(
-        (int)ps2_alpha * 255 / TITLE_BG_FADE_ALPHA_MAX, 0, 255);
-    bar_color = ((ImU32)imgui_alpha << 24);
-
-    MikuPan_GetPS2Viewport(
-        (int)io->DisplaySize.x,
-        (int)io->DisplaySize.y,
-        &viewport_x,
-        &viewport_y,
-        &viewport_w,
-        &viewport_h,
-        &viewport_scale);
-    (void)viewport_scale;
-
-    if (viewport_y > 0.0f)
-    {
-        ImDrawList_AddRectFilled(
-            draw_list,
-            ImVec2{0.0f, 0.0f},
-            ImVec2{io->DisplaySize.x, viewport_y},
-            bar_color,
-            0.0f,
-            0);
-        ImDrawList_AddRectFilled(
-            draw_list,
-            ImVec2{0.0f, viewport_y + viewport_h},
-            ImVec2{io->DisplaySize.x, io->DisplaySize.y},
-            bar_color,
-            0.0f,
-            0);
-    }
-
-    if (viewport_x > 0.0f)
-    {
-        ImDrawList_AddRectFilled(
-            draw_list,
-            ImVec2{0.0f, viewport_y},
-            ImVec2{viewport_x, viewport_y + viewport_h},
-            bar_color,
-            0.0f,
-            0);
-        ImDrawList_AddRectFilled(
-            draw_list,
-            ImVec2{viewport_x + viewport_w, viewport_y},
-            ImVec2{io->DisplaySize.x, viewport_y + viewport_h},
-            bar_color,
-            0.0f,
-            0);
-    }
 }
 
 void MikuPan_TitleCalibrationPreviewOpen(void)
@@ -1698,7 +1566,6 @@ void MikuPan_TitleBackgroundDrawRoom(void)
         return;
     }
 
-    TitleBgAutoCycleUpdate();
     room_no = title_bg_room_no;
     room_ready = MikuPan_TitleBackgroundRoomReady();
 
@@ -1722,6 +1589,7 @@ void MikuPan_TitleBackgroundDrawRoom(void)
     ingame_wrk.msn_no = title_bg_msn_no;
 
     TitleBgCameraLerpUpdate();
+    TitleBgAutoCycleUpdate();
 
     TitleBgSetupCamera();
     MikuPan_TitleSceneBeginFrame(1, title_bg_msn_no, title_bg_room_no,
@@ -1835,7 +1703,7 @@ void MikuPan_TitleBackgroundDebugUi(void)
 
     igSeparator();
 
-    if (igCheckbox("Auto cycle presets", (bool *)&auto_cycle))
+    if (igCheckbox("Auto cycle title scenes", (bool *)&auto_cycle))
     {
         title_bg_auto_cycle = auto_cycle != 0;
         title_bg_auto_cycle_timer = 0;
@@ -1848,11 +1716,11 @@ void MikuPan_TitleBackgroundDebugUi(void)
 
     if (igInputInt("Cycle seconds", &cycle_seconds, 1, 5, 0))
     {
-        title_bg_auto_cycle_seconds = TitleBgClampInt(cycle_seconds, 1, 120);
+        title_bg_auto_cycle_seconds = MikuPan_ClampInt(cycle_seconds, 1, 120);
         title_bg_auto_cycle_timer = 0;
     }
 
-    if (igInputInt("Preset", &preset_index, 1, 1, 0))
+    if (igInputInt("Title scene", &preset_index, 1, 1, 0))
     {
         TitleBgPauseCameraAnimations();
         TitleBgApplyPreset(preset_index - 1);
@@ -1860,7 +1728,7 @@ void MikuPan_TitleBackgroundDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Prev##title_bg_preset", ImVec2{0.0f, 0.0f}))
+    if (igButton("Prev##title_bg_scene", ImVec2{0.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgApplyPrevPreset();
@@ -1868,13 +1736,13 @@ void MikuPan_TitleBackgroundDebugUi(void)
 
     igSameLine(0.0f, -1.0f);
 
-    if (igButton("Next##title_bg_preset", ImVec2{0.0f, 0.0f}))
+    if (igButton("Next##title_bg_scene", ImVec2{0.0f, 0.0f}))
     {
         TitleBgPauseCameraAnimations();
         TitleBgApplyNextPreset();
     }
 
-    igText("Preset count: %d", TITLE_BG_PRESET_COUNT);
+    igText("Title scene count: %d", TITLE_BG_PRESET_COUNT);
 
     if (igInputInt("Mission", &msn_no, 1, 10, 0))
     {
@@ -2084,7 +1952,7 @@ void MikuPan_TitleBackgroundDebugUi(void)
         full_values,
         sizeof(full_values),
         "title_bg_setup\n"
-        "msn=%d room=%d room_background=%d audio=%d auto_cycle=%d cycle_seconds=%d preset=%d\n"
+        "msn=%d room=%d room_background=%d audio=%d auto_cycle=%d cycle_seconds=%d title_scene=%d\n"
         "camera p={%.1ff, %.1ff, %.1ff} i={%.1ff, %.1ff, %.1ff} fov=%.1ff\n"
         "lerp enabled=%d seconds=%.1ff t=%.3ff\n"
         "lerp_a p={%.1ff, %.1ff, %.1ff} i={%.1ff, %.1ff, %.1ff} fov=%.1ff\n"

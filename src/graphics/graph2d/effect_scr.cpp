@@ -181,6 +181,15 @@ static u_char EffectScrClampColor(int value)
     return (u_char)value;
 }
 
+static float EffectScrFullScreenHalfWidth(void)
+{
+    float half_w;
+    float half_h;
+
+    MikuPan_GetFullScreenHalfExtent(&half_w, &half_h);
+    return half_w;
+}
+
 static int EffectScrClipHasUsableW(const sceVu0FVECTOR clip)
 {
     const float min_w = 0.00001f;
@@ -1176,7 +1185,7 @@ void MakeScrDeformPacket(/* s1 17 */ int pnumw, /* 0x0(sp) */ int pnumh, /* s2 1
         }
     }
 
-    MikuPan_RenderScreenCopyTriangles3D(
+    MikuPan_RenderScreenCopyTriangles3DFullDeform(
         (sceGsTex0 *)&tex0,
         &render_buffer[0][0],
         render_vertices,
@@ -1436,7 +1445,7 @@ void SetDeform0(/* 0x2850(sp) */ int type, /* f20 58 */ float rate, /* 0x2854(sp
             }
         }
 
-        MikuPan_RenderScreenCopyTriangles3D(
+        MikuPan_RenderScreenCopyTriangles3DFullDeform(
             &sd1.g_GsTex0,
             &render_buffer[0][0],
             render_vertices,
@@ -2178,7 +2187,7 @@ void SetDeform3(/* 0x81f0(sp) */ int type, /* f20 58 */ float rate, /* 0x81f4(sp
             }
         }
 
-        MikuPan_RenderScreenCopyTriangles3D(
+        MikuPan_RenderScreenCopyTriangles3DFullDeform(
             &sd1.g_GsTex0,
             &render_buffer[0][0],
             render_vertices,
@@ -2213,6 +2222,9 @@ void SetDeform4(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
 	/* f20 58 */ float fy;
 	/* f23 61 */ float fz;
 	/* f2 40 */ float yoff;
+	float deform_half_w;
+	float deform_step_x;
+	float deform_source_x0;
 	/* 0x0(sp) */ SCRDEF scrdef[25][33];
 	/* v0 2 */ SCRDEF *pscr;
 	/* s0 16 */ DEFWORK *pdef;
@@ -2223,38 +2235,35 @@ void SetDeform4(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
     vnumw = 33;
     pnumh = 24;
     vnumh = 25;
+    deform_half_w = EffectScrFullScreenHalfWidth();
+    deform_step_x = deform_half_w * 2.0f / (float)pnumw;
+    deform_source_x0 = 320.0f - deform_half_w;
     
     LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
     
     yoff = GetYOffsetf();
     
+    for (j = 0; j < vnumh; j++)
     {
-        float eff_hw, eff_hh;
-        MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);
-        float deform_full_w = eff_hw * 2.0f;
-        float deform_tx_start = 320.0f - eff_hw;
-        for (j = 0; j < vnumh; j++)
-        {
-            for (i = 0; i < vnumw; i++)
-            {
-                pscr = &scrdef[j][i];
-                pscr->stq[0] = (i * deform_full_w) / 32.0f + deform_tx_start;
-                pscr->stq[1] = (j * 224) / 24.0f + yoff;
-            }
-
-            scrdef[j][0].stq[0] += 1.0f;
-            scrdef[j][vnumw-1].stq[0] -= 1.0f;
-        }
-
         for (i = 0; i < vnumw; i++)
         {
-            scrdef[0][i].stq[1] += 1.0f;
-            scrdef[vnumh-1][i].stq[1] -= 1.0f;
+            pscr = &scrdef[j][i];
+            pscr->stq[0] = i * deform_step_x + deform_source_x0;
+            pscr->stq[1] = (j * 224) / 24.0f + yoff;
         }
+
+        scrdef[j][0].stq[0] += 1.0f;
+        scrdef[j][vnumw-1].stq[0] -= 1.0f;
+    }
+
+    for (i = 0; i < vnumw; i++)
+    {
+        scrdef[0][i].stq[1] += 1.0f;
+        scrdef[vnumh-1][i].stq[1] -= 1.0f;
     }
 
     fw = rate / 4.0f;
-    lm = SgSqrtf(224 * 224 + 320 * 320);
+    lm = SgSqrtf(224.0f * 224.0f + deform_half_w * deform_half_w);
     lw = 1.0f / lm;
     
     if (eff_deform.init != 0)
@@ -2265,7 +2274,7 @@ void SetDeform4(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
             {
                 pdef = &dw[j][i];
                 
-                wfw = i * 20.0f - 320.0f;
+                wfw = i * deform_step_x - deform_half_w;
                 wfh = j * (448.0f / 24.0f) - 224.0f;
                 
                 pdef->lll = SgSqrtf(wfw * wfw + wfh * wfh);
@@ -2354,6 +2363,9 @@ void SetDeform5(/* 0x6720(sp) */ int type, /* f21 59 */ float rate, /* 0x6724(sp
 	/* f22 60 */ float fx;
 	/* f20 58 */ float fy;
 	/* f23 61 */ float fz;
+	float deform_half_w;
+	float deform_step_x;
+	float deform_source_x0;
 	/* 0x0(sp) */ SCRDEF scrdef[25][33];
 	/* v0 2 */ SCRDEF *pscr;
 	/* f0 38 */ float xx;
@@ -2366,24 +2378,26 @@ void SetDeform5(/* 0x6720(sp) */ int type, /* f21 59 */ float rate, /* 0x6724(sp
     vnumw = 33;
     pnumh = 24;
     vnumh = 25;
+    deform_half_w = EffectScrFullScreenHalfWidth();
+    deform_step_x = deform_half_w * 2.0f / (float)pnumw;
+    deform_source_x0 = 320.0f - deform_half_w;
     
     LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
     
-    fx = 20.0f;
     fy = (56.0f / 6.0f);
     
     yy = GetYOffsetf();
     
     for (j = 0; j < vnumh; j++)
     {
-        for (i = 0, xx = 0.0f; i < vnumw; i++)
+        for (i = 0, xx = deform_source_x0; i < vnumw; i++)
         {
             pscr = &scrdef[j][i];
             
             pscr->stq[0] = xx;
             pscr->stq[1] = yy;
 
-            xx += fx;
+            xx += deform_step_x;
         }
         
         scrdef[j][0].stq[0] += 1.0f;
@@ -2399,7 +2413,7 @@ void SetDeform5(/* 0x6720(sp) */ int type, /* f21 59 */ float rate, /* 0x6724(sp
     }
     
     fw = rate / 4.0f;
-    lm = SgSqrtf(224 * 224 + 320 * 320);
+    lm = SgSqrtf(224.0f * 224.0f + deform_half_w * deform_half_w);
     lw = 1.0f / lm;
     
     if (eff_deform.init != 0)
@@ -2410,7 +2424,7 @@ void SetDeform5(/* 0x6720(sp) */ int type, /* f21 59 */ float rate, /* 0x6724(sp
             {
                 pdef = &dw[j][i];
                 
-                wfw = i * 20.0f - 320.0f;
+                wfw = i * deform_step_x - deform_half_w;
                 wfh = j * (448.0f / 24.0f) - 224.0f;
                 
                 pdef->lll = SgSqrtf(wfw * wfw + wfh * wfh);
@@ -2501,6 +2515,9 @@ void SetDeform6(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
 	/* f20 58 */ float fy;
 	/* f23 61 */ float fz;
 	/* f2 40 */ float yoff;
+	float deform_half_w;
+	float deform_step_x;
+	float deform_source_x0;
 	/* 0x0(sp) */ SCRDEF scrdef[25][33];
 	/* s1 17 */ SCRDEF *pscr;
 	/* s0 16 */ DEFWORK *pdef;
@@ -2511,38 +2528,35 @@ void SetDeform6(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
     vnumw = 33;
     pnumh = 24;
     vnumh = 25;
+    deform_half_w = EffectScrFullScreenHalfWidth();
+    deform_step_x = deform_half_w * 2.0f / (float)pnumw;
+    deform_source_x0 = 320.0f - deform_half_w;
     
     LocalCopyLtoLDraw((sys_wrk.count & 1) * 0x8c0, 0x1a40);
     
     yoff = GetYOffsetf();
     
+    for (j = 0; j < vnumh; j++)
     {
-        float eff_hw, eff_hh;
-        MikuPan_GetFullScreenHalfExtent(&eff_hw, &eff_hh);
-        float deform_full_w = eff_hw * 2.0f;
-        float deform_tx_start = 320.0f - eff_hw;
-        for (j = 0; j < vnumh; j++)
-        {
-            for (i = 0; i < vnumw; i++)
-            {
-                pscr = &scrdef[j][i];
-                pscr->stq[0] = (i * deform_full_w) / 32.0f + deform_tx_start;
-                pscr->stq[1] = (j * 224) / 24.0f + yoff;
-            }
-
-            scrdef[j][0].stq[0] += 1.0f;
-            scrdef[j][vnumw-1].stq[0] -= 1.0f;
-        }
-
         for (i = 0; i < vnumw; i++)
         {
-            scrdef[0][i].stq[1] += 1.0f;
-            scrdef[vnumh-1][i].stq[1] -= 1.0f;
+            pscr = &scrdef[j][i];
+            pscr->stq[0] = i * deform_step_x + deform_source_x0;
+            pscr->stq[1] = (j * 224) / 24.0f + yoff;
         }
+
+        scrdef[j][0].stq[0] += 1.0f;
+        scrdef[j][vnumw-1].stq[0] -= 1.0f;
+    }
+
+    for (i = 0; i < vnumw; i++)
+    {
+        scrdef[0][i].stq[1] += 1.0f;
+        scrdef[vnumh-1][i].stq[1] -= 1.0f;
     }
 
     fw = rate / 4.0f;
-    lm = SgSqrtf(224 * 224 + 320 * 320);
+    lm = SgSqrtf(224.0f * 224.0f + deform_half_w * deform_half_w);
     lw = 1.0f / lm;
 
     if (eff_deform.init != 0)
@@ -2553,7 +2567,7 @@ void SetDeform6(/* 0x6720(sp) */ int type, /* f20 58 */ float rate, /* 0x6724(sp
             {
                 pdef = &dw[j][i];
                 
-                wfw = i * 20.0f - 320.0f;
+                wfw = i * deform_step_x - deform_half_w;
                 wfh = j * (448.0f / 24.0f) - 224.0f;
                 
                 pdef->lll = SgSqrtf(wfw * wfw + wfh * wfh);

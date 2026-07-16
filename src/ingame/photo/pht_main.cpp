@@ -113,6 +113,8 @@ void PhotoCtrl()
             else
             {
                 FurnPicExecStart();
+                FurnAplyAmbient();
+                SetPlyrSpotLight(1);
                 MikuPan_OnHiddenFurniturePhotoStart();
             }
 

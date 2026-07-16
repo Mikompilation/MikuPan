@@ -279,12 +279,24 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui_c.cpp
         src/mikupan/ui/mikupan_rmlui.cpp
+        src/mikupan/ui/mikupan_rml_message_box.cpp
+        src/mikupan/ui/mikupan_rml_message_box.h
         src/mikupan/ui/mikupan_rml_options.cpp
         src/mikupan/ui/mikupan_rml_options.h
+        src/mikupan/ui/mikupan_rml_mode_select.cpp
+        src/mikupan/ui/mikupan_rml_mode_select.h
+        src/mikupan/ui/mikupan_rml_title.cpp
+        src/mikupan/ui/mikupan_rml_title.h
+        src/mikupan/ui/mikupan_rml_save_load.cpp
+        src/mikupan/ui/mikupan_rml_save_load.h
+        src/mikupan/ui/mikupan_rml_save_point.cpp
+        src/mikupan/ui/mikupan_rml_save_point.h
         src/mikupan/rendering/mikupan_profiler.cpp
         src/mikupan/rendering/mikupan_gpu.cpp
         src/mikupan/rendering/mikupan_camera.cpp
         src/mikupan/rendering/mikupan_debug_draw.cpp
+        src/mikupan/rendering/mikupan_flashlight_dust.cpp
+        src/mikupan/rendering/mikupan_flashlight_dust.h
         src/mikupan/rendering/mikupan_lighting.cpp
         src/mikupan/rendering/mikupan_mesh_render.cpp
         src/mikupan/rendering/mikupan_renderer.cpp
@@ -340,8 +352,11 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/gs/mikupan_texture_manager.cpp"
         "src/mikupan/mikupan_audio_bus.cpp"
         "src/mikupan/mikupan_config_ini.cpp"
-        "src/mikupan/mikupan_file.cpp"
-        "src/mikupan/mikupan_logging.cpp"
+        "src/mikupan/debug/mikupan_logging.cpp"
+        "src/mikupan/io/mikupan_file.cpp"
+        "src/mikupan/rendering/mikupan_flashlight_dust.cpp"
+        "src/mikupan/ui/mikupan_rml_message_box.cpp"
+        "src/mikupan/ui/mikupan_rml_mode_select.cpp"
         "src/mikupan/ui/mikupan_ui.cpp"
 )
 set(MIKUPAN_CXX_SOURCES)

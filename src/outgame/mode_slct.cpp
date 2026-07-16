@@ -5,6 +5,7 @@
 #include "mode_slct.h"
 
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/ui/mikupan_rml_mode_select.h"
 #include "mikupan/ui/mikupan_rml_options.h"
 
 #include <string.h>
@@ -320,14 +321,64 @@ void ModeSlctCtrl(u_char mode)
                 && dsp_ms.now_mode != 10
                 && cmn_tex_load != 0)
             {
+                const bool rml_mode_select =
+                    (mode == 0 || mode == 1)
+                    && MikuPan_RmlModeSelectIsAvailable() != 0;
+                const bool rml_options =
+                    mode == 3 && MikuPan_RmlOptionsIsOpen() != 0;
+
                 ModeSlctDspBak(dsp_ms.bak_alp, mode);
-                ModeSlctDspFlm(dsp_ms.flm_lng, dsp_ms.flm_alp, mode);
-                ModeSlctDspChr(dsp_ms.chr_alp, mode);
-                if (dsp_ms.now_mode != 3)
+                ModeSlctDspFlm(
+                    dsp_ms.flm_lng,
+                    dsp_ms.flm_alp,
+                    mode,
+                    (rml_mode_select || rml_options) ? 1 : 0);
+
+                if (rml_mode_select)
+                {
+                    float opacity =
+                        static_cast<float>(dsp_ms.chr_alp) / 128.0f;
+                    if (dsp_ms.main_step == 5 || dsp_ms.main_step == 6)
+                    {
+                        const float film_opacity =
+                            static_cast<float>(dsp_ms.flm_lng) / 100.0f;
+                        if (film_opacity < opacity)
+                        {
+                            opacity = film_opacity;
+                        }
+                    }
+                    if (mode == 0)
+                    {
+                        MikuPan_RmlModeSelectShowMain(dsp_ms.csr[0], opacity);
+                    }
+                    else
+                    {
+                        MikuPan_RmlModeSelectShowStory(
+                            dsp_ms.csr[1],
+                            dsp_ms.side,
+                            sm_csr_info[0],
+                            dsp_ms.sm_slct[0],
+                            dsp_ms.sm_slct[1],
+                            dsp_ms.sm_slct[2],
+                            opacity);
+                    }
+
+                    SetSprFile(MikuPan_GetHostAddress(PL_STTS_PK2_ADDRESS));
+                    DispCaption(3, dsp_ms.chr_alp);
+                }
+                else
+                {
+                    ModeSlctDspChr(dsp_ms.chr_alp, mode);
+                }
+
+                if (dsp_ms.now_mode != 3 && !rml_mode_select)
                 {
                     ModeSlctDspWin(dsp_ms.win_alp);
                 }
-                ModeSlctDspMsg(dsp_ms.win_alp, mode);
+                if (!rml_mode_select)
+                {
+                    ModeSlctDspMsg(dsp_ms.win_alp, mode);
+                }
             }
         }
     }
@@ -340,6 +391,55 @@ char ModeSlctPad(u_char mode)
     u_char sm_slct_num[3] = {6, 2, 4};
     u_char bm_slct_num[1] = {4};
     int level;
+    int rml_command = MIKUPAN_RML_MODE_SELECT_COMMAND_NONE;
+    int rml_selection = -1;
+
+    if ((mode == 0 || mode == 1) && MikuPan_RmlModeSelectIsAvailable() != 0)
+    {
+        rml_selection = MikuPan_RmlModeSelectConsumeSelection();
+        rml_command = MikuPan_RmlModeSelectConsumeCommand();
+
+        if (mode == 0 && rml_selection >= 0 && rml_selection < 5)
+        {
+            if (dsp_ms.csr[0] != rml_selection)
+            {
+                dsp_ms.csr[0] = static_cast<u_char>(rml_selection);
+                SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
+            }
+        }
+        else if (mode == 1)
+        {
+            if (rml_selection >= sm_csr_info[0] && rml_selection < 5)
+            {
+                if (dsp_ms.csr[1] != rml_selection)
+                {
+                    dsp_ms.csr[1] = static_cast<u_char>(rml_selection);
+                    dsp_ms.side = 0;
+                    SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
+                }
+            }
+            else if (rml_selection >= 0)
+            {
+                rml_command = MIKUPAN_RML_MODE_SELECT_COMMAND_NONE;
+            }
+
+            if ((rml_command == MIKUPAN_RML_MODE_SELECT_COMMAND_LEFT
+                 || rml_command == MIKUPAN_RML_MODE_SELECT_COMMAND_RIGHT)
+                && dsp_ms.csr[1] < 3)
+            {
+                if (dsp_ms.csr[1] != 1
+                    || dsp_ms.sm_slct[0] != 0
+                    || (ingame_wrk.msn_no == 0 && mc_msn_flg == 1))
+                {
+                    dsp_ms.side = 1;
+                }
+                else
+                {
+                    rml_command = MIKUPAN_RML_MODE_SELECT_COMMAND_NONE;
+                }
+            }
+        }
+    }
 
     rtrn = 0;
     switch (mode)
@@ -351,7 +451,8 @@ char ModeSlctPad(u_char mode)
             dsp_ms.next_mode = 5;
             rtrn = 1;
         }
-        else if (CROSS_PRESSED() == 1)
+        else if (CROSS_PRESSED() == 1
+                 || rml_command == MIKUPAN_RML_MODE_SELECT_COMMAND_CONFIRM)
         { 
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dsp_ms.next_mode = dsp_ms.csr[0] + 1;
@@ -424,7 +525,8 @@ char ModeSlctPad(u_char mode)
             cribo.costume = dsp_ms.sm_slct[2];
 #endif
         }
-        else if (CROSS_PRESSED() == 1)
+        else if (CROSS_PRESSED() == 1
+                 || rml_command == MIKUPAN_RML_MODE_SELECT_COMMAND_CONFIRM)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             switch (dsp_ms.csr[1])
@@ -529,6 +631,7 @@ char ModeSlctPad(u_char mode)
             break;
             case 1:
                 if (
+                    rml_command == MIKUPAN_RML_MODE_SELECT_COMMAND_LEFT ||
                     DPAD_LEFT_PRESSED() == 1 ||
                      (DPAD_LEFT_PRESSED() > 0x19 && (DPAD_LEFT_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(3) == 1 ||
@@ -560,6 +663,7 @@ char ModeSlctPad(u_char mode)
                     }
                 }
                 else if (
+                    rml_command == MIKUPAN_RML_MODE_SELECT_COMMAND_RIGHT ||
                     DPAD_RIGHT_PRESSED() == 1 ||
                     (DPAD_RIGHT_PRESSED() > 0x19 && (DPAD_RIGHT_PRESSED() % 5) == 1) ||
                     Ana2PadDirCnt(1) == 1 ||
@@ -1489,7 +1593,7 @@ void PutChrOneRGB(u_short chr, short int px, short int py, u_int rgb, u_char alp
     DispSprD(&ds);
 }
 
-void ModeSlctDspFlm(u_char per, u_char alp, u_char mode)
+void ModeSlctDspFlm(u_char per, u_char alp, u_char mode, u_char hide_title)
 {
     short int mx;
     DISP_SPRT ds;
@@ -1501,39 +1605,34 @@ void ModeSlctDspFlm(u_char per, u_char alp, u_char mode)
 
     mx = ((100 - per) * 0x1f9) / 100.0f;
 
-    switch (mode)
+    FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
+
+    if (hide_title == 0)
     {
-    case 0:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(3, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 1:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(4, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 2:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(2, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 3:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(6, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 4:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(5, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
-    case 7:
-        FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
-        FilmCutter(1, -mx, 0, 0x59, 0x80, alp);
-        PutChrOne(7, 0, 0, 0x80, alp, 0x0);
-    break;
+        switch (mode)
+        {
+        case 0:
+            FilmCutter(3, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 1:
+            FilmCutter(4, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 2:
+            FilmCutter(2, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 3:
+            FilmCutter(6, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 4:
+            FilmCutter(5, -mx, 0, 0x59, 0x80, alp);
+        break;
+        case 7:
+            FilmCutter(1, -mx, 0, 0x59, 0x80, alp);
+        break;
+        }
     }
+
+    PutChrOne(7, 0, 0, 0x80, alp, 0x0);
 }
 
 void FilmCutter(u_short chr, short int px, short int py, short int ex, u_char rgb, u_char alp)

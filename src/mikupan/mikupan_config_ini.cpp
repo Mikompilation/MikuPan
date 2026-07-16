@@ -219,6 +219,10 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
     ApplyValue(ini, "ui", "minimap_enabled",
                mikupan_configuration.minimap_enabled);
+    ApplyValue(ini, "gameplay", "flashlight_style",
+               mikupan_configuration.flashlight_style);
+    ApplyValue(ini, "gameplay", "keep_finder_raised_for_apparitions",
+               mikupan_configuration.keep_finder_raised_for_apparitions);
     ApplyValue(ini, "ui", "title_room_background",
                mikupan_configuration.title_room_background);
     ApplyValue(ini, "ui", "title_dither",
@@ -311,6 +315,20 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.input.finder_mouse_enabled);
     ApplyValue(ini, "input", "finder_mouse_sensitivity",
                mikupan_configuration.input.finder_mouse_sensitivity);
+    ApplyValue(ini, "input", "special_bindings_saved",
+               mikupan_configuration.input.special_bindings_saved);
+    ApplyValue(ini, "input", "special_bindings_count",
+               mikupan_configuration.input.special_bindings_count);
+    ApplyValue(ini, "input", "camera_activation_mode",
+               mikupan_configuration.input.camera_activation_mode);
+    for (int i = 0; i < 6; i++)
+    {
+        const std::string base = "special" + std::to_string(i) + "_";
+        ApplyValue(ini, "input", (base + "kind").c_str(),
+                   mikupan_configuration.input.special_bind_kind[i]);
+        ApplyValue(ini, "input", (base + "code").c_str(),
+                   mikupan_configuration.input.special_bind_code[i]);
+    }
     for (int i = 0; i < 16; i++)
     {
         ApplyValue(ini, "input.action_profile",
@@ -399,6 +417,10 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
     SetValue(ini, "ui", "minimap_enabled",
              mikupan_configuration.minimap_enabled);
+    SetValue(ini, "gameplay", "flashlight_style",
+             mikupan_configuration.flashlight_style);
+    SetValue(ini, "gameplay", "keep_finder_raised_for_apparitions",
+             mikupan_configuration.keep_finder_raised_for_apparitions);
     SetValue(ini, "ui", "title_room_background",
              mikupan_configuration.title_room_background);
     SetValue(ini, "ui", "title_dither",
@@ -493,6 +515,20 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
                  mikupan_configuration.input.finder_mouse_enabled);
         SetValue(ini, "input", "finder_mouse_sensitivity",
                  mikupan_configuration.input.finder_mouse_sensitivity);
+        SetValue(ini, "input", "special_bindings_saved",
+                 mikupan_configuration.input.special_bindings_saved);
+        SetValue(ini, "input", "special_bindings_count",
+                 mikupan_configuration.input.special_bindings_count);
+        SetValue(ini, "input", "camera_activation_mode",
+                 mikupan_configuration.input.camera_activation_mode);
+        for (int i = 0; i < 6; i++)
+        {
+            const std::string base = "special" + std::to_string(i) + "_";
+            SetValue(ini, "input", (base + "kind").c_str(),
+                     mikupan_configuration.input.special_bind_kind[i]);
+            SetValue(ini, "input", (base + "code").c_str(),
+                     mikupan_configuration.input.special_bind_code[i]);
+        }
         for (int i = 0; i < 16; i++)
         {
             SetValue(ini, "input.action_profile",
