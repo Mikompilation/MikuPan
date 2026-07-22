@@ -64,7 +64,10 @@ void OutGameCtrl(void)
             TitleCtrl();
         break;
         case OUTGAME_MODE_BATTLE:
-            ModeSlctLoop();
+            BattleModeMain();
+        break;
+        case OUTGAME_MODE_FREE:
+            FreeModeMain();
         break;
         case OUTGAME_MODE_OPTION:
             ModeSlctLoop();
@@ -106,6 +109,9 @@ void OutGameModeChange(u_char mode)
             // do nothing ...
             break;
         case OUTGAME_MODE_BATTLE:
+            BattleModeInit();
+            break;
+        case OUTGAME_MODE_FREE:
             BattleModeInit();
             break;
         case OUTGAME_MODE_OPTION:

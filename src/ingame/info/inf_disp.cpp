@@ -194,7 +194,6 @@ void InformationDispMain()
     }
 }
 
-
 void InformationDispLateFinderMask()
 {
 }
@@ -2218,7 +2217,9 @@ static void ShowEnePower(u_char blu_bar, u_char red_bar, short int pos_x, short 
 
     if (alp != 0)
     {
-        PutSpriteYW(65, 66, pos_x, pos_y, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+        PutSpriteYW(FND_ENE_VIT_BASE, FND_ENE_VIT_BASE2, pos_x, pos_y, 0.0f,
+                    0x808080, alp,
+                    1.0f, 1.0f, 0, 0xff, 1, 0, 0);
 
 #ifdef BUILD_EU_VERSION
         GayBar(143, pos_x, pos_y, alp, red_bar / 16.0f);
@@ -2237,7 +2238,9 @@ static void ShowEnePower(u_char blu_bar, u_char red_bar, short int pos_x, short 
             alp_per = bar_over / 300.0f;
             alp0 = alp * alp_per * 0.5f + alp * 0.5f;
 
-            PutSpriteYW(68, 68, pos_x, pos_y, 0.0f, ovr_ene_rgb, alp0, 9.5625f, 1.0f, 0, 0xff, 1, 0, 0);
+            PutSpriteYW(FND_ENE_VIT_OVR, FND_ENE_VIT_OVR, pos_x, pos_y, 0.0f,
+                        ovr_ene_rgb,
+                        alp0, 9.5625f, 1.0f, 0, 0xff, 1, 0, 0);
 
             if (new_inf.hit_hp_ovr_ene_wait != 0)
             {

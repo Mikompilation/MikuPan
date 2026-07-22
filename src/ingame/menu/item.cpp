@@ -33,7 +33,6 @@
 #include "graphics/graph2d/subtitles.h"
 #endif
 
-
 static int IngameMenuItemEventOpenJudge(u_char item_no);
 static void ItemModeInOut();
 static void ItemModeInOut2();
@@ -59,358 +58,7 @@ static void BgFusumaWideSideYW(int rgb, float pos_x, float alpha, int pri, float
 static void BgFusumaFadeQuad(float x0, float x1, float a0, float a1);
 static float BgFusumaAlpha(float alpha);
 
-ITEM_USE_DAT item_use_dat[70] = {
-    {
-        .type = 2,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 2,
-        .value0 = 1,
-        .value1 = 0,
-    },
-    {
-        .type = 2,
-        .value0 = 2,
-        .value1 = 0,
-    },
-    {
-        .type = 2,
-        .value0 = 3,
-        .value1 = 0,
-    },
-    {
-        .type = 2,
-        .value0 = 4,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 3,
-        .value0 = 0,
-        .value1 = 200,
-    },
-    {
-        .type = 3,
-        .value0 = 1,
-        .value1 = 500,
-    },
-    {
-        .type = 0,
-        .value0 = 1,
-        .value1 = 500,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 56,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 87,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 129,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 84,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 71,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 61,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 5,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 5,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 144,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 112,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 80,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 5,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 5,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 5,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 5,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 5,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 5,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-    {
-        .type = 0,
-        .value0 = 0,
-        .value1 = 0,
-    },
-};
+#include "data/item_use_dat.h" // ITEM_USE_DAT item_use_dat[70];
 
 short int item_sort[70] = {
      6, 66,  7,  8, 41, 42, 43, 44, 10, 16,
@@ -439,18 +87,6 @@ static FLSH_CORE dbg_flsh;
 static ITM_EFF_WRK iew;
 
 #define PI 3.1415927f
-
-#ifdef BUILD_EU_VERSION
-#define PL_BGBG_PK2_ADDRESS 0x1cfefc0
-#endif
-
-#ifdef BUILD_EU_VERSION
-#define LOAD_ITEM_2D_ADDR 0x1d51db0
-#endif
-
-#ifdef BUILD_EU_VERSION
-#define VRAM_ITEM_2D_ADDRESS 0x1d51db0
-#endif
 
 void NewgameItemInit()
 {
@@ -1140,23 +776,22 @@ void PlayerStatusYW(u_char alpha)
     u_char tmp_alp;
     u_char flr_alp;
 
-    PutSpriteYW(209, 209, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-    PutSpriteYW(210, 210, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-
+    PutSpriteYW(STTS_BASE_L, STTS_BASE_L, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+    PutSpriteYW(STTS_BASE_R, STTS_BASE_R, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
 
     if (ingame_wrk.game == 0 && ingame_wrk.msn_no == 0)
     {
-        PutSpriteYW(239, 239, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+        PutSpriteYW(STTS_MAFUYU, STTS_MAFUYU, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
     }
     else
     {
-        PutSpriteYW(211, 211, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+        PutSpriteYW(STTS_MIKU, STTS_MIKU, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
     }
 
     GageAnime(0, 0, alpha);
     FilmAnime(0, 0, alpha);
 
-    PutSpriteYW(240, 240, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 0.9f, 0.9f, 0, 0xff, 1, 0, 0);
+    PutSpriteYW(STTS_REISEKI2, STTS_REISEKI2, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 0.9f, 0.9f, 0, 0xff, 1, 0, 0);
 
     PutStringYW(45, 0, 453, 59, 0x808080, alpha, 0x5000, 0);
 
@@ -1186,12 +821,18 @@ void PlayerStatusYW(u_char alpha)
 
             if (iew.set_sub_tmp != 0xff)
             {
-                PutSpriteYW(iew.set_sub_tmp + 218, iew.set_sub_tmp + 218, 0.0f, 0.0f, 0.0f, 0x808080, tmp_alp, 1.0f, 1.0f, 0, 255, 1, 0, 0);
+                PutSpriteYW(iew.set_sub_tmp + STTS_ATSU,
+                            iew.set_sub_tmp + STTS_ATSU,
+                            0.0f, 0.0f, 0.0f, 0x808080, tmp_alp, 1.0f, 1.0f, 0,
+                            255, 1, 0, 0);
             }
 
             if (iew.set_sub_bak != 0xff)
             {
-                PutSpriteYW(iew.set_sub_bak + 218, iew.set_sub_bak + 218, 0.0f, 0.0f, 0.0f, 0x808080, bak_alp, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+                PutSpriteYW(iew.set_sub_bak + STTS_ATSU,
+                            iew.set_sub_bak + STTS_ATSU,
+                            0.0f, 0.0f, 0.0f, 0x808080, bak_alp, 1.0f, 1.0f, 0,
+                            0xff, 1, 0, 0);
             }
     }
     else if (iew.set_sub_flr != 0)
@@ -1202,13 +843,21 @@ void PlayerStatusYW(u_char alpha)
 
         if (iew.set_sub_bak != 0xff)
         {
-            PutSpriteYW(iew.set_sub_bak + 218, iew.set_sub_bak + 218, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-            PutSpriteYW(iew.set_sub_bak + 218, iew.set_sub_bak + 218, 0.0f, 0.0f, 0.0f, 0x808080, bak_alp, 1.0f, 1.0f, 0, 0xff, 1, 1, 0);
+            PutSpriteYW(iew.set_sub_bak + STTS_ATSU,
+                        iew.set_sub_bak + STTS_ATSU,
+                        0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff,
+                        1, 0, 0);
+            PutSpriteYW(iew.set_sub_bak + STTS_ATSU,
+                        iew.set_sub_bak + STTS_ATSU,
+                        0.0f, 0.0f, 0.0f, 0x808080, bak_alp, 1.0f, 1.0f, 0,
+                        0xff, 1, 1, 0);
         }
     }
     else if (iew.set_sub_bak != 0xff)
     {
-        PutSpriteYW(iew.set_sub_bak + 218, iew.set_sub_bak + 218, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+        PutSpriteYW(iew.set_sub_bak + STTS_ATSU, iew.set_sub_bak + STTS_ATSU,
+                    0.0f,
+                    0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
     }
 
     if (iew.set_spe_bak != cam_custom_wrk.set_spe)
@@ -1230,12 +879,18 @@ void PlayerStatusYW(u_char alpha)
 
         if (iew.set_spe_tmp != 0xff)
         {
-            PutSpriteYW(iew.set_spe_tmp + 223, iew.set_spe_tmp + 223, 0.0f, 0.0f, 0.0f, 0x808080, tmp_alp, 1.0f, 1.0f, 0, 255, 1, 0, 0);
+            PutSpriteYW(iew.set_spe_tmp + STTS_KAN, iew.set_spe_tmp + STTS_KAN,
+                        0.0f,
+                        0.0f, 0.0f, 0x808080, tmp_alp, 1.0f, 1.0f, 0, 255, 1, 0,
+                        0);
         }
 
         if (iew.set_spe_bak != 0xff)
         {
-            PutSpriteYW(iew.set_spe_bak + 223, iew.set_spe_bak + 223, 0.0f, 0.0f, 0.0f, 0x808080, bak_alp, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+            PutSpriteYW(iew.set_spe_bak + STTS_KAN, iew.set_spe_bak + STTS_KAN,
+                        0.0f,
+                        0.0f, 0.0f, 0x808080, bak_alp, 1.0f, 1.0f, 0, 0xff, 1,
+                        0, 0);
         }
     }
     else if (iew.set_spe_flr != 0)
@@ -1246,14 +901,22 @@ void PlayerStatusYW(u_char alpha)
 
         if (iew.set_spe_bak != 0xff)
         {
-            PutSpriteYW(iew.set_spe_bak + 223, iew.set_spe_bak + 223, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-            PutSpriteYW(iew.set_spe_bak + 223, iew.set_spe_bak + 223, 0.0f, 0.0f, 0.0f, 0x808080, bak_alp, 1.0f, 1.0f, 0, 0xff, 1, 1, 0);
+            PutSpriteYW(iew.set_spe_bak + STTS_KAN, iew.set_spe_bak + STTS_KAN,
+                        0.0f,
+                        0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0,
+                        0);
+            PutSpriteYW(iew.set_spe_bak + STTS_KAN, iew.set_spe_bak + STTS_KAN,
+                        0.0f,
+                        0.0f, 0.0f, 0x808080, bak_alp, 1.0f, 1.0f, 0, 0xff, 1,
+                        1, 0);
         }
 
     }
     else if (iew.set_spe_bak != 0xff)
     {
-        PutSpriteYW(iew.set_spe_bak + 223, iew.set_spe_bak + 223, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+        PutSpriteYW(iew.set_spe_bak + STTS_KAN, iew.set_spe_bak + STTS_KAN,
+                    0.0f,
+                    0.0f, 0.0f, 0x808080, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
     }
 }
 
@@ -1319,11 +982,11 @@ static void FilmAnime(short int pos_x, short int pos_y, short int alpha)
         }
     }
 
-    PutSpriteYW(212, 212, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[0], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-    PutSpriteYW(213, 213, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[1], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-    PutSpriteYW(214, 214, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[2], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-    PutSpriteYW(215, 215, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[3], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-    PutSpriteYW(216, 216, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[4], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+    PutSpriteYW(STTS_FLM_07, STTS_FLM_07, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[0], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+    PutSpriteYW(STTS_FLM_14, STTS_FLM_14, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[1], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+    PutSpriteYW(STTS_FLM_37, STTS_FLM_37, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[2], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+    PutSpriteYW(STTS_FLM_74, STTS_FLM_74, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[3], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+    PutSpriteYW(STTS_FLM_90, STTS_FLM_90, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[4], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
 
     PutStringYW(45, 0, 347, 59, 0x808080, alpha, 0x5000, 0);
 
@@ -2758,7 +2421,8 @@ static void BgFusumaWideSideYW(int rgb, float pos_x, float alpha, int pri, float
             {
                 break;
             }
-            PutSpriteYWFlipX(396, -pos_x - panel_w * (float)i, 0.0f, 0.0f,
+
+            PutSpriteYWFlipX(FUSUMA_L, -pos_x - panel_w * (float) i, 0.0f, 0.0f,
                              rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
         }
 
@@ -2775,7 +2439,8 @@ static void BgFusumaWideSideYW(int rgb, float pos_x, float alpha, int pri, float
             {
                 break;
             }
-            PutSpriteYWFlipX(397, pos_x + panel_w * (float)i, 0.0f, 0.0f,
+
+            PutSpriteYWFlipX(FUSUMA_R, pos_x + panel_w * (float) i, 0.0f, 0.0f,
                              rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
         }
 
@@ -2796,8 +2461,8 @@ void BgFusumaYW(int rgb, float pos_x, float alpha, int pri)
     scl_x = 2.5396826f;
     scl_y = 2.516854f;
 
-    PutSpriteYW(396, 396, -pos_x, 0.0f, 0.0f, rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
-    PutSpriteYW(397, 397, +pos_x, 0.0f, 0.0f, rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
+    PutSpriteYW(FUSUMA_L, FUSUMA_L, -pos_x, 0.0f, 0.0f, rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
+    PutSpriteYW(FUSUMA_R, FUSUMA_R, +pos_x, 0.0f, 0.0f, rgb, alpha, scl_x, scl_y, 1, 0xff, 1, 0, 0);
     BgFusumaWideSideYW(rgb, pos_x, alpha, pri, scl_x, scl_y);
 }
 
@@ -2834,11 +2499,11 @@ static void ItmTrFlsh(short int pos_x, short int pos_y, short int alpha)
 
         CLRtoRGB(&rgb, flsh[1].alpha, flsh[1].alpha, flsh[1].alpha);
 
-        PutSpriteYW(282, 283, pos_x, pos_y, 0.0f, rgb, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+        PutSpriteYW(ITM_SCR_TRIANGLE_U, ITM_SCR_TRIANGLE_D, pos_x, pos_y, 0.0f, rgb, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
     }
     else
     {
-        PutSpriteYW(282, 283, pos_x, pos_y, 0.0f, 0x404040, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+        PutSpriteYW(ITM_SCR_TRIANGLE_U, ITM_SCR_TRIANGLE_D, pos_x, pos_y, 0.0f, 0x404040, alpha, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
     }
 }
 

@@ -28,6 +28,7 @@ extern BTL_SAVE_STR btl_save_str[];
 extern u_long btl_save_str_num;
 
 void FreeModeMain();
+u_char FreeModeRoomNo();
 void FreeModePosSet();
 void BattleModeInit();
 void ClearStageWrk();

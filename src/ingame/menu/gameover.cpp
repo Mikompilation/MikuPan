@@ -200,7 +200,7 @@ void GameOverMenuMain()
 
             else if (go_wrk.csr == 1)
             {
-                GameModeChange(1);
+                GameModeChange(GMC_IN_GAMEOVER_OUT);
 
                 ingame_wrk.stts &= ~0x80;
 
@@ -223,7 +223,7 @@ static void GameOverMenuDisp(u_char alp)
 
     CmnWindow(21, 0, 0, alp, 0x80);
 
-    PutSpriteYW(534, 535, 0.0f, 0.0f, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
+    PutSpriteYW(GOV_FNT1, GOV_FNT2, 0.0f, 0.0f, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
     FlashStarYW(&flsh, 96, 64, 90, 0);
 
     CmnCursol(169, go_wrk.csr * 29 + 202, 302, 30, flsh.alpha, go_wrk.menu_alp, 0x23000);

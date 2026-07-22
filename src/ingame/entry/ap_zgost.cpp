@@ -27,8 +27,6 @@
 
 ZHOUR_WRK zh_wrk = {0};
 
-
-
 #ifdef BUILD_EU_VERSION
 #define TYPE_8_MDL_FILE_NO_OFFSET 47
 #define TYPE_9_MDL_FILE_NO_OFFSET 115

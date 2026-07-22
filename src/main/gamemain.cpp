@@ -222,12 +222,12 @@ void GameModeChange(u_char mode)
 {
     switch (mode)
     {
-    case GAME_MODE_INIT:
+    case GMC_OUT_MENU_IN:
         MovieInitWrk();
         sys_wrk.game_mode = GAME_MODE_INGAME;
         ingame_wrk.mode = INGAME_MODE_FIRST_LOAD;
     break;
-    case GAME_MODE_MCCHECK:
+    case GMC_IN_GAMEOVER_OUT:
         sys_wrk.game_mode = GAME_MODE_OUTGAME;
         if (ingame_wrk.game == INGAME_MODE_INIT)
         {
@@ -242,7 +242,7 @@ void GameModeChange(u_char mode)
         }
         SetReverbVolume(0x2fff);
     break;
-    case GAME_MODE_OUTGAME:
+    case GMC_IN_GAMECLEAR_OUT:
         sys_wrk.game_mode = GAME_MODE_OUTGAME;
         if (ingame_wrk.game != INGAME_MODE_INIT)
         {
@@ -250,7 +250,7 @@ void GameModeChange(u_char mode)
         }
         SetReverbVolume(0x2fff);
     break;
-    case GAME_MODE_INGAME:
+    case GMC_IN_GAMERETIRE_OUT:
         sys_wrk.game_mode = GAME_MODE_OUTGAME;
         title_wrk.mode = TITLE_INIT_FROM_IN;
         SetReverbVolume(0x2fff);

@@ -10,10 +10,26 @@ MikuPan is an in progress port of Fatal Frame 1 PS2 to PC running natively, no e
 # Build
 For now, building in `debug` is highly recommended due to issues related to the `release` build. The build process was made to automatically fetch all required dependencies of the project.
 
-## Assets
-You need to copy the files `IMG_HD.BIN` and `IMG_BD.BIN` from the NTSC-U (USA) ISO of Fatal Frame to the folder containing the `MikuPan` executable.
+## CMake presets
+Use the CMake presets to switch between the NTSC-U and PAL/EU builds without
+editing cache variables manually. The default presets target NTSC-U game data;
+the `*-eu` presets set `BUILD_EU_VERSION=ON` and target PAL/EU game data.
 
-PAL (EU), NTSC-J (Japan) ISOs will *NOT* work.
+```powershell
+cmake --preset debug
+cmake --build --preset debug
+
+cmake --preset debug-eu
+cmake --build --preset debug-eu
+```
+
+Available native presets are `debug`, `debug-eu`, `release`, `release-eu`,
+`relwithdebinfo`, and `relwithdebinfo-eu`.
+
+## Assets
+You need to copy the files `IMG_HD.BIN` and `IMG_BD.BIN` from the matching Fatal Frame ISO to the folder containing the `MikuPan` executable.
+
+Use the NTSC-U (USA) ISO with the default presets, or the PAL (EU) ISO with an `*-eu` preset. NTSC-J (Japan) ISOs will *NOT* work.
 The executable will be located at `{CMake-Build-Directory}/MikuPan`.
 
 

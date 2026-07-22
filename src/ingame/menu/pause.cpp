@@ -183,7 +183,7 @@ int PauseMain()
                     SetBattleEnd();
                 }
 
-                GameModeChange(1);
+                GameModeChange(GMC_IN_GAMEOVER_OUT);
                 EAdpcmFadeOutGameEnd(0x1e);
 
                 SetTargetVolSeMenuFade(0xfff);

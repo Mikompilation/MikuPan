@@ -829,6 +829,7 @@ void OneNum(u_short num_chr, u_char number, u_char no, u_char timer, u_char tim_
 
     switch (mode)
     {
+    default:
     case 0:
         slot_mov = 0;
     break;

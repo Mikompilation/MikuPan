@@ -1,0 +1,129 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "native-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/cmake-build-${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug (NTSC-U)",
+      "description": "Configure a debug build for the default NTSC-U game data.",
+      "inherits": "native-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_EU_VERSION": false
+      }
+    },
+    {
+      "name": "debug-eu",
+      "displayName": "Debug (PAL/EU)",
+      "description": "Configure a debug build for PAL/EU game data.",
+      "inherits": "native-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_EU_VERSION": true
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release (NTSC-U)",
+      "description": "Configure a release build for the default NTSC-U game data.",
+      "inherits": "native-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_EU_VERSION": false
+      }
+    },
+    {
+      "name": "release-eu",
+      "displayName": "Release (PAL/EU)",
+      "description": "Configure a release build for PAL/EU game data.",
+      "inherits": "native-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_EU_VERSION": true
+      }
+    },
+    {
+      "name": "relwithdebinfo",
+      "displayName": "RelWithDebInfo (NTSC-U)",
+      "description": "Configure a release build with debug info for the default NTSC-U game data.",
+      "inherits": "native-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BUILD_EU_VERSION": false
+      }
+    },
+    {
+      "name": "relwithdebinfo-eu",
+      "displayName": "RelWithDebInfo (PAL/EU)",
+      "description": "Configure a release build with debug info for PAL/EU game data.",
+      "inherits": "native-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BUILD_EU_VERSION": true
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug (NTSC-U)",
+      "configurePreset": "debug",
+      "targets": [
+        "MikuPan"
+      ]
+    },
+    {
+      "name": "debug-eu",
+      "displayName": "Debug (PAL/EU)",
+      "configurePreset": "debug-eu",
+      "targets": [
+        "MikuPan"
+      ]
+    },
+    {
+      "name": "release",
+      "displayName": "Release (NTSC-U)",
+      "configurePreset": "release",
+      "targets": [
+        "MikuPan"
+      ]
+    },
+    {
+      "name": "release-eu",
+      "displayName": "Release (PAL/EU)",
+      "configurePreset": "release-eu",
+      "targets": [
+        "MikuPan"
+      ]
+    },
+    {
+      "name": "relwithdebinfo",
+      "displayName": "RelWithDebInfo (NTSC-U)",
+      "configurePreset": "relwithdebinfo",
+      "targets": [
+        "MikuPan"
+      ]
+    },
+    {
+      "name": "relwithdebinfo-eu",
+      "displayName": "RelWithDebInfo (PAL/EU)",
+      "configurePreset": "relwithdebinfo-eu",
+      "targets": [
+        "MikuPan"
+      ]
+    }
+  ]
+}

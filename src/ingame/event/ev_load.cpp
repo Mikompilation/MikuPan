@@ -188,9 +188,16 @@ void MissionTitleInit(int msn_no)
     mttl_wrk.load_mode = 0;
     ingame_wrk.stts |= 0x28;
   
-    if (ingame_wrk.game == 0)
+    if (ingame_wrk.game == 0 || ingame_wrk.game == INGAME_GAME_FREE)
     {
-        map_wrk.floor = msn_start_floor[msn_no];
+        if (ingame_wrk.game == INGAME_GAME_FREE)
+        {
+            FreeModePosSet();
+        }
+        else
+        {
+            map_wrk.floor = msn_start_floor[msn_no];
+        }
 #ifdef BUILD_EU_VERSION
         mttl_wrk.load_id = LoadReqLanguage(MSN00TTL_E_PK2 + msn_no * 5, MISSION_TITLE_CARD_ADDRESS);
 #else
@@ -234,7 +241,7 @@ int MissionTitleMain(int msn_no)
                 mttl_wrk.time -= 1;
             }
 
-            if (ingame_wrk.game == 0)
+            if (ingame_wrk.game == 0 || ingame_wrk.game == INGAME_GAME_FREE)
             {
                 if (MissionTitleLoad(msn_no) != 0 && mttl_wrk.time == 0)
                 {
@@ -277,7 +284,7 @@ int MissionTitleMain(int msn_no)
   
     if (mttl_wrk.mode != MSN_TITLE_MODE_READY && mttl_wrk.mode != MSN_TITLE_MODE_END) 
     {
-        if (ingame_wrk.game == 0) 
+        if (ingame_wrk.game == 0 || ingame_wrk.game == INGAME_GAME_FREE)
         {
             MissionTitleDisp(msn_no);
         }
@@ -292,6 +299,10 @@ int MissionTitleMain(int msn_no)
 
 int MissionTitleLoad(int msn_no)
 {
+    u_char start_room = ingame_wrk.game == INGAME_GAME_FREE
+        ? FreeModeRoomNo()
+        : msn_start_room[msn_no];
+
     if (mttl_wrk.load_mode == 9)
     {
         return 1;
@@ -308,6 +319,11 @@ int MissionTitleLoad(int msn_no)
     {
         if (MsnInitPlyr())
         {
+            if (ingame_wrk.game == INGAME_GAME_FREE)
+            {
+                FreeModePosSet();
+            }
+
             mttl_wrk.load_mode = 2;
         }
 
@@ -343,8 +359,8 @@ int MissionTitleLoad(int msn_no)
             return 0;
         }
         
-        RoomMdlLoadReq(NULL, mttl_wrk.load_count, msn_no, msn_start_room[msn_no], 1);
-        area_wrk.room[mttl_wrk.load_count] = msn_start_room[msn_no];
+        RoomMdlLoadReq(NULL, mttl_wrk.load_count, msn_no, start_room, 1);
+        area_wrk.room[mttl_wrk.load_count] = start_room;
         mttl_wrk.load_mode = 5;
     }
     else if (mttl_wrk.load_mode == 5)
@@ -364,7 +380,7 @@ int MissionTitleLoad(int msn_no)
             return 0;
         }
         
-        FloatGhostAppearTypeSet(ap_wrk.fgst_no, 0, msn_start_room[msn_no]);
+        FloatGhostAppearTypeSet(ap_wrk.fgst_no, 0, start_room);
         if (GuardGhostAppearSet() == 0)
         {
             mttl_wrk.load_mode = 9;

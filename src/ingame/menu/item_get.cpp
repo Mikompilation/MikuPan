@@ -1086,7 +1086,7 @@ static void GetMsg(u_char msg_type, u_char msg_no, u_char msg_dsp)
             fade_ctr.msg = 128;
         }
     break;
-    case '\a':
+    case 7:
         msg_add = 8.0f;
 
         if (fade_ctr.msg - msg_add > 0.0f)

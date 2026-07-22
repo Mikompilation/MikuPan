@@ -768,7 +768,7 @@ void TitleCtrl()
                 EAdpcmFadeOut(0x3c);
                 LoadGameInit();
                 ingame_wrk.game = 0;
-                GameModeChange(GAME_MODE_INIT);
+                GameModeChange(GMC_OUT_MENU_IN);
             }
             break;
         case 2:
@@ -1499,6 +1499,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
     u_char alp;
     u_int textbl[4] = { 8, 0, 7, 20 };
     DISP_SPRT ds;
+    int rml_title;
 
     adj = 28;
 
@@ -1599,7 +1600,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
                 NewGameInit();
                 EAdpcmFadeOut(60);
                 ingame_wrk.game = 0;
-                GameModeChange(GAME_MODE_INIT);
+                GameModeChange(GMC_OUT_MENU_IN);
                 SeStartFix(1, 0, 0x1000, 0x1000, 0);
             break;
             case 1:
@@ -2212,9 +2213,10 @@ void TitleLoadCtrl()
 void TitleSelectMode()
 {
     /* s1 17 */ int i;
-    /* 0x0(sp) */ char *mode_str[10] = {
+    /* 0x0(sp) */ char *mode_str[11] = {
         (char *)"STORY MODE",
         (char *)"BATTLE MODE",
+        (char *)"FREE MODE",
         (char *)"OPTION",
         (char *)"MAP DATA EDIT",
         (char *)"SOUND TEST",
@@ -2228,7 +2230,7 @@ void TitleSelectMode()
 
     TitleDrawClassicBackground(0, 0);
 
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < 11; i++)
     {
         SetASCIIString(110.0f, 30 + 40 * i, mode_str[i]);
     }
@@ -2249,7 +2251,7 @@ void TitleSelectMode()
         }
         else
         {
-            title_wrk.csr = 0x9;
+            title_wrk.csr = 0xa;
         }
 
         SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
@@ -2261,7 +2263,7 @@ void TitleSelectMode()
         (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
     )
     {
-        if (title_wrk.csr < 9)
+        if (title_wrk.csr < 10)
         {
             title_wrk.csr++;
         }
@@ -2285,33 +2287,36 @@ void TitleSelectMode()
             case 0:
                 ingame_wrk.game = 0;
 
-                GameModeChange(GAME_MODE_INIT);
+                GameModeChange(GMC_OUT_MENU_IN);
                 break;
             case 1:
                 OutGameModeChange(OUTGAME_MODE_BATTLE);
                 break;
             case 2:
+                OutGameModeChange(OUTGAME_MODE_FREE);
+                break;
+            case 3:
                 OutGameModeChange(OUTGAME_MODE_OPTION);
                 break;
-            case 3: // MAP DATA EDIT
+            case 4: // MAP DATA EDIT
                 OutGameModeChange(OUTGAME_MODE_MAP_DATA_EDIT);
                 break;
-            case 4:
+            case 5:
                 OutGameModeChange(OUTGAME_MODE_SOUND_TEST);
                 break;
-            case 5:
+            case 6:
                 OutGameModeChange(OUTGAME_MODE_SND_TEST);
                 break;
-            case 6:
+            case 7:
                 OutGameModeChange(OUTGAME_MODE_SCENE_TEST);
                 break;
-            case 7:
+            case 8:
                 OutGameModeChange(OUTGAME_MODE_MOTION_TEST);
                 break;
-            case 8:
+            case 9:
                 OutGameModeChange(OUTGAME_MODE_ROOM_SIZE_CHECK);
                 break;
-            case 9:
+            case 10:
                 OutGameModeChange(OUTGAME_MODE_LAYOUT_TEST);
                 break;
         }
@@ -2434,7 +2439,7 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
 
             ingame_wrk.game = 0;
 
-            GameModeChange(0);
+            GameModeChange(GMC_OUT_MENU_IN);
         break;
         case 1:
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);

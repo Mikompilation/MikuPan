@@ -48,8 +48,6 @@ int gg_room_ = 0;
 int gg_load_mode = 0;
 int gg_room_bak = 0;
 
-
-
 int GuardGhostAppearSet(void) {
     int i;
     int dat_no;

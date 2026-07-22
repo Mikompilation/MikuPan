@@ -115,6 +115,12 @@ void InGameCtrl(void)
                 
                 MissionTitleInit(ingame_wrk.msn_no);
             }
+            else if (ingame_wrk.game == INGAME_GAME_FREE)
+            {
+                ingame_wrk.mode = INGAME_MODE_MSN_TITLE;
+
+                MissionTitleInit(ingame_wrk.msn_no);
+            }
         break;
 
         default:
@@ -626,7 +632,7 @@ void InGameMain()
     
     if (dbg_wrk.mode_on == 2)
     {
-        GameModeChange(GAME_MODE_INGAME);
+        GameModeChange(GMC_IN_GAMERETIRE_OUT);
         SetTargetVolSeMenuFade(0xfff);
         SetTargetVolAdpcmMenuFade(0xfff);
         EAdpcmFadeOutGameEnd(0x1e);

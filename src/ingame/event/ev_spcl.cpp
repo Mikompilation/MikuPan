@@ -171,6 +171,7 @@ void (*SpecialEventMainTbl[])() = {
 #include "data/dmodel_table.h" // static short int dmodel_table[][2];
 #include "data/doorid_table.h" // static short int doorid_table[][2];
 #include "data/camera_table.h" // static short int camera_table[];
+
 STAR_PZL_WRK star_pzl_wrk = {0};
 DIAL_KEY_WRK dkey_wrk = {0};
 

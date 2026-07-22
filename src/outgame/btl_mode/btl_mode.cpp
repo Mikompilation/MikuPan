@@ -187,7 +187,7 @@ void BattleModeStageMain()
 
         ingame_wrk.stts &= 0x40 | 0x10 | 0x4 | 0x2 | 0x1;
 
-        GameModeChange(0x3);
+        GameModeChange(GMC_IN_GAMERETIRE_OUT);
         EAdpcmFadeOut(60);
     break;
     case BTL_MODE_SAVE1:
@@ -255,12 +255,12 @@ void BattleModeStageMain()
     break;
     case BTL_MODE_EXIT:
         LoadStoryWrk();
-        GameModeChange(3);
+        GameModeChange(GMC_IN_GAMERETIRE_OUT);
         EAdpcmFadeOut(60);
         BattleModeExit();
     break;
     case BTL_MODE_END:
-        GameModeChange(3);
+        GameModeChange(GMC_IN_GAMERETIRE_OUT);
         EAdpcmFadeOut(60);
     break;
     }

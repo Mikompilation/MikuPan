@@ -282,7 +282,7 @@ void ModeSlctCtrl(u_char mode)
         else if (dsp_ms.next_mode == 12)
         {
             ingame_wrk.game = 0;
-            GameModeChange(GAME_MODE_INIT);
+            GameModeChange(GMC_OUT_MENU_IN);
             title_bgm_no = -1;
         }
         else
@@ -886,7 +886,7 @@ char ModeSlctPad(u_char mode)
             TitleModeEnd();
             sys_wrk.load = 0;
             SaveStoryWrk();
-            GameModeChange(0);
+            GameModeChange(GMC_OUT_MENU_IN);
             title_bgm_no = -1;
             if (R1_PRESSED() != 0)
             {

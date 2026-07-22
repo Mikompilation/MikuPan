@@ -28,7 +28,6 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define EFFECT_BUFFER_ADDRESS           0x01F1C000
 #define PBUF_ADDRESS                    0x00720000
 #define SPRITE_ADDRESS                  0x00a30000
-#define PL_BGBG_PK2_ADDRESS             0x01d05140
 #define PL_STTS_PK2_ADDRESS             0x01ce0000
 #define MODE_SELECT_ADDRESS             0x01d10000
 #define MODE_SELECT2_ADDRESS            0x01d51db0
@@ -99,8 +98,24 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define MODEL_DATA_ADDRESS              0x014b0000
 #define SCENE_TEST_MD_LOAD_ADDRESS      0x00e00000
 #define LOAD_ITEM_2D_ADDRESS            0x01d573b0
-#define VRAM_ITEM_2D_ADDRESS            0x01d573b0
-#define VRAM_ITEM_2D_EU_ADDRESS         0x01d51db0
+
+#ifdef BUILD_EU_VERSION
+#define PL_BGBG_PK2_ADDRESS				0x01cfefc0
+#else
+#define PL_BGBG_PK2_ADDRESS				0x01d05140
+#endif
+
+#ifdef BUILD_EU_VERSION
+#define LOAD_ITEM_2D_ADDRESS			0x01d51db0
+#else
+#define LOAD_ITEM_2D_ADDRESS			0x01d573b0
+#endif
+
+#ifdef BUILD_EU_VERSION
+#define VRAM_ITEM_2D_ADDRESS			0x01d51db0
+#else
+#define VRAM_ITEM_2D_ADDRESS			0x01d573b0
+#endif
 
 /* DEVKIT EXTANDED RAM */
 #define TEST2D_PK2_ADDRESS              0x007F0000 /* 0x04300000 */

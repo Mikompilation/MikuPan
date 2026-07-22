@@ -31,412 +31,37 @@
 
 #include <string.h>
 
-MSN_LOAD_DAT stage_load_dat0[] = {
-    {
-     .file_no = 26,
-     .file_type = 3,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 29,
-     .file_type = 4,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 32,
-     .file_type = 5,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 35,
-     .file_type = 6,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 22,
-     .file_type = 1,
-     .tmp_no = 0,
-     .addr = 8257536,
-     },
-    {
-     .file_no = 10,
-     .file_type = 7,
-     .tmp_no = 0,
-     .addr = 8355840,
-     },
-    {
-     .file_no = 65535,
-     .file_type = 0,
-     .tmp_no = 0,
-     .addr = 0,
-     },
-};
-
-MSN_LOAD_DAT stage_load_dat1[] = {
-    {
-     .file_no = 26,
-     .file_type = 3,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 29,
-     .file_type = 4,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 32,
-     .file_type = 5,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 35,
-     .file_type = 6,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 22,
-     .file_type = 1,
-     .tmp_no = 0,
-     .addr = 8257536,
-     },
-    {
-     .file_no = 11,
-     .file_type = 7,
-     .tmp_no = 0,
-     .addr = 8355840,
-     },
-    {
-     .file_no = 65535,
-     .file_type = 0,
-     .tmp_no = 0,
-     .addr = 0,
-     },
-};
-MSN_LOAD_DAT stage_load_dat2[] = {
-    {
-     .file_no = 27,
-     .file_type = 3,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 30,
-     .file_type = 4,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 33,
-     .file_type = 5,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 36,
-     .file_type = 6,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 23,
-     .file_type = 1,
-     .tmp_no = 0,
-     .addr = 8257536,
-     },
-    {
-     .file_no = 12,
-     .file_type = 7,
-     .tmp_no = 0,
-     .addr = 8355840,
-     },
-    {
-     .file_no = 65535,
-     .file_type = 0,
-     .tmp_no = 0,
-     .addr = 0,
-     },
-};
-MSN_LOAD_DAT stage_load_dat3[] = {
-    {
-     .file_no = 28,
-     .file_type = 3,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 31,
-     .file_type = 4,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 34,
-     .file_type = 5,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 37,
-     .file_type = 6,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 24,
-     .file_type = 1,
-     .tmp_no = 0,
-     .addr = 8257536,
-     },
-    {
-     .file_no = 13,
-     .file_type = 7,
-     .tmp_no = 0,
-     .addr = 8355840,
-     },
-    {
-     .file_no = 65535,
-     .file_type = 0,
-     .tmp_no = 0,
-     .addr = 0,
-     },
-};
-MSN_LOAD_DAT stage_load_dat4[] = {
-    {
-     .file_no = 28,
-     .file_type = 3,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 31,
-     .file_type = 4,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 34,
-     .file_type = 5,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 37,
-     .file_type = 6,
-     .tmp_no = 0,
-     .addr = 8323072,
-     },
-    {
-     .file_no = 25,
-     .file_type = 1,
-     .tmp_no = 0,
-     .addr = 8257536,
-     },
-    {
-     .file_no = 14,
-     .file_type = 7,
-     .tmp_no = 0,
-     .addr = 8355840,
-     },
-    {
-     .file_no = 65535,
-     .file_type = 0,
-     .tmp_no = 0,
-     .addr = 0,
-     },
-};
-
-MSN_LOAD_DAT *stage_load_dat[] = {
+#include "data/stage_load_dat0.h"// MSN_LOAD_DAT stage_load_dat0[];
+#include "data/stage_load_dat1.h"// MSN_LOAD_DAT stage_load_dat1[];
+#include "data/stage_load_dat2.h"// MSN_LOAD_DAT stage_load_dat2[];
+#include "data/stage_load_dat3.h"// MSN_LOAD_DAT stage_load_dat3[];
+#include "data/stage_load_dat4.h"// MSN_LOAD_DAT stage_load_dat4[];
+MSN_LOAD_DAT* stage_load_dat[] = {
     stage_load_dat0, stage_load_dat1, stage_load_dat2,
     stage_load_dat3, stage_load_dat4,
 };
-FREE_DAT free_dat[] = {
-    {
-     .pos = {23268.0, 0.0, 8272.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {21382.0, 0.0, 11551.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {22243.0, 0.0, 8563.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {23784.0, 0.0, 12896.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {32980.0, 0.0, 10130.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {33521.0, 0.0, 11011.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {32985.0, 0.0, 18852.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {16962.0, 0.0, 21112.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {14509.0, 0.0, 14870.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {15697.0, 0.0, 16808.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {22074.0, 0.0, 16350.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {24799.0, 0.0, 18000.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {27151.0, 0.0, 18522.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {26959.0, 0.0, 14624.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {33561.0, 0.0, 21557.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {17287.0, 0.0, 23262.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {25109.0, 0.0, 19313.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {28801.0, 0.0, 23721.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {0.0, 0.0, 0.0, 0.0},
-     .floor = 2,
-     },
-    {
-     .pos = {21897.0, -225.0, 27960.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {0.0, 0.0, 0.0, 0.0},
-     .floor = 3,
-     },
-    {
-     .pos = {35448.0, 400.0, 29927.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {24730.0, 400.0, 30871.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {28810.0, 0.0, 27310.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {24831.0, -1400.0, 20049.0, 0.0},
-     .floor = 2,
-     },
-    {
-     .pos = {34552.0, 400.0, 35920.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {34121.0, -1625.0, 45728.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {14768.0, 0.0, 25897.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {13529.0, 1500.0, 36984.0, 0.0},
-     .floor = 0,
-     },
-    {
-     .pos = {10462.0, 1500.0, 36416.0, 0.0},
-     .floor = 0,
-     },
-    {
-     .pos = {0.0, 0.0, 0.0, 0.0},
-     .floor = 0,
-     },
-    {
-     .pos = {0.0, 0.0, 0.0, 0.0},
-     .floor = 0,
-     },
-    {
-     .pos = {0.0, 0.0, 0.0, 0.0},
-     .floor = 0,
-     },
-    {
-     .pos = {0.0, 0.0, 0.0, 0.0},
-     .floor = 0,
-     },
-    {
-     .pos = {0.0, 0.0, 0.0, 0.0},
-     .floor = 0,
-     },
-    {
-     .pos = {21513.0, -1400.0, 14648.0, 0.0},
-     .floor = 2,
-     },
-    {
-     .pos = {29547.0, 0.0, 12874.0, 0.0},
-     .floor = 1,
-     },
-    {
-     .pos = {0.0, 0.0, 0.0, 0.0},
-     .floor = 0,
-     },
-    {
-     .pos = {25934.0, -1400.0, 16351.0, 0.0},
-     .floor = 2,
-     },
-};
-
+#include "data/free_dat.h"// FREE_DAT free_dat[];
 BTL_SAVE_STR btl_save_str[] = {
-    {   .addr = (u_char *) load_dat_wrk,    .size = sizeof(load_dat_wrk)},
-    {      .addr = (u_char *) &time_wrk,        .size = sizeof(time_wrk)},
-    {      .addr = (u_char *) &plyr_wrk,        .size = sizeof(plyr_wrk)},
-    {        .addr = (u_char *) ene_wrk,         .size = sizeof(ene_wrk)},
-    {       .addr = (u_char *) &map_wrk,         .size = sizeof(map_wrk)},
-    {        .addr = (u_char *) &ap_wrk,          .size = sizeof(ap_wrk)},
-    {        .addr = (u_char *) &ev_wrk,          .size = sizeof(ev_wrk)},
-    {     .addr = (u_char *) event_stts,      .size = sizeof(event_stts)},
-    {      .addr = (u_char *) find_stts,       .size = sizeof(find_stts)},
-    {      .addr = (u_char *) poss_item,       .size = sizeof(poss_item)},
-    {      .addr = (u_char *) poss_file,       .size = sizeof(poss_file)},
-    {    .addr = (u_char *) flm_exp_flg,     .size = sizeof(flm_exp_flg)},
-    {        .addr = (u_char *) item_ap,         .size = sizeof(item_ap)},
-    {      .addr = (u_char *) &area_wrk,        .size = sizeof(area_wrk)},
-    {  .addr = (u_char *) furn_attr_flg,   .size = sizeof(furn_attr_flg)},
-    {      .addr = (u_char *) door_keep,       .size = sizeof(door_keep)},
-    {      .addr = (u_char *) room_pass,       .size = sizeof(room_pass)},
-    {        .addr = (u_char *) &pg_wrk,          .size = sizeof(pg_wrk)},
-    {     .addr = (u_char *) f_dat_save,      .size = sizeof(f_dat_save)},
-    {.addr = (u_char *) wander_soul_wrk, .size = sizeof(wander_soul_wrk)},
+    {   .addr = (u_char*) load_dat_wrk,    .size = sizeof(load_dat_wrk)},
+    {      .addr = (u_char*) &time_wrk,        .size = sizeof(time_wrk)},
+    {      .addr = (u_char*) &plyr_wrk,        .size = sizeof(plyr_wrk)},
+    {        .addr = (u_char*) ene_wrk,         .size = sizeof(ene_wrk)},
+    {       .addr = (u_char*) &map_wrk,         .size = sizeof(map_wrk)},
+    {        .addr = (u_char*) &ap_wrk,          .size = sizeof(ap_wrk)},
+    {        .addr = (u_char*) &ev_wrk,          .size = sizeof(ev_wrk)},
+    {     .addr = (u_char*) event_stts,      .size = sizeof(event_stts)},
+    {      .addr = (u_char*) find_stts,       .size = sizeof(find_stts)},
+    {      .addr = (u_char*) poss_item,       .size = sizeof(poss_item)},
+    {      .addr = (u_char*) poss_file,       .size = sizeof(poss_file)},
+    {    .addr = (u_char*) flm_exp_flg,     .size = sizeof(flm_exp_flg)},
+    {        .addr = (u_char*) item_ap,         .size = sizeof(item_ap)},
+    {      .addr = (u_char*) &area_wrk,        .size = sizeof(area_wrk)},
+    {  .addr = (u_char*) furn_attr_flg,   .size = sizeof(furn_attr_flg)},
+    {      .addr = (u_char*) door_keep,       .size = sizeof(door_keep)},
+    {      .addr = (u_char*) room_pass,       .size = sizeof(room_pass)},
+    {        .addr = (u_char*) &pg_wrk,          .size = sizeof(pg_wrk)},
+    {     .addr = (u_char*) f_dat_save,      .size = sizeof(f_dat_save)},
+    {.addr = (u_char*) wander_soul_wrk, .size = sizeof(wander_soul_wrk)},
 };
 
 void FreeModeMain()
@@ -458,7 +83,7 @@ void FreeModeMain()
 
     if (CROSS_PRESSED() == 1)
     {
-        OutGameModeChange(4);
+        OutGameModeChange(OUTGAME_MODE_TITLE);
 
         return;
     }
@@ -467,9 +92,11 @@ void FreeModeMain()
     {
         if (btl_wrk.csr[0] == 2)
         {
-            ingame_wrk.game = 1;
+            ingame_wrk.game = INGAME_GAME_FREE;
+            ingame_wrk.msn_no = btl_wrk.csr[1];
+            sys_wrk.load = 0;
 
-            GameModeChange(0);
+            GameModeChange(GMC_OUT_MENU_IN);
 
             return;
         }
@@ -542,14 +169,21 @@ void FreeModeMain()
     }
 }
 
+u_char FreeModeRoomNo()
+{
+    return btl_wrk.csr[2];
+}
+
 void FreeModePosSet()
 {
-    map_wrk.floor = free_dat[btl_wrk.csr[2]].floor;
+    u_char room_no = FreeModeRoomNo();
 
-    plyr_wrk.move_box.pos[0] = free_dat[btl_wrk.csr[2]].pos[0];
-    plyr_wrk.move_box.pos[1] = free_dat[btl_wrk.csr[2]].pos[1];
-    plyr_wrk.move_box.pos[2] = free_dat[btl_wrk.csr[2]].pos[2];
-    plyr_wrk.move_box.pos[3] = free_dat[btl_wrk.csr[2]].pos[3];
+    map_wrk.floor = free_dat[room_no].floor;
+
+    plyr_wrk.move_box.pos[0] = free_dat[room_no].pos[0];
+    plyr_wrk.move_box.pos[1] = free_dat[room_no].pos[1];
+    plyr_wrk.move_box.pos[2] = free_dat[room_no].pos[2];
+    plyr_wrk.move_box.pos[3] = free_dat[room_no].pos[3];
 }
 
 void BattleModeInit()
@@ -633,7 +267,7 @@ void BattleModeMain()
     {
         ingame_wrk.game = 1;
 
-        GameModeChange(0);
+        GameModeChange(GMC_OUT_MENU_IN);
     }
     else if (DPAD_UP_PRESSED() == 1)
     {

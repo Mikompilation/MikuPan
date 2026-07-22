@@ -31,10 +31,8 @@
 #include "os/backup.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
-
-#define INCLUDING_FROM_SP_MENU_C
 #include "outgame/memory_album.h"
-#undef INCLUDING_FROM_SP_MENU_C
+
 
 static u_char SaveConte();
 static void WarningMsg(u_char msg, u_char csr0, u_char alp, u_char ha);
