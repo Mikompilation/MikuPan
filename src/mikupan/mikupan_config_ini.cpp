@@ -222,6 +222,8 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
     ApplyValue(ini, "ui", "minimap_enabled",
                mikupan_configuration.minimap_enabled);
+    ApplyValue(ini, "ui", "cursor_auto_hide_enabled",
+               mikupan_configuration.cursor_auto_hide_enabled);
     ApplyValue(ini, "gameplay", "flashlight_style",
                mikupan_configuration.flashlight_style);
     ApplyValue(ini, "gameplay", "number_door_fix_localization",
@@ -232,6 +234,10 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.title_room_background);
     ApplyValue(ini, "ui", "title_dither",
                mikupan_configuration.title_dither);
+    ApplyValue(ini, "gameplay", "text_mods_enabled",
+               mikupan_configuration.text_mods_enabled);
+    ApplyValue(ini, "gameplay", "album_photo_png_export_enabled",
+               mikupan_configuration.album_photo_png_export_enabled);
     ApplyValue(ini, "third_person_camera", "enabled",
                mikupan_configuration.third_person_camera.enabled);
     ApplyValue(ini, "third_person_camera", "distance",
@@ -424,6 +430,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "ui", "show_fps", mikupan_configuration.show_fps);
     SetValue(ini, "ui", "minimap_enabled",
              mikupan_configuration.minimap_enabled);
+    SetValue(ini, "ui", "cursor_auto_hide_enabled",
+             mikupan_configuration.cursor_auto_hide_enabled);
     SetValue(ini, "gameplay", "flashlight_style",
              mikupan_configuration.flashlight_style);
     SetValue(ini, "gameplay", "number_door_fix_localization",
@@ -434,6 +442,10 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
              mikupan_configuration.title_room_background);
     SetValue(ini, "ui", "title_dither",
              mikupan_configuration.title_dither);
+    SetValue(ini, "gameplay", "text_mods_enabled",
+             mikupan_configuration.text_mods_enabled);
+    SetValue(ini, "gameplay", "album_photo_png_export_enabled",
+             mikupan_configuration.album_photo_png_export_enabled);
     SetValue(ini, "third_person_camera", "enabled",
              mikupan_configuration.third_person_camera.enabled);
     SetValue(ini, "third_person_camera", "distance",

@@ -57,6 +57,16 @@ static void UnlockVoices(void)
     }
 }
 
+void VoiceLock(void)
+{
+    LockVoices();
+}
+
+void VoiceUnlock(void)
+{
+    UnlockVoices();
+}
+
 void VoicesInit()
 {
     if (voice_mutex == NULL)
@@ -101,18 +111,6 @@ void VoicesInit()
         }
     }
     memset(iop_stat.sev_stat, 0, sizeof(iop_stat.sev_stat));
-}
-
-VOICE *GetFreeVoice()
-{
-    for (int i = 0; i < 24; i++)
-    {
-        if (iop_stat.sev_stat[i].status == VOICE_FREE)
-        {
-            return &voices[i];
-        }
-    }
-    return NULL;
 }
 
 static void MixStereoSamples(int sampleCount, s16 *samples, VOICE *v)
@@ -254,7 +252,7 @@ static void BeginVoiceEnd(int vNo)
 {
     VOICE *v = &voices[vNo];
 
-    if (!v->isPlaying && v->endPending)
+    if (!v->isPlaying)
     {
         return;
     }
@@ -538,11 +536,6 @@ static int StereoPairRightVoice(int vNo)
         return 1;
     }
 
-    if (vNo == 46)
-    {
-        return 47;
-    }
-
     return -1;
 }
 
@@ -551,11 +544,6 @@ static int StereoPairLeftVoice(int vNo)
     if (vNo == 1)
     {
         return 0;
-    }
-
-    if (vNo == 47)
-    {
-        return 46;
     }
 
     return -1;

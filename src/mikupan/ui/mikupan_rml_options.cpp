@@ -7,6 +7,7 @@
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
+#include "mikupan/mikupan_i18n.h"
 #include "os/key_cnf.h"
 
 #include "RmlUi/Core.h"
@@ -291,6 +292,8 @@ struct MikuPanRmlOptionsState
     Rml::Element* gpu_restart_note = nullptr;
     Rml::ElementFormControlInput* crt_enabled_input = nullptr;
     Rml::ElementFormControlInput* minimap_enabled_input = nullptr;
+    Rml::ElementFormControlInput* album_photo_png_export_input = nullptr;
+    Rml::ElementFormControlInput* cursor_auto_hide_input = nullptr;
     Rml::ElementFormControlInput* keep_finder_raised_input = nullptr;
     Rml::ElementFormControlInput* number_door_fix_localization_input = nullptr;
     Rml::ElementFormControlInput* finder_dpad_film_swap_input = nullptr;
@@ -471,17 +474,13 @@ int OptionsLang(void)
     return std::clamp(g_rml.language, 0, 4);
 }
 
-static const char* const kCategoryTitles5[5][5] = {
-    {"DISPLAY", "GRAPHICS", "AUDIO", "CONTROLS", "ADVANCED"},
-    {"AFFICHAGE", "GRAPHISMES", "AUDIO", "COMMANDES", "AVANCÉ"},
-    {"ANZEIGE", "GRAFIK", "AUDIO", "STEUERUNG", "ERWEITERT"},
-    {"PANTALLA", "GRÁFICOS", "SONIDO", "CONTROLES", "AVANZADO"},
-    {"SCHERMO", "GRAFICA", "AUDIO", "COMANDI", "AVANZATE"},
+static const char* const kCategoryTitles5[5] = {
+    "DISPLAY", "GRAPHICS", "AUDIO", "CONTROLS", "ADVANCED",
 };
 
 const char* CategoryTitle(int index)
 {
-    return kCategoryTitles5[OptionsLang()][index];
+    return MikuPan_Translate(kCategoryTitles5[index]);
 }
 
 static constexpr const char* kCategoryButtonIds[] = {
@@ -508,12 +507,8 @@ static constexpr const char* kCategoryFirstControlIds[] = {
     "theme-picker",
 };
 
-static const char* const kWindowModeLabels5[5][2] = {
-    {"Windowed", "Fullscreen"},
-    {"Fenêtre", "Plein écran"},
-    {"Fenster", "Vollbild"},
-    {"Ventana", "Pantalla completa"},
-    {"Finestra", "Schermo intero"},
+static const char* const kWindowModeLabels5[2] = {
+    "Windowed", "Fullscreen",
 };
 
 static constexpr int kWindowModeValues[] = {
@@ -523,32 +518,24 @@ static constexpr int kWindowModeValues[] = {
 
 static constexpr int kWindowModeCount = 2;
 
-static const char* const kLightingModeLabels5[5][2] = {
-    {"Pixel (Modern)", "Vertex (PS2)"},
-    {"Pixel (Moderne)", "Vertex (PS2)"},
-    {"Pixel (Modern)", "Vertex (PS2)"},
-    {"Pixel (Moderno)", "Vertex (PS2)"},
-    {"Pixel (Moderno)", "Vertex (PS2)"},
+static const char* const kLightingModeLabels5[2] = {
+    "Pixel (Modern)", "Vertex (PS2)",
 };
 
 const char* LightingModeLabel(int index)
 {
-    return kLightingModeLabels5[OptionsLang()][index];
+    return MikuPan_Translate(kLightingModeLabels5[index]);
 }
 
 static constexpr int kLightingModeCount = 2;
 
-static const char* const kFinderSurroundLabels5[5][2] = {
-    {"Black", "Blur"},
-    {"Noir", "Flou"},
-    {"Schwarz", "Unschärfe"},
-    {"Negro", "Desenfoque"},
-    {"Nero", "Sfocatura"},
+static const char* const kFinderSurroundLabels5[2] = {
+    "Black", "Blur",
 };
 
 const char* FinderSurroundLabel(int index)
 {
-    return kFinderSurroundLabels5[OptionsLang()][index];
+    return MikuPan_Translate(kFinderSurroundLabels5[index]);
 }
 
 static constexpr int kFinderSurroundCount = 2;
@@ -959,68 +946,34 @@ bool CrtPanelIsFocused(void)
     return false;
 }
 
-static const char* const kControlsButtonLabels5[5][MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
-    {
-        "Triangle", "Cross / Confirm", "Square", "Circle / Cancel",
-        "D-Pad Up", "D-Pad Down", "D-Pad Left", "D-Pad Right",
-        "R3 / Right Stick", "Select", "Start / Pause", "L3 / Left Stick",
-        "R1 / RB", "L2 / LT", "R2 / RT", "L1 / LB",
-    },
-    {
-        "TRIANGLE", "CROSS / CONFIRM", "CARRE", "CIRCLE / CANCEL",
-        "D-PAD UP", "D-PAD DOWN", "D-PAD LEFT", "D-PAD RIGHT",
-        "R3 / RIGHT STICK", "SÉLECTIONNER", "START / PAUSE", "L3 / LEFT STICK",
-        "R1 / RB", "L2 / LT", "R2 / RT", "L1 / LB",
-    },
-    {
-        "TRIANGLE", "CROSS / CONFIRM", "QUADRAT", "CIRCLE / CANCEL",
-        "D-PAD UP", "D-PAD DOWN", "D-PAD LEFT", "D-PAD RIGHT",
-        "R3 / RIGHT STICK", "AUSWÄHLEN", "START / PAUSE", "L3 / LEFT STICK",
-        "R1 / RB", "L2 / LT", "R2 / RT", "L1 / LB",
-    },
-    {
-        "TRIANGLE", "CROSS / CONFIRM", "CUADRADO", "CIRCLE / CANCEL",
-        "D-PAD UP", "D-PAD DOWN", "D-PAD LEFT", "D-PAD RIGHT",
-        "R3 / RIGHT STICK", "SELECCIONAR", "START / PAUSE", "L3 / LEFT STICK",
-        "R1 / RB", "L2 / LT", "R2 / RT", "L1 / LB",
-    },
-    {
-        "TRIANGLE", "CROSS / CONFIRM", "QUADRATO", "CIRCLE / CANCEL",
-        "D-PAD UP", "D-PAD DOWN", "D-PAD LEFT", "D-PAD RIGHT",
-        "R3 / RIGHT STICK", "SELEZIONA", "START / PAUSE", "L3 / LEFT STICK",
-        "R1 / RB", "L2 / LT", "R2 / RT", "L1 / LB",
-    },
+static const char* const kControlsButtonLabels5[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
+    "Triangle", "Cross / Confirm", "Square", "Circle / Cancel",
+    "D-Pad Up", "D-Pad Down", "D-Pad Left", "D-Pad Right",
+    "R3 / Right Stick", "Select", "Start / Pause", "L3 / Left Stick",
+    "R1 / RB", "L2 / LT", "R2 / RT", "L1 / LB",
 };
 
 const char* ControlsButtonLabel(int index)
 {
-    return kControlsButtonLabels5[OptionsLang()][index];
+    return MikuPan_Translate(kControlsButtonLabels5[index]);
 }
 
-static const char* const kControlsStickLabels5[5][MIKUPAN_STICK_COUNT] = {
-    {"Move X", "Move Y", "Aim X", "Aim Y"},
-    {"DÉPLACEMENT X", "DÉPLACEMENT Y", "VISÉE X", "VISÉE Y"},
-    {"BEWEGUNG X", "BEWEGUNG Y", "ZIELEN X", "ZIELEN Y"},
-    {"MOVIMIENTO X", "MOVIMIENTO Y", "APUNTAR X", "APUNTAR Y"},
-    {"MOVIMENTO X", "MOVIMENTO Y", "MIRA X", "MIRA Y"},
+static const char* const kControlsStickLabels5[MIKUPAN_STICK_COUNT] = {
+    "Move X", "Move Y", "Aim X", "Aim Y",
 };
 
 const char* ControlsStickLabel(int index)
 {
-    return kControlsStickLabels5[OptionsLang()][index];
+    return MikuPan_Translate(kControlsStickLabels5[index]);
 }
 
-static const char* const kControllerStickInvertLabels5[5][MIKUPAN_STICK_COUNT] = {
-    {"Invert Move X", "Invert Move Y", "Invert Aim X", "Invert Aim Y"},
-    {"INVERSER DÉPLACEMENT X", "INVERSER DÉPLACEMENT Y", "INVERSER VISÉE X", "INVERSER VISÉE Y"},
-    {"BEWEGUNG X UMKEHREN", "BEWEGUNG Y UMKEHREN", "ZIELEN X UMKEHREN", "ZIELEN Y UMKEHREN"},
-    {"INVERTIR MOVIMIENTO X", "INVERTIR MOVIMIENTO Y", "INVERTIR APUNTAR X", "INVERTIR APUNTAR Y"},
-    {"INVERTI MOVIMENTO X", "INVERTI MOVIMENTO Y", "INVERTI MIRA X", "INVERTI MIRA Y"},
+static const char* const kControllerStickInvertLabels5[MIKUPAN_STICK_COUNT] = {
+    "Invert Move X", "Invert Move Y", "Invert Aim X", "Invert Aim Y",
 };
 
 const char* ControllerStickInvertLabel(int index)
 {
-    return kControllerStickInvertLabels5[OptionsLang()][index];
+    return MikuPan_Translate(kControllerStickInvertLabels5[index]);
 }
 
 enum MikuPanDirectionLabel
@@ -1037,91 +990,49 @@ enum MikuPanDirectionLabel
 
 const char* DirectionLabel(int index)
 {
-    static const char* const kDirectionLabels5[5][8] = {
-        {"Forward", "Backward", "Left", "Right",
-         "Aim Up", "Aim Down", "Aim Left", "Aim Right"},
-        {"AVANCER", "RECULER", "GAUCHE", "DROITE",
-         "VISER EN HAUT", "VISER EN BAS", "VISER À GAUCHE", "VISER À DROITE"},
-        {"VORWÄRTS", "RÜCKWÄRTS", "LINKS", "RECHTS",
-         "ZIELEN HOCH", "ZIELEN RUNTER", "ZIELEN LINKS", "ZIELEN RECHTS"},
-        {"ADELANTE", "ATRÁS", "IZQUIERDA", "DERECHA",
-         "APUNTAR ARRIBA", "APUNTAR ABAJO", "APUNTAR IZQUIERDA", "APUNTAR DERECHA"},
-        {"AVANTI", "INDIETRO", "SINISTRA", "DESTRA",
-         "MIRA SU", "MIRA GIÙ", "MIRA SINISTRA", "MIRA DESTRA"},
+    static const char* const kDirectionLabels5[8] = {
+        "Forward", "Backward", "Left", "Right",
+        "Aim Up", "Aim Down", "Aim Left", "Aim Right",
     };
-    return kDirectionLabels5[OptionsLang()][index];
+    return MikuPan_Translate(kDirectionLabels5[index]);
 }
 
 const char* BindControlTitleLabel(void)
 {
-    static const char* const kBindControlTitle5[5] = {
-        "Bind Control",
-        "ASSIGNER LA COMMANDE",
-        "STEUERUNG ZUWEISEN",
-        "ASIGNAR CONTROL",
-        "ASSEGNA COMANDO",
-    };
-    return kBindControlTitle5[OptionsLang()];
+    static const char* const kBindControlTitle5 = "Bind Control";
+    return MikuPan_Translate(kBindControlTitle5);
 }
 
 const char* UnavailableLabel(void)
 {
-    static const char* const kUnavailable5[5] = {
-        "Unavailable",
-        "Indisponible",
-        "Nicht verfügbar",
-        "No disponible",
-        "Non disponibile",
-    };
-    return kUnavailable5[OptionsLang()];
+    static const char* const kUnavailable5 = "Unavailable";
+    return MikuPan_Translate(kUnavailable5);
 }
 
 const char* ClearButtonLabel(void)
 {
-    static const char* const kClearLabel5[5] = {
-        "Clear",
-        "Effacer",
-        "Löschen",
-        "Borrar",
-        "Cancella",
-    };
-    return kClearLabel5[OptionsLang()];
+    static const char* const kClearLabel5 = "Clear";
+    return MikuPan_Translate(kClearLabel5);
 }
 
 const char* OnOffLabel(bool on)
 {
-    static const char* const kOnOffLabels5[5][2] = {
-        {"On", "Off"},
-        {"Activé", "Désactivé"},
-        {"An", "Aus"},
-        {"Activado", "Desactivado"},
-        {"Attivo", "Disattivato"},
+    static const char* const kOnOffLabels5[2] = {
+        "On", "Off",
     };
-    return kOnOffLabels5[OptionsLang()][on ? 0 : 1];
+    return MikuPan_Translate(kOnOffLabels5[on ? 0 : 1]);
 }
 
 const char* ControllerRumbleTitleLabel(void)
 {
-    static const char* const kControllerRumbleTitle5[5] = {
-        "Controller Rumble",
-        "VIBRATION DE LA MANETTE",
-        "CONTROLLER-VIBRATION",
-        "VIBRACIÓN DEL MANDO",
-        "VIBRAZIONE DEL CONTROLLER",
-    };
-    return kControllerRumbleTitle5[OptionsLang()];
+    static const char* const kControllerRumbleTitle5 = "Controller Rumble";
+    return MikuPan_Translate(kControllerRumbleTitle5);
 }
 
 const char* CameraActivationTitleLabel(void)
 {
-    static const char* const kCameraActivationTitle5[5] = {
-        "Camera Activation",
-        "ACTIVATION DE LA CAMÉRA",
-        "KAMERAAKTIVIERUNG",
-        "ACTIVACIÓN DE LA CÁMARA",
-        "ATTIVAZIONE DELLA FOTOCAMERA",
-    };
-    return kCameraActivationTitle5[OptionsLang()];
+    static const char* const kCameraActivationTitle5 = "Camera Activation";
+    return MikuPan_Translate(kCameraActivationTitle5);
 }
 
 std::string BuildBindingButton(const char* id, const char* text, bool small = false)
@@ -1216,16 +1127,12 @@ std::string BuildCameraActivationRow(void)
     rml += EscapeRmlText(CameraActivationTitleLabel());
     rml += "</span>";
     rml += "<button id=\"camera-activation-toggle\" class=\"controls-option-button\">";
-    static const char* const kToggleHoldLabels5[5][2] = {
-        {"Toggle", "Hold"},
-        {"Basculer", "Maintenir"},
-        {"Umschalten", "Halten"},
-        {"Alternar", "Mantener"},
-        {"Attiva/Disattiva", "Tieni premuto"},
+    static const char* const kToggleHoldLabels5[2] = {
+        "Toggle", "Hold",
     };
     rml += MikuPan_CameraActivationMode() == MIKUPAN_CAMERA_ACTIVATION_TOGGLE
-               ? kToggleHoldLabels5[OptionsLang()][0]
-               : kToggleHoldLabels5[OptionsLang()][1];
+               ? MikuPan_Translate(kToggleHoldLabels5[0])
+               : MikuPan_Translate(kToggleHoldLabels5[1]);
     rml += "</button></div>";
     return rml;
 }
@@ -1252,14 +1159,10 @@ int CurrentStickMovementUsesSubjective(void)
 
 const char* MovementStyleLabel(int subjective)
 {
-    static const char* const kMovementStyleLabels5[5][2] = {
-        {"Objective", "Subjective"},
-        {"Objectif", "Subjectif"},
-        {"Objektiv", "Subjektiv"},
-        {"Objetivo", "Subjetivo"},
-        {"Oggettivo", "Soggettivo"},
+    static const char* const kMovementStyleLabels5[2] = {
+        "Objective", "Subjective",
     };
-    return kMovementStyleLabels5[OptionsLang()][subjective ? 1 : 0];
+    return MikuPan_Translate(kMovementStyleLabels5[subjective ? 1 : 0]);
 }
 
 void SyncMovementStyleButtons(void)
@@ -1311,15 +1214,11 @@ void ToggleMovementStyle(int dpad)
 
 const char* FinderStickLayoutLabel(void)
 {
-    static const char* const kFinderStickLayoutLabels5[5][2] = {
-        {"Classic", "Modern"},
-        {"Classique", "Moderne"},
-        {"Klassisch", "Modern"},
-        {"Clásico", "Moderno"},
-        {"Classico", "Moderno"},
+    static const char* const kFinderStickLayoutLabels5[2] = {
+        "Classic", "Modern",
     };
-    return kFinderStickLayoutLabels5[OptionsLang()][
-        MikuPan_CustomActionProfileSwapsFinderSticks() ? 1 : 0];
+    return MikuPan_Translate(kFinderStickLayoutLabels5[
+        MikuPan_CustomActionProfileSwapsFinderSticks() ? 1 : 0]);
 }
 
 const char* FinderFilmSwapLabel(void)
@@ -1368,110 +1267,57 @@ void ToggleFinderDpadFilmSwap(void)
 
 const char* GameplayActionsTitleLabel(void)
 {
-    static const char* const kGameplayActionsTitle5[5] = {
-        "Gameplay Actions",
-        "ACTIONS DE JEU",
-        "SPIELAKTIONEN",
-        "ACCIONES DE JUEGO",
-        "AZIONI DI GIOCO",
-    };
-    return kGameplayActionsTitle5[OptionsLang()];
+    static const char* const kGameplayActionsTitle5 = "Gameplay Actions";
+    return MikuPan_Translate(kGameplayActionsTitle5);
 }
 
 const char* KeyboardButtonsTitleLabel(void)
 {
-    static const char* const kKeyboardButtonsTitle5[5] = {
-        "Keyboard Buttons",
-        "TOUCHES DU CLAVIER",
-        "TASTATURBELEGUNG",
-        "BOTONES DEL TECLADO",
-        "TASTI DELLA TASTIERA",
-    };
-    return kKeyboardButtonsTitle5[OptionsLang()];
+    static const char* const kKeyboardButtonsTitle5 = "Keyboard Buttons";
+    return MikuPan_Translate(kKeyboardButtonsTitle5);
 }
 
 const char* MovementSectionTitleLabel(void)
 {
-    static const char* const kMovementSectionTitle5[5] = {
-        "Movement",
-        "DÉPLACEMENT",
-        "BEWEGUNG",
-        "MOVIMIENTO",
-        "MOVIMENTO",
-    };
-    return kMovementSectionTitle5[OptionsLang()];
+    static const char* const kMovementSectionTitle5 = "Movement";
+    return MikuPan_Translate(kMovementSectionTitle5);
 }
 
 const char* AimSectionTitleLabel(void)
 {
-    static const char* const kAimSectionTitle5[5] = {
-        "Aim",
-        "VISÉE",
-        "ZIELEN",
-        "PUNTERÍA",
-        "MIRA",
-    };
-    return kAimSectionTitle5[OptionsLang()];
+    static const char* const kAimSectionTitle5 = "Aim";
+    return MikuPan_Translate(kAimSectionTitle5);
 }
 
 const char* ControllerSectionTitleLabel(void)
 {
-    static const char* const kControllerSectionTitle5[5] = {
-        "Controller",
-        "MANETTE",
-        "CONTROLLER",
-        "MANDO",
-        "CONTROLLER",
-    };
-    return kControllerSectionTitle5[OptionsLang()];
+    static const char* const kControllerSectionTitle5 = "Controller";
+    return MikuPan_Translate(kControllerSectionTitle5);
 }
 
 const char* ButtonsSectionTitleLabel(void)
 {
-    static const char* const kButtonsSectionTitle5[5] = {
-        "Buttons",
-        "BOUTONS",
-        "TASTEN",
-        "BOTONES",
-        "PULSANTI",
-    };
-    return kButtonsSectionTitle5[OptionsLang()];
+    static const char* const kButtonsSectionTitle5 = "Buttons";
+    return MikuPan_Translate(kButtonsSectionTitle5);
 }
 
 const char* SticksSectionTitleLabel(void)
 {
-    static const char* const kSticksSectionTitle5[5] = {
-        "Sticks",
-        "STICKS",
-        "STICKS",
-        "STICKS",
-        "LEVETTE",
-    };
-    return kSticksSectionTitle5[OptionsLang()];
+    static const char* const kSticksSectionTitle5 = "Sticks";
+    return MikuPan_Translate(kSticksSectionTitle5);
 }
 
 const char* StickInvertSectionTitleLabel(void)
 {
-    static const char* const kStickInvertSectionTitle5[5] = {
-        "Stick Invert",
-        "INVERSION DU STICK",
-        "STICK-INVERTIERUNG",
-        "INVERTIR STICK",
-        "INVERSIONE LEVETTA",
-    };
-    return kStickInvertSectionTitle5[OptionsLang()];
+    static const char* const kStickInvertSectionTitle5 = "Stick Invert";
+    return MikuPan_Translate(kStickInvertSectionTitle5);
 }
 
 const char* NoControllerPlaceholderLabel(void)
 {
-    static const char* const kNoControllerPlaceholder5[5] = {
-        "No controller is currently open. Connect a controller, or select one in the ImGui device selector for now.",
-        "Aucune manette n'est actuellement ouverte. Connectez une manette, ou sélectionnez-en une dans le sélecteur de périphériques ImGui pour l'instant.",
-        "Derzeit ist kein Controller geöffnet. Schließe einen Controller an oder wähle vorübergehend einen im ImGui-Geräteauswahlmenü aus.",
-        "No hay ningún mando abierto actualmente. Conecta un mando, o selecciona uno en el selector de dispositivos de ImGui por ahora.",
-        "Al momento non è aperto alcun controller. Collega un controller, oppure selezionane uno nel selettore dispositivi di ImGui per ora.",
-    };
-    return kNoControllerPlaceholder5[OptionsLang()];
+    static const char* const kNoControllerPlaceholder5 =
+        "No controller is currently open. Connect a controller, or select one in the ImGui device selector for now.";
+    return MikuPan_Translate(kNoControllerPlaceholder5);
 }
 
 void RebuildControlsList(void)
@@ -2805,9 +2651,9 @@ const char* WindowModeLabel(int index)
 {
     if (index < 0 || index >= kWindowModeCount)
     {
-        return kWindowModeLabels5[OptionsLang()][0];
+        return MikuPan_Translate(kWindowModeLabels5[0]);
     }
-    return kWindowModeLabels5[OptionsLang()][index];
+    return MikuPan_Translate(kWindowModeLabels5[index]);
 }
 
 int GetFinderSurroundIndex(void)
@@ -2962,56 +2808,39 @@ const char* GetPickerLabel(MikuPanChoicePickerKind kind, int index)
 
 const char* GetPickerTitle(MikuPanChoicePickerKind kind)
 {
-    static const char* const kPickerTitles5[5][13] = {
-        {"DISPLAY MODE", "WINDOW SIZE", "RENDER SCALE", "GPU BACKEND", "MSAA",
-         "SHADOW RESOLUTION", "LIGHTING MODE", "DITHER FILTERING",
-         "FINDER SURROUND", "FLASHLIGHT STYLE", "THEME", "FONT", "SELECT"},
-        {"MODE D'AFFICHAGE", "TAILLE DE FENÊTRE", "ÉCHELLE DE RENDU",
-         "MOTEUR GPU", "MSAA", "RÉSOLUTION DES OMBRES", "MODE D'ÉCLAIRAGE",
-         "FILTRAGE DE TRAME", "CONTOUR DU VISEUR", "STYLE DE LAMPE TORCHE",
-         "THÈME", "POLICE", "SÉLECTIONNER"},
-        {"ANZEIGEMODUS", "FENSTERGRÖSSE", "RENDERSKALIERUNG", "GPU-BACKEND",
-         "MSAA", "SCHATTENAUFLÖSUNG", "BELEUCHTUNGSMODUS", "DITHER-FILTER",
-         "SUCHERRAND", "TASCHENLAMPENSTIL", "DESIGN", "SCHRIFTART",
-         "AUSWÄHLEN"},
-        {"MODO DE PANTALLA", "TAMAÑO DE VENTANA", "ESCALA DE RENDERIZADO",
-         "MOTOR GPU", "MSAA", "RESOLUCIÓN DE SOMBRAS", "MODO DE ILUMINACIÓN",
-         "FILTRADO DE TRAMA", "CONTORNO DEL VISOR", "ESTILO DE LINTERNA",
-         "TEMA", "FUENTE", "SELECCIONAR"},
-        {"MODALITÀ SCHERMO", "DIMENSIONE FINESTRA", "SCALA DI RENDERING",
-         "BACKEND GPU", "MSAA", "RISOLUZIONE OMBRE", "MODALITÀ ILLUMINAZIONE",
-         "FILTRO DITHER", "CONTORNO MIRINO", "STILE TORCIA", "TEMA",
-         "CARATTERE", "SELEZIONA"},
+    static const char* const kPickerTitles5[13] = {
+        "DISPLAY MODE", "WINDOW SIZE", "RENDER SCALE", "GPU BACKEND", "MSAA",
+        "SHADOW RESOLUTION", "LIGHTING MODE", "DITHER FILTERING",
+        "FINDER SURROUND", "FLASHLIGHT STYLE", "THEME", "FONT", "SELECT",
     };
-    const int lang = OptionsLang();
     switch (kind)
     {
         case MIKUPAN_PICKER_WINDOW_MODE:
-            return kPickerTitles5[lang][0];
+            return MikuPan_Translate(kPickerTitles5[0]);
         case MIKUPAN_PICKER_WINDOW_SIZE:
-            return kPickerTitles5[lang][1];
+            return MikuPan_Translate(kPickerTitles5[1]);
         case MIKUPAN_PICKER_RESOLUTION:
-            return kPickerTitles5[lang][2];
+            return MikuPan_Translate(kPickerTitles5[2]);
         case MIKUPAN_PICKER_GPU_BACKEND:
-            return kPickerTitles5[lang][3];
+            return MikuPan_Translate(kPickerTitles5[3]);
         case MIKUPAN_PICKER_MSAA:
-            return kPickerTitles5[lang][4];
+            return MikuPan_Translate(kPickerTitles5[4]);
         case MIKUPAN_PICKER_SHADOW_RESOLUTION:
-            return kPickerTitles5[lang][5];
+            return MikuPan_Translate(kPickerTitles5[5]);
         case MIKUPAN_PICKER_LIGHTING_MODE:
-            return kPickerTitles5[lang][6];
+            return MikuPan_Translate(kPickerTitles5[6]);
         case MIKUPAN_PICKER_DITHER_MODE:
-            return kPickerTitles5[lang][7];
+            return MikuPan_Translate(kPickerTitles5[7]);
         case MIKUPAN_PICKER_FINDER_SURROUND:
-            return kPickerTitles5[lang][8];
+            return MikuPan_Translate(kPickerTitles5[8]);
         case MIKUPAN_PICKER_FLASHLIGHT_STYLE:
-            return kPickerTitles5[lang][9];
+            return MikuPan_Translate(kPickerTitles5[9]);
         case MIKUPAN_PICKER_THEME:
-            return kPickerTitles5[lang][10];
+            return MikuPan_Translate(kPickerTitles5[10]);
         case MIKUPAN_PICKER_FONT:
-            return kPickerTitles5[lang][11];
+            return MikuPan_Translate(kPickerTitles5[11]);
         default:
-            return kPickerTitles5[lang][12];
+            return MikuPan_Translate(kPickerTitles5[12]);
     }
 }
 
@@ -3255,38 +3084,20 @@ void UpdateChoicePickerVisual(void)
 
 const char* PressConfirmToApplyLabel(void)
 {
-    static const char* const kPressConfirmToApply5[5] = {
-        "Press confirm to apply",
-        "Appuyez sur confirmer pour appliquer",
-        "Bestätigen drücken zum Anwenden",
-        "Pulsa confirmar para aplicar",
-        "Premi conferma per applicare",
-    };
-    return kPressConfirmToApply5[OptionsLang()];
+    static const char* const kPressConfirmToApply5 = "Press confirm to apply";
+    return MikuPan_Translate(kPressConfirmToApply5);
 }
 
 const char* NoWindowSizesLabel(void)
 {
-    static const char* const kNoWindowSizes5[5] = {
-        "No window sizes",
-        "Aucune taille de fenêtre",
-        "Keine Fenstergrößen",
-        "Sin tamaños de ventana",
-        "Nessuna dimensione finestra",
-    };
-    return kNoWindowSizes5[OptionsLang()];
+    static const char* const kNoWindowSizes5 = "No window sizes";
+    return MikuPan_Translate(kNoWindowSizes5);
 }
 
 const char* NoRenderScalesLabel(void)
 {
-    static const char* const kNoRenderScales5[5] = {
-        "No render scales",
-        "Aucune échelle de rendu",
-        "Keine Renderskalierungen",
-        "Sin escalas de renderizado",
-        "Nessuna scala di rendering",
-    };
-    return kNoRenderScales5[OptionsLang()];
+    static const char* const kNoRenderScales5 = "No render scales";
+    return MikuPan_Translate(kNoRenderScales5);
 }
 
 void UpdateWindowModePicker(void)
@@ -3467,26 +3278,15 @@ void UpdateMsaaSelectState(void)
 
 const char* SaveConfigurationRestartLabel(void)
 {
-    static const char* const kSaveConfigurationRestart5[5] = {
-        "Save Configuration and restart to apply",
-        "Sauvegardez la configuration et redémarrez pour appliquer",
-        "Konfiguration speichern und neu starten zum Anwenden",
-        "Guarda la configuración y reinicia para aplicar",
-        "Salva la configurazione e riavvia per applicare",
-    };
-    return kSaveConfigurationRestart5[OptionsLang()];
+    static const char* const kSaveConfigurationRestart5 =
+        "Save Configuration and restart to apply";
+    return MikuPan_Translate(kSaveConfigurationRestart5);
 }
 
 const char* ActiveGpuDriverPrefixLabel(void)
 {
-    static const char* const kActiveLabel5[5] = {
-        "Active:",
-        "Actif :",
-        "Aktiv:",
-        "Activo:",
-        "Attivo:",
-    };
-    return kActiveLabel5[OptionsLang()];
+    static const char* const kActiveLabel5 = "Active:";
+    return MikuPan_Translate(kActiveLabel5);
 }
 
 void UpdateGpuDriverNotes(void)
@@ -3786,23 +3586,18 @@ bool HandleHorizontalInput(int direction)
 
 const char* ResolutionConfirmTitleLabel(MikuPanDisplayConfirmKind kind)
 {
-    static const char* const kTitles5[5][3] = {
-        {"Keep this render scale?", "Keep this display mode?", "Keep this window size?"},
-        {"GARDER CETTE ÉCHELLE DE RENDU ?", "GARDER CE MODE D'AFFICHAGE ?", "GARDER CETTE TAILLE DE FENÊTRE ?"},
-        {"DIESE RENDERSKALIERUNG BEHALTEN?", "DIESEN ANZEIGEMODUS BEHALTEN?", "DIESE FENSTERGRÖSSE BEHALTEN?"},
-        {"¿MANTENER ESTA ESCALA DE RENDERIZADO?", "¿MANTENER ESTE MODO DE PANTALLA?", "¿MANTENER ESTE TAMAÑO DE VENTANA?"},
-        {"MANTENERE QUESTA SCALA DI RENDERING?", "MANTENERE QUESTA MODALITÀ SCHERMO?", "MANTENERE QUESTA DIMENSIONE FINESTRA?"},
+    static const char* const kTitles5[3] = {
+        "Keep this render scale?", "Keep this display mode?", "Keep this window size?",
     };
-    const int lang = OptionsLang();
     if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_MODE)
     {
-        return kTitles5[lang][1];
+        return MikuPan_Translate(kTitles5[1]);
     }
     if (kind == MIKUPAN_DISPLAY_CONFIRM_WINDOW_SIZE)
     {
-        return kTitles5[lang][2];
+        return MikuPan_Translate(kTitles5[2]);
     }
-    return kTitles5[lang][0];
+    return MikuPan_Translate(kTitles5[0]);
 }
 
 void SetResolutionConfirmVisible(bool visible,
@@ -5103,6 +4898,8 @@ bool FocusedControlWantsSpaceConfirm(void)
     if (focus == g_rml.vsync_input
         || focus == g_rml.crt_enabled_input
         || focus == g_rml.minimap_enabled_input
+        || focus == g_rml.album_photo_png_export_input
+        || focus == g_rml.cursor_auto_hide_input
         || focus == g_rml.keep_finder_raised_input
         || focus == g_rml.number_door_fix_localization_input
         || focus == g_rml.finder_dpad_film_swap_input
@@ -5536,7 +5333,7 @@ void PopulateStaticSelect(Rml::ElementFormControlSelect* select,
 
     for (int i = 0; i < count; i++)
     {
-        select->Add(labels[i], std::to_string(i));
+        select->Add(MikuPan_Translate(labels[i]), std::to_string(i));
     }
 
     if (count > 0)
@@ -5566,7 +5363,7 @@ void RelabelStaticSelect(Rml::ElementFormControlSelect* select,
     {
         if (Rml::Element* option = select->GetOption(i))
         {
-            option->SetInnerRML(labels[i]);
+            option->SetInnerRML(MikuPan_Translate(labels[i]));
         }
     }
 }
@@ -5630,6 +5427,10 @@ void SyncRmlSettingsValues(void)
     SetCheckbox(g_rml.crt_enabled_input, crt != nullptr && crt->enabled);
     SetCheckbox(g_rml.minimap_enabled_input,
                 mikupan_configuration.minimap_enabled);
+    SetCheckbox(g_rml.album_photo_png_export_input,
+                mikupan_configuration.album_photo_png_export_enabled);
+    SetCheckbox(g_rml.cursor_auto_hide_input,
+                mikupan_configuration.cursor_auto_hide_enabled);
     SetCheckbox(g_rml.keep_finder_raised_input,
                 MikuPan_KeepFinderRaisedForApparitionsEnabled());
     SetCheckbox(g_rml.number_door_fix_localization_input,
@@ -5885,7 +5686,7 @@ bool LoadOptionsDocument(void)
 
     g_rml.lighting_mode_select = GetSelect("lighting-mode-select");
     PopulateStaticSelect(g_rml.lighting_mode_select,
-                         kLightingModeLabels5[OptionsLang()],
+                         kLightingModeLabels5,
                          2,
                          MikuPan_GetLightingMode(),
                          [](int index) { MikuPan_SetLightingMode(index); });
@@ -5900,7 +5701,7 @@ bool LoadOptionsDocument(void)
     g_rml.finder_surround_select = GetSelect("finder-surround-select");
     PopulateStaticSelect(
         g_rml.finder_surround_select,
-        kFinderSurroundLabels5[OptionsLang()],
+        kFinderSurroundLabels5,
         2,
         mikupan_configuration.renderer.finder_viewport_mask_mode ==
                 MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
@@ -6022,6 +5823,27 @@ bool LoadOptionsDocument(void)
                     [](Rml::ElementFormControlInput* input) {
                         MarkSettingsDirty();
                         mikupan_configuration.minimap_enabled =
+                            IsCheckboxChecked(input) ? 1 : 0;
+                    }));
+
+    g_rml.album_photo_png_export_input =
+        GetInput("album-photo-png-export-input");
+    AddListener(g_rml.album_photo_png_export_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        mikupan_configuration.album_photo_png_export_enabled =
+                            IsCheckboxChecked(input) ? 1 : 0;
+                    }));
+
+    g_rml.cursor_auto_hide_input = GetInput("cursor-auto-hide-input");
+    AddListener(g_rml.cursor_auto_hide_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MarkSettingsDirty();
+                        mikupan_configuration.cursor_auto_hide_enabled =
                             IsCheckboxChecked(input) ? 1 : 0;
                     }));
 
@@ -6520,55 +6342,24 @@ void MikuPan_RmlOptionsApplyFont(int font)
 struct MikuPanLocalizedElement
 {
     const char* id;
-    const char* const* text5;
+    const char* text5;
 };
 
-const char* const kAdjustLabel5[5] = {
-    "Adjust", "Ajuster", "Anpassen", "Ajustar", "Regola",
-};
-const char* const kBrowseLabel5[5] = {
-    "Browse", "Parcourir", "Durchsuchen", "Examinar", "Sfoglia",
-};
-const char* const kSaveLabel5[5] = {
-    "Save", "Enregistrer", "Speichern", "Guardar", "Salva",
-};
-const char* const kBackLabel5[5] = {
-    "Back", "Retour", "Zurück", "Volver", "Indietro",
-};
-const char* const kYesLabel5[5] = {
-    "Yes", "Oui", "Ja", "Sí", "Sì",
-};
-const char* const kNoLabel5[5] = {
-    "No", "Non", "Nein", "No", "No",
-};
-const char* const kCancelLabel5[5] = {
-    "Cancel", "Annuler", "Abbrechen", "Cancelar", "Annulla",
-};
-const char* const kApplyLabel5[5] = {
-    "Apply", "Appliquer", "Anwenden", "Aplicar", "Applica",
-};
-const char* const kResetLabel5[5] = {
-    "Reset", "Réinitialiser", "Zurücksetzen", "Restablecer", "Ripristina",
-};
-const char* const kOkLabel5[5] = {
-    "OK", "OK", "OK", "OK", "OK",
-};
-const char* const kEnableLabel5[5] = {
-    "Enable", "ACTIVER", "AKTIVIEREN", "ACTIVAR", "ATTIVA",
-};
-const char* const kDefaultsLabel5[5] = {
-    "Defaults", "Par défaut", "Standard", "Predeterminados", "Predefiniti",
-};
-const char* const kHdrOutputLabel5[5] = {
-    "HDR Output", "SORTIE HDR", "HDR-AUSGABE", "SALIDA HDR", "USCITA HDR",
-};
-const char* const kImageCalibrationLabel5[5] = {
-    "Image Calibration", "CALIBRATION DE L'IMAGE", "BILDKALIBRIERUNG",
-    "CALIBRACIÓN DE IMAGEN", "CALIBRAZIONE IMMAGINE",
-};
-const char* const kCrtFilterLabel5[5] = {
-    "CRT Filter", "FILTRE CRT", "CRT-FILTER", "FILTRO CRT", "FILTRO CRT",
-};
+const char* const kAdjustLabel5 = "Adjust";
+const char* const kBrowseLabel5 = "Browse";
+const char* const kSaveLabel5 = "Save";
+const char* const kBackLabel5 = "Back";
+const char* const kYesLabel5 = "Yes";
+const char* const kNoLabel5 = "No";
+const char* const kCancelLabel5 = "Cancel";
+const char* const kApplyLabel5 = "Apply";
+const char* const kResetLabel5 = "Reset";
+const char* const kOkLabel5 = "OK";
+const char* const kEnableLabel5 = "Enable";
+const char* const kDefaultsLabel5 = "Defaults";
+const char* const kHdrOutputLabel5 = "HDR Output";
+const char* const kImageCalibrationLabel5 = "Image Calibration";
+const char* const kCrtFilterLabel5 = "CRT Filter";
 
 void MikuPan_RmlOptionsApplyLanguage(int language)
 {
@@ -6577,12 +6368,8 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
         return;
     }
 
-    static const char* const kCategoryLabels[5][5] = {
-        {"Display", "Graphics", "Audio", "Controls", "Advanced"},
-        {"Affichage", "Graphismes", "Audio", "Commandes", "Avancé"},
-        {"Anzeige", "Grafik", "Audio", "Steuerung", "Erweitert"},
-        {"Pantalla", "Gráficos", "Sonido", "Controles", "Avanzado"},
-        {"Schermo", "Grafica", "Audio", "Comandi", "Avanzate"},
+    static const char* const kCategoryLabels[5] = {
+        "Display", "Graphics", "Audio", "Controls", "Advanced",
     };
 
     const int lang = std::clamp(language, 0, 4);
@@ -6591,7 +6378,7 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
     {
         if (g_rml.category_buttons[i] != nullptr)
         {
-            g_rml.category_buttons[i]->SetInnerRML(kCategoryLabels[lang][i]);
+            g_rml.category_buttons[i]->SetInnerRML(MikuPan_Translate(kCategoryLabels[i]));
         }
     }
 
@@ -6600,454 +6387,120 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
         SetElementText(g_rml.panel_title, CategoryTitle(g_rml.selected_category));
     }
 
-    static const char* const kOptionsBranding5[5] = {
-        "OPTIONS", "OPTIONS", "OPTIONEN", "OPCIONES", "OPZIONI",
-    };
+    static const char* const kOptionsBranding5 = "OPTIONS";
     if (g_rml.film_title != nullptr)
     {
-        g_rml.film_title->SetInnerRML(kOptionsBranding5[lang]);
+        g_rml.film_title->SetInnerRML(MikuPan_Translate(kOptionsBranding5));
     }
     if (g_rml.side_title != nullptr)
     {
-        g_rml.side_title->SetInnerRML(kOptionsBranding5[lang]);
+        g_rml.side_title->SetInnerRML(MikuPan_Translate(kOptionsBranding5));
     }
 
     RelabelStaticSelect(g_rml.lighting_mode_select,
-                       kLightingModeLabels5[lang],
+                       kLightingModeLabels5,
                        2);
     RelabelStaticSelect(g_rml.finder_surround_select,
-                       kFinderSurroundLabels5[lang],
+                       kFinderSurroundLabels5,
                        2);
 
-    static const char* const kSettingTitleWindowMode5[5] = {
-        "Display Mode", "MODE D'AFFICHAGE", "ANZEIGEMODUS", "MODO DE PANTALLA",
-        "MODALITÀ SCHERMO",
-    };
-    static const char* const kSettingDescWindowMode5[5] = {
-        "Windowed or borderless fullscreen.",
-        "Fenêtre ou plein écran sans bordure.",
-        "Fenster oder randloser Vollbildmodus.",
-        "Ventana o pantalla completa sin bordes.",
-        "Finestra o schermo intero senza bordi.",
-    };
-    static const char* const kSettingTitleWindowSize5[5] = {
-        "Windowed Resolution", "RÉSOLUTION FENÊTRÉE", "FENSTERGRÖSSE",
-        "RESOLUCIÓN EN VENTANA", "RISOLUZIONE FINESTRA",
-    };
-    static const char* const kSettingDescWindowSize5[5] = {
-        "Window size used in Windowed mode. Fullscreen uses borderless desktop size.",
-        "Taille de fenêtre utilisée en mode Fenêtre. Le plein écran utilise la taille du bureau sans bordure.",
-        "Fenstergröße im Fenstermodus. Vollbild nutzt die randlose Desktopgröße.",
-        "Tamaño de ventana usado en modo Ventana. Pantalla completa usa el tamaño del escritorio sin bordes.",
-        "Dimensione finestra usata in modalità Finestra. Schermo intero usa la dimensione del desktop senza bordi.",
-    };
-    static const char* const kSettingDescCalibration5[5] = {
-        "Open a scene preview with all image controls in one place.",
-        "Ouvre un aperçu de scène avec tous les contrôles d'image au même endroit.",
-        "Öffnet eine Szenenvorschau mit allen Bildeinstellungen an einem Ort.",
-        "Abre una vista previa de escena con todos los controles de imagen en un solo lugar.",
-        "Apre un'anteprima della scena con tutti i controlli immagine in un unico posto.",
-    };
-    static const char* const kSettingDescHdr5[5] = {
-        "Use extended-linear HDR presentation when the display supports it.",
-        "Utilise le rendu HDR linéaire étendu si l'écran le prend en charge.",
-        "Verwendet erweiterte lineare HDR-Darstellung, wenn der Bildschirm dies unterstützt.",
-        "Usa presentación HDR lineal extendida si la pantalla lo permite.",
-        "Usa la presentazione HDR lineare estesa se lo schermo lo supporta.",
-    };
-    static const char* const kSettingTitleVsync5[5] = {
-        "VSync", "VSync", "VSync", "VSync", "VSync",
-    };
-    static const char* const kSettingDescVsync5[5] = {
-        "Synchronise presentation to the display refresh.",
-        "Synchronise l'affichage avec le taux de rafraîchissement de l'écran.",
-        "Synchronisiert die Darstellung mit der Bildwiederholrate.",
-        "Sincroniza la presentación con la frecuencia de actualización de la pantalla.",
-        "Sincronizza la presentazione con la frequenza di aggiornamento dello schermo.",
-    };
-    static const char* const kSettingTitleResolution5[5] = {
-        "Render Resolution", "RÉSOLUTION DE RENDU", "RENDERAUFLÖSUNG",
-        "RESOLUCIÓN DE RENDERIZADO", "RISOLUZIONE DI RENDERING",
-    };
-    static const char* const kSettingDescResolution5[5] = {
-        "Match the window, scale from it, or use exact PS2 multiples.",
-        "Correspond à la fenêtre, la met à l'échelle, ou utilise des multiples exacts de la PS2.",
-        "Passt sich dem Fenster an, skaliert davon, oder nutzt exakte PS2-Vielfache.",
-        "Coincide con la ventana, escala desde ella, o usa múltiplos exactos de PS2.",
-        "Corrisponde alla finestra, la scala, oppure usa multipli esatti della PS2.",
-    };
-    static const char* const kSettingTitleGpuBackend5[5] = {
-        "GPU Backend", "MOTEUR GPU", "GPU-BACKEND", "MOTOR GPU", "BACKEND GPU",
-    };
-    static const char* const kSettingDescGpuBackend5[5] = {
-        "Renderer backend selection. A restart may be required.",
-        "Sélection du moteur de rendu. Un redémarrage peut être nécessaire.",
-        "Auswahl des Render-Backends. Ein Neustart kann erforderlich sein.",
-        "Selección del motor de renderizado. Puede requerir reiniciar.",
-        "Selezione del backend di rendering. Potrebbe essere necessario riavviare.",
-    };
-    static const char* const kSettingTitleMsaa5[5] = {
-        "MSAA", "MSAA", "MSAA", "MSAA", "MSAA",
-    };
-    static const char* const kSettingDescMsaa5[5] = {
-        "Smooth geometry edges using multisampling.",
-        "Adoucit les bords de la géométrie grâce au multi-échantillonnage.",
-        "Glättet Geometriekanten durch Multisampling.",
-        "Suaviza los bordes de la geometría mediante multimuestreo.",
-        "Leviga i bordi della geometria tramite multisampling.",
-    };
-    static const char* const kSettingTitleShadowResolution5[5] = {
-        "Shadow Resolution", "RÉSOLUTION DES OMBRES", "SCHATTENAUFLÖSUNG",
-        "RESOLUCIÓN DE SOMBRAS", "RISOLUZIONE OMBRE",
-    };
-    static const char* const kSettingDescShadowResolution5[5] = {
-        "Higher values sharpen shadows at a performance cost.",
-        "Des valeurs plus élevées affinent les ombres au prix de performances.",
-        "Höhere Werte schärfen Schatten auf Kosten der Leistung.",
-        "Valores más altos afinan las sombras a costa del rendimiento.",
-        "Valori più alti rendono le ombre più nitide a scapito delle prestazioni.",
-    };
-    static const char* const kSettingTitleLightingMode5[5] = {
-        "Lighting Mode", "MODE D'ÉCLAIRAGE", "BELEUCHTUNGSMODUS",
-        "MODO DE ILUMINACIÓN", "MODALITÀ ILLUMINAZIONE",
-    };
-    static const char* const kSettingDescLightingMode5[5] = {
-        "Modern pixel lighting or PS2-style vertex lighting.",
-        "Éclairage par pixel moderne ou éclairage par sommet de style PS2.",
-        "Modernes Pixel-Licht oder PS2-artiges Vertex-Licht.",
-        "Iluminación por píxel moderna o iluminación por vértice al estilo PS2.",
-        "Illuminazione pixel moderna o illuminazione vertex in stile PS2.",
-    };
-    static const char* const kSettingTitleDitherMode5[5] = {
-        "Dither Filtering", "FILTRAGE DE TRAME", "DITHER-FILTER",
-        "FILTRADO DE TRAMA", "FILTRO DITHER",
-    };
-    static const char* const kSettingDescDitherMode5[5] = {
-        "Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays.",
-        "Natif conserve la texture de trame PS2 nette. Doux l'adoucit pour les écrans modernes.",
-        "Nativ hält die PS2-Dither-Textur scharf. Weich glättet sie für moderne Bildschirme.",
-        "Nativo mantiene nítida la textura de trama PS2. Suave la difumina para pantallas modernas.",
-        "Nativo mantiene nitida la texture dither PS2. Morbido la smussa per schermi moderni.",
-    };
-    static const char* const kSettingTitleFinderSurround5[5] = {
-        "Finder Surround", "CONTOUR DU VISEUR", "SUCHERRAND",
-        "CONTORNO DEL VISOR", "CONTORNO MIRINO",
-    };
-    static const char* const kSettingDescFinderSurround5[5] = {
-        "Choose the area outside the Camera Obscura frame.",
-        "Choisissez la zone en dehors du cadre de la Camera Obscura.",
-        "Wählt den Bereich außerhalb des Camera-Obscura-Rahmens.",
-        "Elige el área fuera del marco de la Camera Obscura.",
-        "Scegli l'area fuori dalla cornice della Camera Obscura.",
-    };
-    static const char* const kSettingTitleMasterVolume5[5] = {
-        "Master Volume", "VOLUME GÉNÉRAL", "GESAMTLAUTSTÄRKE",
-        "VOLUMEN GENERAL", "VOLUME GENERALE",
-    };
-    static const char* const kSettingDescMasterVolume5[5] = {
-        "Set the overall game volume.",
-        "Règle le volume général du jeu.",
-        "Legt die Gesamtlautstärke des Spiels fest.",
-        "Ajusta el volumen general del juego.",
-        "Imposta il volume generale del gioco.",
-    };
-    static const char* const kControlsSectionTitleMovement5[5] = {
-        "Movement Style", "STYLE DE DÉPLACEMENT", "BEWEGUNGSSTIL",
-        "ESTILO DE MOVIMIENTO", "STILE DI MOVIMENTO",
-    };
-    static const char* const kControlsBindLabelDpad5[5] = {
-        "D-Pad / Arrow Keys", "CROIX DIRECTIONNELLE / FLÈCHES",
-        "D-PAD / PFEILTASTEN", "CRUCETA / TECLAS DE FLECHA",
-        "CROCE DIREZIONALE / FRECCE",
-    };
-    static const char* const kControlsBindLabelStick5[5] = {
-        "Left Stick / WASD", "STICK GAUCHE / WASD", "LINKER STICK / WASD",
-        "STICK IZQUIERDO / WASD", "LEVETTA SINISTRA / WASD",
-    };
-    static const char* const kControlsSectionTitleViewfinder5[5] = {
-        "Viewfinder", "VISEUR", "SUCHER", "VISOR", "MIRINO",
-    };
-    static const char* const kControlsBindLabelStickLayout5[5] = {
-        "Stick Layout", "DISPOSITION DU STICK", "STICK-LAYOUT",
-        "DISPOSICIÓN DEL STICK", "DISPOSIZIONE LEVETTA",
-    };
-    static const char* const kControlsBindLabelDpadFilmSwap5[5] = {
-        "D-Pad Film Swap", "CHANGEMENT DE PELLICULE (CROIX)",
-        "D-PAD FILMWECHSEL", "CAMBIO DE PELÍCULA (CRUCETA)",
-        "CAMBIO PELLICOLA (CROCE)",
-    };
-    static const char* const kSettingTitleControlsReset5[5] = {
-        "Defaults", "PAR DÉFAUT", "STANDARD", "PREDETERMINADOS", "PREDEFINITI",
-    };
-    static const char* const kSettingDescControlsReset5[5] = {
-        "Restore keyboard, mouse, and controller bindings.",
-        "Restaure les assignations clavier, souris et manette.",
-        "Stellt Tastatur-, Maus- und Controller-Belegung wieder her.",
-        "Restaura las asignaciones de teclado, ratón y mando.",
-        "Ripristina le assegnazioni di tastiera, mouse e controller.",
-    };
-    static const char* const kControlsKeyboardTab5[5] = {
-        "Keyboard / Mouse", "Clavier / Souris", "Tastatur / Maus",
-        "Teclado / Ratón", "Tastiera / Mouse",
-    };
-    static const char* const kControlsControllerTab5[5] = {
-        "Controller", "Manette", "Controller", "Mando", "Controller",
-    };
-    static const char* const kControlsHelp5[5] = {
-        "Select a movement style, or click a binding then press a key, mouse input, or controller input to assign.",
-        "Choisissez un style de déplacement, ou cliquez sur une assignation puis appuyez sur une touche, la souris, ou une entrée manette pour l'assigner.",
-        "Wähle einen Bewegungsstil, oder klicke auf eine Belegung und drücke dann eine Taste, Maus- oder Controller-Eingabe zum Zuweisen.",
-        "Elige un estilo de movimiento, o haz clic en una asignación y luego pulsa una tecla, entrada de ratón o mando para asignarla.",
-        "Scegli uno stile di movimento, oppure clicca su un'assegnazione e premi un tasto, il mouse o un controller per assegnarla.",
-    };
-    static const char* const kSubsectionTitleInterface5[5] = {
-        "Interface", "INTERFACE", "BENUTZEROBERFLÄCHE", "INTERFAZ", "INTERFACCIA",
-    };
-    static const char* const kSettingTitleTheme5[5] = {
-        "Theme", "THÈME", "DESIGN", "TEMA", "TEMA",
-    };
-    static const char* const kSettingDescTheme5[5] = {
-        "Use the same colour palette as the ImGui overlay.",
-        "Utilise la même palette de couleurs que l'overlay ImGui.",
-        "Verwendet dieselbe Farbpalette wie das ImGui-Overlay.",
-        "Usa la misma paleta de colores que la superposición ImGui.",
-        "Usa la stessa tavolozza colori della sovrapposizione ImGui.",
-    };
-    static const char* const kSettingTitleFont5[5] = {
-        "Font", "POLICE", "SCHRIFTART", "FUENTE", "CARATTERE",
-    };
-    static const char* const kSettingDescFont5[5] = {
-        "Choose the options-menu font.",
-        "Choisissez la police du menu des options.",
-        "Wählt die Schriftart des Optionsmenüs.",
-        "Elige la fuente del menú de opciones.",
-        "Scegli il carattere del menu opzioni.",
-    };
-    static const char* const kSettingTitleFontScale5[5] = {
-        "Font Scale", "ÉCHELLE DE POLICE", "SCHRIFTGRÖSSE",
-        "ESCALA DE FUENTE", "SCALA CARATTERE",
-    };
-    static const char* const kSettingDescFontScale5[5] = {
-        "Adjust interface text size.",
-        "Ajuste la taille du texte de l'interface.",
-        "Passt die Textgröße der Oberfläche an.",
-        "Ajusta el tamaño del texto de la interfaz.",
-        "Regola la dimensione del testo dell'interfaccia.",
-    };
-    static const char* const kSubsectionTitleGameplay5[5] = {
-        "Gameplay", "Gameplay", "Gameplay", "Gameplay", "Gameplay",
-    };
-    static const char* const kSettingTitleFlashlightStyle5[5] = {
-        "Flashlight Style", "STYLE DE LAMPE TORCHE", "TASCHENLAMPENSTIL",
-        "ESTILO DE LINTERNA", "STILE TORCIA",
-    };
-    static const char* const kSettingDescFlashlightStyle5[5] = {
-        "Choose the original PS2 light, the simpler Xbox light, or disable it.",
-        "Choisissez la lumière PS2 originale, la lumière Xbox plus simple, ou désactivez-la.",
-        "Wählt das originale PS2-Licht, das einfachere Xbox-Licht, oder deaktiviert es.",
-        "Elige la luz original de PS2, la luz más simple de Xbox, o desactívala.",
-        "Scegli la luce originale PS2, la luce Xbox più semplice, oppure disattivala.",
-    };
-    static const char* const kSettingTitleKeepFinderRaised5[5] = {
-        "Keep Finder Raised", "GARDER LE VISEUR LEVÉ", "SUCHER ANGEHOBEN HALTEN",
-        "MANTENER EL VISOR LEVANTADO", "MANTIENI IL MIRINO SOLLEVATO",
-    };
-    static const char* const kSettingDescKeepFinderRaised5[5] = {
-        "Do not lower the Camera Obscura when an apparition event begins.",
-        "Ne baisse pas la Camera Obscura au début d'un événement d'apparition.",
-        "Senkt die Camera Obscura nicht ab, wenn ein Erscheinungsereignis beginnt.",
-        "No baja la Camera Obscura cuando comienza un evento de aparición.",
-        "Non abbassa la Camera Obscura quando inizia un evento di apparizione.",
-    };
-    static const char* const kSettingTitleMinimap5[5] = {
-        "Mini Map", "MINI-CARTE", "MINI-KARTE", "MINIMAPA", "MINIMAPPA",
-    };
-    static const char* const kSettingDescMinimap5[5] = {
-        "Show the corner map while exploring.",
-        "Affiche la carte dans le coin pendant l'exploration.",
-        "Zeigt die Kartenanzeige in der Ecke während der Erkundung.",
-        "Muestra el mapa en la esquina mientras exploras.",
-        "Mostra la mappa nell'angolo durante l'esplorazione.",
-    };
-    static const char* const kSettingTitleQuickFilmSwap5[5] = {
-        "Quick Film Swap", "CHANGEMENT RAPIDE DE PELLICULE", "SCHNELLER FILMWECHSEL",
-        "CAMBIO RÁPIDO DE PELÍCULA", "CAMBIO RAPIDO PELLICOLA",
-    };
-    static const char* const kSettingDescQuickFilmSwap5[5] = {
-        "Use D-Pad Up / Down in finder mode to switch film.<br />D-Pad finder aim is disabled while enabled.",
-        "Utilisez Haut / Bas de la croix directionnelle en mode viseur pour changer de pellicule.<br />La visée à la croix est désactivée lorsque active.",
-        "Verwende D-Pad Hoch / Runter im Suchermodus, um den Film zu wechseln.<br />Die D-Pad-Zielsteuerung im Sucher ist deaktiviert, solange dies aktiv ist.",
-        "Usa D-Pad Arriba / Abajo en modo visor para cambiar de película.<br />La puntería con D-Pad en el visor se desactiva mientras está activo.",
-        "Usa D-Pad Su / Giù in modalità mirino per cambiare pellicola.<br />La mira con D-Pad nel mirino è disattivata quando è attivo.",
-    };
-    static const char* const kSettingTitleMirrorStone5[5] = {
-        "Mirror Stone Indicator", "INDICATEUR DE PIERRE MIROIR",
-        "SPIEGELSTEIN-ANZEIGE", "INDICADOR DE PIEDRA ESPEJO",
-        "INDICATORE PIETRA SPECCHIO",
-    };
-    static const char* const kSettingDescMirrorStone5[5] = {
-        "Show a Mirror Stone icon next to the filament.",
-        "Affiche une icône de pierre miroir à côté du filament.",
-        "Zeigt ein Spiegelstein-Symbol neben dem Filament.",
-        "Muestra un icono de piedra espejo junto al filamento.",
-        "Mostra un'icona di pietra specchio accanto al filamento.",
-    };
-    static const char* const kSettingTitleImprovedCollisions5[5] = {
-        "Improved Movement Collisions", "COLLISIONS DE DÉPLACEMENT AMÉLIORÉES",
-        "VERBESSERTE BEWEGUNGSKOLLISIONEN", "COLISIONES DE MOVIMIENTO MEJORADAS",
-        "COLLISIONI DI MOVIMENTO MIGLIORATE",
-    };
-    static const char* const kSettingDescImprovedCollisions5[5] = {
-        "Uses an improved movement collision method to reduce snagging.",
-        "Utilise une méthode de collision de déplacement améliorée pour réduire les accrochages.",
-        "Verwendet eine verbesserte Bewegungskollisionsmethode, um Hängenbleiben zu reduzieren.",
-        "Usa un método de colisión de movimiento mejorado para reducir enganches.",
-        "Usa un metodo di collisione del movimento migliorato per ridurre gli incastri.",
-    };
-    static const char* const kSubsectionTitleVideoFilters5[5] = {
-        "Video Filters", "FILTRES VIDÉO", "VIDEOFILTER", "FILTROS DE VÍDEO",
-        "FILTRI VIDEO",
-    };
-    static const char* const kSettingDescCrt5[5] = {
-        "Open the CRT post-process tuning panel.",
-        "Ouvre le panneau de réglage du post-traitement CRT.",
-        "Öffnet das CRT-Nachbearbeitungs-Panel.",
-        "Abre el panel de ajuste de posprocesado CRT.",
-        "Apre il pannello di regolazione del post-processing CRT.",
-    };
-    static const char* const kSubsectionTitleFiles5[5] = {
-        "Files", "FICHIERS", "DATEIEN", "ARCHIVOS", "FILE",
-    };
-    static const char* const kSettingTitleDataFolder5[5] = {
-        "Data Folder", "DOSSIER DE DONNÉES", "DATENORDNER", "CARPETA DE DATOS",
-        "CARTELLA DATI",
-    };
-    static const char* const kSettingDescDataFolder5[5] = {
-        "Folder containing extracted MikuPan game data.",
-        "Dossier contenant les données de jeu MikuPan extraites.",
-        "Ordner mit den extrahierten MikuPan-Spieldaten.",
-        "Carpeta que contiene los datos extraídos del juego MikuPan.",
-        "Cartella contenente i dati di gioco MikuPan estratti.",
-    };
-    static const char* const kConfirmSaveTitle5[5] = {
-        "Save Changes?", "ENREGISTRER LES MODIFICATIONS ?",
-        "ÄNDERUNGEN SPEICHERN?", "¿GUARDAR CAMBIOS?", "SALVARE LE MODIFICHE?",
-    };
-    static const char* const kConfirmSaveText5[5] = {
-        "Unsaved settings remain.", "Des réglages non enregistrés subsistent.",
-        "Es gibt ungespeicherte Einstellungen.", "Quedan ajustes sin guardar.",
-        "Rimangono impostazioni non salvate.",
-    };
-    static const char* const kChoicePickerHelp5[5] = {
-        "Up / Down to choose. Confirm applies. Back cancels.",
-        "Haut / Bas pour choisir. Confirmer applique. Retour annule.",
-        "Hoch / Runter zum Wählen. Bestätigen wendet an. Zurück bricht ab.",
-        "Arriba / Abajo para elegir. Confirmar aplica. Volver cancela.",
-        "Su / Giù per scegliere. Conferma applica. Indietro annulla.",
-    };
-    static const char* const kBindingCaptureText5[5] = {
-        "Press input...", "Appuyez sur une entrée...", "Eingabe drücken...",
-        "Pulsa una entrada...", "Premi un input...",
-    };
-    static const char* const kBindingCaptureHelpPrefix5[5] = {
-        "Times out in ", "Expire dans ", "Zeitlimit in ", "Expira en ",
-        "Scade tra ",
-    };
-    static const char* const kBindingCaptureHelpSuffix5[5] = {
-        " seconds.", " secondes.", " Sekunden.", " segundos.", " secondi.",
-    };
-    static const char* const kResolutionConfirmTextPrefix5[5] = {
-        "Reverting in ", "Retour en arrière dans ", "Zurücksetzen in ",
-        "Revirtiendo en ", "Ripristino tra ",
-    };
-    static const char* const kResolutionConfirmTextSuffix5[5] = {
-        " seconds", " secondes", " Sekunden", " segundos", " secondi",
-    };
-    static const char* const kCalibrationLabelBrightness5[5] = {
-        "Brightness", "LUMINOSITÉ", "HELLIGKEIT", "BRILLO", "LUMINOSITÀ",
-    };
-    static const char* const kCalibrationLabelGamma5[5] = {
-        "Gamma", "Gamma", "Gamma", "Gamma", "Gamma",
-    };
-    static const char* const kCalibrationLabelContrast5[5] = {
-        "Contrast", "CONTRASTE", "KONTRAST", "CONTRASTE", "CONTRASTO",
-    };
-    static const char* const kCalibrationLabelShadowDepth5[5] = {
-        "Shadow Depth", "PROFONDEUR DES OMBRES", "SCHATTENTIEFE",
-        "PROFUNDIDAD DE SOMBRA", "PROFONDITÀ OMBRA",
-    };
-    static const char* const kCalibrationLabelPaperWhite5[5] = {
-        "Paper White", "BLANC PAPIER", "PAPIERWEISS", "BLANCO PAPEL",
-        "BIANCO CARTA",
-    };
-    static const char* const kCalibrationLabelPeak5[5] = {
-        "Peak", "PIC", "SPITZENWERT", "PICO", "PICCO",
-    };
-    static const char* const kCrtLabelStrength5[5] = {
-        "Strength", "INTENSITÉ", "STÄRKE", "INTENSIDAD", "INTENSITÀ",
-    };
-    static const char* const kCrtLabelCurvature5[5] = {
-        "Curvature", "COURBURE", "KRÜMMUNG", "CURVATURA", "CURVATURA",
-    };
-    static const char* const kCrtLabelOverscan5[5] = {
-        "Overscan", "SURBALAYAGE", "OVERSCAN", "SOBREBARRIDO", "OVERSCAN",
-    };
-    static const char* const kCrtLabelScanlines5[5] = {
-        "Scanlines", "LIGNES DE BALAYAGE", "SCANLINES",
-        "LÍNEAS DE EXPLORACIÓN", "SCANLINE",
-    };
-    static const char* const kCrtLabelScanlineScale5[5] = {
-        "Scanline Scale", "ÉCHELLE DES LIGNES", "SCANLINE-SKALIERUNG",
-        "ESCALA DE LÍNEAS", "SCALA SCANLINE",
-    };
-    static const char* const kCrtLabelScanlineThickness5[5] = {
-        "Scanline Thickness", "ÉPAISSEUR DES LIGNES", "SCANLINE-DICKE",
-        "GROSOR DE LÍNEAS", "SPESSORE SCANLINE",
-    };
-    static const char* const kCrtLabelMask5[5] = {
-        "Mask", "MASQUE", "MASKE", "MÁSCARA", "MASCHERA",
-    };
-    static const char* const kCrtLabelMaskScale5[5] = {
-        "Mask Scale", "ÉCHELLE DU MASQUE", "MASKENSKALIERUNG",
-        "ESCALA DE MÁSCARA", "SCALA MASCHERA",
-    };
-    static const char* const kCrtLabelVignette5[5] = {
-        "Vignette", "VIGNETTAGE", "VIGNETTE", "VIÑETA", "VIGNETTA",
-    };
-    static const char* const kCrtLabelVignetteSize5[5] = {
-        "Vignette Size", "TAILLE DU VIGNETTAGE", "VIGNETTENGRÖSSE",
-        "TAMAÑO DE VIÑETA", "DIMENSIONE VIGNETTA",
-    };
-    static const char* const kCrtLabelChromaOffset5[5] = {
-        "Chroma Offset", "DÉCALAGE CHROMA", "CHROMA-VERSATZ",
-        "DESPLAZAMIENTO DE CROMA", "OFFSET CROMA",
-    };
-    static const char* const kCrtLabelBlend5[5] = {
-        "Blend", "FONDU", "MISCHUNG", "MEZCLA", "FUSIONE",
-    };
-    static const char* const kCrtLabelBlendRadius5[5] = {
-        "Blend Radius", "RAYON DE FONDU", "MISCHRADIUS", "RADIO DE MEZCLA",
-        "RAGGIO FUSIONE",
-    };
-    static const char* const kCrtLabelNoise5[5] = {
-        "Noise", "BRUIT", "RAUSCHEN", "RUIDO", "RUMORE",
-    };
-    static const char* const kCrtLabelFlicker5[5] = {
-        "Flicker", "SCINTILLEMENT", "FLACKERN", "PARPADEO", "SFARFALLIO",
-    };
-    static const char* const kCrtLabelGlow5[5] = {
-        "Glow", "LUEUR", "LEUCHTEN", "RESPLANDOR", "BAGLIORE",
-    };
-    static const char* const kCalibrationLevelTitle5[5] = {
-        "Grey Levels", "NIVEAUX DE GRIS", "GRAUSTUFEN", "NIVELES DE GRIS",
-        "LIVELLI DI GRIGIO",
-    };
-    static const char* const kCalibrationLevelBlack5[5] = {
-        "BLACK", "NOIR", "SCHWARZ", "NEGRO", "NERO",
-    };
-    static const char* const kCalibrationLevelWhite5[5] = {
-        "WHITE", "BLANC", "WEISS", "BLANCO", "BIANCO",
-    };
+    static const char* const kSettingTitleWindowMode5 = "Display Mode";
+    static const char* const kSettingDescWindowMode5 = "Windowed or borderless fullscreen.";
+    static const char* const kSettingTitleWindowSize5 = "Windowed Resolution";
+    static const char* const kSettingDescWindowSize5 = "Window size used in Windowed mode. Fullscreen uses borderless desktop size.";
+    static const char* const kSettingDescCalibration5 = "Open a scene preview with all image controls in one place.";
+    static const char* const kSettingDescHdr5 = "Use extended-linear HDR presentation when the display supports it.";
+    static const char* const kSettingTitleVsync5 = "VSync";
+    static const char* const kSettingDescVsync5 = "Synchronise presentation to the display refresh.";
+    static const char* const kSettingTitleResolution5 = "Render Resolution";
+    static const char* const kSettingDescResolution5 = "Match the window, scale from it, or use exact PS2 multiples.";
+    static const char* const kSettingTitleGpuBackend5 = "GPU Backend";
+    static const char* const kSettingDescGpuBackend5 = "Renderer backend selection. A restart may be required.";
+    static const char* const kSettingTitleMsaa5 = "MSAA";
+    static const char* const kSettingDescMsaa5 = "Smooth geometry edges using multisampling.";
+    static const char* const kSettingTitleShadowResolution5 = "Shadow Resolution";
+    static const char* const kSettingDescShadowResolution5 = "Higher values sharpen shadows at a performance cost.";
+    static const char* const kSettingTitleLightingMode5 = "Lighting Mode";
+    static const char* const kSettingDescLightingMode5 = "Modern pixel lighting or PS2-style vertex lighting.";
+    static const char* const kSettingTitleDitherMode5 = "Dither Filtering";
+    static const char* const kSettingDescDitherMode5 = "Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays.";
+    static const char* const kSettingTitleFinderSurround5 = "Finder Surround";
+    static const char* const kSettingDescFinderSurround5 = "Choose the area outside the Camera Obscura frame.";
+    static const char* const kSettingTitleMasterVolume5 = "Master Volume";
+    static const char* const kSettingDescMasterVolume5 = "Set the overall game volume.";
+    static const char* const kControlsSectionTitleMovement5 = "Movement Style";
+    static const char* const kControlsBindLabelDpad5 = "D-Pad / Arrow Keys";
+    static const char* const kControlsBindLabelStick5 = "Left Stick / WASD";
+    static const char* const kControlsSectionTitleViewfinder5 = "Viewfinder";
+    static const char* const kControlsBindLabelStickLayout5 = "Stick Layout";
+    static const char* const kControlsBindLabelDpadFilmSwap5 = "D-Pad Film Swap";
+    static const char* const kSettingTitleControlsReset5 = "Defaults";
+    static const char* const kSettingDescControlsReset5 = "Restore keyboard, mouse, and controller bindings.";
+    static const char* const kControlsKeyboardTab5 = "Keyboard / Mouse";
+    static const char* const kControlsControllerTab5 = "Controller";
+    static const char* const kControlsHelp5 = "Select a movement style, or click a binding then press a key, mouse input, or controller input to assign.";
+    static const char* const kSubsectionTitleInterface5 = "Interface";
+    static const char* const kSettingTitleTheme5 = "Theme";
+    static const char* const kSettingDescTheme5 = "Use the same colour palette as the ImGui overlay.";
+    static const char* const kSettingTitleFont5 = "Font";
+    static const char* const kSettingDescFont5 = "Choose the options-menu font.";
+    static const char* const kSettingTitleFontScale5 = "Font Scale";
+    static const char* const kSettingDescFontScale5 = "Adjust interface text size.";
+    static const char* const kSubsectionTitleGameplay5 = "Gameplay";
+    static const char* const kSettingTitleFlashlightStyle5 = "Flashlight Style";
+    static const char* const kSettingDescFlashlightStyle5 = "Choose the original PS2 light, the simpler Xbox light, or disable it.";
+    static const char* const kSettingTitleNumberDoorFixLocalization5 = "Fix Number Door Localization";
+    static const char* const kSettingDescNumberDoorFixLocalization5 = "Use clockwise numerical ordering and show inset numbers over the original kanji buttons.";
+    static const char* const kSettingTitleKeepFinderRaised5 = "Keep Finder Raised";
+    static const char* const kSettingDescKeepFinderRaised5 = "Do not lower the Camera Obscura when an apparition event begins.";
+    static const char* const kSettingTitleMinimap5 = "Mini Map";
+    static const char* const kSettingDescMinimap5 = "Show the corner map while exploring.";
+    static const char* const kSettingTitleAlbumPhotoPngExport5 = "Save Album Photos as PNG";
+    static const char* const kSettingDescAlbumPhotoPngExport5 = "Also write album photos as PNG files next to the game.";
+    static const char* const kSettingTitleQuickFilmSwap5 = "Quick Film Swap";
+    static const char* const kSettingDescQuickFilmSwap5 = "Use D-Pad Up / Down in finder mode to switch film.<br />D-Pad finder aim is disabled while enabled.";
+    static const char* const kSettingTitleMirrorStone5 = "Mirror Stone Indicator";
+    static const char* const kSettingDescMirrorStone5 = "Show a Mirror Stone icon next to the filament.";
+    static const char* const kSettingTitleImprovedCollisions5 = "Improved Movement Collisions";
+    static const char* const kSettingDescImprovedCollisions5 = "Uses an improved movement collision method to reduce snagging.";
+    static const char* const kSubsectionTitleVideoFilters5 = "Video Filters";
+    static const char* const kSettingDescCrt5 = "Open the CRT post-process tuning panel.";
+    static const char* const kSubsectionTitleFiles5 = "Files";
+    static const char* const kSettingTitleDataFolder5 = "Data Folder";
+    static const char* const kSettingDescDataFolder5 = "Folder containing extracted MikuPan game data.";
+    static const char* const kConfirmSaveTitle5 = "Save Changes?";
+    static const char* const kConfirmSaveText5 = "Unsaved settings remain.";
+    static const char* const kChoicePickerHelp5 = "Up / Down to choose. Confirm applies. Back cancels.";
+    static const char* const kBindingCaptureText5 = "Press input...";
+    static const char* const kBindingCaptureHelpPrefix5 = "Times out in ";
+    static const char* const kBindingCaptureHelpSuffix5 = " seconds.";
+    static const char* const kResolutionConfirmTextPrefix5 = "Reverting in ";
+    static const char* const kResolutionConfirmTextSuffix5 = " seconds";
+    static const char* const kCalibrationLabelBrightness5 = "Brightness";
+    static const char* const kCalibrationLabelGamma5 = "Gamma";
+    static const char* const kCalibrationLabelContrast5 = "Contrast";
+    static const char* const kCalibrationLabelShadowDepth5 = "Shadow Depth";
+    static const char* const kCalibrationLabelPaperWhite5 = "Paper White";
+    static const char* const kCalibrationLabelPeak5 = "Peak";
+    static const char* const kCrtLabelStrength5 = "Strength";
+    static const char* const kCrtLabelCurvature5 = "Curvature";
+    static const char* const kCrtLabelOverscan5 = "Overscan";
+    static const char* const kCrtLabelScanlines5 = "Scanlines";
+    static const char* const kCrtLabelScanlineScale5 = "Scanline Scale";
+    static const char* const kCrtLabelScanlineThickness5 = "Scanline Thickness";
+    static const char* const kCrtLabelMask5 = "Mask";
+    static const char* const kCrtLabelMaskScale5 = "Mask Scale";
+    static const char* const kCrtLabelVignette5 = "Vignette";
+    static const char* const kCrtLabelVignetteSize5 = "Vignette Size";
+    static const char* const kCrtLabelChromaOffset5 = "Chroma Offset";
+    static const char* const kCrtLabelBlend5 = "Blend";
+    static const char* const kCrtLabelBlendRadius5 = "Blend Radius";
+    static const char* const kCrtLabelNoise5 = "Noise";
+    static const char* const kCrtLabelFlicker5 = "Flicker";
+    static const char* const kCrtLabelGlow5 = "Glow";
+    static const char* const kCalibrationLevelTitle5 = "Grey Levels";
+    static const char* const kCalibrationLevelBlack5 = "BLACK";
+    static const char* const kCalibrationLevelWhite5 = "WHITE";
 
     static const MikuPanLocalizedElement kStaticLabels[] = {
         {"setting-title-window-mode", kSettingTitleWindowMode5},
@@ -7099,10 +6552,14 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
         {"subsection-title-gameplay", kSubsectionTitleGameplay5},
         {"setting-title-flashlight-style", kSettingTitleFlashlightStyle5},
         {"setting-desc-flashlight-style", kSettingDescFlashlightStyle5},
+        {"setting-title-number-door-fix-localization", kSettingTitleNumberDoorFixLocalization5},
+        {"setting-desc-number-door-fix-localization", kSettingDescNumberDoorFixLocalization5},
         {"setting-title-keep-finder-raised", kSettingTitleKeepFinderRaised5},
         {"setting-desc-keep-finder-raised", kSettingDescKeepFinderRaised5},
         {"setting-title-minimap", kSettingTitleMinimap5},
         {"setting-desc-minimap", kSettingDescMinimap5},
+        {"setting-title-album-photo-png-export", kSettingTitleAlbumPhotoPngExport5},
+        {"setting-desc-album-photo-png-export", kSettingDescAlbumPhotoPngExport5},
         {"setting-title-quick-film-swap", kSettingTitleQuickFilmSwap5},
         {"setting-desc-quick-film-swap", kSettingDescQuickFilmSwap5},
         {"setting-title-mirror-stone", kSettingTitleMirrorStone5},
@@ -7174,7 +6631,7 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
     {
         if (Rml::Element* element = GetElement(entry.id))
         {
-            element->SetInnerRML(entry.text5[lang]);
+            element->SetInnerRML(MikuPan_Translate(entry.text5));
         }
     }
 
@@ -7193,7 +6650,7 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
     SetElementText(g_rml.binding_capture_title, BindControlTitleLabel());
     if (!BindingCaptureIsVisible())
     {
-        SetElementText(g_rml.binding_capture_text, kBindingCaptureText5[lang]);
+        SetElementText(g_rml.binding_capture_text, MikuPan_Translate(kBindingCaptureText5));
     }
 
     SetElementText(g_rml.resolution_confirm_title,

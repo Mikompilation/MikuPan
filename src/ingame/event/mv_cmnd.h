@@ -3,6 +3,8 @@
 
 #include "typedefs.h"
 
+#include <cstdint>
+
 typedef struct {
     short int msg_no;
     short int msg_wait;
@@ -12,6 +14,6 @@ typedef struct {
 
 void EventMovieCommandInit();
 void EventMovieCommandMain(int flame, int top_addr);
-int GetMovieMessageAddr(short int msg_no);
+int64_t GetMovieMessageAddr(short int msg_no);
 
 #endif // INGAME_EVENT_MV_CMND_H

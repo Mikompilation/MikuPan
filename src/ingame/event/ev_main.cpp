@@ -4,8 +4,10 @@
 #include "ev_main.h"
 
 #include "mikupan/mikupan_config.h"
+#include "mikupan/mikupan_textoverride.h"
 #include "mikupan/mikupan_memory.h"
 
+#include <cstdio>
 #include <string.h>
 
 #include "main/glob.h"
@@ -977,6 +979,15 @@ u_char EventOpenJudge(short int event_no)
 int64_t GetEventMessageAddr(short int msg_no)
 {
     u_char *addr;
+    char mod_category[24];
+
+    std::snprintf(mod_category, sizeof(mod_category), "m%d_event#msg",
+                 ingame_wrk.msn_no);
+    const int64_t mod_addr = MikuPan_GetTextModAddr(mod_category, msg_no);
+    if (mod_addr != 0)
+    {
+        return mod_addr;
+    }
 
     addr = (u_char *)MikuPan_GetHostPointer(Get4Byte((u_char *)MikuPan_GetHostPointer(MSN_TITLE_DAT_ADDRESS + 2 * 4)));
     addr += msg_no * 4 + MSN_TITLE_DAT_ADDRESS;

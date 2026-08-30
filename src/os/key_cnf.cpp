@@ -5,6 +5,7 @@
 
 #include "enums.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_i18n.h"
 #include "os/key_cnf.h"
 
 u_short *default_key[32] = {
@@ -398,29 +399,31 @@ int MikuPan_GetDefaultActionProfileTarget(int action)
 
 const char *MikuPan_ActionProfileModeLabel(int mode)
 {
-    return ClampActionProfileMode(mode) == MIKUPAN_ACTION_PROFILE_MODE_FINDER
-               ? "Finder Mode"
-               : "Normal Mode";
+    return MikuPan_Translate(
+        ClampActionProfileMode(mode) == MIKUPAN_ACTION_PROFILE_MODE_FINDER
+            ? "Finder Mode"
+            : "Normal Mode");
 }
 
 const char *MikuPan_ActionProfileActionLabel(int mode, int action)
 {
     if (action < 0 || action >= MIKUPAN_ACTION_PROFILE_ACTION_COUNT)
     {
-        return "<unknown action>";
+        return MikuPan_Translate("<unknown action>");
     }
 
-    return ClampActionProfileMode(mode) == MIKUPAN_ACTION_PROFILE_MODE_FINDER
-               ? finder_action_labels[action]
-               : normal_action_labels[action];
+    return MikuPan_Translate(
+        ClampActionProfileMode(mode) == MIKUPAN_ACTION_PROFILE_MODE_FINDER
+            ? finder_action_labels[action]
+            : normal_action_labels[action]);
 }
 
 const char *MikuPan_ActionProfileTargetLabel(int target)
 {
     if (target < 0 || target >= MIKUPAN_ACTION_PROFILE_ACTION_COUNT)
     {
-        return "<unmapped>";
+        return MikuPan_Translate("<unmapped>");
     }
 
-    return action_profile_target_labels[target];
+    return MikuPan_Translate(action_profile_target_labels[target]);
 }

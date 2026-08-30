@@ -65,12 +65,13 @@ extern bool loopEnd;
 extern bool loopRepeat;
 
 void VoicesInit();
-VOICE *GetFreeVoice();
 void FillAdpcmHeader(int vNo);
 void Key_On(int vNo);
 void Key_Off(int vNo);
 void VoiceRun();
 void VoiceSetKeySwitch(int core, u_int value, int key_on);
+void VoiceLock(void);
+void VoiceUnlock(void);
 
 static inline u_short DecodeSpu2PositiveVolume(u_short val)
 {

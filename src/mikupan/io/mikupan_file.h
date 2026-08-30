@@ -37,6 +37,18 @@ void MikuPan_ReadFullFile(const char *filename, char *buffer);
 void MikuPan_ReadFileInArchive(int sector, int size, u_int *address);
 void MikuPan_BufferFile(int sector, int size, int64_t address);
 u_int MikuPan_GetFileSize(const char *filename);
+/// Size in bytes of a file resolved against the configured data folder (the
+/// same root used for IMG_HD.BIN/IMG_BD.BIN), or 0 if it can't be resolved.
+/// Unlike MikuPan_LoadImgHdFile()/MikuPan_ReadFileInArchive(), this never
+/// pops the "missing data folder" dialog -- callers that treat the file as
+/// optional should decide for themselves how to react to a 0 result.
+u_int MikuPan_GetDataFileSize(const char *relative_name);
+/// Reads `size` bytes starting at `offset` from a file resolved against the
+/// configured data folder into a plain host buffer. Returns false (without
+/// prompting for a data folder) if the file is missing or the read is
+/// short.
+bool MikuPan_ReadDataFileRange(const char *relative_name, int64_t offset,
+                               void *buffer, size_t size);
 u_char MikuPan_OpenFile(const char *filename, void *buffer, int size);
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size);
 bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size);

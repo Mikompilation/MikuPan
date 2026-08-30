@@ -2,10 +2,13 @@
 #include "typedefs.h"
 #include "enums.h"
 #include "ev_spcl.h"
+#include "mikupan/mikupan_textoverride.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_rng.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/io/mikupan_controller.h"
+
+#include <cstdio>
 
 #include "graphics/graph2d/effect_scr.h" // SetBlackIn, SetBlackOut
 #include "graphics/graph2d/message.h"
@@ -628,6 +631,15 @@ void SpecialEventMain()
 int64_t GetSpecialEventMessageAddr(short int msg_no)
 {
     int addr;
+    char mod_category[24];
+
+    std::snprintf(mod_category, sizeof(mod_category), "m%d_event#special",
+                 ingame_wrk.msn_no);
+    const int64_t mod_addr = MikuPan_GetTextModAddr(mod_category, msg_no);
+    if (mod_addr != 0)
+    {
+        return mod_addr;
+    }
 
     addr = Get4Byte((u_char *)MikuPan_GetHostPointer(BASE_ADDRESS + 0x10));
     addr = Get4Byte((u_char *)MikuPan_GetHostPointer(BASE_ADDRESS + addr + msg_no * 4));

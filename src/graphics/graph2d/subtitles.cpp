@@ -719,7 +719,7 @@ void SetSubtitles(int type, int no, u_int mframe)
             i++;
         }
 
-        if (i > 0 && stlp[i - 1].out <= frame)
+        if (i > 0 && stlp[i - 1].out <= frame && type == subtitles_sys.type)
         {
             subtitles_sys.flg = 0;
         }

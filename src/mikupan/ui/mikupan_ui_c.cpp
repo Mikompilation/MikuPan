@@ -56,6 +56,7 @@ void MikuPan_InitUi(SDL_Window* window)
     MikuPan_ImPlot_CreateContext();
     ImGuiIO* io = igGetIO_Nil();
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
+    io->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
     MikuPan_UiThemeInit(window);
     MikuPan_UiSettingsInit();

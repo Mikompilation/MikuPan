@@ -600,9 +600,7 @@ void SceneDraw(int scene_no)
 #ifdef BUILD_EU_VERSION
     SendFontTex();
 
-    SetSubtitles(0, scene_no,
-                 sys_wrk.pal_disp_mode == 0 ? (fc->now_frame * 5) / 6
-                                            : fc->now_frame);
+    SetSubtitles(0, scene_no, fc->now_frame);
 
     MakeMovMes();
 

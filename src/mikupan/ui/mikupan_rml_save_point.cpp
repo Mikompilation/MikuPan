@@ -2,6 +2,7 @@
 
 #include "enums.h"
 #include "main/glob.h"
+#include "mikupan/mikupan_i18n.h"
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/mikupan_utils.h"
 
@@ -733,37 +734,26 @@ void MikuPan_RmlSavePointApplyLanguage(int language)
         return;
     }
 
-    const int lang = std::clamp(language, 0, 4);
+    (void)language;
 
     if (Rml::Element* title = MikuPan_RmlSavePointGetElement("save-point-title"))
     {
-        static const char* const kTitle[5] = {
-            "SAVE POINT", "POINT DE SAUVEGARDE", "SPEICHERPUNKT", "PUNTO DE GUARDADO", "PUNTO DI SALVATAGGIO",
-        };
-        title->SetInnerRML(kTitle[lang]);
+        static const char* const kTitle = "SAVE POINT";
+        title->SetInnerRML(MikuPan_Translate(kTitle));
     }
 
     if (g_save_point.document != nullptr)
     {
         if (Rml::Element* hint = g_save_point.document->QuerySelector(".save-point-controls-text"))
         {
-            static const char* const kControlsHint[5] = {
-                "A Select&#160;&#160;&#160;&#160;Y Exit",
-                "A Valider&#160;&#160;&#160;&#160;Y Quitter",
-                "A Auswählen&#160;&#160;&#160;&#160;Y Beenden",
-                "A Seleccionar&#160;&#160;&#160;&#160;Y Salir",
-                "A Seleziona&#160;&#160;&#160;&#160;Y Esci",
-            };
-            hint->SetInnerRML(kControlsHint[lang]);
+            static const char* const kControlsHint =
+                "A Select&#160;&#160;&#160;&#160;Y Exit";
+            hint->SetInnerRML(MikuPan_Translate(kControlsHint));
         }
     }
 
-    static const char* const kLabels[5][4] = {
-        {"Save Game", "Save Album", "Load Film", "Exit"},
-        {"Sauvegarder", "Sauver l'album", "Charger le film", "Quitter"},
-        {"Spiel Speichern", "Album Speichern", "Film Laden", "Beenden"},
-        {"Guardar partida", "Guardar álbum", "Cargar película", "Salir"},
-        {"Salva partita", "Salva album", "Carica pellicola", "Esci"},
+    static const char* const kLabels[4] = {
+        "Save Game", "Save Album", "Load Film", "Exit",
     };
     for (int i = 0; i < 4; i++)
     {
@@ -771,71 +761,47 @@ void MikuPan_RmlSavePointApplyLanguage(int language)
         Rml::Element* label = wrapper != nullptr ? wrapper->QuerySelector(".save-point-label-text") : nullptr;
         if (label != nullptr)
         {
-            label->SetInnerRML(kLabels[lang][i]);
+            label->SetInnerRML(MikuPan_Translate(kLabels[i]));
         }
     }
 
-    static const char* const kMessages[5][4] = {
-        {"Save game data.",
-         "Register the PhotoData inside &quot;Photograph&quot;<br/>into an album for them to be saved.",
-         "Load Type-14 Film into the Camera Obscura.",
-         "Leave the save point."},
-        {"Sauvegarder les données de jeu.",
-         "Enregistrez les PhotoData de &quot;Photographie&quot;<br/>dans un album pour les conserver.",
-         "Charger le Film Type-14 dans la Camera Obscura.",
-         "Quitter le point de sauvegarde."},
-        {"Spielstand speichern.",
-         "Registriere die PhotoDaten aus &quot;Fotografie&quot;<br/>in einem Album, um sie zu speichern.",
-         "Lade Film Typ-14 in die Camera Obscura.",
-         "Verlasse den Speicherpunkt."},
-        {"Guardar los datos de la partida.",
-         "Registra los PhotoData de &quot;Fotografía&quot;<br/>en un álbum para guardarlos.",
-         "Carga la Película Tipo-14 en la Cámara Obscura.",
-         "Salir del punto de guardado."},
-        {"Salva i dati di gioco.",
-         "Registra i PhotoData di &quot;Fotografia&quot;<br/>in un album per salvarli.",
-         "Carica la Pellicola Tipo-14 nella Camera Obscura.",
-         "Esci dal punto di salvataggio."},
+    static const char* const kMessages[4] = {
+        "Save game data.",
+        "Register the PhotoData inside &quot;Photograph&quot;<br/>into an album for them to be saved.",
+        "Load Type-14 Film into the Camera Obscura.",
+        "Leave the save point.",
     };
     for (int i = 0; i < 4; i++)
     {
         if (g_save_point.messages[i] != nullptr)
         {
-            g_save_point.messages[i]->SetInnerRML(kMessages[lang][i]);
+            g_save_point.messages[i]->SetInnerRML(MikuPan_Translate(kMessages[i]));
         }
     }
 
-    static const char* const kConfirmMessages[5][2] = {
-        {"Load film?", "Exit the save point?"},
-        {"Charger le film ?", "Quitter le point de sauvegarde ?"},
-        {"Film laden?", "Speicherpunkt verlassen?"},
-        {"¿Cargar la película?", "¿Salir del punto de guardado?"},
-        {"Caricare la pellicola?", "Uscire dal punto di salvataggio?"},
+    static const char* const kConfirmMessages[2] = {
+        "Load film?", "Exit the save point?",
     };
     for (int i = 0; i < 2; i++)
     {
         if (g_save_point.confirm_messages[i] != nullptr)
         {
-            g_save_point.confirm_messages[i]->SetInnerRML(kConfirmMessages[lang][i]);
+            g_save_point.confirm_messages[i]->SetInnerRML(MikuPan_Translate(kConfirmMessages[i]));
         }
     }
 
-    static const char* const kYesNo[5][2] = {
-        {"Yes", "No"},
-        {"Oui", "Non"},
-        {"Ja", "Nein"},
-        {"Sí", "No"},
-        {"Sì", "No"},
+    static const char* const kYesNo[2] = {
+        "Yes", "No",
     };
     if (Rml::Element* label = g_save_point.confirm_yes != nullptr
             ? g_save_point.confirm_yes->QuerySelector(".ff-prompt-button-label") : nullptr)
     {
-        label->SetInnerRML(kYesNo[lang][0]);
+        label->SetInnerRML(MikuPan_Translate(kYesNo[0]));
     }
     if (Rml::Element* label = g_save_point.confirm_no != nullptr
             ? g_save_point.confirm_no->QuerySelector(".ff-prompt-button-label") : nullptr)
     {
-        label->SetInnerRML(kYesNo[lang][1]);
+        label->SetInnerRML(MikuPan_Translate(kYesNo[1]));
     }
 }
 

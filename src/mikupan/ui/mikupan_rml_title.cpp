@@ -2,6 +2,7 @@
 
 #include "main/glob.h"
 #include "mikupan/io/mikupan_file.h"
+#include "mikupan/mikupan_i18n.h"
 #include "mikupan/mikupan_utils.h"
 
 #include "mikupan_version.h"
@@ -619,60 +620,49 @@ int MikuPan_RmlTitleIsInputCooldownActive(void)
 
 void MikuPan_RmlTitleApplyLanguage(int language)
 {
+    (void) language;
+
     if (!g_title.initialized)
     {
         return;
     }
 
-    static const char* const kMenuLabels[5][5] = {
-        {"New Game", "Load Game", "Album", "Settings", "Exit Game"},
-        {"Nouvelle partie", "Charger", "Album", "Options", "Quitter"},
-        {"Neues Spiel", "Spiel Laden", "Album", "Einstellungen", "Spiel Beenden"},
-        {"Nueva partida", "Cargar partida", "Álbum", "Opciones", "Salir del juego"},
-        {"Nuova partita", "Carica partita", "Album", "Impostazioni", "Esci dal gioco"},
+    static const char* const kMenuLabels[5] = {
+        "New Game", "Load Game", "Album", "Settings", "Exit Game",
     };
 
-    const int lang = std::clamp(language, 0, 4);
     for (int i = 0; i < 5; i++)
     {
         Rml::Element* button = g_title.menu_buttons[i];
         Rml::Element* label = button != nullptr ? button->QuerySelector(".title-menu-label") : nullptr;
         if (label != nullptr)
         {
-            label->SetInnerRML(kMenuLabels[lang][i]);
+            label->SetInnerRML(MikuPan_Translate(kMenuLabels[i]));
         }
     }
 
-    static const char* const kPressStart5[5] = {
-        "Press Start", "Appuyez sur Start", "Start drücken", "Pulsa Start", "Premi Start",
-    };
     if (g_title.press_button != nullptr)
     {
-        g_title.press_button->SetInnerRML(kPressStart5[lang]);
+        g_title.press_button->SetInnerRML(MikuPan_Translate("Press Start"));
     }
 
-    static const char* const kExitMessage5[5] = {
-        "Exit the game?", "Quitter le jeu ?", "Spiel beenden?", "¿Salir del juego?", "Uscire dal gioco?",
-    };
     if (g_title.exit_message != nullptr)
     {
-        g_title.exit_message->SetInnerRML(kExitMessage5[lang]);
+        g_title.exit_message->SetInnerRML(MikuPan_Translate("Exit the game?"));
     }
 
-    static const char* const kYes5[5] = {"Yes", "Oui", "Ja", "Sí", "Sì"};
-    static const char* const kNo5[5] = {"No", "Non", "Nein", "No", "No"};
     if (g_title.exit_yes_button != nullptr)
     {
         if (Rml::Element* label = g_title.exit_yes_button->QuerySelector(".ff-prompt-button-label"))
         {
-            label->SetInnerRML(kYes5[lang]);
+            label->SetInnerRML(MikuPan_Translate("Yes"));
         }
     }
     if (g_title.exit_no_button != nullptr)
     {
         if (Rml::Element* label = g_title.exit_no_button->QuerySelector(".ff-prompt-button-label"))
         {
-            label->SetInnerRML(kNo5[lang]);
+            label->SetInnerRML(MikuPan_Translate("No"));
         }
     }
 }

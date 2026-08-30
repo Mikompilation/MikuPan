@@ -129,7 +129,7 @@
                         <div class="setting-control"><button id="flashlight-style-picker" class="choice-picker"><span id="flashlight-style-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
                     </div>
                     <div class="setting-row compact">
-                        <div class="setting-copy"><label class="setting-title" for="number-door-fix-localization-input">Fix Number Door Localization</label><p class="setting-desc">Use clockwise numerical ordering and show inset numbers over the original kanji buttons.</p></div>
+                        <div class="setting-copy"><label id="setting-title-number-door-fix-localization" class="setting-title" for="number-door-fix-localization-input">Fix Number Door Localization</label><p id="setting-desc-number-door-fix-localization" class="setting-desc">Use clockwise numerical ordering and show inset numbers over the original kanji buttons.</p></div>
                         <div class="setting-control checkbox-control"><input type="checkbox" id="number-door-fix-localization-input" class="checkbox" /></div>
                     </div>
                     <div class="setting-row compact">
@@ -139,6 +139,14 @@
                     <div class="setting-row compact">
                         <div class="setting-copy"><label id="setting-title-minimap" class="setting-title" for="minimap-enabled-input">Mini Map</label><p id="setting-desc-minimap" class="setting-desc">Show the corner map while exploring.</p></div>
                         <div class="setting-control checkbox-control"><input type="checkbox" id="minimap-enabled-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label id="setting-title-album-photo-png-export" class="setting-title" for="album-photo-png-export-input">Save Album Photos as PNG</label><p id="setting-desc-album-photo-png-export" class="setting-desc">Also write album photos as PNG files next to the game.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="album-photo-png-export-input" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label id="setting-title-cursor-auto-hide" class="setting-title" for="cursor-auto-hide-input">Auto-hide Cursor</label><p id="setting-desc-cursor-auto-hide" class="setting-desc">Hide the mouse cursor after 5 seconds of inactivity.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="cursor-auto-hide-input" class="checkbox" /></div>
                     </div>
                     <div class="setting-row compact">
                         <div class="setting-copy"><label id="setting-title-quick-film-swap" class="setting-title" for="finder-dpad-film-swap-input">Quick Film Swap</label><p id="setting-desc-quick-film-swap" class="setting-desc">Use D-Pad Up / Down in finder mode to switch film.<br />D-Pad finder aim is disabled while enabled.</p></div>

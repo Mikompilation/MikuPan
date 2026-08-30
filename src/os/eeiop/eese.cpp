@@ -958,6 +958,8 @@ static int SeGetFreeVoice(int start_no, int get)
         }
     }
 
+    info_log("SeGetFreeVoice: pool exhausted (start_no=%d)", start_no);
+
     return -1;
 }
 

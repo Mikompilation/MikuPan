@@ -191,6 +191,7 @@ void sceSdSetAddr(u_short entry, u_int value)
         return;
     }
 
+    VoiceLock();
     switch (reg) {
     case SD_VA_SSA:
         voices[voice_index].ssa = value >> 1;
@@ -204,6 +205,7 @@ void sceSdSetAddr(u_short entry, u_int value)
     default:
         break;
     }
+    VoiceUnlock();
 }
 
 static void SetMasterVolLeft(s32 val)
@@ -223,6 +225,7 @@ void sceSdSetParam(u_short entry, u_short value)
 
     sd_param_regs[entry] = value;
 
+    VoiceLock();
     switch (reg) {
     case SD_VP_PITCH:
         if (voice_index < VOICE_NUM) {
@@ -258,6 +261,7 @@ void sceSdSetParam(u_short entry, u_short value)
     default:
         break;
     }
+    VoiceUnlock();
 }
 
 u_short sceSdGetParam(u_short entry)

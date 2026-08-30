@@ -9,12 +9,16 @@
 #include "main/glob.h"
 #include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/debug/mikupan_logging_c.h"
+#include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_screenshot.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 static u_short MikuPan_PhotoPackRgb555(int r, int g, int b)
 {
@@ -342,6 +346,51 @@ void MikuPan_TakePhotoFromResolvedScreen(void)
         g_photo_preview_w,
         g_photo_preview_h,
         g_photo_preview_rgba);
+}
+
+void MikuPan_ExportAlbumPhotoPng(int slot_no)
+{
+    if (!mikupan_configuration.album_photo_png_export_enabled)
+    {
+        return;
+    }
+
+    if (!g_photo_capture_valid || g_photo_preview_rgba == NULL)
+    {
+        return;
+    }
+
+    char filename[128];
+    time_t t = time(NULL);
+    struct tm lt;
+#if defined(_WIN32)
+    localtime_s(&lt, &t);
+#else
+    localtime_r(&t, &lt);
+#endif
+    snprintf(filename, sizeof(filename),
+             "mikupan_album_photo_%02d_%04d%02d%02d_%02d%02d%02d.png",
+             slot_no,
+             lt.tm_year + 1900, lt.tm_mon + 1, lt.tm_mday,
+             lt.tm_hour, lt.tm_min, lt.tm_sec);
+
+    char path[1024];
+    if (!MikuPan_ResolveUserPath(filename, path, sizeof(path)))
+    {
+        info_log("Album photo export: failed to resolve output path");
+        return;
+    }
+
+    if (MikuPan_ScreenshotWritePng(path, g_photo_preview_rgba,
+                                   g_photo_preview_w, g_photo_preview_h))
+    {
+        info_log("Album photo exported: %s (%dx%d)", path,
+                 g_photo_preview_w, g_photo_preview_h);
+    }
+    else
+    {
+        info_log("Album photo export: failed to write %s", path);
+    }
 }
 
 void MikuPan_QueueResolvedPhotoPreview(void)

@@ -119,9 +119,9 @@ body {
     width: 350dp;
     height: 46dp;
     color: #f5e4b8;
-    font-size: 28dp;
+    font-size: 20dp;
     line-height: 46dp;
-    letter-spacing: 7dp;
+    letter-spacing: 3dp;
     text-align: center;
     font-effect: glow(1px 3px 0px 0px #c89a4654), shadow(0px 1px #000000e8);
     pointer-events: none;

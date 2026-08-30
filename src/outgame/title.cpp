@@ -45,6 +45,7 @@
 #include "mikupan/gameplay/mikupan_title_scene.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/debug/mikupan_logging_c.h"
+#include "mikupan/mikupan_i18n.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_rng.h"
 #include "mikupan/rendering/mikupan_renderer.h"
@@ -211,6 +212,8 @@ static TITLE_SYS title_sys;
 
 void ChangeTVMode(int mode)
 {
+    mode = 1;
+
     if (sys_wrk.pal_disp_mode == mode)
     {
         return;
@@ -1353,7 +1356,7 @@ void TitleWaitMode()
         u_char g_message = 63;
         u_char b_message = 68;
 
-        SetASCIIString3(0x10, message_x, message_y, 0, r_message, g_message, b_message, alp, (char *) "PRESS   TO LEAVE");
+        SetASCIIString3(0x10, message_x, message_y, 0, r_message, g_message, b_message, alp, (char *) MikuPan_Translate("PRESS   TO LEAVE"));
         SetASCIIString3(0x10, message_x + (7*12)+2, message_y, 2, r_message, g_message, b_message, alp, (char *) "\xD8");
     }
 
@@ -1501,7 +1504,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
     u_char alp;
     u_int textbl[4] = { 8, 0, 7, 20 };
     DISP_SPRT ds;
-    int rml_title;
+    int rml_title = 0;
 
     adj = 28;
 
@@ -1681,6 +1684,8 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         return;
     }
 
+    // TV mode (PAL/NTSC) manual toggle removed from the title menu.
+    /*
     if (
         title_wrk.csr == 3 && (
             *key_now[3] == 1 ||
@@ -1704,6 +1709,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         ChangeTVMode(0);
         SeStartFix(0, 0, 0x1000, 0x1000, 0);
     }
+    */
 
     if (ttl_dsp.no_disp == 0)
     {
@@ -1717,7 +1723,8 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         }
     }
 
-    for (mode = 0; mode < 4; mode++)
+    // for (mode = 0; mode < 4; mode++)
+    for (mode = 0; mode < 3; mode++)
     {
         if (ttl_dsp.no_disp == 0)
         {
@@ -1744,6 +1751,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
             DispSprD(&ds);
 
+            /*
             if (mode == 3 && title_wrk.csr == 3)
             {
                 dsp = sys_wrk.pal_disp_mode == 0;
@@ -1786,6 +1794,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
                 DispSprD(&ds);
             }
+            */
         }
     }
 
@@ -1877,7 +1886,8 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
     )
     {
-        if (title_wrk.csr < 3)
+        // if (title_wrk.csr < 3)
+        if (title_wrk.csr < 2)
         {
             title_wrk.csr++;
         }
@@ -1901,7 +1911,8 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         }
         else
         {
-            title_wrk.csr = 3;
+            // title_wrk.csr = 3;
+            title_wrk.csr = 2;
         }
 
         SeStartFix(0, 0, 0x1000, 0x1000, 0);

@@ -931,6 +931,52 @@ void MikuPan_ReadFileInArchive(int sector, int size, u_int *address)
     infile.close();
 }
 
+u_int MikuPan_GetDataFileSize(const char *relative_name)
+{
+    const std::string path_string = MikuPan_GetDataPathString(relative_name);
+
+    if (MikuPan_IsSdlAssetPathString(path_string))
+    {
+        return MikuPan_GetSdlFileSize(path_string.c_str());
+    }
+
+    std::error_code ec;
+    const auto size = std::filesystem::file_size(path_string, ec);
+    if (ec)
+    {
+        return 0;
+    }
+
+    return static_cast<u_int>(size);
+}
+
+bool MikuPan_ReadDataFileRange(const char *relative_name, int64_t offset,
+                               void *buffer, size_t size)
+{
+    if (buffer == nullptr)
+    {
+        return false;
+    }
+
+    const std::string path_string = MikuPan_GetDataPathString(relative_name);
+
+    if (MikuPan_IsSdlAssetPathString(path_string))
+    {
+        return MikuPan_ReadSdlFileRange(path_string.c_str(), offset, buffer,
+                                        size);
+    }
+
+    std::ifstream infile(path_string, std::ios::binary);
+    if (!infile.is_open())
+    {
+        return false;
+    }
+
+    infile.seekg(offset, std::ios::beg);
+    infile.read(static_cast<char *>(buffer), static_cast<std::streamsize>(size));
+    return !infile.bad() && static_cast<size_t>(infile.gcount()) == size;
+}
+
 void MikuPan_BufferFile(int sector, int size, int64_t address)
 {
     std::string archive_string = MikuPan_GetDataPathString("IMG_BD.BIN");

@@ -66,11 +66,13 @@ MikuPan_Config mikupan_configuration = {
     1.0f,
     0,
     0,
+    1,
     MIKUPAN_FLASHLIGHT_STYLE_PS2,
     0,
     0,
     1,
     1,
+    0,
     {
         0,
         900.0f,
@@ -95,7 +97,8 @@ MikuPan_Config mikupan_configuration = {
         -1,
         1
     },
-    ""
+    "",
+    1
 };
 
 static int MikuPan_ConfigClampIndex(int value, int count, int fallback)
@@ -353,6 +356,10 @@ void MikuPan_ConfigurationValidate(void)
     mikupan_configuration.show_fps = mikupan_configuration.show_fps ? 1 : 0;
     mikupan_configuration.minimap_enabled =
         mikupan_configuration.minimap_enabled ? 1 : 0;
+    mikupan_configuration.cursor_auto_hide_enabled =
+        mikupan_configuration.cursor_auto_hide_enabled ? 1 : 0;
+    mikupan_configuration.album_photo_png_export_enabled =
+        mikupan_configuration.album_photo_png_export_enabled ? 1 : 0;
     if (mikupan_configuration.flashlight_style < MIKUPAN_FLASHLIGHT_STYLE_PS2
         || mikupan_configuration.flashlight_style > MIKUPAN_FLASHLIGHT_STYLE_OFF)
     {
@@ -366,4 +373,6 @@ void MikuPan_ConfigurationValidate(void)
         mikupan_configuration.title_room_background ? 1 : 0;
     mikupan_configuration.title_dither =
         mikupan_configuration.title_dither ? 1 : 0;
+    mikupan_configuration.text_mods_enabled =
+        mikupan_configuration.text_mods_enabled ? 1 : 0;
 }

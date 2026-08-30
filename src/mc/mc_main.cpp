@@ -1483,7 +1483,7 @@ void mcEnd()
     sys_wrk.sreset_ng = 0;
 #ifdef BUILD_EU_VERSION
     sys_wrk.language = mc_language & 0x7f;
-    sys_wrk.pal_disp_mode = (mc_language & 0x80) != 0;
+    sys_wrk.pal_disp_mode = 1;
 #endif
 }
 

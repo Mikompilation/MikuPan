@@ -3,7 +3,10 @@
 #include "enums.h"
 #include "ig_menu.h"
 
+#include <cstdio>
+
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_textoverride.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/ui/mikupan_rml_options.h"
 #include "graphics/graph2d/effect.h"
@@ -551,6 +554,14 @@ int Get4Byte(u_char *addr)
 int64_t GetIngameMSGAddr(u_char type, int msg_no)
 {
     int64_t addr;
+    char mod_category[16];
+
+    std::snprintf(mod_category, sizeof(mod_category), "ig_msg#%d", type);
+    const int64_t mod_addr = MikuPan_GetTextModAddr(mod_category, msg_no);
+    if (mod_addr != 0)
+    {
+        return mod_addr;
+    }
 
     addr = MikuPan_GetHostAddress(MSN_FILE_ADDRESS + type * 4);
     addr = MikuPan_GetHostAddress(MSN_FILE_ADDRESS + Get4Byte((u_char *)addr) + msg_no * 4);

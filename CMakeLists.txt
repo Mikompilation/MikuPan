@@ -315,6 +315,10 @@ set(MIKUPAN_SOURCES
         "src/mikupan/gameplay/mikupan_effect_compat.cpp"
         "src/mikupan/gameplay/mikupan_photo_capture.cpp"
         "src/mikupan/mikupan_utils.cpp"
+        src/mikupan/mikupan_i18n.cpp
+        src/mikupan/mikupan_i18n.h
+        src/mikupan/mikupan_textoverride.cpp
+        src/mikupan/mikupan_textoverride.h
         src/ingame/map/furn_spe/fsla_dat.cpp
         src/mikupan/mikupan_config.cpp
         src/mikupan/mikupan_config_ini.cpp

@@ -20,6 +20,7 @@
 #include "mikupan/rendering/mikupan_shader.h"
 #include "mikupan_framegraph.h"
 #include "mikupan/gameplay/mikupan_title_scene.h"
+#include "mikupan/mikupan_textoverride.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -1854,6 +1855,18 @@ void MikuPan_UiDebugMenuRender(void)
         {
             igCheckbox("Player Collision Console Log",
                        (bool*) &player_collision_console_log);
+
+            igSeparatorText("Game Text");
+            if (igButton("Extract All Texts", ImVec2{0, 0}))
+            {
+                MikuPan_GameTextExtractAllPOs();
+            }
+            igTextDisabled("Writes to resources/mods/text/<lang>/game_text.po");
+
+            igCheckbox("Enable Text Override",
+                       (bool*) &mikupan_configuration.text_mods_enabled);
+            igTextDisabled("Applies overrides from resources/mods/text/<lang>/game_text.po in-game");
+
             igEndMenu();
         }
 

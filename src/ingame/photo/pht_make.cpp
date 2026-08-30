@@ -2585,6 +2585,7 @@ void PhotoMake()
             MikuPan_TakePhotoFromResolvedScreen();
             MikuPan_ActivatePhotoFrameOverlays();
             CompPhotoFromWorkArea(photo_wrk.adr_no);
+            MikuPan_ExportAlbumPhotoPng(photo_wrk.adr_no);
             WaitFrameTop(1);
             MakeSPhotoFromWorkArea(photo_wrk.adr_no);
             WaitFrameTop(0);
@@ -2722,6 +2723,7 @@ void PhotoMake_EneDead()
             MikuPan_TakePhotoFromResolvedScreen();
             MikuPan_ActivatePhotoFrameOverlays();
             CompPhotoFromWorkArea(photo_wrk.adr_no);
+            MikuPan_ExportAlbumPhotoPng(photo_wrk.adr_no);
             MakeSPhotoFromWorkArea(photo_wrk.adr_no);
             LocalCopyLtoL(0x1a40, ((sys_wrk.count + 1) & 1) * 0x8c0);
             DrawAll2D();

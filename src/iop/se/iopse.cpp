@@ -72,6 +72,12 @@ static void SeGenerateVolPich(SE_WRK_SET* swsp, int vol_rate, int pan, int phase
 static int CidAndVnum(int voice_num, int voice_sift);
 static void SeSetMix(int core_id, int v_no, char mix_mode);
 
+#ifdef BUILD_EU_VERSION
+#define SE_STREAM_FILE_BASE_OFFSET 0x110
+#else
+#define SE_STREAM_FILE_BASE_OFFSET 0
+#endif
+
 void ISeInit(int mode)
 {
     sceSdEffectAttr r_attr;
@@ -550,79 +556,79 @@ void SeSetStartPoint(u_char type, u_int no)
     case SE_ADDRNO_STATIC:
         break;
     case SE_ADDRNO_BTLHIT:
-        se_start_point.btlhit = no - 0x547;
+        se_start_point.btlhit = no - (0x547 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_VOICE:
-        se_start_point.voice = no - 0x549;
+        se_start_point.voice = no - (0x549 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_DOOR0:
-        se_start_point.door[0] = no - 0x5C0;
+        se_start_point.door[0] = no - (0x5C0 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_DOOR1:
-        se_start_point.door[1] = no - 0x5C0;
+        se_start_point.door[1] = no - (0x5C0 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_DOOR2:
-        se_start_point.door[2] = no - 0x5C0;
+        se_start_point.door[2] = no - (0x5C0 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_FOOT0:
-        se_start_point.foot[0] = no - 0x5A4;
+        se_start_point.foot[0] = no - (0x5A4 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_FOOT1:
-        se_start_point.foot[1] = no - 0x5A4;
+        se_start_point.foot[1] = no - (0x5A4 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_FOOT2:
-        se_start_point.foot[2] = no - 0x5A4;
+        se_start_point.foot[2] = no - (0x5A4 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_FOOT3:
-        se_start_point.foot[3] = no - 0x5A4;
+        se_start_point.foot[3] = no - (0x5A4 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_FOOT4:
-        se_start_point.foot[4] = no - 0x5A4;
+        se_start_point.foot[4] = no - (0x5A4 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_FOOT5:
-        se_start_point.foot[5] = no - 0x5A4;
+        se_start_point.foot[5] = no - (0x5A4 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_FOOT6:
-        se_start_point.foot[6] = no - 0x5A4;
+        se_start_point.foot[6] = no - (0x5A4 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_FOOT7:
-        se_start_point.foot[7] = no - 0x5A4;
+        se_start_point.foot[7] = no - (0x5A4 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_SRUND0:
-        se_start_point.srund[0] = no - 0x5D6;
+        se_start_point.srund[0] = no - (0x5D6 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_SRUND1:
-        se_start_point.srund[1] = no - 0x5D6;
+        se_start_point.srund[1] = no - (0x5D6 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_GHOST0:
-        se_start_point.ghost[0] = no - 0x553;
+        se_start_point.ghost[0] = no - (0x553 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_GHOST1:
-        se_start_point.ghost[1] = no - 0x553;
+        se_start_point.ghost[1] = no - (0x553 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_GHOST2:
-        se_start_point.ghost[2] = no - 0x553;
+        se_start_point.ghost[2] = no - (0x553 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_EVENT0:
-        se_start_point.event[0] = no - 0x577;
+        se_start_point.event[0] = no - (0x577 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_EVENT1:
-        se_start_point.event[1] = no - 0x577;
+        se_start_point.event[1] = no - (0x577 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_WIDE:
-        se_start_point.wide = no - 0x5E9;
+        se_start_point.wide = no - (0x5E9 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_JIDOU0:
-        se_start_point.jidou[0] = no - 0x596;
+        se_start_point.jidou[0] = no - (0x596 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_JIDOU1:
-        se_start_point.jidou[1] = no - 0x596;
+        se_start_point.jidou[1] = no - (0x596 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_JIDOU2:
-        se_start_point.jidou[2] = no - 0x596;
+        se_start_point.jidou[2] = no - (0x596 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     case SE_ADDRNO_JIDOU3:
-        se_start_point.jidou[3] = no - 0x596;
+        se_start_point.jidou[3] = no - (0x596 + SE_STREAM_FILE_BASE_OFFSET);
         break;
     }
 }

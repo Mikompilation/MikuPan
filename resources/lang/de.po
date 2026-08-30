@@ -1,0 +1,1294 @@
+# German translations for MikuPan RML UI.
+msgid ""
+msgstr ""
+"Language: de\n"
+
+# --- mikupan_rml_title.cpp ---
+msgid "New Game"
+msgstr "Neues Spiel"
+
+msgid "Load Game"
+msgstr "Spiel Laden"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "Exit Game"
+msgstr "Spiel Beenden"
+
+msgid "Press Start"
+msgstr "Start drücken"
+
+msgid "Exit the game?"
+msgstr "Spiel beenden?"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nein"
+
+# --- mikupan_rml_mode_select.cpp ---
+msgid "MODE SELECT"
+msgstr "MODUSAUSWAHL"
+
+msgid "STORY MODE"
+msgstr "GESCHICHTSMODUS"
+
+msgid "Story Mode"
+msgstr "GESCHICHTSMODUS"
+
+msgid "Battle Mode"
+msgstr "KAMPFMODUS"
+
+msgid "Option"
+msgstr "OPTIONEN"
+
+msgid "Sound Test"
+msgstr "SOUNDTEST"
+
+msgid "Exit"
+msgstr "BEENDEN"
+
+msgid "Chapter"
+msgstr "KAPITEL"
+
+msgid "Difficulty"
+msgstr "SCHWIERIGKEIT"
+
+msgid "Costume"
+msgstr "KOSTÜM"
+
+msgid "Game Start"
+msgstr "SPIEL STARTEN"
+
+msgid "Continue"
+msgstr "FORTSETZEN"
+
+msgid "Prologue"
+msgstr "PROLOG"
+
+msgid "Night 1"
+msgstr "NACHT 1"
+
+msgid "Night 2"
+msgstr "NACHT 2"
+
+msgid "Night 3"
+msgstr "NACHT 3"
+
+msgid "Final Night"
+msgstr "LETZTE NACHT"
+
+msgid "Normal"
+msgstr "NORMAL"
+
+msgid "Nightmare"
+msgstr "ALBTRAUM"
+
+msgid "Special 1"
+msgstr "SPEZIAL 1"
+
+msgid "Special 2"
+msgstr "SPEZIAL 2"
+
+msgid "Special 3"
+msgstr "SPEZIAL 3"
+
+msgid "Regular game mode. Start from the chapter of your choice."
+msgstr "Regulärer Spielmodus. Starte im Kapitel deiner Wahl."
+
+msgid "Battle against ghosts in a series of missions."
+msgstr "Kämpfe gegen Geister in einer Reihe von Missionen."
+
+msgid "Change the game settings."
+msgstr "Spieleinstellungen ändern."
+
+msgid "Listen to music and sound effects."
+msgstr "Musik und Soundeffekte anhören."
+
+msgid "Return to the title screen."
+msgstr "Zum Titelbildschirm zurückkehren."
+
+msgid "Choose the chapter to start from."
+msgstr "Wähle das Startkapitel."
+
+msgid "Choose the game difficulty."
+msgstr "Wähle den Schwierigkeitsgrad."
+
+msgid "Choose Miku's costume."
+msgstr "Wähle Mikus Kostüm."
+
+msgid "Start the game with these settings."
+msgstr "Spiel mit diesen Einstellungen starten."
+
+msgid "Return to Mode Select."
+msgstr "Zurück zur Modusauswahl."
+
+# --- mikupan_rml_save_load.cpp ---
+msgid "SAVE FILE"
+msgstr "SPIEL SPEICHERN"
+
+msgid "LOAD FILE"
+msgstr "SPIEL LADEN"
+
+msgid "Back: Y / Esc"
+msgstr "Zurück: Y / Esc"
+
+msgid "Move: D-Pad / Stick&#160;&#160;&#160; Select: A / Enter"
+msgstr "Bewegen: D-Pad / Stick&#160;&#160;&#160; Auswählen: A / Enter"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Save Complete."
+msgstr "Speichern abgeschlossen."
+
+msgid "Create a new save file?"
+msgstr "Neuen Spielstand erstellen?"
+
+msgid "Replace this save?"
+msgstr "Diesen Spielstand ersetzen?"
+
+msgid "Load this save?"
+msgstr "Diesen Spielstand laden?"
+
+msgid "Create a new save"
+msgstr "Neuen Spielstand erstellen"
+
+msgid "No save files found."
+msgstr "Keine Spielstände gefunden."
+
+msgid "Create a new save file"
+msgstr "Neue Speicherdatei erstellen"
+
+msgid "No save selected"
+msgstr "Kein Spielstand ausgewählt"
+
+msgid "Select a save from the list above."
+msgstr "Wähle einen Spielstand aus der Liste oben."
+
+msgid "Create a new save or select an existing save to replace."
+msgstr "Erstelle einen neuen Spielstand oder ersetze einen vorhandenen."
+
+msgid "No save files were found."
+msgstr "Keine Spielstände gefunden."
+
+msgid "Select a save to continue."
+msgstr "Wähle einen Spielstand, um fortzufahren."
+
+msgid "Save system is not ready."
+msgstr "Speichersystem ist nicht bereit."
+
+msgid "Could not create the save folder."
+msgstr "Speicherordner konnte nicht erstellt werden."
+
+msgid "Could not open the save file."
+msgstr "Speicherdatei konnte nicht geöffnet werden."
+
+msgid "Could not write the save file."
+msgstr "Speicherdatei konnte nicht geschrieben werden."
+
+msgid "Save data updated."
+msgstr "Speicherdaten aktualisiert."
+
+msgid "Load system is not ready."
+msgstr "Ladesystem ist nicht bereit."
+
+msgid "This save file has an invalid size."
+msgstr "Diese Speicherdatei hat eine ungültige Größe."
+
+msgid "Could not read the save file."
+msgstr "Speicherdatei konnte nicht gelesen werden."
+
+msgid "The save file is corrupt."
+msgstr "Die Speicherdatei ist beschädigt."
+
+msgid "Intro"
+msgstr "Intro"
+
+msgid "1st Night"
+msgstr "1. Nacht"
+
+msgid "2nd Night"
+msgstr "2. Nacht"
+
+msgid "3rd Night"
+msgstr "3. Nacht"
+
+msgid "4th Night"
+msgstr "4. Nacht"
+
+msgid "Clear Data"
+msgstr "Spiel beendet"
+
+msgid "Night"
+msgstr "Nacht"
+
+msgid "Room"
+msgstr "Raum"
+
+msgid "Unknown date"
+msgstr "Unbekanntes Datum"
+
+msgid "Legacy Save"
+msgstr "Alter Spielstand"
+
+msgid "Save"
+msgstr "Spielstand"
+
+msgid "Clear"
+msgstr "Abgeschlossen"
+
+msgid "Item data unavailable"
+msgstr "Objektdaten nicht verfügbar"
+
+msgid "Play"
+msgstr "Zeit"
+
+msgid "Shots"
+msgstr "Fotos"
+
+msgid "Points"
+msgstr "Punkte"
+
+# --- mikupan_rml_save_point.cpp ---
+msgid "SAVE POINT"
+msgstr "SPEICHERPUNKT"
+
+msgid "A Select&#160;&#160;&#160;&#160;Y Exit"
+msgstr "A Auswählen&#160;&#160;&#160;&#160;Y Beenden"
+
+msgid "Save Game"
+msgstr "Spiel Speichern"
+
+msgid "Save Album"
+msgstr "Album Speichern"
+
+msgid "Load Film"
+msgstr "Film Laden"
+
+msgid "Save game data."
+msgstr "Spielstand speichern."
+
+msgid "Register the PhotoData inside &quot;Photograph&quot;<br/>into an album for them to be saved."
+msgstr "Registriere die PhotoDaten aus &quot;Fotografie&quot;<br/>in einem Album, um sie zu speichern."
+
+msgid "Load Type-14 Film into the Camera Obscura."
+msgstr "Lade Film Typ-14 in die Camera Obscura."
+
+msgid "Leave the save point."
+msgstr "Verlasse den Speicherpunkt."
+
+msgid "Load film?"
+msgstr "Film laden?"
+
+msgid "Exit the save point?"
+msgstr "Speicherpunkt verlassen?"
+
+# --- mikupan_controller.cpp ---
+msgid "Raise Camera"
+msgstr "KAMERA ANHEBEN"
+
+msgid "Take Photo"
+msgstr "FOTO AUFNEHMEN"
+
+msgid "Previous Film"
+msgstr "VORHERIGER FILM"
+
+msgid "Next Film"
+msgstr "NÄCHSTER FILM"
+
+msgid "Special Ability"
+msgstr "SPEZIALFÄHIGKEIT"
+
+msgid "Run"
+msgstr "RENNEN"
+
+msgid "L2 / LT (axis)"
+msgstr "L2 / LT (Achse)"
+
+msgid "R2 / RT (axis)"
+msgstr "R2 / RT (Achse)"
+
+msgid "Left Stick X"
+msgstr "Linker Stick X"
+
+msgid "Left Stick Y"
+msgstr "Linker Stick Y"
+
+msgid "Right Stick X"
+msgstr "Rechter Stick X"
+
+msgid "Right Stick Y"
+msgstr "Rechter Stick Y"
+
+msgid "Unknown Axis"
+msgstr "Unbekannte Achse"
+
+msgid "<unmapped>"
+msgstr "<nicht zugewiesen>"
+
+msgid "<unknown>"
+msgstr "<unbekannt>"
+
+msgid "Left Mouse"
+msgstr "Linke Maustaste"
+
+msgid "Middle Mouse"
+msgstr "Mittlere Maustaste"
+
+msgid "Right Mouse"
+msgstr "Rechte Maustaste"
+
+msgid "Mouse 4"
+msgstr "Maus 4"
+
+msgid "Mouse 5"
+msgstr "Maus 5"
+
+msgid "<unknown mouse button>"
+msgstr "<unbekannte Maustaste>"
+
+msgid "Wheel Up"
+msgstr "Rad hoch"
+
+msgid "Wheel Down"
+msgstr "Rad runter"
+
+msgid "<unknown action>"
+msgstr "<unbekannte Aktion>"
+
+# --- mikupan_rml_options.cpp ---
+msgid "DISPLAY"
+msgstr "ANZEIGE"
+
+msgid "GRAPHICS"
+msgstr "GRAFIK"
+
+msgid "AUDIO"
+msgstr "AUDIO"
+
+msgid "CONTROLS"
+msgstr "STEUERUNG"
+
+msgid "ADVANCED"
+msgstr "ERWEITERT"
+
+msgid "Windowed"
+msgstr "Fenster"
+
+msgid "Fullscreen"
+msgstr "Vollbild"
+
+msgid "Pixel (Modern)"
+msgstr "Pixel (Modern)"
+
+msgid "Vertex (PS2)"
+msgstr "Vertex (PS2)"
+
+msgid "Black"
+msgstr "Schwarz"
+
+msgid "Blur"
+msgstr "Unschärfe"
+
+msgid "Triangle"
+msgstr "TRIANGLE"
+
+msgid "Cross / Confirm"
+msgstr "CROSS / CONFIRM"
+
+msgid "Square"
+msgstr "QUADRAT"
+
+msgid "Circle / Cancel"
+msgstr "CIRCLE / CANCEL"
+
+msgid "D-Pad Up"
+msgstr "D-PAD UP"
+
+msgid "D-Pad Down"
+msgstr "D-PAD DOWN"
+
+msgid "D-Pad Left"
+msgstr "D-PAD LEFT"
+
+msgid "D-Pad Right"
+msgstr "D-PAD RIGHT"
+
+msgid "R3 / Right Stick"
+msgstr "R3 / RIGHT STICK"
+
+msgid "Select"
+msgstr "AUSWÄHLEN"
+
+msgid "Start / Pause"
+msgstr "START / PAUSE"
+
+msgid "L3 / Left Stick"
+msgstr "L3 / LEFT STICK"
+
+msgid "R1 / RB"
+msgstr "R1 / RB"
+
+msgid "L2 / LT"
+msgstr "L2 / LT"
+
+msgid "R2 / RT"
+msgstr "R2 / RT"
+
+msgid "L1 / LB"
+msgstr "L1 / LB"
+
+msgid "Move X"
+msgstr "BEWEGUNG X"
+
+msgid "Move Y"
+msgstr "BEWEGUNG Y"
+
+msgid "Aim X"
+msgstr "ZIELEN X"
+
+msgid "Aim Y"
+msgstr "ZIELEN Y"
+
+msgid "Invert Move X"
+msgstr "BEWEGUNG X UMKEHREN"
+
+msgid "Invert Move Y"
+msgstr "BEWEGUNG Y UMKEHREN"
+
+msgid "Invert Aim X"
+msgstr "ZIELEN X UMKEHREN"
+
+msgid "Invert Aim Y"
+msgstr "ZIELEN Y UMKEHREN"
+
+msgid "Forward"
+msgstr "VORWÄRTS"
+
+msgid "Backward"
+msgstr "RÜCKWÄRTS"
+
+msgid "Left"
+msgstr "LINKS"
+
+msgid "Right"
+msgstr "RECHTS"
+
+msgid "Aim Up"
+msgstr "ZIELEN HOCH"
+
+msgid "Aim Down"
+msgstr "ZIELEN RUNTER"
+
+msgid "Aim Left"
+msgstr "ZIELEN LINKS"
+
+msgid "Aim Right"
+msgstr "ZIELEN RECHTS"
+
+msgid "On"
+msgstr "An"
+
+msgid "Off"
+msgstr "Aus"
+
+msgid "Toggle"
+msgstr "Umschalten"
+
+msgid "Hold"
+msgstr "Halten"
+
+msgid "Objective"
+msgstr "Objektiv"
+
+msgid "Subjective"
+msgstr "Subjektiv"
+
+msgid "Classic"
+msgstr "Klassisch"
+
+msgid "Modern"
+msgstr "Modern"
+
+msgid "DISPLAY MODE"
+msgstr "ANZEIGEMODUS"
+
+msgid "WINDOW SIZE"
+msgstr "FENSTERGRÖSSE"
+
+msgid "RENDER SCALE"
+msgstr "RENDERSKALIERUNG"
+
+msgid "GPU BACKEND"
+msgstr "GPU-BACKEND"
+
+msgid "MSAA"
+msgstr "MSAA"
+
+msgid "SHADOW RESOLUTION"
+msgstr "SCHATTENAUFLÖSUNG"
+
+msgid "LIGHTING MODE"
+msgstr "BELEUCHTUNGSMODUS"
+
+msgid "DITHER FILTERING"
+msgstr "DITHER-FILTER"
+
+msgid "FINDER SURROUND"
+msgstr "SUCHERRAND"
+
+msgid "FLASHLIGHT STYLE"
+msgstr "TASCHENLAMPENSTIL"
+
+msgid "THEME"
+msgstr "DESIGN"
+
+msgid "FONT"
+msgstr "SCHRIFTART"
+
+msgid "SELECT"
+msgstr "AUSWÄHLEN"
+
+msgid "Keep this render scale?"
+msgstr "DIESE RENDERSKALIERUNG BEHALTEN?"
+
+msgid "Keep this display mode?"
+msgstr "DIESEN ANZEIGEMODUS BEHALTEN?"
+
+msgid "Keep this window size?"
+msgstr "DIESE FENSTERGRÖSSE BEHALTEN?"
+
+msgid "Display"
+msgstr "Anzeige"
+
+msgid "Graphics"
+msgstr "Grafik"
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Controls"
+msgstr "Steuerung"
+
+msgid "Advanced"
+msgstr "Erweitert"
+
+msgid "Bind Control"
+msgstr "STEUERUNG ZUWEISEN"
+
+msgid "Unavailable"
+msgstr "Nicht verfügbar"
+
+msgid "Controller Rumble"
+msgstr "CONTROLLER-VIBRATION"
+
+msgid "Camera Activation"
+msgstr "KAMERAAKTIVIERUNG"
+
+msgid "Gameplay Actions"
+msgstr "SPIELAKTIONEN"
+
+msgid "Keyboard Buttons"
+msgstr "TASTATURBELEGUNG"
+
+msgid "Movement"
+msgstr "BEWEGUNG"
+
+msgid "Aim"
+msgstr "ZIELEN"
+
+msgid "Controller"
+msgstr "CONTROLLER"
+
+msgid "Buttons"
+msgstr "TASTEN"
+
+msgid "Sticks"
+msgstr "STICKS"
+
+msgid "Stick Invert"
+msgstr "STICK-INVERTIERUNG"
+
+msgid "No controller is currently open. Connect a controller, or select one in the ImGui device selector for now."
+msgstr "Derzeit ist kein Controller geöffnet. Schließe einen Controller an oder wähle vorübergehend einen im ImGui-Geräteauswahlmenü aus."
+
+msgid "Press confirm to apply"
+msgstr "Bestätigen drücken zum Anwenden"
+
+msgid "No window sizes"
+msgstr "Keine Fenstergrößen"
+
+msgid "No render scales"
+msgstr "Keine Renderskalierungen"
+
+msgid "Save Configuration and restart to apply"
+msgstr "Konfiguration speichern und neu starten zum Anwenden"
+
+msgid "Active:"
+msgstr "Aktiv:"
+
+msgid "Adjust"
+msgstr "Anpassen"
+
+msgid "Browse"
+msgstr "Durchsuchen"
+
+msgid "Back"
+msgstr "Zurück"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "Apply"
+msgstr "Anwenden"
+
+msgid "Reset"
+msgstr "Zurücksetzen"
+
+msgid "Enable"
+msgstr "AKTIVIEREN"
+
+msgid "Defaults"
+msgstr "Standard"
+
+msgid "HDR Output"
+msgstr "HDR-AUSGABE"
+
+msgid "Image Calibration"
+msgstr "BILDKALIBRIERUNG"
+
+msgid "CRT Filter"
+msgstr "CRT-FILTER"
+
+msgid "OPTIONS"
+msgstr "OPTIONEN"
+
+msgid "Display Mode"
+msgstr "ANZEIGEMODUS"
+
+msgid "Windowed or borderless fullscreen."
+msgstr "Fenster oder randloser Vollbildmodus."
+
+msgid "Windowed Resolution"
+msgstr "FENSTERGRÖSSE"
+
+msgid "Window size used in Windowed mode. Fullscreen uses borderless desktop size."
+msgstr "Fenstergröße im Fenstermodus. Vollbild nutzt die randlose Desktopgröße."
+
+msgid "Open a scene preview with all image controls in one place."
+msgstr "Öffnet eine Szenenvorschau mit allen Bildeinstellungen an einem Ort."
+
+msgid "Use extended-linear HDR presentation when the display supports it."
+msgstr "Verwendet erweiterte lineare HDR-Darstellung, wenn der Bildschirm dies unterstützt."
+
+msgid "VSync"
+msgstr "VSync"
+
+msgid "Synchronise presentation to the display refresh."
+msgstr "Synchronisiert die Darstellung mit der Bildwiederholrate."
+
+msgid "Render Resolution"
+msgstr "RENDERAUFLÖSUNG"
+
+msgid "Match the window, scale from it, or use exact PS2 multiples."
+msgstr "Passt sich dem Fenster an, skaliert davon, oder nutzt exakte PS2-Vielfache."
+
+msgid "GPU Backend"
+msgstr "GPU-BACKEND"
+
+msgid "Renderer backend selection. A restart may be required."
+msgstr "Auswahl des Render-Backends. Ein Neustart kann erforderlich sein."
+
+msgid "Smooth geometry edges using multisampling."
+msgstr "Glättet Geometriekanten durch Multisampling."
+
+msgid "Shadow Resolution"
+msgstr "SCHATTENAUFLÖSUNG"
+
+msgid "Higher values sharpen shadows at a performance cost."
+msgstr "Höhere Werte schärfen Schatten auf Kosten der Leistung."
+
+msgid "Lighting Mode"
+msgstr "BELEUCHTUNGSMODUS"
+
+msgid "Modern pixel lighting or PS2-style vertex lighting."
+msgstr "Modernes Pixel-Licht oder PS2-artiges Vertex-Licht."
+
+msgid "Dither Filtering"
+msgstr "DITHER-FILTER"
+
+msgid "Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays."
+msgstr "Nativ hält die PS2-Dither-Textur scharf. Weich glättet sie für moderne Bildschirme."
+
+msgid "Finder Surround"
+msgstr "SUCHERRAND"
+
+msgid "Choose the area outside the Camera Obscura frame."
+msgstr "Wählt den Bereich außerhalb des Camera-Obscura-Rahmens."
+
+msgid "Master Volume"
+msgstr "GESAMTLAUTSTÄRKE"
+
+msgid "Set the overall game volume."
+msgstr "Legt die Gesamtlautstärke des Spiels fest."
+
+msgid "Movement Style"
+msgstr "BEWEGUNGSSTIL"
+
+msgid "D-Pad / Arrow Keys"
+msgstr "D-PAD / PFEILTASTEN"
+
+msgid "Left Stick / WASD"
+msgstr "LINKER STICK / WASD"
+
+msgid "Viewfinder"
+msgstr "SUCHER"
+
+msgid "Stick Layout"
+msgstr "STICK-LAYOUT"
+
+msgid "D-Pad Film Swap"
+msgstr "D-PAD FILMWECHSEL"
+
+msgid "Restore keyboard, mouse, and controller bindings."
+msgstr "Stellt Tastatur-, Maus- und Controller-Belegung wieder her."
+
+msgid "Keyboard / Mouse"
+msgstr "Tastatur / Maus"
+
+msgid "Select a movement style, or click a binding then press a key, mouse input, or controller input to assign."
+msgstr "Wähle einen Bewegungsstil, oder klicke auf eine Belegung und drücke dann eine Taste, Maus- oder Controller-Eingabe zum Zuweisen."
+
+msgid "Interface"
+msgstr "BENUTZEROBERFLÄCHE"
+
+msgid "Theme"
+msgstr "DESIGN"
+
+msgid "Use the same colour palette as the ImGui overlay."
+msgstr "Verwendet dieselbe Farbpalette wie das ImGui-Overlay."
+
+msgid "Font"
+msgstr "SCHRIFTART"
+
+msgid "Choose the options-menu font."
+msgstr "Wählt die Schriftart des Optionsmenüs."
+
+msgid "Font Scale"
+msgstr "SCHRIFTGRÖSSE"
+
+msgid "Adjust interface text size."
+msgstr "Passt die Textgröße der Oberfläche an."
+
+msgid "Gameplay"
+msgstr "Gameplay"
+
+msgid "Flashlight Style"
+msgstr "TASCHENLAMPENSTIL"
+
+msgid "Choose the original PS2 light, the simpler Xbox light, or disable it."
+msgstr "Wählt das originale PS2-Licht, das einfachere Xbox-Licht, oder deaktiviert es."
+
+msgid "Keep Finder Raised"
+msgstr "SUCHER ANGEHOBEN HALTEN"
+
+msgid "Do not lower the Camera Obscura when an apparition event begins."
+msgstr "Senkt die Camera Obscura nicht ab, wenn ein Erscheinungsereignis beginnt."
+
+msgid "Mini Map"
+msgstr "MINI-KARTE"
+
+msgid "Show the corner map while exploring."
+msgstr "Zeigt die Kartenanzeige in der Ecke während der Erkundung."
+
+msgid "Save Album Photos as PNG"
+msgstr "ALBUMFOTOS ALS PNG SPEICHERN"
+
+msgid "Also write album photos as PNG files next to the game."
+msgstr "Speichert Albumfotos zusätzlich als PNG-Dateien neben dem Spiel."
+
+msgid "Auto-hide Cursor"
+msgstr "MAUSZEIGER AUTOMATISCH AUSBLENDEN"
+
+msgid "Hide the mouse cursor after 5 seconds of inactivity."
+msgstr "Blendet den Mauszeiger nach 5 Sekunden Inaktivität aus."
+
+msgid "Quick Film Swap"
+msgstr "SCHNELLER FILMWECHSEL"
+
+msgid "Use D-Pad Up / Down in finder mode to switch film.<br />D-Pad finder aim is disabled while enabled."
+msgstr "Verwende D-Pad Hoch / Runter im Suchermodus, um den Film zu wechseln.<br />Die D-Pad-Zielsteuerung im Sucher ist deaktiviert, solange dies aktiv ist."
+
+msgid "Mirror Stone Indicator"
+msgstr "SPIEGELSTEIN-ANZEIGE"
+
+msgid "Show a Mirror Stone icon next to the filament."
+msgstr "Zeigt ein Spiegelstein-Symbol neben dem Filament."
+
+msgid "Improved Movement Collisions"
+msgstr "VERBESSERTE BEWEGUNGSKOLLISIONEN"
+
+msgid "Uses an improved movement collision method to reduce snagging."
+msgstr "Verwendet eine verbesserte Bewegungskollisionsmethode, um Hängenbleiben zu reduzieren."
+
+msgid "Video Filters"
+msgstr "VIDEOFILTER"
+
+msgid "Open the CRT post-process tuning panel."
+msgstr "Öffnet das CRT-Nachbearbeitungs-Panel."
+
+msgid "Files"
+msgstr "DATEIEN"
+
+msgid "Data Folder"
+msgstr "DATENORDNER"
+
+msgid "Folder containing extracted MikuPan game data."
+msgstr "Ordner mit den extrahierten MikuPan-Spieldaten."
+
+msgid "Save Changes?"
+msgstr "ÄNDERUNGEN SPEICHERN?"
+
+msgid "Unsaved settings remain."
+msgstr "Es gibt ungespeicherte Einstellungen."
+
+msgid "Up / Down to choose. Confirm applies. Back cancels."
+msgstr "Hoch / Runter zum Wählen. Bestätigen wendet an. Zurück bricht ab."
+
+msgid "Press input..."
+msgstr "Eingabe drücken..."
+
+msgid "Times out in "
+msgstr "Zeitlimit in "
+
+msgid " seconds."
+msgstr " Sekunden."
+
+msgid "Reverting in "
+msgstr "Zurücksetzen in "
+
+msgid " seconds"
+msgstr " Sekunden"
+
+msgid "Brightness"
+msgstr "HELLIGKEIT"
+
+msgid "Gamma"
+msgstr "Gamma"
+
+msgid "Contrast"
+msgstr "KONTRAST"
+
+msgid "Shadow Depth"
+msgstr "SCHATTENTIEFE"
+
+msgid "Paper White"
+msgstr "PAPIERWEISS"
+
+msgid "Peak"
+msgstr "SPITZENWERT"
+
+msgid "Strength"
+msgstr "STÄRKE"
+
+msgid "Curvature"
+msgstr "KRÜMMUNG"
+
+msgid "Overscan"
+msgstr "OVERSCAN"
+
+msgid "Scanlines"
+msgstr "SCANLINES"
+
+msgid "Scanline Scale"
+msgstr "SCANLINE-SKALIERUNG"
+
+msgid "Scanline Thickness"
+msgstr "SCANLINE-DICKE"
+
+msgid "Mask"
+msgstr "MASKE"
+
+msgid "Mask Scale"
+msgstr "MASKENSKALIERUNG"
+
+msgid "Vignette"
+msgstr "VIGNETTE"
+
+msgid "Vignette Size"
+msgstr "VIGNETTENGRÖSSE"
+
+msgid "Chroma Offset"
+msgstr "CHROMA-VERSATZ"
+
+msgid "Blend"
+msgstr "MISCHUNG"
+
+msgid "Blend Radius"
+msgstr "MISCHRADIUS"
+
+msgid "Noise"
+msgstr "RAUSCHEN"
+
+msgid "Flicker"
+msgstr "FLACKERN"
+
+msgid "Glow"
+msgstr "LEUCHTEN"
+
+msgid "Grey Levels"
+msgstr "GRAUSTUFEN"
+
+msgid "BLACK"
+msgstr "SCHWARZ"
+
+msgid "WHITE"
+msgstr "WEISS"
+
+msgid "Fix Number Door Localization"
+msgstr "Zahlentür-Lokalisierung korrigieren"
+
+msgid "Use clockwise numerical ordering and show inset numbers over the original kanji buttons."
+msgstr "Verwendet eine im Uhrzeigersinn verlaufende Nummerierung und zeigt eingeblendete Zahlen über den originalen Kanji-Tasten an."
+
+# --- key_cnf.cpp / mikupan_controller.cpp (legacy ImGui binding panels) ---
+msgid "Finder Mode"
+msgstr "Suchermodus"
+
+msgid "Normal Mode"
+msgstr "Normaler Modus"
+
+msgid "Move / Aim Up"
+msgstr "Bewegen / Zielen Hoch"
+
+msgid "Move / Aim Down"
+msgstr "Bewegen / Zielen Runter"
+
+msgid "Move / Aim Left"
+msgstr "Bewegen / Zielen Links"
+
+msgid "Move / Aim Right"
+msgstr "Bewegen / Zielen Rechts"
+
+msgid "Menu"
+msgstr "Menü"
+
+msgid "Search / Obtain"
+msgstr "Suchen / Erhalten"
+
+msgid "Finder ON"
+msgstr "Sucher AN"
+
+msgid "Special Functions"
+msgstr "Sonderfunktionen"
+
+msgid "Eye View / L2"
+msgstr "Augenansicht / L2"
+
+msgid "Shutter / R1"
+msgstr "Auslöser / R1"
+
+msgid "Eye View / R2"
+msgstr "Augenansicht / R2"
+
+msgid "Pause"
+msgstr "Pause"
+
+msgid "Finder Aim Up"
+msgstr "Sucher Zielen Hoch"
+
+msgid "Finder Aim Down"
+msgstr "Sucher Zielen Runter"
+
+msgid "Finder Aim Left"
+msgstr "Sucher Zielen Links"
+
+msgid "Finder Aim Right"
+msgstr "Sucher Zielen Rechts"
+
+msgid "Turn Around"
+msgstr "Umdrehen"
+
+msgid "Shutter"
+msgstr "Auslöser"
+
+msgid "Quick Turn"
+msgstr "Schnelldrehung"
+
+msgid "Finder OFF"
+msgstr "Sucher AUS"
+
+msgid "Finder Control / L2"
+msgstr "Sucher-Steuerung / L2"
+
+msgid "Finder Control / R2"
+msgstr "Sucher-Steuerung / R2"
+
+msgid "L1"
+msgstr "L1"
+
+msgid "L2"
+msgstr "L2"
+
+msgid "R1"
+msgstr "R1"
+
+msgid "R2"
+msgstr "R2"
+
+msgid "L3"
+msgstr "L3"
+
+msgid "R3"
+msgstr "R3"
+
+msgid "DPad Up"
+msgstr "D-Pad Hoch"
+
+msgid "DPad Down"
+msgstr "D-Pad Runter"
+
+msgid "DPad Left"
+msgstr "D-Pad Links"
+
+msgid "DPad Right"
+msgstr "D-Pad Rechts"
+
+msgid "Cross"
+msgstr "Kreuz"
+
+msgid "Circle"
+msgstr "Kreis"
+
+msgid "Start"
+msgstr "Start"
+
+msgid "R3 (Right Stick)"
+msgstr "R3 (Rechter Stick)"
+
+msgid "L3 (Left Stick)"
+msgstr "L3 (Linker Stick)"
+
+# --- mikupan_controller.cpp (Controller Mapping window, extended) ---
+msgid "Binding"
+msgstr "Belegung"
+
+msgid "Key"
+msgstr "Taste"
+
+msgid "Stick"
+msgstr "Stick"
+
+msgid "Axis"
+msgstr "Achse"
+
+msgid "Invert"
+msgstr "Umkehren"
+
+msgid "Negative"
+msgstr "Negativ"
+
+msgid "Positive"
+msgstr "Positiv"
+
+msgid "Target"
+msgstr "Ziel"
+
+msgid "Default"
+msgstr "Standard"
+
+msgid "DPad"
+msgstr "D-Pad"
+
+msgid "Live preview"
+msgstr "Live-Vorschau"
+
+msgid "Controller Mapping"
+msgstr "Controller-Zuordnung"
+
+msgid "Connected"
+msgstr "Verbunden"
+
+msgid "Gamepad"
+msgstr "Controller"
+
+msgid "Movement & Aim"
+msgstr "Bewegung & Zielen"
+
+msgid "Action Maps"
+msgstr "Aktionszuordnungen"
+
+msgid "<not connected>"
+msgstr "<nicht verbunden>"
+
+msgid "Auto (first available controller)"
+msgstr "Auto (erster verfügbarer Controller)"
+
+msgid "Input device"
+msgstr "Eingabegerät"
+
+msgid "<unknown controller>"
+msgstr "<unbekannter Controller>"
+
+msgid "Keyboard & Mouse"
+msgstr "Tastatur & Maus"
+
+msgid "Guide"
+msgstr "Guide"
+
+msgid "Touchpad"
+msgstr "Touchpad"
+
+msgid "Misc 1"
+msgstr "Sonstige 1"
+
+msgid "Misc 2"
+msgstr "Sonstige 2"
+
+msgid "Misc 3"
+msgstr "Sonstige 3"
+
+msgid "Misc 4"
+msgstr "Sonstige 4"
+
+msgid "Misc 5"
+msgstr "Sonstige 5"
+
+msgid "Misc 6"
+msgstr "Sonstige 6"
+
+msgid "Left Paddle 1"
+msgstr "Linkes Paddle 1"
+
+msgid "Left Paddle 2"
+msgstr "Linkes Paddle 2"
+
+msgid "Right Paddle 1"
+msgstr "Rechtes Paddle 1"
+
+msgid "Right Paddle 2"
+msgstr "Rechtes Paddle 2"
+
+msgid "Select / Back"
+msgstr "Select / Back"
+
+msgid "Left Stick (L3)"
+msgstr "Linker Stick (L3)"
+
+msgid "Right Stick (R3)"
+msgstr "Rechter Stick (R3)"
+
+msgid "Y / Triangle"
+msgstr "Y / Triangle"
+
+msgid "A / Cross"
+msgstr "A / Cross"
+
+msgid "X / Square"
+msgstr "X / Square"
+
+msgid "B / Circle"
+msgstr "B / Circle"
+
+msgid "Unknown Button"
+msgstr "Unbekannte Taste"
+
+msgid "No controller connected."
+msgstr "Kein Controller verbunden."
+
+msgid "No controller connected. Connect one to remap gamepad bindings."
+msgstr "Kein Controller verbunden. Schließe einen an, um die Belegung zu ändern."
+
+msgid "Click a binding, then press a button on your controller. 'x' clears it."
+msgstr "Klicke auf eine Belegung und drücke dann eine Taste auf deinem Controller. 'x' löscht sie."
+
+msgid "Always active alongside the controller. Click a binding, then press a key. 'x' clears it."
+msgstr "Immer zusätzlich zum Controller aktiv. Klicke auf eine Belegung und drücke dann eine Taste. 'x' löscht sie."
+
+msgid "Click an axis, then move a stick on your controller. 'x' clears it."
+msgstr "Klicke auf eine Achse und bewege dann einen Stick deines Controllers. 'x' löscht sie."
+
+msgid "No controller connected. Connect one to remap stick axes."
+msgstr "Kein Controller verbunden. Schließe einen an, um die Stick-Achsen zu ändern."
+
+msgid "Always active alongside the controller. Each axis is driven to its extremes by a negative and a positive key. Click a key to rebind it, 'x' clears it."
+msgstr "Immer zusätzlich zum Controller aktiv. Jede Achse wird durch eine negative und eine positive Taste an ihre Extreme getrieben. Klicke auf eine Taste, um sie neu zuzuweisen, 'x' löscht sie."
+
+msgid "Enable custom action profile"
+msgstr "Benutzerdefiniertes Aktionsprofil aktivieren"
+
+msgid "Normal movement"
+msgstr "Normale Bewegung"
+
+msgid "Reverse finder vertical aim"
+msgstr "Vertikale Sucher-Zielung umkehren"
+
+msgid "Swap finder sticks"
+msgstr "Sucher-Sticks tauschen"
+
+msgid "On (default): left stick / WASD move, right stick / mouse aim. Off: classic (left stick aims, right stick moves)."
+msgstr "An (Standard): Linker Stick / WASD bewegt, rechter Stick / Maus zielt. Aus: klassisch (linker Stick zielt, rechter Stick bewegt)."
+
+msgid "D-Pad quick film swap"
+msgstr "Schneller Filmwechsel (D-Pad)"
+
+msgid "Use D-Pad Up / Down in finder mode to switch film.
+D-Pad finder aim is disabled while enabled."
+msgstr "Verwende D-Pad Hoch/Runter im Suchermodus, um den Film zu wechseln.
+Die D-Pad-Zielsteuerung im Sucher ist deaktiviert, solange dies aktiv ist."
+
+msgid "Mirror Stone HUD icon"
+msgstr "Spiegelstein-HUD-Symbol"
+
+msgid "Shows a small Mirror Stone box next to the filament. It stays visible even when you do not have one."
+msgstr "Zeigt ein kleines Spiegelstein-Symbol neben dem Filament. Es bleibt sichtbar, auch wenn du keinen besitzt."
+
+msgid "Reset custom profile"
+msgstr "Benutzerdefiniertes Profil zurücksetzen"
+
+msgid "(keeps the custom profile enabled state)"
+msgstr "(behält den Aktivierungsstatus des benutzerdefinierten Profils bei)"
+
+msgid "Finder Mouse Look"
+msgstr "Sucher-Maussteuerung"
+
+msgid "Aim the first-person finder with the mouse. Always active (independent of the custom profile above)."
+msgstr "Ziele mit dem Sucher in der Egoperspektive mit der Maus. Immer aktiv (unabhängig vom benutzerdefinierten Profil oben)."
+
+msgid "Enable finder mouse look"
+msgstr "Sucher-Maussteuerung aktivieren"
+
+msgid "Mouse sensitivity"
+msgstr "Mausempfindlichkeit"
+
+msgid "Vertical aim follows the \"Reverse finder vertical aim\" option above."
+msgstr "Die vertikale Zielung folgt der obigen Option „Vertikale Sucher-Zielung umkehren“."
+
+msgid "Advanced: remap which in-game action each button triggers, separately for normal and finder mode."
+msgstr "Erweitert: Weise neu zu, welche Spielaktion jede Taste auslöst, getrennt für Normal- und Suchermodus."
+
+msgid "Normal Mode Actions"
+msgstr "Aktionen im Normalmodus"
+
+msgid "Finder Mode Actions"
+msgstr "Aktionen im Suchermodus"
+
+msgid "Reset all input settings"
+msgstr "Alle Eingabeeinstellungen zurücksetzen"
+
+msgid "Keyboard/mouse and controller are always active together; this selects which bindings to edit below."
+msgstr "Tastatur/Maus und Controller sind immer gemeinsam aktiv; dies wählt aus, welche Belegungen unten bearbeitet werden."
+
+msgid "Press input... (Esc)"
+msgstr "Eingabe drücken... (Esc)"
+
+
+# --- outgame/title.cpp ---
+msgid "PRESS   TO LEAVE"
+msgstr "DRUECKEN   ZUM VERLASSEN"
