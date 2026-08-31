@@ -1267,7 +1267,7 @@ struct MikuPanRmlFontFace
 
 static constexpr MikuPanRmlFontFace kRmlFontFaces[] = {
     {"resources/fonts/CenturyOldStyle.ttf", "MikuPanRml"},
-    {"resources/fonts/zapfchancer.ttf", "MikuPanRmlZapf"},
+    {"resources/fonts/URW Chancery L Medium Italic U.ttf", "MikuPanRmlZapf"},
 };
 
 static constexpr int kRmlFontFaceCount =

@@ -189,7 +189,7 @@ static void MikuPan_LoadUiFonts(void)
     }
 
     ui_fonts[2] = MikuPan_LoadUiFontTtf(
-        "resources/fonts/zapfchancer.ttf", ui_font_regular_size);
+        "resources/fonts/URW Chancery L Medium Italic U.ttf", ui_font_regular_size);
 
     if (ui_fonts[2] == NULL)
     {

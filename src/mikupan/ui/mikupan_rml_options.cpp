@@ -6457,6 +6457,8 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
     static const char* const kSettingDescMinimap5 = "Show the corner map while exploring.";
     static const char* const kSettingTitleAlbumPhotoPngExport5 = "Save Album Photos as PNG";
     static const char* const kSettingDescAlbumPhotoPngExport5 = "Also write album photos as PNG files next to the game.";
+    static const char* const kSettingTitleCursorAutoHide5 = "Auto-hide Cursor";
+    static const char* const kSettingDescCursorAutoHide5 = "Hide the mouse cursor after 5 seconds of inactivity.";
     static const char* const kSettingTitleQuickFilmSwap5 = "Quick Film Swap";
     static const char* const kSettingDescQuickFilmSwap5 = "Use D-Pad Up / Down in finder mode to switch film.<br />D-Pad finder aim is disabled while enabled.";
     static const char* const kSettingTitleMirrorStone5 = "Mirror Stone Indicator";
@@ -6560,6 +6562,8 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
         {"setting-desc-minimap", kSettingDescMinimap5},
         {"setting-title-album-photo-png-export", kSettingTitleAlbumPhotoPngExport5},
         {"setting-desc-album-photo-png-export", kSettingDescAlbumPhotoPngExport5},
+        {"setting-title-cursor-auto-hide", kSettingTitleCursorAutoHide5},
+        {"setting-desc-cursor-auto-hide", kSettingDescCursorAutoHide5},
         {"setting-title-quick-film-swap", kSettingTitleQuickFilmSwap5},
         {"setting-desc-quick-film-swap", kSettingDescQuickFilmSwap5},
         {"setting-title-mirror-stone", kSettingTitleMirrorStone5},
