@@ -339,27 +339,17 @@ void MikuPan_ConvertPs2GSSubPixelToNDC(float *out,
                                    (float)gs_sub_y / 16.0f);
 }
 
-void MikuPan_ConvertScreenToNDCCoord(int *out, float ref_width,
+void MikuPan_ConvertScreenToNDCCoord(int* out, float ref_width,
                                      float ref_height, float target_width,
                                      float target_height)
 {
-    float target_aspect = target_width / target_height;
-    float window_aspect = (float)ref_width / (float)ref_height;
+    (void) target_width;
+    (void) target_height;
 
-    if (window_aspect > target_aspect)
-    {
-        out[3] = (int)ref_height;
-        out[2] = (int)(ref_height * target_aspect);
-        out[0] = (int) ((ref_width - (float)out[2]) / 2);
-        out[1] = 0;
-    }
-    else
-    {
-        out[2] = (int)ref_width;
-        out[3] = (int)(ref_width / target_aspect);
-        out[0] = 0;
-        out[1] = (int) ((ref_height - (float)out[3]) / 2);
-    }
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = (int) ref_width;
+    out[3] = (int) ref_height;
 }
 
 int MikuPan_ClampInt(int value, int min_value, int max_value)

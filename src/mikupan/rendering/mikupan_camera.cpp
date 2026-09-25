@@ -150,7 +150,7 @@ void MikuPan_SetupCamera(MikuPan_Camera *mikupan_camera)
     projection[2][3] = -1.0f;
     projection[3][2] = -(2.0f * farz * nearz) / (farz - nearz);
     projection[3][3] = 0.0f;
-    projection[0][0] *= mikupan_camera->ax;
+    projection[0][0] *= mikupan_camera->ax * 0.75f;
     projection[1][1] *= mikupan_camera->ay;
 
     glm_mat4_mul(projection, WorldView, WorldClipView);
