@@ -37,6 +37,7 @@
 #include "ingame/plyr/time_ctl.h"
 #include "ingame/plyr/unit_ctl.h"
 #include "main/glob.h"
+#include "mikupan/gameplay/mikupan_cheat_manager.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
@@ -1234,6 +1235,11 @@ void PlyrTrembleChk()
 
 void ReqPlyrHPdown(u_short deg, u_char prio)
 {
+    if (MikuPan_CheatManagerInfiniteHealthEnabled())
+    {
+        return;
+    }
+
     if (dbg_wrk.param_muteki == 0)
     {
         if (((plyr_wrk.sta & 0x800) == 0 || prio != 0) && (plyr_wrk.sta & 0x4000) == 0)
@@ -1248,6 +1254,13 @@ void ReqPlyrHPdown(u_short deg, u_char prio)
 void PlyrHPdwonCtrl()
 {
     u_short down;
+
+    if (MikuPan_CheatManagerInfiniteHealthEnabled())
+    {
+        plyr_wrk.sta &= ~(0x800 | 0x4000);
+        MikuPan_CheatManagerUpdatePlayer();
+        return;
+    }
 
     if (plyr_wrk.sta & 0x800)
     {
@@ -5502,17 +5515,17 @@ float GetPlyrSpd()
     {
         if (plyr_wrk.mvsta & 1)
         {
-            return 11.0f;
+            return MikuPan_CheatManagerScaleRunSpeed(11.0f);
         }
 
         if (plyr_wrk.mvsta & 2)
         {
-            return 5.5f;
+            return MikuPan_CheatManagerScaleWalkSpeed(5.5f);
         }
 
         if (plyr_wrk.mvsta & 4)
         {
-            return 2.75f;
+            return MikuPan_CheatManagerScaleWalkSpeed(2.75f);
         }
 
         if (plyr_wrk.mvsta & 8)

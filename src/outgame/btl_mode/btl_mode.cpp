@@ -25,6 +25,7 @@
 #include "outgame/btl_mode/btl_mode.h"
 #include "outgame/mode_slct.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/gameplay/mikupan_cheat_manager.h"
 
 int rank_dat[] = {
     401, 1201, 2501, 4001, 7001,
@@ -395,6 +396,16 @@ void BattleModeClear()
 
 void BattleModeScoreRecord(long long score)
 {
+    if (MikuPan_CheatManagerMaxBattleHighScoreEnabled())
+    {
+        msn_high_score = 9999;
+    }
+
+    if (MikuPan_CheatManagerMaxBattleScoreEnabled())
+    {
+        msn_total_score = 99996499;
+        return;
+    }
     if (msn_high_score < score)
     {
         msn_high_score = score;

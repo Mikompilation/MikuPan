@@ -17,6 +17,7 @@
 
 #include "cglm/call/mat4.h"
 #include "ingame/plyr/plyr_ctl.h"
+#include "mikupan/gameplay/mikupan_cheat_manager.h"
 #include "main/glob.h"
 #include "mdlact.h"
 
@@ -1384,6 +1385,14 @@ void movGetMoveval(ANI_CTRL *ani_ctrl, u_int frame_num)
         height = p1[1];
 
         plyr_wrk.spd = dist * 25.0f * 0.5f;
+        if (plyr_wrk.mvsta & 0x1)
+        {
+            plyr_wrk.spd = MikuPan_CheatManagerScaleRunSpeed(plyr_wrk.spd);
+        }
+        else if (plyr_wrk.mvsta & (0x2 | 0x4))
+        {
+            plyr_wrk.spd = MikuPan_CheatManagerScaleWalkSpeed(plyr_wrk.spd);
+        }
         plyr_wrk.spd_ud = -height * 25.0f * 0.5f;
     }
 

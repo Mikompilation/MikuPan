@@ -19,6 +19,7 @@
                 <button id="cat-audio" class="category-button">Audio</button>
                 <button id="cat-controls" class="category-button">Controls</button>
                 <button id="cat-advanced" class="category-button">Advanced</button>
+                <button id="cat-cheats" class="category-button">Cheats</button>
             </div>
             <div id="side-actions">
                 <button id="save-return-button" class="side-action-button">Save</button>
@@ -166,6 +167,36 @@
 
                     <div id="subsection-title-files" class="subsection-title">Files</div>
                     <div class="setting-row"><div class="setting-copy"><label id="setting-title-data-folder" class="setting-title" for="data-folder-input">Data Folder</label><p id="setting-desc-data-folder" class="setting-desc">Folder containing extracted MikuPan game data.</p></div><div class="setting-control wide-control"><input type="text" id="data-folder-input" class="text" /><button id="browse-folder-button">Browse</button></div></div>
+                </div>
+
+                <div id="page-cheats" class="page hidden">
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="cheat-infinite-health">Infinite Health</label><p class="setting-desc">Keep the player's health at its maximum during gameplay.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="cheat-infinite-health" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="cheat-infinite-film">Infinite Film</label><p class="setting-desc">Keep the currently selected film at its maximum quantity.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="cheat-infinite-film" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row compact">
+                        <div class="setting-copy"><label class="setting-title" for="cheat-infinite-spirit-stone">Infinite Spirit Stone</label><p class="setting-desc">Keep Spirit Stones at their maximum quantity.</p></div>
+                        <div class="setting-control checkbox-control"><input type="checkbox" id="cheat-infinite-spirit-stone" class="checkbox" /></div>
+                    </div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-infinite-herbal-medicine">Infinite Herbal Medicine</label><p class="setting-desc">Keep Herbal Medicine at its maximum quantity.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-infinite-herbal-medicine" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-infinite-sacred-water">Infinite Sacred Water</label><p class="setting-desc">Keep Sacred Water at its maximum quantity.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-infinite-sacred-water" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-one-hit-kills">One-Hit Kills</label><p class="setting-desc">Defeatable enemies are defeated by one damaging hit.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-one-hit-kills" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-max-camera-range">Max Camera Range</label><p class="setting-desc">Keep camera range at its highest upgrade level.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-max-camera-range" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-max-camera-speed">Max Camera Speed</label><p class="setting-desc">Keep camera charge speed at its highest upgrade level.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-max-camera-speed" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-unlock-bonus-camera-options">Unlock All Bonus Camera Options</label><p class="setting-desc">Make all bonus camera functions available.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-unlock-bonus-camera-options" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-unlock-special-camera-options">Unlock All Special Camera Options</label><p class="setting-desc">Make all special camera functions available.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-unlock-special-camera-options" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-max-camera-upgrades">Max Camera Upgrades</label><p class="setting-desc">Keep range, speed, and charge capacity at their maximum.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-max-camera-upgrades" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-max-campaign-score">Max Score - Campaign</label><p class="setting-desc">Set campaign total score to 9,999,999.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-max-campaign-score" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-max-camera-points">Max Camera Upgrade Points</label><p class="setting-desc">Set camera upgrade currency to its native maximum of 9,999,999.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-max-camera-points" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-always-low-game-time">Always Low Game Time</label><p class="setting-desc">Keep campaign total and current mission timers at zero.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-always-low-game-time" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-faster-running">Faster Running</label><p class="setting-desc">Double the character's normal running speed.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-faster-running" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-faster-walking">Faster Walking</label><p class="setting-desc">Double normal and slow walking speed, including while the camera is raised.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-faster-walking" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-max-battle-high-score">Max Battle High Score</label><p class="setting-desc">Set this battle run's best shot to 9,999; the stage record updates on a successful clear.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-max-battle-high-score" class="checkbox" /></div></div>
+                    <div class="setting-row compact"><div class="setting-copy"><label class="setting-title" for="cheat-max-battle-score">Max Score - Battle Mode</label><p class="setting-desc">Set battle run total score to 99,996,499, leaving room for the clear bonus.</p></div><div class="setting-control checkbox-control"><input type="checkbox" id="cheat-max-battle-score" class="checkbox" /></div></div>
                 </div>
             </div>
 

@@ -3452,7 +3452,7 @@ static void GekisyaBoyGeisyaGirl(short int px, short int py)
 static char KanKinoSyogai(short int pos_x, short int pos_y)
 {
     int i;
-    char dir;
+    char dir = 0;
     u_char alp;
 
     if (cam_custom_wrk.set_spe == 0xff)

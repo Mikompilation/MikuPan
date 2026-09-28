@@ -738,11 +738,16 @@ button.controller-focus {
 
 #cat-advanced {
     nav-up: #cat-controls;
+    nav-down: #cat-cheats;
+}
+
+#cat-cheats {
+    nav-up: #cat-advanced;
     nav-down: #save-return-button;
 }
 
 #save-return-button {
-    nav-up: #cat-advanced;
+    nav-up: #cat-cheats;
     nav-down: #cancel-options-button;
 }
 

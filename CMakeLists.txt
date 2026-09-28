@@ -59,6 +59,7 @@ set(MIKUPAN_SOURCES
         resources/shaders/normals_debug.frag
         "src/mikupan/io/mikupan_file.cpp"
         "src/mikupan/gameplay/mikupan_first_person.cpp"
+        "src/mikupan/gameplay/mikupan_cheat_manager.cpp"
         "src/mikupan/gameplay/mikupan_item_icon_hud.cpp"
         "src/common/ul_math.cpp"
         "src/common/utility.cpp"

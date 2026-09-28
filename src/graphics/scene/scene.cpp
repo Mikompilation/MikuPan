@@ -1224,7 +1224,7 @@ void SceneDrawManShadow(SCENE_CTRL *sc, SCN_ANM_MDL *sam)
     SCN_ANM_MDL *dsam;
     sceVu0FMATRIX mat;
     sceVu0FVECTOR shadow_bbox[8];
-    sceVu0FVECTOR dir;
+    sceVu0FVECTOR dir = {0};
     sceVu0FVECTOR lp;
     sceVu0FVECTOR li;
     sceVu0FVECTOR *bbox_addr;

@@ -5,6 +5,7 @@
 #include "ingame/map/map_area.h"
 #include "os/system.h"
 #include "ingame/entry/entry.h"
+#include "mikupan/gameplay/mikupan_cheat_manager.h"
 
 void TimeCtrlInit()
 {
@@ -23,6 +24,14 @@ void GameTimeCtrl()
 
     if (ingame_wrk.stts & 0x80)
     {
+        return;
+    }
+
+    if (ingame_wrk.game == 0
+        && MikuPan_CheatManagerAlwaysLowGameTimeEnabled())
+    {
+        time_wrk.game = 0;
+        time_wrk.one_game = 0;
         return;
     }
 

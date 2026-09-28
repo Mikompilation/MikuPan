@@ -7,6 +7,7 @@
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
+#include "mikupan/gameplay/mikupan_cheat_manager.h"
 #include "mikupan/mikupan_i18n.h"
 #include "os/key_cnf.h"
 
@@ -299,6 +300,24 @@ struct MikuPanRmlOptionsState
     Rml::ElementFormControlInput* finder_dpad_film_swap_input = nullptr;
     Rml::ElementFormControlInput* mirror_stone_hud_input = nullptr;
     Rml::ElementFormControlInput* improved_movement_collisions_input = nullptr;
+    Rml::ElementFormControlInput* cheat_infinite_health_input = nullptr;
+    Rml::ElementFormControlInput* cheat_infinite_film_input = nullptr;
+    Rml::ElementFormControlInput* cheat_infinite_spirit_stone_input = nullptr;
+    Rml::ElementFormControlInput* cheat_infinite_herbal_medicine_input = nullptr;
+    Rml::ElementFormControlInput* cheat_infinite_sacred_water_input = nullptr;
+    Rml::ElementFormControlInput* cheat_one_hit_kills_input = nullptr;
+    Rml::ElementFormControlInput* cheat_max_camera_range_input = nullptr;
+    Rml::ElementFormControlInput* cheat_max_camera_speed_input = nullptr;
+    Rml::ElementFormControlInput* cheat_unlock_bonus_camera_options_input = nullptr;
+    Rml::ElementFormControlInput* cheat_unlock_special_camera_options_input = nullptr;
+    Rml::ElementFormControlInput* cheat_max_camera_upgrades_input = nullptr;
+    Rml::ElementFormControlInput* cheat_max_campaign_score_input = nullptr;
+    Rml::ElementFormControlInput* cheat_max_camera_points_input = nullptr;
+    Rml::ElementFormControlInput* cheat_always_low_game_time_input = nullptr;
+    Rml::ElementFormControlInput* cheat_faster_running_input = nullptr;
+    Rml::ElementFormControlInput* cheat_faster_walking_input = nullptr;
+    Rml::ElementFormControlInput* cheat_max_battle_high_score_input = nullptr;
+    Rml::ElementFormControlInput* cheat_max_battle_score_input = nullptr;
     Rml::ElementFormControlInput* controller_remap_input = nullptr;
     Rml::ElementFormControlInput* data_folder_input = nullptr;
     Rml::Element* save_status = nullptr;
@@ -316,8 +335,8 @@ struct MikuPanRmlOptionsState
     Rml::Element* binding_capture_countdown = nullptr;
     std::array<Rml::Element*, 16> calibration_level_swatches{};
     std::vector<MikuPanStepControl> step_controls;
-    std::array<Rml::Element*, 5> category_buttons{};
-    std::array<Rml::Element*, 5> category_pages{};
+    std::array<Rml::Element*, 6> category_buttons{};
+    std::array<Rml::Element*, 6> category_pages{};
     int selected_category = 0;
     int language = 0;
     MikuPanControlScope control_scope = MIKUPAN_CONTROL_SCOPE_SIDEBAR;
@@ -474,13 +493,13 @@ int OptionsLang(void)
     return std::clamp(g_rml.language, 0, 4);
 }
 
-static const char* const kCategoryTitles5[5] = {
-    "DISPLAY", "GRAPHICS", "AUDIO", "CONTROLS", "ADVANCED",
+static const char* const kCategoryTitles[6] = {
+    "DISPLAY", "GRAPHICS", "AUDIO", "CONTROLS", "ADVANCED", "CHEATS",
 };
 
 const char* CategoryTitle(int index)
 {
-    return MikuPan_Translate(kCategoryTitles5[index]);
+    return MikuPan_Translate(kCategoryTitles[index]);
 }
 
 static constexpr const char* kCategoryButtonIds[] = {
@@ -489,6 +508,7 @@ static constexpr const char* kCategoryButtonIds[] = {
     "cat-audio",
     "cat-controls",
     "cat-advanced",
+    "cat-cheats",
 };
 
 static constexpr const char* kCategoryPageIds[] = {
@@ -497,6 +517,7 @@ static constexpr const char* kCategoryPageIds[] = {
     "page-audio",
     "page-controls",
     "page-advanced",
+    "page-cheats",
 };
 
 static constexpr const char* kCategoryFirstControlIds[] = {
@@ -505,6 +526,7 @@ static constexpr const char* kCategoryFirstControlIds[] = {
     "master-volume-stepper",
     "movement-dpad-mode",
     "theme-picker",
+    "cheat-infinite-health",
 };
 
 static const char* const kWindowModeLabels5[2] = {
@@ -5278,7 +5300,7 @@ void SelectCategory(int category)
         }
     }
 
-    if (category >= 0 && category < 5)
+    if (category >= 0 && category < 6)
     {
         SetElementText(g_rml.panel_title, CategoryTitle(category));
     }
@@ -5441,6 +5463,27 @@ void SyncRmlSettingsValues(void)
                 MikuPan_MirrorStoneHudEnabled());
     SetCheckbox(g_rml.improved_movement_collisions_input,
                 MikuPan_ImprovedMovementCollisionsEnabled());
+    SetCheckbox(g_rml.cheat_infinite_health_input,
+                MikuPan_CheatManagerInfiniteHealthEnabled());
+    SetCheckbox(g_rml.cheat_infinite_film_input,
+                MikuPan_CheatManagerInfiniteFilmEnabled());
+    SetCheckbox(g_rml.cheat_infinite_spirit_stone_input,
+                MikuPan_CheatManagerInfiniteSpiritStoneEnabled());
+    SetCheckbox(g_rml.cheat_infinite_herbal_medicine_input, MikuPan_CheatManagerInfiniteHerbalMedicineEnabled());
+    SetCheckbox(g_rml.cheat_infinite_sacred_water_input, MikuPan_CheatManagerInfiniteSacredWaterEnabled());
+    SetCheckbox(g_rml.cheat_one_hit_kills_input, MikuPan_CheatManagerOneHitKillsEnabled());
+    SetCheckbox(g_rml.cheat_max_camera_range_input, MikuPan_CheatManagerMaxCameraRangeEnabled());
+    SetCheckbox(g_rml.cheat_max_camera_speed_input, MikuPan_CheatManagerMaxCameraSpeedEnabled());
+    SetCheckbox(g_rml.cheat_unlock_bonus_camera_options_input, MikuPan_CheatManagerUnlockBonusCameraOptionsEnabled());
+    SetCheckbox(g_rml.cheat_unlock_special_camera_options_input, MikuPan_CheatManagerUnlockSpecialCameraOptionsEnabled());
+    SetCheckbox(g_rml.cheat_max_camera_upgrades_input, MikuPan_CheatManagerMaxCameraUpgradesEnabled());
+    SetCheckbox(g_rml.cheat_max_campaign_score_input, MikuPan_CheatManagerMaxCampaignScoreEnabled());
+    SetCheckbox(g_rml.cheat_max_camera_points_input, MikuPan_CheatManagerMaxCameraPointsEnabled());
+    SetCheckbox(g_rml.cheat_always_low_game_time_input, MikuPan_CheatManagerAlwaysLowGameTimeEnabled());
+    SetCheckbox(g_rml.cheat_faster_running_input, MikuPan_CheatManagerFasterRunningEnabled());
+    SetCheckbox(g_rml.cheat_faster_walking_input, MikuPan_CheatManagerFasterWalkingEnabled());
+    SetCheckbox(g_rml.cheat_max_battle_high_score_input, MikuPan_CheatManagerMaxBattleHighScoreEnabled());
+    SetCheckbox(g_rml.cheat_max_battle_score_input, MikuPan_CheatManagerMaxBattleScoreEnabled());
 
     SetCheckbox(g_rml.controller_remap_input,
                 MikuPan_ShowControllerRemapWindow());
@@ -6019,6 +6062,61 @@ bool LoadOptionsDocument(void)
     g_rml.binding_capture_title = GetElement("binding-capture-title");
     g_rml.binding_capture_text = GetElement("binding-capture-text");
     g_rml.binding_capture_countdown = GetElement("binding-capture-countdown");
+    g_rml.cheat_infinite_health_input = GetInput("cheat-infinite-health");
+    AddListener(g_rml.cheat_infinite_health_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MikuPan_CheatManagerSetInfiniteHealth(
+                            IsCheckboxChecked(input));
+                    }));
+    g_rml.cheat_infinite_film_input = GetInput("cheat-infinite-film");
+    AddListener(g_rml.cheat_infinite_film_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MikuPan_CheatManagerSetInfiniteFilm(
+                            IsCheckboxChecked(input));
+                    }));
+    g_rml.cheat_infinite_spirit_stone_input =
+        GetInput("cheat-infinite-spirit-stone");
+    AddListener(g_rml.cheat_infinite_spirit_stone_input,
+                Rml::EventId::Change,
+                std::make_unique<MikuPanInputListener>(
+                    [](Rml::ElementFormControlInput* input) {
+                        MikuPan_CheatManagerSetInfiniteSpiritStone(
+                            IsCheckboxChecked(input));
+                    }));
+    g_rml.cheat_infinite_herbal_medicine_input = GetInput("cheat-infinite-herbal-medicine");
+    AddListener(g_rml.cheat_infinite_herbal_medicine_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetInfiniteHerbalMedicine(IsCheckboxChecked(input)); }));
+    g_rml.cheat_infinite_sacred_water_input = GetInput("cheat-infinite-sacred-water");
+    AddListener(g_rml.cheat_infinite_sacred_water_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetInfiniteSacredWater(IsCheckboxChecked(input)); }));
+    g_rml.cheat_one_hit_kills_input = GetInput("cheat-one-hit-kills");
+    AddListener(g_rml.cheat_one_hit_kills_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetOneHitKills(IsCheckboxChecked(input)); }));
+    g_rml.cheat_max_camera_range_input = GetInput("cheat-max-camera-range");
+    AddListener(g_rml.cheat_max_camera_range_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetMaxCameraRange(IsCheckboxChecked(input)); }));
+    g_rml.cheat_max_camera_speed_input = GetInput("cheat-max-camera-speed");
+    AddListener(g_rml.cheat_max_camera_speed_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetMaxCameraSpeed(IsCheckboxChecked(input)); }));
+    g_rml.cheat_unlock_bonus_camera_options_input = GetInput("cheat-unlock-bonus-camera-options");
+    AddListener(g_rml.cheat_unlock_bonus_camera_options_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetUnlockBonusCameraOptions(IsCheckboxChecked(input)); }));
+    g_rml.cheat_unlock_special_camera_options_input = GetInput("cheat-unlock-special-camera-options");
+    AddListener(g_rml.cheat_unlock_special_camera_options_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetUnlockSpecialCameraOptions(IsCheckboxChecked(input)); }));
+    g_rml.cheat_max_camera_upgrades_input = GetInput("cheat-max-camera-upgrades");
+    AddListener(g_rml.cheat_max_camera_upgrades_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetMaxCameraUpgrades(IsCheckboxChecked(input)); }));
+    g_rml.cheat_max_campaign_score_input = GetInput("cheat-max-campaign-score");
+    AddListener(g_rml.cheat_max_campaign_score_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetMaxCampaignScore(IsCheckboxChecked(input)); }));
+    g_rml.cheat_max_camera_points_input = GetInput("cheat-max-camera-points");
+    g_rml.cheat_always_low_game_time_input = GetInput("cheat-always-low-game-time");
+    g_rml.cheat_faster_running_input = GetInput("cheat-faster-running");
+    AddListener(g_rml.cheat_faster_running_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetFasterRunning(IsCheckboxChecked(input)); }));
+    g_rml.cheat_faster_walking_input = GetInput("cheat-faster-walking");
+    AddListener(g_rml.cheat_faster_walking_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetFasterWalking(IsCheckboxChecked(input)); }));
+    AddListener(g_rml.cheat_always_low_game_time_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetAlwaysLowGameTime(IsCheckboxChecked(input)); }));
+    AddListener(g_rml.cheat_max_camera_points_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetMaxCameraPoints(IsCheckboxChecked(input)); }));
+    g_rml.cheat_max_battle_high_score_input = GetInput("cheat-max-battle-high-score");
+    AddListener(g_rml.cheat_max_battle_high_score_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetMaxBattleHighScore(IsCheckboxChecked(input)); }));
+    g_rml.cheat_max_battle_score_input = GetInput("cheat-max-battle-score");
+    AddListener(g_rml.cheat_max_battle_score_input, Rml::EventId::Change, std::make_unique<MikuPanInputListener>([](Rml::ElementFormControlInput* input) { MikuPan_CheatManagerSetMaxBattleScore(IsCheckboxChecked(input)); }));
     AddListener(g_rml.choice_picker_list,
                 Rml::EventId::Click,
                 std::make_unique<MikuPanEventListener>(
@@ -6368,8 +6466,8 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
         return;
     }
 
-    static const char* const kCategoryLabels[5] = {
-        "Display", "Graphics", "Audio", "Controls", "Advanced",
+    static const char* const kCategoryLabels[6] = {
+        "Display", "Graphics", "Audio", "Controls", "Advanced", "Cheats",
     };
 
     const int lang = std::clamp(language, 0, 4);
@@ -6382,7 +6480,7 @@ void MikuPan_RmlOptionsApplyLanguage(int language)
         }
     }
 
-    if (g_rml.selected_category >= 0 && g_rml.selected_category < 5)
+    if (g_rml.selected_category >= 0 && g_rml.selected_category < 6)
     {
         SetElementText(g_rml.panel_title, CategoryTitle(g_rml.selected_category));
     }

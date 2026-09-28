@@ -11,6 +11,7 @@
 
 #include "common/ul_math.h"
 #include "main/glob.h"
+#include "mikupan/gameplay/mikupan_cheat_manager.h"
 #include "os/eeiop/eese.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/adpcm/ea_dat.h"
@@ -1345,6 +1346,8 @@ u_char EneDmgChk(ENE_WRK *ew)
             ew->dmg = 0;
             return result;
         }
+
+        ew->dmg = MikuPan_CheatManagerForceEnemyLethalDamage(ew->dmg);
 
         if (ew->hp <= ew->dmg)
         {
