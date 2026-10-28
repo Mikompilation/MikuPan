@@ -47,7 +47,18 @@ the draw calls while drawing the same triangles.
 You need either `MinGW` or `Cygwin` with `gcc` and `CMake` in order to build `MikuPan`. `MSVC` with *CMake* will *ALSO* work. 
 
 ## Linux
-`GCC` and `CMake` required to build `MikuPan`.
+`GCC`, `CMake`, `Make` and `Git` are required to build `MikuPan`.
+FFmpeg is built automatically with only MPEG-1/2 video decoding, MPEG program
+stream demuxing, MPEG elementary-stream probing, local file access and colour conversion. Movie audio uses
+MikuPan's own decoder; FFmpeg audio codecs and resampling are disabled.
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```
+
+To reuse shader bytecode already generated or downloaded, configure with
+`-DMIKUPAN_COMPILE_SHADERS=OFF`.
 
 ## macOS
 macOS is not officially supported: the maintainers have no Apple hardware to

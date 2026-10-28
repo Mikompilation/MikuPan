@@ -2099,9 +2099,9 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
     ImDrawList_AddRect      (dl, b_min, b_max, body_outline, 30.0f, 0, 0);
 
     ImDrawList_AddCircleFilled(dl, ImVec2{origin.x + 80,     origin.y + H - 60}, 50, body_col,     24);
-    ImDrawList_AddCircle      (dl, ImVec2{origin.x + 80,     origin.y + H - 60}, 50, body_outline, 24, 2.0f);
+    ImDrawList_AddCircle      (dl, ImVec2{origin.x + 80,     origin.y + H - 60}, 50, body_outline, 24, 2.0f, 0);
     ImDrawList_AddCircleFilled(dl, ImVec2{origin.x + W - 80, origin.y + H - 60}, 50, body_col,     24);
-    ImDrawList_AddCircle      (dl, ImVec2{origin.x + W - 80, origin.y + H - 60}, 50, body_outline, 24, 2.0f);
+    ImDrawList_AddCircle      (dl, ImVec2{origin.x + W - 80, origin.y + H - 60}, 50, body_outline, 24, 2.0f, 0);
 
     // -- Shoulders & triggers --
     int lb = gp ? SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)         : 0;
@@ -2175,10 +2175,10 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
         ImDrawList_AddCircleFilled(dl, ImVec2{fx - d, fy    }, r, col_if(west,  0xFF603060, 0xFFFF60FF), 0);
         ImDrawList_AddCircleFilled(dl, ImVec2{fx + d, fy    }, r, col_if(east,  0xFF603030, 0xFFFF6060), 0);
 
-        ImDrawList_AddCircle(dl, ImVec2{fx,     fy - d}, r, 0xFFA0A0A0, 0, 1.5f);
-        ImDrawList_AddCircle(dl, ImVec2{fx,     fy + d}, r, 0xFFA0A0A0, 0, 1.5f);
-        ImDrawList_AddCircle(dl, ImVec2{fx - d, fy    }, r, 0xFFA0A0A0, 0, 1.5f);
-        ImDrawList_AddCircle(dl, ImVec2{fx + d, fy    }, r, 0xFFA0A0A0, 0, 1.5f);
+        ImDrawList_AddCircle(dl, ImVec2{fx,     fy - d}, r, 0xFFA0A0A0, 0, 1.5f, 0);
+        ImDrawList_AddCircle(dl, ImVec2{fx,     fy + d}, r, 0xFFA0A0A0, 0, 1.5f, 0);
+        ImDrawList_AddCircle(dl, ImVec2{fx - d, fy    }, r, 0xFFA0A0A0, 0, 1.5f, 0);
+        ImDrawList_AddCircle(dl, ImVec2{fx + d, fy    }, r, 0xFFA0A0A0, 0, 1.5f, 0);
 
         ImDrawList_AddText_Vec2(dl, ImVec2{fx - 4,     fy - d - 7}, 0xFFFFFFFF, "Y", NULL);
         ImDrawList_AddText_Vec2(dl, ImVec2{fx - 4,     fy + d - 7}, 0xFFFFFFFF, "A", NULL);
@@ -2217,12 +2217,12 @@ static void MikuPan_ControllerDrawControllerImage(SDL_Gamepad *gp)
         float rcy = origin.y + 190.0f;
 
         ImDrawList_AddCircleFilled(dl, ImVec2{lcx, lcy}, 26, 0xFF202028, 0);
-        ImDrawList_AddCircle      (dl, ImVec2{lcx, lcy}, 26, body_outline, 0, 1.5f);
+        ImDrawList_AddCircle      (dl, ImVec2{lcx, lcy}, 26, body_outline, 0, 1.5f, 0);
         ImDrawList_AddCircleFilled(dl, ImVec2{lcx + lsx*16, lcy + lsy*16}, 16,
                                        col_if(lpress, plate_col, active_col), 0);
 
         ImDrawList_AddCircleFilled(dl, ImVec2{rcx, rcy}, 26, 0xFF202028, 0);
-        ImDrawList_AddCircle      (dl, ImVec2{rcx, rcy}, 26, body_outline, 0, 1.5f);
+        ImDrawList_AddCircle      (dl, ImVec2{rcx, rcy}, 26, body_outline, 0, 1.5f, 0);
         ImDrawList_AddCircleFilled(dl, ImVec2{rcx + rsx*16, rcy + rsy*16}, 16,
                                        col_if(rpress, plate_col, active_col), 0);
     }

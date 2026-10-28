@@ -489,11 +489,8 @@ target_link_libraries(MikuPan PRIVATE
         SDL3::SDL3
         spdlog::spdlog
         cglm
-        avcodec
-        swscale
-        avutil
-        swresample
-        avformat
+        ${MIKUPAN_FFMPEG_LIBS}
+        xxHash::xxhash
         inipp::inipp
 )
 

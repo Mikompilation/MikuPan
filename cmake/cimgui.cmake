@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
         cimgui_src
         GIT_REPOSITORY https://github.com/cimgui/cimgui.git
-        GIT_TAG        master
+        GIT_TAG        c4461a7eadbd17b6a6a8124a8abbf499aba6318d # ImGui 1.93.0
         GIT_SUBMODULES "imgui"
         # Point SOURCE_SUBDIR at a path with no CMakeLists.txt so
         # FetchContent_MakeAvailable downloads the sources WITHOUT running

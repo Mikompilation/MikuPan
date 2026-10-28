@@ -887,6 +887,8 @@ static void MikuPan_PopulateGpuDriverList(void)
     gpu_driver_count = 1;
     gpu_driver_selected = 0;
 
+    SDL_GPUDevice* device = MikuPan_GPUGetDevice();
+    const char* active_driver = device ? SDL_GetGPUDeviceDriver(device) : NULL;
     const int n = SDL_GetNumGPUDrivers();
     for (int i = 0; i < n && gpu_driver_count <= MIKUPAN_MAX_GPU_DRIVERS; i++)
     {
@@ -899,9 +901,16 @@ static void MikuPan_PopulateGpuDriverList(void)
         const int idx = gpu_driver_count;
         snprintf(gpu_driver_names[idx], sizeof(gpu_driver_names[idx]), "%s",
                  name);
-        gpu_driver_supported[idx] =
-            SDL_GPUSupportsShaderFormats(MIKUPAN_GPU_SHADER_FORMATS, name) ? 1
-                                                                           : 0;
+        // Reprobing live Vulkan can clear NVIDIA's Wayland callbacks.
+        if (active_driver != NULL && SDL_strcasecmp(name, active_driver) == 0)
+        {
+            gpu_driver_supported[idx] = 1;
+        }
+        else
+        {
+            gpu_driver_supported[idx] =
+                SDL_GPUSupportsShaderFormats(MIKUPAN_GPU_SHADER_FORMATS, name);
+        }
 
         if (SDL_strcasecmp(name, mikupan_configuration.renderer.gpu_driver)
             == 0)

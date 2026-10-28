@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.20)
+project(ffmpeg_smoke LANGUAGES C CXX)
+include(CTest)
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/ffmpeg.cmake")
+add_executable(ffmpeg_smoke smoke.cpp)
+target_link_libraries(ffmpeg_smoke PRIVATE ${MIKUPAN_FFMPEG_LIBS})
+add_test(NAME ffmpeg_smoke COMMAND ffmpeg_smoke)

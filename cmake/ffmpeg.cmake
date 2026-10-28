@@ -185,6 +185,7 @@ elseif(WIN32)
             IMPORTED_IMPLIB "${FFMPEG_ROOT}/lib/swresample.lib"
     )
 else()
+    list(REMOVE_ITEM MIKUPAN_FFMPEG_LIBS swresample)
     include(FetchContent)
     include(ExternalProject)
     include(ProcessorCount)
@@ -193,6 +194,7 @@ else()
             ffmpeg
             GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
             GIT_TAG n8.1
+            GIT_SHALLOW TRUE
     )
 
     # FFmpeg ships no CMakeLists.txt, so MakeAvailable just populates the
@@ -214,7 +216,7 @@ else()
     ExternalProject_Add(ffmpeg_build
             SOURCE_DIR "${ffmpeg_SOURCE_DIR}"
             CONFIGURE_COMMAND
-                ${BASH_EXECUTABLE} ./configure
+                ${BASH_EXECUTABLE} <SOURCE_DIR>/configure
                 --prefix=${FFMPEG_ROOT}
                 --disable-shared
                 --enable-static
@@ -224,20 +226,25 @@ else()
                 --disable-autodetect
                 --disable-x86asm
                 --enable-pic
+                --disable-everything
+                --disable-avdevice
+                --disable-avfilter
+                --disable-swresample
+                --enable-decoder=mpeg1video,mpeg2video
+                --enable-parser=mpegvideo
+                --enable-demuxer=mpegps,mpegvideo
+                --enable-protocol=file
                 --enable-avcodec
                 --enable-avformat
                 --enable-avutil
                 --enable-swscale
-                --enable-swresample
             BUILD_COMMAND ${MAKE_EXECUTABLE} -j${FFMPEG_BUILD_JOBS}
             INSTALL_COMMAND ${MAKE_EXECUTABLE} install
-            BUILD_IN_SOURCE 1
             BUILD_BYPRODUCTS
                 "${FFMPEG_LIB_DIR}/libavcodec.a"
                 "${FFMPEG_LIB_DIR}/libavformat.a"
                 "${FFMPEG_LIB_DIR}/libavutil.a"
                 "${FFMPEG_LIB_DIR}/libswscale.a"
-                "${FFMPEG_LIB_DIR}/libswresample.a"
     )
 
     find_package(Threads REQUIRED)
@@ -277,16 +284,8 @@ else()
             INTERFACE_LINK_LIBRARIES "avutil;${FFMPEG_SYSTEM_LIBS}"
     )
 
-    add_library(swresample STATIC IMPORTED)
-    set_target_properties(swresample PROPERTIES
-            IMPORTED_LOCATION "${FFMPEG_LIB_DIR}/libswresample.a"
-            INTERFACE_INCLUDE_DIRECTORIES "${FFMPEG_ROOT}/include"
-            INTERFACE_LINK_LIBRARIES "avutil;${FFMPEG_SYSTEM_LIBS}"
-    )
-
     add_dependencies(avutil ffmpeg_build)
     add_dependencies(avcodec ffmpeg_build)
     add_dependencies(avformat ffmpeg_build)
     add_dependencies(swscale ffmpeg_build)
-    add_dependencies(swresample ffmpeg_build)
 endif()
