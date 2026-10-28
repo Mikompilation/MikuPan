@@ -485,7 +485,15 @@ void MikuPan_LegacyMouseBeginFrame(void)
     float viewport_width = 0.0f;
     float viewport_height = 0.0f;
     float viewport_scale = 1.0f;
-    MikuPan_GetPS2Viewport(pixel_width, pixel_height, &viewport_x, &viewport_y,
+    /* The 640x448 screen sits centred in the picture, and the picture in the
+     * window -- with bars whenever the aspect ratio is not the window's. */
+    int picture[4];
+    MikuPan_ConvertScreenToNDCCoord(picture,
+                                    (float)pixel_width,
+                                    (float)pixel_height,
+                                    (float)MikuPan_GetRenderResolutionWidth(),
+                                    (float)MikuPan_GetRenderResolutionHeight());
+    MikuPan_GetPS2Viewport(picture[2], picture[3], &viewport_x, &viewport_y,
                            &viewport_width, &viewport_height, &viewport_scale);
     if (viewport_scale <= 0.0f)
     {
@@ -493,6 +501,8 @@ void MikuPan_LegacyMouseBeginFrame(void)
         legacy_mouse_previous_valid = 0;
         return;
     }
+    viewport_x += (float)picture[0];
+    viewport_y += (float)picture[1];
 
     legacy_mouse_state.x = (mouse_x - viewport_x) / viewport_scale;
     legacy_mouse_state.y = (mouse_y - viewport_y) / viewport_scale;

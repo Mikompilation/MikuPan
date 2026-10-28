@@ -287,6 +287,10 @@ void MikuPan_GPUSetInt(const char *name, int value);
 /// Per-draw flag of the textured mesh shader: gray the sampled texel. Only
 /// marks the fragment uniforms dirty when the value changes.
 void MikuPan_GPUSetBlackWhiteTexel(int enabled);
+/* The sprite shader takes its output from sRGB to the HDR swapchain's linear
+ * scale (paper white from the last postprocess pass).  Only for UI drawn
+ * straight onto the window after that pass. */
+void MikuPan_GPUSetUiHdrOutput(int enabled);
 void MikuPan_GPUSetFloat(const char *name, float value);
 void MikuPan_GPUSetVec2(const char *name, float x, float y);
 

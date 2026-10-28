@@ -4045,6 +4045,17 @@ void MikuPan_GPUSetBlackWhiteTexel(int enabled)
     }
 }
 
+void MikuPan_GPUSetUiHdrOutput(int enabled)
+{
+    enabled = enabled != 0;
+
+    if (g_uniforms.uFlags3[1] != enabled)
+    {
+        g_uniforms.uFlags3[1] = enabled;
+        g_fragment_uniform_dirty = 1;
+    }
+}
+
 void MikuPan_GPUSetFloat(const char* name, float value)
 {
     if (strcmp(name, "uNormalLength") == 0)

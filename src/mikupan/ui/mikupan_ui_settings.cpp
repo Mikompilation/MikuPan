@@ -470,9 +470,14 @@ static const char* const kPs2NativeLabel5[5] = {
     "PS2 nativo (%d x %d)",
 };
 
+static void MikuPan_GetPictureSize(int* out_width, int* out_height);
+
 static void MikuPan_ApplyRenderResolutionLabels(void)
 {
     const int lang = MikuPan_GetUiLanguage();
+    int picture_width = 0;
+    int picture_height = 0;
+    MikuPan_GetPictureSize(&picture_width, &picture_height);
 
     for (int i = 0; i < resolution_count; i++)
     {
@@ -490,11 +495,23 @@ static void MikuPan_ApplyRenderResolutionLabels(void)
         }
         else if (resolution_list[i].width > 0 && resolution_list[i].height > 0
                  && MikuPan_IsPs2ScaleResolution(resolution_list[i].width,
-                                                 resolution_list[i].height)
-                 && resolution_list[i].width == PS2_RESOLUTION_X_INT)
+                                                 resolution_list[i].height))
         {
-            snprintf(label, sizeof(label), kPs2NativeLabel5[lang],
-                     resolution_list[i].width, resolution_list[i].height);
+            /// The PS2 multiples keep their line count and take the
+            /// picture's shape, so the width shown follows the aspect ratio.
+            const int height = resolution_list[i].height;
+            const int width = (int)roundf((float)height * (float)picture_width
+                                          / (float)picture_height);
+            if (resolution_list[i].width == PS2_RESOLUTION_X_INT)
+            {
+                snprintf(label, sizeof(label), kPs2NativeLabel5[lang],
+                         width, height);
+            }
+            else
+            {
+                snprintf(label, sizeof(label), "PS2 %dx (%d x %d)",
+                         height / PS2_RESOLUTION_Y_INT, width, height);
+            }
         }
         else
         {
@@ -1055,6 +1072,28 @@ void MikuPan_UiSettingsRender(void)
                 igTextDisabled("Render Resolution: no modes available");
             }
 
+            const char* aspect_modes[] = {
+                "Auto (fill window)", "Original (PS2 640x448)", "4:3",
+                "16:10", "16:9", "21:9", "Custom",
+            };
+            int aspect_mode = MikuPan_GetAspectMode();
+            if (igCombo_Str_arr("Aspect Ratio", &aspect_mode, aspect_modes,
+                                (int)(sizeof(aspect_modes) / sizeof(aspect_modes[0])),
+                                -1))
+            {
+                MikuPan_SetAspectMode(aspect_mode);
+            }
+
+            if (aspect_mode == MIKUPAN_ASPECT_CUSTOM)
+            {
+                float aspect_custom = MikuPan_GetAspectCustom();
+                if (igSliderFloat("Custom Ratio", &aspect_custom, 1.0f, 4.0f,
+                                  "%.2f : 1", 0))
+                {
+                    MikuPan_SetAspectCustom(aspect_custom);
+                }
+            }
+
             igSliderFloat("Brightness", &brightness, 0.0f, 2.0f, "%.2f", 0);
             igSliderFloat("Gamma", &gamma_value, 0.1f, 2.0f, "%.2f", 0);
             igSliderFloat("Contrast", &contrast, 0.0f, 2.0f, "%.2f", 0);
@@ -1516,56 +1555,156 @@ int MikuPan_SelectWindowSizeOption(int index)
     return 1;
 }
 
-int MikuPan_GetRenderResolutionWidth(void)
+/// Width over height of the picture for a window of window_w x window_h.
+static float MikuPan_ResolveAspect(int window_w, int window_h)
 {
-    if (mikupan_configuration.renderer.render_mode
-        == MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW
-        || mikupan_configuration.renderer.render_mode
-               == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+    switch (mikupan_configuration.renderer.aspect_mode)
     {
-        int width = 0;
-        int height = 0;
-        MikuPan_GetWindowPixelSize(&width, &height);
-
-        if (mikupan_configuration.renderer.render_mode
-            == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
-        {
-            width = (int)roundf((float)width
-                                * (float)mikupan_configuration.renderer.render_scale_percent
-                                / 100.0f);
-        }
-
-        return MikuPan_ClampInt(width, PS2_RESOLUTION_X_INT / 2, 16384);
+        case MIKUPAN_ASPECT_ORIGINAL:
+            return PS2_RESOLUTION_X_FLOAT / PS2_RESOLUTION_Y_FLOAT;
+        case MIKUPAN_ASPECT_4_3:
+            return 4.0f / 3.0f;
+        case MIKUPAN_ASPECT_16_10:
+            return 16.0f / 10.0f;
+        case MIKUPAN_ASPECT_16_9:
+            return 16.0f / 9.0f;
+        case MIKUPAN_ASPECT_21_9:
+            return 21.0f / 9.0f;
+        case MIKUPAN_ASPECT_CUSTOM:
+            return mikupan_configuration.renderer.aspect_custom;
+        default:
+            break;
     }
 
-    return render_resolution_width > 0 ? render_resolution_width
-                                       : PS2_RESOLUTION_X_INT;
+    return window_h > 0 ? (float)window_w / (float)window_h
+                        : PS2_RESOLUTION_X_FLOAT / PS2_RESOLUTION_Y_FLOAT;
+}
+
+/// The part of the window the picture fills: all of it in Auto, otherwise
+/// the largest centred rect of the chosen shape.
+static void MikuPan_GetPictureSize(int* out_width, int* out_height)
+{
+    int width = 0;
+    int height = 0;
+    MikuPan_GetWindowPixelSize(&width, &height);
+
+    /// Skipped in Auto, where the fit is the identity and rounding would
+    /// only take a pixel off the window size.
+    if (mikupan_configuration.renderer.aspect_mode != MIKUPAN_ASPECT_AUTO)
+    {
+        const float aspect = MikuPan_ResolveAspect(width, height);
+        if ((float)width / (float)height > aspect)
+        {
+            width = (int)roundf((float)height * aspect);
+        }
+        else
+        {
+            height = (int)roundf((float)width / aspect);
+        }
+    }
+
+    *out_width = width > 0 ? width : 1;
+    *out_height = height > 0 ? height : 1;
+}
+
+static void MikuPan_GetRenderResolutionSize(int* out_width, int* out_height)
+{
+    const int mode = mikupan_configuration.renderer.render_mode;
+    int width = 0;
+    int height = 0;
+
+    if (mode == MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW
+        || mode == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+    {
+        MikuPan_GetPictureSize(&width, &height);
+
+        if (mode == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+        {
+            const float scale =
+                (float)mikupan_configuration.renderer.render_scale_percent
+                / 100.0f;
+            width = (int)roundf((float)width * scale);
+            height = (int)roundf((float)height * scale);
+        }
+    }
+    else
+    {
+        width = render_resolution_width > 0 ? render_resolution_width
+                                            : PS2_RESOLUTION_X_INT;
+        height = render_resolution_height > 0 ? render_resolution_height
+                                              : PS2_RESOLUTION_Y_INT;
+
+        /// A fixed size keeps its height -- a PS2 multiple is a count of the
+        /// PS2's lines -- and is widened or narrowed to the picture's shape.
+        /// Auto leaves a size of the player's own (not a PS2 multiple) as
+        /// they gave it.
+        if (mikupan_configuration.renderer.aspect_mode != MIKUPAN_ASPECT_AUTO
+            || MikuPan_IsPs2ScaleResolution(width, height))
+        {
+            int picture_width = 0;
+            int picture_height = 0;
+            MikuPan_GetPictureSize(&picture_width, &picture_height);
+            width = (int)roundf((float)height * (float)picture_width
+                                / (float)picture_height);
+        }
+    }
+
+    *out_width = MikuPan_ClampInt(width, PS2_RESOLUTION_X_INT / 2, 16384);
+    *out_height = MikuPan_ClampInt(height, PS2_RESOLUTION_Y_INT / 2, 16384);
+}
+
+int MikuPan_GetRenderResolutionWidth(void)
+{
+    int width = 0;
+    int height = 0;
+    MikuPan_GetRenderResolutionSize(&width, &height);
+    return width;
 }
 
 int MikuPan_GetRenderResolutionHeight(void)
 {
-    if (mikupan_configuration.renderer.render_mode
-        == MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW
-        || mikupan_configuration.renderer.render_mode
-               == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
+    int width = 0;
+    int height = 0;
+    MikuPan_GetRenderResolutionSize(&width, &height);
+    return height;
+}
+
+int MikuPan_GetAspectMode(void)
+{
+    return mikupan_configuration.renderer.aspect_mode;
+}
+
+void MikuPan_SetAspectMode(int mode)
+{
+    if (mode < MIKUPAN_ASPECT_AUTO || mode > MIKUPAN_ASPECT_CUSTOM)
     {
-        int width = 0;
-        int height = 0;
-        MikuPan_GetWindowPixelSize(&width, &height);
-
-        if (mikupan_configuration.renderer.render_mode
-            == MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE)
-        {
-            height = (int)roundf((float)height
-                                 * (float)mikupan_configuration.renderer.render_scale_percent
-                                 / 100.0f);
-        }
-
-        return MikuPan_ClampInt(height, PS2_RESOLUTION_Y_INT / 2, 16384);
+        mode = MIKUPAN_ASPECT_AUTO;
     }
 
-    return render_resolution_height > 0 ? render_resolution_height
-                                        : PS2_RESOLUTION_Y_INT;
+    mikupan_configuration.renderer.aspect_mode = mode;
+    MikuPan_RefreshWindowBackedRenderResolution();
+    MikuPan_ApplyRenderResolutionLabels();
+}
+
+float MikuPan_GetAspectCustom(void)
+{
+    return mikupan_configuration.renderer.aspect_custom;
+}
+
+void MikuPan_SetAspectCustom(float ratio)
+{
+    mikupan_configuration.renderer.aspect_custom =
+        MikuPan_ClampFloat(ratio, 1.0f, 4.0f);
+    MikuPan_RefreshWindowBackedRenderResolution();
+    MikuPan_ApplyRenderResolutionLabels();
+}
+
+float MikuPan_GetPictureAspect(void)
+{
+    int width = 0;
+    int height = 0;
+    MikuPan_GetPictureSize(&width, &height);
+    return (float)width / (float)height;
 }
 
 static int MikuPan_IsSuperSamplingEnabledInternal(void)

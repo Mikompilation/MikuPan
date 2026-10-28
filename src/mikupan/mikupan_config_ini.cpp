@@ -198,6 +198,10 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.renderer.finder_viewport_mask_mode);
     ApplyValue(ini, "renderer", "hd_font_textures",
                mikupan_configuration.renderer.hd_font_textures);
+    ApplyValue(ini, "renderer", "aspect_mode",
+               mikupan_configuration.renderer.aspect_mode);
+    ApplyValue(ini, "renderer", "aspect_custom",
+               mikupan_configuration.renderer.aspect_custom);
     ApplyValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     ApplyValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     ApplyValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);
@@ -406,6 +410,10 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
              mikupan_configuration.renderer.finder_viewport_mask_mode);
     SetValue(ini, "renderer", "hd_font_textures",
              mikupan_configuration.renderer.hd_font_textures);
+    SetValue(ini, "renderer", "aspect_mode",
+             mikupan_configuration.renderer.aspect_mode);
+    SetValue(ini, "renderer", "aspect_custom",
+             mikupan_configuration.renderer.aspect_custom);
     SetValue(ini, "crt", "enabled", mikupan_configuration.crt.enabled);
     SetValue(ini, "crt", "strength", mikupan_configuration.crt.strength);
     SetValue(ini, "crt", "curvature", mikupan_configuration.crt.curvature);

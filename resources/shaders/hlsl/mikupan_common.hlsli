@@ -50,7 +50,7 @@ cbuffer MikuPanUniforms : register(b0, MIKUPAN_UNIFORM_SPACE)
 
     float4 uHdrOutput; // x=paper white in output colorspace, y=usable headroom
 
-    int4 uFlags3; // x=blackWhiteTexel (gray the sampled model texel)
+    int4 uFlags3; // x=blackWhiteTexel (gray the sampled model texel), y=uiHdrOutput (UI drawn straight onto the HDR swapchain)
 };
 
 cbuffer LightBlock : register(b1, MIKUPAN_UNIFORM_SPACE)

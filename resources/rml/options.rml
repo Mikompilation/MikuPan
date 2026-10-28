@@ -1,311 +1,65 @@
 <rml>
 <head>
+    <title>Options</title>
     <link type="text/rcss" href="options.rcss"/>
 </head>
-<body id="options-root">
-    <div id="options-film-title">OPTIONS</div>
-    <div id="window">
-        <div id="classic-window-backdrop">
-            <div class="classic-window-backdrop-part left"></div>
-            <div class="classic-window-backdrop-part center"></div>
-            <div class="classic-window-backdrop-part right"></div>
+<body id="options">
+    <div id="backdrop"></div>
+    <!-- The mode select's own film strip and canister, as the options screen
+         had them on the PS2: built from the disc by mikupan_rml_save_load.cpp
+         and shared with the Load screen. -->
+    <div id="film">
+        <img id="film-strip" class="hidden" />
+        <h1 id="title">Options</h1>
+    </div>
+    <div id="frame">
+        <!-- Sections and their rows are built by mikupan_rml_options.cpp. -->
+        <div id="tabs"></div>
+        <div class="rule" id="rule-top"></div>
+        <div id="pages"></div>
+        <div class="rule" id="rule-bottom"></div>
+        <p id="help"></p>
+        <div id="prompts" class="prompts"></div>
+    </div>
+
+    <!-- Calibration and the CRT filter: a narrow panel at the side, with the
+         room left in view behind it. -->
+    <div id="panel" class="hidden">
+        <h2 id="panel-title"></h2>
+        <div class="rule"></div>
+        <div id="panel-rows"></div>
+        <div class="rule"></div>
+        <p id="panel-help"></p>
+        <div id="panel-prompts" class="prompts"></div>
+    </div>
+    <div id="levels" class="hidden">
+        <p id="levels-title">Grey Levels</p>
+        <div id="levels-strip">
+            <span class="level"></span><span class="level"></span>
+            <span class="level"></span><span class="level"></span>
+            <span class="level"></span><span class="level"></span>
+            <span class="level"></span><span class="level"></span>
+            <span class="level"></span><span class="level"></span>
+            <span class="level"></span><span class="level"></span>
+            <span class="level"></span><span class="level"></span>
+            <span class="level"></span><span class="level"></span>
         </div>
-
-        <div id="side">
-            <div id="side-title">OPTIONS</div>
-            <div id="category-list">
-                <button id="cat-display" class="category-button selected" autofocus="autofocus">Display</button>
-                <button id="cat-graphics" class="category-button">Graphics</button>
-                <button id="cat-audio" class="category-button">Audio</button>
-                <button id="cat-controls" class="category-button">Controls</button>
-                <button id="cat-advanced" class="category-button">Advanced</button>
-            </div>
-            <div id="side-actions">
-                <button id="save-return-button" class="side-action-button">Save</button>
-                <button id="cancel-options-button" class="side-action-button">Back</button>
-            </div>
-        </div>
-
-        <div id="content">
-            <div id="header">
-                <h1 id="panel-title">DISPLAY</h1>
-            </div>
-
-            <div id="page-area">
-                <div id="page-display" class="page active">
-                    <div class="setting-row">
-                        <div class="setting-copy"><label id="setting-title-window-mode" class="setting-title" for="window-mode-picker">Display Mode</label><p id="setting-desc-window-mode" class="setting-desc">Windowed or borderless fullscreen.</p></div>
-                        <div class="setting-control"><button id="window-mode-picker" class="choice-picker"><span id="window-mode-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row">
-                        <div class="setting-copy"><label id="setting-title-window-size" class="setting-title" for="window-size-picker">Windowed Resolution</label><p id="setting-desc-window-size" class="setting-desc">Window size used in Windowed mode. Fullscreen uses borderless desktop size.</p></div>
-                        <div class="setting-control"><button id="window-size-picker" class="choice-picker"><span id="window-size-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row">
-                        <div class="setting-copy"><span id="setting-title-calibration" class="setting-title">Image Calibration</span><p id="setting-desc-calibration" class="setting-desc">Open a scene preview with all image controls in one place.</p></div>
-                        <div class="setting-control"><button id="open-calibration-button">Adjust</button></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-hdr" class="setting-title" for="hdr-enabled-input">HDR Output</label><p id="setting-desc-hdr" class="setting-desc">Use extended-linear HDR presentation when the display supports it.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="hdr-enabled-input" class="checkbox" /></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-vsync" class="setting-title" for="vsync-input">VSync</label><p id="setting-desc-vsync" class="setting-desc">Synchronise presentation to the display refresh.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="vsync-input" class="checkbox" /></div>
-                    </div>
-                </div>
-
-                <div id="page-graphics" class="page hidden">
-                    <div class="setting-row">
-                        <div class="setting-copy"><label id="setting-title-resolution" class="setting-title" for="resolution-picker">Render Resolution</label><p id="setting-desc-resolution" class="setting-desc">Match the window, scale from it, or use exact PS2 multiples.</p></div>
-                        <div class="setting-control"><button id="resolution-picker" class="choice-picker"><span id="resolution-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row">
-                        <div class="setting-copy"><label id="setting-title-gpu-backend" class="setting-title" for="gpu-backend-picker">GPU Backend</label><p id="setting-desc-gpu-backend" class="setting-desc">Renderer backend selection. A restart may be required.</p><p id="active-gpu-label" class="note"></p><p id="gpu-restart-note" class="note"></p></div>
-                        <div class="setting-control"><button id="gpu-backend-picker" class="choice-picker"><span id="gpu-backend-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row">
-                        <div class="setting-copy"><label id="setting-title-msaa" class="setting-title" for="msaa-picker">MSAA</label><p id="setting-desc-msaa" class="setting-desc">Smooth geometry edges using multisampling.</p></div>
-                        <div class="setting-control"><button id="msaa-picker" class="choice-picker"><span id="msaa-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row">
-                        <div class="setting-copy"><label id="setting-title-shadow-resolution" class="setting-title" for="shadow-resolution-picker">Shadow Resolution</label><p id="setting-desc-shadow-resolution" class="setting-desc">Higher values sharpen shadows at a performance cost.</p></div>
-                        <div class="setting-control"><button id="shadow-resolution-picker" class="choice-picker"><span id="shadow-resolution-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row">
-                        <div class="setting-copy"><label id="setting-title-lighting-mode" class="setting-title" for="lighting-mode-picker">Lighting Mode</label><p id="setting-desc-lighting-mode" class="setting-desc">Modern pixel lighting or PS2-style vertex lighting.</p></div>
-                        <div class="setting-control"><button id="lighting-mode-picker" class="choice-picker"><span id="lighting-mode-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row">
-                        <div class="setting-copy"><label id="setting-title-dither-mode" class="setting-title" for="dither-mode-picker">Dither Filtering</label><p id="setting-desc-dither-mode" class="setting-desc">Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays.</p></div>
-                        <div class="setting-control"><button id="dither-mode-picker" class="choice-picker"><span id="dither-mode-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row">
-                        <div class="setting-copy"><label id="setting-title-finder-surround" class="setting-title" for="finder-surround-picker">Finder Surround</label><p id="setting-desc-finder-surround" class="setting-desc">Choose the area outside the Camera Obscura frame.</p></div>
-                        <div class="setting-control"><button id="finder-surround-picker" class="choice-picker"><span id="finder-surround-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                </div>
-
-                <div id="page-audio" class="page hidden">
-                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="master-volume-stepper"><span id="setting-title-master-volume">Master Volume</span> <span id="master-volume-value" class="value"></span></label><p id="setting-desc-master-volume" class="setting-desc">Set the overall game volume.</p></div><div class="setting-control"><button id="master-volume-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="master-volume-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div></div>
-                </div>
-                <div id="page-controls" class="page hidden">
-                    <div id="controls-movement-style">
-                        <div id="controls-section-title-movement" class="controls-section-title">Movement Style</div>
-                        <div class="controls-bind-row controls-option-row"><span id="controls-bind-label-dpad" class="controls-bind-label">D-Pad / Arrow Keys</span><button id="movement-dpad-mode" class="controls-option-button">Objective</button></div>
-                        <div class="controls-bind-row controls-option-row"><span id="controls-bind-label-stick" class="controls-bind-label">Left Stick / WASD</span><button id="movement-stick-mode" class="controls-option-button">Objective</button></div>
-                    </div>
-                    <div id="controls-viewfinder">
-                        <div id="controls-section-title-viewfinder" class="controls-section-title">Viewfinder</div>
-                        <div class="controls-bind-row controls-option-row"><span id="controls-bind-label-stick-layout" class="controls-bind-label">Stick Layout</span><button id="finder-stick-layout-mode" class="controls-option-button">Modern</button></div>
-                        <div class="controls-bind-row controls-option-row"><span id="controls-bind-label-dpad-film-swap" class="controls-bind-label">D-Pad Film Swap</span><button id="finder-dpad-film-swap-mode" class="controls-option-button">Off</button></div>
-                    </div>
-                    <div id="controls-tabs">
-                        <button id="controls-keyboard-tab" class="controls-tab selected">Keyboard / Mouse</button>
-                        <button id="controls-controller-tab" class="controls-tab">Controller</button>
-                    </div>
-                    <div id="controls-help" class="setting-desc">Select a movement style, or click a binding then press a key, mouse input, or controller input to assign.</div>
-                    <div id="controls-list"></div>
-                    <div class="setting-row compact controls-actions-row">
-                        <div class="setting-copy"><span id="setting-title-controls-reset" class="setting-title">Defaults</span><p id="setting-desc-controls-reset" class="setting-desc">Restore keyboard, mouse, and controller bindings.</p></div>
-                        <div class="setting-control"><button id="controls-reset-button">Defaults</button></div>
-                    </div>
-                </div>
-                <div id="page-advanced" class="page hidden">
-                    <div id="subsection-title-interface" class="subsection-title">Interface</div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-theme" class="setting-title" for="theme-picker">Theme</label><p id="setting-desc-theme" class="setting-desc">Use the same colour palette as the ImGui overlay.</p></div>
-                        <div class="setting-control"><button id="theme-picker" class="choice-picker"><span id="theme-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-font" class="setting-title" for="font-picker">Font</label><p id="setting-desc-font" class="setting-desc">Choose the options-menu font.</p></div>
-                        <div class="setting-control"><button id="font-picker" class="choice-picker"><span id="font-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row"><div class="setting-copy"><label class="setting-title" for="font-scale-stepper"><span id="setting-title-font-scale">Font Scale</span> <span id="font-scale-value" class="value"></span></label><p id="setting-desc-font-scale" class="setting-desc">Adjust interface text size.</p></div><div class="setting-control"><button id="font-scale-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="font-scale-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div></div>
-
-                    <div id="subsection-title-gameplay" class="subsection-title">Gameplay</div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-flashlight-style" class="setting-title" for="flashlight-style-picker">Flashlight Style</label><p id="setting-desc-flashlight-style" class="setting-desc">Choose the original PS2 light, the simpler Xbox light, or disable it.</p></div>
-                        <div class="setting-control"><button id="flashlight-style-picker" class="choice-picker"><span id="flashlight-style-choice" class="choice-text"></span><span class="picker-arrow"><span class="picker-arrow-shape"></span></span></button></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-number-door-fix-localization" class="setting-title" for="number-door-fix-localization-input">Fix Number Door Localization</label><p id="setting-desc-number-door-fix-localization" class="setting-desc">Use clockwise numerical ordering and show inset numbers over the original kanji buttons.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="number-door-fix-localization-input" class="checkbox" /></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-keep-finder-raised" class="setting-title" for="keep-finder-raised-input">Keep Finder Raised</label><p id="setting-desc-keep-finder-raised" class="setting-desc">Do not lower the Camera Obscura when an apparition event begins.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="keep-finder-raised-input" class="checkbox" /></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-minimap" class="setting-title" for="minimap-enabled-input">Mini Map</label><p id="setting-desc-minimap" class="setting-desc">Show the corner map while exploring.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="minimap-enabled-input" class="checkbox" /></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-album-photo-png-export" class="setting-title" for="album-photo-png-export-input">Save Album Photos as PNG</label><p id="setting-desc-album-photo-png-export" class="setting-desc">Also write album photos as PNG files next to the game.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="album-photo-png-export-input" class="checkbox" /></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-cursor-auto-hide" class="setting-title" for="cursor-auto-hide-input">Auto-hide Cursor</label><p id="setting-desc-cursor-auto-hide" class="setting-desc">Hide the mouse cursor after 5 seconds of inactivity.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="cursor-auto-hide-input" class="checkbox" /></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-quick-film-swap" class="setting-title" for="finder-dpad-film-swap-input">Quick Film Swap</label><p id="setting-desc-quick-film-swap" class="setting-desc">Use D-Pad Up / Down in finder mode to switch film.<br />D-Pad finder aim is disabled while enabled.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="finder-dpad-film-swap-input" class="checkbox" /></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-mirror-stone" class="setting-title" for="mirror-stone-hud-input">Mirror Stone Indicator</label><p id="setting-desc-mirror-stone" class="setting-desc">Show a Mirror Stone icon next to the filament.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="mirror-stone-hud-input" class="checkbox" /></div>
-                    </div>
-                    <div class="setting-row compact">
-                        <div class="setting-copy"><label id="setting-title-improved-collisions" class="setting-title" for="improved-movement-collisions-input">Improved Movement Collisions</label><p id="setting-desc-improved-collisions" class="setting-desc">Uses an improved movement collision method to reduce snagging.</p></div>
-                        <div class="setting-control checkbox-control"><input type="checkbox" id="improved-movement-collisions-input" class="checkbox" /></div>
-                    </div>
-
-                    <div id="subsection-title-video-filters" class="subsection-title">Video Filters</div>
-                    <div class="setting-row compact"><div class="setting-copy"><label id="setting-title-crt" class="setting-title" for="open-crt-button">CRT Filter</label><p id="setting-desc-crt" class="setting-desc">Open the CRT post-process tuning panel.</p></div><div class="setting-control"><button id="open-crt-button">Adjust</button></div></div>
-
-                    <div id="subsection-title-files" class="subsection-title">Files</div>
-                    <div class="setting-row"><div class="setting-copy"><label id="setting-title-data-folder" class="setting-title" for="data-folder-input">Data Folder</label><p id="setting-desc-data-folder" class="setting-desc">Folder containing extracted MikuPan game data.</p></div><div class="setting-control wide-control"><input type="text" id="data-folder-input" class="text" /><button id="browse-folder-button">Browse</button></div></div>
-                </div>
-            </div>
-
-        </div>
-
-        <div id="ritual-overlay">
-            <div id="ritual-edge-top">
-                <div class="classic-edge-part left"></div>
-                <div class="classic-edge-part center"></div>
-                <div class="classic-edge-part right"></div>
-            </div>
-            <div id="ritual-edge-bottom">
-                <div class="classic-edge-part left"></div>
-                <div class="classic-edge-part center"></div>
-                <div class="classic-edge-part right"></div>
-            </div>
-            <div id="ritual-edge-left"></div>
-            <div id="ritual-edge-right"></div>
-            <div id="ritual-corner-tl" class="ritual-corner"></div>
-            <div id="ritual-corner-tr" class="ritual-corner"></div>
-            <div id="ritual-corner-bl" class="ritual-corner"></div>
-            <div id="ritual-corner-br" class="ritual-corner"></div>
-            <div id="ritual-scratch-a" class="ritual-scratch"></div>
-            <div id="ritual-scratch-b" class="ritual-scratch"></div>
-            <div id="ritual-scratch-c" class="ritual-scratch"></div>
-            <div id="ritual-speck-a" class="ritual-speck"></div>
-            <div id="ritual-speck-b" class="ritual-speck"></div>
-            <div id="ritual-speck-c" class="ritual-speck"></div>
-        </div>
-
-        <div id="confirm-save-modal" class="modal hidden">
-            <div id="confirm-save-card">
-                <div id="confirm-save-title">Save Changes?</div>
-                <div id="confirm-save-text">Unsaved settings remain.</div>
-                <div id="confirm-save-buttons">
-                    <button id="save-changes-yes-button">Yes</button>
-                    <button id="save-changes-no-button">No</button>
-                    <button id="save-changes-cancel-button">Cancel</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="choice-picker-modal" class="modal hidden">
-            <div id="choice-picker-card">
-                <div id="choice-picker-title">Select</div>
-                <div id="choice-picker-list"></div>
-                <div id="choice-picker-help">Up / Down to choose. Confirm applies. Back cancels.</div>
-                <div id="choice-picker-buttons">
-                    <button id="choice-picker-apply-button">Apply</button>
-                    <button id="choice-picker-cancel-button">Cancel</button>
-                </div>
-            </div>
-        </div>
-
-
-
-        <div id="binding-capture-modal" class="modal hidden">
-            <div id="binding-capture-card">
-                <div id="binding-capture-title">Bind Control</div>
-                <div id="binding-capture-text">Press input...</div>
-                <div id="binding-capture-help"><span id="binding-capture-help-prefix">Times out in </span><span id="binding-capture-countdown">5</span><span id="binding-capture-help-suffix"> seconds.</span></div>
-            </div>
-        </div>
-
-        <div id="resolution-confirm-modal" class="modal hidden">
-            <div id="resolution-confirm-card">
-                <div id="resolution-confirm-title">Keep this display setting?</div>
-                <div id="resolution-confirm-text"><span id="resolution-confirm-text-prefix">Reverting in </span><span id="resolution-confirm-countdown">15</span><span id="resolution-confirm-text-suffix"> seconds</span></div>
-                <div id="resolution-confirm-buttons">
-                    <button id="resolution-keep-button">Yes</button>
-                    <button id="resolution-revert-button">No</button>
-                </div>
-            </div>
+        <div id="levels-labels">
+            <span id="levels-black">Black</span>
+            <span id="levels-white">White</span>
         </div>
     </div>
 
-    <div id="calibration-panel" class="calibration-panel hidden">
-        <div id="calibration-title">Image Calibration</div>
-        <div class="calibration-row"><label for="calibration-brightness-stepper"><span id="calibration-label-brightness">Brightness</span> <span id="calibration-brightness-value" class="value"></span></label><button id="calibration-brightness-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-brightness-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="calibration-row"><label for="calibration-gamma-stepper"><span id="calibration-label-gamma">Gamma</span> <span id="calibration-gamma-value" class="value"></span></label><button id="calibration-gamma-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-gamma-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="calibration-row"><label for="calibration-contrast-stepper"><span id="calibration-label-contrast">Contrast</span> <span id="calibration-contrast-value" class="value"></span></label><button id="calibration-contrast-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-contrast-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="calibration-row"><label for="calibration-shadow-depth-stepper"><span id="calibration-label-shadow-depth">Shadow Depth</span> <span id="calibration-shadow-depth-value" class="value"></span></label><button id="calibration-shadow-depth-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-shadow-depth-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="calibration-row compact"><label id="calibration-label-hdr" for="calibration-hdr-enabled-input">HDR Output</label><input type="checkbox" id="calibration-hdr-enabled-input" class="checkbox" /></div>
-        <div class="calibration-row"><label for="calibration-hdr-paper-white-stepper"><span id="calibration-label-paper-white">Paper White</span> <span id="calibration-hdr-paper-white-value" class="value"></span></label><button id="calibration-hdr-paper-white-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-hdr-paper-white-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="calibration-row"><label for="calibration-hdr-peak-luminance-stepper"><span id="calibration-label-peak">Peak</span> <span id="calibration-hdr-peak-luminance-value" class="value"></span></label><button id="calibration-hdr-peak-luminance-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="calibration-hdr-peak-luminance-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div id="calibration-actions">
-            <button id="calibration-reset-button">Reset</button>
-            <button id="calibration-ok-button">OK</button>
-            <button id="calibration-back-button">Back</button>
+    <!-- Yes / No, the display countdown, and binding capture. -->
+    <div id="confirm" class="hidden">
+        <div id="confirm-box">
+            <p id="confirm-text"></p>
+            <p id="confirm-note"></p>
+            <div id="confirm-choices">
+                <span id="confirm-yes" class="confirm-choice">Yes</span>
+                <span id="confirm-no" class="confirm-choice">No</span>
+            </div>
         </div>
-    </div>
-
-
-    <div id="crt-panel" class="crt-panel hidden">
-        <div id="crt-title">CRT Filter</div>
-        <div class="crt-row compact"><label id="crt-label-enable" for="crt-enabled-input">Enable</label><input type="checkbox" id="crt-enabled-input" class="checkbox" /></div>
-        <div class="crt-row"><label for="crt-0-stepper"><span id="crt-label-0">Strength</span> <span id="crt-0-value" class="value"></span></label><button id="crt-0-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-0-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-1-stepper"><span id="crt-label-1">Curvature</span> <span id="crt-1-value" class="value"></span></label><button id="crt-1-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-1-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-2-stepper"><span id="crt-label-2">Overscan</span> <span id="crt-2-value" class="value"></span></label><button id="crt-2-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-2-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-3-stepper"><span id="crt-label-3">Scanlines</span> <span id="crt-3-value" class="value"></span></label><button id="crt-3-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-3-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-4-stepper"><span id="crt-label-4">Scanline Scale</span> <span id="crt-4-value" class="value"></span></label><button id="crt-4-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-4-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-5-stepper"><span id="crt-label-5">Scanline Thickness</span> <span id="crt-5-value" class="value"></span></label><button id="crt-5-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-5-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-6-stepper"><span id="crt-label-6">Mask</span> <span id="crt-6-value" class="value"></span></label><button id="crt-6-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-6-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-7-stepper"><span id="crt-label-7">Mask Scale</span> <span id="crt-7-value" class="value"></span></label><button id="crt-7-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-7-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-8-stepper"><span id="crt-label-8">Vignette</span> <span id="crt-8-value" class="value"></span></label><button id="crt-8-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-8-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-9-stepper"><span id="crt-label-9">Vignette Size</span> <span id="crt-9-value" class="value"></span></label><button id="crt-9-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-9-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-10-stepper"><span id="crt-label-10">Chroma Offset</span> <span id="crt-10-value" class="value"></span></label><button id="crt-10-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-10-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-11-stepper"><span id="crt-label-11">Blend</span> <span id="crt-11-value" class="value"></span></label><button id="crt-11-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-11-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-12-stepper"><span id="crt-label-12">Blend Radius</span> <span id="crt-12-value" class="value"></span></label><button id="crt-12-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-12-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-13-stepper"><span id="crt-label-13">Noise</span> <span id="crt-13-value" class="value"></span></label><button id="crt-13-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-13-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-14-stepper"><span id="crt-label-14">Flicker</span> <span id="crt-14-value" class="value"></span></label><button id="crt-14-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-14-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div class="crt-row"><label for="crt-15-stepper"><span id="crt-label-15">Glow</span> <span id="crt-15-value" class="value"></span></label><button id="crt-15-stepper" class="stepper-control"><span class="stepper-edge stepper-left">&lt;</span><span id="crt-15-bars" class="stepper-bars"></span><span class="stepper-edge stepper-right">&gt;</span></button></div>
-        <div id="crt-actions">
-            <button id="reset-crt-button">Reset</button>
-            <button id="crt-ok-button">OK</button>
-            <button id="crt-back-button">Back</button>
-        </div>
-    </div>
-
-    <div id="calibration-level-panel" class="calibration-level-panel hidden">
-        <div id="calibration-level-title">Grey Levels</div>
-        <div id="calibration-level-strip">
-            <span id="calibration-level-0" class="calibration-level-swatch"></span>
-            <span id="calibration-level-1" class="calibration-level-swatch"></span>
-            <span id="calibration-level-2" class="calibration-level-swatch"></span>
-            <span id="calibration-level-3" class="calibration-level-swatch"></span>
-            <span id="calibration-level-4" class="calibration-level-swatch"></span>
-            <span id="calibration-level-5" class="calibration-level-swatch"></span>
-            <span id="calibration-level-6" class="calibration-level-swatch"></span>
-            <span id="calibration-level-7" class="calibration-level-swatch"></span>
-            <span id="calibration-level-8" class="calibration-level-swatch"></span>
-            <span id="calibration-level-9" class="calibration-level-swatch"></span>
-            <span id="calibration-level-10" class="calibration-level-swatch"></span>
-            <span id="calibration-level-11" class="calibration-level-swatch"></span>
-            <span id="calibration-level-12" class="calibration-level-swatch"></span>
-            <span id="calibration-level-13" class="calibration-level-swatch"></span>
-            <span id="calibration-level-14" class="calibration-level-swatch"></span>
-            <span id="calibration-level-15" class="calibration-level-swatch"></span>
-        </div>
-        <div id="calibration-level-labels"><span id="calibration-level-label-black">BLACK</span><span id="calibration-level-label-white">WHITE</span></div>
     </div>
 </body>
 </rml>

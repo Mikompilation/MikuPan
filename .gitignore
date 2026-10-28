@@ -34,3 +34,4 @@ cmake-build-android-*/
 /resources/shaders/msl
 /resources/shaders/dxil
 /tools/sgdstitch/.vs
+/.claude

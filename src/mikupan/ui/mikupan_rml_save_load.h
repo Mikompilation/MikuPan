@@ -30,6 +30,10 @@ int MikuPan_RmlSaveLoadHandleCancel(void);
 int MikuPan_RmlSaveLoadConsumeResult(void);
 void MikuPan_RmlSaveLoadCapturePreview(void);
 void MikuPan_RmlSaveLoadApplyLanguage(int language);
+/* The mode select's film strip and canister, built from the disc into the
+ * user folder the first time it is asked for.  An RmlUi image source once it
+ * is ready, "" until then (or if the data has none). */
+const char* MikuPan_RmlFilmHeaderSource(void);
 
 #ifdef __cplusplus
 }
