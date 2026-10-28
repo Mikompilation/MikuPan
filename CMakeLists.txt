@@ -490,7 +490,6 @@ target_link_libraries(MikuPan PRIVATE
         spdlog::spdlog
         cglm
         ${MIKUPAN_FFMPEG_LIBS}
-        xxHash::xxhash
         inipp::inipp
 )
 
