@@ -30,6 +30,12 @@ static inline void MikuPan_CheckPointDepthKeyed(PP_JUDGE *ppj, int kind,
         GetCamI2DPos(ppj->p[i], &tx, &ty);
         visible = MikuPan_GPUDepthQueryPointVisibleWorldScreenQueued(
             kind, object_id, point_base + i, ppj->p[i], tx, ty);
+        if (visible == MIKUPAN_GPU_DEPTH_QUERY_PENDING)
+        {
+            // No completed GPU result yet; GS shadow memory is not live GPU depth.
+            ppj->result[i] = 0;
+            continue;
+        }
         if (visible < 0)
         {
             CheckPointDepth(ppj);

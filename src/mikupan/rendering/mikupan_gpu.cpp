@@ -9,6 +9,7 @@
 #include "SDL3/SDL_properties.h"
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #define MIKUPAN_GPU_MAX_BUFFERS 8192
 #define MIKUPAN_GPU_MAX_TEXTURES 8192
@@ -329,6 +330,7 @@ struct MikuPanDepthQueryPendingEntry
     MikuPanDepthQueryKey key;
     SDL_GPUTransferBuffer *transfer;
     unsigned int byte_count;
+    unsigned int marker_id;
 };
 
 struct MikuPanDepthQueryPendingBatch
@@ -336,6 +338,7 @@ struct MikuPanDepthQueryPendingBatch
     int active;
     int count;
     SDL_GPUFence *fence;
+    Uint64 submitted_frame;
     MikuPanDepthQueryPendingEntry entries[MIKUPAN_DEPTH_QUERY_MAX_REQUESTS];
 };
 
@@ -1355,7 +1358,7 @@ static void SetDepthQueryCache(const MikuPanDepthQueryKey *key, int visible,
         entry = AllocDepthQueryCache(key);
     }
 
-    if (entry != NULL)
+    if (entry != NULL && frame >= entry->frame)
     {
         entry->visible = visible != 0;
         entry->frame = frame;
@@ -1367,12 +1370,12 @@ static int GetDepthQueryCacheResult(const MikuPanDepthQueryKey *key)
     MikuPanDepthQueryCacheEntry *entry = FindDepthQueryCache(key);
     if (entry == NULL)
     {
-        return 0;
+        return MIKUPAN_GPU_DEPTH_QUERY_PENDING;
     }
 
     if (g_gpu_frame - entry->frame > MIKUPAN_DEPTH_QUERY_CACHE_MAX_AGE)
     {
-        return 0;
+        return MIKUPAN_GPU_DEPTH_QUERY_PENDING;
     }
 
     return entry->visible != 0;
@@ -1417,24 +1420,58 @@ static void ReleaseDepthQueryPendingBatch(MikuPanDepthQueryPendingBatch *batch)
     memset(batch, 0, sizeof(*batch));
 }
 
+// MSAA resolves scale RGB and alpha by coverage; decode their ratio.
+static unsigned int DepthQueryMarkerId(const unsigned char *pixel)
+{
+    const unsigned int alpha = pixel[3];
+    if (alpha == 0)
+    {
+        return MIKUPAN_DEPTH_QUERY_MAX_REQUESTS;
+    }
+    unsigned int id = 0;
+    for (unsigned int channel = 0; channel < 3; channel++)
+    {
+        const unsigned int level = (pixel[channel] * 3u + alpha / 2u) / alpha;
+        if (level > 3u)
+        {
+            return MIKUPAN_DEPTH_QUERY_MAX_REQUESTS;
+        }
+        id |= level << (channel * 2u);
+    }
+    return id;
+}
+
+static void DepthQueryReportFailure(const char *reason)
+{
+    static Uint64 last_frame = 0;
+    static int reported = 0;
+    if (!reported || g_gpu_frame - last_frame >= 120)
+    {
+        info_log("GPU depth query: %s; no new visibility result", reason);
+        last_frame = g_gpu_frame;
+        reported = 1;
+    }
+}
+
 static int DepthQueryTransferVisible(const MikuPanDepthQueryPendingEntry *entry)
 {
-    int visible = 0;
+    int visible = -1;
 
     if (entry == NULL || entry->transfer == NULL || entry->byte_count == 0)
     {
-        return 0;
+        return -1;
     }
 
     void *mapped = SDL_MapGPUTransferBuffer(g_device, entry->transfer, false);
     if (mapped != NULL)
     {
+        visible = 0;
         const unsigned char *bytes = (const unsigned char *)mapped;
         const unsigned int count = entry->byte_count / 4u;
         for (unsigned int i = 0; i < count; i++)
         {
             const unsigned char *p = &bytes[i * 4u];
-            if (p[0] != 0 || p[1] != 0 || p[2] != 0 || p[3] != 0)
+            if (DepthQueryMarkerId(p) == entry->marker_id)
             {
                 visible = 1;
                 break;
@@ -1466,9 +1503,15 @@ static void PollDepthQueryPendingBatches(void)
             MikuPanDepthQueryPendingEntry *entry = &batch->entries[j];
             if (entry->active)
             {
-                SetDepthQueryCache(&entry->key,
-                                    DepthQueryTransferVisible(entry),
-                                    g_gpu_frame);
+                const int visible = DepthQueryTransferVisible(entry);
+                if (visible >= 0)
+                {
+                    SetDepthQueryCache(&entry->key, visible, batch->submitted_frame);
+                }
+                else
+                {
+                    DepthQueryReportFailure("readback mapping failed");
+                }
             }
         }
 
@@ -2408,7 +2451,8 @@ static int DepthQueryQueuedIndex(const MikuPanDepthQueryKey *key)
 
 static int AddDepthQueryDownload(MikuPanDepthQueryPendingBatch *batch,
                                  const MikuPanDepthQueryKey *key,
-                                 float screen_x, float screen_y)
+                                 float screen_x, float screen_y,
+                                 unsigned int marker_id)
 {
     GPUTextureEntry *entry = TextureEntry(g_depth_query_texture_id);
     if (batch == NULL
@@ -2496,7 +2540,31 @@ static int AddDepthQueryDownload(MikuPanDepthQueryPendingBatch *batch,
     pending->key = *key;
     pending->transfer = transfer;
     pending->byte_count = byte_count;
+    pending->marker_id = marker_id;
     return 1;
+}
+
+static int DepthQuerySelectGroup(int count, const float *x, const float *y,
+                                 const int *rendered, const int *representative,
+                                 int *group)
+{
+    int group_count = 0;
+    for (int i = 0; i < count; i++)
+    {
+        if (rendered[i] || representative[i] != i) continue;
+        int overlaps = 0;
+        for (int j = 0; j < group_count; j++)
+        {
+            const int other = group[j];
+            if (fabsf(x[i] - x[other]) < 2.0f && fabsf(y[i] - y[other]) < 2.0f)
+            {
+                overlaps = 1;
+                break;
+            }
+        }
+        if (!overlaps) group[group_count++] = i;
+    }
+    return group_count;
 }
 
 static void FlushDepthQueryQueuedRequests(void)
@@ -2509,6 +2577,7 @@ static void FlushDepthQueryQueuedRequests(void)
 
     if (!EnsureDepthQueryTargets())
     {
+        DepthQueryReportFailure("target allocation failed");
         g_depth_query_request_count = 0;
         return;
     }
@@ -2516,9 +2585,12 @@ static void FlushDepthQueryQueuedRequests(void)
     MikuPanDepthQueryPendingBatch *batch = AllocDepthQueryPendingBatch();
     if (batch == NULL)
     {
+        DepthQueryReportFailure("pending batch limit reached");
         g_depth_query_request_count = 0;
         return;
     }
+
+    batch->submitted_frame = g_gpu_frame;
 
     GPURenderState saved_state = g_state;
     unsigned int saved_vao = g_bound_vao;
@@ -2596,15 +2668,6 @@ static void FlushDepthQueryQueuedRequests(void)
                             (unsigned int)(sizeof(float) * 4 * draw_count),
                             positions);
 
-    BeginDepthQueryPass();
-    if (g_pass == NULL)
-    {
-        ReleaseDepthQueryPendingBatch(batch);
-        RestoreSceneTargetAfterDepthQuery();
-        RestoreDepthQueryGpuState(&saved_state, saved_vao, saved_shader);
-        return;
-    }
-
     float identity[16] = {
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f, 0.0f,
@@ -2615,22 +2678,71 @@ static void FlushDepthQueryQueuedRequests(void)
     memcpy(g_uniforms.view, (float *)WorldView, sizeof(g_uniforms.view));
     memcpy(g_uniforms.projection, (float *)projection,
            sizeof(g_uniforms.projection));
-    float query_color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    memcpy(g_uniforms.uColor, query_color, sizeof(g_uniforms.uColor));
-    g_vertex_uniform_dirty = 1;
-    g_fragment_uniform_dirty = 1;
-
-    MikuPan_GPUSetRenderState3D();
-    MikuPan_GPUSetDepthWrite(0);
-    MikuPan_GPUSetBlendMode(0, MIKUPAN_GPU_BLEND_NORMAL);
-    MikuPan_GPUSetCullNone();
-
-    MikuPan_GPUDrawArrays(GL_POINTS, 0, draw_count);
-    MikuPan_GPUFlushRenderPass();
-
+    // IDs distinguish nearby markers. Overlapping raster footprints need separate passes.
+    int rendered[MIKUPAN_DEPTH_QUERY_MAX_REQUESTS] = {};
+    int representative[MIKUPAN_DEPTH_QUERY_MAX_REQUESTS];
+    int remaining = 0;
     for (int i = 0; i < draw_count; i++)
     {
-        AddDepthQueryDownload(batch, &keys[i], marker_x[i], marker_y[i]);
+        representative[i] = i;
+        for (int j = 0; j < i; j++)
+        {
+            if (memcmp(positions[i], positions[j], sizeof(positions[i])) == 0)
+            {
+                representative[i] = representative[j];
+                break;
+            }
+        }
+        if (representative[i] == i) remaining++;
+    }
+    while (remaining > 0)
+    {
+        int group[MIKUPAN_DEPTH_QUERY_MAX_REQUESTS];
+        const int group_count = DepthQuerySelectGroup(
+            draw_count, marker_x, marker_y, rendered, representative, group);
+
+        BeginDepthQueryPass();
+        if (g_pass == NULL)
+        {
+            DepthQueryReportFailure("render pass failed");
+            break;
+        }
+        MikuPan_GPUSetRenderState3D();
+        MikuPan_GPUSetDepthWrite(0);
+        MikuPan_GPUSetBlendMode(0, MIKUPAN_GPU_BLEND_NORMAL);
+        MikuPan_GPUSetCullNone();
+
+        for (int j = 0; j < group_count; j++)
+        {
+            const int i = group[j];
+            const float query_color[4] = {
+                (float)(i & 3) / 3.0f,
+                (float)((i >> 2) & 3) / 3.0f,
+                (float)((i >> 4) & 3) / 3.0f, 1.0f,
+            };
+            memcpy(g_uniforms.uColor, query_color, sizeof(query_color));
+            g_vertex_uniform_dirty = 1;
+            g_fragment_uniform_dirty = 1;
+            MikuPan_GPUDrawArrays(GL_POINTS, i, 1);
+            rendered[i] = 1;
+            remaining--;
+        }
+        MikuPan_GPUFlushRenderPass();
+        for (int j = 0; j < group_count; j++)
+        {
+            const int marker = group[j];
+            for (int i = 0; i < draw_count; i++)
+            {
+                if (representative[i] == marker)
+                {
+                    if (!AddDepthQueryDownload(batch, &keys[i], marker_x[i], marker_y[i],
+                                               (unsigned int)marker))
+                    {
+                        DepthQueryReportFailure("readback scheduling failed");
+                    }
+                }
+            }
+        }
     }
 
     RestoreSceneTargetAfterDepthQuery();
@@ -2686,6 +2798,11 @@ int MikuPan_GPUDepthQueryPointVisibleWorldScreenQueued(int kind,
         request->world_pos[3] = 1.0f;
         request->screen_x = screen_x;
         request->screen_y = screen_y;
+    }
+
+    else
+    {
+        DepthQueryReportFailure("request limit reached");
     }
 
     return visible;

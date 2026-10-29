@@ -208,6 +208,8 @@ int MikuPan_GPUDepthQueryPointVisibleWorld(const float world_pos[4]);
 int MikuPan_GPUDepthQueryPointVisibleWorldScreen(const float world_pos[4],
                                                  float screen_x,
                                                  float screen_y);
+// Pending asynchronous results are distinct from tested occlusion (0).
+#define MIKUPAN_GPU_DEPTH_QUERY_PENDING (-2)
 int MikuPan_GPUDepthQueryPointVisibleWorldScreenQueued(int kind,
                                                        int object_id,
                                                        int point_index,
