@@ -1355,12 +1355,15 @@ int MikuPan_ReadController(unsigned char *rdata)
     const int stick_center = 127;
     const bool *key_states = SDL_GetKeyboardState(NULL);
     int pressed_buttons[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {};
+    unsigned char pressure[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {};
+    int physical_down[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {};
 
     /* Buttons: OR the two sources per logical button, then flip the bit once.
      * XOR-ing per source would cancel out when both press the same button. */
     for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
     {
         int pressed = 0;
+        int strength = 0;
 
         if (mikupan_gamepad != NULL)
         {
@@ -1369,18 +1372,23 @@ int MikuPan_ReadController(unsigned char *rdata)
                 case MIKUPAN_CONTROLLER_BIND_BUTTON:
                     pressed = SDL_GetGamepadButton(
                         mikupan_gamepad, (SDL_GamepadButton) mikupan_controller_map[i].code);
+                    strength = pressed ? 255 : 0;
                     break;
                 case MIKUPAN_CONTROLLER_BIND_AXIS:
-                    pressed = SDL_GetGamepadAxis(
-                                  mikupan_gamepad, (SDL_GamepadAxis) mikupan_controller_map[i].code)
-                              != 0;
+                {
+                    int value = SDL_GetGamepadAxis(mikupan_gamepad,
+                        (SDL_GamepadAxis)mikupan_controller_map[i].code);
+                    if (value < 0) value = -value;
+                    pressed = value != 0;
+                    strength = value >= 32767 ? 255 : value * 255 / 32767;
                     break;
+                }
                 default:
                     break;
             }
         }
 
-        if (!pressed && key_states != NULL)
+        if (key_states != NULL)
         {
             int sc = mikupan_keyboard_map[i];
             if (sc >= 0 && sc < SDL_SCANCODE_COUNT
@@ -1388,9 +1396,12 @@ int MikuPan_ReadController(unsigned char *rdata)
                 && key_states[sc])
             {
                 pressed = 1;
+                strength = 255;
             }
         }
 
+        pressure[i] = (unsigned char)strength;
+        physical_down[i] = pressed;
         pressed_buttons[i] = pressed;
     }
 
@@ -1407,6 +1418,8 @@ int MikuPan_ReadController(unsigned char *rdata)
     {
         pressed_buttons[1] = 0;
         pressed_buttons[3] = 1;
+        pressure[1] = 0;
+        pressure[3] = 255;
     }
 
     for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
@@ -1416,7 +1429,17 @@ int MikuPan_ReadController(unsigned char *rdata)
             pressed_buttons[i] = 1;
             legacy_mouse_queued_buttons[i] = 0;
             legacy_mouse_delivery_active = 1;
+            pressure[i] = 255;
         }
+    }
+
+    // DS2 pressure order: right, left, up, down, triangle, circle, cross, square, L1, R1, L2, R2.
+    const int pressure_buttons[12] = {7, 6, 4, 5, 0, 3, 1, 2, 15, 12, 13, 14};
+    for (int i = 0; i < 12; ++i)
+    {
+        const int button = pressure_buttons[i];
+        rdata[8 + i] = !pressed_buttons[button] ? 0
+            : !physical_down[button] ? 255 : pressure[button];
     }
 
     for (int i = 0; i < MIKUPAN_CONTROLLER_LOGICAL_COUNT; i++)
