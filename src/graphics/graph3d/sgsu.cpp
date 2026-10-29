@@ -861,7 +861,7 @@ u_int *SetVUVNDataPost(u_int *prim, int allow_gpu_skin)
 
     switch (vh->vtype)
     {
-        case 2:
+        case VUPROG_SG_PRESET2:
             if (lphead->pWeightedList != 0)
             {
                 if (!SkinTryGpuWeighted(prim, vh->vnum, 2, allow_gpu_skin))
@@ -875,7 +875,7 @@ u_int *SetVUVNDataPost(u_int *prim, int allow_gpu_skin)
             }
             break;
 
-        case 3:
+        case VUPROG_SG_SHADOW:
             if (lphead->pWeightedList != 0)
             {
                 if (!SkinTryGpuWeighted(prim, vh->vnum, 3, allow_gpu_skin))
@@ -917,7 +917,7 @@ void SetVUMeshData(u_int *prim)
 
     switch (mtype & (0x1 | 0x2 | 0x10 | 0x40 | 0x80))// 0xd3
     {
-        case 0:
+        case VUPROG_SG:
             read_p = SetVUVNData(vuvnprim);
 
             read_p[0] = 0x14000000 | ((u_int) DRAWTYPE0 >> 3);
@@ -929,7 +929,7 @@ void SetVUMeshData(u_int *prim)
             AppendDmaBuffer(((u_char *) vuvnprim)[12]);
             FlushModel(0);
             break;
-        case 2:
+        case VUPROG_SG_PRESET2:
             read_p = SetVUVNData(vuvnprim);
             MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER*)vuvnprim, (SGDPROCUNITHEADER*)prim, (float*)read_p);
 
@@ -1004,7 +1004,7 @@ void SetVUMeshDataPost(u_int *prim)
 
     switch (mtype & (0x1 | 0x2 | 0x10 | 0x40))// 0x53
     {
-        case 0:
+        case VUPROG_SG:
             read_p = SetVUVNDataPost(vuvnprim, 0);
 
             //MikuPan_RenderMeshType0x2((SGDPROCUNITHEADER*)vuvnprim, (SGDPROCUNITHEADER*)prim, (float*)read_p);
@@ -1018,7 +1018,7 @@ void SetVUMeshDataPost(u_int *prim)
             AppendDmaBuffer(((u_char *) vuvnprim)[12]);
             FlushModel(0);
             break;
-        case 2:
+        case VUPROG_SG_PRESET2:
             read_p = SetVUVNDataPost(vuvnprim, SkinAllowedForMeshType(mtype));
 
             /// Needs to be its own function since the actual type is 0x10
@@ -1096,13 +1096,13 @@ void SgSortUnitPrim(u_int *prim)
     {
         switch (prim[1])
         {
-            case 0:
+            case VUPROG_SG:
                 vuvnprim = prim;
                 break;
-            case 1:
+            case VUPROG_SG_PRESET0:
                 SetVUMeshData(prim);
                 break;
-            case 2:
+            case VUPROG_SG_PRESET2:
                 SetMaterialDataVU(prim);
                 break;
             case 4:
@@ -1141,16 +1141,16 @@ void SgSortUnitPrimPost(u_int *prim)
     {
         switch (prim[1])
         {
-            case 0:
+            case VUPROG_SG:
                 vuvnprim = prim;
                 break;
-            case 1:
+            case VUPROG_SG_PRESET0:
                 SetVUMeshDataPost(prim);
                 break;
-            case 2:
+            case VUPROG_SG_PRESET2:
                 SetMaterialDataVU(prim);
                 break;
-            case 3:
+            case VUPROG_SG_SHADOW:
                 SetMaterialPointerCoordVU();
                 SetCoordData(prim);
 

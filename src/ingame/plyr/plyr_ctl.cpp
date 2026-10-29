@@ -874,7 +874,7 @@ void PlyrDmgCtrl()
 
     switch (dmg_step)
     {
-    case 0:
+    case PMODE_NORMAL:
         if (avoid_chk != 0)
         {
             plyr_wrk.dwalk_tm = 0;
@@ -1551,7 +1551,7 @@ void PlyrSubAtkChk()
 
             switch(cam_custom_wrk.set_sub)
             {
-            case 0:
+            case PMODE_NORMAL:
                 hit = PSAchk0();
             break;
             case 1:
@@ -1980,7 +1980,7 @@ void PlyrPhotoChk()
         case 9:
             SeStartFix(SE_SPOUT_MDL, 0, 0x1000, 0x1000, 0);
         break;
-        case 10:
+        case PMODE_ANIME:
         case 11:
         case 12:
             SeStartFix(SE_SPOUT_HI, 0, 0x1000, 0x1000, 0);
@@ -2146,7 +2146,7 @@ void PlyrChargeCtrl(u_char req, ENE_WRK *ew)
             plyr_wrk.charge_num = 12;
         }
     break;
-    case 0:
+    case PMODE_NORMAL:
         cn = ini_charge_tbl[plyr_wrk.film_no];
 
         if (cam_custom_wrk.set_spe == 4)
@@ -2630,7 +2630,7 @@ void PhotoPointCulcEne(ENE_WRK *ew, PHOTO_WRK *pw)
 
     switch (ew->type)
     {
-    case 0:
+    case PMODE_NORMAL:
     case 1:
         sw->dmg = ew->dmg;
 
@@ -3739,7 +3739,7 @@ void PlyrSpecialMoveChk(sceVu0FVECTOR mv)
                 RotLimitChk(&plyr_wrk.move_box.rot[1]);
             }
         break;
-        case 10:
+        case PMODE_ANIME:
             plyr_wrk.mvsta |= 0x10000;
         break;
         case 11:
@@ -5009,7 +5009,7 @@ float GetEnePowerDegree()
         return -1.0f;
     }
 
-    if (plyr_wrk.mode == 1)
+    if (plyr_wrk.mode == PMODE_FINDER)
     {
         dist[0] = 0.0f;
         ew = ene_wrk;
@@ -5431,7 +5431,7 @@ int GetFurnHintPos(FURN_WRK *fw, sceVu0FVECTOR tv, u_int *fsta)
 
     result = 0;
 
-    if (fw->use != 0  && fw->use != 2)
+    if (fw->use != FURN_USER_NOW_ROOM  && fw->use != FURN_USER_NEXT_ROOM)
     {
         return 0;
     }
@@ -5636,7 +5636,7 @@ u_char NeckTargetDoorChk(sceVu0FVECTOR p)
 
     for (i = 0; i < 20; i++)
     {
-        if (door_wrk[i].use == 1 || door_wrk[i].use == 3 || door_wrk[i].use == 4)
+        if (door_wrk[i].use == FURN_USER_DOOR_NOW_ROOM || door_wrk[i].use == FURN_USER_DOOR_NEXT_ROOM || door_wrk[i].use == FURN_USER_DOOR_JOINT)
         {
             if ((door_keep[door_wrk[i].door_id].attr & 0x8000) == 0)
             {
@@ -5729,7 +5729,7 @@ void PlayerWarpReq(u_char dat_no)
     ingame_wrk.stts |= 0x80;
 
     pwarp_wrk.time = 32;
-    pwarp_wrk.mode = 1;
+    pwarp_wrk.mode = PWARP_MODE_IN_REQ;
     pwarp_wrk.req_no = dat_no;
 
     SetBlackOut2(32);

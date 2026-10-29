@@ -166,10 +166,10 @@ void SceneTestMain()
     case 1:
         SceneTestSelect();
     break;
-    case 2:
+    case EF_DITHER:
         SceneTestPlay();
     break;
-    case 3:
+    case EF_BLUR_N:
         SceneTestMenu();
     break;
     }
@@ -325,7 +325,7 @@ int SceneTestLoad()
             scn_test_wrk.load_status = 2;
         }
     break;
-    case 2:
+    case EF_DITHER:
         if (IsLoadEnd(load_id) != 0)
         {
             if (scn_p->chapter_no < 0)
@@ -340,14 +340,14 @@ int SceneTestLoad()
             scn_test_wrk.load_status = 3;
         }
     break;
-    case 3:
+    case EF_BLUR_N:
         if (RoomMdlLoadWait() != 0)
         {
             ReqMsnInitPlyr(scn_p->chapter_no);
             scn_test_wrk.load_status = 4;
         }
     break;
-    case 4:
+    case EF_BLUR_B:
         if (MsnInitPlyr() != 0)
         {
             ScnTestMdlLoadReq((u_int *)MikuPan_GetHostAddress(SCENE_TEST_MD_LOAD_ADDRESS));
@@ -356,7 +356,7 @@ int SceneTestLoad()
             scn_test_wrk.load_status = 5;
         }
     break;
-    case 5:
+    case EF_BLUR_W:
         if (ScnTestMdlLoadWait() != 0)
         {
             SceneCheckModelEntry(scn_p);
@@ -365,19 +365,19 @@ int SceneTestLoad()
             scn_test_wrk.load_status = 6;
         }
     break;
-    case 6:
+    case EF_DEFORM:
         AdpcmScenePreLoadReq(scn_test_wrk.scene_no);
 
         scn_test_wrk.load_status = 7;
     break;
-    case 7:
+    case EF_FOCUS:
         if (IsAdpcmScenePreLoadEnd() != 1 && IsAdpcmScenePreLoadEnd() != -1)
         {
             break;
         }
 
         scn_test_wrk.load_status = 8;
-    case 8:
+    case EF_OVERLAP:
         if (scn_test_wrk.loop_flg != 0)
         {
             SceneTestLoopManage(0);
@@ -560,18 +560,18 @@ void SceneTestMainMenu()
         {
         case 0:
         case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
+        case EF_DITHER:
+        case EF_BLUR_N:
+        case EF_BLUR_B:
+        case EF_BLUR_W:
+        case EF_DEFORM:
             scn_test_wrk.menu_csr = 0;
             scn_test_wrk.now_menu = scn_test_wrk.main_menu_csr + 1;
         break;
-        case 7:
+        case EF_FOCUS:
             SceneFileSaveBin();
         break;
-        case 8:
+        case EF_OVERLAP:
             scn_test_wrk.mode = 2;
         break;
         }
@@ -1425,15 +1425,15 @@ void SceneTestEneEffFire()
     case 1:
         ScnValueCtrl(&rate, 2.0f, 0.0f, 0.001f, 10.0f);
     break;
-    case 2:
-    case 3:
-    case 4:
+    case EF_DITHER:
+    case EF_BLUR_N:
+    case EF_BLUR_B:
         ScnValueCtrlC(&rgba[stw->effect_csr - 2], 0xff, 0x0, 1, 16);
     break;
-    case 5:
+    case EF_BLUR_W:
         ScnValueCtrlC(&rgba[3], 0x80, 0x0, 1, 16);
     break;
-    case 6:
+    case EF_DEFORM:
         if (ret == 1)
         {
             SceneReleaseEffect(scn_p);
@@ -1508,19 +1508,19 @@ void SceneTestEneEffPDeform()
     case 1:
         ScnValueCtrl(&pdf_buf.sclx, 2.0f, -2.0f, 0.01f, 10.0f);
     break;
-    case 2:
+    case EF_DITHER:
         ScnValueCtrl(&pdf_buf.scly, 2.0f, -2.0f, 0.01f, 10.0f);
     break;
-    case 3:
+    case EF_BLUR_N:
         ScnValueCtrlI((int *)&pdf_buf.alpha, 0x80, 0, 1, 0x10);
     break;
-    case 4:
+    case EF_BLUR_B:
         ScnValueCtrl(&pdf_buf.rate, 2.0f, 0.0f, 0.01f, 10.0f);
     break;
-    case 5:
+    case EF_BLUR_W:
         ScnValueCtrl(&pdf_buf.trate, 2.0f, 0.0f, 0.01f, 10.0f);
     break;
-    case 6:
+    case EF_DEFORM:
         if (ret == 1)
         {
             SceneReleaseEffect(scn_p);
@@ -1590,10 +1590,10 @@ void SceneTestEneEffOthers()
     case 1:
         ScnValueCtrl(&pos_ajst, 800.0f, -800.0f, 1.0f, 10.0f);
     break;
-    case 2:
+    case EF_DITHER:
         ScnValueCtrlI(&alpha, 0x80, 0x0, 1, 16);
     break;
-    case 3:
+    case EF_BLUR_N:
         if (ret == 1)
         {
             SceneReleaseEffect(scn_p);
@@ -1822,7 +1822,7 @@ void SceneTestVibrate()
         case 1:
             VibrateRequest2(0, vib2_val);
         break;
-        case 2:
+        case EF_DITHER:
             VibrateRequest(0, 1, vib2_val);
         break;
         }

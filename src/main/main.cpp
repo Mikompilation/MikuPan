@@ -217,8 +217,8 @@ void InitGameFirst()
     MovieInitWrk();
     realtime_scene_flg = 0;
     sys_wrk.game_mode = GAME_MODE_INIT;
-    outgame_wrk.mode = 0;
-    outgame_wrk.mode_next = 4;
+    outgame_wrk.mode = OUTGAME_MODE_INIT;
+    outgame_wrk.mode_next = OUTGAME_MODE_TITLE;
     memset(&ingame_wrk, 0, sizeof(INGAME_WRK));
     sys_wrk.sreset_ng = 0;
     opening_movie_type = 0;

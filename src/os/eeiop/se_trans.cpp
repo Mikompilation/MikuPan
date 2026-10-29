@@ -29,7 +29,7 @@ static void UseOkFGhost();
 
 void FGTransInit()
 {  
-    if (ingame_wrk.msn_no != 0 && ingame_wrk.msn_no != 4)
+    if (ingame_wrk.msn_no != PMODE_NORMAL && ingame_wrk.msn_no != PMODE_MSG_DISP)
     {
         if (ChkFGhostAlreadySet()) 
         {
@@ -141,7 +141,7 @@ static void TransReqIopCmd()
     SetIopCmdLg(
         IC_CDVD_SE_TRANS,
         st_ctrl.size,
-        st_ctrl.trans_pos + 0x10,
+        st_ctrl.trans_pos + SE_ADDRNO_GHOST0,
         st_ctrl.file_no,
         MikuPan_GetHostAddress(FLOAT_GHOST_SE_LOAD_ADDR),
         0,

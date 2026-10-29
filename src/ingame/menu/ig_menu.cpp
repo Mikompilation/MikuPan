@@ -345,7 +345,7 @@ void IngameMenuModeSlct()
         {
             switch(ig_menu_wrk.csr[0])
             {
-            case 0:
+            case IGMENU_MODE_MAP:
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_MAP;
@@ -354,7 +354,7 @@ void IngameMenuModeSlct()
 
                 StartMapModeInit();
             break;
-            case 1:
+            case IGMENU_MODE_ITEM:
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_ITEM;
@@ -363,7 +363,7 @@ void IngameMenuModeSlct()
 
                 StartItemModeInit();
             break;
-            case 2:
+            case IGMENU_MODE_ALBM:
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_ALBM;
@@ -376,7 +376,7 @@ void IngameMenuModeSlct()
 
                 StartAlbumModeInit();
             break;
-            case 3:
+            case IGMENU_MODE_FILE:
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_FILE;
@@ -389,7 +389,7 @@ void IngameMenuModeSlct()
 
                 StartFileModeInit();
             break;
-            case 4:
+            case IGMENU_MODE_GHOST:
                 if (ingame_wrk.clear_count != 0)
                 {
                     SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
@@ -419,7 +419,7 @@ void IngameMenuModeSlct()
                     CameraCustomInit();
                 }
             break;
-            case 5:
+            case IGMENU_MODE_RANKING:
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_RANKING;
@@ -432,7 +432,7 @@ void IngameMenuModeSlct()
 
                 StartRankModeInit();
             break;
-            case 6:
+            case IGMENU_MODE_CAMERA:
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 ig_menu_wrk.mode = IGMENU_MODE_CAMERA;
@@ -445,7 +445,7 @@ void IngameMenuModeSlct()
 
                 CameraCustomInit();
             break;
-            case 12:
+            case IGMENU_MODE_OPTN:
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                 MikuPan_RmlOptionsOpenInGame();
@@ -795,7 +795,7 @@ static u_char MenuInOut()
 
     switch (yw2d.menu_io_flg)
     {
-    case 1:
+    case IGMENU_MODE_ITEM:
         if (yw2d.menu_io_cnt < 30)
         {
             count = yw2d.menu_io_cnt;
@@ -858,7 +858,7 @@ static u_char MenuInOut()
             yw2d.menu_io_flg = 0;
         }
     break;
-    case 2:
+    case IGMENU_MODE_ALBM:
         if (yw2d.menu_io_cnt >= 30)
         {
             yw2d.io_x[0] = 0.0f;
@@ -1201,31 +1201,31 @@ void DspMenuTitle(short int pos_x, short int pos_y, float alp, u_char pri, u_cha
 
     switch(mode)
     {
-    case 1:
+    case IGMENU_MODE_ITEM:
         PutSpriteYW(MNU_FNT_MAP, MNU_FNT_MAP, pos_x - 15, pos_y - 103, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, ((pri + 3) & 0xff) << 12, 1, 0, 0);
     break;
-    case 2:
+    case IGMENU_MODE_ALBM:
         PutSpriteYW(MNU_FNT_ITEM, MNU_FNT_ITEM, pos_x - 15, pos_y - 141, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, ((pri + 3) & 0xff) << 12, 1, 0, 0);
     break;
-    case 3:
+    case IGMENU_MODE_FILE:
         PutSpriteYW(MNU_FNT_PHOT, MNU_FNT_PHOT, pos_x - 15, pos_y - 179, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, ((pri + 3) & 0xff) << 12, 1, 0, 0);
     break;
-    case 4:
+    case IGMENU_MODE_GHOST:
         PutSpriteYW(MNU_FNT_FILE, MNU_FNT_FILE, pos_x - 15, pos_y - 217, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, ((pri + 3) & 0xff) << 12, 1, 0, 0);
     break;
-    case 5:
+    case IGMENU_MODE_RANKING:
         PutSpriteYW(MNU_FNT_GHOST, MNU_FNT_GHOST, pos_x - 15, pos_y - 255, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, ((pri + 3) & 0xff) << 12, 1, 0, 0);
     break;
-    case 6:
+    case IGMENU_MODE_CAMERA:
         PutSpriteYW(MNU_FNT_RANKING, MNU_FNT_RANKING, pos_x - 15, pos_y - 293, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, ((pri + 3) & 0xff) << 12, 1, 0, 0);
     break;
-    case 7:
+    case IGMENU_MODE_SLCT:
         PutSpriteYW(MNU_FNT_CAMERA, MNU_FNT_CAMERA, pos_x - 15, pos_y - 331, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, ((pri + 3) & 0xff) << 12, 1, 0, 0);
     break;
-    case 8:
+    case IGMENU_MODE_ITEM_USE_SLCT:
         PutSpriteYW(MNU_FNT_MENU, MNU_FNT_MENU, pos_x - 15, pos_y, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, ((pri + 3) & 0xff) << 12, 1, 0, 0);
     break;
-    case 9:
+    case IGMENU_MODE_ITEM_USE_END:
         PutSpriteYW(MNU_FNT_OPTION, MNU_FNT_OPTION, pos_x - 15, pos_y - 331, 0.0f, 0x808080, alp, 1.0f, 1.0f, 0, ((pri + 3) & 0xff) << 12, 1, 0, 0);
     break;
     }
@@ -1490,13 +1490,13 @@ static void PutMask(short int pos_x, short int pos_y, u_char alp, u_char flp, in
 
     switch (flp)
     {
-    case 1:
+    case IGMENU_MODE_ITEM:
         ds.att |= 1;
     break;
-    case 2:
+    case IGMENU_MODE_ALBM:
         ds.att |= 2;
     break;
-    case 3:
+    case IGMENU_MODE_FILE:
         ds.att |= 3;
     break;
     }

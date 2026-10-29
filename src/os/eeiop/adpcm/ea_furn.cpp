@@ -107,55 +107,55 @@ void AdpcmPlayFurn(int file_no, float *pos, u_short vol, int fade_flm)
 
     switch(file_no)
     {
-    case 0:
+    case FSPE_AE_TAPE:
         adpcm_map.furn.para.file_no = AE000_TAPE_STR;
     break;
-    case 1:
+    case FSPE_AE_KOTO:
         adpcm_map.furn.para.file_no = AE002_KOTO_STR;
     break;
-    case 25:
+    case FSPE_AE_CHIKUON:
         adpcm_map.furn.para.file_no = AE003_CHIKUONKI_STR;
     break;
-    case 3:
+    case FSPE_AE_OKYO:
         adpcm_map.furn.para.file_no = AE004_AYASHII_STR;
     break;
-    case 4:
+    case FSPE_AE_OKYO_L:
         adpcm_map.furn.para.file_no = AK006_AME_STR;
     break;
-    case 5:
+    case FSPE_AE_DOKO:
         adpcm_map.furn.para.file_no = AVMC021_DOKONIIKUNO_STR;
     break;
-    case 6:
+    case FSPE_AE_SAMUI:
         adpcm_map.furn.para.file_no = AVMC022_SAMUI_STR;
     break;
-    case 7:
+    case FSPE_AE_MITA:
         adpcm_map.furn.para.file_no = AVMC023_MITAWAYO_STR;
     break;
-    case 8:
+    case FSPE_AE_KAESHITE:
         adpcm_map.furn.para.file_no = AVMC024_KAESHITE_STR;
     break;
-    case 9:
+    case FSPE_AE_KOKONI:
         adpcm_map.furn.para.file_no = AVMC025_KOKONIITE_STR;
     break;
-    case 10:
+    case FSPE_AE_NE:
         adpcm_map.furn.para.file_no = AVMC026_NE_STR;
     break;
-    case 11:
+    case FSPE_AE_DOUSHITE:
         adpcm_map.furn.para.file_no = AVMC027_DOUSHITE_STR;
     break;
-    case 12:
+    case FSPE_AE_NAWAGA:
         adpcm_map.furn.para.file_no = AVMC028_NAWAGA_STR;
     break;
-    case 13:
+    case FSPE_AE_SUSURI1:
         adpcm_map.furn.para.file_no = AVMC029_SUSURI1_STR;
     break;
-    case 14:
+    case FSPE_AE_SUSURI2:
         adpcm_map.furn.para.file_no = AVMC030_SUSURI2_STR;
     break;
-    case 15:
+    case FSPE_AE_SUSURI3:
         adpcm_map.furn.para.file_no = AVMC031_SUSURI3_STR;
     break;
-    case 16:
+    case FSPE_AE_SUSURI4:
         adpcm_map.furn.para.file_no = AVMC032_SUSURI4_STR;
     break;
     default:

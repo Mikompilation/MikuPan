@@ -55,21 +55,21 @@ void EntryMain()
     
     if (dbg_wrk.param_fuyurei != 0) 
     {
-        if ((ap_wrk.stts & 4) != 0 || ap_wrk.room_fg[plyr_wrk.pr_info.room_no] != 0 || ap_wrk.zh_mode != 0) 
+        if ((ap_wrk.stts & 4) != 0 || ap_wrk.room_fg[plyr_wrk.pr_info.room_no] != 0 || ap_wrk.zh_mode != ZH_NO_REQ)
         {
             ZeroHourAppearMain();
         }
 
         if ((ap_wrk.stts & 0x40) == 0 && ap_wrk.room_fg[plyr_wrk.pr_info.room_no] != 0) 
         {
-            if (ap_wrk.zh_mode == 0)
+            if (ap_wrk.zh_mode == ZH_NO_REQ)
             {
                 FloatGhostAppearMain();
             }
         }
     }
   
-    if (ap_wrk.zh_mode == 0) 
+    if (ap_wrk.zh_mode == ZH_NO_REQ)
     {
         GuardGhostAppearMain();
     }

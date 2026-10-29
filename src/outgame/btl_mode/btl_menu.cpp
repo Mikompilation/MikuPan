@@ -422,7 +422,7 @@ void StageGhostLoadReq()
 
         if (stage_dat[btl_wrk.stage_no].fly_mdl_no != 0xffff)
         {
-            SeFileLoadAndSet(SGY001_BD, 1);
+            SeFileLoadAndSet(SGY001_BD, SE_ADDRNO_BTLHIT);
         }
 
         SeFileLoadAndSet(edp[ene_no].se_no, load_se_addr[i]);

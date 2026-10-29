@@ -226,7 +226,7 @@ void CalcRoomCoord(void *sgd_top, float *pos)
 
 void SetUpRoomCoordinate(int disp_room, float *pos)
 {
-    if (area_read_wrk.stat != 0 || disp_room == 0xff)
+    if (area_read_wrk.stat != AR_STAT_NO || disp_room == 0xff)
     {
         return;
     }

@@ -89,7 +89,7 @@ int SeReqFootStep(sceVu0FVECTOR pos)
     
     for (i = 0; i < room_wrk.se_num; i++)
     {
-        if (PosInAreaJudge1(8, room_no, i, pz, px) != 0) 
+        if (PosInAreaJudge1(MAP_REQ_SE, room_no, i, pz, px) != 0)
         {
             addr = (u_int *)MikuPan_GetHostAddress(((int *)map_wrk.dat_adr)[8] + DVD_DATA_ADDR);
             addr = (u_int *)MikuPan_GetHostAddress((++addr)[room_no] + DVD_DATA_ADDR);

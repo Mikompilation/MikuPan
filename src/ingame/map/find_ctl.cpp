@@ -134,7 +134,7 @@ u_char FindMapCtrl()
     case 1:
         find_wrk.mode = 2;
 
-        SetMessageAddr(GetIngameMSGAddr(5, find_wrk.msg_no));
+        SetMessageAddr(GetIngameMSGAddr(IGMSG_FIND_MSG, find_wrk.msg_no));
 
         if (SetMessage() == 0)
         {

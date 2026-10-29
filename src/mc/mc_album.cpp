@@ -37,10 +37,10 @@ char mcAlbumSaveMain()
     case MC_SEL_SLOT:
         switch (mcCtrlSelSlot())
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             mcSetStep(MC_CHECK, MC_MSG_CHECK);
         break;
         case 2:
@@ -59,10 +59,10 @@ char mcAlbumSaveMain()
 
         switch(mcCtrlFileSel())
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             mcSetStep(MC_SEL_SAVE, MC_MSG_SEL_OVERWRITE);
         break;
         case 2:
@@ -71,7 +71,7 @@ char mcAlbumSaveMain()
         case 3:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
-        case 4:
+        case MC_SEL_SLOT:
             mcSetStep(MC_SEL_ALBUM_TYPE, MC_MSG_SEL_ALBUM_TYPE);
 
             newfile_flg = 1;
@@ -83,10 +83,10 @@ char mcAlbumSaveMain()
     case MC_SEL_ALBUM_TYPE:
         switch (mcCtrlAlbumSel())
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             mcSetStep(MC_SEL_ALBUM_CHECK, MC_MSG_SEL_ALBUM_CHECK);
         break;
         case 2:
@@ -100,10 +100,10 @@ char mcAlbumSaveMain()
     case MC_SEL_ALBUM_CHECK:
         switch(mcCtrlYesno(1))
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             if (newfile_flg == 1)
             {
                 mcSetStep(MC_MAKE_DIR, MC_MSG_MAKE_DIR);
@@ -128,7 +128,7 @@ char mcAlbumSaveMain()
         case 3:
             mcSetStep(MC_SEL_ALBUM_TYPE, MC_MSG_SEL_ALBUM_TYPE);
         break;
-        case 4:
+        case MC_SEL_SLOT:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
         }
@@ -136,17 +136,17 @@ char mcAlbumSaveMain()
     case MC_SEL_FORMAT:
         switch(mcCtrlYesno(1))
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             mcSetStep(MC_FORMAT, MC_MSG_FORMAT);
         break;
         case 2:
         case 3:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
-        case 4:
+        case MC_SEL_SLOT:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
         }
@@ -154,10 +154,10 @@ char mcAlbumSaveMain()
     case MC_SEL_SAVE:
         switch(mcCtrlYesno(1))
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             if (is_newdata_albmside != 0)
             {
                 mcSetStep(MC_SEL_ALBUM_TYPE, MC_MSG_SEL_ALBUM_TYPE);
@@ -182,7 +182,7 @@ char mcAlbumSaveMain()
         case 3:
             mcSetStep(MC_SEL_FILE, MC_MSG_SEL_SAVEFILE);
         break;
-        case 4:
+        case MC_SEL_SLOT:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
         }
@@ -190,17 +190,17 @@ char mcAlbumSaveMain()
     case MC_SEL_MAKE_DIR:
         switch(mcCtrlYesno(1))
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             mcSetStep(MC_MAKE_DIR, MC_MSG_MAKE_DIR);
         break;
         case 2:
         case 3:
             mcSetStep(MC_SEL_FILE, MC_MSG_SEL_SAVEFILE);
         break;
-        case 4:
+        case MC_SEL_SLOT:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
         }
@@ -208,10 +208,10 @@ char mcAlbumSaveMain()
     case MC_MAKE_DIR:
         switch (mcCtrlMakeDir())
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
 #ifdef BUILD_EU_VERSION
             if (mc_header_buf[mc_ctrl.sel_file].game.map_flg == 0)
             {
@@ -233,10 +233,10 @@ char mcAlbumSaveMain()
     case MC_SAVE:
         switch (mcCtrlSave())
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
 #ifdef BUILD_EU_VERSION
             if (mc_header_buf[mc_ctrl.sel_file].game.map_flg == 0)
             {
@@ -258,10 +258,10 @@ char mcAlbumSaveMain()
     case MC_FORMAT:
         switch (mcCtrlFormat())
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
 #ifdef BUILD_EU_VERSION
             mcSetStep(MC_FORMAT_END, MC_MSG_END_FORMAT);
 
@@ -284,10 +284,10 @@ char mcAlbumSaveMain()
     case MC_DISP_ERR:
         switch (mcCtrlDispErr())
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
         case 2:
@@ -301,17 +301,17 @@ char mcAlbumSaveMain()
     case MC_SEL_REMAKE_DIR:
         switch(mcCtrlYesno(1))
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             mcSetStep(MC_DELETE_DIR, MC_MSG_REMAKE_DIR);
         break;
         case 2:
         case 3:
             mcSetStep(MC_SEL_FILE, MC_MSG_SEL_SAVEFILE);
         break;
-        case 4:
+        case MC_SEL_SLOT:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
         }
@@ -319,10 +319,10 @@ char mcAlbumSaveMain()
     case MC_DELETE_DIR:
         switch (mcCtrlDelete())
         {
-        case 0:
+        case MC_INIT:
             // do nothing ...
         break;
-        case 1:
+        case MC_CHECK:
             mcSetStep(MC_MAKE_DIR, MC_MSG_REMAKE_DIR);
 
             mc_ctrl.sub_step = 2;
@@ -382,12 +382,12 @@ char mcCtrlCheckAlbum(void)
 
     switch (mc_ctrl.sub_step)
     {
-    case 0:
+    case MC_INIT:
         mc_ctrl.sub_step = 1;
 
         mcAcsReq(MC_FUNC_SLOT_CHECK);
     break;
-    case 1:
+    case MC_CHECK:
         if (mcAcsMain() != 0)
         {
             if (mc_ctrl.acs.sta == 0)
@@ -451,7 +451,7 @@ char mcCtrlCheckAlbum(void)
             }
         }
     break;
-    case 4:
+    case MC_SEL_SLOT:
         mc_ctrl.sub_step = 5;
         mc_ctrl.sel_file = mc_ctrl.album.file_no[loop];
 
@@ -497,7 +497,7 @@ char mcCtrlCheckAlbum(void)
 
         }
     break;
-    case 6:
+    case MC_SEL_FILE:
         mcAcsFileReq(mc_ctrl.album.file_no[loop] + 8, 1, 1);
 
         mc_ctrl.sub_step = 7;

@@ -232,7 +232,7 @@ void MissionTitleInit(int msn_no)
     DataLoadWrkInit();
     mttl_wrk = {};
     mttl_wrk.mode = 0;
-    mttl_wrk.load_mode = 0;
+    mttl_wrk.load_mode = MT_LOAD_MODE_PREQ;
     ingame_wrk.stts |= 0x28;
   
     if (ingame_wrk.game == 0 || ingame_wrk.game == INGAME_GAME_FREE)
@@ -353,19 +353,19 @@ int MissionTitleLoad(int msn_no)
         ? FreeModeRoomNo()
         : msn_start_room[msn_no];
 
-    if (mttl_wrk.load_mode == 9)
+    if (mttl_wrk.load_mode == MT_LOAD_MODE_END)
     {
         return 1;
     }
     
-    if (mttl_wrk.load_mode == 0)
+    if (mttl_wrk.load_mode == MT_LOAD_MODE_PREQ)
     {
-        mttl_wrk.load_mode = 1;
+        mttl_wrk.load_mode = MT_LOAD_MODE_PLYR;
         
         ReqMsnInitPlyr(msn_no);
         return 0;
     }
-    else if (mttl_wrk.load_mode == 1)
+    else if (mttl_wrk.load_mode == MT_LOAD_MODE_PLYR)
     {
         if (MsnInitPlyr())
         {
@@ -374,7 +374,7 @@ int MissionTitleLoad(int msn_no)
                 FreeModePosSet();
             }
 
-            mttl_wrk.load_mode = 2;
+            mttl_wrk.load_mode = MT_LOAD_MODE_DREQ;
         }
 
         return 0;
@@ -382,48 +382,48 @@ int MissionTitleLoad(int msn_no)
     
     if (msn_title_load_dat[msn_no][mttl_wrk.load_count].file_no == 0xFFFF)
     {
-        mttl_wrk.load_mode = 4;
+        mttl_wrk.load_mode = MT_LOAD_MODE_RREQ;
         mttl_wrk.load_count = 0;
     }
-    else if (mttl_wrk.load_mode == 3)
+    else if (mttl_wrk.load_mode == MT_LOAD_MODE_DATA)
     {
         if (IsLoadEnd(mttl_wrk.load_id))
         {
             MissionDataLoadAfterInit(msn_title_load_dat[msn_no] + mttl_wrk.load_count);
             SetDataLoadWrk(msn_title_load_dat[msn_no] + mttl_wrk.load_count);
-            mttl_wrk.load_mode = 2;
+            mttl_wrk.load_mode = MT_LOAD_MODE_DREQ;
             mttl_wrk.load_count++;
         }
     }
-    else if (mttl_wrk.load_mode == 2)
+    else if (mttl_wrk.load_mode == MT_LOAD_MODE_DREQ)
     {
         mttl_wrk.load_id = MissionDataLoadReq(&msn_title_load_dat[msn_no][mttl_wrk.load_count]);
-        mttl_wrk.load_mode = 3;
+        mttl_wrk.load_mode = MT_LOAD_MODE_DATA;
     }
-    else if (mttl_wrk.load_mode == 4)
+    else if (mttl_wrk.load_mode == MT_LOAD_MODE_RREQ)
     {
         if (mttl_wrk.load_count != 0)
         {
             FloatGhostLoadReq();
-            mttl_wrk.load_mode = 6;
+            mttl_wrk.load_mode = MT_LOAD_MODE_FGST;
             return 0;
         }
         
         RoomMdlLoadReq(NULL, mttl_wrk.load_count, msn_no, start_room, 1);
         area_wrk.room[mttl_wrk.load_count] = start_room;
-        mttl_wrk.load_mode = 5;
+        mttl_wrk.load_mode = MT_LOAD_MODE_ROOM;
     }
-    else if (mttl_wrk.load_mode == 5)
+    else if (mttl_wrk.load_mode == MT_LOAD_MODE_ROOM)
     {
         if (RoomMdlLoadWait() == 0)
         {
             return 0;
         }
         
-        mttl_wrk.load_mode = 4;
+        mttl_wrk.load_mode = MT_LOAD_MODE_RREQ;
         mttl_wrk.load_count++;
     } 
-    else if (mttl_wrk.load_mode == 6)
+    else if (mttl_wrk.load_mode == MT_LOAD_MODE_FGST)
     {
         if (FloatGhostLoadMain() == 0)
         {
@@ -433,14 +433,14 @@ int MissionTitleLoad(int msn_no)
         FloatGhostAppearTypeSet(ap_wrk.fgst_no, 0, start_room);
         if (GuardGhostAppearSet() == 0)
         {
-            mttl_wrk.load_mode = 9;
+            mttl_wrk.load_mode = MT_LOAD_MODE_END;
         }
         else
         {
-            mttl_wrk.load_mode = 8;
+            mttl_wrk.load_mode = MT_LOAD_MODE_GGST;
         }
     }
-    else if (mttl_wrk.load_mode == 7)
+    else if (mttl_wrk.load_mode == MT_LOAD_MODE_DGST)
     {
         if (DeadGhostLoad() == 0)
         {
@@ -449,23 +449,23 @@ int MissionTitleLoad(int msn_no)
         
         if (GuardGhostAppearSet() == 0)
         {
-            mttl_wrk.load_mode = 9;
+            mttl_wrk.load_mode = MT_LOAD_MODE_END;
         }
         else
         {
-            mttl_wrk.load_mode = 8;
+            mttl_wrk.load_mode = MT_LOAD_MODE_GGST;
         }
     }
     else
     {
-        if (mttl_wrk.load_mode != 8)
+        if (mttl_wrk.load_mode != MT_LOAD_MODE_GGST)
         {
             return 0;
         }
         
         if (GuardGhostLoad() != 0)
         {
-            mttl_wrk.load_mode = 9;
+            mttl_wrk.load_mode = MT_LOAD_MODE_END;
         }
     }
     
@@ -476,17 +476,17 @@ int MissionDataLoadReq(MSN_LOAD_DAT* dat)
 {
     int ret;
 
-    if (dat->file_type == 2)
+    if (dat->file_type == FILE_TYPE_SE)
     {
-        if (dat->addr == 16)
+        if (dat->addr == SE_ADDRNO_GHOST0)
         {
             ap_wrk.fg_se_empty[0] = 1;
         }
-        else if (dat->addr == 17)
+        else if (dat->addr == SE_ADDRNO_GHOST1)
         {
             ap_wrk.fg_se_empty[1] = 1;
         }
-        else if (dat->addr == 18)
+        else if (dat->addr == SE_ADDRNO_GHOST2)
         {
             ap_wrk.fg_se_empty[2] = 1;
         }
@@ -502,7 +502,7 @@ int MissionDataLoadReq(MSN_LOAD_DAT* dat)
     }
     else
     {
-        if (dat->file_type == 9)
+        if (dat->file_type == FILE_TYPE_BENE_MOT)
         {
             LoadEneDmgTex(dat->tmp_no, (u_int *)MikuPan_GetHostPointer(dat->addr + ENE_DMG_TEX_BASE_ADDRESS));
             ret = LoadReq(dat->file_no, (int64_t)dat->addr);
@@ -526,37 +526,37 @@ void MissionDataLoadAfterInit(MSN_LOAD_DAT* dat)
 {
     switch (dat->file_type)
     {
-        case 3:
+        case FILE_TYPE_CAM_DAT:
             memcpy(&map_cam_dat, (void *)MikuPan_GetHostPointer(dat->addr), sizeof(map_cam_dat));
             break;
 
-        case 4:
+        case FILE_TYPE_CAM_DAT2:
             memcpy(&map_cam_dat2, (void *)MikuPan_GetHostPointer(dat->addr), sizeof(map_cam_dat2));
             break;
 
-        case 5:
+        case FILE_TYPE_CAM_DAT3:
             memcpy(&map_cam_dat3, (void *)MikuPan_GetHostPointer(dat->addr), sizeof(map_cam_dat3));
             break;
 
-        case 6:
+        case FILE_TYPE_CAM_DAT4:
             memcpy(&map_cam_dat4, (void *)MikuPan_GetHostPointer(dat->addr), sizeof(map_cam_dat4));
             break;
 
-        case 7:    
+        case FILE_TYPE_MAP_DAT:
             FSpeMapDataMapping();
             map_wrk.dat_adr = GetFloorTopAddr(map_wrk.floor);
             break;
 
-        case 8:
+        case FILE_TYPE_ENE_MDL:
             motInitEnemyMdl((u_int *)MikuPan_GetHostPointer(dat->addr), dat->file_no - M000_MIKU_MDL);
             break;
 
-        case 9:
-        case 10:
+        case FILE_TYPE_BENE_MOT:
+        case FILE_TYPE_ENE_MOT:
             motInitEnemyAnm((u_int *)MikuPan_GetHostPointer(dat->addr), dat->tmp_no, dat->file_no -  M000_MIKU_ANM);
             break;
         
-        case 11:
+        case FILE_TYPE_ITM_MDL:
             ItemLoadAfterInit(dat->file_no - I000_PLAY_CAMERA1_SGD, MikuPan_GetHostAddress(dat->addr));
             break;
 
@@ -608,17 +608,17 @@ void DelDataLoadWrk(u_short file_no)
             {
                 motReleaseAniMdlBuf((u_short)file_no - M000_MIKU_ANM, (u_int *)MikuPan_GetHostPointer(load_dat_wrk[i].addr));
             }
-            else if (load_dat_wrk[i].file_type == 2)
+            else if (load_dat_wrk[i].file_type == FILE_TYPE_SE)
             {
-                if (load_dat_wrk[i].addr == 16)
+                if (load_dat_wrk[i].addr == SE_ADDRNO_GHOST0)
                 {
                     ap_wrk.fg_se_empty[0] = 0;
                 }
-                else if (load_dat_wrk[i].addr == 17)
+                else if (load_dat_wrk[i].addr == SE_ADDRNO_GHOST1)
                 {
                     ap_wrk.fg_se_empty[1] = 0;
                 }
-                else if (load_dat_wrk[i].addr == 18)
+                else if (load_dat_wrk[i].addr == SE_ADDRNO_GHOST2)
                 {
                     ap_wrk.fg_se_empty[2] = 0;
                 }
@@ -654,12 +654,12 @@ void SortLoadDataAddr()
 
     for (i = 0; i < 40; i++)
     {
-        if (load_dat_wrk[i].file_type == 9 || load_dat_wrk[i].file_type == 10)
+        if (load_dat_wrk[i].file_type == FILE_TYPE_BENE_MOT || load_dat_wrk[i].file_type == FILE_TYPE_ENE_MOT)
         {
             for (j = i + 1; j < 40; j++)
             {
-                if (load_dat_wrk[j].file_type != 9
-                    && load_dat_wrk[j].file_type != 10)
+                if (load_dat_wrk[j].file_type != FILE_TYPE_BENE_MOT
+                    && load_dat_wrk[j].file_type != FILE_TYPE_ENE_MOT)
                 {
                     tmp.file_no = load_dat_wrk[i].file_no;
                     tmp.file_type = load_dat_wrk[i].file_type;
@@ -786,7 +786,7 @@ int EventLoadData(u_char load_no)
 
     mld = &sld[load_no].load_dat[ev_load_wrk.count];
 
-    if (mld->file_type == 0 && ev_load_wrk.mode != 0)
+    if (mld->file_type == FILE_TYPE_END && ev_load_wrk.mode != 0)
     {
         ev_load_wrk.mode = EV_LOAD_MODE_END;
         return 1;
@@ -794,7 +794,7 @@ int EventLoadData(u_char load_no)
 
     if (ev_load_wrk.mode == EV_LOAD_MODE_REQ)
     {
-        if (mld->file_type == 13)
+        if (mld->file_type == FILE_TYPE_SCENE)
         {
             SceneDataLoadReq(mld->file_no, (u_int *)MikuPan_GetHostPointer(mld->addr));
 
@@ -802,7 +802,7 @@ int EventLoadData(u_char load_no)
 
             return 0;
         }
-        else if (mld->file_type == 12)
+        else if (mld->file_type == FILE_TYPE_ROOM)
         {
             RoomLoadReq(mld->file_no);
 
@@ -866,7 +866,7 @@ int GetLoadGhostInfo(u_char* load_inf)
 
     for (i = 0; i < 40; i++)
     {
-        if (load_dat_wrk[i].file_type == 8)
+        if (load_dat_wrk[i].file_type == FILE_TYPE_ENE_MDL)
         {
             switch (load_dat_wrk[i].addr)
             {
@@ -916,7 +916,7 @@ void RoomLoadReq(int load_room)
     {
         if (furn_wrk[i].room_id != room_wrk.disp_no[0]) // Line 898
         {
-            if(furn_wrk[i].use == 0 || furn_wrk[i].use == 2) // Line 899 
+            if(furn_wrk[i].use == FURN_USER_NOW_ROOM || furn_wrk[i].use == FURN_USER_NEXT_ROOM) // Line 899
             {
                 FurnSetWrkNoUse(&furn_wrk[i], i); // Line 901
             }

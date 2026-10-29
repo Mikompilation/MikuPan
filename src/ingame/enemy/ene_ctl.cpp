@@ -476,7 +476,7 @@ void EneCondCtrl(ENE_WRK *ew)
 
 void EneAuraCtrl(ENE_WRK *ew)
 {
-    if (plyr_wrk.mode == 0x2)
+    if (plyr_wrk.mode == PMODE_DMG)
     {
         ew->tr_rate = 50;
         ew->tr_rate2 = 50;
@@ -484,7 +484,7 @@ void EneAuraCtrl(ENE_WRK *ew)
 
     if ((ew->dat->attr1 & 0x10 || (ingame_wrk.difficult != 0 && ingame_wrk.game == 0)) && ew->sta & 0x2000000)
     {
-        if (plyr_wrk.mode != 1 && plyr_wrk.mode != 2 && ew->act_no != 8)
+        if (plyr_wrk.mode != PMODE_FINDER && plyr_wrk.mode != PMODE_DMG && ew->act_no != 8)
         {
             ew->tr_rate = 0;
         }
@@ -494,7 +494,7 @@ void EneAuraCtrl(ENE_WRK *ew)
         }
     }
 
-    if (plyr_wrk.mode == 1 || efcnt[12].dat.uc8[0] != 0 || ew->sta & 0x8000 || ew->hp == 0)
+    if (plyr_wrk.mode == PMODE_FINDER || efcnt[12].dat.uc8[0] != 0 || ew->sta & 0x8000 || ew->hp == 0)
     {
         ew->d_pd2 = 0.0f;
     }
@@ -674,7 +674,7 @@ int EneWrkReleaseChk(ENE_WRK *ew)
 
         memset(ew, 0, sizeof(ENE_WRK));
 
-        if (ap_wrk.zh_mode != 0)
+        if (ap_wrk.zh_mode != ZH_NO_REQ)
         {
             ZeroHourOutReq();
         }

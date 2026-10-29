@@ -126,7 +126,7 @@ void LoadStartDataInit()
 
     SortLoadDataAddr();
 
-    load_start_wrk.mode = 0;
+    load_start_wrk.mode = LOAD_START_MODE_PREQ;
 
     InitNowLoading();
     SetNowLoadingON();
@@ -140,38 +140,38 @@ int LoadStartDataSet()
 
     ret = SetNowLoading();
 
-    if (load_start_wrk.mode == 0)
+    if (load_start_wrk.mode == LOAD_START_MODE_PREQ)
     {
-        load_start_wrk.mode = 1;
+        load_start_wrk.mode = LOAD_START_MODE_PLYR;
 
         ReqMsnInitPlyr(ingame_wrk.msn_no);
     }
-    else if (load_start_wrk.mode == 1)
+    else if (load_start_wrk.mode == LOAD_START_MODE_PLYR)
     {
         if (MsnInitPlyr())
         {
-            load_start_wrk.mode = 2;
+            load_start_wrk.mode = LOAD_START_MODE_DREQ;
         }
     }
 
-    if (load_start_wrk.mode == 3)
+    if (load_start_wrk.mode == LOAD_START_MODE_DATA)
     {
         if (IsLoadEnd(load_start_wrk.load_id))
         {
             MissionDataLoadAfterInit(&load_dat_wrk[load_start_wrk.count]);
 
-            load_start_wrk.mode = 2;
+            load_start_wrk.mode = LOAD_START_MODE_DREQ;
             load_start_wrk.count += 1;
         }
     }
-    else if (load_start_wrk.mode == 2)
+    else if (load_start_wrk.mode == LOAD_START_MODE_DREQ)
     {
         while (load_start_wrk.count < 40)
         {
             if (load_dat_wrk[load_start_wrk.count].file_no != 0xffff)
             {
                 load_start_wrk.load_id = MissionDataLoadReq(&load_dat_wrk[load_start_wrk.count]);
-                load_start_wrk.mode = 3;
+                load_start_wrk.mode = LOAD_START_MODE_DATA;
 
                 return 0;
             }
@@ -183,56 +183,56 @@ int LoadStartDataSet()
 
         area_wrk.room[0] = plyr_wrk.pr_info.room_no;
         area_wrk.room[1] = 0xff;
-        load_start_wrk.mode = 4;
+        load_start_wrk.mode = LOAD_START_MODE_ROOM;
     }
-    else if (load_start_wrk.mode == 4)
+    else if (load_start_wrk.mode == LOAD_START_MODE_ROOM)
     {
         if (RoomMdlLoadWait())
         {
-            load_start_wrk.mode = 5;
+            load_start_wrk.mode = LOAD_START_MODE_RGRQ;
         }
     }
-    else if (load_start_wrk.mode == 5)
+    else if (load_start_wrk.mode == LOAD_START_MODE_RGRQ)
     {
         RareGhostLoadGameLoadReq();
 
-        load_start_wrk.mode = 6;
+        load_start_wrk.mode = LOAD_START_MODE_RGST;
     }
-    else if (load_start_wrk.mode == 6)
+    else if (load_start_wrk.mode == LOAD_START_MODE_RGST)
     {
         if (IsLoadEndAll())
         {
             FloatGhostLoadReq();
 
             ap_wrk.fgst_no = 0xff;
-            load_start_wrk.mode = 7;
+            load_start_wrk.mode = LOAD_START_MODE_FGST;
         }
     }
-    else if (load_start_wrk.mode == 7)
+    else if (load_start_wrk.mode == LOAD_START_MODE_FGST)
     {
         if (FloatGhostLoadMain())
         {
             GuardGhostLoadReq();
 
-            load_start_wrk.mode = 8;
+            load_start_wrk.mode = LOAD_START_MODE_GGST;
         }
     }
-    else if (load_start_wrk.mode == 8)
+    else if (load_start_wrk.mode == LOAD_START_MODE_GGST)
     {
         if (GuardGhostLoad())
         {
             info_log("GuardGhostLoadend");
 
-            load_start_wrk.mode = 0x9;
+            load_start_wrk.mode = LOAD_START_MODE_FADEIN;
         }
     }
-    else if (load_start_wrk.mode == 9)
+    else if (load_start_wrk.mode == LOAD_START_MODE_FADEIN)
     {
         SetNowLoadingOFF();
 
-        load_start_wrk.mode = 10;
+        load_start_wrk.mode = LOAD_START_MODE_END;
     }
-    else if (load_start_wrk.mode == 10)
+    else if (load_start_wrk.mode == LOAD_START_MODE_END)
     {
         if (ret != 0xff)
         {

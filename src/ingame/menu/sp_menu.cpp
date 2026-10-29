@@ -237,7 +237,7 @@ char SavePointMenuMain(u_char msn)
 
     switch (spmenu_wrk.mode)
     {
-        case 0:
+        case ALBM_MODE_INIT:
             if (dsp_svp.msg_alp + 8 < 0x80)
             {
                 dsp_svp.msg_alp += 8;
@@ -387,16 +387,16 @@ char SavePointMenuMain(u_char msn)
                 {
                     rml_save_active = 0;
                     SendManMdlTex();
-                    spmenu_wrk.mode = 8;
+                    spmenu_wrk.mode = SPMODE_SAVE_OUT;
                 }
             }
             else if (McAtSaveChk() != 0)
             {
                 SendManMdlTex();
-                spmenu_wrk.mode = 8;
+                spmenu_wrk.mode = SPMODE_SAVE_OUT;
             }
             break;
-        case 8:
+        case CNT_BREAK:
             SetSprFile(MikuPan_GetHostAddress(LOAD_ADDRESS_1));
 
             if (sp_load_id == -1)
@@ -416,7 +416,7 @@ char SavePointMenuMain(u_char msn)
                 }
             }
             break;
-        case 9:
+        case CNT_END:
             SetSprFile(MikuPan_GetHostAddress(LOAD_ADDRESS_1));
 
             if (sp_load_id == -1)
@@ -458,7 +458,7 @@ char SavePointMenuMain(u_char msn)
 
             switch (McAtLoadChk(2))
             {
-                case 0:
+                case ALBM_MODE_INIT:
                     // do nothing ...
                     break;
                 case 1:
@@ -596,7 +596,7 @@ char SavePointMenuMain(u_char msn)
 
             switch (SweetMemories(0, 0x80))
             {
-                case 0:
+                case ALBM_MODE_INIT:
                     // do nothing ...
                     break;
                 case 1:
@@ -669,7 +669,7 @@ char SavePointMenuMain(u_char msn)
                     sp_load_id = LoadReq(PL_ALBM_SAVE_PK2, LOAD_ADDRESS_3);
 #endif
 
-                    spmenu_wrk.mode = 9;
+                    spmenu_wrk.mode = SPMODE_ALBM_PSVP_WAIT;
 
                     dsp_svp.in_album = 1;
                     break;
@@ -687,7 +687,7 @@ char SavePointMenuMain(u_char msn)
 
                     dsp_svp.in_album = 1;
 
-                    spmenu_wrk.mode = 9;
+                    spmenu_wrk.mode = SPMODE_ALBM_PSVP_WAIT;
                     break;
                 case 5:
 #ifdef BUILD_EU_VERSION
@@ -715,7 +715,7 @@ char SavePointMenuMain(u_char msn)
 
             switch (McAtAlbmChk())
             {
-                case 0:
+                case ALBM_MODE_INIT:
                     // do nothing ...
                     break;
                 case 1:
@@ -1057,7 +1057,7 @@ void SavePointMenuModeSlct(u_char msn, u_char mode)
         {
             switch (dsp_svp.slct_mode)
             {
-                case 0:
+                case ALBM_MODE_INIT:
                     SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
 #ifdef BUILD_EU_VERSION
@@ -1169,7 +1169,7 @@ void SavePointMenuModeSlctDisp(u_char msn, u_char csr3, u_char csr4,
 
     switch (mode)
     {
-        case 0:
+        case ALBM_MODE_INIT:
             PutSpriteYW(PSP_FNT_ALBUM, PSP_FNT_ALBUM, 75.0f, 0.0f, 0.0f,
                         0x808080, alp_max, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             break;
@@ -1203,7 +1203,7 @@ void SavePointMenuModeSlctDisp(u_char msn, u_char csr3, u_char csr4,
 
         switch (mode)
         {
-            case 0:
+            case ALBM_MODE_INIT:
                 if (i == 1)
                 {
                     PutSpriteYW(PSP_ICN_ALBUM, PSP_ICN_ALBUM, 75.0f, 0.0f, 0.0f,
@@ -1238,7 +1238,7 @@ void SavePointMenuModeSlctDisp(u_char msn, u_char csr3, u_char csr4,
 
     switch (mode)
     {
-        case 0:
+        case ALBM_MODE_INIT:
             csr = csr_x0[csr3];
             break;
         case 1:
@@ -1292,7 +1292,7 @@ void SavePointMenuModeSlctDisp(u_char msn, u_char csr3, u_char csr4,
     {
         switch (spmenu_wrk.csr[3])
         {
-            case 0:
+            case ALBM_MODE_INIT:
                 PutStringYW(9, 8, 320, 333, 0x808080, alp_max, 0xf000, 1);
                 PutStringYW(9, 16, 320, 359, 0x808080, alp_max, 0xf000, 1);
                 PutStringYW(9, 17, 320, 385, 0x808080, alp_max, 0xf000, 1);
@@ -2060,7 +2060,7 @@ static void GetSvpNo(u_char *no)
 
     room_no = GetPointRoomNoFloor(plyr_wrk.move_box.pos[0],
                                   plyr_wrk.move_box.pos[2], map_wrk.floor);
-    room_from = GetRoomIdFromRoomNoFloor(0, room_no, map_wrk.floor);
+    room_from = GetRoomIdFromRoomNoFloor(MAP_ROOM_DAT, room_no, map_wrk.floor);
 
     svp_no = 0xff;
 
@@ -2717,7 +2717,7 @@ static void DspSpInfo(u_char file_no, u_char pos_y, u_char alp, u_char type)
 
             switch (mc_header_buf[file_no].game.room_no)
             {
-                case 0:
+                case ALBM_MODE_INIT:
                     sv_pht = 0;
                     break;
                 case 6:
@@ -2803,7 +2803,7 @@ static void DspSpInfo(u_char file_no, u_char pos_y, u_char alp, u_char type)
 
             switch (end_showzo)
             {
-                case 0:
+                case ALBM_MODE_INIT:
                     sv_pht = 4;
                     break;
                 case 1:
@@ -2873,7 +2873,7 @@ static void DspSpInfo2(u_char csr_no, u_char pos_y, u_char alp, u_char type)
 
     switch (mc_ctrl.album.sta[csr_no])
     {
-        case 0:
+        case ALBM_MODE_INIT:
             no = mc_ctrl.album.file_no[csr_no];
 
             PutSpriteYW(OA_LD_FNT2_ALBM, OA_LD_FNT2_ALBM, 0.0f, pos_y, 0.0f,
@@ -2892,7 +2892,7 @@ static void DspSpInfo2(u_char csr_no, u_char pos_y, u_char alp, u_char type)
         case 3:
             PutStringYW(8, 107, 271, pos_y + 47, 0x808080, alp, 0xa000, 0);
             break;
-        case 9:
+        case CNT_END:
             PutStringYW(8, 107, 271, pos_y + 47, 0x808080, alp, 0xa000, 0);
             break;
         case 0xff:
@@ -3188,7 +3188,7 @@ static void DspSaveTitle(u_char type, short int pos_x, short int pos_y,
 
     switch (type)
     {
-        case 0:
+        case ALBM_MODE_INIT:
             PutSpriteYW(TTL_FNT_SAVE, TTL_FNT_SAVE, pos_x - 15, pos_y, 0.0f,
                         0x808080, alp, 1.0f, 1.0f, 0, (u_char) (pri + 3) << 12,
                         1, 0, 0);
@@ -3245,7 +3245,7 @@ static int AlbmDesignLoadInGame(u_char side, u_char type)
 
     switch (type)
     {
-        case 0:
+        case ALBM_MODE_INIT:
 #ifdef BUILD_EU_VERSION
             load_id = LoadReqLanguage(PL_ALBM_SW_E_PK2, addr);
 #else
@@ -3358,7 +3358,7 @@ char AlbumModeInGameOver()
 
             switch (McAtLoadChk(2))
             {
-                case 0:
+                case ALBM_MODE_INIT:
                     // do nothing ...
                     break;
                 case 1:
@@ -3483,7 +3483,7 @@ char AlbumModeInGameOver()
 
             switch (SweetMemories(0, 0x80))
             {
-                case 0:
+                case ALBM_MODE_INIT:
                     // do nothing ...
                     break;
                 case 1:
@@ -3568,7 +3568,7 @@ char AlbumModeInGameOver()
 
             switch (McAtAlbmChk())
             {
-                case 0:
+                case ALBM_MODE_INIT:
                     // do nothing ...
                     break;
                 case 1:

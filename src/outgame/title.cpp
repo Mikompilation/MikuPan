@@ -119,11 +119,11 @@ static int TitleRmlVisualSelectionToTitleSelection(int selection)
 {
     switch (selection)
     {
-    case 0:
+    case TITLE_INIT:
         return 0;
-    case 1:
+    case TITLE_WAIT:
         return 1;
-    case 2:
+    case TITLE_TITLE:
         return 2;
     default:
         return -1;
@@ -758,7 +758,7 @@ void TitleCtrl()
 
         switch (load_result)
         {
-        case 1:
+        case TITLE_WAIT:
             ingame_wrk.stts &= (0x80 | 0x40 | 0x10 | 0x8 | 0x4 | 0x2 | 0x1);
             InitialDmaBuffer();
 
@@ -775,7 +775,7 @@ void TitleCtrl()
                 GameModeChange(GMC_OUT_MENU_IN);
             }
             break;
-        case 2:
+        case TITLE_TITLE:
             EAdpcmFadeOut(0x3c);
             title_wrk.mode = TITLE_TITLE_SEL_BGMREQ;
             ingame_wrk.stts &= (0x80 | 0x40 | 0x10 | 0x8 | 0x4 | 0x2 | 0x1);
@@ -852,7 +852,7 @@ void TitleCtrl()
         switch (McAtLoadChk(2))
         {
         case 0: break;
-        case 1:
+        case TITLE_WAIT:
             album_save_dat[0] = mc_album_save;
             mc_pnum1 = mc_photo_num;
             mc_atyp1 = mc_album_type;
@@ -866,7 +866,7 @@ void TitleCtrl()
             title_wrk.mode = TITLE_ALBM_LOAD2;
             break;
         case 3: info_log("ここに来るわけがない！ (code shouldnt have reached here!)"); break;
-        case 2:
+        case TITLE_TITLE:
             EAdpcmFadeOut(0x3c);
 
             title_wrk.mode = TITLE_TITLE_SEL_BGMREQ;
@@ -879,10 +879,10 @@ void TitleCtrl()
 
         switch (McAtLoadChk(2))
         {
-        case 0:
+        case TITLE_INIT:
             // do nothing ...
         break;
-        case 1:
+        case TITLE_WAIT:
             album_save_dat[1] = mc_album_save;
 
             mc_pnum2 = mc_photo_num;
@@ -906,7 +906,7 @@ void TitleCtrl()
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
-        case 3:
+        case TITLE_TITLE_WAIT:
             mc_pnum2 = 0;
             mc_atyp2 = 5;
             mc_slot2 = 0;
@@ -930,7 +930,7 @@ void TitleCtrl()
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
-        case 2:
+        case TITLE_TITLE:
             EAdpcmFadeOut(0x3c);
 
             title_wrk.mode = TITLE_TITLE_SEL_BGMREQ;
@@ -950,7 +950,7 @@ void TitleCtrl()
         switch(SweetMemories(1, 0x80))
         {
         case 0: break;
-        case 1:
+        case TITLE_WAIT:
             memcpy((void *)MikuPan_GetHostPointer(0x5a0000), (void *)MikuPan_GetHostPointer(0xe80000), 0x180000);
 
             mcInit(2, (u_int *)MikuPan_GetHostAddress(MC_WORK_ADDRESS), 0);
@@ -969,7 +969,7 @@ void TitleCtrl()
 
             title_wrk.mode = TITLE_ALBM_SAVE_PRE;
         break;
-        case 2:
+        case TITLE_TITLE:
             memcpy((void *)MikuPan_GetHostPointer(0x5a0000), (void *)MikuPan_GetHostPointer(0x1000000), 0x180000);
 
             mcInit(2, (u_int *)MikuPan_GetHostAddress(MC_WORK_ADDRESS), 0);
@@ -988,7 +988,7 @@ void TitleCtrl()
 
             title_wrk.mode = TITLE_ALBM_SAVE_PRE;
         break;
-        case 3:
+        case TITLE_TITLE_WAIT:
 #ifdef BUILD_EU_VERSION
                 title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
                 title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
@@ -1005,7 +1005,7 @@ void TitleCtrl()
 
             title_wrk.mode = TITLE_ALBM_LOAD_MODE_PRE;
         break;
-        case 4:
+        case TITLE_TITLE_WAIT2:
 #ifdef BUILD_EU_VERSION
                 title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
                 title_wrk.load_id = LoadReqLanguage(PL_SAVE_E_PK2, SPRITE_ADDR_2);
@@ -1022,7 +1022,7 @@ void TitleCtrl()
 
             title_wrk.mode = TITLE_ALBM_LOAD_MODE_PRE;
         break;
-        case 5:
+        case TITLE_TITLE_SEL:
             EAdpcmFadeOut(0x3c);
 
             title_wrk.mode = TITLE_TITLE_SEL_BGMREQ;
@@ -1047,11 +1047,11 @@ void TitleCtrl()
 
         switch (McAtLoadChk(2))
         {
-        case 0:
+        case TITLE_INIT:
             // do nothing ...
         break;
-        case 3:
-        case 1:
+        case TITLE_TITLE_WAIT:
+        case TITLE_WAIT:
             if (title_wrk.load_side == 0)
             {
                 memcpy((void *)MikuPan_GetHostPointer(0xe80000), (void *)MikuPan_GetHostPointer(0x5a0000), 0x180000);
@@ -1088,7 +1088,7 @@ void TitleCtrl()
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
-        case 2:
+        case TITLE_TITLE:
             MemAlbmInit3();
             AlbmDesignLoad(0, mc_atyp1);
             AlbmDesignLoad(1, mc_atyp2);
@@ -1116,10 +1116,10 @@ void TitleCtrl()
 
         switch (McAtAlbmChk())
         {
-        case 0:
+        case TITLE_INIT:
             // do nothing ...
         break;
-        case 1:
+        case TITLE_WAIT:
             if (title_wrk.load_side == 0)
             {
                 mc_pnum1 = mc_photo_num;
@@ -1149,7 +1149,7 @@ void TitleCtrl()
 
             title_wrk.mode = TITLE_ALBM_MAIN_PRE;
         break;
-        case 2:
+        case TITLE_TITLE:
             MemAlbmInit3();
 
             AlbmDesignLoad(0, mc_atyp1);
@@ -1600,14 +1600,14 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
             switch (TitleRmlVisualSelectionToTitleSelection(title_wrk.csr))
             {
-            case 0:
+            case TITLE_INIT:
                 NewGameInit();
                 EAdpcmFadeOut(60);
                 ingame_wrk.game = 0;
                 GameModeChange(GMC_OUT_MENU_IN);
                 SeStartFix(1, 0, 0x1000, 0x1000, 0);
             break;
-            case 1:
+            case TITLE_WAIT:
                 title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
                 title_wrk.load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
                 title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
@@ -1623,7 +1623,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
                 SeStartFix(1, 0, 0x1000, 0x1000, 0);
                 EAdpcmFadeOut(60);
             break;
-            case 2:
+            case TITLE_TITLE:
                 title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
                 title_wrk.load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
                 title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
@@ -1647,7 +1647,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         if (*key_now[4] == 1)
         {
             ttl_dsp.timer = 0;
-            title_wrk.mode = 2;
+            title_wrk.mode = TITLE_TITLE;
 
             SeStartFix(3, 0, 0x1000, 0x1000, 0);
             return;
@@ -1829,15 +1829,15 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
         switch (title_wrk.csr)
         {
-        case 0:
+        case TITLE_INIT:
             NewGameInit();
 
-            title_wrk.mode = 9;
+            title_wrk.mode = TITLE_MODE_SEL;
             title_wrk.csr = 0;
 
             SeStartFix(1, 0, 0x1000, 0x1000, 0);
         break;
-        case 1:
+        case TITLE_WAIT:
             title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
             title_wrk.load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
             title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
@@ -1853,7 +1853,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
             SeStartFix(1, 0, 0x1000, 0x1000, 0);
             EAdpcmFadeOut(60);
         break;
-        case 2:
+        case TITLE_TITLE:
             title_wrk.load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
             title_wrk.load_id = LoadReqLanguage(PL_STTS_E_PK2, 0x1ce0000);
             title_wrk.load_id = LoadReqLanguage(PL_PSVP_E_PK2, SPRITE_ADDR_4);
@@ -1874,7 +1874,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
     else if (*key_now[4] == 1)
     {
         ttl_dsp.timer = 0;
-        title_wrk.mode = 2;
+        title_wrk.mode = TITLE_TITLE;
 
         SeStartFix(3, 0, 0x1000, 0x1000, 0);
     }
@@ -1970,61 +1970,61 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
         {
             switch (mode)
             {
-            case 0:
+            case TITLE_INIT:
                 chr1 = 8;
                 chr2 = 4;
 
                 switch (title_wrk.csr)
                 {
-                case 0:
+                case TITLE_INIT:
                     adj = 0;
                     dsp = 1;
                 break;
-                case 1:
+                case TITLE_WAIT:
                     adj = 0;
                     dsp = 0;
                 break;
-                case 2:
+                case TITLE_TITLE:
                     adj = 0;
                     dsp = 0;
                 break;
                 }
             break;
-            case 1:
+            case TITLE_WAIT:
                 chr1 = 0;
                 chr2 = 5;
 
                 switch (title_wrk.csr)
                 {
-                case 0:
+                case TITLE_INIT:
                     adj = 35;
                     dsp = 0;
                 break;
-                case 1:
+                case TITLE_WAIT:
                     adj = 35;
                     dsp = 1;
                 break;
-                case 2:
+                case TITLE_TITLE:
                     adj = 35;
                     dsp = 0;
                 break;
                 }
             break;
-            case 2:
+            case TITLE_TITLE:
                 chr1 = 7;
                 chr2 = 0xff;
 
                 switch (title_wrk.csr)
                 {
-                case 0:
+                case TITLE_INIT:
                     adj = 70;
                     dsp = 0;
                 break;
-                case 1:
+                case TITLE_WAIT:
                     adj = 70;
                     dsp = 0;
                 break;
-                case 2:
+                case TITLE_TITLE:
                     adj = 70;
                     dsp = 1;
                 break;
@@ -2137,14 +2137,14 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
 
         switch (rml_title != 0 ? TitleRmlVisualSelectionToTitleSelection(title_wrk.csr) : title_wrk.csr)
         {
-        case 0:
+        case TITLE_INIT:
             NewGameInit();
             EAdpcmFadeOut(60);
             ingame_wrk.game = 0;
             GameModeChange(GAME_MODE_INIT);
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         break;
-        case 1:
+        case TITLE_WAIT:
             title_wrk.load_id = LoadReq(PL_BGBG_PK2, PL_BGBG_PK2_ADDRESS);
             title_wrk.load_id = LoadReq(PL_STTS_PK2, PL_STTS_PK2_ADDRESS);
             title_wrk.load_id = LoadReq(PL_PSVP_PK2, PL_PSVP_PK2_ADDRESS);
@@ -2160,7 +2160,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             EAdpcmFadeOut(60);
         break;
-        case 2:
+        case TITLE_TITLE:
             title_wrk.load_id = LoadReq(PL_BGBG_PK2, PL_BGBG_PK2_ADDRESS);
             title_wrk.load_id = LoadReq(PL_STTS_PK2, PL_STTS_PK2_ADDRESS);
             title_wrk.load_id = LoadReq(PL_PSVP_PK2, PL_PSVP_PK2_ADDRESS);
@@ -2181,7 +2181,7 @@ void TitleStartSlctYW(u_char pad_off, u_char alp_max)
     else if (TRIANGLE_PRESSED() == 1)
     {
         ttl_dsp.timer = 0;
-        title_wrk.mode = 2;
+        title_wrk.mode = TITLE_TITLE;
 
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
@@ -2288,7 +2288,7 @@ void TitleSelectMode()
     }
     else if (TRIANGLE_PRESSED() == 1)
     {
-        title_wrk.mode = 3;
+        title_wrk.mode = TITLE_TITLE_WAIT;
 
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
@@ -2296,39 +2296,39 @@ void TitleSelectMode()
     {
         switch(title_wrk.csr)
         {
-            case 0:
+            case TITLE_INIT:
                 ingame_wrk.game = 0;
 
                 GameModeChange(GMC_OUT_MENU_IN);
                 break;
-            case 1:
+            case TITLE_WAIT:
                 OutGameModeChange(OUTGAME_MODE_BATTLE);
                 break;
-            case 2:
+            case TITLE_TITLE:
                 OutGameModeChange(OUTGAME_MODE_FREE);
                 break;
-            case 3:
+            case TITLE_TITLE_WAIT:
                 OutGameModeChange(OUTGAME_MODE_OPTION);
                 break;
             case 4: // MAP DATA EDIT
                 OutGameModeChange(OUTGAME_MODE_MAP_DATA_EDIT);
                 break;
-            case 5:
+            case TITLE_TITLE_SEL:
                 OutGameModeChange(OUTGAME_MODE_SOUND_TEST);
                 break;
-            case 6:
+            case TITLE_LOAD_PRE:
                 OutGameModeChange(OUTGAME_MODE_SND_TEST);
                 break;
-            case 7:
+            case TITLE_MEMCA_LOAD_WAIT:
                 OutGameModeChange(OUTGAME_MODE_SCENE_TEST);
                 break;
-            case 8:
+            case TITLE_MEMCA_LOAD:
                 OutGameModeChange(OUTGAME_MODE_MOTION_TEST);
                 break;
-            case 9:
+            case TITLE_MODE_SEL:
                 OutGameModeChange(OUTGAME_MODE_ROOM_SIZE_CHECK);
                 break;
-            case 10:
+            case TITLE_DIFF_SEL:
                 OutGameModeChange(OUTGAME_MODE_LAYOUT_TEST);
                 break;
         }
@@ -2354,41 +2354,41 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
     {
         switch (mode)
         {
-        case 0:
+        case TITLE_INIT:
             chr1 = 3;
             chr2 = 6;
 
             switch (title_wrk.csr)
             {
-            case 0:
+            case TITLE_INIT:
                 adj = 17;
                 dsp = 1;
             break;
-            case 1:
+            case TITLE_WAIT:
                 adj = 17;
                 dsp = 0;
             break;
-            case 2:
+            case TITLE_TITLE:
                 adj = 17;
                 dsp = 0;
             break;
             }
         break;
-        case 1:
+        case TITLE_WAIT:
             chr1 = 9;
             chr2 = 0xff;
 
             switch (title_wrk.csr)
             {
-            case 0:
+            case TITLE_INIT:
                 adj = 52;
                 dsp = 0;
             break;
-            case 1:
+            case TITLE_WAIT:
                 adj = 52;
                 dsp = 1;
             break;
-            case 2:
+            case TITLE_TITLE:
                 adj = 52;
                 dsp = 0;
             break;
@@ -2445,7 +2445,7 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
     {
         switch (title_wrk.csr)
         {
-        case 0:
+        case TITLE_INIT:
             EAdpcmFadeOut(60);
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
@@ -2453,7 +2453,7 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
 
             GameModeChange(GMC_OUT_MENU_IN);
         break;
-        case 1:
+        case TITLE_WAIT:
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             ModeSlctInit(3, 5);
 
@@ -2466,7 +2466,7 @@ void TitleSelectModeYW(u_char pad_off, u_char alp_max)
     }
     else if (TRIANGLE_PRESSED() == 1)
     {
-        title_wrk.mode = 23;
+        title_wrk.mode = TITLE_TITLE_SEL_INIT;
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
     else if (
@@ -2548,13 +2548,13 @@ void TitleSelectDifficultyYW()
 
     switch (title_wrk.csr)
     {
-    case 0:
+    case TITLE_INIT:
         chr = 1;
     break;
-    case 1:
+    case TITLE_WAIT:
         chr = 10;
     break;
-    case 2:
+    case TITLE_TITLE:
         chr = 2;
     break;
     }
@@ -2568,13 +2568,13 @@ void TitleSelectDifficultyYW()
 
     if (CROSS_PRESSED() == 1 || *key_now[0xc] == 1)
     {
-        title_wrk.mode = 9;
+        title_wrk.mode = TITLE_MODE_SEL;
 
         SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
     }
     else if (TRIANGLE_PRESSED() == 1)
     {
-        title_wrk.mode = 9;
+        title_wrk.mode = TITLE_MODE_SEL;
 
         SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
     }
@@ -2751,31 +2751,31 @@ void DispOutDither()
 
     switch(out_dither.type)
     {
-    case 1:
+    case TITLE_WAIT:
         de2.alpha = 0x44;
     break;
-    case 2:
+    case TITLE_TITLE:
         de2.alpha = 0x48;
     break;
-    case 3:
+    case TITLE_TITLE_WAIT:
         de2.alpha = 0x41;
     break;
-    case 4:
+    case TITLE_TITLE_WAIT2:
         sd2.r = 0x80;
         sd2.g = 0x0;
         sd2.b = 0x80;
         de2.alpha = 0x41;
     break;
-    case 5:
+    case TITLE_TITLE_SEL:
         sd2.r = 0x80;
         sd2.g = 0x80;
         sd2.b = 0x0;
         de2.alpha = 0x41;
     break;
-    case 6:
+    case TITLE_LOAD_PRE:
         de2.alpha = 0x49;
     break;
-    case 7:
+    case TITLE_MEMCA_LOAD_WAIT:
         de2.alpha = 0x42;
     break;
     }
@@ -2867,42 +2867,42 @@ int AlbmDesignLoad(u_char side, u_char type)
 
     switch(type)
     {
-        case 0:
+        case TITLE_INIT:
 #ifdef BUILD_EU_VERSION
             load_id = LoadReqLanguage(PL_ALBM_BW_E_PK2, addr);
 #else
             load_id = LoadReq(PL_ALBM_BW_PK2, addr);
 #endif
             break;
-        case 1:
+        case TITLE_WAIT:
 #ifdef BUILD_EU_VERSION
             load_id = LoadReqLanguage(PL_ALBM_BP_E_PK2, addr);
 #else
             load_id = LoadReq(PL_ALBM_BP_PK2, addr);
 #endif
             break;
-        case 2:
+        case TITLE_TITLE:
 #ifdef BUILD_EU_VERSION
             load_id = LoadReqLanguage(PL_ALBM_BR_E_PK2, addr);
 #else
             load_id = LoadReq(PL_ALBM_BR_PK2, addr);
 #endif
             break;
-        case 3:
+        case TITLE_TITLE_WAIT:
 #ifdef BUILD_EU_VERSION
             load_id = LoadReqLanguage(PL_ALBM_BG_E_PK2, addr);
 #else
             load_id = LoadReq(PL_ALBM_BG_PK2, addr);
 #endif
             break;
-        case 4:
+        case TITLE_TITLE_WAIT2:
 #ifdef BUILD_EU_VERSION
             load_id = LoadReqLanguage(PL_ALBM_BB_E_PK2, addr);
 #else
             load_id = LoadReq(PL_ALBM_BB_PK2, addr);
 #endif
             break;
-        case 5:
+        case TITLE_TITLE_SEL:
 #ifdef BUILD_EU_VERSION
             load_id = LoadReqLanguage(PL_ALBM_BO_E_PK2, addr);
 #else
@@ -2940,11 +2940,11 @@ int SetTecmoLogo() {
 
     switch (title_sys.logo_flow)
     {
-    case 0:
+    case TITLE_INIT:
         title_sys.cnt = 0;
         title_sys.alp = 0;
         title_sys.logo_flow = 1;
-    case 1:
+    case TITLE_WAIT:
         title_sys.alp = title_sys.cnt * 128 / sec1;
         title_sys.cnt++;
         if (title_sys.cnt >= sec1)
@@ -2953,7 +2953,7 @@ int SetTecmoLogo() {
             title_sys.logo_flow = 2;
         }
     break;
-    case 2:
+    case TITLE_TITLE:
         title_sys.alp = 128;
         title_sys.cnt++;
         if (title_sys.cnt >= sec2)
@@ -2962,7 +2962,7 @@ int SetTecmoLogo() {
             title_sys.logo_flow = 3;
         }
     break;
-    case 3:
+    case TITLE_TITLE_WAIT:
         title_sys.alp = (sec3 - title_sys.cnt) * 128 / sec3;
         title_sys.cnt++;
         if (title_sys.cnt >= sec3)
@@ -2971,7 +2971,7 @@ int SetTecmoLogo() {
             title_sys.cnt = 0;
         }
     break;
-    case 4:
+    case TITLE_TITLE_WAIT2:
         title_sys.alp = 0;
         title_sys.cnt++;
         if (title_sys.cnt >= sec4) {
@@ -2980,7 +2980,7 @@ int SetTecmoLogo() {
             title_sys.logo_flow = 5;
         }
     break;
-    case 5:
+    case TITLE_TITLE_SEL:
         title_sys.alp = title_sys.cnt * 128 / sec1;
         title_sys.cnt++;
         if (title_sys.cnt >= sec1)
@@ -2989,7 +2989,7 @@ int SetTecmoLogo() {
             title_sys.logo_flow = 6;
         }
     break;
-    case 6:
+    case TITLE_LOAD_PRE:
         title_sys.alp = 128;
         title_sys.cnt++;
         if (title_sys.cnt >= sec2)
@@ -2998,7 +2998,7 @@ int SetTecmoLogo() {
             title_sys.logo_flow = 7;
         }
     break;
-    case 7:
+    case TITLE_MEMCA_LOAD_WAIT:
         title_sys.alp = (sec3 - title_sys.cnt) * 128 / sec3;
         title_sys.cnt++;
         if (title_sys.cnt >= sec3)
@@ -3007,7 +3007,7 @@ int SetTecmoLogo() {
             title_sys.logo_flow = 8;
         }
     break;
-    case 8:
+    case TITLE_MEMCA_LOAD:
         return 1;
     default:
     break;
@@ -3051,10 +3051,10 @@ int SetSelectLanguage(int cur_pos)
 
     switch(title_sys.lang_sel_flow)
     {
-    case 0:
+    case TITLE_INIT:
         title_sys.load_id = LoadReq(LOGO_PK2, 0x1e90000);
         title_sys.lang_sel_flow = 1;
-    case 1:
+    case TITLE_WAIT:
         if (IsLoadEnd(title_sys.load_id) != 0)
         {
             title_sys.alp = 0;
@@ -3062,7 +3062,7 @@ int SetSelectLanguage(int cur_pos)
             title_sys.lang_sel_flow = 2;
         }
     break;
-    case 2:
+    case TITLE_TITLE:
         if (title_sys.alp + 0x10 < 0x80)
         {
             title_sys.alp += 0x10;
@@ -3073,10 +3073,10 @@ int SetSelectLanguage(int cur_pos)
             title_sys.lang_sel_flow = 3;
         }
     break;
-    case 3:
+    case TITLE_TITLE_WAIT:
         title_sys.alp = 0x80;
     break;
-    case 4:
+    case TITLE_TITLE_WAIT2:
         if (title_sys.alp - 0x10 > 0)
         {
             title_sys.alp -= 0x10;
@@ -3090,7 +3090,7 @@ int SetSelectLanguage(int cur_pos)
             }
         }
     break;
-    case 5:
+    case TITLE_TITLE_SEL:
         // do nothing ...
     break;
     }

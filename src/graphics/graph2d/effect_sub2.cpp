@@ -2410,34 +2410,34 @@ void ResultDisp()
 {
 	/* s0 16 */ u_long clear_time;
     
-    PutStringYW(0x2e, 13, 118, 163, 0x808080, 0x80, 0x23000, 0);
-    PutStringYW(0x2e, 14, 218, 163, 0x808080, 0x80, 0x23000, 0);
-    PutStringYW(0x2e, 15, 118, 203, 0x808080, 0x80, 0x23000, 0);
-    PutStringYW(0x2e, 16, 203, 203, 0x808080, 0x80, 0x23000, 0);
-    PutStringYW(0x2e, 17, 118, 243, 0x808080, 0x80, 0x23000, 0);
-    PutStringYW(0x2e, 18, 218, 243, 0x808080, 0x80, 0x23000, 0);
-    PutStringYW(0x2e, 19, 118, 303, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 13, 118, 163, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 14, 218, 163, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 15, 118, 203, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 16, 203, 203, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 17, 118, 243, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 18, 218, 243, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 19, 118, 303, 0x808080, 0x80, 0x23000, 0);
 #ifdef BUILD_EU_VERSION
-    PutStringYW(0x2e, 40, 118, 333, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 40, 118, 333, 0x808080, 0x80, 0x23000, 0);
 #else
-    PutStringYW(0x2e, 17, 118, 333, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 17, 118, 333, 0x808080, 0x80, 0x23000, 0);
 #endif
     
     clear_time = stage_dat[btl_wrk.stage_no].time - btl_wrk.time;
     
     PutNumberYW(0x3, clear_time / 3600, 429, 163, 1.0f, 1.0f, 0x808080, 0x80, 0x23000, 1, 1);
-    PutStringYW(0x2e, 11, 442, 163, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 11, 442, 163, 0x808080, 0x80, 0x23000, 0);
     PutNumberYW(0x3, (clear_time / 60) % 60, 456, 163, 1.0f, 1.0f, 0x808080, 0x80, 0x23000, 2, 1);
-    PutStringYW(0x2e, 11, 487, 163, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 11, 487, 163, 0x808080, 0x80, 0x23000, 0);
     PutNumberYW(0x3, (clear_time * 100 / 60) % 100, 499, 163, 1.0f, 1.0f, 0x808080, 0x80, 0x23000, 2, 1);
     PutNumberYW(0x3, msn_high_score, 428, 203, 1.0f, 1.0f, 0x808080, 0x80, 0x23000, 4, 0);
-    PutStringYW(0x2e, 12, 493, 203, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 12, 493, 203, 0x808080, 0x80, 0x23000, 0);
     PutNumberYW(0x3, msn_total_score, 364, 243, 1.0f, 1.0f, 0x808080, 0x80, 0x23000, 8, 0);
-    PutStringYW(0x2e, 12, 493, 243, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 12, 493, 243, 0x808080, 0x80, 0x23000, 0);
     PutNumberYW(0x3, msn_bonus, 364, 303, 1.0f, 1.0f, 0x808080, 0x80, 0x23000, 8, 0);
-    PutStringYW(0x2e, 12, 493, 303, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 12, 493, 303, 0x808080, 0x80, 0x23000, 0);
     PutNumberYW(0x3, msn_bonus + msn_total_score, 364, 333, 1.0f, 1.0f, 0x808080, 0x80, 0x23000, 8, 0);
-    PutStringYW(0x2e, 12, 493, 333, 0x808080, 0x80, 0x23000, 0);
+    PutStringYW(IGMSG_BTL_MSON, 12, 493, 333, 0x808080, 0x80, 0x23000, 0);
 }
 
 int CallMissionClear()
@@ -2454,11 +2454,11 @@ int CallMissionClear()
     {
     case 0:
         plyr_wrk.sta |= 2;
-        btl_wrk.mode = 3;
+        btl_wrk.mode = BTL_MODE_CLEAR;
         
         if (plyr_wrk.mode == 1) {
             FinderEndSet();
-            plyr_wrk.mode = 3;
+            plyr_wrk.mode = PMODE_FINDER_END;
         }
         AdpcmPreBtlmodeFadeOut(0);
         SeFadeFlameAll(0x1e, 0);
@@ -2546,7 +2546,7 @@ int CallMissionClear()
             sd.b = 0x80;
             sd.alpha = 0x80;
             sd.pri = 0x1000;
-            sd.str = (u_char *)GetIngameMSGAddr(0x6, 43);
+            sd.str = (u_char *)GetIngameMSGAddr(IGMSG_MENU_MSG, 43);
             sd.pos_x = 88;
             sd.pos_y = 320;
             sd.type = 0;
@@ -2581,11 +2581,11 @@ uint64_t CallMissionFailed()
     {
     case 0:
         plyr_wrk.sta |= 2;
-        btl_wrk.mode = 2;
+        btl_wrk.mode = BTL_MODE_FAILED;
         
-        if (plyr_wrk.mode == 1 || plyr_wrk.mode == 6) {
+        if (plyr_wrk.mode == PMODE_FINDER || plyr_wrk.mode == PMODE_FINDER_IN) {
             FinderEndSet();
-            plyr_wrk.mode = 3;
+            plyr_wrk.mode = PMODE_FINDER_END;
         }
         AdpcmPreBtlmodeFadeOut(0);
         SeFadeFlameAll(0x1e, 0);
@@ -2701,12 +2701,12 @@ int CallMissionAllClear()
     {
     case 0:
         plyr_wrk.sta = plyr_wrk.sta | 2;
-        btl_wrk.mode = 3;
+        btl_wrk.mode = BTL_MODE_CLEAR;
         
-        if (plyr_wrk.mode == 1)
+        if (plyr_wrk.mode == PMODE_FINDER)
         {
             FinderEndSet();
-            plyr_wrk.mode = 3;
+            plyr_wrk.mode = PMODE_FINDER_END;
         }
         AdpcmPreBtlmodeFadeOut(0);
         SeFadeFlameAll(0x1e, 0);
@@ -2819,7 +2819,7 @@ int CallMissionAllClear()
             sd.b = 0x80;
             sd.alpha = 0x80;
             sd.pri = 0x1000;
-            sd.str = (u_char *)GetIngameMSGAddr(0x6, 0x2a);
+            sd.str = (u_char *)GetIngameMSGAddr(IGMSG_MENU_MSG, 0x2a);
 #if BUILD_EU_VERSION
             sd.pos_x = 46;
             sd.pos_y = 274;
@@ -2911,7 +2911,7 @@ int CallStoryClear()
         
         if (clear_disp_mode == 1)
         {
-            sd.str = (u_char *)GetIngameMSGAddr(6, 41);
+            sd.str = (u_char *)GetIngameMSGAddr(IGMSG_MENU_MSG, 41);
 #if BUILD_EU_VERSION
             sd.pos_x = 72;
             sd.pos_y = 170;
@@ -2930,7 +2930,7 @@ int CallStoryClear()
         }
         if (clear_disp_mode == 2)
         {
-            sd.str = (u_char *)GetIngameMSGAddr(6, 44);
+            sd.str = (u_char *)GetIngameMSGAddr(IGMSG_MENU_MSG, 44);
 #if BUILD_EU_VERSION
             sd.pos_x = 72;
             sd.pos_y = 182;
@@ -2950,7 +2950,7 @@ int CallStoryClear()
         
         if (clear_disp_mode == 3)
         {
-            sd.str = (u_char *)GetIngameMSGAddr(6, 45);
+            sd.str = (u_char *)GetIngameMSGAddr(IGMSG_MENU_MSG, 45);
 #if BUILD_EU_VERSION
             sd.pos_x = 94;
             sd.pos_y = 205;
@@ -3002,18 +3002,18 @@ int CallStoryClear()
         }
         else
         {
-            PutStringYW(0x2e, 13, 118, 123, 0x808080, 0x80, 0x18000, 0);
-            PutStringYW(0x2e, 14, 218, 123, 0x808080, 0x80, 0x18000, 0);
+            PutStringYW(IGMSG_BTL_MSON, 13, 118, 123, 0x808080, 0x80, 0x18000, 0);
+            PutStringYW(IGMSG_BTL_MSON, 14, 218, 123, 0x808080, 0x80, 0x18000, 0);
             
             PutNumberYW(0x3, clear_time / (3600 * 60), 413, 123, 1.0f, 1.0f, 0x808080, 0x80, 0x18000, 2, 1);
-            PutStringYW(0x2e, 11, 442, 123, 0x808080, 0x80, 0x18000, 0);
+            PutStringYW(IGMSG_BTL_MSON, 11, 442, 123, 0x808080, 0x80, 0x18000, 0);
             PutNumberYW(0x3, (clear_time / 3600) % 60, 456, 123, 1.0f, 1.0f, 0x808080, 0x80, 0x18000, 2, 1);
-            PutStringYW(0x2e, 11, 487, 123, 0x808080, 0x80, 0x18000, 0);
+            PutStringYW(IGMSG_BTL_MSON, 11, 487, 123, 0x808080, 0x80, 0x18000, 0);
             PutNumberYW(0x3, (clear_time / 60) % 60, 499, 123, 1.0f, 1.0f, 0x808080, 0x80, 0x18000, 2, 1);
-            PutStringYW(0x2e, 17, 118, 163, 0x808080, 0x80, 0x18000, 0);
-            PutStringYW(0x2e, 18, 218, 163, 0x808080, 0x80, 0x18000, 0);
+            PutStringYW(IGMSG_BTL_MSON, 17, 118, 163, 0x808080, 0x80, 0x18000, 0);
+            PutStringYW(IGMSG_BTL_MSON, 18, 218, 163, 0x808080, 0x80, 0x18000, 0);
             PutNumberYW(0x3, t_point, 364, 163, 1.0f, 1.0f, 0x808080, 0x80, 0x18000, 8, 0);
-            PutStringYW(0x2e, 12, 493, 163, 0x808080, 0x80, 0x18000, 0);
+            PutStringYW(IGMSG_BTL_MSON, 12, 493, 163, 0x808080, 0x80, 0x18000, 0);
         }
     }
     
@@ -3520,7 +3520,7 @@ void BtlReadyDisp(/* s0 16 */ ANM2D_WRK_TABLE *w_table)
     }
     else if (ANM2D_DAT_TABLE_P(w_table->table_p)->attribute & 0x20)
     {
-        PutStringYW(0x2e, 0x14, w_table->sdat[0].x, w_table->sdat[0].y, 0x808080, 0x80, 0x1000, 0);
+        PutStringYW(IGMSG_BTL_MSON, 0x14, w_table->sdat[0].x, w_table->sdat[0].y, 0x808080, 0x80, 0x1000, 0);
     }
     else if (ANM2D_DAT_TABLE_P(w_table->table_p)->attribute & 0x100)
     {

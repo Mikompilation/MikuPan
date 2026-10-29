@@ -475,21 +475,21 @@ void acsRopeMoveWind(ROPE_CTRL* rope, char dir_cng)
     {
         switch (rope->furn_id)
         {
-        case 177:
+        case M2_FRN_HIMO1:
             rope->pow = 0.07f;
         break;
-        case 178:
+        case M2_FRN_LIGHT1:
             rope->pow = 0.07f;
             cnt = 5;
         break;
-        case 209:
+        case M1_FRN_WLIGHT0:
             rope->pow = 0.08f;
         break;
-        case 264:
+        case M1_FRN_264:
             rope->pow = 0.0f;
             cnt = 10;
         break;
-        case 293:
+        case M1_FRN_293:
             rope->pow = 0.04f;
             cnt = 10;
         break;
@@ -1550,7 +1550,7 @@ char acsChodoMoveBird(SgCOORDUNIT *cp, float *p, CMOVE_CTRL *mv)
     sceVu0FVECTOR v1;
     sceVu0FVECTOR v2;
 
-    if (mv->furn_id == 286)
+    if (mv->furn_id == M1_FRN_286)
     {
         start[0] = 23547.0f;
         start[1] = -2345.0f;
@@ -1607,7 +1607,7 @@ char acsChodoMoveBird(SgCOORDUNIT *cp, float *p, CMOVE_CTRL *mv)
 
     if (!(ingame_wrk.stts & 0x10) && !(ingame_wrk.stts & 0x80))
     {
-        if (mv->furn_id == 286)
+        if (mv->furn_id == M1_FRN_286)
         {
             if (mv->timer == 0)
             {

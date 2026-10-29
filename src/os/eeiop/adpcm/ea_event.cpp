@@ -86,23 +86,23 @@ void EAdpcmEventMain()
 void AdpcmPlayEvent(/* a0 4 */ int file_no, /* s1 17 */ u_short start_flm, /* s2 18 */ int fade_flm)
 {
     switch(file_no) {
-    case 0:
+    case AMEV_MODE_PRE_FADE_OUT:
         adpcm_map.event.para.file_no = AVMC000_KIRIE0_STR;
     break;
-    case 1:
+    case AMEV_MODE_REQ_WAIT_STOP:
         adpcm_map.event.para.file_no = AVMC001_KIRIE1_STR;
     break;
-    case 2:
+    case AMEV_MODE_REQ_PLAY:
         adpcm_map.event.para.file_no = AVMC002_KIRIE2_STR;
     break;
-    case 3:
+    case AMEV_MODE_REQ_PLAYING:
         adpcm_map.event.para.file_no = AVMC003_MAHUYU0_STR;
 #ifdef BUILD_EU_VERSION
         InitSubtitlesSys();
         SetSubtitlesNCntOne(2, 0);
 #endif
     break;
-    case 4:
+    case AMEV_MODE_END:
         adpcm_map.event.para.file_no = AVMC004_MAHUYU1_STR;
     break;
     case 5:

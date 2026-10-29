@@ -74,7 +74,7 @@ void LoadgameMenuAlbumInit()
 void StartAlbumModeInit()
 {
     ig_menu_wrk.csr[1] = 0;
-    ig_menu_wrk.csr[2] = ig_menu_wrk.csr_bak[2] = 0;
+    ig_menu_wrk.csr[2] = ig_menu_wrk.csr_bak[2] = ALBM_MODE_ALL;
     ig_menu_wrk.csr[3] = 0;
     ig_menu_wrk.csr[5] = 0xff;
 
@@ -120,7 +120,7 @@ void IngameMenuAlbum(char is_outgame)
     }
     else
     {
-        if (ig_menu_wrk.csr[2] != 2)
+        if (ig_menu_wrk.csr[2] != ALBM_MODE_BIG)
         {
             if (yw2d.pad_lock == 0)
             {
@@ -144,7 +144,7 @@ void IngameMenuAlbum(char is_outgame)
                         SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                         ig_menu_wrk.csr_bak[2] = ig_menu_wrk.csr[2];
-                        ig_menu_wrk.csr[2] = 2;
+                        ig_menu_wrk.csr[2] = ALBM_MODE_BIG;
                     }
                 }
             }
@@ -168,7 +168,7 @@ void IngameMenuAlbum(char is_outgame)
 
                         ig_menu_wrk.csr[2] = ig_menu_wrk.csr_bak[2];
 
-                        if (ig_menu_wrk.csr_bak[2] == 1)
+                        if (ig_menu_wrk.csr_bak[2] == ALBM_MODE_LST)
                         {
                             if (pfile_wrk.pic_num >= 7)
                             {
@@ -200,13 +200,13 @@ void IngameMenuAlbum(char is_outgame)
         {
             switch (ig_menu_wrk.csr[2])
             {
-            case 0:
+            case ALBM_MODE_ALL:
                 IngameAlbumAllPad(&ig_menu_wrk.csr[1], &ig_menu_wrk.csr[3], &ig_menu_wrk.csr[2]);
             break;
-            case 1:
+            case ALBM_MODE_LST:
                 IngameAlbumLstPad(&ig_menu_wrk.csr[1], &ig_menu_wrk.csr[3], &ig_menu_wrk.csr[2]);
             break;
-            case 2:
+            case ALBM_MODE_BIG:
                 IngameAlbumBigPad(&ig_menu_wrk.csr[1], &ig_menu_wrk.csr[3], &ig_menu_wrk.csr[2]);
             break;
             }
@@ -402,7 +402,7 @@ void IngameAlbumAllPad(u_char *csr, u_char *csr_top, u_char *mode)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
-                *mode = 1;
+                *mode = ALBM_MODE_LST;
 
                 if (pfile_wrk.pic_num > 6)
                 {
@@ -536,7 +536,7 @@ void IngameAlbumLstPad(u_char *csr, u_char *csr_top, u_char *mode)
             {
                 SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
-                *mode = 0;
+                *mode = ALBM_MODE_ALL;
             }
         }
     }
@@ -790,7 +790,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
             {
                 switch (*csr0)
                 {
-                case 0:
+                case NRM_ALBM_CMD_SEAL:
                     if (*pic < pfile_wrk.pic_num)
                     {
                         if (pfile_wrk.pic[*pic].status & 0x2)
@@ -818,7 +818,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
 
                     *csr0 = 0xff;
                 break;
-                case 1:
+                case NRM_ALBM_CMD_DEL:
                     if (*pic < pfile_wrk.pic_num)
                     {
                         SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
@@ -830,7 +830,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                         SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 1);
                     }
                 break;
-                case 2:
+                case NRM_ALBM_CMD_MODE:
                     SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
                     albm_wrk.mmenu_tmr = 0;
@@ -840,7 +840,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
 
                     *mode = 1 - *mode;
 
-                    if (*mode == 1)
+                    if (*mode == ALBM_MODE_LST)
                     {
                         if (pfile_wrk.pic_num > 6)
                         {
@@ -864,10 +864,10 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                         }
                     }
                 break;
-                case 3:
+                case NRM_ALBM_CMD_SORT:
                     SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 1);
 
-                    *csr1 = 0;
+                    *csr1 = ALBM_SORT_DATE;
                 break;
                 }
             }
@@ -939,7 +939,7 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
     }
     else
     {
-        if (*csr0 == 3)
+        if (*csr0 == NRM_ALBM_CMD_SORT)
         {
             if (yw2d.pad_lock == 0)
             {
@@ -982,13 +982,13 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                     (Ana2PadDirCnt(0) > 25 && (Ana2PadDirCnt(0) % 5) == 1)
                 )
                 {
-                    if (*csr1 != 0)
+                    if (*csr1 != ALBM_SORT_DATE)
                     {
                         (*csr1)--;
                     }
                     else
                     {
-                        *csr1 = 2;
+                        *csr1 = ALBM_SORT_SEAL;
                     }
 
                     SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
@@ -1000,13 +1000,13 @@ static void CmndMenuClrB(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, 
                     (Ana2PadDirCnt(2) > 25 && (Ana2PadDirCnt(2) % 5) == 1)
                 )
                 {
-                    if (*csr1 != 2)
+                    if (*csr1 != ALBM_SORT_SEAL)
                     {
                         (*csr1)++;
                     }
                     else
                     {
-                        *csr1 = 0;
+                        *csr1 = ALBM_SORT_DATE;
                     }
 
                     SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 1);
@@ -1089,14 +1089,14 @@ static void IngameAlbumMenuDsp(u_char *csr0, u_char *csr1, u_char *pic, u_char *
 
                 if (pfile_wrk.pic[*pic].status & 0x2)
                 {
-                    PutStringYW(33, 2, 48, 179, 0x808080, 0x80, 0x5000, 0);
+                    PutStringYW(IGMSG_MENU_ALBUM, 2, 48, 179, 0x808080, 0x80, 0x5000, 0);
                 }
                 else
                 {
-                    PutStringYW(33, 1, 48, 179, 0x808080, 0x80, 0x5000, 0);
+                    PutStringYW(IGMSG_MENU_ALBUM, 1, 48, 179, 0x808080, 0x80, 0x5000, 0);
                 }
 
-                PutStringYW(33, 4, 48, 205, 0x808080, 0x80, 0x5000, 0);
+                PutStringYW(IGMSG_MENU_ALBUM, 4, 48, 205, 0x808080, 0x80, 0x5000, 0);
 
 #ifdef BUILD_EU_VERSION
                 YesNoCrslOKR(0xa000, *csr1 * 132 + 178, 203.0f, 0x808080, 128.0f, 2.0f);
@@ -1110,7 +1110,7 @@ static void IngameAlbumMenuDsp(u_char *csr0, u_char *csr1, u_char *pic, u_char *
 
         switch (*mode)
         {
-        case 0:
+        case ALBM_MODE_ALL:
             mnx = (*pic & 7) * 72 + 35;
 
             if ((*pic & 7) < 4)
@@ -1128,13 +1128,13 @@ static void IngameAlbumMenuDsp(u_char *csr0, u_char *csr1, u_char *pic, u_char *
                 smy = mmy;
             }
         break;
-        case 1:
+        case ALBM_MODE_LST:
             mmx = 485;
             mmy = 54;
             smx = mmx - 120;
             smy = mmy;
         break;
-        case 2:
+        case ALBM_MODE_BIG:
             mmx = 385;
             mmy = 54;
             smx = mmx - 120;
@@ -1156,14 +1156,14 @@ static void IngameAlbumMenuDsp(u_char *csr0, u_char *csr1, u_char *pic, u_char *
 
             if (pfile_wrk.pic[*pic].status & 0x2)
             {
-                PutStringYW(33, 2, 48, 179, 0x808080, 0x80, 0x5000, 0);
+                PutStringYW(IGMSG_MENU_ALBUM, 2, 48, 179, 0x808080, 0x80, 0x5000, 0);
             }
             else
             {
-                PutStringYW(33, 1, 48, 179, 0x808080, 0x80, 0x5000, 0);
+                PutStringYW(IGMSG_MENU_ALBUM, 1, 48, 179, 0x808080, 0x80, 0x5000, 0);
             }
 
-            PutStringYW(33, 4, 48, 205, 0x808080, 0x80, 0x5000, 0);
+            PutStringYW(IGMSG_MENU_ALBUM, 4, 48, 205, 0x808080, 0x80, 0x5000, 0);
 
             YesNoCrslOKR(0xa000, *csr1 * 132 + 184, 203.0f, 0x808080, 128.0f, 2.0f);
 
@@ -1173,7 +1173,7 @@ static void IngameAlbumMenuDsp(u_char *csr0, u_char *csr1, u_char *pic, u_char *
 
     switch (*mode)
     {
-    case 0:
+    case ALBM_MODE_ALL:
         mnx = (*pic & 7) * 72 + 35;
 
         if ((*pic & 7) < 4)
@@ -1187,7 +1187,7 @@ static void IngameAlbumMenuDsp(u_char *csr0, u_char *csr1, u_char *pic, u_char *
             mmy = 54;
         }
     break;
-    case 2:
+    case ALBM_MODE_BIG:
         mmx = 385;
         mmy = 54;
     break;
@@ -1210,7 +1210,7 @@ void IngameAlbumDisp(u_char csr, u_char csr_top, u_char mode, char is_outgame)
     {
         DrawAlbum(csr, csr_top, mode, 0);
 
-        if (mode == 2)
+        if (mode == ALBM_MODE_BIG)
         {
             DispCaption(11, yw2d.io_a[4]);
         }
@@ -1234,13 +1234,13 @@ void IngameAlbumDisp(u_char csr, u_char csr_top, u_char mode, char is_outgame)
             {
                 switch (mode)
                 {
-                case 0:
+                case ALBM_MODE_ALL:
                     PhotOnlyAll(csr, yw2d.io_x[5], yw2d.io_y[5], yw2d.io_a[5]);
                 break;
-                case 1:
+                case ALBM_MODE_LST:
                     PhotOnlyLst(csr, yw2d.io_x[5], yw2d.io_y[5], yw2d.io_a[5]);
                 break;
-                case 2:
+                case ALBM_MODE_BIG:
                     PhotOnlyBig(csr, yw2d.io_x[5], yw2d.io_y[5], yw2d.io_a[5]);
                 break;
                 }
@@ -1249,10 +1249,10 @@ void IngameAlbumDisp(u_char csr, u_char csr_top, u_char mode, char is_outgame)
             {
                 switch (mode)
                 {
-                case 0:
+                case ALBM_MODE_ALL:
                     PhotOnlyAll(csr, yw2d.io_x[5], yw2d.io_y[5], yw2d.io_a[5]);
                 break;
-                case 2:
+                case ALBM_MODE_BIG:
                     PhotOnlyBig(csr, yw2d.io_x[5], yw2d.io_y[5], yw2d.io_a[5]);
                 break;
                 }
@@ -1278,17 +1278,17 @@ static void DrawAlbum(u_char csr, u_char csr_top, u_char mode, u_char str)
         {
             switch (mode)
             {
-            case 0:
+            case ALBM_MODE_ALL:
                 DspNotice(yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4], csr + 1, pfile_wrk.pic_num, 1);
                 DspSumnale(csr, yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4]);
                 DspDetail(csr, yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4], str);
             break;
-            case 1:
+            case ALBM_MODE_LST:
                 DspNotice(yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4], csr + 1, pfile_wrk.pic_num, 1);
                 DspDetail(csr, yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4], str);
                 DspPhtLst(csr, csr_top, yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4]);
             break;
-            case 2:
+            case ALBM_MODE_BIG:
                 DspNotice(yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4], csr + 1, pfile_wrk.pic_num, 0);
                 DspFilmCut(csr, yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4]);
                 DspCherry(yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4]);
@@ -1301,12 +1301,12 @@ static void DrawAlbum(u_char csr, u_char csr_top, u_char mode, u_char str)
         {
             switch (mode)
             {
-            case 0:
+            case ALBM_MODE_ALL:
                 DspNotice(yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4], csr + 1, pfile_wrk.pic_num, 1);
                 DspSumnale(csr, yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4]);
                 DspDetail(csr, yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4], str);
             break;
-            case 2:
+            case ALBM_MODE_BIG:
                 DspNotice(yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4], csr + 1, pfile_wrk.pic_num, 0);
                 DspFilmCut(csr, yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4]);
                 DspCherry(yw2d.io_x[4], yw2d.io_y[4], yw2d.io_a[4]);
@@ -1320,7 +1320,7 @@ static void DrawAlbum(u_char csr, u_char csr_top, u_char mode, u_char str)
     {
         DrawMessageBox(0x14000, 170.0f, 210.0f, 300.0f, 60.0f, yw2d.io_a[4]);
 
-        PutStringYW(33, 0, 215, 228, 0x808080, yw2d.io_a[4], 0xf000, 0);
+        PutStringYW(IGMSG_MENU_ALBUM, 0, 215, 228, 0x808080, yw2d.io_a[4], 0xf000, 0);
     }
 }
 
@@ -1550,7 +1550,7 @@ static void IngameAlbumSort()
 
     switch (pfile_wrk.sort_key)
     {
-    case 0:
+    case ALBM_SORT_DATE:
         for (i = 0; i < pfile_wrk.pic_num - 1; i++)
         {
             tmp_pic = pfile_wrk.pic[i];
@@ -1607,7 +1607,7 @@ static void IngameAlbumSort()
             pfile_wrk.pic[i] = tmp_pic;
         }
     break;
-    case 1:
+    case ALBM_SORT_SCORE:
         for (i = 0; i < pfile_wrk.pic_num - 1; i++)
         {
             tmp_pic = pfile_wrk.pic[i];
@@ -1626,7 +1626,7 @@ static void IngameAlbumSort()
             pfile_wrk.pic[i] = tmp_pic;
         }
     break;
-    case 2:
+    case ALBM_SORT_SEAL:
         for (i = 0; i < pfile_wrk.pic_num - 1; i++)
         {
             if (pfile_wrk.pic[i].status & 0x2)
@@ -1692,7 +1692,7 @@ static void DspMainMenu(u_char csr0, u_char csr1, u_char mode, short int pos_x, 
 
     if (ingame_wrk.clear_count != 0)
     {
-        if (mode != 2)
+        if (mode != ALBM_MODE_BIG)
         {
             DspMenuWin(0, csr0, mode, pos_x, pos_y, flsh[0].alpha, alpha, anm);
         }
@@ -1820,36 +1820,36 @@ static void DspMenuWin(u_char type, u_char csr, u_char mode, short int pos_x, sh
         PutSpriteYW(MNU_MAIN_BASE_VAT4, MNU_MAIN_BASE_VAT4_B, pos_x + 17, pos_y + 105 + pos_v, 0.0f, 0x808080, alp2, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
         PutSpriteYW(MNU_MAIN_BASE_VAT4, MNU_MAIN_BASE_VAT4_B, pos_x + 108, pos_y + 105 - pos_v, 0.0f, 0x808080, alp2, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
 
-        if (mode == 0)
+        if (mode == ALBM_MODE_ALL)
         {
             mode_char = 300;
         }
-        else if (mode == 1)
+        else if (mode == ALBM_MODE_LST)
         {
             mode_char = 299;
         }
 
         switch (csr)
         {
-        case 0:
+        case NRM_ALBM_CMD_SEAL:
             PutSpriteYW(PHT_SAVE_ACT, PHT_SAVE_ACT, pos_x, pos_y, 0.0f, rgb, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(PHT_DELT_ACT, PHT_DELT_ACT, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(mode_char, mode_char, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(PHT_SORT_ACT, PHT_SORT_ACT, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
         break;
-        case 1:
+        case NRM_ALBM_CMD_DEL:
             PutSpriteYW(PHT_SAVE_ACT, PHT_SAVE_ACT, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(PHT_DELT_ACT, PHT_DELT_ACT, pos_x, pos_y, 0.0f, rgb, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(mode_char, mode_char, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(PHT_SORT_ACT, PHT_SORT_ACT, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
         break;
-        case 2:
+        case NRM_ALBM_CMD_MODE:
             PutSpriteYW(PHT_SAVE_ACT, PHT_SAVE_ACT, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(PHT_DELT_ACT, PHT_DELT_ACT, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(mode_char, mode_char, pos_x, pos_y, 0.0f, rgb, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(PHT_SORT_ACT, PHT_SORT_ACT, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
         break;
-        case 3:
+        case NRM_ALBM_CMD_SORT:
             PutSpriteYW(PHT_SAVE_ACT, PHT_SAVE_ACT, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(PHT_DELT_ACT, PHT_DELT_ACT, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
             PutSpriteYW(mode_char, mode_char, pos_x, pos_y, 0.0f, 0x808080, alp3, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
@@ -2025,13 +2025,13 @@ static void DspDetail(u_char csr, short int pos_x, short int pos_y, short int al
             }
             else
             {
-                PutStringYW(33, 3, (u_short)pos_x + 452, obj_py[0][0] + 267 + pos_y, 0x808080, alpha, 0x28000, 0);
+                PutStringYW(IGMSG_MENU_ALBUM, 3, (u_short)pos_x + 452, obj_py[0][0] + 267 + pos_y, 0x808080, alpha, 0x28000, 0);
             }
         }
 
         PutDate(pfile_wrk.pic + csr, pos_x + 0x172, pos_y + 0x154, alpha, 0x28000);
 
-        PutStringYW(30, pfile_wrk.pic[csr].room, pos_x + 482, pos_y + 371, 0x808080, alpha, 0x28000, 1);
+        PutStringYW(IGMSG_ROOM_NAME, pfile_wrk.pic[csr].room, pos_x + 482, pos_y + 371, 0x808080, alpha, 0x28000, 1);
         PutNumberYW(0, pfile_wrk.pic[csr].score, pos_x + 421, pos_y + 399, 1.0f, 1.0f, 0x808080, alpha, 0x28000, 7, 0);
     }
 }
@@ -2124,15 +2124,15 @@ static void DspPhtLst(u_char csr, u_char csr_top, short int pos_x, short int pos
     {
         if (pfile_wrk.pic[i + csr_top_1].status & 0x2)
         {
-            PutStringYW(33, 7, pos_x + 48, i * 24 + (pos_y + y_off_1), 0x808080, alpha, 0x23000, 0);
+            PutStringYW(IGMSG_MENU_ALBUM, 7, pos_x + 48, i * 24 + (pos_y + y_off_1), 0x808080, alpha, 0x23000, 0);
         }
 
         PutDate(&pfile_wrk.pic[i + csr_top_1], pos_x + 73, i * 24 + (pos_y + y_off_2), alpha, 0x23000);
 
 #ifdef BUILD_EU_VERSION
-        PutStringYW(30, pfile_wrk.pic[i + csr_top_1].room, pos_x + 302, i * 24 + (pos_y + y_off_2) - v_off_1, 0x808080, alpha, 0x23000, 0);
+        PutStringYW(IGMSG_ROOM_NAME, pfile_wrk.pic[i + csr_top_1].room, pos_x + 302, i * 24 + (pos_y + y_off_2) - v_off_1, 0x808080, alpha, 0x23000, 0);
 #else
-        PutStringYW(30, pfile_wrk.pic[i + csr_top_1].room, pos_x + 307, i * 24 + (pos_y + y_off_2) - v_off_1, 0x808080, alpha, 0x23000, 0);
+        PutStringYW(IGMSG_ROOM_NAME, pfile_wrk.pic[i + csr_top_1].room, pos_x + 307, i * 24 + (pos_y + y_off_2) - v_off_1, 0x808080, alpha, 0x23000, 0);
 #endif
 
         PutNumberYW(3, pfile_wrk.pic[i + csr_top_1].score, pos_x + 497, (i * 24 + (pos_y + y_off_3)) - v_off_2, 1.0f, 1.0f, 0x808080, alpha, 0x23000, 7, 0);
@@ -2248,10 +2248,10 @@ static void DspBtmDtl(u_char csr, short int pos_x, short int pos_y, short int al
     }
     else
     {
-        PutStringYW(33, 3, (u_short)pos_x + 192, obj_py[0][0] + 347 + pos_y, 0x808080, alpha, 0x28000, 0);
+        PutStringYW(IGMSG_MENU_ALBUM, 3, (u_short)pos_x + 192, obj_py[0][0] + 347 + pos_y, 0x808080, alpha, 0x28000, 0);
     }
     PutDate(pfile_wrk.pic + csr, pos_x + 386, pos_y + 340, alpha, 0x28000);
-    PutStringYW(30, pfile_wrk.pic[csr].room, pos_x + 496, pos_y + 371, 0x808080, alpha, 0x28000, 1);
+    PutStringYW(IGMSG_ROOM_NAME, pfile_wrk.pic[csr].room, pos_x + 496, pos_y + 371, 0x808080, alpha, 0x28000, 1);
     PutNumberYW(0, pfile_wrk.pic[csr].score, pos_x + 435, pos_y + 399, 1.0f, 1.0f, 0x808080, alpha, 0x28000, 7, 0);
 }
 
@@ -2333,10 +2333,10 @@ void PutDate(PICTURE_WRK *pic_inf, short int pos_x, short int pos_y, short int a
     PutNumberYW(3, TimeIsMoney(pic_inf->time.minute), pos_x + 155, pos_y, 1.0f, 1.0f, 0x808080, alpha, pri, 2, 1);
     PutNumberYW(3, TimeIsMoney(pic_inf->time.second), pos_x + 192, pos_y, 1.0f, 1.0f, 0x808080, alpha, pri, 2, 1);
 
-    PutStringYW(33, 5, pos_x + 29, pos_y + 1, 0x808080, alpha, pri, 0);
-    PutStringYW(33, 5, pos_x + 66, pos_y + 1, 0x808080, alpha, pri, 0);
-    PutStringYW(33, 6, pos_x + 145, pos_y + 2, 0x808080, alpha, pri, 0);
-    PutStringYW(33, 6, pos_x + 182, pos_y + 2, 0x808080, alpha, pri, 0);
+    PutStringYW(IGMSG_MENU_ALBUM, 5, pos_x + 29, pos_y + 1, 0x808080, alpha, pri, 0);
+    PutStringYW(IGMSG_MENU_ALBUM, 5, pos_x + 66, pos_y + 1, 0x808080, alpha, pri, 0);
+    PutStringYW(IGMSG_MENU_ALBUM, 6, pos_x + 145, pos_y + 2, 0x808080, alpha, pri, 0);
+    PutStringYW(IGMSG_MENU_ALBUM, 6, pos_x + 182, pos_y + 2, 0x808080, alpha, pri, 0);
 }
 
 static void AlbmCntInit()

@@ -75,7 +75,7 @@ int GuardGhostAppearSet(void) {
 
 void GuardGhostLoadInit()
 {
-    gg_load_mode = 0;
+    gg_load_mode = GGLOAD_MODE_REQ;
 }
 
 int GuardGhostAppearMain(void)
@@ -166,7 +166,7 @@ void GuardGhostLoadReq()
 
     ap_wrk.gg_mode = 1;
 
-    gg_load_mode = 0;
+    gg_load_mode = GGLOAD_MODE_REQ;
 
     ene_dead_load = 1;
 }
@@ -228,7 +228,7 @@ int GuardGhostLoad()
         if (IsLoadEndAll() != 0)
         {
             motInitEnemyAnm((u_int *)MikuPan_GetHostAddress(ANIM_ADDRESS), fene_dat[ingame_wrk.msn_no][gg_no].mdl_no, fene_dat[ingame_wrk.msn_no][gg_no].anm_no);
-            SeFileLoadAndSetFGhost(fene_dat[ingame_wrk.msn_no][gg_no].se_no, 18);
+            SeFileLoadAndSetFGhost(fene_dat[ingame_wrk.msn_no][gg_no].se_no, SE_ADDRNO_GHOST2);
 
             gg_load_mode = 6;
         }

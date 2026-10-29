@@ -69,7 +69,7 @@ char motPlayerActCtrl(SgCOORDUNIT *cp)
 
         type = plyr_act_wrk.move_type;
     }
-    else if (ingame_wrk.mode == 7 || plyr_wrk.mode == 4)
+    else if (ingame_wrk.mode == INGAME_MODE_EVENT || plyr_wrk.mode == PMODE_MSG_DISP)
     {
         trot[0] = trot[1] = 0.0f;
     }
@@ -108,7 +108,7 @@ char motPlayerActCtrl(SgCOORDUNIT *cp)
         LocalRotMatrixX(cp[13].matrix, cp[13].matrix, rot[0]);
         LocalRotMatrixZ(cp[13].matrix, cp[13].matrix, rot[1]);
 
-        if (plyr_wrk.mode != 1)
+        if (plyr_wrk.mode != PMODE_FINDER)
         {
             motInversKinematics(cp, target, ani_mdl[0].mot.dat, 5);
 
@@ -209,13 +209,13 @@ char motPlyrActSurprise(SgCOORDUNIT *cp)
 
     motGetPlyrNeckRot(cp, plyr_act_wrk.trot, plyr_act_wrk.pos);
 
-    if (((plyr_act_wrk.timer == 0) && (plyr_wrk.mode != 0x1))
+    if (((plyr_act_wrk.timer == 0) && (plyr_wrk.mode != PMODE_FINDER))
         && (ReqPlyrSpeAnime(68, 0) != 0))
     {
-        plyr_wrk.mode = 0xA;
+        plyr_wrk.mode = PMODE_ANIME;
     }
 
-    if ((plyr_wrk.mode == 0xA) && (plyr_act_wrk.timer < 20))
+    if ((plyr_wrk.mode == PMODE_ANIME) && (plyr_act_wrk.timer < 20))
     {
         VibrateRequest2(0, 200);
     }
@@ -281,10 +281,10 @@ char motPlyrActKyoro(SgCOORDUNIT *cp)
             dat = plyr_act_furi2;
             break;
         case 6:
-            if (plyr_act_wrk.timer == 0 && plyr_wrk.mode != 1
+            if (plyr_act_wrk.timer == 0 && plyr_wrk.mode != PMODE_FINDER
                 && ReqPlyrSpeAnime(68, 0) != 0)
             {
-                plyr_wrk.mode = 10;
+                plyr_wrk.mode = PMODE_ANIME;
             }
             dat = plyr_act_furi3;
             break;

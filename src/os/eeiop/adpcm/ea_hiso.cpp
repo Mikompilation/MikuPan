@@ -14,46 +14,46 @@ void AdpcmPlayHiso(int file_no, int fade_flm)
     
     switch(file_no)
     {
-    case 33:
+    case ADPCM_FURN_CHIKUONKI:
         call_no = AE003_CHIKUONKI_STR;
     break;
-    case 13:
+    case ADPCM_MC_DOKONIIKUNO:
         call_no = AVMC021_DOKONIIKUNO_STR;
     break;
-    case 14:
+    case ADPCM_MC_SAMUI:
         call_no = AVMC022_SAMUI_STR;
     break;
-    case 15:
+    case ADPCM_MC_MITAWAYO:
         call_no = AVMC023_MITAWAYO_STR;
     break;
-    case 16:
+    case ADPCM_MC_KAESHITE:
         call_no = AVMC024_KAESHITE_STR;
     break;
-    case 17:
+    case ADPCM_MC_KOKONIITE:
         call_no = AVMC025_KOKONIITE_STR;
     break;
-    case 18:
+    case ADPCM_MC_NE:
         call_no = AVMC026_NE_STR;
     break;
-    case 19:
+    case ADPCM_MC_DOUSHITE:
         call_no = AVMC027_DOUSHITE_STR;
     break;
-    case 20:
+    case ADPCM_MC_NAWAGA:
         call_no = AVMC028_NAWAGA_STR;
     break;
-    case 21:
+    case ADPCM_MC_SUSURI1:
         call_no = AVMC029_SUSURI1_STR;
     break;
-    case 22:
+    case ADPCM_MC_SUSURI2:
         call_no = AVMC030_SUSURI2_STR;
     break;
-    case 23:
+    case ADPCM_MC_SUSURI3:
         call_no = AVMC031_SUSURI3_STR;
     break;
-    case 24:
+    case ADPCM_MC_SUSURI4:
         call_no = AVMC032_SUSURI4_STR;
     break;
-    case 12:
+    case ADPCM_MC_KOROSHITA:
     default:
         call_no = AVMC020_KOROSHITA_STR;
     break;

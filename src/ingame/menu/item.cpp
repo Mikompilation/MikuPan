@@ -731,7 +731,7 @@ void IngameMenuItemDisp()
     if (ig_menu_wrk.item_num == 0)
     {
         DrawMessageBox(0x64000, 170.0f, 210.0f, 300.0f, 60.0f, yw2d.io_a[4]);
-        PutStringYW(0x19, 6, 0xc3, 0xe4, 0x808080, yw2d.io_a[4], 0x1000, 0);
+        PutStringYW(IGMSG_MENU_ITEM, 6, 0xc3, 0xe4, 0x808080, yw2d.io_a[4], 0x1000, 0);
     }
 
     else
@@ -752,18 +752,18 @@ void ItemUse(u_char item_no)
 
     switch (item_use_dat[item_no].type)
     {
-    case 0:
+    case NO_USE_ITEM:
         // do nothing ...
     break;
-    case 1:
+    case EV_OPEN_ITEM:
         // do nothing ...
     break;
-    case 2:
+    case FILM_SET_ITEM:
         plyr_wrk.film_no = item_use_dat[item_no].value0;
 
         SeStartFix(SE_SEALING, 0, 0x1000, 0x1000, 1);
     break;
-    case 3:
+    case HP_RECOVER:
         /// Check if player is already max HP
         if (plyr_wrk.hp == 500)
         {
@@ -788,10 +788,10 @@ void ItemUse(u_char item_no)
 
         SeStartFix(SE_USEITEM, 0, 0x1000, 0x1000, 1);
     break;
-    case 4:
+    case MP_RECOVER:
         // do nothing ...
     break;
-    case 5:
+    case TAPE_PLAY:
         adpcm_no = CheckTape(item_no);
 
         if (adpcm_no != -1)
@@ -927,7 +927,7 @@ void PlayerStatusYW(u_char alpha)
 
     PutSpriteYW(STTS_REISEKI2, STTS_REISEKI2, 0.0f, 0.0f, 0.0f, 0x808080, alpha, 0.9f, 0.9f, 0, 0xff, 1, 0, 0);
 
-    PutStringYW(45, 0, 453, 59, 0x808080, alpha, 0x5000, 0);
+    PutStringYW(IGMSG_CAME_MSG, 0, 453, 59, 0x808080, alpha, 0x5000, 0);
 
     PutNumberYW(3, poss_item[5], 463, 0x37, 1.0f, 1.0f, 0x808080, alpha, 0x5000, 2, 1);
 
@@ -1064,8 +1064,8 @@ static void GageAnime(short int pos_x, short int pos_y, u_char alpha)
     {
         iew.gage_hp = plyr_wrk.hp;
     }
-    PutStsBar(0xE5U, 0x808080, alpha, plyr_wrk.hp / 500.0f);
-    PutStsBar(0xE8U, 0x808080, alpha, iew.gage_hp / 500.0f);
+    PutStsBar(0xe5U, 0x808080, alpha, plyr_wrk.hp / 500.0f);
+    PutStsBar(0xe8U, 0x808080, alpha, iew.gage_hp / 500.0f);
 }
 
 static void PutStsBar(u_char char_label, int rgb, u_char alp, float scl_x)
@@ -1122,7 +1122,7 @@ static void FilmAnime(short int pos_x, short int pos_y, short int alpha)
     PutSpriteYW(STTS_FLM_74, STTS_FLM_74, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[3], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
     PutSpriteYW(STTS_FLM_90, STTS_FLM_90, pos_x, pos_y, 0.0f, 0x808080, iew.flm_alp[4], 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
 
-    PutStringYW(45, 0, 347, 59, 0x808080, alpha, 0x5000, 0);
+    PutStringYW(IGMSG_CAME_MSG, 0, 347, 59, 0x808080, alpha, 0x5000, 0);
 
     PutNumberYW(3, poss_item[plyr_wrk.film_no], 358, 55, 1.0f, 1.0f, 0x808080, alpha, 0x5000, 2, 1);
 }
@@ -1173,7 +1173,7 @@ static void ItemList(short int pos_x, short int pos_y, short int alpha)
 
         alp = alpha;
 
-        PutStringYW(24, menu_item_wrk[i + iew.itm_lst_strt].item_no,  pos_x +  52, i * 34 + (pos_y + y_off_1), 0x808080, alp, 0xf000, 0);
+        PutStringYW(IGMSG_ITEM_NAME, menu_item_wrk[i + iew.itm_lst_strt].item_no,  pos_x +  52, i * 34 + (pos_y + y_off_1), 0x808080, alp, 0xf000, 0);
         PutNumberYW( 0, menu_item_wrk[i + iew.itm_lst_strt].item_num, pos_x + 274, i * 34 + (pos_y + y_off_2), 1.0f, 1.0f, 0x808080, alp, 0xf000, 2, 0);
     }
 
@@ -1309,19 +1309,19 @@ int LoadItem2D(u_char get_type, u_char get_no)
     {
         switch(get_type)
         {
-        case 0:
+        case GET_ITM_TYPE_FILE0:
             load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
-        case 1:
+        case GET_ITM_TYPE_FILE1:
             load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
-        case 2:
+        case GET_ITM_TYPE_FILE2:
             load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
-        case 3:
+        case GET_ITM_TYPE_PHOT:
             load_id = LoadReq(get_no + HINT_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
-        case 4:
+        case GET_ITM_TYPE_ITEM:
             load_id = LoadReq(get_no + ITEM_00_TM2, LOAD_ITEM_2D_ADDRESS);
         break;
         }
@@ -1480,7 +1480,7 @@ static void MessageWindow(short int pos_x, short int pos_y, short int alpha)
 
     if (ig_menu_wrk.mode == 1)
     {
-        PutStringYW(22, menu_item_wrk[ig_menu_wrk.csr[1]].item_no, pos_x + 48, pos_y + 356, 0x808080, alpha, 0x14000, 0);
+        PutStringYW(IGMSG_ITEM_MSG, menu_item_wrk[ig_menu_wrk.csr[1]].item_no, pos_x + 48, pos_y + 356, 0x808080, alpha, 0x14000, 0);
     }
     else if (ig_menu_wrk.mode == 8)
     {
@@ -1490,11 +1490,11 @@ static void MessageWindow(short int pos_x, short int pos_y, short int alpha)
         }
         else if (iew.hp_max_chk != 0)
         {
-            PutStringYW(25, 4, pos_x + 48, pos_y + 356, 0x808080, alpha, 0xf000, 0);
+            PutStringYW(IGMSG_MENU_ITEM, 4, pos_x + 48, pos_y + 356, 0x808080, alpha, 0xf000, 0);
         }
         else if (iew.flm_dff_chk != 0)
         {
-            PutStringYW(25, 5, pos_x + 48, pos_y + 356, 0x808080, alpha, 0xf000, 0);
+            PutStringYW(IGMSG_MENU_ITEM, 5, pos_x + 48, pos_y + 356, 0x808080, alpha, 0xf000, 0);
         }
         else if (iew.itm_eve_chk != 0)
         {
@@ -1502,7 +1502,7 @@ static void MessageWindow(short int pos_x, short int pos_y, short int alpha)
         }
         else if (item_use_dat[menu_item_wrk[ig_menu_wrk.csr[1]].item_no].type == 2)
         {
-            PutStringYW(25, 3, pos_x + 48, pos_y + 356, 0x808080, alpha, 0xf000, 0);
+            PutStringYW(IGMSG_MENU_ITEM, 3, pos_x + 48, pos_y + 356, 0x808080, alpha, 0xf000, 0);
             PutStringYW(25, 1, pos_x + 48, pos_y + 382, 0x808080, alpha, 0xf000, 0);
 
 #ifdef BUILD_EU_VERSION
@@ -1513,8 +1513,8 @@ static void MessageWindow(short int pos_x, short int pos_y, short int alpha)
         }
         else
         {
-            PutStringYW(25, 0, pos_x + 48, pos_y + 356, 0x808080, alpha, 0xf000, 0);
-            PutStringYW(25, 1, pos_x + 48, pos_y + 382, 0x808080, alpha, 0xf000, 0);
+            PutStringYW(IGMSG_MENU_ITEM, 0, pos_x + 48, pos_y + 356, 0x808080, alpha, 0xf000, 0);
+            PutStringYW(IGMSG_MENU_ITEM, 1, pos_x + 48, pos_y + 382, 0x808080, alpha, 0xf000, 0);
 
 #ifdef BUILD_EU_VERSION
             YesNoCrslOKR(0x14000, ig_menu_wrk.csr[2] * 132 + 178, 380.0f, 0x808080, 128.0f, 2.0f);
@@ -1523,12 +1523,12 @@ static void MessageWindow(short int pos_x, short int pos_y, short int alpha)
 #endif
         }
     }
-    else if (ig_menu_wrk.mode == 9)
+    else if (ig_menu_wrk.mode == IGMENU_MODE_ITEM_USE_END)
     {
 #ifdef BUILD_EU_VERSION
         if (tape_play == 0)
         {
-            iew.msg_end = PutMessageYW(23, ig_menu_wrk.use_item, 48, 356, 0x808080, 0x80, 0xf000);
+            iew.msg_end = PutMessageYW(IGMSG_ITEM_USE, ig_menu_wrk.use_item, 48, 356, 0x808080, 0x80, 0xf000);
 
             btn_alp = (SgSinf((iew.btn_flsh_cnt * (PI * 2)) / 60.0f) + 1.0f) * 128.0f * 0.5f;
 
@@ -1539,7 +1539,7 @@ static void MessageWindow(short int pos_x, short int pos_y, short int alpha)
             PlaySM(alpha);
         }
 #else
-        iew.msg_end = PutMessageYW(23, ig_menu_wrk.use_item, 48, 356, 0x808080, 0x80, 0xf000);
+        iew.msg_end = PutMessageYW(IGMSG_ITEM_USE, ig_menu_wrk.use_item, 48, 356, 0x808080, 0x80, 0xf000);
 
         btn_alp = (SgSinf((iew.btn_flsh_cnt * (PI * 2)) / 60.0f) + 1.0f) * 128.0f * 0.5f;
 
@@ -2154,7 +2154,7 @@ static void DigiPut01(u_char font, u_char num, u_char no, short int pos_x, short
         ds.x = (no - 1) * fw[font] + pos_x;
         ds.y = pos_y - fh[font];
     break;
-    case 5:
+    case TAPE_PLAY:
         CopySprDToSpr(&ds, &spr_dat[PHT_SCRT_NUM0 + num]);
 
         ds.x = (no - 1) * fw[font] + pos_x;
@@ -2516,7 +2516,7 @@ static void BgFusumaFadeQuad(float x0, float x1, float a0, float a1)
 
 static void BgFusumaWideSideYW(int rgb, float pos_x, float alpha, int pri, float scl_x, float scl_y)
 {
-    const float panel_w = (float)spr_dat[396].w;
+    const float panel_w = (float)spr_dat[FUSUMA_L].w;
     const float panel_w_scaled = panel_w * scl_x;
     const int render_w = MikuPan_GetRenderResolutionWidth();
     const int render_h = MikuPan_GetRenderResolutionHeight();
@@ -2669,7 +2669,7 @@ u_int FromPKZ(u_int pkz_addr, u_char pk2_no)
         SetSprFile(MikuPan_GetHostAddress(0x1d15600));
 #endif
     break;
-    case 5:
+    case TAPE_PLAY:
 #ifdef BUILD_EU_VERSION
         SetSprFile(MikuPan_GetHostAddress(0x1d54030));
 #else

@@ -207,7 +207,7 @@ void ZeroHourDataBackUp()
 
         if (load_dat_wrk[i].file_no != 0xffff)
         {
-            if (mld->file_type == 8)
+            if (mld->file_type == FILE_TYPE_ENE_MDL)
             {
                 if (mld->addr == ANIM_MODEL_TYPE_8_ADDRESS_0)
                 {
@@ -218,7 +218,7 @@ void ZeroHourDataBackUp()
                     zh_wrk.zh_mdl_bak[1] = mld->file_no - TYPE_8_MDL_FILE_NO_OFFSET;
                 }
             }
-            else if (mld->file_type == 9)
+            else if (mld->file_type == FILE_TYPE_BENE_MOT)
             {
                 if (mld->addr == ANIM_MODEL_TYPE_9_ADDRESS_0)
                 {
@@ -353,7 +353,7 @@ void ZeroHourAfterRoomLoadReq()
     {
         if (furn_wrk[i].room_id != room_wrk.disp_no[0])
         {
-            if (furn_wrk[i].use == 0 || furn_wrk[i].use == 2)
+            if (furn_wrk[i].use == FURN_USER_NOW_ROOM || furn_wrk[i].use == FURN_USER_NEXT_ROOM)
             {
                 FurnSetWrkNoUse(&furn_wrk[i], i);
             }

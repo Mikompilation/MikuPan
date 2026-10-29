@@ -217,7 +217,7 @@ void SeRevival(u_short fin_spd)
 
         switch (se_wrk_bk[i].atr & 7)
         {
-            case 0:
+            case SE_ADDRNO_STATIC:
                 tmp.pos[0] = 0.0;
                 tmp.pos[1] = 0.0;
                 tmp.pos[2] = 0.0;
@@ -232,7 +232,7 @@ void SeRevival(u_short fin_spd)
                 SeStartVp(&tmp);
 
                 break;
-            case 3:
+            case SE_ADDRNO_DOOR0:
                 tmp.pos[0] = se_wrk_bk[i].spos[0];
                 tmp.pos[1] = se_wrk_bk[i].spos[1];
                 tmp.pos[2] = se_wrk_bk[i].spos[2];
@@ -244,7 +244,7 @@ void SeRevival(u_short fin_spd)
                 tmp.pitch = se_wrk_bk[i].pitch;
                 tmp.room_id = se_wrk_bk[i].room_id;
                 break;
-            case 1:
+            case SE_ADDRNO_BTLHIT:
                 tmp.pos[0] = se_wrk_bk[i].spos[0];
                 tmp.pos[1] = se_wrk_bk[i].spos[1];
                 tmp.pos[2] = se_wrk_bk[i].spos[2];
@@ -257,7 +257,7 @@ void SeRevival(u_short fin_spd)
                 tmp.room_id = se_wrk_bk[i].room_id;
                 SeStartVp(&tmp);
                 break;
-            case 4:
+            case SE_ADDRNO_DOOR1:
                 tmp.pos[0] = 0.0;
                 tmp.pos[1] = 0.0;
                 tmp.pos[2] = 0.0;
@@ -634,13 +634,13 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
 
     switch (tmp_str->mode)
     {
-        case 0:
+        case SE_ADDRNO_STATIC:
             // ...
             break;
-        case 1:
+        case SE_ADDRNO_BTLHIT:
             swp->status = SEW_STAT_RESERVED;
             break;
-        case 4:
+        case SE_ADDRNO_DOOR1:
             swp->status = SEW_STAT_RESERVED;
             swp->atr = 3;
             swp->spos[0] = tmp_str->pos[0];
@@ -660,7 +660,7 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
             }
             swp->pitch = SeCmdGetPitch(rot_oc, swp->pitch);
             break;
-        case 2:
+        case SE_ADDRNO_VOICE:
             swp->atr = 1;
             swp->status = SEW_STAT_RESERVED;
             swp->spos[0] = tmp_str->pos[0];
@@ -680,7 +680,7 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
             }
             swp->pitch = SeCmdGetPitch(rot_oc, swp->pitch);
             break;
-        case 3:
+        case SE_ADDRNO_DOOR0:
             swp->ene_wrk_no = tmp_str->ewrk_no;
             swp->mpos = &ene_wrk[swp->ene_wrk_no].move_box;
             swp->atr = 2;
@@ -702,7 +702,7 @@ static void SeStartVp(SE_REQ_TMP_STR *tmp_str)
             }
             swp->pitch = SeCmdGetPitch(rot_oc, swp->pitch);
             break;
-        case 5:
+        case SE_ADDRNO_DOOR2:
             swp->mpos = &plyr_wrk.move_box;
             swp->atr = 4;
             swp->status = SEW_STAT_RESERVED;
@@ -838,65 +838,65 @@ int SeStartPosEventFlame(u_char room_id, u_char req_pos, float *pos,
 
     switch (room_id)
     {
-        case 1:
+        case SE_ADDRNO_BTLHIT:
             req_file_no = SE001_BD;
             break;
-        case 2:
+        case SE_ADDRNO_VOICE:
             req_file_no = SE002_BD;
             break;
-        case 3:
+        case SE_ADDRNO_DOOR0:
             req_file_no = SE003_BD;
             break;
-        case 5:
+        case SE_ADDRNO_DOOR2:
             req_file_no = SE005_BD;
             break;
-        case 6:
+        case SE_ADDRNO_FOOT0:
             req_file_no = SE006_BD;
             break;
-        case 7:
+        case SE_ADDRNO_FOOT1:
             req_file_no = SE007_BD;
             break;
-        case 8:
+        case SE_ADDRNO_FOOT2:
             req_file_no = SE008_BD;
             break;
-        case 9:
+        case SE_ADDRNO_FOOT3:
             req_file_no = SE009_BD;
             break;
-        case 11:
+        case SE_ADDRNO_FOOT5:
             req_file_no = SE011_BD;
             break;
-        case 12:
+        case SE_ADDRNO_FOOT6:
             req_file_no = SE012_BD;
             break;
-        case 14:
+        case SE_ADDRNO_SRUND0:
             req_file_no = SE014_BD;
             break;
-        case 15:
+        case SE_ADDRNO_SRUND1:
             req_file_no = SE015_BD;
             break;
-        case 17:
+        case SE_ADDRNO_GHOST1:
             req_file_no = SE017_BD;
             break;
-        case 18:
-        case 21:
+        case SE_ADDRNO_GHOST2:
+        case SE_ADDRNO_WIDE:
             req_file_no = SE018_BD;
             break;
-        case 22:
+        case SE_ADDRNO_JIDOU0:
             req_file_no = SE022_BD;
             break;
-        case 23:
+        case SE_ADDRNO_JIDOU1:
             req_file_no = SE023_BD;
             break;
-        case 24:
+        case SE_ADDRNO_JIDOU2:
             req_file_no = SE024_BD;
             break;
-        case 25:
+        case SE_ADDRNO_JIDOU3:
             req_file_no = SE025_BD;
             break;
         case 26:
             req_file_no = SE026_BD;
             break;
-        case 16:
+        case SE_ADDRNO_GHOST0:
         case 27:
             req_file_no = SE027_BD;
             break;
@@ -906,11 +906,11 @@ int SeStartPosEventFlame(u_char room_id, u_char req_pos, float *pos,
         case 38:
             req_file_no = SE038_BD;
             break;
-        case 10:
+        case SE_ADDRNO_FOOT4:
         case 40:
             req_file_no = SE010_BD;
             break;
-        case 0:
+        case SE_ADDRNO_STATIC:
         default:
             req_file_no = SE000_BD;
             break;
@@ -1247,31 +1247,31 @@ int SeFileLoadAndSetWide(u_short lbl_no)
 
     switch (lbl_no)
     {
-        case 2:
+        case SE_ADDRNO_VOICE:
             file_no = ST000_ZOU_OKU_BD;
             break;
-        case 1:
-        case 4:
+        case SE_ADDRNO_BTLHIT:
+        case SE_ADDRNO_DOOR1:
             file_no = ST006_DMDL_KAGI_BD;
             break;
-        case 5:
+        case SE_ADDRNO_DOOR2:
             file_no = ST014_NINGYOU_BD;
             break;
-        case 0:
-        case 7:
+        case SE_ADDRNO_STATIC:
+        case SE_ADDRNO_FOOT1:
             file_no = ST008_KAGAMI_BD;
             break;
-        case 8:
+        case SE_ADDRNO_FOOT2:
             file_no = ST011_NAWA_KAKE_BD;
             break;
-        case 3:
-        case 10:
+        case SE_ADDRNO_DOOR0:
+        case SE_ADDRNO_FOOT4:
             file_no = ST007_DSML_KAGI_BD;
             break;
-        case 11:
+        case SE_ADDRNO_FOOT5:
             file_no = ST004_DMDL_AKANAI_BD;
             break;
-        case 12:
+        case SE_ADDRNO_FOOT6:
             file_no = ST005_FUSUMA_AKANAI_BD;
             break;
         default:
@@ -1279,7 +1279,7 @@ int SeFileLoadAndSetWide(u_short lbl_no)
             break;
     }
 
-    return SeFileLoadAndSet(file_no, 21);
+    return SeFileLoadAndSet(file_no, SE_ADDRNO_WIDE);
 }
 
 char SeGetGhostPos(u_int se_file_no, u_char type)
@@ -1383,7 +1383,7 @@ void SeStartVpCmn(int se_no, int vpos, float *pos, float *mb, int fin_spd,
 
     switch (mode)
     {
-        case 4:
+        case SE_ADDRNO_DOOR1:
             swp->atr = 3;
             swp->spos[0] = pos[0];
             swp->spos[1] = pos[1];
@@ -1395,7 +1395,7 @@ void SeStartVpCmn(int se_no, int vpos, float *pos, float *mb, int fin_spd,
             swp->pan = SeCmdGetPan(rot_oc);
             swp->pitch = SeCmdGetPitch(rot_oc, swp->pitch);
             break;
-        case 2:
+        case SE_ADDRNO_VOICE:
             swp->atr = 1;
             swp->status = SEW_STAT_RING;
             swp->spos[0] = pos[0];
@@ -1408,9 +1408,9 @@ void SeStartVpCmn(int se_no, int vpos, float *pos, float *mb, int fin_spd,
             swp->pan = SeCmdGetPan(rot_oc);
             swp->pitch = SeCmdGetPitch(rot_oc, swp->pitch);
             break;
-        case 1:
-        case 3:
-        case 0:
+        case SE_ADDRNO_BTLHIT:
+        case SE_ADDRNO_DOOR0:
+        case SE_ADDRNO_STATIC:
             break;
     }
 

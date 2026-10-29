@@ -2825,7 +2825,7 @@ void RelDspBackGrd()
 
     DispSprD(&ds);
 
-    ssd = spr_dat[471];
+    ssd = spr_dat[MAP_FNT_L1R1];
 
     ssd.x += -45;
     ssd.y += rel_csr.offy + 97;

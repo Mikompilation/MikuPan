@@ -57,7 +57,7 @@ void GameMain()
             if (mc_start_flg == 1)
             {
                 sys_wrk.game_mode = mc_start_flg;
-                mcInit(7, (u_int *)MikuPan_GetHostPointer(0x00420000), 0);
+                mcInit(MC_MODE_STARTCHECK, (u_int *)MikuPan_GetHostPointer(0x00420000), 0);
                 mc_start_flg = 0;
             }
             else
@@ -110,7 +110,7 @@ void GameMain()
     break;
     case GAME_MODE_MCINIT:
         sys_wrk.game_mode = GAME_MODE_MCCHECK;
-        mcInit(7, NULL, 0);
+        mcInit(MC_MODE_STARTCHECK, NULL, 0);
     break;
     case GAME_MODE_MCCHECK:
         if (mcStartCheckMain())
@@ -224,7 +224,7 @@ int GameInitLoad()
         }
         sys_wrk.load_mode = INGAME_INIT_LOAD_PHOTO;
     case INGAME_INIT_LOAD_PHOTO:
-        sys_wrk.load_mode = 0;
+        sys_wrk.load_mode = GAME_INIT_LOAD_START;
         return 1;
     }
     

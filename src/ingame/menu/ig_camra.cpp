@@ -1326,16 +1326,16 @@ void CameraDsp(short int pos_x, short int pos_y, u_char alp, u_char msg)
             if (poss_item[i+1] != 0)
             {
                 PutSpriteYW(CAM_FILM_00 + i, CAM_FILM_00 + i, pos_x, pos_y, 0.0f, 0x404040, alp, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-                PutStringYW(45, 0, flm_ax[i] + 351, flm_ay[i] + 155, 0x808080, alp, 0x2000, 0);
-                PutStringYW(24, i+1, flm_ax[i] + 206, flm_ay[i] + 131, 0x808080, alp, 0x2000, 0);
+                PutStringYW(IGMSG_CAME_MSG, 0, flm_ax[i] + 351, flm_ay[i] + 155, 0x808080, alp, 0x2000, 0);
+                PutStringYW(IGMSG_ITEM_NAME, i+1, flm_ax[i] + 206, flm_ay[i] + 131, 0x808080, alp, 0x2000, 0);
 
                 PutNumberYW(3, poss_item[i+1], pos_x + 0x16f + flm_ax[i], pos_y + 0x97 + flm_ay[i], 1.0f, 1.0f, 0x808080, alp, 0x2000, 2, 1);
             }
             else if (flm_exp_flg[i+1] != 0)
             {
                 PutSpriteYW(CAM_FILM_00 + i, CAM_FILM_00 + i, pos_x, pos_y, 0.0f, 0x404040, alp, 1.0f, 1.0f, 0, 0xff, 1, 0, 0);
-                PutStringYW(45, 0, flm_ax[i] + 351, flm_ay[i] + 155, 0x404040, alp, 0x2000, 0);
-                PutStringYW(24, i+1, flm_ax[i] + 206, flm_ay[i] + 131, 0x404040, alp, 0x2000, 0);
+                PutStringYW(IGMSG_CAME_MSG, 0, flm_ax[i] + 351, flm_ay[i] + 155, 0x404040, alp, 0x2000, 0);
+                PutStringYW(IGMSG_ITEM_NAME, i+1, flm_ax[i] + 206, flm_ay[i] + 131, 0x404040, alp, 0x2000, 0);
 
                 PutNumberYW(3, poss_item[i+1], pos_x + 0x16f + flm_ax[i], pos_y + 0x97 + flm_ay[i], 1.0f, 1.0f, 0x404040, alp, 0x2000, 2, 1);
 
@@ -1505,8 +1505,8 @@ void CameraDsp(short int pos_x, short int pos_y, u_char alp, u_char msg)
     {
         if (msg != 0xff)
         {
-            PutStringYW(45, msg, 318, 356, 0x808080, alp, 0x5000, 1);
-            PutStringYW(45, 2, 48, 385, 0x808080, alp, 0x5000, 0);
+            PutStringYW(IGMSG_CAME_MSG, msg, 318, 356, 0x808080, alp, 0x5000, 1);
+            PutStringYW(IGMSG_CAME_MSG, 2, 48, 385, 0x808080, alp, 0x5000, 0);
 
             YesNoCrslOKR(0x14000, cmr_menu_wrk.csr[5] * 132 + 178, 380.0f, 0x808080, alp, 2.0f);
         }
@@ -1515,7 +1515,7 @@ void CameraDsp(short int pos_x, short int pos_y, u_char alp, u_char msg)
     {
         if (msg != 0xff)
         {
-            PutStringYW(45, msg, 48, 356, 0x808080, alp, 0x5000, 0);
+            PutStringYW(IGMSG_CAME_MSG, msg, 48, 356, 0x808080, alp, 0x5000, 0);
         }
     }
 }

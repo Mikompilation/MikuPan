@@ -289,7 +289,7 @@ int SetCamFont(int no, int fl)
         }
     }
 
-    if (plyr_wrk.mode != 0x1)
+    if (plyr_wrk.mode != PMODE_FINDER)
     {
         flow[no][0] = 0xff;
         flow[no][1] = 0xff;
@@ -747,7 +747,7 @@ void RunCamSearch()
 
     for (i = 0; i < 3; i++)
     {
-        if (camsearch[i].cam_search_flow != -1 && plyr_wrk.mode == 1)
+        if (camsearch[i].cam_search_flow != -1 && plyr_wrk.mode == PMODE_FINDER)
         {
             j++;
         }
@@ -3822,7 +3822,7 @@ int SetEneDmgEffect3(int flag, u_char eneno, sceVu0FVECTOR *pos)
 
     sceVu0UnitMatrix(wlm);
 
-    if (plyr_wrk.mode != 1)
+    if (plyr_wrk.mode != PMODE_FINDER)
     {
         sceVu0RotMatrixX(wlm, wlm, plyr_wrk.move_box.rot[0]);
         sceVu0RotMatrixY(wlm, wlm, plyr_wrk.move_box.rot[1]);
@@ -4128,7 +4128,7 @@ void SetEneSeal(EFFECT_CONT *ec)
 
                 GetTrgtRot(pos, bpos[eneno], rot, 3);
 
-                if (plyr_wrk.mode != 1)
+                if (plyr_wrk.mode != PMODE_FINDER)
                 {
                     FinderInSet();
                 }
@@ -5002,7 +5002,7 @@ void SetEneDmgEffect2_Sub()
 
     sceVu0UnitMatrix(wlm);
 
-    if (plyr_wrk.mode != 1)
+    if (plyr_wrk.mode != PMODE_FINDER)
     {
         sceVu0RotMatrixX(wlm, wlm, plyr_wrk.move_box.rot[0]);
         sceVu0RotMatrixY(wlm, wlm, plyr_wrk.move_box.rot[1]);
@@ -5126,7 +5126,7 @@ void SetEneDmgEffect2_Sub()
                 sceVu0RotMatrixY(wlm, wlm, rot_y);
                 sceVu0TransMatrix(wlm, wlm, new_perticle[i].npos);
 
-                if (plyr_wrk.mode != 1)
+                if (plyr_wrk.mode != PMODE_FINDER)
                 {
                     f = 1.0f - new_perticle[i].cnt / 180.0f;
                 }

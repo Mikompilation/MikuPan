@@ -923,14 +923,14 @@ char NmlPadInTopPage()
 
         if (dm_albm.side == 0 && dm_albm.is_title == 0)
         {
-            PutStringYW(6, 0x2e, 0x44, 0x181, 0x808080, 0x80, 0x1000, 0);
+            PutStringYW(IGMSG_MENU_MSG, 0x2e, 0x44, 0x181, 0x808080, 0x80, 0x1000, 0);
         }
         else
         {
-            PutStringYW(6, 0x28, 0x3b, 0x181, 0x808080, 0x80, 0x1000, 0);
+            PutStringYW(IGMSG_MENU_MSG, 0x28, 0x3b, 0x181, 0x808080, 0x80, 0x1000, 0);
         }
-        PutStringYW(6, 0x20, 0x140, 0x143, 0x808080, 0x80, 0x1000, 1);
-        PutStringYW(6, 0x25, 0x3c, 0x161, 0x808080, 0x80, 0x1000, 0);
+        PutStringYW(IGMSG_MENU_MSG, 0x20, 0x140, 0x143, 0x808080, 0x80, 0x1000, 1);
+        PutStringYW(IGMSG_MENU_MSG, 0x25, 0x3c, 0x161, 0x808080, 0x80, 0x1000, 0);
         DrawSPhotoFromSmallPhotoArea(0, 0x1000, 0, 0, 0, 0);
     }
 
@@ -1547,8 +1547,8 @@ char MenuPadCmn()
             DSP_MEM_ALBM *dm_albm_p = &dm_albm;
             
             YesNoCrslOKR(0x2000, (dm_albm.csr[4] * 0x84) + 0x13e, 387.0f, 0x808080, 128.0f, 2.0f);
-            PutStringYW(6, 0x22, 0x3c, 0x186, 0x808080, 0x80, 0x1000, 0);
-            PutStringYW(9, 1, 0x166, 0x186, 0x808080, 0x80, 0x1000, 1);
+            PutStringYW(IGMSG_MENU_MSG, 0x22, 0x3c, 0x186, 0x808080, 0x80, 0x1000, 0);
+            PutStringYW(IGMSG_PRE_SV_MSG, 1, 0x166, 0x186, 0x808080, 0x80, 0x1000, 1);
             
             if (TRIANGLE_PRESSED() == 1)
             {
@@ -1591,9 +1591,9 @@ char MenuPadCmn()
             PolySquareYW(34.0f, 315.0f, 0x241, 0x6b, 0, 48.0f, 1.0f, 1.0f, 0x4000, 0, 0, 0);
             DrawMessageBox(0x3000, 22.0f, 308.0f, 596.0f, 118.0f, 0x80);
             YesNoCrslOKR(0x2000, (dm_albm.csr[4] * 0x84) + 0xb8, 382.0f, 0x808080, 128.0f, 2.0f);
-            PutStringYW(9, 1, 0xe1, 0x181, 0x808080, 0x80, 0x1000, 1);
-            PutStringYW(6, 0x27, 0x140, 0x143, 0x808080, 0x80, 0x1000, 1);
-            PutStringYW(6, 0x25, 0x3c, 0x161, 0x808080, 0x80, 0x1000, 0);
+            PutStringYW(IGMSG_PRE_SV_MSG, 1, 0xe1, 0x181, 0x808080, 0x80, 0x1000, 1);
+            PutStringYW(IGMSG_MENU_MSG, 0x27, 0x140, 0x143, 0x808080, 0x80, 0x1000, 1);
+            PutStringYW(IGMSG_MENU_MSG, 0x25, 0x3c, 0x161, 0x808080, 0x80, 0x1000, 0);
             
             if (TRIANGLE_PRESSED() == 1)
             {
@@ -1657,8 +1657,8 @@ char PasteCtrl()
         DSP_MEM_ALBM *dm_albm_p = &dm_albm;
         
         YesNoCrslOKR(0x2000, (dm_albm.csr[4] * 0x84 + 0x13e), 387.0f, 0x808080, 128.0f, 2.0f); // Line 1443
-        PutStringYW(9, 1, 0x166, 0x186, 0x808080, 0x80, 0x1000, 1); // Line 1444
-        PutStringYW(6, 0x26, 0x3c, 0x186, 0x808080, 0x80, 0x1000, 0); // Line 1447
+        PutStringYW(IGMSG_PRE_SV_MSG, 1, 0x166, 0x186, 0x808080, 0x80, 0x1000, 1); // Line 1444
+        PutStringYW(IGMSG_MENU_MSG, 0x26, 0x3c, 0x186, 0x808080, 0x80, 0x1000, 0); // Line 1447
         if (TRIANGLE_PRESSED() == 1) // Line 1450
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0); // Line 1455
@@ -2419,21 +2419,21 @@ void InfoWin(u_char mode, u_char side, u_char alp)
             case 0:
                 if (alp1 == 0x80)
                 {
-                    PutStringYW(9, 13, adj1 + 0x5a, 0x1d, 0x909090, 0x80, 0x2f000, 0);
+                    PutStringYW(IGMSG_PRE_SV_MSG, 13, adj1 + 0x5a, 0x1d, 0x909090, 0x80, 0x2f000, 0);
                 }
             break;
             case 1:
             case 2:
                 if (alp1 == 0x80)
                 {
-                    PutStringYW(9, 0xe, adj1 + 0x5a, 0x1d, 0x909090, 0x80, 0x2f000, 0);
+                    PutStringYW(IGMSG_PRE_SV_MSG, 0xe, adj1 + 0x5a, 0x1d, 0x909090, 0x80, 0x2f000, 0);
 #ifdef BUILD_EU_VERSION
                     PutNumberYW(0, dm_albm.file[1],
-                                pos_x + GetStrWidth((u_char *)GetIngameMSGAddr(9, 0xe)), 0x1d,
+                                pos_x + GetStrWidth((u_char *)GetIngameMSGAddr(IGMSG_PRE_SV_MSG, 0xe)), 0x1d,
                                 1.0f, 1.0f, 0x808080, 0x80, 0x2f000, 1, 0);
 #else
                     PutNumberYW(0, dm_albm.file[1], adj1 + 0xb4, 0x1d, 1.0f, 1.0f, 0x808080, 0x80, 0x2f000, 1, 0);
-                    PutStringYW(8, 0x6d, adj1 + 0xf0, 0x1d, 0x909090, 0x80, 0x2f000, 0);
+                    PutStringYW(IGMSG_SV_PNT_MSG, 0x6d, adj1 + 0xf0, 0x1d, 0x909090, 0x80, 0x2f000, 0);
                     PutNumberYW(0, dm_albm.slot[1], adj1 + 0x1a6, 0x1d, 1.0f, 1.0f, 0x808080, 0x80, 0x2f000, 1, 0);
 #endif
                 }
@@ -2441,7 +2441,7 @@ void InfoWin(u_char mode, u_char side, u_char alp)
             case 3:
                 if (alp1 == 0x80)
                 {
-                    PutStringYW(9, 0xf, adj1 + 0x5a, 0x1d, 0x909090, 0x80, 0x2f000, 0);
+                    PutStringYW(IGMSG_PRE_SV_MSG, 0xf, adj1 + 0x5a, 0x1d, 0x909090, 0x80, 0x2f000, 0);
                 }
             break;
         }
@@ -2490,21 +2490,21 @@ void InfoWin(u_char mode, u_char side, u_char alp)
             case 0:
                 if (alp0 == 0x80)
                 {
-                    PutStringYW(9, 13, adj2 + 0x1e, 0x1d, 0x909090, 0x80, 0x2a000, 0);
+                    PutStringYW(IGMSG_PRE_SV_MSG, 13, adj2 + 0x1e, 0x1d, 0x909090, 0x80, 0x2a000, 0);
                 }
             break;
             case 1:
             case 2:
                 if (alp0 == 0x80)
                 {
-                    PutStringYW(9, 0xe, adj2 + 0x1e, 0x1d, 0x909090, 0x80, 0x2a000, 0);
+                    PutStringYW(IGMSG_PRE_SV_MSG, 0xe, adj2 + 0x1e, 0x1d, 0x909090, 0x80, 0x2a000, 0);
 #ifdef BUILD_EU_VERSION
                     PutNumberYW(0, dm_albm.file[0],
-                                pos_x + GetStrWidth((u_char *)GetIngameMSGAddr(9, 14)), 0x1d,
+                                pos_x + GetStrWidth((u_char *)GetIngameMSGAddr(IGMSG_PRE_SV_MSG, 14)), 0x1d,
                                 1.0f, 1.0f, 0x808080, 0x80, 0x2a000, 1, 0);
 #else
                     PutNumberYW(0, dm_albm.file[0], adj2 + 0x78, 0x1d, 1.0f, 1.0f, 0x808080, 0x80, 0x2a000, 1, 0);
-                    PutStringYW(8, 0x6d, adj2 + 0xb4, 0x1d, 0x909090, 0x80, 0x2a000, 0);
+                    PutStringYW(IGMSG_SV_PNT_MSG, 0x6d, adj2 + 0xb4, 0x1d, 0x909090, 0x80, 0x2a000, 0);
                     PutNumberYW(0, dm_albm.slot[0], adj2 + 0x16a, 0x1d, 1.0f, 1.0f, 0x808080, 0x80, 0x2a000, 1, 0);
 #endif
                 }
@@ -2512,7 +2512,7 @@ void InfoWin(u_char mode, u_char side, u_char alp)
             case 3:
                 if (alp0 == 0x80)
                 {
-                    PutStringYW(9, 0xf, adj2 + 0x1e, 0x1d, 0x909090, 0x80, 0x2a000, 0);
+                    PutStringYW(IGMSG_PRE_SV_MSG, 0xf, adj2 + 0x1e, 0x1d, 0x909090, 0x80, 0x2a000, 0);
                 }
             break;
         }

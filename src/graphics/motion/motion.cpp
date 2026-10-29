@@ -649,7 +649,7 @@ void ReqPlayerAnime(u_char flame)
     )
     {
         plyracs_ctrl[1].stat = 0;
-        mimLNigiriReq(1, 0);
+        mimLNigiriReq(M001_MIM_LHAND_NIGIRI, 0);
     }
     else if (
         !(

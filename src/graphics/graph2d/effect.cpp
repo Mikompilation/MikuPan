@@ -1037,7 +1037,7 @@ static EFFECT_CONT *MikuPan_AllocEffectCont(int id)
 
 static void MikuPan_SetEffectFlow(EFFECT_CONT *ec)
 {
-    ec->flow = ec->in == 0 ? (ec->keep == 0 ? (ec->out != 0 ? 2 : 3) : 1) : 0;
+    ec->flow = ec->in == EF_NULL ? (ec->keep == 0 ? (ec->out != 0 ? EF_DITHER : 3) : 1) : 0;
 }
 
 static void MikuPan_SetFireStartCounter(EFFECT_CONT *ec)
@@ -1061,7 +1061,7 @@ void *SetZDepthEffect(int fl)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 1;
+    ec->dat.uc8[0] = EF_Z_DEP;
     ec->dat.uc8[1] = fl;
     return ec;
 }
@@ -1075,7 +1075,7 @@ void *SetZDepth2Effect(int fl)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 36;
+    ec->dat.uc8[0] = EF_Z_DEP2;
     ec->dat.uc8[1] = fl;
     return ec;
 }
@@ -1089,7 +1089,7 @@ void *SetDitherEffect(int fl, int type, float alpha, float speed, int alpha_max,
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 2;
+    ec->dat.uc8[0] = EF_DITHER;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)type;
     ec->dat.fl32[2] = alpha;
@@ -1118,7 +1118,7 @@ void *SetDither2Effect(int fl, int type, float alpha, float speed)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 35;
+    ec->dat.uc8[0] = EF_DITHER2;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)type;
     ec->dat.fl32[1] = alpha;
@@ -1138,15 +1138,15 @@ void *SetBlurEffect(int id, int fl, u_char *alpha, u_int scale, u_int rotation, 
     switch (id)
     {
         case EF_BLUR_N:
-            ec->dat.uc8[0] = 3;
+            ec->dat.uc8[0] = EF_BLUR_N;
             ec->dat.uc8[2] = 0;
             break;
         case EF_BLUR_B:
-            ec->dat.uc8[0] = 4;
+            ec->dat.uc8[0] = EF_BLUR_B;
             ec->dat.uc8[2] = 1;
             break;
         case EF_BLUR_W:
-            ec->dat.uc8[0] = 5;
+            ec->dat.uc8[0] = EF_BLUR_W;
             ec->dat.uc8[2] = 2;
             break;
         default:
@@ -1182,7 +1182,7 @@ void *SetDeformEffect(int fl, int type, int rate, u_int in, u_int keep, u_int ou
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 6;
+    ec->dat.uc8[0] = EF_DEFORM;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)type;
     ec->dat.uc8[3] = (u_char)rate;
@@ -1209,7 +1209,7 @@ void *SetFocusEffect(int fl, int volume)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 7;
+    ec->dat.uc8[0] = EF_FOCUS;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)volume;
     return ec;
@@ -1224,7 +1224,7 @@ void *SetOverlapEffect(int fl, int alpha)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 8;
+    ec->dat.uc8[0] = EF_OVERLAP;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)alpha;
     return ec;
@@ -1239,7 +1239,7 @@ void *SetFadeFrameEffect(int fl, int alpha, u_int color)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 9;
+    ec->dat.uc8[0] = EF_FADEFRAME;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)alpha;
     ec->dat.ui32[1] = color;
@@ -1255,7 +1255,7 @@ void *SetRenzFlareEffect(int fl, int type, void *position, void *rotation)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 10;
+    ec->dat.uc8[0] = EF_RENZFLARE;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)type;
     ec->pnt[0] = position;
@@ -1272,7 +1272,7 @@ void *SetHazeEffect(int fl)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 37;
+    ec->dat.uc8[0] = EF_HAZE;
     ec->dat.uc8[1] = fl;
     return ec;
 }
@@ -1286,7 +1286,7 @@ void *SetBlackFilterEffect(int fl, int alpha)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 11;
+    ec->dat.uc8[0] = EF_BLACKFILTER;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)alpha;
     return ec;
@@ -1301,7 +1301,7 @@ void *SetNegaEffect(int fl, int color, int alpha, u_char *alpha2)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 12;
+    ec->dat.uc8[0] = EF_NEGA;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)color;
     ec->dat.uc8[3] = (u_char)alpha;
@@ -1318,7 +1318,7 @@ void *SetNegaEffectTimed(int fl, int color, int alpha, u_int in, u_int keep, u_i
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 12;
+    ec->dat.uc8[0] = EF_NEGA;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)color;
     ec->dat.uc8[3] = (u_char)alpha;
@@ -1342,13 +1342,13 @@ void *SetContrastEffect(int id, int fl, int color, int alpha)
     switch (id)
     {
         case EF_NCONTRAST:
-            ec->dat.uc8[0] = 13;
+            ec->dat.uc8[0] = EF_NCONTRAST;
             break;
         case EF_NCONTRAST2:
-            ec->dat.uc8[0] = 14;
+            ec->dat.uc8[0] = EF_NCONTRAST2;
             break;
         case EF_NCONTRAST3:
-            ec->dat.uc8[0] = 15;
+            ec->dat.uc8[0] = EF_NCONTRAST3;
             break;
         default:
             return nullptr;
@@ -1369,7 +1369,7 @@ void *SetMagatokiEffect(int fl, u_int in, u_int out, void *flag)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 16;
+    ec->dat.uc8[0] = EF_MAGATOKI;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = fl;
     ec->flow = 0;
@@ -1388,7 +1388,7 @@ void *SetSpiritEffect(int fl, int flow, void *position, int r1, int g1, int b1, 
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 19;
+    ec->dat.uc8[0] = EF_SPIRIT;
     ec->dat.uc8[1] = fl;
     ec->flow = flow;
     ec->pnt[0] = position;
@@ -1416,7 +1416,7 @@ void *SetPBlurEffect(int fl, int alpha)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 38;
+    ec->dat.uc8[0] = EF_PBLUR;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)alpha;
     return ec;
@@ -1431,7 +1431,7 @@ void *SetFireEffect(int fl, int flow, void *position, int r1, int g1, int b1, fl
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 23;
+    ec->dat.uc8[0] = EF_FIRE;
     ec->dat.uc8[1] = fl | 0x80;
     ec->flow = (char)flow;
     ec->pnt[0] = position;
@@ -1456,7 +1456,7 @@ void *SetFire2Effect(int fl, int flow, void *position, int r1, int g1, int b1, f
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 24;
+    ec->dat.uc8[0] = EF_FIRE2;
     ec->dat.uc8[1] = fl | 0x80;
     ec->flow = flow;
     ec->pnt[0] = position;
@@ -1482,7 +1482,7 @@ void *SetHaloEffect(int fl, int type, void *position, int r, int g, int b, float
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 20;
+    ec->dat.uc8[0] = EF_HALO;
     ec->dat.uc8[1] = fl | 0x80;
     ec->dat.uc8[2] = (u_char)type;
     ec->pnt[0] = position;
@@ -1503,7 +1503,7 @@ void *SetRippleEffect(int fl, int type, int time, void *position)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 21;
+    ec->dat.uc8[0] = EF_RIPPLE;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)type;
     ec->dat.uc8[3] = (u_char)time;
@@ -1522,7 +1522,7 @@ void *SetRipple2Effect(int fl, int type, int time, int r, int g, int b, float sc
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 22;
+    ec->dat.uc8[0] = EF_RIPPLE2;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)type;
     ec->dat.uc8[3] = (u_char)time;
@@ -1553,7 +1553,7 @@ void *SetPartsDeformEffect(int fl, int type, u_int max, float scale_x, float sca
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 27;
+    ec->dat.uc8[0] = EF_PDEFORM;
     ec->dat.uc8[1] = fl | 0x80;
     ec->dat.uc8[2] = (u_char)type;
     ec->max = max;
@@ -1588,7 +1588,7 @@ void *SetEneInEffect(int fl, int type, int alpha, float scale, void *position, u
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 39;
+    ec->dat.uc8[0] = EF_ENEIN;
     ec->dat.uc8[1] = fl | 0x80;
     ec->dat.uc8[2] = (u_char)type;
     ec->dat.uc8[3] = (u_char)alpha;
@@ -1618,7 +1618,7 @@ void *SetEneOutEffect(int fl, int index, int value, float scale)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 40;
+    ec->dat.uc8[0] = EF_ENEOUT;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = 0;
     ec->dat.uc8[3] = 0;
@@ -1642,7 +1642,7 @@ void *SetDustEffect(int fl, void *position)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 29;
+    ec->dat.uc8[0] = EF_DUST;
     ec->dat.uc8[1] = fl | 0x80;
     ec->dat.uc8[2] = 1;
     ec->pnt[0] = position;
@@ -1658,7 +1658,7 @@ void *SetWaterdropEffect(int fl, void *position, int state, float speed, u_int m
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 30;
+    ec->dat.uc8[0] = EF_WATERDROP;
     ec->dat.uc8[1] = fl | 0x80;
     ec->pnt[0] = position;
     ec->dat.uc8[5] = (u_char)state;
@@ -1681,7 +1681,7 @@ void *SetSunshineEffect(int fl, void *position1, void *position2, void *rotation
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 31;
+    ec->dat.uc8[0] = EF_SUNSHINE;
     ec->dat.uc8[1] = fl;
     ec->pnt[0] = position1;
     ec->pnt[1] = position2;
@@ -1705,7 +1705,7 @@ void *SetEneFireEffect(int fl, int type, void *position, void *position2, void *
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 28;
+    ec->dat.uc8[0] = EF_ENEFIRE;
     ec->dat.uc8[1] = fl | 0x80;
     ec->dat.uc8[2] = (u_char)type;
     ec->pnt[0] = position;
@@ -1727,7 +1727,7 @@ void *SetTorchEffect(int fl, int type, void *position, float *scale_rate, float 
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 25;
+    ec->dat.uc8[0] = EF_TORCH;
     ec->dat.uc8[1] = fl | 0x80;
     ec->dat.uc8[2] = (u_char)type;
     ec->dat.uc8[3] = 0;
@@ -1747,7 +1747,7 @@ void *SetSmokeEffect(int fl, void *position)
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 26;
+    ec->dat.uc8[0] = EF_SMOKE;
     ec->dat.uc8[1] = fl | 0x80;
     ec->pnt[0] = position;
     ec->pnt[1] = nullptr;
@@ -1763,7 +1763,7 @@ void *SetNegaCircleEffect(int fl, float x, float y, float size, int alpha, u_int
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 32;
+    ec->dat.uc8[0] = EF_NEGACIRCLE;
     ec->dat.uc8[1] = fl;
     ec->dat.fl32[1] = x;
     ec->dat.fl32[2] = y;
@@ -1784,7 +1784,7 @@ void *SetEneFaceEffect(int fl, int type, int rotation, float x, float y, float z
         return nullptr;
     }
 
-    ec->dat.uc8[0] = 33;
+    ec->dat.uc8[0] = EF_ENEFACE;
     ec->dat.uc8[1] = fl;
     ec->dat.uc8[2] = (u_char)type;
     ec->dat.uc8[3] = (u_char)rotation;
@@ -1806,7 +1806,7 @@ void *SetFaceSpiritEffect(int fl, void *position, int r, int g, int b, float *al
     }
 
     ec->dat.uc8[1] = fl;
-    ec->dat.uc8[0] = 34;
+    ec->dat.uc8[0] = EF_FACESPIRIT;
     ec->pnt[0] = position;
     ec->dat.uc8[2] = (u_char)r;
     ec->dat.uc8[3] = (u_char)g;
@@ -1981,7 +1981,7 @@ void EffectZSort()
 
         switch (ec->dat.uc8[0])
         {
-            case 29:
+            case EF_DUST:
                 SetDust(ec);
                 break;
         }
@@ -2162,7 +2162,7 @@ void EffectZSort3()
         ec = &ecm[efzsort[i]];
         switch (ec->dat.uc8[0])
         {
-            case 32:
+            case EF_NEGACIRCLE:
                 SetNegaCircle(ec);
                 break;
         }

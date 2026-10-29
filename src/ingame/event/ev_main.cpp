@@ -681,7 +681,7 @@ void EventMain()
         break;
         case DCAM_SET:
             ReqDramaCamera(dat_adr[1], *(short*)&dat_adr[2], *(short*)&dat_adr[4]);
-            CameraNoRenewEach(3);
+            CameraNoRenewEach(MAP_CAMERA_D);
             dat_adr += 6;
         break;
         case BTL_LOCK:
@@ -866,7 +866,7 @@ u_char EventOpenJudge(short int event_no)
     addr = (int *)(*addr + (event_no * 4 + (int64_t)addr));
     addr = (int *)MikuPan_GetHostPointer(*addr + MSN_TITLE_DAT_ADDRESS);
 
-    if (ap_wrk.zh_mode != 0 && ((u_char *)addr)[3] != 202)
+    if (ap_wrk.zh_mode != ZH_NO_REQ && ((u_char *)addr)[3] != 202)
     {
         return 0;
     }
@@ -1223,7 +1223,7 @@ int EventSceneCtrl(short int scene_no)
                 ret = 1;
             }
         break;
-        case 5:
+        case BTL_LOCK_AFTER_MSG:
             if (EventLoadData(scene_no))
             {
                 Init3D();
@@ -1413,7 +1413,7 @@ void LockBattleDoorOpenMSGDisp()
     {
         case BTL_LOCK_SET0:
         case BTL_LOCK_SET1:
-            SetMessageV3((u_char *)GetIngameMSGAddr(6, 28),0x64000);
+            SetMessageV3((u_char *)GetIngameMSGAddr(IGMSG_MENU_MSG, 28),0x64000);
 
             if (MesStatusCheck() == 0)
             {
@@ -1426,7 +1426,7 @@ void LockBattleDoorOpenMSGDisp()
             }
         break;
         case BTL_LOCK_SET_MSG:
-            SetMessageV3((u_char *)GetIngameMSGAddr(6, 28), 0x64000);
+            SetMessageV3((u_char *)GetIngameMSGAddr(IGMSG_MENU_MSG, 28), 0x64000);
 
             if (CROSS_PRESSED() == 1)
             {
@@ -1442,7 +1442,7 @@ void LockBattleDoorOpenMSGDisp()
         break;
         case BTL_LOCK_AFTER:
             find_wrk.mode = 2;
-            SetMessageV3((u_char *)GetIngameMSGAddr(6, 0x1d),0x64000);
+            SetMessageV3((u_char *)GetIngameMSGAddr(IGMSG_MENU_MSG, 0x1d),0x64000);
 
             if (MesStatusCheck() == 0)
             {
@@ -1457,7 +1457,7 @@ void LockBattleDoorOpenMSGDisp()
             }
          break;
         case BTL_LOCK_AFTER_MSG:
-            SetMessageV3((u_char *)GetIngameMSGAddr(6, 0x1d),0x64000);
+            SetMessageV3((u_char *)GetIngameMSGAddr(IGMSG_MENU_MSG, 0x1d),0x64000);
 
             if (CROSS_PRESSED() == 1)
             {

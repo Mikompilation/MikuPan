@@ -340,106 +340,106 @@ u_char* ForwardActionPointer(u_char *pointer)
     {
         switch(*pointer)
         {
-        case 1:
+        case ACT_SE_PLAY:
             pointer += 4;
         break;
-        case 2:
+        case ACT_SE_PLAY_FIO:
             pointer += 8;
         break;
-        case 30:
+        case ACT_EVE_SE:
             pointer += 6;
         break;
-        case 3:
+        case ACT_MIME_REQ:
             pointer += 2;
         break;
-        case 4:
+        case ACT_ACCSRY_REQ:
             pointer += 4;
         break;
-        case 5:
+        case ACT_TEX_ANM_REQ:
             pointer += 6;
         break;
-        case 16:
+        case ACT_CANDLE_FIRE:
             pointer += 8;
         break;
-        case 31:
+        case ACT_CANDLE_NO:
             pointer += 2;
         break;
-        case 8:
+        case ACT_ROTATE_G:
             pointer += 6;
         break;
-        case 7:
+        case ACT_ROTATE:
             pointer += 4;
         break;
-        case 9:
+        case ACT_TREMBLE:
             pointer += 2;
         break;
-        case 10:
+        case ACT_PARALLEL_LIGHT:
             pointer += 6;
         break;
-        case 11:
+        case ACT_MIKU_ACT:
             pointer += 4;
         break;
-        case 25:
+        case ACT_CANDLE_FRAME:
             pointer += 4;
         break;
-        case 15:
+        case ACT_ROPE_FALL:
             pointer += 2;
         break;
-        case 13:
+        case ACT_VIBE:
             pointer += 2;
         break;
-        case 14:
+        case ACT_SHOUKI:
             pointer += 6;
         break;
-        case 32:
+        case ACT_SHOUKI2:
             pointer += 2;
         break;
-        case 12:
+        case ACT_CHANGE_DATA:
             pointer += 2;
         break;
-        case 17:
+        case ACT_ROPE_AWAY:
             pointer += 2;
         break;
-        case 19:
+        case ACT_DISP_GHOST:
             pointer += 2;
         break;
-        case 18:
+        case ACT_THUNDER:
             pointer += 8;
         break;
-        case 20:
+        case ACT_LAMP_TREMBLE:
             pointer += 8;
         break;
-        case 21:
+        case ACT_EYE_LIGHT:
             pointer += 2;
         break;
-        case 22:
+        case ACT_ADPCM:
             pointer += 4;
         break;
-        case 33:
+        case ACT_ADPCM_ONCE:
             pointer += 2;
         break;
-        case 23:
+        case ACT_FALL_OBJ:
             pointer += 6;
         break;
-        case 6:
+        case ACT_POINT_LIGHT:
             pointer += 4;
         break;
-        case 24:
+        case ACT_QUAKE:
             pointer += 6;
         break;
-        case 26:
+        case ACT_SUNSHINE:
             pointer += 2;
         break;
-        case 27:
+        case ACT_BLOOD:
             pointer += 2;
         break;
-        case 28:
+        case ACT_BUTSUMA_FIRE:
             pointer += 2;
         break;
-        case 29:
+        case ACT_CMOVE:
             pointer += 2;
         break;
-        case 0:
+        case ACT_END:
             return pointer + 2;
         break;
         }
@@ -452,42 +452,42 @@ u_char* ForwardConditionPointer(u_char *cp, u_char count)
     {
         switch(*cp)
         {
-        case 3:
-        case 4:
-        case 5:
-        case 7:
-        case 9:
-        case 12:
-        case 13:
+        case CHK_DIST_NEAR:
+        case CHK_DIST_FAR:
+        case CHK_STATUS:
+        case CHK_DIRECT:
+        case CHK_NODIRECT:
+        case CHK_SPEED_LESS:
+        case CHK_SPEED_MORE:
             cp += 6;
         break;
-        case 14:
-        case 15:
+        case CHK_COUNT_LESS:
+        case CHK_COUNT_MORE:
             cp += 4;
         break;
-        case 17:
+        case CHK_CIRCLE_AREA:
             cp += 12;
         break;
-        case 16:
-        case 22:
-        case 23:
+        case CHK_SQUARE_AREA:
+        case CHK_NOSQU_AREA:
+        case CHK_NOCIR_AREA:
             cp += 16;
         break;
-        case 6:
-        case 8:
-        case 10:
-        case 11:
-        case 18:
-        case 19:
-        case 20:
-        case 21:
-        case 24:
-        case 25:
-        case 26:
-        case 27:
-        case 28:
-        case 29:
-        case 30:
+        case CHK_EVENT:
+        case CHK_FINDER:
+        case CHK_NOFINDER:
+        case CHK_NOEVENT:
+        case CHK_PERCENT:
+        case CHK_ACT_FINISH:
+        case CHK_IN_ROOM:
+        case CHK_OUT_OF_ROOM:
+        case CHK_DOOR_OPEN:
+        case CHK_NO_DOOR_OPEN:
+        case CHK_BATTLE:
+        case CHK_NO_BATTLE:
+        case CHK_FLOOR:
+        case CHK_NO_FLOOR:
+        case CHK_CLEAR_COUNT:
             cp += 2;
         break;
         }
@@ -707,13 +707,13 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
         case 33:    
         printer += 2; 
         break;
-        case 1:
-        case 4:
-        case 6:
-        case 7:
-        case 11:
-        case 22:
-        case 25:
+        case ACT_SE_PLAY:
+        case ACT_ACCSRY_REQ:
+        case ACT_POINT_LIGHT:
+        case ACT_ROTATE:
+        case ACT_MIKU_ACT:
+        case ACT_ADPCM:
+        case ACT_CANDLE_FRAME:
             printer += 4;
         break;
         }
@@ -725,33 +725,33 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
 
         switch(*pointer)
         {
-        case 3:
+        case ACT_MIME_REQ:
             pointer += 2;
         break;
-        case 4:
+        case ACT_ACCSRY_REQ:
             acsRopeMoveRequest(fawp->furn_id, 0, 0.0f);
 
             pointer += 4;
         break;
-        case 29:
+        case ACT_CMOVE:
             acsChodoMoveStop(fawp->furn_id);
             pointer += 2;
         break;
-        case 24:
+        case ACT_QUAKE:
             pointer += 6;
         break;
-        case 5:
+        case ACT_TEX_ANM_REQ:
             fawp->pta = NULL;
 
             pointer += 6;
         break;
-        case 16:
+        case ACT_CANDLE_FIRE:
             if (fawp->lw_id >= 0)
             {
                 CandleAnmStop(fawp->lw_id);
             }
 
-            if (fawp->furn_id == 334 || fawp->furn_id == 335 || fawp->furn_id == 336 || fawp->furn_id == 337)
+            if (fawp->furn_id == M1_FRN_334 || fawp->furn_id == M1_FRN_335 || fawp->furn_id == M1_FRN_336 || fawp->furn_id == M1_FRN_337)
             {
                 ResetRDPFire(fawp->furn_id);
             }
@@ -765,8 +765,8 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 8;
         break;
-        case 31:
-            if (fawp->furn_id == 334 || fawp->furn_id == 335 || fawp->furn_id == 336 || fawp->furn_id == 337)
+        case ACT_CANDLE_NO:
+            if (fawp->furn_id == M1_FRN_334 || fawp->furn_id == M1_FRN_335 || fawp->furn_id == M1_FRN_336 || fawp->furn_id == M1_FRN_337)
             {
                 ResetRDPFire(fawp->furn_id);
             }
@@ -780,12 +780,12 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 2;
         break;
-        case 8:
+        case ACT_ROTATE_G:
             ReleaseAdjValGWrkVec(fawp->rot_speed);
 
             pointer += 6;
         break;
-        case 7:
+        case ACT_ROTATE:
             fawp->rot_speed[0] = 0.0f;
             fawp->rot_speed[1] = 0.0f;
             fawp->rot_speed[2] = 0.0f;
@@ -793,26 +793,26 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 4;
         break;
-        case 9:
+        case ACT_TREMBLE:
             StopTrembleH(fawp, fawp->trembleflg);
 
             pointer += 2;
         break;
-        case 10:
+        case ACT_PARALLEL_LIGHT:
             pointer += 6;
         break;
-        case 11:
+        case ACT_MIKU_ACT:
             motPlyrActStop();
 
             pointer += 4;
         break;
-        case 25:
+        case ACT_CANDLE_FRAME:
             switch (fawp->furn_id)
             {
-            case 334:
-            case 335:
-            case 336:
-            case 337:
+            case M1_FRN_334:
+            case M1_FRN_335:
+            case M1_FRN_336:
+            case M1_FRN_337:
                 ResetRDPFire(fawp->furn_id);
             break;
             default:
@@ -822,62 +822,62 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 4;
         break;
-        case 13:
+        case ACT_VIBE:
             VibrateRequest1(0, 1);
 
             pointer += 2;
         break;
-        case 14:
+        case ACT_SHOUKI:
             StopGusEffect();
 
             pointer += 6;
         break;
-        case 32:
+        case ACT_SHOUKI2:
             StopGusEffect();
 
             pointer += 2;
         break;
-        case 12:
+        case ACT_CHANGE_DATA:
             f_dat_save[fawp->furn_id].data = pointer[1];
 
             pointer += 2;
         break;
-        case 19:
+        case ACT_DISP_GHOST:
             ResetRDPazzEne();
 
             pointer += 2;
         break;
-        case 20:
+        case ACT_LAMP_TREMBLE:
             StopLampTremble(&pointer[1]);
 
             pointer += 8;
         break;
-        case 21:
+        case ACT_EYE_LIGHT:
             StopEyeLight();
 
             pointer += 2;
         break;
-        case 22:
+        case ACT_ADPCM:
             AdpcmStopFurn(20);
 
             pointer += 4;
         break;
-        case 33:
+        case ACT_ADPCM_ONCE:
             AdpcmStopHiso(0);
 
             pointer += 2;
         break;
-        case 23:
+        case ACT_FALL_OBJ:
             StopFallenEffect();
 
             pointer += 6;
         break;
-        case 6:
+        case ACT_POINT_LIGHT:
             FSpeDelPointLight(fawp);
 
             pointer += 4;
         break;
-        case 26: {
+        case ACT_SUNSHINE: {
             int _12 = 12; // HACK: fixes regswap
 
             if (fawp->room_no == _12)
@@ -904,14 +904,14 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
             pointer += 2;
         }
         break;
-        case 27:
+        case ACT_BLOOD:
             ResetRDBloodDrop(fawp->furn_id);
 
             pointer += 2;
         break;
-        case 28: {
+        case ACT_BUTSUMA_FIRE: {
             int i;
-            u_short furn_id[4] = { 330, 331, 332, 333 };
+            u_short furn_id[4] = { M1_FRN_330, M1_FRN_331, M1_FRN_332, M1_FRN_333 };
 
             for (i = 0; i < 4; i++)
             {
@@ -921,7 +921,7 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
             pointer += 2;
         }
         break;
-        case 1:
+        case ACT_SE_PLAY:
             if (sp[0] < 1000)
             {
                 SeStop(fawp->se_no);
@@ -929,23 +929,23 @@ void FActStopAction(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 4;
         break;
-        case 2:
+        case ACT_SE_PLAY_FIO:
             if (sp[0] < 1000 || sp[0] == 0xffff)
             {
                 SeFadeFlame(fawp->se_no, sp[2], 0);
             }
         // fall-through
-        case 18:
+        case ACT_THUNDER:
             pointer += 8;
         break;
-        case 30:
+        case ACT_EVE_SE:
             SeFadeFlame(fawp->se_no, sp[1], 0);
 
             pointer += 6;
         break;
-        case 0:
-        case 15:
-        case 17:
+        case ACT_END:
+        case ACT_ROPE_FALL:
+        case ACT_ROPE_AWAY:
         default:
             return;
         break;
@@ -972,42 +972,42 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
         switch(*printer)
         {
-        case 2:
-        case 16:
-        case 18:
-        case 20:
+        case ACT_SE_PLAY_FIO:
+        case ACT_CANDLE_FIRE:
+        case ACT_THUNDER:
+        case ACT_LAMP_TREMBLE:
             printer += 8;
         break;
-        case 5:
-        case 8:
-        case 14:
-        case 23:
-        case 24:
-        case 30:
+        case ACT_TEX_ANM_REQ:
+        case ACT_ROTATE_G:
+        case ACT_SHOUKI:
+        case ACT_FALL_OBJ:
+        case ACT_QUAKE:
+        case ACT_EVE_SE:
             printer += 6;
         break;
-        case 1:
-        case 4:
-        case 6:
-        case 7:
-        case 11:
-        case 22:
-        case 25:
+        case ACT_SE_PLAY:
+        case ACT_ACCSRY_REQ:
+        case ACT_POINT_LIGHT:
+        case ACT_ROTATE:
+        case ACT_MIKU_ACT:
+        case ACT_ADPCM:
+        case ACT_CANDLE_FRAME:
             printer += 4;
         break;
-        case 3:
-        case 9:
-        case 12:
-        case 13:
-        case 19:
-        case 21:
-        case 26:
-        case 27:
-        case 28:
-        case 29:
-        case 31:
-        case 32:
-        case 33:
+        case ACT_MIME_REQ:
+        case ACT_TREMBLE:
+        case ACT_CHANGE_DATA:
+        case ACT_VIBE:
+        case ACT_DISP_GHOST:
+        case ACT_EYE_LIGHT:
+        case ACT_SUNSHINE:
+        case ACT_BLOOD:
+        case ACT_BUTSUMA_FIRE:
+        case ACT_CMOVE:
+        case ACT_CANDLE_NO:
+        case ACT_SHOUKI2:
+        case ACT_ADPCM_ONCE:
             printer += 2;
         break;
         }
@@ -1019,8 +1019,8 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
         switch(*pointer)
         {
-        case 28: {
-            u_short furn_id[4] = { 330, 331, 332, 333 };
+        case ACT_BUTSUMA_FIRE: {
+            u_short furn_id[4] = { M1_FRN_330, M1_FRN_331, M1_FRN_332, M1_FRN_333 };
             int wrkid;
 
             for (i = 0; i < 4; i++)
@@ -1036,23 +1036,23 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
             pointer += 2;
         }
         break;
-        case 25:
+        case ACT_CANDLE_FRAME:
             switch(fawp->furn_id)
             {
-            case 330:
-            case 331:
-            case 332:
-            case 333:
+            case M1_FRN_330:
+            case M1_FRN_331:
+            case M1_FRN_332:
+            case M1_FRN_333:
                 SetRDLongFire2(fawp->pos, 1, 1.3f, 1.3f, 0.6f, 0.2f, 100.0f, 80.0f, 40.0f, fawp->room_no, fawp->furn_id);
             break;
-            case 338:
-            case 339:
+            case M1_FRN_338:
+            case M1_FRN_339:
                 SetRDLongFire2(fawp->pos, 1, 0.3f, 0.6f, 0.1f, 0.2f, 100.0f, 80.0f, 40.0f, fawp->room_no, fawp->furn_id);
             break;
-            case 334:
-            case 335:
-            case 336:
-            case 337:
+            case M1_FRN_334:
+            case M1_FRN_335:
+            case M1_FRN_336:
+            case M1_FRN_337:
                 SetRDPFire2(fawp->pos, fawp->furn_id);
             break;
             default:
@@ -1062,12 +1062,12 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 4;
         break;
-        case 19:
+        case ACT_DISP_GHOST:
             SetRDPazzEne(fawp->pos);
 
             pointer += 2;
         break;
-        case 26:
+        case ACT_SUNSHINE:
             if (fawp->room_no == 12)
             {
                 SetRDSunshine(1);
@@ -1093,7 +1093,7 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 2;
         break;
-        case 27:
+        case ACT_BLOOD:
         {
             float* blood_drop_pos;
 
@@ -1105,17 +1105,17 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
             pointer += 2;
             break;
         }
-        case 11:
+        case ACT_MIKU_ACT:
             motPlyrActReq(pointer[1], &fawp->pos, *(u_short *)(pointer + 2));
 
             pointer += 4;
         break;
-        case 4:
+        case ACT_ACCSRY_REQ:
             acsRopeMoveRequest(fawp->furn_id, pointer[1], sp[0] / 1000.0f);
 
             pointer += 4;
         break;
-        case 3:
+        case ACT_MIME_REQ:
             if (mimChodoChkExec(fawp->furn_id) == 0)
             {
                 mimChodoRequest(fawp, 0, 0);
@@ -1123,17 +1123,17 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 2;
         break;
-        case 24:
+        case ACT_QUAKE:
             ReqQuake(fawp->furn_id, *((u_short *)&pointer[2]) / 1000.0f, *((u_short *)&pointer[4]), pointer[1], 0);
 
             pointer += 6;
         break;
-        case 29:
+        case ACT_CMOVE:
             acsChodoMoveRequest(fawp->furn_id);
 
             pointer += 2;
         break;
-        case 23:
+        case ACT_FALL_OBJ:
             if (pointer[1] != 0)
             {
                 CallFallenEffect(plyr_wrk.move_box.pos, sp[0], pointer[4], pointer[5]);
@@ -1145,50 +1145,50 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 6;
         break;
-        case 14:
+        case ACT_SHOUKI:
             CallGusEffect(fawp->pos, (float)sp[0], (float)sp[1]);
 
             pointer += 6;
         break;
-        case 32:
+        case ACT_SHOUKI2:
             switch (fawp->furn_id)
             {
-            case 23:
+            case M1_FRN_TOKEI1:
                 CallGusEffect(special_furn_pos[3], 800, 2000);
             break;
-            case 101:
+            case M1_FRN_IDO02:
                 CallGusEffect(special_furn_pos[4], 800, 2000);
             break;
-            case 123:
+            case M1_FRN_TOITA1:
                 CallGusEffect(special_furn_pos[5], 800, 2000);
             break;
             }
 
             pointer += 2;
         break;
-        case 18:
+        case ACT_THUNDER:
             CallThunderLight((char)sp[0], (char)sp[1], (char)sp[2], pointer[1], &furn_wrk[fawp->fw_id].pos, fawp->room_no);
 
             pointer += 8;
         break;
-        case 20:
+        case ACT_LAMP_TREMBLE:
             CallLampTremble(&pointer[1]);
 
             pointer += 8;
         break;
-        case 21:
+        case ACT_EYE_LIGHT:
             fawp->pos[3] = 1.0f;
 
             CallEyeLight(&fawp->pos, &fawp->pos);
 
             pointer += 2;
         break;
-        case 22:
-            if (fawp->furn_id == 39)
+        case ACT_ADPCM:
+            if (fawp->furn_id == M1_FRN_YOKAN6)
             {
                 AdpcmPlayFurn(pointer[1], special_furn_pos[2], 0x3fff, 40);
             }
-            else if (fawp->furn_id == 323)
+            else if (fawp->furn_id == M1_FRN_323)
             {
                 AdpcmPlayFurn(pointer[1], special_furn_pos[7], 0x3fff, 40);
             }
@@ -1199,12 +1199,12 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 4;
         break;
-        case 33:
+        case ACT_ADPCM_ONCE:
             AdpcmPlayHiso(pointer[1] + 8, 0);
 
             pointer += 2;
         break;
-        case 1:
+        case ACT_SE_PLAY:
             if (sp[0] == 0xffff)
             {
                 fawp->se_no = SeStartPosSrundFlame(fawp->room_no, fawp->pos, 1, 0x1000, 0x1000);
@@ -1216,10 +1216,10 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 4;
         break;
-        case 2:
+        case ACT_SE_PLAY_FIO:
             if (sp[0] == 0xffff)
             {
-                if (fawp->furn_id == 314)
+                if (fawp->furn_id == M1_FRN_314)
                 {
                     fawp->se_no = SeStartPosSrundFlame(12, special_furn_pos[6], 0, 0x1000, 0x1000);
                 }
@@ -1235,22 +1235,22 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
 
             pointer += 8;
         break;
-        case 30:
+        case ACT_EVE_SE:
             fawp->se_no = SeStartPosEventFlame(fawp->room_no, pointer[1], fawp->pos, sp[0], 0x1000, 0x1000);
 
             pointer += 6;
         break;
-        case 5:
+        case ACT_TEX_ANM_REQ:
             FSpeTexAnmExe(pointer[1], fawp, pointer[2], pointer[3], pointer[4]);
 
             pointer += 6;
         break;
-        case 16: {
+        case ACT_CANDLE_FIRE: {
             u_char no = furn_dat[fawp->furn_id].ef_no;
 
             fawp->lw_id = -1;
 
-            if (fawp->furn_id == 334 || fawp->furn_id == 335 || fawp->furn_id == 336 || fawp->furn_id == 337)
+            if (fawp->furn_id == M1_FRN_334 || fawp->furn_id == M1_FRN_335 || fawp->furn_id == M1_FRN_336 || fawp->furn_id == M1_FRN_337)
             {
                 SetRDPFire(fawp->pos, fawp->furn_id);
             }
@@ -1271,27 +1271,27 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
             pointer += 8;
         }
         break;
-        case 31: {
+        case ACT_CANDLE_NO: {
             u_char no = furn_dat[fawp->furn_id].ef_no;
 
             fawp->lw_id = -1;
 
-            if (fawp->furn_id == 334 || fawp->furn_id == 335 || fawp->furn_id == 336 || fawp->furn_id == 337)
+            if (fawp->furn_id == M1_FRN_334 || fawp->furn_id == M1_FRN_335 || fawp->furn_id == M1_FRN_336 || fawp->furn_id == M1_FRN_337)
             {
                 SetRDPFire(fawp->pos, fawp->furn_id);
             }
 
-            else if (!(fawp->furn_id == 330 || fawp->furn_id == 331 || fawp->furn_id == 332 || fawp->furn_id == 333))
+            else if (!(fawp->furn_id == M1_FRN_330 || fawp->furn_id == M1_FRN_331 || fawp->furn_id == M1_FRN_332 || fawp->furn_id == M1_FRN_333))
             {
                 fawp->buff = SetFireEffect(2, 3, fawp->pos, fefct_fire[no].fr, fefct_fire[no].fg, fefct_fire[no].fb, fefct_fire[no].fscl, fefct_fire[no].kr, fefct_fire[no].kg, fefct_fire[no].kb, fefct_fire[no].kscl);
             }
         }
         // fall-through
-        case 12:
-        case 13:
+        case ACT_CHANGE_DATA:
+        case ACT_VIBE:
             pointer += 2;
         break;
-        case 8: {
+        case ACT_ROTATE_G: {
             float f1 = ((sp[0] * 3.1415927f) / 180.0f) / 60.0f;
             sceVu0FVECTOR temp = { f1, 0.0f, 0.0f, 0.0f };
 
@@ -1300,7 +1300,7 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
             pointer += 6;
         }
         break;
-        case 7: {
+        case ACT_ROTATE: {
             float f1 = ((sp[0] * 3.1415927f) / 180.0f) / 60.0f;
 
             fawp->rot_speed[0] = f1;
@@ -1311,20 +1311,20 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
             pointer += 4;
         }
         break;
-        case 9:
+        case ACT_TREMBLE:
             fawp->trembleflg = CallTrembleH(fawp);
 
             pointer += 2;
         break;
-        case 6:
+        case ACT_POINT_LIGHT:
             FSpeSetPointLight(fawp, pointer[1] / 100.0f, pointer[2] / 100.0f, pointer[3] / 100.0f);
 
             pointer += 4;
         break;
-        case 0:
-        case 10:
-        case 15:
-        case 17:
+        case ACT_END:
+        case ACT_PARALLEL_LIGHT:
+        case ACT_ROPE_FALL:
+        case ACT_ROPE_AWAY:
         default:
             return;
         break;
@@ -1375,7 +1375,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
         switch(**cpp)
         {
-        case 3:
+        case CHK_DIST_NEAR:
             if (flg != 0)
             {
                 if (FACheckDistNear(sp[1], sp[0], fawp->pos) == 0)
@@ -1386,7 +1386,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 6;
         break;
-        case 4:
+        case CHK_DIST_FAR:
             if (flg != 0)
             {
                 if (FACheckDistFar(sp[1], sp[0], fawp->pos) == 0)
@@ -1397,7 +1397,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 6;
         break;
-        case 5:
+        case CHK_STATUS:
             if (flg != 0)
             {
                 if (FACheckStatus(sp[0], sp[1]) == 0)
@@ -1408,7 +1408,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 6;
         break;
-        case 6:
+        case CHK_EVENT:
             if (f_dat_save[fawp->furn_id].eventflg == 0)
             {
                 flg = 0;
@@ -1416,7 +1416,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 11:
+        case CHK_NOEVENT:
             if (f_dat_save[fawp->furn_id].eventflg != 0)
             {
                 flg = 0;
@@ -1424,7 +1424,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 7:
+        case CHK_DIRECT:
             if (flg != 0)
             {
                 if (FACheckDirect((float)sp[0], sp[1], fawp->pos) == 0)
@@ -1435,7 +1435,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 6;
         break;
-        case 9:
+        case CHK_NODIRECT:
             if (flg != 0)
             {
                 if (FACheckDirect((float)sp[0], sp[1], fawp->pos) != 0)
@@ -1446,7 +1446,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 6;
         break;
-        case 8:
+        case CHK_FINDER:
             if (plyr_wrk.mode != PMODE_FINDER)
             {
                 flg = 0;
@@ -1454,14 +1454,14 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 10:
+        case CHK_NOFINDER:
             if (plyr_wrk.mode == PMODE_FINDER)
             {
                 flg = 0;
             }
             *cpp += 2;
         break;
-        case 12:
+        case CHK_SPEED_LESS:
             if (flg != 0)
             {
                 if (FACheckSpeedLess(sp[0], sp[1]) == 0)
@@ -1471,7 +1471,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
             }
             *cpp += 6;
         break;
-        case 13:
+        case CHK_SPEED_MORE:
             if (flg != 0)
             {
                 if (FACheckSpeedLess(sp[0], sp[1]) != 0)
@@ -1482,7 +1482,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 6;
         break;
-        case 14:
+        case CHK_COUNT_LESS:
             if (sp[0] < fawp->count)
             {
                 flg = 0;
@@ -1490,7 +1490,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 4;
         break;
-        case 15:
+        case CHK_COUNT_MORE:
             if (fawp->count <= sp[0])
             {
                 flg = 0;
@@ -1498,7 +1498,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 4;
         break;
-        case 16:
+        case CHK_SQUARE_AREA:
             if (flg != 0)
             {
                 if (FACheckSquareArea(sp[0], sp[1], sp[2], sp[3], sp[4], sp[5], sp[6]) == 0)
@@ -1509,7 +1509,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 16;
         break;
-        case 17:
+        case CHK_CIRCLE_AREA:
             if (flg != 0)
             {
                 if (FACheckCircleArea(sp[0], sp[1], sp[2], sp[3], sp[4]) == 0)
@@ -1520,7 +1520,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 12;
         break;
-        case 20:
+        case CHK_IN_ROOM:
             if (room_wrk.disp_no[0] != fawp->room_no)
             {
                 flg = 0;
@@ -1528,7 +1528,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 21:
+        case CHK_OUT_OF_ROOM:
             if (FSpeCheckOutOfRoom(fawp->room_no) != 0)
             {
                 flg = 0;
@@ -1536,7 +1536,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 18:
+        case CHK_PERCENT:
             j = fawp->prejudge;
 
             if (j == 0)
@@ -1564,7 +1564,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 19:
+        case CHK_ACT_FINISH:
             if ((fawp->flg & 0x2) == 0)
             {
                 flg = 0;
@@ -1572,7 +1572,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 22:
+        case CHK_NOSQU_AREA:
             if (flg != 0)
             {
                 if ( FACheckSquareArea(sp[0], sp[1], sp[2], sp[3], sp[4], sp[5], sp[6]) != 0)
@@ -1583,7 +1583,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 16;
         break;
-        case 23:
+        case CHK_NOCIR_AREA:
             if (flg != 0)
             {
                 if (FACheckCircleArea(sp[0], sp[1], sp[2], sp[3], sp[4]) != 0)
@@ -1594,7 +1594,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 16;
         break;
-        case 24:
+        case CHK_DOOR_OPEN:
             if ((plyr_wrk.sta & 0x8) == 0)
             {
                 flg = 0;
@@ -1602,7 +1602,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 25:
+        case CHK_NO_DOOR_OPEN:
             if (plyr_wrk.sta & 0x8)
             {
                 flg = 0;
@@ -1610,7 +1610,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 27:
+        case CHK_NO_BATTLE:
             if (plyr_wrk.sta & 0x1)
             {
                 flg = 0;
@@ -1618,7 +1618,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 26:
+        case CHK_BATTLE:
             if ((plyr_wrk.sta & 0x1) == 0)
             {
                 flg = 0;
@@ -1626,7 +1626,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 28:
+        case CHK_FLOOR:
             if (map_wrk.floor != (*cpp)[1])
             {
                 flg = 0;
@@ -1634,7 +1634,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 29:
+        case CHK_NO_FLOOR:
             if (map_wrk.floor == (*cpp)[1])
             {
                 flg = 0;
@@ -1642,7 +1642,7 @@ int ChkANDCondition(FURN_ACT_WRK *fawp, u_char **cpp, u_char count)
 
             *cpp += 2;
         break;
-        case 30:
+        case CHK_CLEAR_COUNT:
             if (ingame_wrk.clear_count < (*cpp)[1])
             {
                 flg = 0;

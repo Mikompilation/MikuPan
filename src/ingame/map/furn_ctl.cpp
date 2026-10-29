@@ -55,7 +55,7 @@ u_char ChkFurnGetAlready(u_short furn_id)
 
     for (i = 0; i < 60; i++)
     {
-        if (furn_id == fwp->id && (fwp->use == 0 || fwp->use == 2))
+        if (furn_id == fwp->id && (fwp->use == FURN_USER_NOW_ROOM || fwp->use == FURN_USER_NEXT_ROOM))
         {
             return 1;
         }
@@ -68,19 +68,19 @@ u_char ChkFurnGetAlready(u_short furn_id)
 
 void FurnSetWrkNoUse(FURN_WRK *fwp, int no)
 {
-    if (fwp != NULL && fwp->use != 5)
+    if (fwp != NULL && fwp->use != FURN_USER_NOTHING)
     {
         FreeFActFwrkNo(no);
         FurnEfctFree(fwp);
 
-        if (fwp->use == 0 || fwp->use == 2)
+        if (fwp->use == FURN_USER_NOW_ROOM || fwp->use == FURN_USER_NEXT_ROOM)
         {
             mimChodoReleaseWork(fwp->id,fwp->room_id);
             acsRopeReleaseWork(fwp->id);
             acsChodoReleaseWork(fwp->id);
         }
 
-        fwp->use = 5;
+        fwp->use = FURN_USER_NOTHING;
         fwp->furn_no = 0xffff;
         fwp->fno_bk = 0xffff;
         fwp->attr_id = 0xffff;
@@ -284,7 +284,7 @@ int FurnIsWrkUse(FURN_WRK *fw)
 {
     if (fw != NULL)
     {
-        if (fw->use == 5)
+        if (fw->use == FURN_USER_NOTHING)
         {
             return 0;
         }
@@ -517,13 +517,13 @@ void FurnDataRenewNow()
 
     for (i = 0; i < 60; i++)
     {
-        if (furn_wrk[i].use == 2)
+        if (furn_wrk[i].use == FURN_USER_NEXT_ROOM)
         {
-            furn_wrk[i].use = 0;
+            furn_wrk[i].use = FURN_USER_NOW_ROOM;
         }
-        else if (furn_wrk[i].use == 0)
+        else if (furn_wrk[i].use == FURN_USER_NOW_ROOM)
         {
-            furn_wrk[i].use = 2;
+            furn_wrk[i].use = FURN_USER_NEXT_ROOM;
         }
     }
 }
@@ -539,7 +539,7 @@ void FurnFreeFurnWrk(u_char rm_id)
 
     for (i = 0; i < 60; i++)
     {
-        if (furn_wrk[i].use == 2)
+        if (furn_wrk[i].use == FURN_USER_NEXT_ROOM)
         {
             FurnSetWrkNoUse(&furn_wrk[i], i);
         }
@@ -559,7 +559,7 @@ void FurnDataInit()
 
     InitFActWrk();
 
-    addr_si = (int *)(map_wrk.dat_adr + 11 * 4);
+    addr_si = (int *)(map_wrk.dat_adr + MAP_FURNITUR * 4);
     addr_si = (int *)MikuPan_GetHostPointer(*addr_si + BASE_ADDRESS);
 
     r_id_p = (u_char *)MikuPan_GetHostPointer(*addr_si + BASE_ADDRESS);
@@ -582,7 +582,7 @@ void FurnDataInit()
 
     SetUpRoomCoordinate(*r_id_p, room_wrk.pos[0]);
 
-    addr_si = (int *)(map_wrk.dat_adr + 11 * 4);
+    addr_si = (int *)(map_wrk.dat_adr + MAP_FURNITUR * 4);
     addr_si = (int *)MikuPan_GetHostPointer(*addr_si + BASE_ADDRESS);
     addr_si = (int *)MikuPan_GetHostPointer(addr_si[i+1] + BASE_ADDRESS);
 
@@ -601,7 +601,7 @@ void FurnDataInit()
             no_use_fw++;
         }
 
-        FurnSetFurnWork(fdpp, no_use_fw, ingame_wrk.msn_no, 0, *r_id_p);
+        FurnSetFurnWork(fdpp, no_use_fw, ingame_wrk.msn_no, FURN_USER_NOW_ROOM, *r_id_p);
 
         if (furn_wrk[no_use_fw].furn_no != 0xffff && furn_wrk[no_use_fw].furn_no != 0)
         {
@@ -634,7 +634,7 @@ void FurnDataRenewNext(u_char room_id)
         return;
     }
 
-    addr_si = (int *)(map_wrk.dat_adr + 11 * 4);
+    addr_si = (int *)(map_wrk.dat_adr + MAP_FURNITUR * 4);
     addr_si = (int *)MikuPan_GetHostPointer(*addr_si + BASE_ADDRESS);
 
     r_id_p = (u_char *)MikuPan_GetHostPointer(*addr_si + BASE_ADDRESS);
@@ -657,7 +657,7 @@ void FurnDataRenewNext(u_char room_id)
 
     SetUpRoomCoordinate(*r_id_p, room_wrk.pos[1]);
 
-    addr_si = (int *)(map_wrk.dat_adr + 11 * 4);
+    addr_si = (int *)(map_wrk.dat_adr + MAP_FURNITUR * 4);
     addr_si = (int *)MikuPan_GetHostPointer(*addr_si + BASE_ADDRESS);
     addr_si = (int *)MikuPan_GetHostPointer(addr_si[i+1] + BASE_ADDRESS);
 
@@ -676,7 +676,7 @@ void FurnDataRenewNext(u_char room_id)
             no_use_fw++;
         }
 
-        FurnSetFurnWork(fdpp, no_use_fw, ingame_wrk.msn_no, 2, *r_id_p);
+        FurnSetFurnWork(fdpp, no_use_fw, ingame_wrk.msn_no, FURN_USER_NEXT_ROOM, *r_id_p);
 
         if (furn_wrk[no_use_fw].furn_no != 0xffff && furn_wrk[no_use_fw].furn_no != 0)
         {
@@ -703,7 +703,7 @@ void FurnPicDispOn()
 
     for (i = 0; i < 60; i++)
     {
-        if (fwp0->use == 2 || fwp0->use == 0)
+        if (fwp0->use == FURN_USER_NEXT_ROOM || fwp0->use == FURN_USER_NOW_ROOM)
         {
             attr = GetFurnAttr(fwp0->id, ingame_wrk.msn_no);
 
@@ -736,7 +736,7 @@ void FurnPicDispOff()
 
     for (i = 0; i < 60; i++)
     {
-        if (fwp0->use == 2 || fwp0->use == 0)
+        if (fwp0->use == FURN_USER_NEXT_ROOM || fwp0->use == FURN_USER_NOW_ROOM)
         {
             attr = GetFurnAttr(fwp0->id, ingame_wrk.msn_no);
 
@@ -843,7 +843,7 @@ void SetFurnAttrEve(u_short id, u_short flg, int on_flg)
 
     for (i = 0, fwp = furn_wrk; i < 60; i++, fwp++)
     {
-        if (fwp->use != 2 && fwp->use != 0)
+        if (fwp->use != FURN_USER_NEXT_ROOM && fwp->use != FURN_USER_NOW_ROOM)
         {
             continue;
         }

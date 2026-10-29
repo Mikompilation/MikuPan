@@ -250,13 +250,13 @@ u_int* FodGetFirstLight(FOD_LIGHT *fl)
         case 0:
             lit_addr += 8;
         break;
-        case 1:
+        case FOD_EFF_DITHER:
             Vu0CopyVector(fl->all_lit[i].diffuse, *(sceVu0FVECTOR *)&lit_addr[4]);
             Vu0CopyVector(fl->all_lit[i].specular, *(sceVu0FVECTOR *)&lit_addr[4]);
 
             lit_addr += 12;
         break;
-        case 2:
+        case FOD_EFF_BLUR_NORMAL:
             fl->all_lit[i].ambient[0] = 0.0f;
             fl->all_lit[i].ambient[1] = 0.0f;
             fl->all_lit[i].ambient[2] = 0.0f;
@@ -289,7 +289,7 @@ u_int* FodGetFirstLight(FOD_LIGHT *fl)
 
             lit_addr += 20;
         break;
-        case 3:
+        case FOD_EFF_BLUR_BLACK:
             fl->all_lit[i].ambient[0] = 0.0f;
             fl->all_lit[i].ambient[1] = 0.0f;
             fl->all_lit[i].ambient[2] = 0.0f;
@@ -508,7 +508,7 @@ void FodGetToSgLight(FOD_CTRL *fc)
 
             switch (lit_addr[1])
             {
-            case 1:
+            case FOD_EFF_DITHER:
                 if (((u_char *)lit_addr)[8] != 0)
                 {
                     Vu0CopyVector(sl->diffuse, data);
@@ -529,7 +529,7 @@ void FodGetToSgLight(FOD_CTRL *fc)
                     data += 4;
                 }
             break;
-            case 2:
+            case FOD_EFF_BLUR_NORMAL:
                 if (((u_char *)lit_addr)[8] != 0)
                 {
                     Vu0CopyVector(sl->diffuse, data);
@@ -566,7 +566,7 @@ void FodGetToSgLight(FOD_CTRL *fc)
                     data += 4;
                 }
             break;
-            case 3:
+            case FOD_EFF_BLUR_BLACK:
                 if (((u_char *)lit_addr)[8] != 0)
                 {
                     Vu0CopyVector(sl->diffuse, data);
@@ -706,12 +706,12 @@ void FodGetCamData(SgCAMERA *cam, FOD_CTRL *fc)
                 sceVu0ApplyMatrix(cam->p,fod_cmn_mtx,cam->p);
                 fdat += 4;
             break;
-            case 1:
+            case FOD_EFF_DITHER:
                 Vu0CopyVector(cam->i, fdat);
                 sceVu0ApplyMatrix(cam->i,fod_cmn_mtx,cam->i);
                 fdat += 4;
             break;
-            case 2:
+            case FOD_EFF_BLUR_NORMAL:
                 cam->roll = DEG2RAD(fdat[0]) + PI;
                 if (cam->roll > PI)
                 {
@@ -719,7 +719,7 @@ void FodGetCamData(SgCAMERA *cam, FOD_CTRL *fc)
                 }
                 fdat += 1;
             break;
-            case 3:
+            case FOD_EFF_BLUR_BLACK:
                 cam->fov = DEG2RAD(fdat[0]);
                 if (cam->fov > PI)
                 {
@@ -727,11 +727,11 @@ void FodGetCamData(SgCAMERA *cam, FOD_CTRL *fc)
                 }
                 fdat += 1;
             break;
-            case 4:
+            case FOD_EFF_BLUR_WHITE:
                 cam->nearz = fdat[0];
                 fdat += 1;
             break;
-            case 5:
+            case FOD_EFF_DEFORM:
                 cam->farz = fdat[0];
                 fdat += 1;
             break;

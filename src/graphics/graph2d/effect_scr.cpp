@@ -3792,14 +3792,14 @@ void SetMAGATOKI2()
             SetBlurEffect(EF_BLUR_N, 1, &alpr, 1015, 1800, 320.0f, 112.0f);
             SetDeformEffect(1, 2, 12);
             SetContrastEffect(EF_NCONTRAST, 1, 70, 70);
-            SetDitherEffect(1, 2, 24.0f, 8.0f, 106, 101);
+            SetDitherEffect(1, EF_DITHER, 24.0f, 8.0f, 106, 101);
             SetFadeFrameEffect(1, 30, 0x80000);
         }
         else
         {
             SetDeformEffect(1, 2, 12);
             SetContrastEffect(EF_NCONTRAST, 1, 70, 70);
-            SetDitherEffect(1, 2, 24.0f, 8.0f, 106, 101);
+            SetDitherEffect(1, EF_DITHER, 24.0f, 8.0f, 106, 101);
             SetFadeFrameEffect(1, 30, 0x80000);
         }
     }
@@ -5289,7 +5289,7 @@ int SetExFade2()
         SetFadeFrameEffect(1, 0x1e, 0x80000);
         SetBlurEffect(EF_BLUR_N, 1, &balp, 1000, 1800, 320.0f, 112.0f);
         SetDeformEffect(1, 2, dfrt);
-        SetDitherEffect(1, 2, (float)dalp, 8.0f, 0x40, 0x80);
+        SetDitherEffect(1, EF_DITHER, (float)dalp, 8.0f, 0x40, 0x80);
         
         SetContrastEffect(EF_NCONTRAST, 1, ccol, calp);
     }

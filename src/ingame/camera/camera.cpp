@@ -154,11 +154,11 @@ static void CameraDebugSetFromMapInfo(const MAP_CAM_INFO *mci, const SgCAMERA *t
             CameraDebugSetMapPoint(camera_debug_path.camera_path[0], mci->mcd->p1);
             CameraDebugSetMapPoint(camera_debug_path.interest_path[0], mci->mcd->p0);
             break;
-        case 1:
+        case PMODE_FINDER:
             camera_debug_path.camera_path_points = 1;
             CameraDebugSetMapPoint(camera_debug_path.camera_path[0], mci->mcd->p0);
             break;
-        case 2:
+        case PMODE_DMG:
             camera_debug_path.camera_path_points = 2;
             camera_debug_path.interest_path_points = 1;
             CameraDebugSetMapPoint(camera_debug_path.camera_path[0], mci->mcd->p1);
@@ -1422,10 +1422,10 @@ void NormalCameraCtrl()
             case 0:
                 SetCamPos0(&tc, &mci);
                 break;
-            case 1:
+            case PMODE_FINDER:
                 SetCamPos1(&tc, &mci);
                 break;
-            case 2:
+            case PMODE_DMG:
                 SetCamPos2(&tc, &mci);
                 break;
             case 3:
@@ -1508,10 +1508,10 @@ int GetCameraInfo(MAP_CAM_INFO *mci)
         {
             switch (dbg_wrk.cam_hold_mode)
             {
-                case 1:
+                case PMODE_FINDER:
                     mci->kind = 1;
                     break;
-                case 2:
+                case PMODE_DMG:
                     mci->kind = 2;
                     break;
             }
@@ -1546,13 +1546,13 @@ void GetCameraData(u_char kind, MAP_CAM_INFO *mci)
             mci->mcd = &map_cam_dat[mci->no];
             mci->type = map_cam_dat[mci->no].type;
             break;
-        case 1:
+        case PMODE_FINDER:
             mci->no = plyr_wrk.pr_info.camera_btl;
             mci->no_old = plyr_wrk.pr_info.camera_btl_old;
             mci->mcd = &map_cam_dat2[mci->no];
             mci->type = map_cam_dat2[mci->no].type;
             break;
-        case 2:
+        case PMODE_DMG:
             mci->no = plyr_wrk.pr_info.camera_drm;
             mci->no_old = plyr_wrk.pr_info.camera_drm_old;
             mci->mcd = &map_cam_dat3[mci->no];
@@ -1864,7 +1864,7 @@ float GetMCLocalPosPer(u_short cn, u_char kind, u_char id)
     u_short xmax;
     u_short zmin;
     u_short zmax;
-    u_char kind_tbl[4] = {1, 2, 3, 4};
+    u_char kind_tbl[4] = {MAP_CAMERA, MAP_CAMERA_B, MAP_CAMERA_D, MAP_CAMERA_T};
     static float min;
     static float max;
     static u_short req_cam_no_save = 0xFFFF;
@@ -1938,10 +1938,10 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                     case 0:
                         tbl = ncam_comple_dat1[mci->no_old];
                         break;
-                    case 1:
+                    case PMODE_FINDER:
                         tbl = ncam_comple_dat1[mci->no_old];
                         break;
-                    case 2:
+                    case PMODE_DMG:
                         tbl = ncam_comple_dat2[mci->no_old];
                         break;
                     case 3:
@@ -1952,16 +1952,16 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                         break;
                 }
                 break;
-            case 1:
+            case PMODE_FINDER:
                 switch (ingame_wrk.msn_no)
                 {
                     case 0:
                         tbl = bcam_comple_dat1[mci->no_old];
                         break;
-                    case 1:
+                    case PMODE_FINDER:
                         tbl = bcam_comple_dat1[mci->no_old];
                         break;
-                    case 2:
+                    case PMODE_DMG:
                         tbl = bcam_comple_dat2[mci->no_old];
                         break;
                     case 3:
@@ -1972,16 +1972,16 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                         break;
                 }
                 break;
-            case 2:
+            case PMODE_DMG:
                 switch (ingame_wrk.msn_no)
                 {
                     case 0:
                         tbl = dcam_comple_dat1[mci->no_old];
                         break;
-                    case 1:
+                    case PMODE_FINDER:
                         tbl = dcam_comple_dat1[mci->no_old];
                         break;
-                    case 2:
+                    case PMODE_DMG:
                         tbl = dcam_comple_dat2[mci->no_old];
                         break;
                     case 3:
@@ -2002,10 +2002,10 @@ void CompleCameraPos(SgCAMERA *tc, SgCAMERA *oc, MAP_CAM_INFO *mci)
                 {
                     switch (CAMERA_FOCUS_DATA(tbl[i]))
                     {
-                        case 1:
+                        case PMODE_FINDER:
                             CallFocus(0, 1, 50);
                             break;
-                        case 2:
+                        case PMODE_DMG:
                             CallFocus(0, 2, 70);
                             break;
                         case 3:
@@ -2437,7 +2437,7 @@ void PlyrCamCondChk()
 {
     switch (plyr_wrk.cond)
     {
-        case 1:
+        case PMODE_FINDER:
             PconMahiCameraCtrl();
             break;
         case 3:
@@ -2992,10 +2992,10 @@ void CameraIdMoveCtrl()
             case 0:
                 map_cam_dat[cdcopy[1]] = *mcd;
                 break;
-            case 1:
+            case PMODE_FINDER:
                 map_cam_dat2[cdcopy[1]] = *mcd;
                 break;
-            case 2:
+            case PMODE_DMG:
                 map_cam_dat3[cdcopy[1]] = *mcd;
                 break;
             case 3:
@@ -3063,10 +3063,10 @@ void CameraIdMoveCtrl()
             case 0:
                 cd_edit_end = SetMapCamDat0(mcd);
                 break;
-            case 1:
+            case PMODE_FINDER:
                 cd_edit_end = SetMapCamDat1(mcd);
                 break;
-            case 2:
+            case PMODE_DMG:
                 cd_edit_end = SetMapCamDat2(mcd, cam_id);
                 break;
             case 3:
@@ -3415,7 +3415,7 @@ u_char SetMapCamDat2(MAP_CAM_DAT *mcd, u_char id)
 
             cd_step++;
             break;
-        case 1:
+        case PMODE_FINDER:
             if (L1_PRESSED() == 0)
             {
                 for (i = 0; i < 3; i++)
@@ -3444,7 +3444,7 @@ u_char SetMapCamDat2(MAP_CAM_DAT *mcd, u_char id)
 
             cd_step++;
             break;
-        case 2:
+        case PMODE_DMG:
             mcd->id = id;
 
             if (tmpd.p0[0] != 0 || tmpd.p0[1] != 0 || tmpd.p0[2] != 0)
@@ -3514,7 +3514,7 @@ u_char SetMapCamDat3(MAP_CAM_DAT *mcd, u_char id)
 
             cd_step++;
             break;
-        case 1:
+        case PMODE_FINDER:
             if (L1_PRESSED() == 0)
             {
                 for (i = 0; i < 3; i++)
@@ -3543,7 +3543,7 @@ u_char SetMapCamDat3(MAP_CAM_DAT *mcd, u_char id)
 
             cd_step++;
             break;
-        case 2:
+        case PMODE_DMG:
             mcd->id = id;
 
             if (tmpd.p0[0] != 0 || tmpd.p0[1] != 0 || tmpd.p0[2] != 0)
@@ -3615,7 +3615,7 @@ u_char SetMapCamDat4(MAP_CAM_DAT *mcd, u_char id)
 
             cd_step++;
             break;
-        case 1:
+        case PMODE_FINDER:
             if (L1_PRESSED() == 0)
             {
                 for (i = 0; i < 3; i++)
@@ -3649,7 +3649,7 @@ u_char SetMapCamDat4(MAP_CAM_DAT *mcd, u_char id)
 
             cd_step++;
             break;
-        case 2:
+        case PMODE_DMG:
             mcd->id = id;
 
             if (tmpd.p0[0] != 0 || tmpd.p0[1] != 0 || tmpd.p0[2] != 0)
@@ -3749,11 +3749,11 @@ void SaveCamDat(u_char kind, u_char mn)
             fname[32] = '1' + mn;// replace the '1' map_cam1 with 'mn + 1'
             MikuPan_WriteFile(fname, map_cam_dat, 22000);
             break;
-        case 1:
+        case PMODE_FINDER:
             fname2[33] = '1' + mn;// replace the '1' bmap_cam1 with 'mn + 1'
             MikuPan_WriteFile(fname2, map_cam_dat2, 22000);
             break;
-        case 2:
+        case PMODE_DMG:
             fname3[33] = '1' + mn;// replace the '1' dmap_cam1 with 'mn + 1'
             MikuPan_WriteFile(fname3, map_cam_dat3, 0x3390);
             break;
@@ -3817,7 +3817,7 @@ void PlyrDmgCameraCtrl()
 
             plyr_wrk.dmg_cam_flag = 1;
             break;
-        case 1:
+        case PMODE_FINDER:
             if (cnt == 0)
             {
                 plyr_wrk.dmg_cam_flag = 2;
@@ -3829,7 +3829,7 @@ void PlyrDmgCameraCtrl()
                 sceVu0AddVector(camera.p, camera.p, cv);
             }
             break;
-        case 2:
+        case PMODE_DMG:
             // do nothing ...
             break;
     }
@@ -3858,10 +3858,10 @@ void ReqDramaCamera(u_char req, u_short no, u_short time)
             case 0:
                 tbl = dc_no_tbl0[no];
                 break;
-            case 1:
+            case PMODE_FINDER:
                 tbl = dc_no_tbl0[no];
                 break;
-            case 2:
+            case PMODE_DMG:
                 tbl = dc_no_tbl1[no];
                 break;
             case 3:

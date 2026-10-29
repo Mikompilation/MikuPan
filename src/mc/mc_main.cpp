@@ -45,7 +45,7 @@ char mcSaveMain()
         case 1:
             mcSetStep(MC_CHECK, MC_MSG_CHECK);
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_ERR_END, MC_MSG_NONE);
         break;
         }
@@ -72,10 +72,10 @@ char mcSaveMain()
                 mcSetStep(MC_SEL_SAVE, MC_MSG_SEL_OVERWRITE);
             }
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
-        case 3:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
         }
@@ -89,8 +89,8 @@ char mcSaveMain()
         case 1:
             mcSetStep(MC_FORMAT, MC_MSG_FORMAT);
         break;
-        case 2:
-        case 3:
+        case MC_SEL_NEW_OR_LOAD:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
         case 4:
@@ -118,8 +118,8 @@ char mcSaveMain()
             mcSetStep(MC_SAVE, MC_MSG_SAVE);
 #endif
         break;
-        case 2:
-        case 3:
+        case MC_SEL_NEW_OR_LOAD:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_SEL_FILE, MC_MSG_SEL_SAVEFILE);
         break;
         case 4:
@@ -135,8 +135,8 @@ char mcSaveMain()
         case 1:
             mcSetStep(MC_MAKE_DIR, MC_MSG_MAKE_DIR);
         break;
-        case 2:
-        case 3:
+        case MC_SEL_NEW_OR_LOAD:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
         case 4:
@@ -164,7 +164,7 @@ char mcSaveMain()
             mcSetStep(MC_SAVE_END, MC_MSG_END_SAVE);
 #endif
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_SAVE);
         break;
         }
@@ -189,7 +189,7 @@ char mcSaveMain()
             mcSetStep(MC_SAVE_END, MC_MSG_END_SAVE);
 #endif
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_SAVE);
         break;
         }
@@ -208,7 +208,7 @@ char mcSaveMain()
             mcSetStep(MC_MAKE_DIR, MC_MSG_MAKE_DIR);
 #endif
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_FORMAT);
         break;
         }
@@ -222,10 +222,10 @@ char mcSaveMain()
         case 1:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetMessage(MC_MSG_ERR_NOCARD);
         break;
-        case 3:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_CHECK, MC_MSG_CHECK);
         break;
         }
@@ -239,8 +239,8 @@ char mcSaveMain()
         case 1:
             mcSetStep(MC_DELETE_DIR, MC_MSG_REMAKE_DIR);
         break;
-        case 2:
-        case 3:
+        case MC_SEL_NEW_OR_LOAD:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
         case 4:
@@ -259,13 +259,13 @@ char mcSaveMain()
 
             mc_ctrl.sub_step = 2;
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_SAVE);
         break;
         }
     break;
     case MC_SAVE_END:
-        if (mc_ctrl.sub_step == 0)
+        if (mc_ctrl.sub_step == MC_INIT)
         {
             mc_ctrl.sub_step = 1;
 
@@ -324,7 +324,7 @@ char mcLoadMain()
 
         switch (mc_ctrl.mode)
         {
-        case 3:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_SEL_NEW_OR_LOAD, MC_MSG_SEL_NEW_OR_LOAD);
         break;
         case 4:
@@ -347,10 +347,10 @@ char mcLoadMain()
 
             mc_newalbum_flg = 1;
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
-        case 3:
+        case MC_CAP_ALBUM_LOAD:
             if (mc_ctrl.mode == MC_MODE_ALBUMLOAD_TITLE2)
             {
                 mcSetStep(MC_SEL_GOTITLE, MC_MSG_SEL_GOTITLE);
@@ -377,10 +377,10 @@ char mcLoadMain()
         case 1:
             mcSetStep(MC_ERR_END, MC_MSG_NONE);
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_SEL_NEW_OR_LOAD, MC_MSG_SEL_NEW_OR_LOAD2);
         break;
-        case 3:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_SEL_NEW_OR_LOAD, MC_MSG_SEL_NEW_OR_LOAD2);
         break;
 #ifdef BUILD_EU_VERSION
@@ -399,7 +399,7 @@ char mcLoadMain()
         case 1:
             mcSetStep(MC_CHECK, MC_MSG_CHECK);
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             if (mc_ctrl.mode == MC_MODE_ALBUMLOAD_GAME1)
             {
                 mcSetStep(MC_SEL_NEW_OR_LOAD, MC_MSG_SEL_NEW_OR_LOAD);
@@ -436,10 +436,10 @@ char mcLoadMain()
         case 1:
             mcSetStep(MC_SEL_LOAD, MC_MSG_SEL_LOAD);
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
-        case 3:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
         }
@@ -453,8 +453,8 @@ char mcLoadMain()
         case 1:
             mcSetStep(MC_LOAD, MC_MSG_LOAD);
         break;
-        case 2:
-        case 3:
+        case MC_SEL_NEW_OR_LOAD:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_SEL_FILE, MC_MSG_SEL_LOADFILE);
         break;
         case 4:
@@ -470,10 +470,10 @@ char mcLoadMain()
         case 1:
             mcSetStep(MC_LOAD_END, MC_MSG_END_LOAD);
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_LOAD);
         break;
-        case 3:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_SUM);
         break;
         }
@@ -487,10 +487,10 @@ char mcLoadMain()
         case 1:
             mcSetStep(MC_SEL_SLOT, MC_MSG_SEL_SLOT);
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetMessage(MC_MSG_ERR_NOCARD);
         break;
-        case 3:
+        case MC_CAP_ALBUM_LOAD:
             mcSetStep(MC_CHECK, MC_MSG_CHECK);
         break;
         }
@@ -498,7 +498,7 @@ char mcLoadMain()
     case MC_LOAD_END:
         if (pad[0].one & 0x50)
         {
-            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
             mcSetStep(MC_END, MC_MSG_NONE);
         }
     break;
@@ -614,7 +614,7 @@ char mcCtrlCheck()
 
         mc_ctrl.sub_step = 7;
     break;
-    case 7:
+    case MC_SEL_LOAD:
         if (mcReadFile() != 0)
         {
             if (mc_ctrl.acs.sta == 0x0)
@@ -650,7 +650,7 @@ char mcCtrlSelSlot()
 {
     if (pad[0].one & 0x40)
     {
-        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
 
         if (mc_ctrl.port != 2)
         {
@@ -721,7 +721,7 @@ char mcCtrlFileSel()
     case 1:
         num = mc_ctrl.dir.gamefile_num;
     break;
-    case 2:
+    case MC_SEL_NEW_OR_LOAD:
         num = mc_ctrl.album.file_num;
         if (mcCheckEmpty(0) == 0)
         {
@@ -731,7 +731,7 @@ char mcCtrlFileSel()
             }
         }
     break;
-    case 3:
+    case MC_CAP_ALBUM_LOAD:
     case 4:
     case 5:
     case 6:
@@ -739,13 +739,13 @@ char mcCtrlFileSel()
     break;
     }
 
-    if (mc_ctrl.sub_step == 0)
+    if (mc_ctrl.sub_step == MC_INIT)
     {
         mc_ctrl.sub_step = 1;
         mc_ctrl.now_cur = mc_ctrl.sel_cur;
     }
 
-    if (mc_ctrl.sub_step == 1)
+    if (mc_ctrl.sub_step == MC_CHECK)
     {
         mcAcsReq(MC_FUNC_EXIST_CHECK);
         mc_ctrl.sub_step = 2;
@@ -777,7 +777,7 @@ char mcCtrlFileSel()
                     return 0;
                 }
 
-                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+                SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
 
                 mc_ctrl.sel_file = mc_ctrl.album.file_no[mc_ctrl.sel_cur];
             }
@@ -792,7 +792,7 @@ char mcCtrlFileSel()
                     return 0;
                 }
                 else {
-                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
 
                     return 4;
                 }
@@ -801,20 +801,20 @@ char mcCtrlFileSel()
 
                 switch (mc_ctrl.album.sta[mc_ctrl.now_cur])
                 {
-                case 3:
+                case MC_CAP_ALBUM_LOAD:
                     SeStartFix(SE_CLIC_NO, 0, 0x1000, 0x1000, 0);
 
                     return 0;
                 break;
-                case 9:
-                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+                case MC_SEL_MAKE_DIR:
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
 
                     mc_ctrl.sel_file = mc_ctrl.album.file_no[mc_ctrl.sel_cur];
 
                     return 5;
                 break;
                 default:
-                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+                    SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
 
                     mc_ctrl.sel_file = mc_ctrl.album.file_no[mc_ctrl.sel_cur];
                     mc_ctrl.album.type = mc_header_buf[mc_ctrl.sel_file].album.type;
@@ -833,7 +833,7 @@ char mcCtrlFileSel()
                 mc_ctrl.sel_file = mc_ctrl.sel_cur;
             }
 
-            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+            SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
         }
 
         return 1;
@@ -988,13 +988,13 @@ char mcCtrlMakeDir()
             mc_ctrl.sub_step = 2;
         }
     break;
-    case 2:
+    case MC_SEL_NEW_OR_LOAD:
         mcSetIconSys(&mc_ctrl.icon);
         mcAcsFileReq(0, SCE_CREAT | SCE_RDWR, 0);
 
         mc_ctrl.sub_step = 3;
     break;
-    case 3:
+    case MC_CAP_ALBUM_LOAD:
         if (mcWriteFile() != 0)
         {
             if (mc_ctrl.acs.sta == 0)
@@ -1031,7 +1031,7 @@ char mcCtrlMakeDir()
         mcAcsFileReq(loop + 1, 0x203, 0);
         mc_ctrl.sub_step = 7;
     break;
-    case 7:
+    case MC_SEL_LOAD:
         if (mcWriteFile() != 0)
         {
             if (mc_ctrl.acs.sta != 0)
@@ -1058,7 +1058,7 @@ char mcCtrlMakeDir()
             }
         }
     break;
-    case 8:
+    case MC_SEL_SAVE:
         if (loop == 0)
         {
             mcMakeHeaderFile();
@@ -1074,7 +1074,7 @@ char mcCtrlMakeDir()
 
         mc_ctrl.sub_step = 9;
     break;
-    case 9:
+    case MC_SEL_MAKE_DIR:
         if (mcWriteFile() != 0)
         {
             if (mc_ctrl.acs.sta == 0)
@@ -1092,14 +1092,14 @@ char mcCtrlMakeDir()
             }
         }
         break;
-    case 10:
+    case MC_SEL_REMAKE_DIR:
         mcMakeHeaderFile();
         mcMakeSaveFile(mc_ctrl.work_addr, mc_ctrl.sel_file + 8);
         mcAcsFileReq(mc_ctrl.sel_file + 8, SCE_CREAT | SCE_RDWR, 0);
 
         mc_ctrl.sub_step = 11;
     break;
-    case 11:
+    case MC_SEL_FORMAT:
         if (mcWriteFile() != 0)
         {
             if (mc_ctrl.acs.sta == 0)
@@ -1167,7 +1167,7 @@ char mcCtrlDelete()
 
         mcAcsReq(MC_FUNC_FILE_CHECK);
     break;
-    case 2:
+    case MC_SEL_NEW_OR_LOAD:
         if (mcAcsMain() != 0)
         {
             if (mc_ctrl.acs.sta != 0)
@@ -1178,7 +1178,7 @@ char mcCtrlDelete()
             mc_ctrl.sub_step = 3;
         }
     break;
-    case 3:
+    case MC_CAP_ALBUM_LOAD:
         if (mc_ctrl.dir.file_num <= cnt)
         {
             return 1;
@@ -1232,7 +1232,7 @@ char mcCtrlDispErr()
 {
     if (pad[0].one & 0x50)
     {
-        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0x0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
 
 #ifdef BUILD_EU_VERSION
         mc_check_timer = 0;
@@ -1317,7 +1317,7 @@ char mcCtrlYesno(int def_pos)
 
     if (pad[0].one & 0x40)
     {
-        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
 
         if (mc_ctrl.now_cur == 0)
         {
@@ -1347,7 +1347,7 @@ char mcCtrlYesno(int def_pos)
 
 char mcCtrl3taku(int def_pos)
 {
-    if (mc_ctrl.sub_step == 0)
+    if (mc_ctrl.sub_step == MC_INIT)
     {
         mc_ctrl.sub_step = 1;
         mc_ctrl.now_cur = def_pos;
@@ -1355,7 +1355,7 @@ char mcCtrl3taku(int def_pos)
 
     if (pad[0].one & 0x40)
     {
-        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
+        SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, MC_MSG_SEL_SLOT);
 
         return mc_ctrl.now_cur + 1;
     }
@@ -1556,10 +1556,10 @@ void mcSetStepAfterCheck()
         case 1:
             mcSetStep(MC_SEL_FORMAT, MC_MSG_SEL_FORMAT);
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
-        case 3:
+        case MC_CAP_ALBUM_LOAD:
             if (mc_ctrl.mode == MC_MODE_GAMESAVE || mc_ctrl.mode == MC_MODE_GAMELOAD || mc_ctrl.mode == MC_MODE_STARTCHECK)
             {
                 mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOEMPTY_GAME);
@@ -1569,10 +1569,10 @@ void mcSetStepAfterCheck()
                 mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOEMPTY_ALBUM);
             }
         break;
-        case 10:
+        case MC_SEL_REMAKE_DIR:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_ACCESS);
         break;
-        case 9:
+        case MC_SEL_MAKE_DIR:
             mcSetStep(MC_SEL_REMAKE_DIR, MC_MSG_SEL_REMAKE_DIR);
         break;
         default:
@@ -1597,7 +1597,7 @@ void mcSetStepAfterCheck()
                 mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOALBUMFILE);
             }
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOCARD);
         break;
         case 4:
@@ -1611,10 +1611,10 @@ void mcSetStepAfterCheck()
         case 5:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_NOGAMEFILE);
         break;
-        case 10:
+        case MC_SEL_REMAKE_DIR:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_ACCESS);
         break;
-        case 9:
+        case MC_SEL_MAKE_DIR:
             mcSetStep(MC_DISP_ERR, MC_MSG_ERR_ILLEGUL_LOAD);
         break;
         default:

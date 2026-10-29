@@ -494,13 +494,13 @@ void InGameMain()
                         break;
                     }
                     else if (
-                        plyr_wrk.mode != 1 &&
+                        plyr_wrk.mode != PMODE_FINDER &&
                         (plyr_wrk.sta & 1) == 0 &&
                         ev_wrk.mode == 0 &&
                         FindMapReqJudge()
                     )
                     {
-                        plyr_wrk.mode = 4;
+                        plyr_wrk.mode = PMODE_MSG_DISP;
                     }
                 }
                 else if (ingame_wrk.game == 1 && isBattleModeGame())
@@ -517,7 +517,7 @@ void InGameMain()
                 dbg_wrk.cam_mode != 1 &&
                 TRIANGLE_PRESSED() == 1 &&
                 pad[0].push[4] > 6 && 
-                plyr_wrk.mode == 0 &&
+                plyr_wrk.mode == PMODE_NORMAL &&
                 !GetLoadStartLock() &&
                 plyr_wrk.cond != 1 &&
                 ev_wrk.mode == 0
@@ -527,7 +527,7 @@ void InGameMain()
                 dbg_wrk.mode_on == 0 &&
                 dbg_wrk.cam_mode != 1 &&
                 TRIANGLE_PRESSED() == 1 &&
-                plyr_wrk.mode == 0 &&
+                plyr_wrk.mode == PMODE_NORMAL &&
                 !GetLoadStartLock() &&
                 plyr_wrk.cond != 1 &&
                 ev_wrk.mode == 0

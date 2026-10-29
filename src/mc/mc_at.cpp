@@ -166,7 +166,7 @@ static char McAtLoadMainLoop(u_char type)
         case 1:
             msg = mc_ctrl.msg_no;
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             alt = mc_ctrl.msg_no;
             yes_no = 1;
         break;
@@ -277,7 +277,7 @@ static char McAtSaveMainLoop()
         case 1:
             msg = mc_ctrl.msg_no;
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             alt = mc_ctrl.msg_no;
             yes_no = 1;
         break;
@@ -413,7 +413,7 @@ static char McAtAlbmMainLoop()
         case 1:
             msg = mc_ctrl.msg_no;
         break;
-        case 2:
+        case MC_SEL_NEW_OR_LOAD:
             alt = mc_ctrl.msg_no;
             yes_no = 1;
         break;

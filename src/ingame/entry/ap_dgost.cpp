@@ -158,7 +158,7 @@ int DeadGhostLoad()
         if (IsLoadEndAll() != 0)
         {
             motInitEnemyAnm((u_int *)MikuPan_GetHostPointer(SPRITE_ADDRESS), M055_SYOUALL, A042_SYOUKIA);
-            SeFileLoadAndSetFGhost(SG046_SYOUKI1_BD, 16);
+            SeFileLoadAndSetFGhost(SG046_SYOUKI1_BD, SE_ADDRNO_GHOST0);
 
             ap_wrk.fg_se_empty[0] = 1;
             dgst_wrk.load_mode = DGLOAD_MODE_SE;

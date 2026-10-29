@@ -126,7 +126,7 @@ int SDoorLoadReqAndSetSub(int load_id, u_char room_from, u_char room_to)
             {
                 if (empty_tbl[j] == 0)
                 {
-                    load_id = SeFileLoadAndSet(load_file_tbl[i], j + 3);
+                    load_id = SeFileLoadAndSet(load_file_tbl[i], j + SE_ADDRNO_DOOR0);
                     empty_tbl[j] = 1;
                     break;
                 }
@@ -146,7 +146,7 @@ int SDoorLoadReqAndSet(int load_id, u_short door_id)
     u_char room_to;
     u_char dr_num;
     
-    room_from = GetRoomIdFromRoomNo(0, room_wrk.room_no);
+    room_from = GetRoomIdFromRoomNo(MAP_ROOM_DAT, room_wrk.room_no);
     addr_uc = GetDoorRoomConectDataP(room_from);
 
     dr_num = addr_uc[0];

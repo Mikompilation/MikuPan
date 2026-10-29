@@ -30,7 +30,7 @@ void Mission04BindGhostLoad01Req()
     bgst_wrk.bg_no = 6;
     bgst_wrk.mdl_adr = MikuPan_GetHostAddress(0xd80000);
     bgst_wrk.mot_adr = MikuPan_GetHostAddress(0xb90000);
-    bgst_wrk.se_adr = 0x12;
+    bgst_wrk.se_adr = SE_ADDRNO_GHOST2;
 }
 
 void Mission04BindGhostLoad02Req()

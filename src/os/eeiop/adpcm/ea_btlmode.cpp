@@ -10,9 +10,9 @@
 
 void EAdpcmBtlmodeMain()
 {
-    if (adpcm_map.mode != 0xf)
+    if (adpcm_map.mode != ADPCM_MODE_BTLMODE)
     {
-        adpcm_map.mode = 0xf;
+        adpcm_map.mode = ADPCM_MODE_BTLMODE;
         adpcm_map.btlmode.para.file_no = -1;
     }
     

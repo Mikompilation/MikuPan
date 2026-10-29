@@ -475,7 +475,7 @@ static void MikuPan_ButsuzoPuzzleMouseInput(void)
             MikuPan_QueueLegacyControllerButton(MIKUPAN_CONTROLLER_TRIANGLE);
         }
     }
-    else if (spev_wrk.mode == 5)
+    else if (spev_wrk.mode == BTZ_PZL_MODE_SLCT)
     {
         int best = -1;
         int best_distance = 0x7fffffff;
@@ -513,7 +513,7 @@ static void MikuPan_ButsuzoPuzzleMouseInput(void)
             MikuPan_QueueLegacyControllerButton(MIKUPAN_CONTROLLER_TRIANGLE);
         }
     }
-    else if (spev_wrk.mode == 6 || spev_wrk.mode == 7)
+    else if (spev_wrk.mode == BTZ_PZL_MODE_SLCTYES || spev_wrk.mode == BTZ_PZL_MODE_SLCTNO)
     {
         int selected = -1;
         if (MikuPan_LegacyMouseHit(100.0f, 348.0f, 100.0f, 52.0f))
@@ -1112,7 +1112,7 @@ void StarPuzzleInit(int pzl_no)
         SeFadeFlame(plyr_wrk.se_deadly,0x3c,0);
         plyr_wrk.se_deadly = -1;
         star_pzl_wrk.time = 60;
-        star_pzl_wrk.mode = 0;
+        star_pzl_wrk.mode = STAR_PZL_MODE_DEADWAIT;
     }
     else
     {
@@ -1165,7 +1165,7 @@ void StarPuzzleInit(int pzl_no)
 #endif
         }
 
-        star_pzl_wrk.mode = 1;
+        star_pzl_wrk.mode = STAR_PZL_MODE_READY;
         star_pzl_wrk.time = 40;
     }
 
@@ -1344,7 +1344,7 @@ int StarPuzzleMain(int pzl_no)
 
                 star_pzl_wrk.mode = STAR_PZL_MODE_SELOAD;
 
-                pzl_load_id = SeFileLoadAndSet(SP000_KAMON_BD, 2);
+                pzl_load_id = SeFileLoadAndSet(SP000_KAMON_BD, SE_ADDRNO_VOICE);
 
                 ingame_wrk.stts |= 0x20;
             }
@@ -1780,7 +1780,7 @@ int StarPuzzleMain(int pzl_no)
     case STAR_PZL_MODE_END:
         if (pzl_load_id == -1)
         {
-            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, 2);
+            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, SE_ADDRNO_VOICE);
         }
         else
         {
@@ -2763,7 +2763,7 @@ int DialKeyDoorMain()
 
                 ingame_wrk.stts |= 0x20;
 
-                pzl_load_id = SeFileLoadAndSet(SP002_BANGOU_BD, 2);
+                pzl_load_id = SeFileLoadAndSet(SP002_BANGOU_BD, SE_ADDRNO_VOICE);
             }
         }
     break;
@@ -2993,7 +2993,7 @@ int DialKeyDoorMain()
         {
             if (pzl_load_id == -1)
             {
-                pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, 2);
+                pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, SE_ADDRNO_VOICE);
             }
             else if (IsLoadEnd(pzl_load_id) != 0)
             {
@@ -3452,7 +3452,7 @@ void DialKeyMSGDoorDisp(int msg_no)
 
     if (dkey_wrk.mode == DIAL_KEY_MODE_SLCT)
     {
-        spev_str.str = (u_char *)GetIngameMSGAddr(7, msg_no);
+        spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, msg_no);
         spev_str.pos_x = 50;
         spev_str.pos_y = 350;
 
@@ -3471,7 +3471,7 @@ void GhostDoorInit(int door_no)
     int i;
 
     spev_wrk.time = 40;
-    spev_wrk.mode = 0;
+    spev_wrk.mode = GST_DOOR_MODE_READY;
     spev_wrk.count = 0;
 
     for (i = 0; i < 2; i++)
@@ -3551,7 +3551,7 @@ void GhostDoorMain(int door_no)
 
     switch(spev_wrk.mode)
     {
-    case 0:
+    case GST_DOOR_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -3560,7 +3560,7 @@ void GhostDoorMain(int door_no)
         {
             if (IsLoadEndAll() != 0)
             {
-                spev_wrk.mode = 1;
+                spev_wrk.mode = GST_DOOR_MODE_IN;
 
                 ingame_wrk.stts |= 0x20;
 
@@ -3570,31 +3570,31 @@ void GhostDoorMain(int door_no)
             }
         }
     break;
-    case 1:
+    case GST_DOOR_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 2;
+            spev_wrk.mode = GST_DOOR_MODE_MSG;
         }
     break;
-    case 2:
-        spev_wrk.mode = 3;
+    case GST_DOOR_MODE_MSG:
+        spev_wrk.mode = GST_DOOR_MODE_SLCT;
     break;
-    case 3:
+    case GST_DOOR_MODE_SLCT:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 4;
+            spev_wrk.mode = GST_DOOR_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
         }
     break;
-    case 4:
+    case GST_DOOR_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -3603,13 +3603,13 @@ void GhostDoorMain(int door_no)
         {
             ingame_wrk.stts &= ~0x20;
 
-            spev_wrk.mode = 5;
+            spev_wrk.mode = GST_DOOR_MODE_EXIT;
             spev_wrk.time = 40;
 
             SetBlackIn();
         }
     break;
-    case 5:
+    case GST_DOOR_MODE_EXIT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -3636,7 +3636,7 @@ void GhostDoorMain(int door_no)
     break;
     }
 
-    if (spev_wrk.mode != 0 && spev_wrk.mode != 5)
+    if (spev_wrk.mode != GST_DOOR_MODE_READY && spev_wrk.mode != GST_DOOR_MODE_EXIT)
     {
         GhostDoorDisp(door_no);
     }
@@ -3682,7 +3682,7 @@ void GhostDoorDisp(int door_no)
         }
     }
 
-    if (spev_wrk.mode == 2 || spev_wrk.mode == 3)
+    if (spev_wrk.mode == GST_DOOR_MODE_MSG || spev_wrk.mode == GST_DOOR_MODE_SLCT)
     {
         if (spev_wrk.count != 0)
         {
@@ -3727,7 +3727,7 @@ void DollPzlInit()
         plyr_wrk.se_deadly = -1;
 
         spev_wrk.time = 60;
-        spev_wrk.mode = 0;
+        spev_wrk.mode = DOLL_PZL_MODE_DEADWAIT;
     }
     else
     {
@@ -3737,7 +3737,7 @@ void DollPzlInit()
         LoadReq(EVTEX03_PK2, EVENT_ADDRESS);
 #endif
 
-        spev_wrk.mode = 1;
+        spev_wrk.mode = DOLL_PZL_MODE_READY;
         spev_wrk.time = 40;
     }
 
@@ -3762,17 +3762,17 @@ void DollPzlMain()
 
     switch(spev_wrk.mode)
     {
-    case 0:
+    case DOLL_PZL_MODE_DEADWAIT:
 #ifdef BUILD_EU_VERSION
         LoadReqLanguage(EVTEX03_E_PK2, EVENT_ADDRESS);
 #else
         LoadReq(EVTEX03_PK2, EVENT_ADDRESS);
 #endif
 
-        spev_wrk.mode = 1;
+        spev_wrk.mode = DOLL_PZL_MODE_READY;
         spev_wrk.time = 40;
     break;
-    case 1:
+    case DOLL_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -3783,15 +3783,15 @@ void DollPzlMain()
             {
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
 
-                spev_wrk.mode = 2;
+                spev_wrk.mode = DOLL_PZL_MODE_SELOAD;
 
                 ingame_wrk.stts |= 0x20;
 
-                pzl_load_id = SeFileLoadAndSet(SP001_NINGYOU_BD, 2);
+                pzl_load_id = SeFileLoadAndSet(SP001_NINGYOU_BD, SE_ADDRNO_VOICE);
             }
         }
     break;
-    case 2:
+    case DOLL_PZL_MODE_SELOAD:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -3802,30 +3802,30 @@ void DollPzlMain()
             {
                 pzl_load_id = -1;
 
-                spev_wrk.mode = 4;
+                spev_wrk.mode = DOLL_PZL_MODE_ADPFADE;
 
                 SetBlackIn();
             }
         }
     break;
-    case 4:
+    case DOLL_PZL_MODE_ADPFADE:
         if (IsEndAdpcmPuzzle() != 0)
         {
             AdpcmPreLoadPuzzle(AE001_USIRO_STR);
 
-            spev_wrk.mode = 5;
+            spev_wrk.mode = DOLL_PZL_MODE_PRELOAD;
         }
     break;
-    case 5:
+    case DOLL_PZL_MODE_PRELOAD:
         if (IsPreLoadEndAdpcmPuzzle() != 0)
         {
-            spev_wrk.mode = 6;
+            spev_wrk.mode = DOLL_PZL_MODE_IN;
             spev_wrk.time = 60;
 
             AdpcmPuzzlePreLoadEndPlay();
         }
     break;
-    case 6:
+    case DOLL_PZL_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -3840,22 +3840,22 @@ void DollPzlMain()
                 }
             }
 
-            spev_wrk.mode = 7;
+            spev_wrk.mode = DOLL_PZL_MODE_IN2;
             spev_wrk.time = 60;
         }
     break;
-    case 7:
+    case DOLL_PZL_MODE_IN2:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 8;
+            spev_wrk.mode = DOLL_PZL_MODE_IN3;
             spev_wrk.time = 20;
         }
     break;
-    case 8:
+    case DOLL_PZL_MODE_IN3:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -3864,12 +3864,12 @@ void DollPzlMain()
         {
             if (IsEndAdpcmPuzzle() != 0)
             {
-                spev_wrk.mode = 10;
+                spev_wrk.mode = DOLL_PZL_MODE_SLCT;
                 spev_wrk.time = 20;
             }
         }
     break;
-    case 9:
+    case DOLL_PZL_MODE_IN4:
         if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -3877,11 +3877,11 @@ void DollPzlMain()
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 10;
+            spev_wrk.mode = DOLL_PZL_MODE_SLCT;
             spev_wrk.time = 20;
         }
     break;
-    case 10:
+    case DOLL_PZL_MODE_SLCT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -3889,7 +3889,7 @@ void DollPzlMain()
 
         if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 15;
+            spev_wrk.mode = DOLL_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
@@ -3897,7 +3897,7 @@ void DollPzlMain()
         }
         else if (CROSS_PRESSED() == 1)
         {
-            spev_wrk.mode = 11;
+            spev_wrk.mode = DOLL_PZL_MODE_Y_N;
 
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
         }
@@ -3978,10 +3978,10 @@ void DollPzlMain()
             }
         }
     break;
-    case 11:
+    case DOLL_PZL_MODE_Y_N:
         if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 10;
+            spev_wrk.mode = DOLL_PZL_MODE_SLCT;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
@@ -3990,14 +3990,14 @@ void DollPzlMain()
             SeStartFix(SE_PUZZLE2, 0, 0x1000, 0x1000, 0);
             if (spev_wrk.csr[0] == evdl_dat[no].answer)
             {
-                spev_wrk.mode = 21;
+                spev_wrk.mode = DOLL_PZL_MODE_GOOD;
                 spev_wrk.time = 180;
 
                 AdpcmPuzzlePlay(AVP001_STR);
             }
             else
             {
-                spev_wrk.mode = 16;
+                spev_wrk.mode = DOLL_PZL_MODE_BAD;
                 spev_wrk.time = 130;
 
                 AdpcmPuzzlePlay(AVP002_STR);
@@ -4017,21 +4017,21 @@ void DollPzlMain()
             )
         )
         {
-            spev_wrk.mode = 12;
+            spev_wrk.mode = DOLL_PZL_MODE_Y_N2;
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 12:
+    case DOLL_PZL_MODE_Y_N2:
         if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 10;
+            spev_wrk.mode = DOLL_PZL_MODE_SLCT;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (CROSS_PRESSED() == 1)
             {
-                spev_wrk.mode = 10;
+                spev_wrk.mode = DOLL_PZL_MODE_SLCT;
 
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             }
@@ -4049,12 +4049,12 @@ void DollPzlMain()
             )
         )
         {
-            spev_wrk.mode = 11;
+            spev_wrk.mode = DOLL_PZL_MODE_Y_N;
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 13:
+    case DOLL_PZL_MODE_RESL:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -4070,14 +4070,14 @@ void DollPzlMain()
                 spev_wrk.count = 4;
             }
 
-            spev_wrk.mode = 6;
+            spev_wrk.mode = DOLL_PZL_MODE_IN;
             spev_wrk.time = 60;
 
             AdpcmPuzzlePreLoadEndPlay();
             SetBlackIn();
         }
     break;
-    case 16:
+    case DOLL_PZL_MODE_BAD:
         if (spev_wrk.time > 2)
         {
             spev_wrk.time -= 2;
@@ -4087,7 +4087,7 @@ void DollPzlMain()
         {
             if (spev_wrk.time <= 2)
             {
-                spev_wrk.mode = 13;
+                spev_wrk.mode = DOLL_PZL_MODE_RESL;
                 spev_wrk.time = 40;
 
                 SetBlackOut();
@@ -4095,12 +4095,12 @@ void DollPzlMain()
             }
         }
     break;
-    case 17:
+    case DOLL_PZL_MODE_BAD2:
         if (IsEndAdpcmPuzzle() != 0)
         {
             if ((CROSS_PRESSED() == 1) || (TRIANGLE_PRESSED() == 1))
             {
-                spev_wrk.mode = 20;
+                spev_wrk.mode = DOLL_PZL_MODE_BAD5;
 
                 AdpcmPuzzlePlay(AVP000_STR);
             }
@@ -4110,17 +4110,17 @@ void DollPzlMain()
             }
             else
             {
-                spev_wrk.mode = 18;
+                spev_wrk.mode = DOLL_PZL_MODE_BAD3;
                 spev_wrk.time = 130;
             }
         }
     break;
-    case 18:
+    case DOLL_PZL_MODE_BAD3:
         if (IsEndAdpcmPuzzle() != 0)
         {
             if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
             {
-                spev_wrk.mode = 20;
+                spev_wrk.mode = DOLL_PZL_MODE_BAD5;
 
                 AdpcmPuzzlePlay(AVP000_STR);
             }
@@ -4130,24 +4130,24 @@ void DollPzlMain()
             }
 
             else if (evdl_dat[no].unfade_doll[2] == 0xff) {
-                spev_wrk.mode = 19;
+                spev_wrk.mode = DOLL_PZL_MODE_BAD4;
                 spev_wrk.time = 10;
             }
             else
             {
-                spev_wrk.mode = 20;
+                spev_wrk.mode = DOLL_PZL_MODE_BAD5;
                 spev_wrk.time = 130;
 
                 AdpcmPuzzlePlay(AVP000_STR);
             }
         }
     break;
-    case 19:
+    case DOLL_PZL_MODE_BAD4:
         if (IsEndAdpcmPuzzle() != 0)
         {
             if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
             {
-                spev_wrk.mode = 20;
+                spev_wrk.mode = DOLL_PZL_MODE_BAD5;
 
                 AdpcmPuzzlePlay(AVP000_STR);
             }
@@ -4157,14 +4157,14 @@ void DollPzlMain()
             }
             else
             {
-                spev_wrk.mode = 20;
+                spev_wrk.mode = DOLL_PZL_MODE_BAD5;
                 spev_wrk.time = 230;
 
                 AdpcmPuzzlePlay(AVP000_STR);
             }
         }
     break;
-    case 20:
+    case DOLL_PZL_MODE_BAD5:
         if (spev_wrk.time < 230 && blink_dir > 0)
         {
             spev_wrk.time += 2;
@@ -4195,7 +4195,7 @@ void DollPzlMain()
             {
                 blink_dir = 1;
 
-                spev_wrk.mode = 13;
+                spev_wrk.mode = DOLL_PZL_MODE_RESL;
                 spev_wrk.time = 40;
 
                 SetBlackOut();
@@ -4203,7 +4203,7 @@ void DollPzlMain()
             }
         }
     break;
-    case 21:
+    case DOLL_PZL_MODE_GOOD:
         if (spev_wrk.time > 5)
         {
             spev_wrk.time -= 5;
@@ -4211,7 +4211,7 @@ void DollPzlMain()
 
         if (IsEndAdpcmPuzzle() != 0)
         {
-            spev_wrk.mode = 24;
+            spev_wrk.mode = DOLL_PZL_MODE_GOUT;
 
             SetBlackOut();
 
@@ -4219,7 +4219,7 @@ void DollPzlMain()
 
             event_stts[ev_wrk.evt_no] = 1;
         }
-    case 22:
+    case DOLL_PZL_MODE_GOOD2:
         if (spev_wrk.time > 5)
         {
             spev_wrk.time -= 5;
@@ -4227,10 +4227,10 @@ void DollPzlMain()
 
         if (IsEndAdpcmPuzzle() != 0 && CROSS_PRESSED() == 1)
         {
-            spev_wrk.mode = 23;
+            spev_wrk.mode = DOLL_PZL_MODE_GOOD3;
         }
     break;
-    case 23:
+    case DOLL_PZL_MODE_GOOD3:
         if (spev_wrk.time < 230 && blink_dir > 0)
         {
             spev_wrk.time += 5;
@@ -4263,7 +4263,7 @@ void DollPzlMain()
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 24;
+            spev_wrk.mode = DOLL_PZL_MODE_GOUT;
             spev_wrk.time = 40;
 
             blink_dir = 1;
@@ -4273,30 +4273,30 @@ void DollPzlMain()
             SetBlackOut();
         }
     break;
-    case 15:
+    case DOLL_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 14;
+            spev_wrk.mode = DOLL_PZL_MODE_END;
         }
     break;
-    case 24:
+    case DOLL_PZL_MODE_GOUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 14;
+            spev_wrk.mode = DOLL_PZL_MODE_END;
         }
     break;
-    case 14:
+    case DOLL_PZL_MODE_END:
         if (pzl_load_id == -1)
         {
-            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, 2);
+            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, SE_ADDRNO_VOICE);
         }
         else
         {
@@ -4318,7 +4318,7 @@ void DollPzlMain()
     break;
     }
 
-    if (spev_wrk.mode != 0 && spev_wrk.mode != 1 && spev_wrk.mode != 3 && spev_wrk.mode != 14)
+    if (spev_wrk.mode != DOLL_PZL_MODE_DEADWAIT && spev_wrk.mode != DOLL_PZL_MODE_READY && spev_wrk.mode != DOLL_PZL_MODE_BIN && spev_wrk.mode != DOLL_PZL_MODE_END)
     {
         SpecialEventDisp003(no);
     }
@@ -4328,9 +4328,9 @@ int CursorManagerEvent003()
 {
     static int blink_dir = 1;
 
-    if (spev_wrk.mode != 6 && spev_wrk.mode != 7 && spev_wrk.mode != 8 && spev_wrk.mode != 9)
+    if (spev_wrk.mode != DOLL_PZL_MODE_IN && spev_wrk.mode != DOLL_PZL_MODE_IN2 && spev_wrk.mode != DOLL_PZL_MODE_IN3 && spev_wrk.mode != DOLL_PZL_MODE_IN4)
     {
-        if (spev_wrk.mode == 10)
+        if (spev_wrk.mode == DOLL_PZL_MODE_SLCT)
         {
             if (spev_wrk.csr[1] < 125)
             {
@@ -4341,7 +4341,7 @@ int CursorManagerEvent003()
                 spev_wrk.csr[1] = 130;
             }
         }
-        else if (spev_wrk.mode == 21 || spev_wrk.mode == 22 || spev_wrk.mode == 23)
+        else if (spev_wrk.mode == DOLL_PZL_MODE_GOOD || spev_wrk.mode == DOLL_PZL_MODE_GOOD2 || spev_wrk.mode == DOLL_PZL_MODE_GOOD3)
         {
             if (spev_wrk.csr[1] <= 229 && blink_dir > 0)
             {
@@ -4363,7 +4363,7 @@ int CursorManagerEvent003()
                 }
             }
         }
-        else if (spev_wrk.mode == 16)
+        else if (spev_wrk.mode == DOLL_PZL_MODE_BAD)
         {
             if (spev_wrk.csr[1] > 2)
             {
@@ -4374,15 +4374,15 @@ int CursorManagerEvent003()
                 spev_wrk.csr[1] = 0;
             }
         }
-        else if (spev_wrk.mode == 17 || spev_wrk.mode == 18 || spev_wrk.mode == 19 || spev_wrk.mode == 20)
+        else if (spev_wrk.mode == DOLL_PZL_MODE_BAD2 || spev_wrk.mode == DOLL_PZL_MODE_BAD3 || spev_wrk.mode == DOLL_PZL_MODE_BAD4 || spev_wrk.mode == DOLL_PZL_MODE_BAD5)
         {
             spev_wrk.csr[1] = 0;
         }
-        else if (spev_wrk.mode == 13)
+        else if (spev_wrk.mode == DOLL_PZL_MODE_RESL)
         {
             spev_wrk.csr[1] = 0;
         }
-        else if (spev_wrk.mode == 15 || spev_wrk.mode == 24 || spev_wrk.mode == 14)
+        else if (spev_wrk.mode == DOLL_PZL_MODE_OUT || spev_wrk.mode == DOLL_PZL_MODE_GOUT || spev_wrk.mode == DOLL_PZL_MODE_END)
         {
             spev_wrk.csr[1] = 0;
         }
@@ -4455,7 +4455,7 @@ void SpecialEventDisp003(int no)
                 ssd.u = 148;
             }
 
-            if (spev_wrk.mode == 16)
+            if (spev_wrk.mode == DOLL_PZL_MODE_BAD)
             {
                 if (spev_wrk.time > 10)
                 {
@@ -4467,12 +4467,12 @@ void SpecialEventDisp003(int no)
                 }
             }
 
-            if (spev_wrk.mode == 13)
+            if (spev_wrk.mode == DOLL_PZL_MODE_RESL)
             {
                 ssd_tmp_col = 10;
             }
 
-            if ((spev_wrk.mode == 21 || spev_wrk.mode == 22) && evdl_dat[no].answer != i)
+            if ((spev_wrk.mode == DOLL_PZL_MODE_GOOD || spev_wrk.mode == DOLL_PZL_MODE_GOOD2) && evdl_dat[no].answer != i)
             {
                 if (spev_wrk.time != 0)
                 {
@@ -4484,7 +4484,7 @@ void SpecialEventDisp003(int no)
                 }
             }
 
-            if ((spev_wrk.mode == 23 || spev_wrk.mode== 24 || spev_wrk.mode == 14) && evdl_dat[no].answer != i)
+            if ((spev_wrk.mode == DOLL_PZL_MODE_GOOD3 || spev_wrk.mode== DOLL_PZL_MODE_GOUT || spev_wrk.mode == DOLL_PZL_MODE_END) && evdl_dat[no].answer != i)
             {
                 ssd.alp = 0;
             }
@@ -4566,7 +4566,7 @@ void SpecialEventDisp003(int no)
         }
     }
 
-    if (spev_wrk.mode == 6)
+    if (spev_wrk.mode == DOLL_PZL_MODE_IN)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, 0x7f);
 
@@ -4582,7 +4582,7 @@ void SpecialEventDisp003(int no)
         SetMessageV2(&ds);
     }
 
-    if (spev_wrk.mode == 7)
+    if (spev_wrk.mode == DOLL_PZL_MODE_IN2)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, 0x7f);
 
@@ -4598,7 +4598,7 @@ void SpecialEventDisp003(int no)
         SetMessageV2(&ds);
     }
 
-    if (spev_wrk.mode == 8)
+    if (spev_wrk.mode == DOLL_PZL_MODE_IN3)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, 0x7f);
 
@@ -4614,7 +4614,7 @@ void SpecialEventDisp003(int no)
         SetMessageV2(&ds);
     }
 
-    if (spev_wrk.mode == 11 || spev_wrk.mode == 12)
+    if (spev_wrk.mode == DOLL_PZL_MODE_Y_N || spev_wrk.mode == DOLL_PZL_MODE_Y_N2)
     {
         CopySqrDToSqr(&dsq, &spev_sq0);
         DispSqrD(&dsq);
@@ -4649,7 +4649,7 @@ void SpecialEventDisp003(int no)
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
 
-        if (spev_wrk.mode == 11)
+        if (spev_wrk.mode == DOLL_PZL_MODE_Y_N)
         {
             YesNoCrslOKR(0x2000, 200.0f, 370.0f, 0x808080, 100.0f, 1.5f);
         }
@@ -4658,7 +4658,7 @@ void SpecialEventDisp003(int no)
             YesNoCrslOKR(0x2000, 290.0f, 370.0f, 0x808080, 100.0f, 1.5f);
         }
     }
-    else if (spev_wrk.mode == 23)
+    else if (spev_wrk.mode == DOLL_PZL_MODE_GOOD3)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, 0x7f);
 
@@ -4670,7 +4670,7 @@ void SpecialEventDisp003(int no)
         SetMessageV2(&ds);
     }
 #ifdef BUILD_EU_VERSION
-    else if (spev_wrk.mode == 21)
+    else if (spev_wrk.mode == DOLL_PZL_MODE_GOOD)
     {
         if (sys_wrk.language != 0)
         {
@@ -4684,7 +4684,7 @@ void SpecialEventDisp003(int no)
             SetMessageV2(&ds);
         }
     }
-    else if (spev_wrk.mode == 16)
+    else if (spev_wrk.mode == DOLL_PZL_MODE_BAD)
     {
         if (sys_wrk.language != 0)
         {
@@ -4700,7 +4700,7 @@ void SpecialEventDisp003(int no)
     }
 #endif
 
-    if (spev_wrk.mode == 23)
+    if (spev_wrk.mode == DOLL_PZL_MODE_GOOD3)
     {
         ButtonMarkNext(0, 0, 1);
     }
@@ -4737,7 +4737,7 @@ void ButsuzoPzlInit()
         plyr_wrk.se_deadly = -1;
 
         spev_wrk.time = 60;
-        spev_wrk.mode = 0;
+        spev_wrk.mode = BTZ_PZL_MODE_DEADWAIT;
     }
     else
     {
@@ -4749,7 +4749,7 @@ void ButsuzoPzlInit()
 
         pzl_load_id = -1;
 
-        spev_wrk.mode = 1;
+        spev_wrk.mode = BTZ_PZL_MODE_READY;
         spev_wrk.time = 40;
     }
 
@@ -4783,21 +4783,21 @@ void ButsuzoPzlMain()
 
     switch(spev_wrk.mode)
     {
-    case 0:
+    case BTZ_PZL_MODE_DEADWAIT:
 #ifdef BUILD_EU_VERSION
         LoadReqLanguage(EVTEX04_E_PK2, EVENT_ADDRESS);
 #else
         LoadReq(EVTEX04_PK2, EVENT_ADDRESS);
 #endif
 
-        SeFileLoadAndSet(SP003_BUTUDAN_BD, 2);
+        SeFileLoadAndSet(SP003_BUTUDAN_BD, SE_ADDRNO_VOICE);
 
         pzl_load_id = -1;
 
-        spev_wrk.mode = 1;
+        spev_wrk.mode = BTZ_PZL_MODE_READY;
         spev_wrk.time = 40;
     break;
-    case 1:
+    case BTZ_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -4808,15 +4808,15 @@ void ButsuzoPzlMain()
             {
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
 
-                spev_wrk.mode = 2;
+                spev_wrk.mode = BTZ_PZL_MODE_SELOAD;
 
                 ingame_wrk.stts |= 0x20;
 
-                pzl_load_id = SeFileLoadAndSet(SP003_BUTUDAN_BD, 2);
+                pzl_load_id = SeFileLoadAndSet(SP003_BUTUDAN_BD, SE_ADDRNO_VOICE);
             }
         }
     break;
-    case 2:
+    case BTZ_PZL_MODE_SELOAD:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -4827,25 +4827,25 @@ void ButsuzoPzlMain()
             {
                 pzl_load_id = -1;
 
-                spev_wrk.mode = 3;
+                spev_wrk.mode = BTZ_PZL_MODE_IN;
                 spev_wrk.time = 40;
 
                 SetBlackIn();
             }
         }
     break;
-    case 3:
+    case BTZ_PZL_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 4;
+            spev_wrk.mode = BTZ_PZL_MODE_BDSLCT;
             spev_wrk.time = 20;
         }
     break;
-    case 4:
+    case BTZ_PZL_MODE_BDSLCT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -4864,7 +4864,7 @@ void ButsuzoPzlMain()
             }
             else
             {
-                spev_wrk.mode = 15;
+                spev_wrk.mode = BTZ_PZL_MODE_OUT;
                 spev_wrk.time = 60;
 
                 SetBlackOut();
@@ -4882,7 +4882,7 @@ void ButsuzoPzlMain()
                 spev_wrk.csr[1] = evbtz_dat[spev_wrk.csr[0]].set_place << 1;
             }
 
-            spev_wrk.mode = 5;
+            spev_wrk.mode = BTZ_PZL_MODE_SLCT;
             spev_wrk.time = 20;
 
             SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
@@ -4907,7 +4907,7 @@ void ButsuzoPzlMain()
             }
             if (i == 6)
             {
-                spev_wrk.mode = 5;
+                spev_wrk.mode = BTZ_PZL_MODE_SLCT;
             }
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
@@ -4944,13 +4944,13 @@ void ButsuzoPzlMain()
 
             if (i == 6)
             {
-                spev_wrk.mode = 5;
+                spev_wrk.mode = BTZ_PZL_MODE_SLCT;
             }
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 5:
+    case BTZ_PZL_MODE_SLCT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -4961,7 +4961,7 @@ void ButsuzoPzlMain()
             evbtz_dat[spev_wrk.csr[0]].use_flg = 0;
             evbtz_dat[spev_wrk.csr[0]].set_place = -1;
 
-            spev_wrk.mode = 4;
+            spev_wrk.mode = BTZ_PZL_MODE_BDSLCT;
         }
         else if (CROSS_PRESSED() == 1)
         {
@@ -4976,7 +4976,7 @@ void ButsuzoPzlMain()
             if (i != 5)
             {
                 evbtz_dat[spev_wrk.csr[0]].set_place = -1;
-                spev_wrk.mode = 9;
+                spev_wrk.mode = BTZ_PZL_MODE_CONFLICT;
                 spev_wrk.time = 60;
 
                 break;
@@ -4988,7 +4988,7 @@ void ButsuzoPzlMain()
             order_keep[order_no] = spev_wrk.csr[0];
             order_no++;
 
-            spev_wrk.mode = 8;
+            spev_wrk.mode = BTZ_PZL_MODE_PUT;
             spev_wrk.time = 40;
 
             for (i = 0; i < 5; i++)
@@ -5003,7 +5003,7 @@ void ButsuzoPzlMain()
 
             if (i == 5)
             {
-                spev_wrk.mode = 10;
+                spev_wrk.mode = BTZ_PZL_MODE_Y_N;
             }
 
             SeStartFix(SE_MN1, 0, 0x1000, 0x1000, 0);
@@ -5100,8 +5100,8 @@ void ButsuzoPzlMain()
             }
         }
     break;
-    case 6:
-    case 7:
+    case BTZ_PZL_MODE_SLCTYES:
+    case BTZ_PZL_MODE_SLCTNO:
         if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -5109,7 +5109,7 @@ void ButsuzoPzlMain()
 
         if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = BTZ_PZL_MODE_SLCT;
             spev_wrk.time = 20;
         }
         if (
@@ -5126,12 +5126,12 @@ void ButsuzoPzlMain()
             )
         )
         {
-            spev_wrk.mode = spev_wrk.mode == 6 ? 7 : 6;
+            spev_wrk.mode = spev_wrk.mode == BTZ_PZL_MODE_SLCTYES ? BTZ_PZL_MODE_SLCTNO : BTZ_PZL_MODE_SLCTYES;
         }
 
         if (spev_wrk.time == 0)
         {
-            if (spev_wrk.mode == 6)
+            if (spev_wrk.mode == BTZ_PZL_MODE_SLCTYES)
             {
                 evbtz_dat[spev_wrk.csr[0]].use_flg = 1;
                 evbtz_dat[spev_wrk.csr[0]].set_place = spev_wrk.csr[1] >> 1;
@@ -5139,7 +5139,7 @@ void ButsuzoPzlMain()
                 order_keep[order_no] = spev_wrk.csr[0];
                 order_no++;
 
-                spev_wrk.mode = 8;
+                spev_wrk.mode = BTZ_PZL_MODE_PUT;
                 spev_wrk.time = 40;
 
                 for (i = 0; i < 5; i++)
@@ -5154,28 +5154,28 @@ void ButsuzoPzlMain()
 
                 if (i == 5)
                 {
-                    spev_wrk.mode = 10;
+                    spev_wrk.mode = BTZ_PZL_MODE_Y_N;
                 }
             }
             else
             {
-                spev_wrk.mode = 5;
+                spev_wrk.mode = BTZ_PZL_MODE_SLCT;
                 spev_wrk.time = 20;
             }
         }
     break;
-    case 8:
+    case BTZ_PZL_MODE_PUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 4;
+            spev_wrk.mode = BTZ_PZL_MODE_BDSLCT;
             spev_wrk.time = 20;
         }
     break;
-    case 9:
+    case BTZ_PZL_MODE_CONFLICT:
         if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -5183,11 +5183,11 @@ void ButsuzoPzlMain()
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 4;
+            spev_wrk.mode = BTZ_PZL_MODE_BDSLCT;
             spev_wrk.time = 20;
         }
     break;
-    case 10:
+    case BTZ_PZL_MODE_Y_N:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -5204,18 +5204,18 @@ void ButsuzoPzlMain()
 
             if (i == 5)
             {
-                spev_wrk.mode = 13;
+                spev_wrk.mode = BTZ_PZL_MODE_GOOD;
                 spev_wrk.time = 80;
                 SeStartFix(SE_PUZZLE2, 0, 0x1000, 0x1000, 0);
             }
             else
             {
-                spev_wrk.mode = 12;
+                spev_wrk.mode = BTZ_PZL_MODE_BAD;
                 spev_wrk.time = 80;
             }
         }
     break;
-    case 13:
+    case BTZ_PZL_MODE_GOOD:
         if (ButtonMarkNext(-180, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -5225,7 +5225,7 @@ void ButsuzoPzlMain()
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 15;
+            spev_wrk.mode = BTZ_PZL_MODE_OUT;
             spev_wrk.time = 60;
 
             event_stts[ev_wrk.evt_no] = 1;
@@ -5233,7 +5233,7 @@ void ButsuzoPzlMain()
             SetBlackOut();
         }
     break;
-    case 12:
+    case BTZ_PZL_MODE_BAD:
         if (ButtonMarkNext(-180, 8, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -5256,23 +5256,23 @@ void ButsuzoPzlMain()
                 order_keep[i] = -1;
             }
 
-            spev_wrk.mode = 4;
+            spev_wrk.mode = BTZ_PZL_MODE_BDSLCT;
         }
     break;
-    case 15:
+    case BTZ_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 16;
+            spev_wrk.mode = BTZ_PZL_MODE_END;
         }
     break;
-    case 16:
+    case BTZ_PZL_MODE_END:
         if (pzl_load_id == -1)
         {
-            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, 2);
+            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, SE_ADDRNO_VOICE);
 
             break;
         }
@@ -5294,7 +5294,7 @@ void ButsuzoPzlMain()
 
     evbld_dat.t_counter++;
 
-    if (spev_wrk.mode > 1 && spev_wrk.mode != 16)
+    if (spev_wrk.mode > BTZ_PZL_MODE_READY && spev_wrk.mode != BTZ_PZL_MODE_END)
     {
         SpecialEventDisp004();
     }
@@ -5437,7 +5437,7 @@ void SpecialEventDisp004()
     ssd.alp = BldAlpRetern(evbld_dat.t_counter, evbld_dat.bld_apr[9], evbld_dat.bld_end[9], spev04_sp_bld[9].alp);
     SimpleDispSprt(&ssd, MikuPan_GetHostAddress(EVENT_ADDRESS), 8, NULL, NULL, 0x64);
 
-    if (spev_wrk.mode == 5)
+    if (spev_wrk.mode == BTZ_PZL_MODE_SLCT)
     {
         CsrBlink(&spev_wrk.csr[2], 0x80, 0, 3, &blink_flg);
 
@@ -5467,15 +5467,15 @@ void SpecialEventDisp004()
     {
         SimpleDispSprtDatCopy(&spev04_sp_bzf[spev_wrk.csr[0]], &ssd);
 
-        if (spev_wrk.mode == 3)
+        if (spev_wrk.mode == BTZ_PZL_MODE_IN)
         {
             ssd.alp = 0;
         }
-        else if (spev_wrk.mode == 4)
+        else if (spev_wrk.mode == BTZ_PZL_MODE_BDSLCT)
         {
             ssd.alp = ((20 - spev_wrk.time) * ssd.alp) / 20;
         }
-        else if (spev_wrk.mode != 5)
+        else if (spev_wrk.mode != BTZ_PZL_MODE_SLCT)
         {
             ssd.alp = 0;
         }
@@ -5517,7 +5517,7 @@ void SpecialEventDisp004()
 #endif
     SimpleDispSprt(&ssd, MikuPan_GetHostAddress(EVENT_ADDRESS), 11, NULL, NULL, 0x64);
 
-    if (spev_wrk.mode == 5)
+    if (spev_wrk.mode == BTZ_PZL_MODE_SLCT)
     {
 #ifdef BUILD_EU_VERSION
         SimpleDispSprtDatCopy(&spev04_sp_cap[1], &ssd);
@@ -5587,27 +5587,27 @@ void SpecialEventDisp004()
 
     DrawMessageBox(0x2000, 7.0f, 333.0f, 428.0f, 96.0f, 0x7f);
 
-    if (spev_wrk.mode == 4)
+    if (spev_wrk.mode == BTZ_PZL_MODE_BDSLCT)
     {
         if (spev_wrk.csr[0] == 0)
         {
-            msg_no = 55;
+            msg_no = SPEV04_MSG07;
         }
         else if (spev_wrk.csr[0] == 1)
         {
-            msg_no = 57;
+            msg_no = SPEV04_MSG09;
         }
         else if (spev_wrk.csr[0] == 2)
         {
-            msg_no = 58;
+            msg_no = SPEV04_MSG10;
         }
         else if (spev_wrk.csr[0] == 3)
         {
-            msg_no = 56;
+            msg_no = SPEV04_MSG08;
         }
         else
         {
-            msg_no = 54;
+            msg_no = SPEV04_MSG06;
         }
 
         spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, msg_no);
@@ -5617,27 +5617,27 @@ void SpecialEventDisp004()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 5)
+    else if (spev_wrk.mode == BTZ_PZL_MODE_SLCT)
     {
         if (spev_wrk.csr[0] == 0)
         {
-            msg_no = 55;
+            msg_no = SPEV04_MSG07;
         }
         else if (spev_wrk.csr[0] == 1)
         {
-            msg_no = 57;
+            msg_no = SPEV04_MSG09;
         }
         else if (spev_wrk.csr[0] == 2)
         {
-            msg_no = 58;
+            msg_no = SPEV04_MSG10;
         }
         else if (spev_wrk.csr[0] == 3)
         {
-            msg_no = 56;
+            msg_no = SPEV04_MSG08;
         }
         else
         {
-            msg_no = 54;
+            msg_no = SPEV04_MSG06;
         }
 
         spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, msg_no);
@@ -5647,7 +5647,7 @@ void SpecialEventDisp004()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 6 || spev_wrk.mode== 7)
+    else if (spev_wrk.mode == BTZ_PZL_MODE_SLCTYES || spev_wrk.mode== BTZ_PZL_MODE_SLCTNO)
     {
         spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV04_MSG05);
         spev_str.pos_x = 100;
@@ -5670,7 +5670,7 @@ void SpecialEventDisp004()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
 
-        if (spev_wrk.mode == 6)
+        if (spev_wrk.mode == BTZ_PZL_MODE_SLCTYES)
         {
             spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV_MSG_CHECK);
             spev_str.pos_x = 110;
@@ -5689,7 +5689,7 @@ void SpecialEventDisp004()
             SetMessageV2(&ds);
         }
     }
-    else if (spev_wrk.mode == 9)
+    else if (spev_wrk.mode == BTZ_PZL_MODE_CONFLICT)
     {
         spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV04_MSG02);
         spev_str.pos_x = 30;
@@ -5698,7 +5698,7 @@ void SpecialEventDisp004()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 12)
+    else if (spev_wrk.mode == BTZ_PZL_MODE_BAD)
     {
         spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV04_MSG00);
         spev_str.pos_x = 30;
@@ -5707,7 +5707,7 @@ void SpecialEventDisp004()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 13)
+    else if (spev_wrk.mode == BTZ_PZL_MODE_GOOD)
     {
         spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV04_MSG01);
         spev_str.pos_x = 30;
@@ -5728,7 +5728,7 @@ void ButsuzoMSGInit()
 
     pzl_load_id = -1;
 
-    spev_wrk.mode = 1;
+    spev_wrk.mode = BTZ_PZL_MODE_READY;
     spev_wrk.time = 40;
 
     butsuzo_alpha[1] = 0;
@@ -5740,7 +5740,7 @@ void ButsuzoMSGMain()
 {
     switch(spev_wrk.mode)
     {
-    case 1:
+    case BTZ_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -5751,17 +5751,17 @@ void ButsuzoMSGMain()
             {
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
 
-                spev_wrk.mode = 2;
+                spev_wrk.mode = BTZ_PZL_MODE_SELOAD;
 
                 ingame_wrk.stts |= 0x20;
 
                 SetBlackIn();
 
-                pzl_load_id = SeFileLoadAndSet(ST000_ZOU_OKU_BD, 21);
+                pzl_load_id = SeFileLoadAndSet(ST000_ZOU_OKU_BD, SE_ADDRNO_WIDE);
             }
         }
     break;
-    case 2:
+    case BTZ_PZL_MODE_SELOAD:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -5772,26 +5772,26 @@ void ButsuzoMSGMain()
             {
                 pzl_load_id = -1;
 
-                spev_wrk.mode = 3;
+                spev_wrk.mode = BTZ_PZL_MODE_IN;
                 spev_wrk.time = 40;
 
                 SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             }
         }
     break;
-    case 3:
+    case BTZ_PZL_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 8;
+            spev_wrk.mode = BTZ_PZL_MODE_PUT;
             spev_wrk.time = 1;
         }
 
     break;
-    case 8:
+    case BTZ_PZL_MODE_PUT:
         if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -5799,26 +5799,26 @@ void ButsuzoMSGMain()
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 15;
+            spev_wrk.mode = BTZ_PZL_MODE_OUT;
             spev_wrk.time = 60;
 
             SetBlackOut();
         }
     break;
-    case 15:
+    case BTZ_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 16;
+            spev_wrk.mode = BTZ_PZL_MODE_END;
         }
     break;
-    case 16:
+    case BTZ_PZL_MODE_END:
         if (pzl_load_id == -1)
         {
-            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, 2);
+            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, SE_ADDRNO_VOICE);
         }
         else if (IsLoadEnd(pzl_load_id) != 0)
         {
@@ -5835,7 +5835,7 @@ void ButsuzoMSGMain()
     break;
     }
 
-    if (spev_wrk.mode == 8)
+    if (spev_wrk.mode == BTZ_PZL_MODE_PUT)
     {
         if (butsuzo_alpha[1] < 0x80)
         {
@@ -5857,7 +5857,7 @@ void ButsuzoMSGMain()
         }
     }
 
-    if (spev_wrk.mode != 1)
+    if (spev_wrk.mode != BTZ_PZL_MODE_READY)
     {
         ButsuzoMSGDisp();
     }
@@ -5937,7 +5937,7 @@ void LightsOutInit()
 
         plyr_wrk.se_deadly = -1;
 
-        spev_wrk.mode = 0;
+        spev_wrk.mode = CDL_PZL_MODE_DEADWAIT;
         spev_wrk.time = 60;
         spev_wrk.count = 0;
     }
@@ -5949,7 +5949,7 @@ void LightsOutInit()
         LoadReq(EVTEX20_PK2, EVENT_ADDRESS);
 #endif
 
-        spev_wrk.mode = 1;
+        spev_wrk.mode = CDL_PZL_MODE_READY;
         spev_wrk.time = 40;
         spev_wrk.count = 0;
     }
@@ -5979,7 +5979,7 @@ void LightsOutMain()
 
     switch(spev_wrk.mode)
     {
-    case 0:
+    case CDL_PZL_MODE_DEADWAIT:
         if (spev_wrk.time == 0)
         {
 #ifdef BUILD_EU_VERSION
@@ -5990,7 +5990,7 @@ void LightsOutMain()
 
             pzl_load_id = -1;
 
-            spev_wrk.mode = 1;
+            spev_wrk.mode = CDL_PZL_MODE_READY;
             spev_wrk.time = 40;
         }
         else
@@ -5998,7 +5998,7 @@ void LightsOutMain()
             spev_wrk.time--;
         }
     break;
-    case 1:
+    case CDL_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6009,15 +6009,15 @@ void LightsOutMain()
             {
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
 
-                spev_wrk.mode = 2;
+                spev_wrk.mode = CDL_PZL_MODE_SELOAD;
 
                 ingame_wrk.stts |= 0x20;
 
-                pzl_load_id = SeFileLoadAndSet(SP004_ROUSOKU_BD, 2);
+                pzl_load_id = SeFileLoadAndSet(SP004_ROUSOKU_BD, SE_ADDRNO_VOICE);
             }
         }
     break;
-    case 2:
+    case CDL_PZL_MODE_SELOAD:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6028,14 +6028,14 @@ void LightsOutMain()
             {
                 pzl_load_id = -1;
 
-                spev_wrk.mode = 3;
+                spev_wrk.mode = CDL_PZL_MODE_IN;
                 spev_wrk.time = 30;
 
                 SetBlackIn();
             }
         }
     break;
-    case 3:
+    case CDL_PZL_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6044,12 +6044,12 @@ void LightsOutMain()
         {
             if (CsrInclease(&spev_wrk.csr[1], 0x54, 4) != 0)
             {
-                spev_wrk.mode = 4;
+                spev_wrk.mode = CDL_PZL_MODE_SLCT;
                 spev_wrk.time = 40;
             }
         }
     break;
-    case 4:
+    case CDL_PZL_MODE_SLCT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6059,7 +6059,7 @@ void LightsOutMain()
 
         if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 12;
+            spev_wrk.mode = CDL_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
@@ -6071,7 +6071,7 @@ void LightsOutMain()
                 evcdl_dat.cdl_flg[0][i] = evcdl_dat.cdl_flg[1][i];
             }
 
-            spev_wrk.mode = 7;
+            spev_wrk.mode = CDL_PZL_MODE_RESET;
             spev_wrk.time = 20;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
@@ -6082,7 +6082,7 @@ void LightsOutMain()
             {
                 evcdl_dat.cdl_flg[0][spev_wrk.csr[0]] = 1;
 
-                spev_wrk.mode = 5;
+                spev_wrk.mode = CDL_PZL_MODE_FIRE;
                 spev_wrk.time = 30;
 
                 SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
@@ -6125,7 +6125,7 @@ void LightsOutMain()
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 5:
+    case CDL_PZL_MODE_FIRE:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6185,11 +6185,11 @@ void LightsOutMain()
                 }
             }
 
-            spev_wrk.mode = 6;
+            spev_wrk.mode = CDL_PZL_SIDE_FIRE;
             spev_wrk.time = 20;
         }
     break;
-    case 6:
+    case CDL_PZL_SIDE_FIRE:
         if (spev_wrk.time != 0)
         {
             CsrInclease(&spev_wrk.csr[1], 84, 4);
@@ -6208,20 +6208,20 @@ void LightsOutMain()
 
             if (i != 6)
             {
-                spev_wrk.mode = 4;
+                spev_wrk.mode = CDL_PZL_MODE_SLCT;
                 spev_wrk.time = 40;
             }
             else
             {
-                spev_wrk.mode = 8;
+                spev_wrk.mode = CDL_PZL_MODE_GOOD;
                 spev_wrk.time = 8;
             }
         }
     break;
-    case 7:
+    case CDL_PZL_MODE_RESET:
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 4;
+            spev_wrk.mode = CDL_PZL_MODE_SLCT;
             spev_wrk.time = 40;
         }
         else
@@ -6229,10 +6229,10 @@ void LightsOutMain()
             spev_wrk.time--;
         }
     break;
-    case 8:
+    case CDL_PZL_MODE_GOOD:
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 9;
+            spev_wrk.mode = CDL_PZL_MODE_GOOD2;
             spev_wrk.time = 60;
 
             SeStartFix(SE_MN1, 0, 0x1000, 0x1000, 0);
@@ -6242,10 +6242,10 @@ void LightsOutMain()
             spev_wrk.time--;
         }
     break;
-    case 9:
+    case CDL_PZL_MODE_GOOD2:
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 10;
+            spev_wrk.mode = CDL_PZL_MODE_GOOD3;
             spev_wrk.time = 0xff;
 
             pzl_load_id = SeStartFix(SE_PUZZLE2, 0, 0x1000, 0x1000, 0);
@@ -6255,7 +6255,7 @@ void LightsOutMain()
             spev_wrk.time--;
         }
     break;
-    case 10:
+    case CDL_PZL_MODE_GOOD3:
         if (ButtonMarkNext(0, 0, 0) != 0)
         {
             if (spev_wrk.time != 0)
@@ -6271,14 +6271,14 @@ void LightsOutMain()
 
                 event_stts[ev_wrk.evt_no] = 1;
 
-                spev_wrk.mode = 11;
+                spev_wrk.mode = CDL_PZL_MODE_GOUT;
                 spev_wrk.time = 40;
 
                 SetBlackOut();
             }
         }
     break;
-    case 11:
+    case CDL_PZL_MODE_GOUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6287,23 +6287,23 @@ void LightsOutMain()
         {
             ReqDramaCamera(1, 13, 0);
 
-            spev_wrk.mode = 13;
+            spev_wrk.mode = CDL_PZL_MODE_END;
         }
     break;
-    case 12:
+    case CDL_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 13;
+            spev_wrk.mode = CDL_PZL_MODE_END;
         }
     break;
-    case 13:
+    case CDL_PZL_MODE_END:
         if (pzl_load_id == -1)
         {
-            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, 2);
+            pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, SE_ADDRNO_VOICE);
         }
         else if (IsLoadEnd(pzl_load_id) != 0)
         {
@@ -6318,7 +6318,7 @@ void LightsOutMain()
     break;
     }
 
-    if (spev_wrk.mode != 0 && spev_wrk.mode != 1 && spev_wrk.mode != 13)
+    if (spev_wrk.mode != CDL_PZL_MODE_DEADWAIT && spev_wrk.mode != CDL_PZL_MODE_READY && spev_wrk.mode != CDL_PZL_MODE_END)
     {
         SpecialEventDisp014(no);
     }
@@ -6367,7 +6367,7 @@ void SpecialEventDisp014(int no)
 
     for (i = 0; i < 6; i++)
     {
-        if (evcdl_dat.cdl_flg[0][i] > 0 || spev_wrk.mode == 8 || spev_wrk.mode == 9 || spev_wrk.mode == 10 || spev_wrk.mode == 11)
+        if (evcdl_dat.cdl_flg[0][i] > 0 || spev_wrk.mode == CDL_PZL_MODE_GOOD || spev_wrk.mode == CDL_PZL_MODE_GOOD2 || spev_wrk.mode == CDL_PZL_MODE_GOOD3 || spev_wrk.mode == CDL_PZL_MODE_GOUT)
         {
             if (evcdl_dat.flame_alpha[i] + 10 < 129)
             {
@@ -6391,7 +6391,7 @@ void SpecialEventDisp014(int no)
         }
     }
 
-    if ((spev_wrk.mode == 9 || spev_wrk.mode == 10 || spev_wrk.mode == 11) && evcdl_dat.stflame_shape[0] != -1)
+    if ((spev_wrk.mode == CDL_PZL_MODE_GOOD2 || spev_wrk.mode == CDL_PZL_MODE_GOOD3 || spev_wrk.mode == CDL_PZL_MODE_GOUT) && evcdl_dat.stflame_shape[0] != -1)
     {
         for (i = 0; i < 6; i++)
         {
@@ -6494,7 +6494,7 @@ void SpecialEventDisp014(int no)
         SimpleDispSprt(&ssd, MikuPan_GetHostAddress(EVENT_ADDRESS), 13, NULL, NULL, 0x64);
     }
 
-    if (spev_wrk.mode == 10)
+    if (spev_wrk.mode == CDL_PZL_MODE_GOOD3)
     {
         CopySqrDToSqr(&dsq, &menu_sq0);
 
@@ -6552,27 +6552,27 @@ void FaceDoorInit(int face_no)
 
     if (face_no == 0 && plyr_wrk.pr_info.room_no != door_keep[47].room_id)
     {
-        spev_wrk.mode = 4;
+        spev_wrk.mode = OMN_PZL_MODE_NONE;
         spev_wrk.time = 40;
     }
     else if (face_no == 1 && plyr_wrk.pr_info.room_no != door_keep[26].room_id)
     {
-        spev_wrk.mode = 4;
+        spev_wrk.mode = OMN_PZL_MODE_NONE;
         spev_wrk.time = 40;
     }
     else if (face_no == 2 && plyr_wrk.pr_info.room_no != door_keep[34].room_id)
     {
-        spev_wrk.mode = 4;
+        spev_wrk.mode = OMN_PZL_MODE_NONE;
         spev_wrk.time = 40;
     }
     else if (face_no == 3 && plyr_wrk.pr_info.room_no != door_keep[49].room_id)
     {
-        spev_wrk.mode = 4;
+        spev_wrk.mode = OMN_PZL_MODE_NONE;
         spev_wrk.time = 40;
     }
     else
     {
-        spev_wrk.mode = 0;
+        spev_wrk.mode = OMN_PZL_MODE_UNREADY;
         spev_wrk.time = 40;
 
         SetBlackOut();
@@ -6633,7 +6633,7 @@ void FaceDoorMain(int face_no)
 
     switch(spev_wrk.mode)
     {
-    case 4:
+    case OMN_PZL_MODE_NONE:
         SetMessageAddr(GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV21_MSG12));
 
         if (SetMessage() == 0)
@@ -6641,7 +6641,7 @@ void FaceDoorMain(int face_no)
             spev_wrk.ret = 1;
         }
     break;
-    case 0:
+    case OMN_PZL_MODE_UNREADY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6667,10 +6667,10 @@ void FaceDoorMain(int face_no)
 
             LoadReq(TX_PZL_MENZ_PK2, EVENT_ADDRESS_2);
 
-            spev_wrk.mode = 1;
+            spev_wrk.mode = OMN_PZL_MODE_READY;
         }
     break;
-    case 1:
+    case OMN_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6681,15 +6681,15 @@ void FaceDoorMain(int face_no)
             {
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
 
-                spev_wrk.mode = 2;
+                spev_wrk.mode = OMN_PZL_MODE_SELOAD;
 
                 ingame_wrk.stts |= 0x20;
 
-                pzl_load_id = SeFileLoadAndSet(ST001_MEN_KAKE_BD, 21);
+                pzl_load_id = SeFileLoadAndSet(ST001_MEN_KAKE_BD, SE_ADDRNO_WIDE);
             }
         }
     break;
-    case 2:
+    case OMN_PZL_MODE_SELOAD:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6702,12 +6702,12 @@ void FaceDoorMain(int face_no)
 
                 SetBlackIn();
 
-                spev_wrk.mode = 3;
+                spev_wrk.mode = OMN_PZL_MODE_IN;
                 spev_wrk.time = 30;
             }
         }
     break;
-    case 3:
+    case OMN_PZL_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -6716,39 +6716,39 @@ void FaceDoorMain(int face_no)
         {
             if (door_avail == 1)
             {
-                spev_wrk.mode = 5;
+                spev_wrk.mode = OMN_PZL_MODE_EXISTIN;
                 spev_wrk.csr[1] = 0x80;
                 spev_wrk.time = 1;
             }
             else if (have_omen == 1)
             {
-                spev_wrk.mode = 18;
+                spev_wrk.mode = OMN_PZL_MODE_HAVEUSEIN;
                 spev_wrk.time = 1;
             }
             else if (poss_item[46] != 0)
             {
-                spev_wrk.mode = 18;
+                spev_wrk.mode = OMN_PZL_MODE_HAVEUSEIN;
                 spev_wrk.time = 1;
             }
             else
             {
-                spev_wrk.mode = 17;
+                spev_wrk.mode = OMN_PZL_MODE_UNHAVE;
                 spev_wrk.time = 1;
             }
         }
     break;
-    case 5:
+    case OMN_PZL_MODE_EXISTIN:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 7;
+            spev_wrk.mode = OMN_PZL_MODE_EXISTGO;
             spev_wrk.time = 1;
         }
     break;
-    case 7:
-    case 8:
-    case 9:
+    case OMN_PZL_MODE_EXISTGO:
+    case OMN_PZL_MODE_EXISTGET:
+    case OMN_PZL_MODE_EXISTOUT:
         spev_wrk.csr[1] = 0x80;
 
         if (ButtonMarkWait() != 0)
@@ -6762,7 +6762,7 @@ void FaceDoorMain(int face_no)
         }
         else if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 26;
+            spev_wrk.mode = OMN_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
@@ -6879,7 +6879,7 @@ void FaceDoorMain(int face_no)
         }
         else
         {
-            spev_wrk.mode = 26;
+            spev_wrk.mode = OMN_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
@@ -6897,12 +6897,12 @@ void FaceDoorMain(int face_no)
 
             if (have_omen == 1)
             {
-                spev_wrk.mode = 19;
+                spev_wrk.mode = OMN_PZL_MODE_HAVEUSE;
                 spev_wrk.time = 1;
             }
             else
             {
-                spev_wrk.mode = 17;
+                spev_wrk.mode = OMN_PZL_MODE_UNHAVE;
                 spev_wrk.time = 1;
             }
 
@@ -6922,15 +6922,15 @@ void FaceDoorMain(int face_no)
             )
         )
         {
-            spev_wrk.mode = spev_wrk.mode == 11 ? 12 : 11;
+            spev_wrk.mode = spev_wrk.mode == OMN_PZL_MODE_NISUSE ? OMN_PZL_MODE_NISUNUSE : OMN_PZL_MODE_NISUSE;
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
 
         if (spev_wrk.time == 0)
         {
-            if (spev_wrk.mode == 11)
+            if (spev_wrk.mode == OMN_PZL_MODE_NISUSE)
             {
-                spev_wrk.mode = 14;
+                spev_wrk.mode = OMN_PZL_MODE_BEFFADE;
                 spev_wrk.time = 30;
                 spev_wrk.csr[0] = 0x80;
                 spev_wrk.csr[1] = 0;
@@ -6942,21 +6942,21 @@ void FaceDoorMain(int face_no)
             }
             else if (have_omen == 1)
             {
-                spev_wrk.mode = 19;
+                spev_wrk.mode = OMN_PZL_MODE_HAVEUSE;
                 spev_wrk.time = 1;
 
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             }
             else
             {
-                spev_wrk.mode = 17;
+                spev_wrk.mode = OMN_PZL_MODE_UNHAVE;
                 spev_wrk.time = 1;
 
                 SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
             }
         }
     break;
-    case 13:
+    case OMN_PZL_MODE_NISDISUSE:
         if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -6966,30 +6966,30 @@ void FaceDoorMain(int face_no)
         {
             if (have_omen == 1)
             {
-                spev_wrk.mode = 19;
+                spev_wrk.mode = OMN_PZL_MODE_HAVEUSE;
                 spev_wrk.time = 1;
             }
             else
             {
-                spev_wrk.mode = 17;
+                spev_wrk.mode = OMN_PZL_MODE_UNHAVE;
                 spev_wrk.time = 1;
             }
         }
     break;
-    case 14:
+    case OMN_PZL_MODE_BEFFADE:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 15;
+            spev_wrk.mode = OMN_PZL_MODE_CFADE;
             spev_wrk.time = 140;
 
             pzl_load_id = SeStartFixFlame(10, 60, 0xc00, 0xb60, 0);
         }
     break;
-    case 15:
+    case OMN_PZL_MODE_CFADE:
         if (spev_wrk.csr[0] != 0)
         {
             spev_wrk.csr[0]--;
@@ -7009,7 +7009,7 @@ void FaceDoorMain(int face_no)
         }
         else
         {
-            spev_wrk.mode = 16;
+            spev_wrk.mode = OMN_PZL_MODE_AFTFADE;
             spev_wrk.time = 1;
 
             SeFadeFlame(pzl_load_id, 20, 0);
@@ -7017,7 +7017,7 @@ void FaceDoorMain(int face_no)
             pzl_load_id = -1;
         }
     break;
-    case 16:
+    case OMN_PZL_MODE_AFTFADE:
         if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -7029,13 +7029,13 @@ void FaceDoorMain(int face_no)
         {
             FaceDoorOkSet(face_no);
 
-            spev_wrk.mode = 26;
+            spev_wrk.mode = OMN_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
         }
     break;
-    case 17:
+    case OMN_PZL_MODE_UNHAVE:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -7045,13 +7045,13 @@ void FaceDoorMain(int face_no)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 26;
+            spev_wrk.mode = OMN_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
         }
     break;
-    case 18:
+    case OMN_PZL_MODE_HAVEUSEIN:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -7061,18 +7061,18 @@ void FaceDoorMain(int face_no)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 19;
+            spev_wrk.mode = OMN_PZL_MODE_HAVEUSE;
 
             if (poss_item[46] != 0)
             {
-                spev_wrk.mode = 11;
+                spev_wrk.mode = OMN_PZL_MODE_NISUSE;
             }
 
             spev_wrk.time = 1;
         }
     break;
-    case 19:
-    case 20:
+    case OMN_PZL_MODE_HAVEUSE:
+    case OMN_PZL_MODE_HAVEUNUSE:
         if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -7091,13 +7091,13 @@ void FaceDoorMain(int face_no)
             )
         )
         {
-            spev_wrk.mode = spev_wrk.mode == 19 ? 20 : 19;
+            spev_wrk.mode = spev_wrk.mode == OMN_PZL_MODE_HAVEUSE ? OMN_PZL_MODE_HAVEUNUSE : OMN_PZL_MODE_HAVEUSE;
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
         else if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 26;
+            spev_wrk.mode = OMN_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
@@ -7105,21 +7105,21 @@ void FaceDoorMain(int face_no)
 
         if (spev_wrk.time == 0)
         {
-            if (spev_wrk.mode != 19)
+            if (spev_wrk.mode != OMN_PZL_MODE_HAVEUSE)
             {
-                spev_wrk.mode = 26;
+                spev_wrk.mode = OMN_PZL_MODE_OUT;
                 spev_wrk.time = 40;
             }
             else
             {
-                spev_wrk.mode = 21;
+                spev_wrk.mode = OMN_PZL_MODE_USEIN;
                 spev_wrk.time = 40;
             }
 
             SetBlackOut();
         }
     break;
-    case 21:
+    case OMN_PZL_MODE_USEIN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -7127,14 +7127,14 @@ void FaceDoorMain(int face_no)
         else
         {
             spev_wrk.csr[1] = 0x80;
-            spev_wrk.mode = 22;
+            spev_wrk.mode = OMN_PZL_MODE_USE;
             spev_wrk.time = 40;
 
             SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             SetBlackIn();
         }
     break;
-    case 22:
+    case OMN_PZL_MODE_USE:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -7144,7 +7144,7 @@ void FaceDoorMain(int face_no)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 26;
+            spev_wrk.mode = OMN_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             poss_item[omen_no] = 0;
@@ -7156,7 +7156,7 @@ void FaceDoorMain(int face_no)
             SetBlackOut();
         }
     break;
-    case 26:
+    case OMN_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -7186,10 +7186,10 @@ void FaceDoorMain(int face_no)
 
             }
 
-            spev_wrk.mode = 31;
+            spev_wrk.mode = OMN_PZL_MODE_END;
         }
     break;
-    case 27:
+    case OMN_PZL_MODE_GETOUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -7198,7 +7198,7 @@ void FaceDoorMain(int face_no)
         {
             ingame_wrk.stts &= ~0x20;
 
-            spev_wrk.mode = 30;
+            spev_wrk.mode = OMN_PZL_MODE_GETEND;
             spev_wrk.time = 40;
             spev_wrk.csr[1] = 0;
 
@@ -7206,7 +7206,7 @@ void FaceDoorMain(int face_no)
             SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 30:
+    case OMN_PZL_MODE_GETEND:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             ButtonMarkTimeClear();
@@ -7214,7 +7214,7 @@ void FaceDoorMain(int face_no)
             spev_wrk.ret = 1;
         }
     break;
-    case 31:
+    case OMN_PZL_MODE_END:
         SendManMdlTex();
 
         spev_wrk.ret = 1;
@@ -7225,7 +7225,7 @@ void FaceDoorMain(int face_no)
     break;
     }
 
-    if (spev_wrk.mode != 0 && spev_wrk.mode != 1 && spev_wrk.mode != 4 && spev_wrk.mode != 31)
+    if (spev_wrk.mode != OMN_PZL_MODE_UNREADY && spev_wrk.mode != OMN_PZL_MODE_READY && spev_wrk.mode != OMN_PZL_MODE_NONE && spev_wrk.mode != OMN_PZL_MODE_END)
     {
         FaceDoorDisp(face_no);
     }
@@ -7388,7 +7388,7 @@ void FaceDoorDisp(int face_no)
     SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
     SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS_2));
 
-    if (spev_wrk.mode != 4 && spev_wrk.mode != 30)
+    if (spev_wrk.mode != OMN_PZL_MODE_NONE && spev_wrk.mode != OMN_PZL_MODE_GETEND)
     {
         for (i = 0; i < 11; i++)
         {
@@ -7428,7 +7428,7 @@ void FaceDoorDisp(int face_no)
 
     if (face_no == 0)
     {
-        if (ev_wrk.face_stts[1] & 0x2 && spev_wrk.mode != 16)
+        if (ev_wrk.face_stts[1] & 0x2 && spev_wrk.mode != OMN_PZL_MODE_AFTFADE)
         {
             omen_no = SPEV21_MSG18;
         }
@@ -7439,7 +7439,7 @@ void FaceDoorDisp(int face_no)
     }
     else if (face_no == 1)
     {
-        if (ev_wrk.face_stts[1] & 0x4 && spev_wrk.mode != 16)
+        if (ev_wrk.face_stts[1] & 0x4 && spev_wrk.mode != OMN_PZL_MODE_AFTFADE)
         {
             omen_no = SPEV21_MSG18;
         }
@@ -7450,7 +7450,7 @@ void FaceDoorDisp(int face_no)
     }
     else if (face_no == 2)
     {
-        if (ev_wrk.face_stts[1] & 0x8 && spev_wrk.mode != 16)
+        if (ev_wrk.face_stts[1] & 0x8 && spev_wrk.mode != OMN_PZL_MODE_AFTFADE)
         {
             omen_no = SPEV21_MSG18;
         }
@@ -7461,7 +7461,7 @@ void FaceDoorDisp(int face_no)
     }
     else if (face_no == 3)
     {
-        if (ev_wrk.face_stts[1] & 0x10 && spev_wrk.mode != 16)
+        if (ev_wrk.face_stts[1] & 0x10 && spev_wrk.mode != OMN_PZL_MODE_AFTFADE)
         {
             omen_no = SPEV21_MSG18;
         }
@@ -7471,7 +7471,7 @@ void FaceDoorDisp(int face_no)
         }
     }
 
-    if (spev_wrk.mode == 5)
+    if (spev_wrk.mode == OMN_PZL_MODE_EXISTIN)
     {
 #ifdef BUILD_EU_VERSION
         int mes1;
@@ -7655,7 +7655,7 @@ void FaceDoorDisp(int face_no)
 #endif
     }
 
-    if (spev_wrk.mode == 7 || spev_wrk.mode== 8 || spev_wrk.mode== 9)
+    if (spev_wrk.mode == OMN_PZL_MODE_EXISTGO || spev_wrk.mode== OMN_PZL_MODE_EXISTGET || spev_wrk.mode== OMN_PZL_MODE_EXISTOUT)
     {
         CopySqrDToSqr(&dsq, &menu_sq0);
         DispSqrD(&dsq);
@@ -7683,21 +7683,21 @@ void FaceDoorDisp(int face_no)
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
 
-        if (spev_wrk.mode == 7)
+        if (spev_wrk.mode == OMN_PZL_MODE_EXISTGO)
         {
             YesNoCrslOKR(0x2000, 220.0f, 337.0f, 0x808080, 100.0f, 3.4f);
         }
-        else if (spev_wrk.mode == 8)
+        else if (spev_wrk.mode == OMN_PZL_MODE_EXISTGET)
         {
             YesNoCrslOKR(0x2000, 140.0f, 362.0f, 0x808080, 100.0f, 6.0f);
         }
-        else if (spev_wrk.mode == 9)
+        else if (spev_wrk.mode == OMN_PZL_MODE_EXISTOUT)
         {
             YesNoCrslOKR(0x2000, 270.0f, 387.0f, 0x808080, 100.0f, 1.8f);
         }
     }
 
-    if (spev_wrk.mode == 11 || spev_wrk.mode == 12)
+    if (spev_wrk.mode == OMN_PZL_MODE_NISUSE || spev_wrk.mode == OMN_PZL_MODE_NISUNUSE)
     {
         CopySqrDToSqr(&dsq, &menu_sq0);
         DispSqrD(&dsq);
@@ -7725,7 +7725,7 @@ void FaceDoorDisp(int face_no)
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
 
-        if (spev_wrk.mode != 11)
+        if (spev_wrk.mode != OMN_PZL_MODE_NISUSE)
         {
             YesNoCrslOKR(0x2000, 150.0f, 370.0f, 0x808080, 100.0f, 1.5f);
         }
@@ -7734,7 +7734,7 @@ void FaceDoorDisp(int face_no)
             YesNoCrslOKR(0x2000, 50.0f, 370.0f, 0x808080, 100.0f, 1.5f);
         }
     }
-    else if (spev_wrk.mode == 13)
+    else if (spev_wrk.mode == OMN_PZL_MODE_NISDISUSE)
     {
         CopySqrDToSqr(&dsq, &menu_sq0);
         DispSqrD(&dsq);
@@ -7748,7 +7748,7 @@ void FaceDoorDisp(int face_no)
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 16)
+    else if (spev_wrk.mode == OMN_PZL_MODE_AFTFADE)
     {
         CopySqrDToSqr(&dsq, &menu_sq0);
         DispSqrD(&dsq);
@@ -7830,7 +7830,7 @@ void FaceDoorDisp(int face_no)
             SetMessageV2(&ds);
         }
     }
-    else if (spev_wrk.mode == 17)
+    else if (spev_wrk.mode == OMN_PZL_MODE_UNHAVE)
     {
         CopySqrDToSqr(&dsq, &menu_sq0);
         DispSqrD(&dsq);
@@ -7844,7 +7844,7 @@ void FaceDoorDisp(int face_no)
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 18)
+    else if (spev_wrk.mode == OMN_PZL_MODE_HAVEUSEIN)
     {
         CopySqrDToSqr(&dsq, &menu_sq0);
         DispSqrD(&dsq);
@@ -7858,7 +7858,7 @@ void FaceDoorDisp(int face_no)
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 19 || spev_wrk.mode == 20)
+    else if (spev_wrk.mode == OMN_PZL_MODE_HAVEUSE || spev_wrk.mode == OMN_PZL_MODE_HAVEUNUSE)
     {
 #ifdef BUILD_EU_VERSION
         mx = 50;
@@ -7972,7 +7972,7 @@ void FaceDoorDisp(int face_no)
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
 
-        if (spev_wrk.mode == 19)
+        if (spev_wrk.mode == OMN_PZL_MODE_HAVEUSE)
         {
             YesNoCrslOKR(0x2000, 50.0f, 370.0f, 0x808080, 100.0f, 1.5f);
         }
@@ -7981,7 +7981,7 @@ void FaceDoorDisp(int face_no)
             YesNoCrslOKR(0x2000, 150.0f, 370.0f, 0x808080, 100.0f, 1.5f);
         }
     }
-    else if (spev_wrk.mode == 22)
+    else if (spev_wrk.mode == OMN_PZL_MODE_USE)
     {
 #ifdef BUILD_EU_VERSION
         mx = 50;
@@ -8090,7 +8090,7 @@ void FaceDoorDisp(int face_no)
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 30)
+    else if (spev_wrk.mode == OMN_PZL_MODE_GETEND)
     {
 #ifdef BUILD_EU_VERSION
         int mes2;
@@ -8171,7 +8171,7 @@ void FaceDoorDisp(int face_no)
             {
                 mes2 = 71;
 
-                spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, 79);
+                spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV21_MSG19);
                 spev_str.pos_x = 50;
                 spev_str.pos_y = 350;
 
@@ -8182,7 +8182,7 @@ void FaceDoorDisp(int face_no)
             }
             else
             {
-                mes2 = 79;
+                mes2 = SPEV21_MSG19;
             }
 
             spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, omen_no);
@@ -8297,7 +8297,7 @@ void SurpriseDoorInit()
     {
         open_close = 1;
 
-        spev_wrk.mode = 4;
+        spev_wrk.mode = OMN_PZL_MODE_NONE;
         spev_wrk.time = 40;
     }
     else
@@ -8305,7 +8305,7 @@ void SurpriseDoorInit()
         open_close = 0;
         spev_wrk.csr[0] = 0;
         spev_wrk.count = 0;
-        spev_wrk.mode = 0;
+        spev_wrk.mode = OMN_PZL_MODE_UNREADY;
         spev_wrk.time = 40;
         spev_wrk.csr[1] = 0x80;
         spev_str.alpha = 0x80;
@@ -8323,7 +8323,7 @@ void SurpriseDoorMain()
 {
     switch(spev_wrk.mode)
     {
-    case 4:
+    case OMN_PZL_MODE_NONE:
         spev_wrk.ret = 1;
 
         if (DoorKeyUnlockOnly(29) != 0)
@@ -8331,7 +8331,7 @@ void SurpriseDoorMain()
             DoorOpenShiftForce(29);
         }
     break;
-    case 0:
+    case OMN_PZL_MODE_UNREADY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -8341,10 +8341,10 @@ void SurpriseDoorMain()
             LoadReq(TX_PZL_BG_AI_PK2, EVENT_ADDRESS);
             LoadReq(TX_PZL_MENZ_PK2, EVENT_ADDRESS_2);
 
-            spev_wrk.mode = 1;
+            spev_wrk.mode = OMN_PZL_MODE_READY;
         }
     break;
-    case 1:
+    case OMN_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -8356,15 +8356,15 @@ void SurpriseDoorMain()
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS_2));
 
-                spev_wrk.mode = 2;
+                spev_wrk.mode = OMN_PZL_MODE_SELOAD;
 
                 ingame_wrk.stts |= 0x20;
 
-                pzl_load_id = SeFileLoadAndSet(ST003_DBIG_AKANAI_BD, 21);
+                pzl_load_id = SeFileLoadAndSet(ST003_DBIG_AKANAI_BD, SE_ADDRNO_WIDE);
             }
         }
     break;
-    case 2:
+    case OMN_PZL_MODE_SELOAD:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -8375,14 +8375,14 @@ void SurpriseDoorMain()
             {
                 pzl_load_id = -1;
 
-                spev_wrk.mode = 3;
+                spev_wrk.mode = OMN_PZL_MODE_IN;
                 spev_wrk.time = 30;
 
                 SetBlackIn();
             }
         }
     break;
-    case 3:
+    case OMN_PZL_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -8391,13 +8391,13 @@ void SurpriseDoorMain()
         {
             if (open_close == 0x1)
             {
-                spev_wrk.mode = 23;
+                spev_wrk.mode = OMN_PZL_MODE_SIMENOK;
                 spev_wrk.csr[1] = 0x80;
                 spev_wrk.time = 1;
             }
             else
             {
-                spev_wrk.mode = 24;
+                spev_wrk.mode = OMN_PZL_MODE_UNSIMEN;
                 spev_wrk.csr[1] = 0x80;
                 spev_wrk.time = 1;
 
@@ -8405,7 +8405,7 @@ void SurpriseDoorMain()
             }
         }
     break;
-    case 23:
+    case OMN_PZL_MODE_SIMENOK:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -8417,13 +8417,13 @@ void SurpriseDoorMain()
 
             go_flg_s = 1;
 
-            spev_wrk.mode = 26;
+            spev_wrk.mode = OMN_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
         }
     break;
-    case 24:
+    case OMN_PZL_MODE_UNSIMEN:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -8433,13 +8433,13 @@ void SurpriseDoorMain()
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 26;
+            spev_wrk.mode = OMN_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
         }
     break;
-    case 26:
+    case OMN_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -8456,10 +8456,10 @@ void SurpriseDoorMain()
                 go_flg_s = 0;
             }
 
-            spev_wrk.mode = 31;
+            spev_wrk.mode = OMN_PZL_MODE_END;
         }
     break;
-    case 31:
+    case OMN_PZL_MODE_END:
         SendManMdlTex();
 
         spev_wrk.ret = 1;
@@ -8470,7 +8470,7 @@ void SurpriseDoorMain()
     break;
     }
 
-    if (spev_wrk.mode > 1 && spev_wrk.mode != 4 && spev_wrk.mode != 31)
+    if (spev_wrk.mode > OMN_PZL_MODE_READY && spev_wrk.mode != OMN_PZL_MODE_NONE && spev_wrk.mode != OMN_PZL_MODE_END)
     {
         SurpriseDoorDisp(open_close);
     }
@@ -8513,7 +8513,7 @@ void SurpriseDoorDisp(int face_no)
 
     SimpleDispSprt(&ssd, MikuPan_GetHostAddress(EVENT_ADDRESS_2), 5, NULL, NULL, 0x64);
 
-    if (spev_wrk.mode == 23)
+    if (spev_wrk.mode == OMN_PZL_MODE_SIMENOK)
     {
         CopySqrDToSqr(&dsq, &menu_sq0);
         DispSqrD(&dsq);
@@ -8528,7 +8528,7 @@ void SurpriseDoorDisp(int face_no)
     }
     else
     {
-        if (spev_wrk.mode == 0x18)
+        if (spev_wrk.mode == OMN_PZL_MODE_UNSIMEN)
         {
             CopySqrDToSqr(&dsq, &menu_sq0);
             DispSqrD(&dsq);
@@ -8563,32 +8563,32 @@ void SimenPillarInit(int event_no)
 
     SpevWrkInit();
 
-    pzl_load_id = SeFileLoadAndSet(ST001_MEN_KAKE_BD, 21);
+    pzl_load_id = SeFileLoadAndSet(ST001_MEN_KAKE_BD, SE_ADDRNO_WIDE);
 
     spev_wrk.csr[1] = 0x80;
-    spev_wrk.mode = 4;
+    spev_wrk.mode = OMN_PZL_MODE_NONE;
     spev_wrk.time = 20;
 }
 
 void SimenPillarMain(int event_no)
 {
-    if (spev_wrk.mode > 1)
+    if (spev_wrk.mode > OMN_PZL_MODE_READY)
     {
         SimenPillarDisp();
     }
 
     switch(spev_wrk.mode)
     {
-    case 0:
+    case OMN_PZL_MODE_UNREADY:
         LoadReq(TX_PZL_BG_AI_PK2, EVENT_ADDRESS);
         LoadReq(TX_PZL_MENZ_PK2, EVENT_ADDRESS_2);
 
-        spev_wrk.mode = 1;
+        spev_wrk.mode = OMN_PZL_MODE_READY;
         spev_wrk.time = 40;
 
         SetBlackOut();
     break;
-    case 1:
+    case OMN_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -8605,14 +8605,14 @@ void SimenPillarMain(int event_no)
 
             ingame_wrk.stts |= 0x20;
 
-            spev_wrk.mode = 3;
+            spev_wrk.mode = OMN_PZL_MODE_IN;
             spev_wrk.time = 30;
 
             SetBlackIn();
             SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 3:
+    case OMN_PZL_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -8621,17 +8621,17 @@ void SimenPillarMain(int event_no)
         {
             if (open_close == 1)
             {
-                spev_wrk.mode = 23;
+                spev_wrk.mode = OMN_PZL_MODE_SIMENOK;
                 spev_wrk.time = 1;
             }
             else
             {
-                spev_wrk.mode = 24;
+                spev_wrk.mode = OMN_PZL_MODE_UNSIMEN;
                 spev_wrk.time = 1;
             }
         }
     break;
-    case 4:
+    case OMN_PZL_MODE_NONE:
         if (IsLoadEnd(pzl_load_id) == 0)
         {
             return;
@@ -8645,41 +8645,41 @@ void SimenPillarMain(int event_no)
         {
             pzl_load_id = -1;
 
-            if (event_no == 34)
+            if (event_no == SPEV34_MEN_OPEN)
             {
                 omen_no = 0;
                 stts_no = 2;
-                omen_msgno = 64;
+                omen_msgno = SPEV21_MSG04;
                 choudo_no = 126;
                 omen_itemno = 41;
 
                 ReqDramaCamera(1, 23, 0);
             }
-            else if (event_no == 54)
+            else if (event_no == SPEV54_MEN_OPEN1)
             {
                 omen_no = 1;
                 stts_no = 4;
-                omen_msgno = 65;
+                omen_msgno = SPEV21_MSG05;
                 choudo_no = 125;
                 omen_itemno = 42;
 
                 ReqDramaCamera(1, 24, 0);
             }
-            else if (event_no == 55)
+            else if (event_no == SPEV55_MEN_OPEN2)
             {
                 omen_no = 2;
                 stts_no = 8;
-                omen_msgno = 66;
+                omen_msgno = SPEV21_MSG06;
                 choudo_no = 127;
                 omen_itemno = 43;
 
                 ReqDramaCamera(1, 21, 0);
             }
-            else if (event_no == 56)
+            else if (event_no == SPEV56_MEN_OPEN3)
             {
                 omen_no = 3;
                 stts_no = 16;
-                omen_msgno = 67;
+                omen_msgno = SPEV21_MSG07;
                 choudo_no = 124;
                 omen_itemno = 44;
 
@@ -8688,22 +8688,22 @@ void SimenPillarMain(int event_no)
 
             if (ev_wrk.face_stts[0] & stts_no)
             {
-                spev_wrk.mode = 7;
+                spev_wrk.mode = OMN_PZL_MODE_EXISTGO;
                 spev_wrk.time = 1;
             }
             else if (poss_item[omen_itemno] == 0)
             {
-                spev_wrk.mode = 17;
+                spev_wrk.mode = OMN_PZL_MODE_UNHAVE;
                 spev_wrk.time = 1;
             }
             else
             {
-                spev_wrk.mode = 19;
+                spev_wrk.mode = OMN_PZL_MODE_HAVEUSE;
                 spev_wrk.time = 1;
             }
         }
     break;
-    case 7:
+    case OMN_PZL_MODE_EXISTGO:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -8711,19 +8711,19 @@ void SimenPillarMain(int event_no)
 
         if (spev_wrk.time == 0 && ButtonMarkWait() == 0)
         {
-            spev_wrk.mode = 8;
+            spev_wrk.mode = OMN_PZL_MODE_EXISTGET;
             spev_wrk.time = 1;
         }
     break;
-    case 6:
-    case 8:
+    case OMN_PZL_MODE_EXIST:
+    case OMN_PZL_MODE_EXISTGET:
         if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
         else if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 32;
+            spev_wrk.mode = OMN_PZL_MODE_MSGEND;
             spev_wrk.time = 10;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
@@ -8742,7 +8742,7 @@ void SimenPillarMain(int event_no)
             )
         )
         {
-            spev_wrk.mode = spev_wrk.mode == 6 ? 8 : 6;
+            spev_wrk.mode = spev_wrk.mode == OMN_PZL_MODE_EXIST ? OMN_PZL_MODE_EXISTGET : OMN_PZL_MODE_EXIST;
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
@@ -8752,7 +8752,7 @@ void SimenPillarMain(int event_no)
             return;
         }
 
-        if (spev_wrk.mode == 8)
+        if (spev_wrk.mode == OMN_PZL_MODE_EXISTGET)
         {
             open_close = SimenCheck();
 
@@ -8764,12 +8764,12 @@ void SimenPillarMain(int event_no)
             {
                 open_close = SimenCheck();
 
-                spev_wrk.mode = 0;
+                spev_wrk.mode = OMN_PZL_MODE_UNREADY;
                 spev_wrk.time = 40;
             }
             else
             {
-                spev_wrk.mode = 27;
+                spev_wrk.mode = OMN_PZL_MODE_GETOUT;
                 spev_wrk.time = 40;
 
                 SetBlackOut();
@@ -8777,13 +8777,13 @@ void SimenPillarMain(int event_no)
         }
         else
         {
-            spev_wrk.mode = 32;
+            spev_wrk.mode = OMN_PZL_MODE_MSGEND;
             spev_wrk.time = 10;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 17:
+    case OMN_PZL_MODE_UNHAVE:
         if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -8791,19 +8791,19 @@ void SimenPillarMain(int event_no)
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 32;
+            spev_wrk.mode = OMN_PZL_MODE_MSGEND;
             spev_wrk.time = 10;
         }
     break;
-    case 19:
-    case 20:
+    case OMN_PZL_MODE_HAVEUSE:
+    case OMN_PZL_MODE_HAVEUNUSE:
         if (CROSS_PRESSED() == 1)
         {
             spev_wrk.time = 0;
         }
         else if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 32;
+            spev_wrk.mode = OMN_PZL_MODE_MSGEND;
             spev_wrk.time = 10;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
@@ -8822,7 +8822,7 @@ void SimenPillarMain(int event_no)
             )
         )
         {
-            spev_wrk.mode = spev_wrk.mode == 19 ? 20 : 19;
+            spev_wrk.mode = spev_wrk.mode == OMN_PZL_MODE_HAVEUSE ? OMN_PZL_MODE_HAVEUNUSE : OMN_PZL_MODE_HAVEUSE;
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
 
@@ -8831,7 +8831,7 @@ void SimenPillarMain(int event_no)
             return;
         }
 
-        if (spev_wrk.mode == 19)
+        if (spev_wrk.mode == OMN_PZL_MODE_HAVEUSE)
         {
             ev_wrk.face_stts[0] |= stts_no;
 
@@ -8841,12 +8841,12 @@ void SimenPillarMain(int event_no)
 
             if (open_close == 1)
             {
-                spev_wrk.mode = 0;
+                spev_wrk.mode = OMN_PZL_MODE_UNREADY;
                 spev_wrk.time = 40;
             }
             else
             {
-                spev_wrk.mode = 29;
+                spev_wrk.mode = OMN_PZL_MODE_PUTOUT;
                 spev_wrk.time = 40;
 
                 SetBlackOut();
@@ -8854,13 +8854,13 @@ void SimenPillarMain(int event_no)
         }
         else
         {
-            spev_wrk.mode = 32;
+            spev_wrk.mode = OMN_PZL_MODE_MSGEND;
             spev_wrk.time = 10;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 23:
+    case OMN_PZL_MODE_SIMENOK:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -8870,14 +8870,14 @@ void SimenPillarMain(int event_no)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 26;
+            spev_wrk.mode = OMN_PZL_MODE_OUT;
             spev_wrk.time = 40;
 
             SetBlackOut();
             SetFurnAttrEve(choudo_no, 0x4000, 0);
         }
     break;
-    case 24:
+    case OMN_PZL_MODE_UNSIMEN:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -8891,22 +8891,22 @@ void SimenPillarMain(int event_no)
         ButtonMarkTimeClear();
         SetFurnAttrEve(choudo_no, 0x4000, 1);
 
-        spev_wrk.mode = 26;
+        spev_wrk.mode = OMN_PZL_MODE_OUT;
         spev_wrk.time = 40;
 
         SetBlackOut();
     break;
-    case 26:
+    case OMN_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 31;
+            spev_wrk.mode = OMN_PZL_MODE_END;
         }
     break;
-    case 27:
+    case OMN_PZL_MODE_GETOUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -8916,12 +8916,12 @@ void SimenPillarMain(int event_no)
             SetFurnAttrEve(choudo_no, 0x4000, 1);
             SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
 
-            spev_wrk.mode = 30;
+            spev_wrk.mode = OMN_PZL_MODE_GETEND;
 
             SetBlackIn();
         }
     break;
-    case 29:
+    case OMN_PZL_MODE_PUTOUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -8931,36 +8931,36 @@ void SimenPillarMain(int event_no)
             SetFurnAttrEve(choudo_no, 0x4000, 0);
             SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
 
-            spev_wrk.mode = 32;
+            spev_wrk.mode = OMN_PZL_MODE_MSGEND;
 
             SetBlackIn();
         }
     break;
-    case 30:
+    case OMN_PZL_MODE_GETEND:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 32;
+            spev_wrk.mode = OMN_PZL_MODE_MSGEND;
         }
     break;
-    case 31:
-        if (event_no == 34)
+    case OMN_PZL_MODE_END:
+        if (event_no == SPEV34_MEN_OPEN)
         {
             ReqDramaCamera(0, 23, 0);
         }
 
-        if (event_no == 54)
+        if (event_no == SPEV54_MEN_OPEN1)
         {
             ReqDramaCamera(0, 24, 0);
         }
 
-        if (event_no == 55)
+        if (event_no == SPEV55_MEN_OPEN2)
         {
             ReqDramaCamera(0, 21, 0);
         }
 
-        if (event_no == 56)
+        if (event_no == SPEV56_MEN_OPEN3)
         {
             ReqDramaCamera(0, 22, 0);
         }
@@ -8973,25 +8973,25 @@ void SimenPillarMain(int event_no)
 
         SetBlackIn();
     break;
-    case 32:
+    case OMN_PZL_MODE_MSGEND:
         if (ButtonMarkNext(0, 0, 1) == 0)
         {
-            if (event_no == 34)
+            if (event_no == SPEV34_MEN_OPEN)
             {
                 ReqDramaCamera(0, 23, 0);
             }
 
-            if (event_no == 54)
+            if (event_no == SPEV54_MEN_OPEN1)
             {
                 ReqDramaCamera(0, 24, 0);
             }
 
-            if (event_no == 55)
+            if (event_no == SPEV55_MEN_OPEN2)
             {
                 ReqDramaCamera(0, 21, 0);
             }
 
-            if (event_no == 56)
+            if (event_no == SPEV56_MEN_OPEN3)
             {
                 ReqDramaCamera(0, 22, 0);
             }
@@ -9002,7 +9002,7 @@ void SimenPillarMain(int event_no)
 
             break;
         }
-    case 33:
+    case OMN_PZL_MODE_TIMECNT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -9079,7 +9079,7 @@ void SimenPillarDisp()
 
     spev_str.alpha = 0x80;
 
-    if (spev_wrk.mode == 3 || spev_wrk.mode == 23 || spev_wrk.mode == 24 || spev_wrk.mode == 26)
+    if (spev_wrk.mode == OMN_PZL_MODE_IN || spev_wrk.mode == OMN_PZL_MODE_SIMENOK || spev_wrk.mode == OMN_PZL_MODE_UNSIMEN || spev_wrk.mode == OMN_PZL_MODE_OUT)
     {
         SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
 
@@ -9095,11 +9095,11 @@ void SimenPillarDisp()
         SimpleDispSprt(&ssd, MikuPan_GetHostAddress(EVENT_ADDRESS_2), 5, NULL, NULL, 0x64);
     }
 
-    if (alpha_keep <= 0x76 && spev_wrk.mode != 32)
+    if (alpha_keep <= 0x76 && spev_wrk.mode != OMN_PZL_MODE_MSGEND)
     {
         alpha_keep += 9;
     }
-    else if (alpha_keep > 0 && spev_wrk.mode == 32)
+    else if (alpha_keep > 0 && spev_wrk.mode == OMN_PZL_MODE_MSGEND)
     {
         alpha_keep -= 9;
 
@@ -9109,7 +9109,7 @@ void SimenPillarDisp()
         }
     }
 
-    if (spev_wrk.mode == 7)
+    if (spev_wrk.mode == OMN_PZL_MODE_EXISTGO)
     {
 #ifdef BUILD_EU_VERSION
         int mes1;
@@ -9259,7 +9259,7 @@ void SimenPillarDisp()
 #endif
     }
 
-    if (spev_wrk.mode == 6 || spev_wrk.mode == 8)
+    if (spev_wrk.mode == OMN_PZL_MODE_EXIST || spev_wrk.mode == OMN_PZL_MODE_EXISTGET)
     {
 #ifdef BUILD_EU_VERSION
         int mes1;
@@ -9371,7 +9371,7 @@ void SimenPillarDisp()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
 
-        if (spev_wrk.mode == 8)
+        if (spev_wrk.mode == OMN_PZL_MODE_EXISTGET)
         {
             YesNoCrslOKR(0x2000, 190.0f, 375.0f, 0x808080, 100.0f, 1.5f);
         }
@@ -9451,7 +9451,7 @@ void SimenPillarDisp()
 #endif
     }
 
-    if (spev_wrk.mode == 17)
+    if (spev_wrk.mode == OMN_PZL_MODE_UNHAVE)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, alpha_keep);
 
@@ -9463,7 +9463,7 @@ void SimenPillarDisp()
         SetMessageV2(&ds);
     }
 
-    if (spev_wrk.mode == 19 || spev_wrk.mode == 20)
+    if (spev_wrk.mode == OMN_PZL_MODE_HAVEUSE || spev_wrk.mode == OMN_PZL_MODE_HAVEUNUSE)
     {
 #ifdef BUILD_EU_VERSION
         int mes1;
@@ -9560,7 +9560,7 @@ void SimenPillarDisp()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
 
-        if (spev_wrk.mode == 19)
+        if (spev_wrk.mode == OMN_PZL_MODE_HAVEUSE)
         {
             YesNoCrslOKR(0x2000, 190.0f, 375.0f, 0x808080, 100.0f, 1.5f);
         }
@@ -9659,7 +9659,7 @@ void SimenPillarDisp()
         SetMessageV2(&ds);
     }
 
-    if (spev_wrk.mode == 30)
+    if (spev_wrk.mode == OMN_PZL_MODE_GETEND)
     {
 #ifdef BUILD_EU_VERSION
         int mes1;
@@ -9804,7 +9804,7 @@ void SimenPillarDisp()
         }
 #endif
     }
-    else if (spev_wrk.mode == 24)
+    else if (spev_wrk.mode == OMN_PZL_MODE_UNSIMEN)
     {
         CopySqrDToSqr(&dsq, &menu_sq0);
         DispSqrD(&dsq);
@@ -9818,7 +9818,7 @@ void SimenPillarDisp()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 32)
+    else if (spev_wrk.mode == OMN_PZL_MODE_MSGEND)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, alpha_keep);
     }
@@ -9867,7 +9867,7 @@ void HanyouKaitenMain(int event_no)
 {
     switch(event_no)
     {
-    case 86:
+    case SPEV86_ROT_DOOR_KI:
         if (plyr_wrk.pr_info.room_no == door_keep[47].room_id)
         {
             if (DoorKeyUnlockOnly(47) != 0)
@@ -9887,7 +9887,7 @@ void HanyouKaitenMain(int event_no)
 
         spev_wrk.ret = 1;
     break;
-    case 87:
+    case SPEV87_ROT_DOOR_DO:
         if (plyr_wrk.pr_info.room_no == door_keep[26].room_id)
         {
             if (DoorKeyUnlockOnly(26) != 0)
@@ -9907,7 +9907,7 @@ void HanyouKaitenMain(int event_no)
 
         spev_wrk.ret = 1;
     break;
-    case 88:
+    case SPEV88_ROT_DOOR_AI:
         if (plyr_wrk.pr_info.room_no == door_keep[0x22].room_id)
         {
             if (DoorKeyUnlockOnly(34) != 0)
@@ -9927,7 +9927,7 @@ void HanyouKaitenMain(int event_no)
 
         spev_wrk.ret = 1;
     break;
-    case 89:
+    case SPEV89_ROT_DOOR_RAKU:
         if (plyr_wrk.pr_info.room_no == door_keep[49].room_id)
         {
             if (DoorKeyUnlockOnly(49) != 0)
@@ -9947,7 +9947,7 @@ void HanyouKaitenMain(int event_no)
 
         spev_wrk.ret = 1;
     break;
-    case 90:
+    case SPEV90_ROT_DOOR_KAKE:
         if (plyr_wrk.pr_info.room_no == door_keep[54].room_id)
         {
             if (DoorKeyUnlockOnly(54) != 0)
@@ -9979,7 +9979,7 @@ void ZushiBonjiInit(int bonji_no)
         plyr_wrk.se_deadly = -1;
 
         spev_wrk.time = 60;
-        spev_wrk.mode = 0;
+        spev_wrk.mode = ZSI_PZL_MODE_DEADWAIT;
     }
     else
     {
@@ -9992,7 +9992,7 @@ void ZushiBonjiInit(int bonji_no)
 
         pzl_load_id = -1;
 
-        spev_wrk.mode = 1;
+        spev_wrk.mode = ZSI_PZL_MODE_READY;
         spev_wrk.time = 40;
     }
 
@@ -10029,7 +10029,7 @@ void ZushiBonjiMain(int bonji_no)
 {
     switch(spev_wrk.mode)
     {
-    case 0:
+    case ZSI_PZL_MODE_DEADWAIT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -10044,11 +10044,11 @@ void ZushiBonjiMain(int bonji_no)
 
             pzl_load_id = -1;
 
-            spev_wrk.mode = 1;
+            spev_wrk.mode = ZSI_PZL_MODE_READY;
             spev_wrk.time = 40;
         }
     break;
-    case 1:
+    case ZSI_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -10059,15 +10059,15 @@ void ZushiBonjiMain(int bonji_no)
             {
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
 
-                spev_wrk.mode = 3;
+                spev_wrk.mode = ZSI_PZL_MODE_SELOAD;
 
                 ingame_wrk.stts |= 0x20;
 
-                pzl_load_id = SeFileLoadAndSet(SP005_BONJI_BD, 2);
+                pzl_load_id = SeFileLoadAndSet(SP005_BONJI_BD, SE_ADDRNO_VOICE);
             }
         }
     break;
-    case 3:
+    case ZSI_PZL_MODE_SELOAD:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -10078,25 +10078,25 @@ void ZushiBonjiMain(int bonji_no)
             {
                 pzl_load_id = -1;
 
-                spev_wrk.mode = 2;
+                spev_wrk.mode = ZSI_PZL_MODE_IN;
                 spev_wrk.time = 40;
 
                 SetBlackIn();
             }
         }
     break;
-    case 2:
+    case ZSI_PZL_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 4;
+            spev_wrk.mode = ZSI_PZL_MODE_MSG1;
             spev_wrk.time = 1;
         }
     break;
-    case 4:
+    case ZSI_PZL_MODE_MSG1:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -10104,11 +10104,11 @@ void ZushiBonjiMain(int bonji_no)
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 6;
+            spev_wrk.mode = ZSI_PZL_MODE_SLCT;
             spev_wrk.time = 1;
         }
     break;
-    case 6:
+    case ZSI_PZL_MODE_SLCT:
         if (ButtonMarkWait() != 0)
         {
             break;
@@ -10116,14 +10116,14 @@ void ZushiBonjiMain(int bonji_no)
 
         if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 10;
+            spev_wrk.mode = ZSI_PZL_MODE_OUT;
             spev_wrk.time = 70;
 
             SetBlackOut();
         }
         else if (CROSS_PRESSED() == 1)
         {
-            spev_wrk.mode = 7;
+            spev_wrk.mode = ZSI_PZL_MODE_PUSH;
             spev_wrk.time = 40;
 
             SeStartFix(SE_PUZZLE0, 0, 0x1000, 0x1000, 0);
@@ -10165,7 +10165,7 @@ void ZushiBonjiMain(int bonji_no)
             zushi_alpha[0] = 0;
         }
     break;
-    case 7:
+    case ZSI_PZL_MODE_PUSH:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -10174,35 +10174,35 @@ void ZushiBonjiMain(int bonji_no)
         {
             if (spev_wrk.csr[0] == zushi_dat[spev_wrk.csr[1]].answer)
             {
-                spev_wrk.mode = 5;
+                spev_wrk.mode = ZSI_PZL_MODE_MSG2;
                 spev_wrk.time = 20;
             }
             else
             {
-                spev_wrk.mode = 9;
+                spev_wrk.mode = ZSI_PZL_MODE_BAD;
                 spev_wrk.time = 40;
             }
         }
     break;
-    case 5:
+    case ZSI_PZL_MODE_MSG2:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 8;
+            spev_wrk.mode = ZSI_PZL_MODE_GOOD;
             spev_wrk.time = 20;
 
             SeStartFix(SE_MN1, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 8:
+    case ZSI_PZL_MODE_GOOD:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 11;
+            spev_wrk.mode = ZSI_PZL_MODE_GOUT;
             spev_wrk.time = 70;
 
             zushi_dat[spev_wrk.csr[1]].ansflg = 1;
@@ -10212,7 +10212,7 @@ void ZushiBonjiMain(int bonji_no)
             SetWhiteOut();
         }
     break;
-    case 9:
+    case ZSI_PZL_MODE_BAD:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             spev_wrk.time = 0;
@@ -10220,13 +10220,13 @@ void ZushiBonjiMain(int bonji_no)
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 6;
+            spev_wrk.mode = ZSI_PZL_MODE_SLCT;
             spev_wrk.time = 1;
 
             spev_wrk.csr[0] = 0;
         }
     break;
-    case 11:
+    case ZSI_PZL_MODE_GOUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -10235,7 +10235,7 @@ void ZushiBonjiMain(int bonji_no)
         {
             if (pzl_load_id == -1)
             {
-                pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, 2);
+                pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, SE_ADDRNO_VOICE);
             }
             else
             {
@@ -10244,13 +10244,13 @@ void ZushiBonjiMain(int bonji_no)
                     return;
                 }
 
-                spev_wrk.mode = 12;
+                spev_wrk.mode = ZSI_PZL_MODE_END;
 
                 SetWhiteIn();
             }
         }
     break;
-    case 10:
+    case ZSI_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -10259,7 +10259,7 @@ void ZushiBonjiMain(int bonji_no)
         {
             if (pzl_load_id == -1)
             {
-                pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, 2);
+                pzl_load_id = SeFileLoadAndSet(SV000_MIKU_BD, SE_ADDRNO_VOICE);
             }
             else
             {
@@ -10268,13 +10268,13 @@ void ZushiBonjiMain(int bonji_no)
                     return;
                 }
 
-                spev_wrk.mode = 12;
+                spev_wrk.mode = ZSI_PZL_MODE_END;
 
                 SetBlackIn();
             }
         }
     break;
-    case 12:
+    case ZSI_PZL_MODE_END:
         SendManMdlTex();
         ButtonMarkTimeClear();
 
@@ -10286,7 +10286,7 @@ void ZushiBonjiMain(int bonji_no)
     break;
     }
 
-    if (spev_wrk.mode == 6)
+    if (spev_wrk.mode == ZSI_PZL_MODE_SLCT)
     {
         if (zushi_alpha[0] < 0x80)
         {
@@ -10299,12 +10299,12 @@ void ZushiBonjiMain(int bonji_no)
         }
     }
 
-    if (spev_wrk.mode == 7)
+    if (spev_wrk.mode == ZSI_PZL_MODE_PUSH)
     {
         zushi_alpha[0] = 0;
     }
 
-    if (spev_wrk.mode == 9)
+    if (spev_wrk.mode == ZSI_PZL_MODE_BAD)
     {
         if (zushi_alpha[0] > 3)
         {
@@ -10317,7 +10317,7 @@ void ZushiBonjiMain(int bonji_no)
         }
     }
 
-    if (spev_wrk.mode == 4 || spev_wrk.mode == 5 || spev_wrk.mode == 9)
+    if (spev_wrk.mode == ZSI_PZL_MODE_MSG1 || spev_wrk.mode == ZSI_PZL_MODE_MSG2 || spev_wrk.mode == ZSI_PZL_MODE_BAD)
     {
         if (zushi_alpha[1] < 0x80)
         {
@@ -10342,7 +10342,7 @@ void ZushiBonjiMain(int bonji_no)
         }
     }
 
-    if (spev_wrk.mode > 1 && spev_wrk.mode != 12)
+    if (spev_wrk.mode > ZSI_PZL_MODE_READY && spev_wrk.mode != ZSI_PZL_MODE_END)
     {
         ZushiBonjiDisp(bonji_no);
     }
@@ -10377,7 +10377,7 @@ void ZushiBonjiDisp(int bonji_no)
         SimpleDispSprtLNR(&spev21_sp_bak[i], MikuPan_GetHostAddress(EVENT_ADDRESS), i, NULL, NULL, 0x64, 0);
     }
 
-    if (spev_wrk.mode == 7 || spev_wrk.mode == 5 || spev_wrk.mode == 8 || spev_wrk.mode == 11)
+    if (spev_wrk.mode == ZSI_PZL_MODE_PUSH || spev_wrk.mode == ZSI_PZL_MODE_MSG2 || spev_wrk.mode == ZSI_PZL_MODE_GOOD || spev_wrk.mode == ZSI_PZL_MODE_GOUT)
     {
         for (i = 0; i < 4; i++)
         {
@@ -10403,7 +10403,7 @@ void ZushiBonjiDisp(int bonji_no)
     for (i = 0; i < 4; i++)
     {
         if (
-            (spev_wrk.mode == 7 || spev_wrk.mode == 5 || spev_wrk.mode == 8 || spev_wrk.mode == 11) &&
+            (spev_wrk.mode == ZSI_PZL_MODE_PUSH || spev_wrk.mode == ZSI_PZL_MODE_MSG2 || spev_wrk.mode == ZSI_PZL_MODE_GOOD || spev_wrk.mode == ZSI_PZL_MODE_GOUT) &&
             (i == spev_wrk.csr[0])
         )
         {
@@ -10420,7 +10420,7 @@ void ZushiBonjiDisp(int bonji_no)
 
     DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, zushi_alpha[1]);
 
-    if (spev_wrk.mode == 4)
+    if (spev_wrk.mode == ZSI_PZL_MODE_MSG1)
     {
         spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV42_MSG01);
 
@@ -10432,7 +10432,7 @@ void ZushiBonjiDisp(int bonji_no)
         SetMessageV2(&ds);
     }
 
-    if (spev_wrk.mode == 5)
+    if (spev_wrk.mode == ZSI_PZL_MODE_MSG2)
     {
         spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV42_MSG06);
         spev_str.pos_x = 50;
@@ -10447,7 +10447,7 @@ void ZushiBonjiDisp(int bonji_no)
         SetMessageV2(&ds);
     }
 
-    if (spev_wrk.mode == 9)
+    if (spev_wrk.mode == ZSI_PZL_MODE_BAD)
     {
         spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, SPEV42_MSG02);
         spev_str.pos_x = 50;
@@ -10477,7 +10477,7 @@ void ZushiBonjiMSGInit()
     LoadReq(EVTEX_ZUSI_PK2, EVENT_ADDRESS);
 #endif
 
-    spev_wrk.mode = 1;
+    spev_wrk.mode = ZSI_PZL_MODE_READY;
     spev_wrk.time = 40;
 
     SetBlackOut();
@@ -10490,7 +10490,7 @@ void ZushiBonjiMSGMain()
 {
     switch(spev_wrk.mode)
     {
-    case 1:
+    case ZSI_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -10501,7 +10501,7 @@ void ZushiBonjiMSGMain()
             {
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
 
-                spev_wrk.mode = 2;
+                spev_wrk.mode = ZSI_PZL_MODE_IN;
                 spev_wrk.time = 40;
 
                 ingame_wrk.stts |= 0x20;
@@ -10510,18 +10510,18 @@ void ZushiBonjiMSGMain()
             }
             break;
         }
-    case 2:
+    case ZSI_PZL_MODE_IN:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 4;
+            spev_wrk.mode = ZSI_PZL_MODE_MSG1;
             spev_wrk.time = 1;
         }
     break;
-    case 4:
+    case ZSI_PZL_MODE_MSG1:
         if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -10529,11 +10529,11 @@ void ZushiBonjiMSGMain()
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = ZSI_PZL_MODE_MSG2;
             spev_wrk.time = 1;
         }
     break;
-    case 5:
+    case ZSI_PZL_MODE_MSG2:
         if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -10541,23 +10541,23 @@ void ZushiBonjiMSGMain()
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 10;
+            spev_wrk.mode = ZSI_PZL_MODE_OUT;
             spev_wrk.time = 70;
 
             SetBlackOut();
         }
     break;
-    case 10:
+    case ZSI_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 12;
+            spev_wrk.mode = ZSI_PZL_MODE_END;
         }
     break;
-    case 12:
+    case ZSI_PZL_MODE_END:
         ingame_wrk.stts &= ~0x20;
 
         spev_wrk.ret = 1;
@@ -10566,7 +10566,7 @@ void ZushiBonjiMSGMain()
     break;
     }
 
-    if (spev_wrk.mode == 4 || spev_wrk.mode == 5)
+    if (spev_wrk.mode == ZSI_PZL_MODE_MSG1 || spev_wrk.mode == ZSI_PZL_MODE_MSG2)
     {
         if (zushi_alpha[1] < 0x80)
         {
@@ -10591,7 +10591,7 @@ void ZushiBonjiMSGMain()
         }
     }
 
-    if (spev_wrk.mode != 1)
+    if (spev_wrk.mode != ZSI_PZL_MODE_READY)
     {
         ZushiBonjiMSGDisp();
     }
@@ -10660,7 +10660,7 @@ void ZushiBonjiAfterInit(int bonji_no)
     LoadReq(EVTEX_ZUSI_PK2, EVENT_ADDRESS);
 #endif
 
-    spev_wrk.mode = 1;
+    spev_wrk.mode = ZSI_PZL_MODE_READY;
     spev_wrk.time = 40;
 
     SetBlackOut();
@@ -10689,7 +10689,7 @@ void ZushiBonjiAfterMain(int bonji_no)
 {
     switch(spev_wrk.mode)
     {
-    case 1:
+    case ZSI_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
@@ -10700,7 +10700,7 @@ void ZushiBonjiAfterMain(int bonji_no)
             {
                 SetSprFile(MikuPan_GetHostAddress(EVENT_ADDRESS));
 
-                spev_wrk.mode = 2;
+                spev_wrk.mode = ZSI_PZL_MODE_IN;
                 spev_wrk.time = 40;
 
                 ingame_wrk.stts |= 0x20;
@@ -10709,18 +10709,18 @@ void ZushiBonjiAfterMain(int bonji_no)
             }
             break;
         }
-    case 2:
+    case ZSI_PZL_MODE_IN:
         if (spev_wrk.time != 0x0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 4;
+            spev_wrk.mode = ZSI_PZL_MODE_MSG1;
             spev_wrk.time = 1;
         }
     break;
-    case 4:
+    case ZSI_PZL_MODE_MSG1:
         if (CROSS_PRESSED() == 1 || TRIANGLE_PRESSED() == 1)
         {
             spev_wrk.time = 0;
@@ -10728,23 +10728,23 @@ void ZushiBonjiAfterMain(int bonji_no)
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 10;
+            spev_wrk.mode = ZSI_PZL_MODE_OUT;
             spev_wrk.time = 70;
 
             SetBlackOut();
         }
     break;
-    case 10:
+    case ZSI_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 12;
+            spev_wrk.mode = ZSI_PZL_MODE_END;
         }
     break;
-    case 12:
+    case ZSI_PZL_MODE_END:
         ingame_wrk.stts &= ~0x20;
 
         spev_wrk.ret = 1;
@@ -10753,7 +10753,7 @@ void ZushiBonjiAfterMain(int bonji_no)
     break;
     }
 
-    if (spev_wrk.mode == 4 || spev_wrk.mode == 9)
+    if (spev_wrk.mode == ZSI_PZL_MODE_MSG1 || spev_wrk.mode == ZSI_PZL_MODE_BAD)
     {
         if (zushi_alpha[1] < 0x80)
         {
@@ -10778,7 +10778,7 @@ void ZushiBonjiAfterMain(int bonji_no)
         }
     }
 
-    if (spev_wrk.mode != 1)
+    if (spev_wrk.mode != ZSI_PZL_MODE_READY)
     {
         ZushiBonjiAfterDisp(bonji_no);
     }
@@ -10879,7 +10879,7 @@ void KakejikuDoorMain()
 
 void IdoFirstIntoInit()
 {
-    spev_wrk.mode = 2;
+    spev_wrk.mode = IDO_PZL_MODE_READY;
     spev_wrk.time = 60;
 
     PlayerWarpReq2(1);
@@ -10895,20 +10895,20 @@ void IdoFirstIntoMain()
 {
     switch (spev_wrk.mode)
     {
-    case 2:
+    case IDO_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 3;
+            spev_wrk.mode = IDO_PZL_MODE_IN;
             spev_wrk.time = 40;
 
             ingame_wrk.stts |= 0x20;
         }
     break;
-    case 3:
+    case IDO_PZL_MODE_IN:
         if (PlayerWarpCtrl() != 0)
         {
             spev_wrk.time = 0;
@@ -10916,14 +10916,14 @@ void IdoFirstIntoMain()
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = IDO_PZL_MODE_END;
 
             ingame_wrk.stts &= ~0x20;
 
             SetBlackIn();
         }
     break;
-    case 5:
+    case IDO_PZL_MODE_END:
         spev_wrk.ret = 1;
 
         ingame_wrk.stts &= ~0x20;
@@ -10933,7 +10933,7 @@ void IdoFirstIntoMain()
 
 void IdoIntoInit()
 {
-    spev_wrk.mode = 0;
+    spev_wrk.mode = IDO_PZL_MODE_MSGYES;
 
     spev_wrk.csr[0] = 0;
 
@@ -10944,12 +10944,12 @@ void IdoIntoMain()
 {
     switch(spev_wrk.mode)
     {
-    case 0:
+    case IDO_PZL_MODE_MSGYES:
         if (CROSS_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
-            spev_wrk.mode = 2;
+            spev_wrk.mode = IDO_PZL_MODE_READY;
             spev_wrk.time = 60;
 
             SetBlackOut();
@@ -11004,18 +11004,18 @@ void IdoIntoMain()
             )
         )
         {
-            spev_wrk.mode = 0;
+            spev_wrk.mode = IDO_PZL_MODE_MSGYES;
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 2:
+    case IDO_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 3;
+            spev_wrk.mode = IDO_PZL_MODE_IN;
             spev_wrk.time = 40;
 
             ingame_wrk.stts |= 0x20;
@@ -11023,36 +11023,36 @@ void IdoIntoMain()
             SetBlackIn();
         }
     break;
-    case 3:
+    case IDO_PZL_MODE_IN:
         if (PlayerWarpCtrl() != 0)
         {
             spev_wrk.time = 0;
         }
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = IDO_PZL_MODE_END;
 
             ingame_wrk.stts &= ~ 0x20;
 
             SetBlackIn();
         }
     break;
-    case 4:
+    case IDO_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = IDO_PZL_MODE_END;
         }
     break;
-    case 5:
+    case IDO_PZL_MODE_END:
         spev_wrk.ret = 1;
     break;
     }
 
-    if (spev_wrk.mode == 0 || spev_wrk.mode == 1)
+    if (spev_wrk.mode == IDO_PZL_MODE_MSGYES || spev_wrk.mode == IDO_PZL_MODE_MSGNO)
     {
         if (spev_wrk.csr[0] < 120)
         {
@@ -11083,7 +11083,7 @@ void IdoIntoMain()
 
 void IdoFirstOutInit()
 {
-    spev_wrk.mode = 2;
+    spev_wrk.mode = IDO_PZL_MODE_READY;
     spev_wrk.time = 60;
 
     PlayerWarpReq2(0);
@@ -11099,19 +11099,19 @@ void IdoFirstOutMain()
 {
     switch (spev_wrk.mode)
     {
-    case 2:
+    case IDO_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 3;
+            spev_wrk.mode = IDO_PZL_MODE_IN;
             spev_wrk.time = 40;
 
             break;
         }
-    case 3:
+    case IDO_PZL_MODE_IN:
         if (PlayerWarpCtrl() != 0)
         {
             spev_wrk.time = 0;
@@ -11119,14 +11119,14 @@ void IdoFirstOutMain()
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = IDO_PZL_MODE_END;
 
             ingame_wrk.stts &= ~0x20;
 
             SetBlackIn();
         }
     break;
-    case 5:
+    case IDO_PZL_MODE_END:
         ingame_wrk.stts &= ~0x20;
 
         spev_wrk.ret = 1;
@@ -11136,7 +11136,7 @@ void IdoFirstOutMain()
 
 void IdoOutInit()
 {
-    spev_wrk.mode = 0;
+    spev_wrk.mode = IDO_PZL_MODE_MSGYES;
 
     SpevStrInit();
 }
@@ -11145,12 +11145,12 @@ void IdoOutMain()
 {
     switch(spev_wrk.mode)
     {
-    case 0:
+    case IDO_PZL_MODE_MSGYES:
         if (CROSS_PRESSED() == 1)
         {
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
 
-            spev_wrk.mode = 2;
+            spev_wrk.mode = IDO_PZL_MODE_READY;
             spev_wrk.time = 60;
 
             SetBlackOut();
@@ -11206,26 +11206,26 @@ void IdoOutMain()
             )
         )
         {
-            spev_wrk.mode = 0;
+            spev_wrk.mode = IDO_PZL_MODE_MSGYES;
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 2:
+    case IDO_PZL_MODE_READY:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 3;
+            spev_wrk.mode = IDO_PZL_MODE_IN;
             spev_wrk.time = 40;
 
             ingame_wrk.stts |= 0x20;
 
             break;
         }
-    case 3:
+    case IDO_PZL_MODE_IN:
         if (PlayerWarpCtrl() != 0)
         {
             spev_wrk.time = 0;
@@ -11233,29 +11233,29 @@ void IdoOutMain()
 
         if (spev_wrk.time == 0)
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = IDO_PZL_MODE_END;
 
             ingame_wrk.stts &= ~0x20;
 
             SetBlackIn();
         }
     break;
-    case 4:
+    case IDO_PZL_MODE_OUT:
         if (spev_wrk.time != 0)
         {
             spev_wrk.time--;
         }
         else
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = IDO_PZL_MODE_END;
         }
     break;
-    case 5:
+    case IDO_PZL_MODE_END:
         spev_wrk.ret = 1;
     break;
     }
 
-    if (spev_wrk.mode == 0 || spev_wrk.mode == 1)
+    if (spev_wrk.mode == IDO_PZL_MODE_MSGYES || spev_wrk.mode == IDO_PZL_MODE_MSGNO)
     {
         if (spev_wrk.csr[0] < 120)
         {
@@ -11288,7 +11288,7 @@ void IdoInOutDisp(int inout)
 {
     DISP_STR ds;
 
-    if (spev_wrk.mode == 0 || spev_wrk.mode== 1 || spev_wrk.mode == 2 || spev_wrk.mode == 4)
+    if (spev_wrk.mode == IDO_PZL_MODE_MSGYES || spev_wrk.mode== IDO_PZL_MODE_MSGNO || spev_wrk.mode == IDO_PZL_MODE_READY || spev_wrk.mode == IDO_PZL_MODE_OUT)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, spev_wrk.csr[0]);
 
@@ -11329,11 +11329,11 @@ void IdoInOutDisp(int inout)
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
 
-        if (spev_wrk.mode == 0)
+        if (spev_wrk.mode == IDO_PZL_MODE_MSGYES)
         {
             YesNoCrslOKR(0x2000, 192.0f, 370.0f, 0x808080, 100.0f, 1.5f);
         }
-        else if (spev_wrk.mode == 1)
+        else if (spev_wrk.mode == IDO_PZL_MODE_MSGNO)
         {
             YesNoCrslOKR(0x2000, 290.0f, 370.0f, 0x808080, 100.0f, 1.5f);
         }
@@ -11344,7 +11344,7 @@ void ItemEventInit(int event_no)
 {
     switch(event_no)
     {
-    case 65:
+    case SPEV65_USE_KEY:
         spev_wrk.csr[0] = camera_table[1];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 107;
@@ -11354,7 +11354,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 104;
 #endif
     break;
-    case 66:
+    case SPEV66_USE_LIGHTER:
         spev_wrk.csr[0] = camera_table[2];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 109;
@@ -11364,7 +11364,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 106;
 #endif
     break;
-    case 67:
+    case SPEV67_USE_BUTSUZO:
         spev_wrk.csr[0] = camera_table[3];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 111;
@@ -11374,7 +11374,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 108;
 #endif
     break;
-    case 68:
+    case SPEV68_USE_KAKEJIKU:
         spev_wrk.csr[0] = camera_table[4];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 113;
@@ -11384,7 +11384,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 110;
 #endif
     break;
-    case 69:
+    case SPEV69_USE_KINKO:
         spev_wrk.csr[0] = camera_table[5];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 115;
@@ -11394,7 +11394,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 112;
 #endif
     break;
-    case 70:
+    case SPEV70_USE_KAGOME:
         spev_wrk.csr[0] = camera_table[6];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 117;
@@ -11404,7 +11404,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 114;
 #endif
     break;
-    case 71:
+    case SPEV71_USE_MEKAKUSHI:
         spev_wrk.csr[0] = camera_table[7];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 119;
@@ -11414,7 +11414,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 116;
 #endif
     break;
-    case 72:
+    case SPEV72_USE_TOUSHU:
         spev_wrk.csr[0] = camera_table[8];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 121;
@@ -11424,7 +11424,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 118;
 #endif
     break;
-    case 73:
+    case SPEV73_USE_NAWA0:
         spev_wrk.csr[0] = camera_table[9];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 123;
@@ -11434,7 +11434,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 120;
 #endif
     break;
-    case 74:
+    case SPEV74_USE_NAWA1:
         spev_wrk.csr[0] = camera_table[10];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 125;
@@ -11444,7 +11444,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 122;
 #endif
     break;
-    case 75:
+    case SPEV75_USE_NAWA2:
         spev_wrk.csr[0] = camera_table[11];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 127;
@@ -11454,7 +11454,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 124;
 #endif
     break;
-    case 76:
+    case SPEV76_USE_NAWA3:
         spev_wrk.csr[0] = camera_table[12];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 129;
@@ -11464,7 +11464,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 126;
 #endif
     break;
-    case 77:
+    case SPEV77_USE_KANZASHI:
         spev_wrk.csr[0] = camera_table[13];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 131;
@@ -11474,7 +11474,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 128;
 #endif
     break;
-    case 78:
+    case SPEV78_USE_IKARI:
         spev_wrk.csr[0] = camera_table[13];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 133;
@@ -11484,7 +11484,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 130;
 #endif
     break;
-    case 82:
+    case SPEV82_USE_NAWAFLS0:
         spev_wrk.csr[0] = camera_table[15];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 123;
@@ -11494,7 +11494,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 120;
 #endif
     break;
-    case 83:
+    case SPEV83_USE_NAWAFLS1:
         spev_wrk.csr[0] = camera_table[16];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 125;
@@ -11504,7 +11504,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 122;
 #endif
     break;
-    case 84:
+    case SPEV84_USE_NAWAFLS2:
         spev_wrk.csr[0] = camera_table[17];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 127;
@@ -11514,7 +11514,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 124;
 #endif
     break;
-    case 85:
+    case SPEV85_USE_NAWAFLS3:
         spev_wrk.csr[0] = camera_table[18];
 #ifdef BUILD_EU_VERSION
         spev_wrk.csr[1] = 129;
@@ -11524,7 +11524,7 @@ void ItemEventInit(int event_no)
         spev_wrk.csr[2] = 126;
 #endif
     break;
-    case 64:
+    case SPEV64_USE_MIRROR:
     default:
         spev_wrk.csr[0] = camera_table[0];
 #ifdef BUILD_EU_VERSION
@@ -11537,16 +11537,16 @@ void ItemEventInit(int event_no)
     break;
     }
 
-    if (event_no == 78)
+    if (event_no == SPEV78_USE_IKARI)
     {
-        pzl_load_id = SeFileLoadAndSet(ST001_MEN_KAKE_BD, 21);
+        pzl_load_id = SeFileLoadAndSet(ST001_MEN_KAKE_BD, SE_ADDRNO_WIDE);
     }
     else
     {
-        pzl_load_id = SeFileLoadAndSet(ST011_NAWA_KAKE_BD, 21);
+        pzl_load_id = SeFileLoadAndSet(ST011_NAWA_KAKE_BD, SE_ADDRNO_WIDE);
     }
 
-    spev_wrk.mode = 0;
+    spev_wrk.mode = ITM_PZL_MODE_READY;
 
     SpevStrInit();
 
@@ -11559,41 +11559,41 @@ void ItemEventMain(int event_no)
 
     switch(spev_wrk.mode)
     {
-    case 0:
+    case ITM_PZL_MODE_READY:
         if (IsLoadEnd(pzl_load_id) != 0)
         {
             pzl_load_id = -1;
 
-            spev_wrk.mode = 2;
+            spev_wrk.mode = ITM_PZL_MODE_MSG;
         }
     break;
-    case 2:
+    case ITM_PZL_MODE_MSG:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = ITM_PZL_MODE_YES;
         }
     break;
-    case 5:
+    case ITM_PZL_MODE_YES:
         if (CROSS_PRESSED() == 1)
         {
-            spev_wrk.mode = 8;
+            spev_wrk.mode = ITM_PZL_MODE_OUT;
 
             switch(event_no)
             {
-            case 73:
+            case SPEV73_USE_NAWA0:
                 SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
-            case 74:
+            case SPEV74_USE_NAWA1:
                 SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
-            case 75:
+            case SPEV75_USE_NAWA2:
                 SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
-            case 76:
+            case SPEV76_USE_NAWA3:
                 SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
-            case 78:
-                spev_wrk.mode = 7;
+            case SPEV78_USE_IKARI:
+                spev_wrk.mode = ITM_PZL_MODE_OMN;
                 spev_wrk.count = 40;
 
                 SetBlackOut();
@@ -11605,7 +11605,7 @@ void ItemEventMain(int event_no)
         }
         else if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 9;
+            spev_wrk.mode = ITM_PZL_MODE_NOOUT;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
@@ -11623,21 +11623,21 @@ void ItemEventMain(int event_no)
             )
         )
         {
-            spev_wrk.mode = 6;
+            spev_wrk.mode = ITM_PZL_MODE_NO;
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 6:
+    case ITM_PZL_MODE_NO:
         if (CROSS_PRESSED() == 1)
         {
-            spev_wrk.mode = 9;
+            spev_wrk.mode = ITM_PZL_MODE_NOOUT;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 9;
+            spev_wrk.mode = ITM_PZL_MODE_NOOUT;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
@@ -11655,12 +11655,12 @@ void ItemEventMain(int event_no)
             )
         )
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = ITM_PZL_MODE_YES;
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 7:
+    case ITM_PZL_MODE_OMN:
         if (spev_wrk.count != 0)
         {
             spev_wrk.count--;
@@ -11702,22 +11702,22 @@ void ItemEventMain(int event_no)
             SetBlackIn();
             SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
 
-            spev_wrk.mode = 8;
+            spev_wrk.mode = ITM_PZL_MODE_OUT;
         }
     break;
-    case 8:
+    case ITM_PZL_MODE_OUT:
         if (spev_wrk.time < 11)
         {
-            spev_wrk.mode = 10;
+            spev_wrk.mode = ITM_PZL_MODE_END;
         }
     break;
-    case 9:
+    case ITM_PZL_MODE_NOOUT:
         if (spev_wrk.time < 11)
         {
-            spev_wrk.mode = 11;
+            spev_wrk.mode = ITM_PZL_MODE_NOEND;
         }
     break;
-    case 10:
+    case ITM_PZL_MODE_END:
         event_stts[ev_wrk.evt_no] = 1;
 
         spev_wrk.ret = 1;
@@ -11726,7 +11726,7 @@ void ItemEventMain(int event_no)
 
         ButtonMarkTimeClear();
     break;
-    case 11:
+    case ITM_PZL_MODE_NOEND:
         spev_wrk.ret = 1;
 
         spev_str.alpha = 0x80;
@@ -11735,7 +11735,7 @@ void ItemEventMain(int event_no)
     break;
     }
 
-    if (spev_wrk.mode == 2 || spev_wrk.mode == 5 || spev_wrk.mode == 6)
+    if (spev_wrk.mode == ITM_PZL_MODE_MSG || spev_wrk.mode == ITM_PZL_MODE_YES || spev_wrk.mode == ITM_PZL_MODE_NO)
     {
         if (spev_wrk.time < 112)
         {
@@ -11772,7 +11772,7 @@ void ItemEventDisp()
     int yy;
 #endif
 
-    if (spev_wrk.mode == 2)
+    if (spev_wrk.mode == ITM_PZL_MODE_MSG)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, spev_wrk.time);
 
@@ -11803,7 +11803,7 @@ void ItemEventDisp()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 5 || spev_wrk.mode == 6 || spev_wrk.mode == 8)
+    else if (spev_wrk.mode == ITM_PZL_MODE_YES || spev_wrk.mode == ITM_PZL_MODE_NO || spev_wrk.mode == ITM_PZL_MODE_OUT)
     {
 #ifdef BUILD_EU_VERSION
             switch(spev_wrk.csr[2])
@@ -11878,7 +11878,7 @@ void ItemEventDisp()
             YesNoCrslOKR(0x2000, 77.0f, 377.0f, 0x808080, 100.0f, 1.5f);
 #endif
         }
-        else if (spev_wrk.mode == 6)
+        else if (spev_wrk.mode == ITM_PZL_MODE_NO)
         {
 #ifdef BUILD_EU_VERSION
             YesNoCrslOKR(0x2000, 170.0f, 386.0f, 0x808080, 100.0f, 1.5f);
@@ -11895,45 +11895,45 @@ void NawakakeFalseMain(int event_no)
 
     switch(spev_wrk.mode)
     {
-    case 0:
+    case ITM_PZL_MODE_READY:
         if (IsLoadEndAll() != 0)
         {
-            spev_wrk.mode = 2;
+            spev_wrk.mode = ITM_PZL_MODE_MSG;
 
             break;
         }
-    case 2:
+    case ITM_PZL_MODE_MSG:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 5;
+            spev_wrk.mode = ITM_PZL_MODE_YES;
         }
     break;
-    case 5:
+    case ITM_PZL_MODE_YES:
         if (CROSS_PRESSED() == 1)
         {
-            spev_wrk.mode = 3;
+            spev_wrk.mode = ITM_PZL_MODE_MSG2;
 
             switch (event_no)
             {
-            case 82:
+            case SPEV82_USE_NAWAFLS0:
                 SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
-            case 83:
+            case SPEV83_USE_NAWAFLS1:
                 SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
-            case 84:
+            case SPEV84_USE_NAWAFLS2:
                 SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
-            case 85:
+            case SPEV85_USE_NAWAFLS3:
                 SeStartFix(SE_HANYOU, 0, 0x1000, 0x1000, 0);
             break;
             }
         }
         else if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 9;
+            spev_wrk.mode = ITM_PZL_MODE_NOOUT;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
@@ -11951,21 +11951,21 @@ void NawakakeFalseMain(int event_no)
             )
         )
         {
-            spev_wrk.mode = 6;
+            spev_wrk.mode = ITM_PZL_MODE_NO;
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 6:
+    case ITM_PZL_MODE_NO:
         if (CROSS_PRESSED() == 1)
         {
-            spev_wrk.mode = 9;
+            spev_wrk.mode = ITM_PZL_MODE_NOOUT;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
         else if (TRIANGLE_PRESSED() == 1)
         {
-            spev_wrk.mode = 9;
+            spev_wrk.mode = ITM_PZL_MODE_NOOUT;
 
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
         }
@@ -11983,47 +11983,47 @@ void NawakakeFalseMain(int event_no)
             )
         )
         {
-            spev_wrk.mode = 5;
+            spev_wrk.mode = ITM_PZL_MODE_YES;
 
             SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
         }
     break;
-    case 3:
+    case ITM_PZL_MODE_MSG2:
         if (ButtonMarkNext(0, 0, 1) != 0)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 4;
+            spev_wrk.mode = ITM_PZL_MODE_MSG3;
         }
     break;
-    case 4:
+    case ITM_PZL_MODE_MSG3:
         if (ButtonMarkNext(0, 0, 0) != 0)
         {
             ButtonMarkTimeClear();
 
-            spev_wrk.mode = 8;
+            spev_wrk.mode = ITM_PZL_MODE_OUT;
         }
     break;
-    case 8:
+    case ITM_PZL_MODE_OUT:
         if (spev_wrk.time <= 10)
         {
-            spev_wrk.mode = 10;
+            spev_wrk.mode = ITM_PZL_MODE_END;
         }
     break;
-    case 9:
+    case ITM_PZL_MODE_NOOUT:
         if (spev_wrk.time < 11)
         {
-            spev_wrk.mode = 11;
+            spev_wrk.mode = ITM_PZL_MODE_NOEND;
         }
     break;
-    case 10:
+    case ITM_PZL_MODE_END:
         spev_wrk.ret = 1;
 
         spev_str.alpha = 0x80;
 
         ButtonMarkTimeClear();
     break;
-    case 11:
+    case ITM_PZL_MODE_NOEND:
         spev_wrk.ret = 1;
 
         spev_str.alpha = 0x80;
@@ -12032,7 +12032,7 @@ void NawakakeFalseMain(int event_no)
     break;
     }
 
-    if (spev_wrk.mode == 2 || spev_wrk.mode == 3 || spev_wrk.mode == 4 || spev_wrk.mode == 5 || spev_wrk.mode == 6)
+    if (spev_wrk.mode == ITM_PZL_MODE_MSG || spev_wrk.mode == ITM_PZL_MODE_MSG2 || spev_wrk.mode == ITM_PZL_MODE_MSG3 || spev_wrk.mode == ITM_PZL_MODE_YES || spev_wrk.mode == ITM_PZL_MODE_NO)
     {
         if (spev_wrk.time < 112)
         {
@@ -12069,11 +12069,11 @@ void NawakakeFalseDisp()
     int yy;
 #endif
 
-    if (spev_wrk.mode == 2)
+    if (spev_wrk.mode == ITM_PZL_MODE_MSG)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, spev_wrk.time);
 
-        spev_str.str = (u_char *)GetIngameMSGAddr(0x7, spev_wrk.csr[1]);
+        spev_str.str = (u_char *)GetIngameMSGAddr(IGMSG_SPEV_MSG, spev_wrk.csr[1]);
         spev_str.pos_x = 50;
 #ifdef BUILD_EU_VERSION
 
@@ -12098,7 +12098,7 @@ void NawakakeFalseDisp()
         CopyStrDToStr(&ds, &spev_str);
         SetMessageV2(&ds);
     }
-    else if (spev_wrk.mode == 5 || spev_wrk.mode == 6)
+    else if (spev_wrk.mode == ITM_PZL_MODE_YES || spev_wrk.mode == ITM_PZL_MODE_NO)
     {
 #ifdef BUILD_EU_VERSION
         switch (spev_wrk.csr[2])
@@ -12161,7 +12161,7 @@ void NawakakeFalseDisp()
             YesNoCrslOKR(0x2000, 77.0f, 377.0f, 0x808080, 100.0f, 1.5f);
 #endif
         }
-        else if (spev_wrk.mode == 6)
+        else if (spev_wrk.mode == ITM_PZL_MODE_NO)
         {
 #ifdef BUILD_EU_VERSION
             YesNoCrslOKR(0x2000, 170.0f, 386.0f, 0x808080, 100.0f, 1.5f);
@@ -12171,7 +12171,7 @@ void NawakakeFalseDisp()
         }
     }
 
-    if (spev_wrk.mode == 3)
+    if (spev_wrk.mode == ITM_PZL_MODE_MSG2)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, spev_wrk.time);
 
@@ -12188,7 +12188,7 @@ void NawakakeFalseDisp()
         SetMessageV2(&ds);
     }
 
-    if (spev_wrk.mode == 4 || spev_wrk.mode == 8)
+    if (spev_wrk.mode == ITM_PZL_MODE_MSG3 || spev_wrk.mode == ITM_PZL_MODE_OUT)
     {
         DrawMessageBox(0x2000, 19.0f, 328.0f, 592.0f, 96.0f, spev_wrk.time);
 
@@ -12593,12 +12593,12 @@ void SpecialEventMain033()
 
 void SpecialEventInit034()
 {
-    SimenPillarInit(34);
+    SimenPillarInit(SPEV34_MEN_OPEN);
 }
 
 void SpecialEventMain034()
 {
-    SimenPillarMain(34);
+    SimenPillarMain(SPEV34_MEN_OPEN);
 }
 
 void SpecialEventInit035()
@@ -12800,32 +12800,32 @@ void SpecialEventMain053()
 
 void SpecialEventInit054()
 {
-    SimenPillarInit(54);
+    SimenPillarInit(SPEV54_MEN_OPEN1);
 }
 
 void SpecialEventMain054()
 {
-    SimenPillarMain(54);
+    SimenPillarMain(SPEV54_MEN_OPEN1);
 }
 
 void SpecialEventInit055()
 {
-    SimenPillarInit(55);
+    SimenPillarInit(SPEV55_MEN_OPEN2);
 }
 
 void SpecialEventMain055()
 {
-    SimenPillarMain(55);
+    SimenPillarMain(SPEV55_MEN_OPEN2);
 }
 
 void SpecialEventInit056()
 {
-    SimenPillarInit(56);
+    SimenPillarInit(SPEV56_MEN_OPEN3);
 }
 
 void SpecialEventMain056()
 {
-    SimenPillarMain(56);
+    SimenPillarMain(SPEV56_MEN_OPEN3);
 }
 
 void SpecialEventInit057()
@@ -12900,152 +12900,152 @@ void SpecialEventMain063()
 
 void SpecialEventInit064()
 {
-    ItemEventInit(64);
+    ItemEventInit(SPEV64_USE_MIRROR);
 }
 
 void SpecialEventMain064()
 {
-    ItemEventMain(64);
+    ItemEventMain(SPEV64_USE_MIRROR);
 }
 
 void SpecialEventInit065()
 {
-    ItemEventInit(65);
+    ItemEventInit(SPEV65_USE_KEY);
 }
 
 void SpecialEventMain065()
 {
-    ItemEventMain(65);
+    ItemEventMain(SPEV65_USE_KEY);
 }
 
 void SpecialEventInit066()
 {
-    ItemEventInit(66);
+    ItemEventInit(SPEV66_USE_LIGHTER);
 }
 
 void SpecialEventMain066()
 {
-    ItemEventMain(66);
+    ItemEventMain(SPEV66_USE_LIGHTER);
 }
 
 void SpecialEventInit067()
 {
-    ItemEventInit(67);
+    ItemEventInit(SPEV67_USE_BUTSUZO);
 }
 
 void SpecialEventMain067()
 {
-    ItemEventMain(67);
+    ItemEventMain(SPEV67_USE_BUTSUZO);
 }
 
 void SpecialEventInit068()
 {
-    ItemEventInit(68);
+    ItemEventInit(SPEV68_USE_KAKEJIKU);
 }
 
 void SpecialEventMain068()
 {
-    ItemEventMain(68);
+    ItemEventMain(SPEV68_USE_KAKEJIKU);
 }
 
 void SpecialEventInit069()
 {
-    ItemEventInit(69);
+    ItemEventInit(SPEV69_USE_KINKO);
 }
 
 void SpecialEventMain069()
 {
-    ItemEventMain(69);
+    ItemEventMain(SPEV69_USE_KINKO);
 }
 
 void SpecialEventInit070()
 {
-    ItemEventInit(70);
+    ItemEventInit(SPEV70_USE_KAGOME);
 }
 
 void SpecialEventMain070()
 {
-    ItemEventMain(70);
+    ItemEventMain(SPEV70_USE_KAGOME);
 }
 
 void SpecialEventInit071()
 {
-    ItemEventInit(71);
+    ItemEventInit(SPEV71_USE_MEKAKUSHI);
 }
 
 void SpecialEventMain071()
 {
-    ItemEventMain(71);
+    ItemEventMain(SPEV71_USE_MEKAKUSHI);
 }
 
 void SpecialEventInit072()
 {
-    ItemEventInit(72);
+    ItemEventInit(SPEV72_USE_TOUSHU);
 }
 
 void SpecialEventMain072()
 {
-    ItemEventMain(72);
+    ItemEventMain(SPEV72_USE_TOUSHU);
 }
 
 void SpecialEventInit073()
 {
-    ItemEventInit(73);
+    ItemEventInit(SPEV73_USE_NAWA0);
 }
 
 void SpecialEventMain073()
 {
-    ItemEventMain(73);
+    ItemEventMain(SPEV73_USE_NAWA0);
 }
 
 void SpecialEventInit074()
 {
-    ItemEventInit(74);
+    ItemEventInit(SPEV74_USE_NAWA1);
 }
 
 void SpecialEventMain074()
 {
-    ItemEventMain(74);
+    ItemEventMain(SPEV74_USE_NAWA1);
 }
 
 void SpecialEventInit075()
 {
-    ItemEventInit(75);
+    ItemEventInit(SPEV75_USE_NAWA2);
 }
 
 void SpecialEventMain075()
 {
-    ItemEventMain(75);
+    ItemEventMain(SPEV75_USE_NAWA2);
 }
 
 void SpecialEventInit076()
 {
-    ItemEventInit(76);
+    ItemEventInit(SPEV76_USE_NAWA3);
 }
 
 void SpecialEventMain076()
 {
-    ItemEventMain(76);
+    ItemEventMain(SPEV76_USE_NAWA3);
 }
 
 void SpecialEventInit077()
 {
-    ItemEventInit(77);
+    ItemEventInit(SPEV77_USE_KANZASHI);
 }
 
 void SpecialEventMain077()
 {
-    ItemEventMain(77);
+    ItemEventMain(SPEV77_USE_KANZASHI);
 }
 
 void SpecialEventInit078()
 {
-    ItemEventInit(78);
+    ItemEventInit(SPEV78_USE_IKARI);
 }
 
 void SpecialEventMain078()
 {
-    ItemEventMain(78);
+    ItemEventMain(SPEV78_USE_IKARI);
 }
 
 void SpecialEventInit079()
@@ -13080,91 +13080,91 @@ void SpecialEventMain081()
 
 void SpecialEventInit082()
 {
-    ItemEventInit(82);
+    ItemEventInit(SPEV82_USE_NAWAFLS0);
 }
 
 void SpecialEventMain082()
 {
-    NawakakeFalseMain(82);
+    NawakakeFalseMain(SPEV82_USE_NAWAFLS0);
 }
 
 void SpecialEventInit083()
 {
-    ItemEventInit(83);
+    ItemEventInit(SPEV83_USE_NAWAFLS1);
 }
 
 void SpecialEventMain083()
 {
-    NawakakeFalseMain(83);
+    NawakakeFalseMain(SPEV83_USE_NAWAFLS1);
 }
 
 void SpecialEventInit084()
 {
-    ItemEventInit(84);
+    ItemEventInit(SPEV84_USE_NAWAFLS2);
 }
 
 void SpecialEventMain084()
 {
-    NawakakeFalseMain(84);
+    NawakakeFalseMain(SPEV84_USE_NAWAFLS2);
 }
 
 void SpecialEventInit085()
 {
-    ItemEventInit(85);
+    ItemEventInit(SPEV85_USE_NAWAFLS3);
 }
 
 void SpecialEventMain085()
 {
-    NawakakeFalseMain(85);
+    NawakakeFalseMain(SPEV85_USE_NAWAFLS3);
 }
 
 void SpecialEventInit086()
 {
-    HanyouKaitenInit(86);
+    HanyouKaitenInit(SPEV86_ROT_DOOR_KI);
 }
 
 void SpecialEventMain086()
 {
-    HanyouKaitenMain(86);
+    HanyouKaitenMain(SPEV86_ROT_DOOR_KI);
 }
 
 void SpecialEventInit087()
 {
-    HanyouKaitenInit(87);
+    HanyouKaitenInit(SPEV87_ROT_DOOR_DO);
 }
 
 void SpecialEventMain087()
 {
-    HanyouKaitenMain(87);
+    HanyouKaitenMain(SPEV87_ROT_DOOR_DO);
 }
 
 void SpecialEventInit088()
 {
-    HanyouKaitenInit(88);
+    HanyouKaitenInit(SPEV88_ROT_DOOR_AI);
 }
 
 void SpecialEventMain088()
 {
-    HanyouKaitenMain(88);
+    HanyouKaitenMain(SPEV88_ROT_DOOR_AI);
 }
 
 void SpecialEventInit089()
 {
-    HanyouKaitenInit(89);
+    HanyouKaitenInit(SPEV89_ROT_DOOR_RAKU);
 }
 
 void SpecialEventMain089()
 {
-    HanyouKaitenMain(89);
+    HanyouKaitenMain(SPEV89_ROT_DOOR_RAKU);
 }
 
 void SpecialEventInit090()
 {
-    HanyouKaitenInit(90);
+    HanyouKaitenInit(SPEV90_ROT_DOOR_KAKE);
 }
 
 void SpecialEventMain090()
 {
-    HanyouKaitenMain(90);
+    HanyouKaitenMain(SPEV90_ROT_DOOR_KAKE);
 }
 

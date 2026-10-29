@@ -21,14 +21,14 @@
 
 int load_mdl_addr[] = { 0xC80000, 0xD00000, 0xD80000, 0 };
 int load_mot_addr[] = { 0xA30000, 0xAE0000, 0xB90000, 0 };
-int load_se_addr[] = { 0x10, 0x11, 0x12, 0 };
+int load_se_addr[] = { SE_ADDRNO_GHOST0, SE_ADDRNO_GHOST1, SE_ADDRNO_GHOST2, 0 };
 FG_LOAD_WRK fg_load_wrk = {0};
 
 void FloatGhostAppearInit()
 {
     int i;
 
-    ap_wrk.fg_mode = 1;
+    ap_wrk.fg_mode = FG_COUNT;
     ap_wrk.fgst_no = -1;
 
     for (i = 0; i <= 2; i++)
@@ -99,7 +99,7 @@ int FloatGhostAppearMain()
         ap_wrk.fg_mode = FG_ENTRY;
     break;
     case FG_WAIT:
-        if (EnemyUseJudge(1) != 0)
+        if (EnemyUseJudge(ET_FUYU) != 0)
         {
             ap_wrk.fg_mode = FG_COUNT;
             ap_wrk.fg_ap = 950;
@@ -271,7 +271,7 @@ void FloatGhostAppearPosSet(u_char dat_no, float *set_pos, float *set_rot)
 int FloatGhostBattleEnd()
 {
 
-    ap_wrk.fg_mode = 1;
+    ap_wrk.fg_mode = FG_COUNT;
     ap_wrk.fg_ap = 0;
 
     return 1;
@@ -279,7 +279,7 @@ int FloatGhostBattleEnd()
 
 int FloatGhostEscapeEnd()
 {
-    ap_wrk.fg_mode = 1;
+    ap_wrk.fg_mode = FG_COUNT;
     ap_wrk.fg_ap = 700;
 
     return 1;

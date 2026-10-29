@@ -88,7 +88,7 @@ void ModeSlctCtrl(u_char mode)
     
     switch (dsp_ms.main_step)
     {
-    case 0:
+    case MS_MODE_START:
         if (cmn_tex_load == 0)
         {
 #ifdef BUILD_EU_VERSION
@@ -99,26 +99,26 @@ void ModeSlctCtrl(u_char mode)
         }
         adpcm_no = -1;
         MsLoadCtrl(mode);
-        dsp_ms.main_step = 1;
+        dsp_ms.main_step = MS_MODE_INIT;
         
-        if (dsp_ms.now_mode == 2 || dsp_ms.now_mode == 7)
+        if (dsp_ms.now_mode == MS_BATTLE_MODE || dsp_ms.now_mode == MS_MISSION_SELECT)
         {
             adpcm_no = AB000_STR;
             SeStopAll();
         }
-        else if (dsp_ms.now_mode == 0)
+        else if (dsp_ms.now_mode == MS_MODE_SLCT)
         {
             adpcm_no = AB027_STR;
         }
-        else if (dsp_ms.now_mode == 1)
+        else if (dsp_ms.now_mode == MS_STORY_MODE)
         {
             adpcm_no = AB027_STR;
         }
-        else if (dsp_ms.now_mode == 4)
+        else if (dsp_ms.now_mode == MS_SOUND_TEST)
         {
             title_bgm_no = -1;
         }
-        else if (dsp_ms.now_mode == 3)
+        else if (dsp_ms.now_mode == MS_OPTION)
         {
             title_bgm_no = -1;
         }
@@ -132,7 +132,7 @@ void ModeSlctCtrl(u_char mode)
             }
         }
         break;
-    case 1:
+    case MS_MODE_INIT:
         if (ms_load_id == -1)
         {
             if (cmn_tex_load == 0)
@@ -142,33 +142,33 @@ void ModeSlctCtrl(u_char mode)
             dsp_ms.bak_alp = 0;
             dsp_ms.chr_alp = 0;
             dsp_ms.csr[1] = 0;
-            if (mode == 3)
+            if (mode == MS_OPTION)
             {
                 StartOptionModeInit(1);
                 dsp_ms.csr[2] = 0;
-                dsp_ms.opt_mode = 7;
+                dsp_ms.opt_mode = MS_MISSION_SELECT;
                 MikuPan_RmlOptionsOpen();
             }
-            else if (mode == 1)
+            else if (mode == MS_STORY_MODE)
             {
                 dsp_ms.sm_slct[2] = cribo.costume;
                 dsp_ms.sm_slct[1] = ingame_wrk.difficult;
                 dsp_ms.sm_slct[0] = 0;
                 SetCsrInfoStoryMode();
             }
-            else if (mode == 2)
+            else if (mode == MS_BATTLE_MODE)
             {
                 dsp_ms.bm_slct[0] = cribo.costume;
 #ifdef BUILD_EU_VERSION
                 SetCsrInfoBattleMode();
 #endif
             }
-            dsp_ms.main_step = 2;
+            dsp_ms.main_step = MS_MODE_FADE_INN;
             SeSetMVol(opt_wrk.bgm_vol);
             SeSetSteMono(opt_wrk.sound_mode);
         }
     break;
-    case 2:
+    case MS_MODE_FADE_INN:
         if (dsp_ms.bak_alp + 8 < 128)
         {
             dsp_ms.bak_alp += 8;
@@ -190,36 +190,36 @@ void ModeSlctCtrl(u_char mode)
             dsp_ms.bak_alp = 128;
             dsp_ms.chr_alp = 128;
             dsp_ms.flm_lng = 0;
-            dsp_ms.main_step = 3;
+            dsp_ms.main_step = MS_MODE_FILM_INN;
         }
     break;
-    case 3:
+    case MS_MODE_FILM_INN:
         if (dsp_ms.flm_lng + 20 < 100)
         {
             dsp_ms.flm_lng += 20;
         }
-        else if (dsp_ms.now_mode == 3)
+        else if (dsp_ms.now_mode == MS_OPTION)
         {
             if (IsEndAdpcmFadeOut())
             {
             EAdpcmCmdPlay(0, 1, AB018_STR, 0, GetAdpcmVol(AB018_STR), 0x280, 0xfff, 0);
                 dsp_ms.flm_lng = 100;
-                dsp_ms.main_step = 4;
+                dsp_ms.main_step = MS_MODE_LOOP;
             }
         }
         else
         {
             dsp_ms.flm_lng = 100;
-            dsp_ms.main_step = 4;
+            dsp_ms.main_step = MS_MODE_LOOP;
         }
     break;
-    case 4:
+    case MS_MODE_LOOP:
         if (ModeSlctPad(mode))
         {
-            dsp_ms.main_step = 5;
+            dsp_ms.main_step = MS_MODE_FILM_OUT;
         }
     break;
-    case 5:
+    case MS_MODE_FILM_OUT:
         if (dsp_ms.flm_lng - 20 >= 1)
         {
             dsp_ms.flm_lng = dsp_ms.flm_lng - 20;
@@ -227,10 +227,10 @@ void ModeSlctCtrl(u_char mode)
         else
         {
             dsp_ms.flm_lng = 0;
-            dsp_ms.main_step = 6;
+            dsp_ms.main_step = MS_MODE_FADE_OUT;
         }
     break;
-    case 6:
+    case MS_MODE_FADE_OUT:
         if (dsp_ms.chr_alp - 8 >= 1)
         {
             dsp_ms.chr_alp -= 8;
@@ -238,9 +238,9 @@ void ModeSlctCtrl(u_char mode)
             dsp_ms.bak_alp = dsp_ms.chr_alp;
             
             if (
-                dsp_ms.next_mode == 5 || dsp_ms.next_mode == 0xb ||
-                dsp_ms.next_mode == 8 || dsp_ms.next_mode == 9 ||
-                dsp_ms.next_mode == 10 || dsp_ms.next_mode == 12
+                dsp_ms.next_mode == MS_EXIT || dsp_ms.next_mode == MS_BREAK ||
+                dsp_ms.next_mode == MS_CAMERA || dsp_ms.next_mode == MS_PHOT ||
+                dsp_ms.next_mode == MS_SAVE || dsp_ms.next_mode == MS_STORY_EXIT
             )
             {
                 dsp_ms.flm_alp = dsp_ms.chr_alp;
@@ -251,35 +251,35 @@ void ModeSlctCtrl(u_char mode)
             dsp_ms.chr_alp = 0;
             dsp_ms.win_alp = 0;
             dsp_ms.bak_alp = 0;
-            if (dsp_ms.next_mode == 5 || dsp_ms.next_mode == 11 || dsp_ms.next_mode == 12)
+            if (dsp_ms.next_mode == MS_EXIT || dsp_ms.next_mode == MS_BREAK || dsp_ms.next_mode == MS_STORY_EXIT)
             {
                 dsp_ms.flm_alp = 0;
             }
-            dsp_ms.main_step = 7;
+            dsp_ms.main_step = MS_MODE_END;
         }
     break;
-    case 7:
-        dsp_ms.main_step = 0;
-        if (dsp_ms.now_mode == 4)
+    case MS_MODE_END:
+        dsp_ms.main_step = MS_MODE_START;
+        if (dsp_ms.now_mode == MS_SOUND_TEST)
         {
             SeSetMVol(opt_wrk.bgm_vol);
         }
         
-        if (dsp_ms.next_mode == 5)
+        if (dsp_ms.next_mode == MS_EXIT)
         {
-            outgame_wrk.mode = 4;
+            outgame_wrk.mode = OUTGAME_MODE_TITLE;
             EAdpcmFadeOut(0x3c);
-            if (title_wrk.mode != 27)
+            if (title_wrk.mode != TITLE_MODE_SEL_BGMREQ)
             {
-                title_wrk.mode = 26;
+                title_wrk.mode = TITLE_INIT_FROM_IN_BGMREQ;
             }
             title_bgm_no = -1;
         }
-        else if (dsp_ms.next_mode == 11)
+        else if (dsp_ms.next_mode == MS_BREAK)
         {
-            outgame_wrk.mode = 4;
+            outgame_wrk.mode = OUTGAME_MODE_TITLE;
         }
-        else if (dsp_ms.next_mode == 12)
+        else if (dsp_ms.next_mode == MS_STORY_EXIT)
         {
             ingame_wrk.game = 0;
             GameModeChange(GMC_OUT_MENU_IN);
@@ -287,7 +287,7 @@ void ModeSlctCtrl(u_char mode)
         }
         else
         {
-            int now_mode_4 = 4;
+            int now_mode_4 = MS_SOUND_TEST;
             dsp_ms.now_mode = dsp_ms.next_mode;
             if (dsp_ms.now_mode == now_mode_4)
             {
@@ -316,9 +316,9 @@ void ModeSlctCtrl(u_char mode)
         {
             calibration_preview_active = 0;
 
-            if (dsp_ms.now_mode != 8
-                && dsp_ms.now_mode != 9
-                && dsp_ms.now_mode != 10
+            if (dsp_ms.now_mode != MS_CAMERA
+                && dsp_ms.now_mode != MS_PHOT
+                && dsp_ms.now_mode != MS_SAVE
                 && cmn_tex_load != 0)
             {
                 const bool rml_mode_select =
@@ -413,7 +413,7 @@ char ModeSlctPad(u_char mode)
                 SeStartFix(SE_CSR0, 0, 0x1000, 0x1000, 0);
             }
         }
-        else if (mode == 1)
+        else if (mode == MS_STORY_MODE)
         {
             if (rml_selection >= sm_csr_info[0] && rml_selection < 5)
             {
@@ -454,7 +454,7 @@ char ModeSlctPad(u_char mode)
         if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
-            dsp_ms.next_mode = 5;
+            dsp_ms.next_mode = MS_EXIT;
             rtrn = 1;
         }
         else if (CROSS_PRESSED() == 1
@@ -462,7 +462,7 @@ char ModeSlctPad(u_char mode)
         { 
             SeStartFix(SE_CLIC, 0, 0x1000, 0x1000, 0);
             dsp_ms.next_mode = dsp_ms.csr[0] + 1;
-            if (dsp_ms.next_mode == 3 || dsp_ms.next_mode == 4)
+            if (dsp_ms.next_mode == MS_OPTION || dsp_ms.next_mode == MS_SOUND_TEST)
             {
                 EAdpcmFadeOut(0x3c);
             }
@@ -560,7 +560,7 @@ char ModeSlctPad(u_char mode)
             break;
             case 3:
                 EAdpcmFadeOut(0x3c);
-                dsp_ms.next_mode = 12;
+                dsp_ms.next_mode = MS_STORY_EXIT;
                 if (dsp_ms.sm_slct[0] == 0)
                 {
                     sys_wrk.load = 1;
@@ -587,7 +587,7 @@ char ModeSlctPad(u_char mode)
                 rtrn = 1;
             break;
             case 4:
-                dsp_ms.next_mode = 0;
+                dsp_ms.next_mode = MS_MODE_SLCT;
 #ifdef BUILD_EU_VERSION
                 cribo.costume = dsp_ms.sm_slct[2];
 #endif
@@ -704,7 +704,7 @@ char ModeSlctPad(u_char mode)
             }
         }
     break;
-    case 2:
+    case MS_BATTLE_MODE:
         if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
@@ -727,25 +727,25 @@ char ModeSlctPad(u_char mode)
                 dsp_ms.side = 1 - dsp_ms.side;
             break;
             case 1:
-                dsp_ms.next_mode = 8;
+                dsp_ms.next_mode = MS_CAMERA;
                 rtrn = 1;
             break;
             case 2:
-                dsp_ms.next_mode = 9;
+                dsp_ms.next_mode = MS_PHOT;
                 rtrn = 1;
             break;
             case 3:
-                dsp_ms.next_mode = 10;
+                dsp_ms.next_mode = MS_SAVE;
                 rtrn = 1;
             break;
             case 4:
-                dsp_ms.next_mode = 7;
+                dsp_ms.next_mode = MS_MISSION_SELECT;
                 btl_wrk.stage_no = 0;
                 cribo.costume = dsp_ms.bm_slct[0];
                 rtrn = 1;
             break;
-            case 5:
-                dsp_ms.next_mode = 0;
+            case MS_MODE_FILM_OUT:
+                dsp_ms.next_mode = MS_MODE_SLCT;
                 rtrn = 1;
             break;
             }
@@ -858,7 +858,7 @@ char ModeSlctPad(u_char mode)
         }
         cribo.costume = dsp_ms.bm_slct[0];
     break;
-    case 3:
+    case MS_OPTION:
         if (MikuPan_RmlOptionsConsumeExitRequest())
         {
             MikuPan_RmlOptionsClose();
@@ -868,7 +868,7 @@ char ModeSlctPad(u_char mode)
             rtrn = 1;
         }
     break;
-    case 4:
+    case MS_SOUND_TEST:
         if (SoundTestForModeSlect())
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
@@ -876,12 +876,12 @@ char ModeSlctPad(u_char mode)
             rtrn = 1;
         }
     break;
-    case 7:
+    case MS_MISSION_SELECT:
         level = CheckClearStage();
         if (TRIANGLE_PRESSED() == 1)
         {
             SeStartFix(SE_CANCEL, 0, 0x1000, 0x1000, 0);
-            dsp_ms.next_mode = 0x2;
+            dsp_ms.next_mode = MS_BATTLE_MODE;
             OutGameModeChange(OUTGAME_MODE_MODESEL);
             rtrn = 1;
         }
@@ -991,7 +991,7 @@ char ModeSlctPad(u_char mode)
             }
         }
     break;
-    case 8:
+    case MS_CAMERA:
         if (!isCameraEnd())
         {
             BgFusumaYW(0x606060, 0.0f, GetCamDispAlpha(), 0x7d000);
@@ -1013,7 +1013,7 @@ char ModeSlctPad(u_char mode)
             rtrn = 1;
         }
     break;
-    case 9:
+    case MS_PHOT:
         if (!isPhotoEnd())
         {
             BgFusumaYW(0x606060, 0.0f, GetPhtDispAlpha(), 0x7d000);
@@ -1035,10 +1035,10 @@ char ModeSlctPad(u_char mode)
             rtrn = 1;
         }
     break;
-    case 10:
+    case MS_SAVE:
         if (SavePointMenuMain(3))
         {
-            dsp_ms.next_mode = 2;
+            dsp_ms.next_mode = MS_BATTLE_MODE;
             OutGameModeChange(OUTGAME_MODE_MODESEL);
             rtrn = 1;
         }
@@ -1064,28 +1064,28 @@ void ModeSlctDspBak(u_char alp, u_char mode)
     {
         switch (mode)
         {
-        case 0:
+        case MS_MODE_START:
             CopySprDToSpr(&ds, &msl_bg_fsm[i]);
             break;
-        case 1:
+        case MS_MODE_INIT:
             CopySprDToSpr(&ds, &msl_bg_sty[i]);
             ds.r = 0x64;
             ds.g = 0x64;
             ds.b = 0x64;
             break;
-        case 2:
+        case MS_MODE_FADE_INN:
             CopySprDToSpr(&ds, &msl_bg_btl[i]);
             ds.r = 0x64;
             ds.g = 0x64;
             ds.b = 0x64;
             break;
-        case 3:
+        case MS_MODE_FILM_INN:
             CopySprDToSpr(&ds, &msl_bg_opt[i]);
             break;
-        case 4:
+        case MS_MODE_LOOP:
             CopySprDToSpr(&ds, &msl_bg_snd[i]);
             break;
-        case 7:
+        case MS_MODE_END:
             CopySprDToSpr(&ds, &msl_bg_btl[i]);
             if (0x50 < alp)
             {
@@ -1110,16 +1110,16 @@ void ModeSlctDspChr(u_char alp, u_char mode)
 
         switch (mode)
         {
-        case 0:
+        case MS_MODE_SLCT:
             DspModeSlect(alp);
         break;
-        case 1:
+        case MS_STORY_MODE:
             DspStoryMode(alp, flsh);
         break;
-        case 2:
+        case MS_BATTLE_MODE:
             DspBattleMode(alp, flsh);
         break;
-        case 3:
+        case MS_OPTION:
             /* RmlUi owns the PC options menu. Keep the mode-select
              * background/frame, but do not draw the original PS2 option page.
              */
@@ -1127,10 +1127,10 @@ void ModeSlctDspChr(u_char alp, u_char mode)
             //SetSprFile(MikuPan_GetHostAddress(PL_OPTI_PK2_ADDRESS));
             //DspOptCtrl(dsp_ms.csr[2], dsp_ms.opt_mode, alp, 0x0);
         break;
-        case 4:
+        case MS_SOUND_TEST:
             SoundTestForModeSlectDisp(alp, flsh);
         break;
-        case 7:
+        case MS_MISSION_SELECT:
             SetSprFile(MikuPan_GetHostAddress(M_SLCT_BTL_MSN_PK2_ADDRESS));
             DspMissionSelect(alp);
         }
@@ -1157,11 +1157,11 @@ void DspModeSlect(u_char alp)
         }
     };
     
-    PutChrOne(0x46, 0, 0, dsp_rgb[0], dsp_alp[0], 0x0);
-    PutChrOne(0x47, 0, 0, dsp_rgb[1], dsp_alp[1], 0x0);
-    PutChrOne(0x4a, 0, 0, dsp_rgb[2], dsp_alp[2], 0x0);
-    PutChrOne(0x48, 0, 0, dsp_rgb[3], dsp_alp[3], 0x0);
-    PutChrOne(0x49, 0, 0, dsp_rgb[4], dsp_alp[4], 0x0);
+    PutChrOne(TM_MS_STORY_MODE, 0, 0, dsp_rgb[0], dsp_alp[0], 0x0);
+    PutChrOne(TM_MS_BATTLE_MODE, 0, 0, dsp_rgb[1], dsp_alp[1], 0x0);
+    PutChrOne(TM_MS_OPTION, 0, 0, dsp_rgb[2], dsp_alp[2], 0x0);
+    PutChrOne(TM_MS_SOUND_TEST, 0, 0, dsp_rgb[3], dsp_alp[3], 0x0);
+    PutChrOne(TM_MS_EXIT, 0, 0, dsp_rgb[4], dsp_alp[4], 0x0);
     
     SetSprFile(MikuPan_GetHostAddress(PL_STTS_PK2_ADDRESS));
     DispCaption(3, alp);
@@ -1241,74 +1241,74 @@ void DspStoryMode(u_char alp, float flsh)
         }
     }
     
-    PutChrOneRGB(0x65, 0, 0, dsp_rgb[0], dsp_alp[0], 0x0);
-    PutChrOneRGB(0x66, 0, 0, dsp_rgb[1], dsp_alp[1], 0x0);
-    PutChrOneRGB(0x72, 0, 0, dsp_rgb[2], dsp_alp[2], 0x0);
-    PutChrOneRGB(0x67, 0, 0, dsp_rgb[3], dsp_alp[3], 0x0);
-    PutChrOneRGB(0x68, 0, 0, dsp_rgb[4], dsp_alp[4], 0x0);
-    PutChrOneRGB(0x7b, 0x148, 0x65, dsp_rgb[8], dsp_alp[8], 0x2);
-    PutChrOneRGB(0x7b, 0x23a, 0x65, dsp_rgb[8], dsp_alp[8], 0x0);
-    PutChrOneRGB(0x79, 0x15c, 100, dsp_rgb[8], dsp_alp[8], 0x0);
-    PutChrOneRGB(0x7a, 0x225, 100, dsp_rgb[8], dsp_alp[8], 0x0);
+    PutChrOneRGB(TM_SM_CHAPTER, 0, 0, dsp_rgb[0], dsp_alp[0], 0x0);
+    PutChrOneRGB(TM_SM_DIFFICULTY, 0, 0, dsp_rgb[1], dsp_alp[1], 0x0);
+    PutChrOneRGB(TM_SM_COSTUME, 0, 0, dsp_rgb[2], dsp_alp[2], 0x0);
+    PutChrOneRGB(TM_SM_GAME_START, 0, 0, dsp_rgb[3], dsp_alp[3], 0x0);
+    PutChrOneRGB(TM_SM_EXIT, 0, 0, dsp_rgb[4], dsp_alp[4], 0x0);
+    PutChrOneRGB(TM_SM_PLAY_S, 0x148, 0x65, dsp_rgb[8], dsp_alp[8], 0x2);
+    PutChrOneRGB(TM_SM_PLAY_S, 0x23a, 0x65, dsp_rgb[8], dsp_alp[8], 0x0);
+    PutChrOneRGB(TM_SM_KAKKO_L, 0x15c, 100, dsp_rgb[8], dsp_alp[8], 0x0);
+    PutChrOneRGB(TM_SM_KAKKO_R, 0x225, 100, dsp_rgb[8], dsp_alp[8], 0x0);
     
     switch (dsp_ms.sm_slct[0])
     {
     case 0:
-        PutChrOneRGB(0x84, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
+        PutChrOneRGB(TM_SM_CONT, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
     break;
     case 1:
-        PutChrOneRGB(0x7f, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
+        PutChrOneRGB(TM_SM_SHW0, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
     break;
     case 2:
-        PutChrOneRGB(0x80, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
+        PutChrOneRGB(TM_SM_SHW1, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
     break;
     case 3:
-        PutChrOneRGB(0x81, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
+        PutChrOneRGB(TM_SM_SHW2, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
     break;
     case 4:
-        PutChrOneRGB(0x82, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
+        PutChrOneRGB(TM_SM_SHW3, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
     break;
-    case 5:
-        PutChrOneRGB(0x83, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
+    case MS_MODE_FILM_OUT:
+        PutChrOneRGB(TM_SM_SHW4, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
     break;
     }
     
-    PutChrOneRGB(0x7b, 0x148, 0x91, dsp_rgb[9], dsp_alp[9], 0x2);
-    PutChrOneRGB(0x7b, 0x23a, 0x91, dsp_rgb[9], dsp_alp[9], 0x0);
-    PutChrOneRGB(0x79, 0x15c, 0x90, dsp_rgb[9], dsp_alp[9], 0x0);
-    PutChrOneRGB(0x7a, 0x225, 0x90, dsp_rgb[9], dsp_alp[9], 0x0);
+    PutChrOneRGB(TM_SM_PLAY_S, 0x148, 0x91, dsp_rgb[9], dsp_alp[9], 0x2);
+    PutChrOneRGB(TM_SM_PLAY_S, 0x23a, 0x91, dsp_rgb[9], dsp_alp[9], 0x0);
+    PutChrOneRGB(TM_SM_KAKKO_L, 0x15c, 0x90, dsp_rgb[9], dsp_alp[9], 0x0);
+    PutChrOneRGB(TM_SM_KAKKO_R, 0x225, 0x90, dsp_rgb[9], dsp_alp[9], 0x0);
     
     switch (dsp_ms.sm_slct[1])
     {
     case 0:
-        PutChrOneRGB(0x74, 0x17e, 0x8d, dsp_rgb[6], dsp_alp[6], 0x0);
+        PutChrOneRGB(TM_SM_NORMAL, 0x17e, 0x8d, dsp_rgb[6], dsp_alp[6], 0x0);
     break;
     case 1:
-        PutChrOneRGB(0x76, 0xfffb, 0, dsp_rgb[6], dsp_alp[6], 0x0);
+        PutChrOneRGB(TM_SM_NIGHTMARE, 0xfffb, 0, dsp_rgb[6], dsp_alp[6], 0x0);
     break;
     }
     
-    PutChrOneRGB(0x7b, 0x148, 0xc0, dsp_rgb[10], dsp_alp[10], 0x2);
-    PutChrOneRGB(0x7b, 0x23a, 0xc0, dsp_rgb[10], dsp_alp[10], 0x0);
-    PutChrOneRGB(0x79, 0x15c, 0xbf, dsp_rgb[10], dsp_alp[10], 0x0);
-    PutChrOneRGB(0x7a, 0x225, 0xbf, dsp_rgb[10], dsp_alp[10], 0x0);
+    PutChrOneRGB(TM_SM_PLAY_S, 0x148, 0xc0, dsp_rgb[10], dsp_alp[10], 0x2);
+    PutChrOneRGB(TM_SM_PLAY_S, 0x23a, 0xc0, dsp_rgb[10], dsp_alp[10], 0x0);
+    PutChrOneRGB(TM_SM_KAKKO_L, 0x15c, 0xbf, dsp_rgb[10], dsp_alp[10], 0x0);
+    PutChrOneRGB(TM_SM_KAKKO_R, 0x225, 0xbf, dsp_rgb[10], dsp_alp[10], 0x0);
 
     switch (dsp_ms.sm_slct[2])
     {
     case 0:
-        PutChrOneRGB(0x74, 0x17e, 0xbb, dsp_rgb[7], dsp_alp[7], 0x0);
+        PutChrOneRGB(TM_SM_NORMAL, 0x17e, 0xbb, dsp_rgb[7], dsp_alp[7], 0x0);
     break;
     case 1:
-        PutChrOneRGB(0x77, 0xfff5, 0, dsp_rgb[7], dsp_alp[7], 0x0);
-        PutChrOneRGB(0x85, 0x20f, 0xbb, dsp_rgb[7], dsp_alp[7], 0x0);
+        PutChrOneRGB(TM_SM_SPECIAL, 0xfff5, 0, dsp_rgb[7], dsp_alp[7], 0x0);
+        PutChrOneRGB(TM_SM_1, 0x20f, 0xbb, dsp_rgb[7], dsp_alp[7], 0x0);
     break;
     case 2:
-        PutChrOneRGB(0x77, 0xfff5, 0, dsp_rgb[7], dsp_alp[7], 0x0);
-        PutChrOneRGB(0x86, 0x20f, 0xbb, dsp_rgb[7], dsp_alp[7], 0x0);
+        PutChrOneRGB(TM_SM_SPECIAL, 0xfff5, 0, dsp_rgb[7], dsp_alp[7], 0x0);
+        PutChrOneRGB(TM_SM_2, 0x20f, 0xbb, dsp_rgb[7], dsp_alp[7], 0x0);
     break;
     case 3:
-        PutChrOneRGB(0x77, 0xfff5, 0, dsp_rgb[7], dsp_alp[7], 0x0);
-        PutChrOneRGB(0x87, 0x20f, 0xbb, dsp_rgb[7], dsp_alp[7], 0x0);
+        PutChrOneRGB(TM_SM_SPECIAL, 0xfff5, 0, dsp_rgb[7], dsp_alp[7], 0x0);
+        PutChrOneRGB(TM_SM_3, 0x20f, 0xbb, dsp_rgb[7], dsp_alp[7], 0x0);
     break;
     }
     
@@ -1362,39 +1362,39 @@ void DspBattleMode(u_char alp, float flsh)
         }
     }
     
-    PutChrOne(10, 0, 0xffe7, dsp_rgb[0], dsp_alp[0], 0x0);
+    PutChrOne(TM_BM_COSTUME, 0, 0xffe7, dsp_rgb[0], dsp_alp[0], 0x0);
 #ifdef BUILD_EU_VERSION
     // nothing to do
 #else
-    PutChrOne(0x16, 0, 0xffec, dsp_rgb[1], dsp_alp[1], 0x0);
+    PutChrOne(TM_BM_CAMERA, 0, 0xffec, dsp_rgb[1], dsp_alp[1], 0x0);
 #endif
-    PutChrOne(0x17, 0, 0xffec, dsp_rgb[1], dsp_alp[1], 0x0);
-    PutChrOne(0x19, 0, 0xfff1, dsp_rgb[2], dsp_alp[2], 0x0);
-    PutChrOne(0x1a, 0, 0xfff6, dsp_rgb[3], dsp_alp[3], 0x0);
+    PutChrOne(TM_BM_SETTING, 0, 0xffec, dsp_rgb[1], dsp_alp[1], 0x0);
+    PutChrOne(TM_BM_PHOT, 0, 0xfff1, dsp_rgb[2], dsp_alp[2], 0x0);
+    PutChrOne(TM_BM_SAVE, 0, 0xfff6, dsp_rgb[3], dsp_alp[3], 0x0);
     
-    PutChrOne(9, 0, 0xfffb, dsp_rgb[4], dsp_alp[4], 0x0);
-    PutChrOne(0x18, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
-    PutChrOne(0x12, 0x13a, 99, dsp_rgb[7], dsp_alp[7], 0x2);
-    PutChrOne(0x12, 0x248, 99, dsp_rgb[7], dsp_alp[7], 0x0);
-    PutChrOne(0x10, 0x150, 0x62, dsp_rgb[7], dsp_alp[7], 0x0);
-    PutChrOne(0x11, 0x230, 0x62, dsp_rgb[7], dsp_alp[7], 0x0);
+    PutChrOne(TM_BM_MISSION_SELECT, 0, 0xfffb, dsp_rgb[4], dsp_alp[4], 0x0);
+    PutChrOne(TM_BM_EXIT, 0, 0, dsp_rgb[5], dsp_alp[5], 0x0);
+    PutChrOne(TM_BM_PLAY_S, 0x13a, 99, dsp_rgb[7], dsp_alp[7], 0x2);
+    PutChrOne(TM_BM_PLAY_S, 0x248, 99, dsp_rgb[7], dsp_alp[7], 0x0);
+    PutChrOne(TM_BM_KAKKO_L, 0x150, 0x62, dsp_rgb[7], dsp_alp[7], 0x0);
+    PutChrOne(TM_BM_KAKKO_R, 0x230, 0x62, dsp_rgb[7], dsp_alp[7], 0x0);
 
     switch (dsp_ms.bm_slct[0])
     {
     case 0:
-        PutChrOne(0xb, 0x17b, 0x5f, dsp_rgb[6], dsp_alp[6], 0x0);
+        PutChrOne(TM_BM_NORMAL, 0x17b, 0x5f, dsp_rgb[6], dsp_alp[6], 0x0);
     break;
     case 1:
-        PutChrOne(0xe, 0xfff2, 0xffd2, dsp_rgb[6], dsp_alp[6], 0x0);
-        PutChrOne(0x1b, 0x20c, 0x5f, dsp_rgb[6], dsp_alp[6], 0x0);
+        PutChrOne(TM_BM_SPECIAL, 0xfff2, 0xffd2, dsp_rgb[6], dsp_alp[6], 0x0);
+        PutChrOne(TM_BM_1, 0x20c, 0x5f, dsp_rgb[6], dsp_alp[6], 0x0);
     break;
     case 2:
-        PutChrOne(0xe, 0xfff2, 0xffd2, dsp_rgb[6], dsp_alp[6], 0x0);
-        PutChrOne(0x1c, 0x20c, 0x5f, dsp_rgb[6], dsp_alp[6], 0x0);
+        PutChrOne(TM_BM_SPECIAL, 0xfff2, 0xffd2, dsp_rgb[6], dsp_alp[6], 0x0);
+        PutChrOne(TM_BM_2, 0x20c, 0x5f, dsp_rgb[6], dsp_alp[6], 0x0);
     break;
     case 3:
-        PutChrOne(0xe, 0xfff2, 0xffd2, dsp_rgb[6], dsp_alp[6], 0x0);
-        PutChrOne(0x1d, 0x20c, 0x5f, dsp_rgb[6], dsp_alp[6], 0x0);
+        PutChrOne(TM_BM_SPECIAL, 0xfff2, 0xffd2, dsp_rgb[6], dsp_alp[6], 0x0);
+        PutChrOne(TM_BM_3, 0x20c, 0x5f, dsp_rgb[6], dsp_alp[6], 0x0);
     break;
     }
     
@@ -1421,19 +1421,19 @@ void DspMissionSelect(u_char alp)
     
     level = CheckClearStage();
     
-    PutChrOne(0x3a, 0, 0, 0x80, alp, 0x0);
-    PutChrOne(0x3b, 0, 0, 0x80, alp, 0x0);
+    PutChrOne(TM_NS_MN_BT_BS, 0, 0, 0x80, alp, 0x0);
+    PutChrOne(TM_NS_RANK, 0, 0, 0x80, alp, 0x0);
 
     for (i = 0; i <= 4; i++)
     {
-        PutChrOne(0x43, 0, i * 0x28, 0x80, alp, 0);
+        PutChrOne(TM_NS_CHK_BOX, 0, i * 0x28, 0x80, alp, 0);
     }
     
     for (i = 0; i <= 4; i++)
     {
         if (stage_wrk[no + i].rank)
         {
-            PutChrOne(0x44, 0, i * 0x28, 0x80, alp, 0x0);
+            PutChrOne(TM_NS_CHK_RED, 0, i * 0x28, 0x80, alp, 0x0);
         }
     }
     
@@ -1458,12 +1458,12 @@ void DspMissionSelect(u_char alp)
 
     if (page_base_no > 4)
     {
-        PutChrOne(0x45, 0x17, 0xcb, 0x80, alp, 0x0);
+        PutChrOne(TM_NS_NEXT_TRI, 0x17, 0xcb, 0x80, alp, 0x0);
     }
     
     if ((page_base_no < 0xf) && (no / 5 < level))
     {
-        PutChrOne(0x45, 0x24b, 0xcb, 0x80, alp, 0x2);
+        PutChrOne(TM_NS_NEXT_TRI, 0x24b, 0xcb, 0x80, alp, 0x2);
     }
     
     for (i = 0; i < 5; i++)
@@ -1489,22 +1489,22 @@ void DspMissionSelect(u_char alp)
         case 0:
         break;
         case 1:
-            PutChrOne(0x41, 0, i * 0x28, 0x80, alp, 0x0);
+            PutChrOne(TM_NS_E, 0, i * 0x28, 0x80, alp, 0x0);
         break;
         case 2:
-            PutChrOne(0x40, 0, i * 0x28, 0x80, alp, 0x0);
+            PutChrOne(TM_NS_D, 0, i * 0x28, 0x80, alp, 0x0);
         break;
         case 3:
-            PutChrOne(0x3f, 0, i * 0x28, 0x80, alp, 0x0);
+            PutChrOne(TM_NS_C, 0, i * 0x28, 0x80, alp, 0x0);
         break;
         case 4:
-            PutChrOne(0x3e, 0, i * 0x28, 0x80, alp, 0x0);
+            PutChrOne(TM_NS_B, 0, i * 0x28, 0x80, alp, 0x0);
         break;
-        case 5:
-            PutChrOne(0x3d, 0, i * 0x28, 0x80, alp, 0x0);
+        case MS_MODE_FILM_OUT:
+            PutChrOne(TM_NS_A, 0, i * 0x28, 0x80, alp, 0x0);
         break;
-        case 6:
-            PutChrOne(0x3c, 0, i * 0x28, 0x80, alp, 0x0);
+        case MS_MODE_FADE_OUT:
+            PutChrOne(TM_NS_S, 0, i * 0x28, 0x80, alp, 0x0);
         break;
         }
     }
@@ -1611,29 +1611,29 @@ void ModeSlctDspFlm(u_char per, u_char alp, u_char mode, u_char hide_title)
 
     mx = ((100 - per) * 0x1f9) / 100.0f;
 
-    FilmCutter(0, -mx, 0, 0x59, 0x80, alp);
+    FilmCutter(TM_FLM_OBI, -mx, 0, 0x59, 0x80, alp);
 
     if (hide_title == 0)
     {
         switch (mode)
         {
         case 0:
-            FilmCutter(3, -mx, 0, 0x59, 0x80, alp);
+            FilmCutter(TM_FLM_M_SLCT, -mx, 0, 0x59, 0x80, alp);
         break;
         case 1:
-            FilmCutter(4, -mx, 0, 0x59, 0x80, alp);
+            FilmCutter(TM_FLM_S_MODE, -mx, 0, 0x59, 0x80, alp);
         break;
-        case 2:
-            FilmCutter(2, -mx, 0, 0x59, 0x80, alp);
+        case MS_MODE_FADE_INN:
+            FilmCutter(TM_FLM_B_MODE, -mx, 0, 0x59, 0x80, alp);
         break;
-        case 3:
-            FilmCutter(6, -mx, 0, 0x59, 0x80, alp);
+        case MS_MODE_FILM_INN:
+            FilmCutter(TM_FLM_OPTION, -mx, 0, 0x59, 0x80, alp);
         break;
-        case 4:
-            FilmCutter(5, -mx, 0, 0x59, 0x80, alp);
+        case MS_MODE_LOOP:
+            FilmCutter(TM_FLM_S_TEST, -mx, 0, 0x59, 0x80, alp);
         break;
-        case 7:
-            FilmCutter(1, -mx, 0, 0x59, 0x80, alp);
+        case MS_MODE_END:
+            FilmCutter(TM_FLM_MSN_SL, -mx, 0, 0x59, 0x80, alp);
         break;
         }
     }
@@ -1687,7 +1687,7 @@ void MsLoadCtrl(u_char mode)
 {    
     switch(mode)
     {
-    case 0:
+    case MS_MODE_SLCT:
         ms_load_id = LoadReq(EFF001_PK2, EFFECT_ADDRESS);
 #ifdef BUILD_EU_VERSION
         ms_load_id = LoadReqLanguage(M_SLCT_FSM_E_PK2,0xcc0470);
@@ -1695,7 +1695,7 @@ void MsLoadCtrl(u_char mode)
         ms_load_id = LoadReq(M_SLCT_FSM_PK2,M_SLCT_STY_PK2_ADDRESS);
 #endif
     break;
-    case 1:
+    case MS_STORY_MODE:
         ingame_wrk.game = 0;
 #ifdef BUILD_EU_VERSION
         ms_load_id = LoadReqLanguage(M_SLCT_STY_E_PK2, 0xcc0470);
@@ -1708,7 +1708,7 @@ void MsLoadCtrl(u_char mode)
         }
         
     break;
-    case 2:
+    case MS_BATTLE_MODE:
         ingame_wrk.game = 1;
 #ifdef BUILD_EU_VERSION
         ms_load_id = LoadReqLanguage(M_SLCT_BTL_E_PK2, 0xcc0470);
@@ -1719,7 +1719,7 @@ void MsLoadCtrl(u_char mode)
 #endif
         
     break;
-    case 3:
+    case MS_OPTION:
 #ifdef BUILD_EU_VERSION
         ms_load_id = LoadReqLanguage(M_SLCT_OPT_E_PK2, 0xcc0470);
         ms_load_id = LoadReqLanguage(PL_OPTI_E_PK2, 0xddc430);
@@ -1730,14 +1730,14 @@ void MsLoadCtrl(u_char mode)
         ms_load_id = LoadReq(PL_STTS_PK2, PL_STTS_PK2_ADDRESS);
 #endif
         break;
-    case 4:
+    case MS_SOUND_TEST:
 #ifdef BUILD_EU_VERSION
         ms_load_id = LoadReqLanguage(M_SLCT_SND_E_PK2, 0xcc0470);
 #else
         ms_load_id = LoadReq(M_SLCT_SND_PK2, M_SLCT_STY_PK2_ADDRESS);
 #endif
     break;
-    case 7:
+    case MS_MISSION_SELECT:
 #ifdef BUILD_EU_VERSION
         if (cmn_tex_load == 0)
         {
@@ -1752,7 +1752,7 @@ void MsLoadCtrl(u_char mode)
         ms_load_id = LoadReq(M_SLCT_BTL_MSN_PK2, M_SLCT_BTL_MSN_PK2_ADDRESS);
 #endif
     break;
-    case 8:
+    case MS_CAMERA:
         CameraCustomInit();
         OutGameInitCamera();
 #ifdef BUILD_EU_VERSION
@@ -1767,7 +1767,7 @@ void MsLoadCtrl(u_char mode)
         ms_load_id = LoadReq(PL_CAME_PK2, MISSION_TITLE_CARD_ADDRESS);
 #endif
     break;
-    case 9:
+    case MS_PHOT:
 #ifdef BUILD_EU_VERSION
         ms_load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
         ms_load_id = LoadReqLanguage(PL_MTOP_E_PK2, 0x1d10000);
@@ -1782,7 +1782,7 @@ void MsLoadCtrl(u_char mode)
         StartAlbumModeInit();
         OutGameInitPhoto();
     break;
-    case 10:
+    case MS_SAVE:
         motInitMsn();
 #ifdef BUILD_EU_VERSION
         ms_load_id = LoadReq(PL_BGBG_PK2, 0x1cfefc0);
@@ -1796,20 +1796,20 @@ void MsLoadCtrl(u_char mode)
 
 void TitleModeEnd()
 {
-    dsp_ms.main_step = 0;
+    dsp_ms.main_step = MS_MODE_START;
     dsp_ms.flm_alp = 0;
     dsp_ms.win_alp = 0;
     dsp_ms.bak_alp = 0;
     dsp_ms.chr_alp = 0;
     dsp_ms.flm_lng = 0;
     
-    if (dsp_ms.next_mode == 5)
+    if (dsp_ms.next_mode == MS_EXIT)
     {
-        title_wrk.mode = 26;
+        title_wrk.mode = TITLE_INIT_FROM_IN_BGMREQ;
     }
-    else if (dsp_ms.next_mode == 11)
+    else if (dsp_ms.next_mode == MS_BREAK)
     {
-        outgame_wrk.mode = 4;
+        outgame_wrk.mode = OUTGAME_MODE_TITLE;
     }
     else
     {
@@ -1828,12 +1828,12 @@ void ChangeModeSel(int mode)
 
 void BattleModeExit()
 {
-    ChangeModeSel(2);
+    ChangeModeSel(MS_BATTLE_MODE);
 }
 
 void BattleModeNext()
 {
-    ChangeModeSel(7);
+    ChangeModeSel(MS_MISSION_SELECT);
 }
 
 int CheckClearStage()
@@ -1864,14 +1864,14 @@ void ModeSlctDspMsg(u_char alp, u_char mode)
 {
     switch (mode)
     {
-    case 0:
-        PutStringYW(0x31, dsp_ms.csr[0], 0x50, 0x165, 0x808080, alp, 0x1000, 0x0);
+    case MS_MODE_START:
+        PutStringYW(IGMSG_MODE_SLCT, dsp_ms.csr[0], 0x50, 0x165, 0x808080, alp, 0x1000, 0x0);
     break;
-    case 1:
-        PutStringYW(0x31, dsp_ms.csr[1] + 0x5, 0x50, 0x165, 0x808080, alp, 0x1000, 0x0);
+    case MS_MODE_INIT:
+        PutStringYW(IGMSG_MODE_SLCT, dsp_ms.csr[1] + 0x5, 0x50, 0x165, 0x808080, alp, 0x1000, 0x0);
     break;
-    case 2:
-        PutStringYW(0x31, dsp_ms.csr[1] + 0xa, 0x50, 0x165, 0x808080, alp, 0x1000, 0x0);
+    case MS_MODE_FADE_INN:
+        PutStringYW(IGMSG_MODE_SLCT, dsp_ms.csr[1] + 0xa, 0x50, 0x165, 0x808080, alp, 0x1000, 0x0);
     break;
     }
 }

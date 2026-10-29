@@ -1,7 +1,7 @@
 #include "common.h"
 #include "typedefs.h"
 #include "mime.h"
-
+#include "enums.h"
 #include "sce/libvu0.h"
 
 #include "graphics/graph3d/libsg.h"
@@ -900,19 +900,19 @@ void mimDispChodo(MIME_CTRL *m_ctrl, u_int *mdl_p)
         {
             switch (m_ctrl->furn_id)
             {
-            case 270:
+            case M1_FRN_270:
                 if (ingame_wrk.clear_count != 0)
                 {
                     VibrateRequest1(0, 1);
                 }
 
                 break;
-            case 100:
-            case 269:
-            case 271:
+            case M1_FRN_IDO01:
+            case M1_FRN_269:
+            case M1_FRN_271:
                 VibrateRequest1(0, 1);
                 break;
-            case 316:
+            case M1_FRN_316:
                 VibrateRequest1(0, 1);
                 break;
             }
@@ -955,30 +955,30 @@ void mimChodoRequest(FURN_ACT_WRK *fawp, u_char mode, u_char rev)
 
     for (i = 0; i < 20; i++)
     {
-        if (fawp->furn_id == mim_chodo[i].furn_id && !(fawp->furn_id == 270 && ingame_wrk.clear_count == 0))
+        if (fawp->furn_id == mim_chodo[i].furn_id && !(fawp->furn_id == M1_FRN_270 && ingame_wrk.clear_count == 0))
         {
             switch (fawp->furn_id)
             {
-            case 59:
+            case M1_FRN_KIMONO1:
                 // do nothing
             break;
-            case 100:
+            case M1_FRN_IDO01:
                 SeStartPosEventFlame(21, 0, fawp->pos, 0, 4096, 4096);
                 SeStartPosEventFlame(21, 1, fawp->pos, 0, 4096, 4096);
             break;
-            case 269:
+            case M1_FRN_269:
                 SeStartPosEventFlame(9, 0, fawp->pos, 0, 4096, 4096);
             break;
-            case 270:
+            case M1_FRN_270:
                 if (ingame_wrk.clear_count != 0)
                 {
                     SeStartPosEventFlame(3, 0, fawp->pos, 0, 4096, 4096);
                 }
             break;
-            case 271:
+            case M1_FRN_271:
                 SeStartPosEventFlame(11, 1, fawp->pos, 0, 4096, 4096);
             break;
-            case 316:
+            case M1_FRN_316:
                 SeStartPosEventFlame(7, 0, fawp->pos, 0, 4096, 4096);
             break;
             }
