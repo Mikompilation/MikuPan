@@ -1082,26 +1082,24 @@ u_char MikuPan_ReadFile(const char *filename, void *buffer, int size)
 
 u_char MikuPan_WriteFile(const char *filename, const void *buffer, int size)
 {
-    auto relative_path = std::filesystem::path(MikuPan_GetRelativePath(filename));
-    const auto parent = relative_path.parent_path();
-    if (!parent.empty() && !std::filesystem::exists(parent))
+    if (size < 0 || (size && !buffer)) return 0;
+    const auto path = std::filesystem::path(MikuPan_GetRelativePath(filename));
+    std::error_code error;
+    if (!path.parent_path().empty())
     {
-        std::error_code error;
-        std::filesystem::create_directories(parent, error);
+        std::filesystem::create_directories(path.parent_path(), error);
         if (error)
         {
             spdlog::error("Failed to create user data directory {}: {}",
-                          parent.generic_string(), error.message());
+                          path.parent_path().generic_string(), error.message());
             return 0;
         }
     }
-
-    std::ofstream outFile;
-    outFile.open(relative_path, std::ios::binary);
-    outFile.write(static_cast<const char *>(buffer), size);
-    outFile.close();
-
-    return outFile.bad() == 0;
+    std::ofstream file(path, std::ios::binary);
+    if (!file) return 0;
+    if (size) file.write(static_cast<const char *>(buffer), size);
+    file.close();
+    return !file.fail();
 }
 
 u_int MikuPan_GetFileSize(const char *filename)
@@ -1344,14 +1342,10 @@ u_char MikuPan_FolderExists(const char *folder)
 
 u_char MikuPan_CreateFolder(const char *folder)
 {
-    auto relative_path = std::filesystem::path(MikuPan_GetRelativePath(folder));
-
-    if (!std::filesystem::exists(relative_path))
-    {
-        return std::filesystem::create_directories(relative_path);
-    }
-
-    return 1;
+    const auto path = std::filesystem::path(MikuPan_GetRelativePath(folder));
+    std::error_code error;
+    std::filesystem::create_directories(path, error);
+    return !error && std::filesystem::is_directory(path, error);
 }
 
 int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table, int max_entries)

@@ -52,7 +52,7 @@ int sceMcMkdir(int port, int slot, const char *name)
 {
     info_log("MC requested folder creation: %s", name);
     mcRunCmdNo = SCE_MC_FUNC_MKDIR;
-    retval = MikuPan_CreateFolder(name);
+    retval = MikuPan_CreateFolder(name) ? sceMcResSucceed : sceMcResFailReplace;
     return sceMcExecRun;
 }
 
@@ -70,7 +70,7 @@ int sceMcWrite(int fd, const void *buffer, int size)
 {
     info_log("MC requested file write: %s", sifParamPath);
     mcRunCmdNo = SCE_MC_FUNC_WRITE;
-    retval = MikuPan_WriteFile(sifParamPath, buffer, size);
+    retval = MikuPan_WriteFile(sifParamPath, buffer, size) ? size : sceMcResFailReplace;
     return sceMcExecRun;
 }
 
