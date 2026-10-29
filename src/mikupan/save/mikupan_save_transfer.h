@@ -1,7 +1,7 @@
 #ifndef MIKUPAN_SAVE_TRANSFER_H
 #define MIKUPAN_SAVE_TRANSFER_H
-#include "mikupan_save_codec.h"
 #include "mikupan_save_archive.h"
+#include "mikupan_save_region.h"
 #include <array>
 #include <filesystem>
 #include <map>
@@ -19,6 +19,7 @@ struct SlotInfo
 };
 struct Folder
 {
+    SaveRegion region = BuildRegion;
     std::map<std::string, Bytes> files;
     std::array<SlotInfo, 3> slots;
 };
@@ -41,19 +42,23 @@ struct SlotMapping
     int source, destination;
 };
 std::filesystem::path PcFolder();
-bool InspectFiles(const std::map<std::string, Bytes> &files, bool native_allowed, Folder &folder,
-                  std::string &error);
-bool ReadStorage(const std::filesystem::path &path, StorageKind kind, bool native_allowed,
-                 Storage &storage, std::string &error);
-bool BuildBatch(const Folder &source, const Folder *destination,
-                const std::vector<SlotMapping> &slots, bool export_ps2, Folder &result,
-                std::string &error);
-// Uses the captured snapshots; card output must be a new filename. No persistent backups.
-bool TransferBatch(const Storage &source, const Storage &destination,
-                   const std::vector<SlotMapping> &slots, bool export_ps2,
-                   const std::filesystem::path &card_output, std::string &error, bool ecc = true,
-                   SaveArchiveFormat archive = SaveArchiveFormat::None);
-bool Inspect(const std::filesystem::path &path, bool native_allowed, Folder &folder,
-             std::string &error);
-} // namespace MikuPanSave
+bool InspectFiles(const std::map<std::string, Bytes>& files,
+                  bool native_allowed, Folder& folder, std::string& error);
+bool ReadStorage(const std::filesystem::path& path, StorageKind kind,
+                 bool native_allowed, Storage& storage, std::string& error);
+bool BuildBatch(const Folder& source, const Folder* destination,
+                const std::vector<SlotMapping>& slots, bool export_ps2,
+                Folder& result, std::string& error,
+                SaveRegion output_region = BuildRegion);
+// Uses the captured snapshots; card output must be a new filename. No
+// persistent backups.
+bool TransferBatch(const Storage& source, const Storage& destination,
+                   const std::vector<SlotMapping>& slots, bool export_ps2,
+                   const std::filesystem::path& card_output, std::string& error,
+                   bool ecc = true,
+                   SaveArchiveFormat archive = SaveArchiveFormat::None,
+                   SaveRegion output_region = BuildRegion);
+bool Inspect(const std::filesystem::path& path, bool native_allowed,
+             Folder& folder, std::string& error);
+}// namespace MikuPanSave
 #endif
