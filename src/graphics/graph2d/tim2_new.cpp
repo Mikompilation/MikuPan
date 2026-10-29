@@ -12,10 +12,9 @@
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph3d/sgdma.h"
 #include "main/glob.h"
-#include "mikupan/gs/mikupan_gs_c.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/rendering/mikupan_texture_slots.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 
 u_int *tm2_end_pkt = NULL;
@@ -27,7 +26,8 @@ static Q_WORDDATA g2d_top_pkt[2];
 #define UNCACHED(p) ((char *)((u_int)p | 0x20000000))
 
 /**
- * Implemented GS Texture Upload
+ * Builds the texel upload packet of a TIM2 picture and registers the picture
+ * with the 2D texture slots.
  * @param pkt_addr
  * @param tim2_addr
  * @param tbp
@@ -74,37 +74,9 @@ u_int* MakeTim2Direct2(u_int *pkt_addr, u_int *tim2_addr, int tbp)
 
     qw = (Q_WORDDATA *)(pkt_addr + 4);
 
-    sceGsLoadImage load_image;
-
-    /// Setting up the BITBLTBUF tag
-    load_image.bitbltbuf.SBP = 0;
-    load_image.bitbltbuf.SBW = 0;
-    load_image.bitbltbuf.SPSM = 0;
-    load_image.bitbltbuf.DBP = tbp;
-    load_image.bitbltbuf.DBW = tbw;
-    load_image.bitbltbuf.DPSM = psm;
-    load_image.bitbltbufaddr = SCE_GS_BITBLTBUF;
-
-    /// Setting up the TRXPOS tag
-    load_image.trxpos.DIR = 0;
-    load_image.trxpos.DSAX = 0;
-    load_image.trxpos.DSAY = 0;
-    load_image.trxpos.SSAX = 0;
-    load_image.trxpos.SSAY = 0;
-    load_image.trxdiraddr = SCE_GS_TRXPOS;
-
-    /// Setting up the TRXREG tag
-    load_image.trxreg.RRW = tph->ImageWidth;
-    load_image.trxreg.RRH = tph->ImageHeight;
-    load_image.trxregaddr = SCE_GS_TRXREG;
-
-    /// Setting up the TRXDIR tag
-    load_image.trxdir.XDR = 0;
-    load_image.trxdiraddr = SCE_GS_TRXDIR;
-
     qw = SetImageTransParam2(qw, tbp, tbw, psm, tph->ImageWidth, tph->ImageHeight);
 
-    MikuPan_GsUpload(&load_image, (unsigned char*)img_addr);
+    MikuPan_TexSlots_UploadImage(tph, tbp);
 
 #ifdef BUILD_EU_VERSION
     qw->ul64[0] = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 0);
@@ -130,7 +102,8 @@ u_int* MakeTim2Direct2(u_int *pkt_addr, u_int *tim2_addr, int tbp)
 }
 
 /**
- * Implemented GS Texture Upload
+ * Builds the CLUT upload packet of a TIM2 picture and registers the CLUT
+ * with the 2D texture slots.
  * @param pkt_addr
  * @param tim2_addr
  * @param cbp
@@ -177,50 +150,16 @@ u_int* MakeClutDirect2(u_int *pkt_addr, u_int *tim2_addr, int cbp)
 
     qw = (Q_WORDDATA *)(pkt_addr + 4);
 
-    sceGsLoadImage load_image;
-
-    /// Setting up the BITBLTBUF tag
-    load_image.bitbltbuf.SBP = 0;
-    load_image.bitbltbuf.SBW = 0;
-    load_image.bitbltbuf.SPSM = 0;
-    load_image.bitbltbuf.DBP = cbp;
-    load_image.bitbltbuf.DBW = tbw;
-    load_image.bitbltbuf.DPSM = psm;
-    load_image.bitbltbufaddr = SCE_GS_BITBLTBUF;
-
-    /// Setting up the TRXPOS tag
-    load_image.trxpos.DIR = 0;
-    load_image.trxpos.DSAX = 0;
-    load_image.trxpos.DSAY = 0;
-    load_image.trxpos.SSAX = 0;
-    load_image.trxpos.SSAY = 0;
-    load_image.trxdiraddr = SCE_GS_TRXPOS;
-
-    /// Setting up the TRXDIR tag
-    load_image.trxdir.XDR = 0;
-    load_image.trxdiraddr = SCE_GS_TRXDIR;
-
     if (tph->ClutColors == 16)
     {
         qw = SetImageTransParam2(qw, cbp, tbw, psm, 8, 2);
-
-        /// Setting up the TRXREG tag
-        load_image.trxreg.RRW = 8;
-        load_image.trxreg.RRH = 2;
-        load_image.trxregaddr = SCE_GS_TRXREG;
     }
     else
     {
-        int h = tph->ClutColors / 16;
-        qw = SetImageTransParam2(qw, cbp, tbw, psm, 16, h);
-
-        /// Setting up the TRXREG tag
-        load_image.trxreg.RRW = 16;
-        load_image.trxreg.RRH = h;
-        load_image.trxregaddr = SCE_GS_TRXREG;
+        qw = SetImageTransParam2(qw, cbp, tbw, psm, 16, tph->ClutColors / 16);
     }
 
-    MikuPan_GsUpload(&load_image, (unsigned char*)img_addr);
+    MikuPan_TexSlots_UploadClut(tph, cbp);
 
 #ifdef BUILD_EU_VERSION
     qw->ul64[0] = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 0);
@@ -260,48 +199,25 @@ Q_WORDDATA* SetImageTransParam2(Q_WORDDATA *qw, int tbp, int tbw, int psm, u_sho
     qw->ul64[1] = SCE_GIF_PACKED_AD;
     qw++;
 
-    sceGsLoadImage load_image;
-
     /// Setting up the BITBLTBUF tag
-    load_image.bitbltbuf.SBP = 0;
-    load_image.bitbltbuf.SBW = 0;
-    load_image.bitbltbuf.SPSM = 0;
-    load_image.bitbltbuf.DBP = tbp;
-    load_image.bitbltbuf.DBW = tbw;
-    load_image.bitbltbuf.DPSM = psm;
-    load_image.bitbltbufaddr = SCE_GS_BITBLTBUF;
     qw->ul64[0] = SCE_GS_SET_BITBLTBUF(0, 0, 0, tbp, tbw, psm);
     qw->ul64[1] = SCE_GS_BITBLTBUF;
     qw++;
 
     /// Setting up the TRXPOS tag
-    load_image.trxpos.DIR = 0;
-    load_image.trxpos.DSAX = 0;
-    load_image.trxpos.DSAY = 0;
-    load_image.trxpos.SSAX = 0;
-    load_image.trxpos.SSAY = 0;
-    load_image.trxdiraddr = SCE_GS_TRXPOS;
     qw->ul64[0] = SCE_GS_SET_TRXPOS(0, 0, 0, 0, 0);
     qw->ul64[1] = SCE_GS_TRXPOS;
     qw++;
 
     /// Setting up the TRXREG tag
-    load_image.trxreg.RRW = w;
-    load_image.trxreg.RRH = h;
-    load_image.trxregaddr = SCE_GS_TRXREG;
     qw->ul64[0] = SCE_GS_SET_TRXREG(w, h);
     qw->ul64[1] = SCE_GS_TRXREG;
     qw++;
 
     /// Setting up the TRXDIR tag
-    load_image.trxdir.XDR = 0;
-    load_image.trxdiraddr = SCE_GS_TRXDIR;
     qw->ul64[0] = SCE_GS_SET_TRXDIR(0);
     qw->ul64[1] = SCE_GS_TRXDIR;
     qw++;
-
-    /// Setting up the giftag1 tag
-    *(u_long*)&load_image.giftag0 = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
 
     return qw;
 }
@@ -440,7 +356,8 @@ void CallFontTexAndMesPacket()
 }
 
 /**
- * Uploads the Tim2 data to the GS
+ * Builds the texel upload packet of a TIM2 picture and registers the picture
+ * with the 2D texture slots, at its TBP0 plus `offset`.
  * @param tim2_addr
  * @param tbp
  * @param offset
@@ -493,56 +410,33 @@ void MakeTim2Direct3(u_int *tim2_addr, int tbp, int offset)
         tbp = sgtx0.TBP0 + offset;
     }
 
-    sceGsLoadImage load_image = {0};
-
     qwtop = ndpkt++;
 
     /// Setting up the giftag1 tag
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
-    *(u_long*)&load_image.giftag0 = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
 
     /// Setting up the BITBLTBUF tag
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_BITBLTBUF(0, 0, 0, tbp, tbw, psm);
     pbuf[ndpkt++].ul64[1] = SCE_GS_BITBLTBUF;
-    load_image.bitbltbuf.SBP = 0;
-    load_image.bitbltbuf.SBW = 0;
-    load_image.bitbltbuf.SPSM = 0;
-    load_image.bitbltbuf.DBP = tbp;
-    load_image.bitbltbuf.DBW = tbw;
-    load_image.bitbltbuf.DPSM = psm;
-    load_image.bitbltbufaddr = SCE_GS_BITBLTBUF;
 
     /// Setting up the TRXPOS tag
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TRXPOS(0, 0, 0, 0, 0);
     pbuf[ndpkt++].ul64[1] = SCE_GS_TRXPOS;
-    load_image.trxpos.DIR = 0;
-    load_image.trxpos.DSAX = 0;
-    load_image.trxpos.DSAY = 0;
-    load_image.trxpos.SSAX = 0;
-    load_image.trxpos.SSAY = 0;
-    load_image.trxdiraddr = SCE_GS_TRXPOS;
 
     /// Setting up the TRXREG tag
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TRXREG(tph->ImageWidth, tph->ImageHeight);
     pbuf[ndpkt++].ul64[1] = SCE_GS_TRXREG;
-    load_image.trxreg.RRW = tph->ImageWidth;
-    load_image.trxreg.RRH = tph->ImageHeight;
-    load_image.trxregaddr = SCE_GS_TRXREG;
 
     /// Setting up the TRXDIR tag
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TRXDIR(0);
     pbuf[ndpkt++].ul64[1] = SCE_GS_TRXDIR;
 
-    load_image.trxdir.XDR = 0;
-    load_image.trxdiraddr = SCE_GS_TRXDIR;
-
     /// Setting up the giftag1 tag
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
-    *(u_long*)&load_image.giftag1 = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
 
-    MikuPan_GsUpload(&load_image, (unsigned char*)img_addr);
+    MikuPan_TexSlots_UploadImage(tph, tbp);
 
     qwc = (ndpkt - qwtop) - 1;
 
@@ -600,65 +494,41 @@ void MakeClutDirect3(u_int *tim2_addr, int cbp, int offset)
         cbp = sgtx0.CBP + offset;
     }
 
-    sceGsLoadImage load_image;
     qwtop = ndpkt++;
 
     /// Setting up the giftag1 tag
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
-    *(u_long*)&load_image.giftag0 = SCE_GIF_SET_TAG(4, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_PACKED, 1);
 
     /// Setting up the BITBLTBUF tag
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_BITBLTBUF(0, 0, SCE_GS_PSMCT32, cbp, 1, SCE_GS_PSMCT32);
     pbuf[ndpkt++].ul64[1] = SCE_GS_BITBLTBUF;
-    load_image.bitbltbuf.SBP = 0;
-    load_image.bitbltbuf.SBW = 0;
-    load_image.bitbltbuf.SPSM = SCE_GS_PSMCT32;
-    load_image.bitbltbuf.DBP = cbp;
-    load_image.bitbltbuf.DBW = 1;
-    load_image.bitbltbuf.DPSM = SCE_GS_PSMCT32;
-    load_image.bitbltbufaddr = SCE_GS_BITBLTBUF;
 
     /// Setting up the TRXPO tag
     pbuf[ndpkt].ul64[0] = 0;
     pbuf[ndpkt++].ul64[1] = SCE_GS_TRXPOS;
-    load_image.trxpos.DIR = 0;
-    load_image.trxpos.DSAX = 0;
-    load_image.trxpos.DSAY = 0;
-    load_image.trxpos.SSAX = 0;
-    load_image.trxpos.SSAY = 0;
-    load_image.trxdiraddr = SCE_GS_TRXPOS;
 
     /// Setting up the TRXREG tag
     if (tph->ClutColors == 16)
     {
         pbuf[ndpkt].ul64[0] = SCE_GS_SET_TRXREG(8, 2);
-        load_image.trxreg.RRW = 8;
-        load_image.trxreg.RRH = 2;
     }
     else
     {
-        int rrh = tph->ClutColors / 16;
-        pbuf[ndpkt].ul64[0] = SCE_GS_SET_TRXREG(16, rrh);
-        load_image.trxreg.RRW = 16;
-        load_image.trxreg.RRH = rrh;
+        pbuf[ndpkt].ul64[0] = SCE_GS_SET_TRXREG(16, tph->ClutColors / 16);
     }
 
     pbuf[ndpkt++].ul64[1] = SCE_GS_TRXREG;
-    load_image.trxregaddr = SCE_GS_TRXREG;
 
     /// Setting up the TRXDIR tag
     pbuf[ndpkt].ul64[0] = SCE_GS_SET_TRXDIR(0);
     pbuf[ndpkt++].ul64[1] = SCE_GS_TRXDIR;
-    load_image.trxdir.XDR = 0;
-    load_image.trxdiraddr = SCE_GS_TRXDIR;
 
     /// Setting up the giftag1 tag
     pbuf[ndpkt].ul64[0] = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
     pbuf[ndpkt++].ul64[1] = SCE_GIF_PACKED_AD;
-    *(u_long*)&load_image.giftag1 = SCE_GIF_SET_TAG(nloop, SCE_GS_TRUE, SCE_GS_FALSE, 0, SCE_GIF_IMAGE, 1);
 
-    MikuPan_GsUpload(&load_image, (unsigned char*)img_addr);
+    MikuPan_TexSlots_UploadClut(tph, cbp);
 
     qwc = (ndpkt - qwtop) - 1;
 

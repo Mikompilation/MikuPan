@@ -16,6 +16,9 @@ void MikuPan_RenderUi(void);
 void MikuPan_StartFrameUi(void);
 void MikuPan_DrawUi(void);
 void MikuPan_DrawMissingDataUi(const char *missing_file);
+/// Shown while the textures are baked on first launch (or when the bake
+/// failed).
+void MikuPan_DrawTextureBakeUi(void);
 void MikuPan_ShutDownUi(void);
 void MikuPan_ProcessEventUi(SDL_Event *event);
 void MikuPan_RequestQuit(void);
@@ -34,6 +37,11 @@ int MikuPan_GetRenderResolutionOptionCount(void);
 int MikuPan_GetSelectedRenderResolutionOption(void);
 const char *MikuPan_GetRenderResolutionOptionLabel(int index);
 int MikuPan_SelectRenderResolutionOption(int index);
+int MikuPan_GetAspectMode(void);
+void MikuPan_SetAspectMode(int mode);
+float MikuPan_GetAspectCustom(void);
+void MikuPan_SetAspectCustom(float ratio);
+float MikuPan_GetPictureAspect(void);
 int MikuPan_GetMSAA(void);
 int MikuPan_GetMSAAOptionCount(void);
 int MikuPan_GetSelectedMSAAOption(void);

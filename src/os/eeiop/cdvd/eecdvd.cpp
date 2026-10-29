@@ -81,6 +81,11 @@ int LoadReq(int file_no, uint64_t ps2_addr)
     return LoadReqNSector(file_no, img_arng->start, img_arng->size, ps2_addr);
 }
 
+int GetFileNameCount()
+{
+    return (int)(sizeof(file_name) / sizeof(file_name[0]));
+}
+
 int LoadReqToHostPointer(int file_no, void *host_addr)
 {
     IMG_ARRANGEMENT *img_arng;

@@ -1,6 +1,7 @@
 #include "mikupan_utils.h"
 
 #include "main/glob.h"
+#include "mikupan/gs/mikupan_gs_memory.h"
 
 #include <cmath>
 #include <stdlib.h>
@@ -196,42 +197,9 @@ unsigned int *MikuPan_GetNextUnpackAddr(unsigned int *prim)
     }
 }
 
-unsigned char *MikuPan_ConvertImageAlpha(unsigned char *img, int width,
-                                         int height)
-{
-    unsigned int *image_data = (unsigned int *) malloc(width * height * 4);
-    unsigned int *raw_pixel = (unsigned int *) img;
-
-    typedef struct
-    {
-        unsigned char r;
-        unsigned char g;
-        unsigned char b;
-        unsigned char a;
-    } RGBA;
-
-    for (int i = 0; i < height; i++)
-    {
-        for (int k = 0; k < width; k++)
-        {
-            RGBA *pixel = (RGBA *) &raw_pixel[(i * width) + k];
-            pixel->a = MikuPan_AdjustPS2Alpha(pixel->a);
-
-            image_data[(i * width) + k] = *(unsigned int *) pixel;
-        }
-    }
-
-    return (unsigned char *) image_data;
-}
-
 unsigned char MikuPan_AdjustPS2Alpha(unsigned char alpha)
 {
-    if (alpha <= 127)
-    {
-        return alpha << 1;
-    }
-
-    return 0xFF;
+    return GS::AdjustPS2Alpha(alpha);
 }
 
 int MikuPan_IsVisibleOnScreen(const sceVu0FVECTOR *vector)

@@ -37,5 +37,13 @@ float4 main(PSInput input) : SV_Target0
         discard;
     }
 
+    if (uFlags3.y != 0)
+    {
+        // The UI is drawn after the postprocess pass, straight onto an
+        // extended-linear HDR swapchain: take its sRGB colours to linear at
+        // the game's paper white, as OutputColor() does for the picture.
+        col.rgb = pow(max(col.rgb, 0.0.xxx), 2.2.xxx) * max(uHdrOutput.x, 0.01);
+    }
+
     return col;
 }

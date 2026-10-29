@@ -5,6 +5,7 @@
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/ui/mikupan_ui_debug.h"
+#include "mikupan_baked_texture.h"
 #include "mikupan_gpu.h"
 #include "mikupan_meshcache.h"
 #include "mikupan_pipeline.h"
@@ -135,11 +136,14 @@ static int MikuPan_ShouldSkipFullyTransparentMaterialMesh(void)
     return MikuPan_IsCurrentMaterialFullyTransparent();
 }
 
-static void MikuPan_BindDiffuseTextureForShadowCaster(sceGsTex0 *tex0)
+/// `slot` is the mesh's texture slot (the 16 data bytes of its A+D packet),
+/// which names a baked texture by id; NULL unbinds (shadow caster pass, for
+/// preset meshes without a packet).
+static void MikuPan_BindDiffuseTextureForShadowCaster(const void *slot)
 {
-    if (tex0 != NULL)
+    if (slot != NULL)
     {
-        MikuPan_SetTexture(tex0);
+        MikuPan_BakedTexture_BindMesh(slot);
     }
     else
     {

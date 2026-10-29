@@ -14,6 +14,7 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_gl_compat.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/rendering/mikupan_texture_slots.h"
 #include "mikupan/ui/mikupan_ui.h"
 
 #include <stdlib.h>
@@ -868,7 +869,7 @@ u_int Tim2LoadImage2(TIM2_PICTUREHEADER *ph, u_int tbp, u_int offset)
 
             if (ph->ImageSize != 0)
             {
-                Tim2LoadTexture(psm, tbp, tbw, w, h, pImage);
+                MikuPan_TexSlots_UploadImage(ph, tbp);
             }
         }
         else
@@ -879,7 +880,7 @@ u_int Tim2LoadImage2(TIM2_PICTUREHEADER *ph, u_int tbp, u_int offset)
             ((sceGsTex0 *)&ph->GsTex0)->TBP0 = tbp + offset;
             ((sceGsTex0 *)&ph->GsTex0)->TBW  = tbw;
 
-            Tim2LoadTexture(psm, tbp, tbw, w, h, pImage);
+            MikuPan_TexSlots_UploadImage(ph, tbp);
 
             tbp += (u_int)Tim2CalcBufSize(psm, w, h);
         }
@@ -952,9 +953,6 @@ u_int Tim2LoadImage(TIM2_PICTUREHEADER *ph, u_int tbp)
 
 u_int Tim2LoadClut2(TIM2_PICTUREHEADER *ph, u_int cbp, u_int offset)
 {
-    int i;
-    sceGsLoadImage li;
-    u_long128 *pClut;
     int cpsm;
 
     if (ph->ClutType == TIM2_NONE)
@@ -988,8 +986,11 @@ u_int Tim2LoadClut2(TIM2_PICTUREHEADER *ph, u_int cbp, u_int offset)
         ((sceGsTex0 *)&ph->GsTex0)->CBP = cbp + offset;
     }
 
-    pClut = (u_long128 *)((char *)ph + ph->HeaderSize + ph->ImageSize);
-
+    /// The 2D texture slots decode the CLUT as MakeClutDirect3() places
+    /// it. These transfers place the same entries for 32-bit CLUTs stored
+    /// 16 x n (IDTEX8) or 8x2 (IDTEX4), the layouts of every disc picture
+    /// but the 8x2-tiled 256-colour CLUTs of bin/tim/test2d.pk2, which only
+    /// the 2D test mode loads (with SetSprFile()).
     switch ((ph->ClutType << 8) | ph->ImageType)
     {
         case (((TIM2_RGB16 | 0x40) << 8) | TIM2_IDTEX4):
@@ -998,8 +999,6 @@ u_int Tim2LoadClut2(TIM2_PICTUREHEADER *ph, u_int cbp, u_int offset)
         case (((TIM2_RGB16 | 0x00) << 8) | TIM2_IDTEX8):
         case (((TIM2_RGB24 | 0x00) << 8) | TIM2_IDTEX8):
         case (((TIM2_RGB32 | 0x00) << 8) | TIM2_IDTEX8):
-            Tim2LoadTexture(cpsm, cbp, 1, 16, (ph->ClutColors / 16), pClut);
-        break;
         case (((TIM2_RGB16 | 0x00) << 8) | TIM2_IDTEX4):
         case (((TIM2_RGB24 | 0x00) << 8) | TIM2_IDTEX4):
         case (((TIM2_RGB32 | 0x00) << 8) | TIM2_IDTEX4):
@@ -1009,29 +1008,7 @@ u_int Tim2LoadClut2(TIM2_PICTUREHEADER *ph, u_int cbp, u_int offset)
         case (((TIM2_RGB16 | 0x80) << 8) | TIM2_IDTEX8):
         case (((TIM2_RGB24 | 0x80) << 8) | TIM2_IDTEX8):
         case (((TIM2_RGB32 | 0x80) << 8) | TIM2_IDTEX8):
-            for(i=0; i<(ph->ClutColors/16); i++)
-            {
-                sceGsSetDefLoadImage(&li, cbp, 1, cpsm, (i & 1) * 8, (i >> 1) * 2, 8, 2);
-
-                FlushCache(WRITEBACK_DCACHE);
-
-                sceGsExecLoadImage(&li, pClut);
-                sceGsSyncPath(0, 0);
-
-                if ((ph->ClutType & 0x3F) == TIM2_RGB16)
-                {
-                    pClut = (u_long128 *)((char *)pClut + 2 * 16);
-                }
-                else if ((ph->ClutType & 0x3F) == TIM2_RGB24)
-                {
-                    pClut = (u_long128 *)((char *)pClut + 3 * 16);
-                }
-                else
-                {
-                    pClut = (u_long128 *)((char *)pClut + 4 * 16);
-
-                }
-            }
+            MikuPan_TexSlots_UploadClut(ph, cbp);
         break;
         default:
             return 0;

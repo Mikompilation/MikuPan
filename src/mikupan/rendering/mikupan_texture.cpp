@@ -1,7 +1,6 @@
 #include "mikupan_renderer_internal.h"
 #include "graphics/graph2d/message.h"
-#include "mikupan/gs/mikupan_gs_c.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
+#include "mikupan/bake/mikupan_tim2.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -9,6 +8,7 @@
 #include "mikupan_gpu.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
+#include "mikupan_texture_slots.h"
 #include <stdlib.h>
 #include <string>
 #include <format>
@@ -40,6 +40,8 @@ static float g_photo_preview_negative_strength = 0.0f;
 static MikuPan_PhotoDebugInfo g_photo_debug = {
     .force_negative_preview_strength = 1.0f,
 };
+/// What a TEX0 nothing uploaded shows: zero texels, as in empty VRAM.
+static unsigned int g_blank_texture = 0;
 
 MikuPan_TextureInfo *MikuPan_GetCurrentFontTexture(void)
 {
@@ -213,125 +215,76 @@ void MikuPan_TextureShutdown(void)
     g_photo_debug.texture_id = 0;
     g_photo_debug.negative_source_texture_valid = 0;
     g_photo_debug.negative_source_texture_id = 0;
-}
 
-static MikuPan_TextureInfo *MikuPan_CreateGLTextureInternal(sceGsTex0 *tex0,
-                                                            int add_to_cache)
-{
-    int width = 1 << tex0->TW;
-    int height = 1 << tex0->TH;
-
-    uint64_t hash = 0;
-    void *pixels = MikuPan_GsDownloadTexture(tex0, &hash);
-
-    if (hash == 0 || pixels == NULL)
+    if (g_blank_texture != 0)
     {
-        free(pixels);
-        return NULL;
+        MikuPan_GPUReleaseTexture(g_blank_texture);
+        g_blank_texture = 0;
     }
 
-    if (add_to_cache != 0)
-    {
-        MikuPan_TextureInfo *cached_texture = MikuPan_GetTextureInfo(hash);
-        if (cached_texture != NULL)
-        {
-            free(pixels);
-            return cached_texture;
-        }
-    }
-
-    unsigned int tex = MikuPan_GPUCreateTextureRGBA8(
-        width, height, pixels, width * 4, 1, 0);
-    if (tex == 0)
-    {
-        free(pixels);
-        return NULL;
-    }
-
-    MikuPan_TextureInfo *texture_info = (MikuPan_TextureInfo *)malloc(sizeof(MikuPan_TextureInfo));
-    texture_info->height = height;
-    texture_info->width = width;
-    texture_info->id = tex;
-    texture_info->tex0 = *(uint64_t*)tex0;
-    texture_info->hash = hash;
-
-    if (add_to_cache != 0)
-    {
-        MikuPan_AddTexture(hash, texture_info);
-    }
-
-    free(pixels);
-
-    return texture_info;
-}
-
-MikuPan_TextureInfo *MikuPan_CreateGLTexture(sceGsTex0 *tex0)
-{
-    return MikuPan_CreateGLTextureInternal(tex0, 1);
+    MikuPan_TexSlots_Shutdown();
 }
 
 MikuPan_TextureInfo *MikuPan_CreateStandaloneGLTexture(sceGsTex0 *tex0)
 {
-    return MikuPan_CreateGLTextureInternal(tex0, 0);
+    uint64_t tex0_value;
+    memcpy(&tex0_value, tex0, sizeof(tex0_value));
+
+    const unsigned int texture = MikuPan_TexSlots_CreateCopy(tex0_value);
+
+    if (texture == 0)
+    {
+        return NULL;
+    }
+
+    MikuPan_TextureInfo *texture_info = (MikuPan_TextureInfo *)malloc(sizeof(MikuPan_TextureInfo));
+    texture_info->height = 1 << tex0->TH;
+    texture_info->width = 1 << tex0->TW;
+    texture_info->id = texture;
+    texture_info->tex0 = tex0_value;
+    texture_info->hash = 0;
+    return texture_info;
 }
 
 void MikuPan_SetTexture(sceGsTex0 *tex0)
 {
-    // L1: lookup by raw tex0 register value. Avoids the per-call XXH3 over
-    // GS memory (which can run into many MB/frame for textured scenes).
-    uint64_t tex0_value = *(uint64_t *)tex0;
+    /// 2D textures: the slot the TEX0 names, no GS memory and no hashing
+    /// (mikupan_texture_slots.h).
+    uint64_t tex0_value;
+    memcpy(&tex0_value, tex0, sizeof(tex0_value));
 
-    // Sub-section breakdown of PERF_SECT_SC_TEXTURE — each step times itself
-    // separately so the perf graph can show whether the cost is the L1 hash
-    // probe, the XXH3 over GS memory, the L2 lookup, an allocation/upload,
-    // or just glBindTexture.
     Uint64 _t = MikuPan_PerfBegin();
-    MikuPan_TextureInfo *texture_info = MikuPan_LookupTextureByTex0(tex0_value);
-    MikuPan_PerfEnd(PERF_SECT_TEX_L1_LOOKUP, _t);
+    unsigned int texture = MikuPan_TexSlots_Resolve(tex0_value);
+    MikuPan_PerfEnd(PERF_SECT_TEX_RESOLVE, _t);
 
-    if (texture_info == NULL)
+    if (texture == 0)
     {
-        MikuPan_PerfTexL1Miss();
-        // L2: hash-based lookup. Same texture data may be referenced by
-        // different tex0 values; the GS-memory hash unifies them.
-        _t = MikuPan_PerfBegin();
-        uint64_t hash = MikuPan_GetTextureHash(tex0);
-        MikuPan_PerfEnd(PERF_SECT_TEX_HASH, _t);
-
-        _t = MikuPan_PerfBegin();
-        texture_info = MikuPan_GetTextureInfo(hash);
-        MikuPan_PerfEnd(PERF_SECT_TEX_L2_LOOKUP, _t);
-
-        if (texture_info == NULL)
+        /// A TEX0 the game cannot draw keeps the current binding, as it
+        /// always did. Otherwise nothing uploaded shows it: zero texels.
+        if (!MikuPanBake::Tex0Drawable(tex0_value))
         {
-            _t = MikuPan_PerfBegin();
-            texture_info = MikuPan_CreateGLTexture(tex0);
-            MikuPan_PerfEnd(PERF_SECT_TEX_CREATE, _t);
+            return;
         }
 
-        if (texture_info != NULL)
+        if (g_blank_texture == 0)
         {
-            MikuPan_RegisterTextureForTex0(tex0_value, tex0, texture_info);
+            const unsigned char zero[4] = {0, 0, 0, 0};
+            g_blank_texture = MikuPan_GPUCreateTextureRGBA8(1, 1, zero, 4, 1, 0);
         }
-    }
-    else
-    {
-        MikuPan_PerfTexL1Hit();
+
+        texture = g_blank_texture;
     }
 
-    if (texture_info != NULL)
-    {
-        _t = MikuPan_PerfBegin();
-        MikuPan_ActiveTextureCached(GL_TEXTURE0);
-        MikuPan_BindTexture2DCached(texture_info->id);
-        MikuPan_PerfEnd(PERF_SECT_TEX_BIND, _t);
-    }
+    _t = MikuPan_PerfBegin();
+    MikuPan_ActiveTextureCached(GL_TEXTURE0);
+    MikuPan_BindTexture2DCached(texture);
+    MikuPan_PerfEnd(PERF_SECT_TEX_BIND, _t);
 }
 
 void MikuPan_SetupFntTexture()
 {
-    // Re-download every bank from GS memory each time, instead of only once
-    // ever, so a font reload after a language change actually reaches the GPU.
+    // Recreate every bank from the font pictures each time, instead of only
+    // once ever, so a font reload after a language change reaches the GPU.
     for (int i = 0; i < 6; i++)
     {
         if (fnt_texture[i] != NULL)

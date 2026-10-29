@@ -984,6 +984,14 @@ void DrawPerformanceCounter()
 
 void WaitFrameTop(int type)
 {
+    /// On the PS2 this spun on the EE cycle counter until the next field, so
+    /// the GS had drained the frame's packets before the caller went on. The
+    /// host has nothing to wait for: every transfer here is synchronous. And
+    /// scePcGetCounter0() is wall time reset by every vfunc(), so the loops
+    /// below busy-waited until the next 1/30 s boundary -- up to 33 ms of a
+    /// core at 100%, each time a photo was saved (PhotoMake mode 8).
+    return;
+
     if (type != 0)
     {
         while ((scePcGetCounter0() / 0x4a2b80 & 1) == 0) {};

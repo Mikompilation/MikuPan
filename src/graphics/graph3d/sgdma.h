@@ -34,5 +34,6 @@ void LoadTRI2Files(u_int *prim);
 void RebuildTRI2Files(u_int *prim);
 TextureAnimation* GetTextureAnimation(void *sgd_top);
 void LoadTextureAnimation(u_int *prim);
+void SelectTextureAnimationFrame(u_int *prim);
 
 #endif // GRAPHICS_GRAPH3D_SGDMA_H

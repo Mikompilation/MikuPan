@@ -15,6 +15,7 @@
 #include "graphics/graph3d/sgdma.h"
 #include "graphics/graph3d/gra3d.h"
 #include "os/eeiop/adpcm/ea_cmd.h"
+#include "mikupan/rendering/mikupan_baked_texture.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
@@ -22,7 +23,6 @@
 #include "iop/iopmain.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/io/mikupan_file_c.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "os/eeiop/se_cmd.h"
 
@@ -69,6 +69,13 @@ static int MikuPan_TryInitializeGame(void)
     mikupan_missing_data_file[0] = '\0';
     mikupan_missing_data_prompted = 0;
 
+    /// Model and 2D textures come from the texture pack, baked from the
+    /// user's data on first launch.
+    if (!MikuPan_BakedTexture_Prepare())
+    {
+        return 0;
+    }
+
     /// GAME LOGIC ///
     InitSystem();
     InitGameFirst();
@@ -88,7 +95,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
     MikuPan_TryInitializeGame();
 
-    MikuPan_FrameLimiter_Init(&frame_limiter, 60.0);
+    MikuPan_FrameLimiter_Init(&frame_limiter, 20000.0f);
 
     return result;
 }
@@ -129,14 +136,21 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     MikuPan_StartFrameUi();
     MikuPan_LegacyMouseBeginFrame();
 
-    MikuPan_FlushTextureCache();
-
     if (!mikupan_game_initialized)
     {
         MikuPan_TryInitializeGame();
         if (!mikupan_game_initialized)
         {
-            MikuPan_DrawMissingDataUi(mikupan_missing_data_file);
+            if (MikuPan_BakedTexture_GetState() == MIKUPAN_BAKE_RUNNING
+                || MikuPan_BakedTexture_GetState() == MIKUPAN_BAKE_FAILED)
+            {
+                MikuPan_DrawTextureBakeUi();
+            }
+            else
+            {
+                MikuPan_DrawMissingDataUi(mikupan_missing_data_file);
+            }
+
             MikuPan_EndFrame();
             return SDL_APP_CONTINUE;
         }
@@ -191,6 +205,7 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result)
         MikuPan_ShutDownUi();
     }
 
+    MikuPan_BakedTexture_Shutdown();
     MikuPan_Shutdown();
 }
 

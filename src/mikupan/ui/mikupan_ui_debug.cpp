@@ -9,7 +9,7 @@
 #include "ingame/camera/camera_types.h"
 #include "mikupan/rendering/mikupan_gl_compat.h"
 #include "main/glob.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
+#include "mikupan/rendering/mikupan_texture_slots.h"
 #include "mikupan/mikupan_basictypes.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
@@ -34,7 +34,7 @@ const int mikupan_no_navigation_window =
 
 #define TEXTURE_LIST_MAX 4096
 
-static MikuPan_TextureInfo* tex_list[TEXTURE_LIST_MAX];
+static MikuPan_TextureInfo tex_list[TEXTURE_LIST_MAX];
 static int tex_list_count = 0;
 static char last_reload_error[1280] = {0};
 static int show_texture_list = 0;
@@ -48,7 +48,6 @@ static int shadow_debug_auto_probe = 0;
 static int shadow_debug_flip_y = 1;
 static float shadow_debug_preview_size = 384.0f;
 static float photo_debug_preview_size = 256.0f;
-static int disable_gs_uploads = 0;
 static int show_bounding_boxes = 0;
 static int show_event_hitboxes = 0;
 static int player_collision_console_log = 0;
@@ -70,20 +69,27 @@ static FrameTimeGraph g_frame_graph = {.count = 0,
                                        .max_samples = 600,
                                        .ms_scale = -1.0f};
 
-void CollectTexture(MikuPan_TextureInfo* tex, void* ud)
+/// MikuPan_TexSlots_ForEachTexture(): `hash` keeps the 2D texture id.
+void CollectTexture(unsigned int texture, int width, int height,
+                    uint32_t id, void* ud)
 {
     int* count = (int*) ud;
 
     if (*count < TEXTURE_LIST_MAX)
     {
-        tex_list[(*count)++] = tex;
+        MikuPan_TextureInfo* t = &tex_list[(*count)++];
+        t->id = texture;
+        t->width = width;
+        t->height = height;
+        t->tex0 = 0;
+        t->hash = id;
     }
 }
 
 int CompareTextureById(const void* a, const void* b)
 {
-    const MikuPan_TextureInfo* ta = *(const MikuPan_TextureInfo**) a;
-    const MikuPan_TextureInfo* tb = *(const MikuPan_TextureInfo**) b;
+    const MikuPan_TextureInfo* ta = (const MikuPan_TextureInfo*) a;
+    const MikuPan_TextureInfo* tb = (const MikuPan_TextureInfo*) b;
     return (int) ta->id - (int) tb->id;
 }
 
@@ -769,7 +775,7 @@ void MikuPan_UiPerfDiagWindow(void)
     igText("Frame %u  CPU %.3f ms  GPU wait %.3f ms", s.frame, s.cpu_ms, s.gpu_wait_ms);
     igText("Draws %d  State %d  Uploads %d  Upload bytes %.2f KiB", s.draw_calls, s.state_changes, s.gpu_uploads, (double)s.gpu_upload_bytes / 1024.0);
     igText("Upload flushes %d  Render pass flushes %d  Buffer grows %d", s.gpu_upload_flushes, s.render_pass_flushes, s.gpu_upload_grows);
-    igText("Mesh cache %d hit / %d new / %d full  Texture L1 %d hit / %d miss", s.mesh_cache_hits, s.mesh_cache_misses_new, s.mesh_cache_misses_full, s.tex_l1_hits, s.tex_l1_misses);
+    igText("Mesh cache %d hit / %d new / %d full  2D textures %d created / %d misses", s.mesh_cache_hits, s.mesh_cache_misses_new, s.mesh_cache_misses_full, s.tex_created, s.tex_misses);
 
     igSeparatorText("Mesh 0x2 / 0xA");
     igText("0x2 calls %d  0xA calls %d  CPU path %d  GPU path %d", s.mesh0x2_calls, s.mesh0xA_calls, s.mesh0x2_cpu, s.mesh0x2_gpu);
@@ -1507,9 +1513,9 @@ void MikuPan_ShowTextureList(void)
     const MikuPan_TextureInfo* screen_copy;
 
     tex_list_count = 0;
-    MikuPan_ForEachTexture(CollectTexture, &tex_list_count);
+    MikuPan_TexSlots_ForEachTexture(CollectTexture, &tex_list_count);
 
-    qsort(tex_list, tex_list_count, sizeof(MikuPan_TextureInfo*),
+    qsort(tex_list, tex_list_count, sizeof(MikuPan_TextureInfo),
           CompareTextureById);
 
     igBegin("Texture List", NULL, 0);
@@ -1564,17 +1570,27 @@ void MikuPan_ShowTextureList(void)
     for (int i = 0; i < tex_list_count; i++)
     {
         char label[64];
-        snprintf(label, sizeof(label), "Texture ID %u", tex_list[i]->id);
+
+        if (tex_list[i].hash == 0xFFFFFFFFu)
+        {
+            snprintf(label, sizeof(label), "Texture ID %u (runtime image)",
+                     tex_list[i].id);
+        }
+        else
+        {
+            snprintf(label, sizeof(label), "Texture ID %u (2D id %u)",
+                     tex_list[i].id, (unsigned int) tex_list[i].hash);
+        }
 
         if (igCollapsingHeader_TreeNodeFlags(label, 0))
         {
-            igText("%u: %d x %d", tex_list[i]->id, tex_list[i]->width,
-                   tex_list[i]->height);
+            igText("%u: %d x %d", tex_list[i].id, tex_list[i].width,
+                   tex_list[i].height);
             igImage(ImTextureRef_c{._TexID = (ImTextureID) (uintptr_t)
                                           MikuPan_GPUGetTextureHandle(
-                                              tex_list[i]->id)},
-                    ImVec2{(float) tex_list[i]->width,
-                              (float) tex_list[i]->height},
+                                              tex_list[i].id)},
+                    ImVec2{(float) tex_list[i].width,
+                              (float) tex_list[i].height},
                     ImVec2{0.0f, 0.0f}, ImVec2{1.0f, 1.0f});
         }
     }
@@ -1830,19 +1846,17 @@ void MikuPan_UiDebugMenuRender(void)
 
             if (igBeginMenu("Textures", 1))
             {
-                igCheckbox("Disable GS Uploads", (bool*) &disable_gs_uploads);
+                igCheckbox("Texture List", (bool*) &show_texture_list);
+                if (igButton("Release 2D Textures", ImVec2{0.0f, 0.0f}))
+                {
+                    MikuPan_TexSlots_ReleaseTextures();
+                }
 
                 if (igIsItemHovered(0))
                 {
                     igBeginTooltip();
-                    igText("THIS *WILL* BREAK TEXTURES, ONLY USE FOR TESTING PERFORMANCE IMPACT OF GS UPLOADS");
+                    igText("Frees the GPU copies of the 2D textures; each is decoded again the next time it is drawn");
                     igEndTooltip();
-                }
-
-                igCheckbox("Texture List", (bool*) &show_texture_list);
-                if (igButton("Clear Texture Cache", ImVec2{0.0f, 0.0f}))
-                {
-                    MikuPan_RequestFlushTextureCache();
                 }
 
                 igEndMenu();
@@ -2071,11 +2085,6 @@ int MikuPan_IsMesh0x2Rendering(void)
 int MikuPan_IsLightingDisabled(void)
 {
     return disable_lighting;
-}
-
-int MikuPan_IsGsUploadsDisabled(void)
-{
-    return disable_gs_uploads;
 }
 
 int MikuPan_ShowStaticLighting(void)

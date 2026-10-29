@@ -20,7 +20,6 @@ void MikuPan_FixUV(float* uv, int num);
 void MikuPan_FixColors(float *color_buf, int num);
 int MikuPan_SetTriangleIndex(int* triangle_index, int vertex_count, int vertex_offset, int index_write_offset);
 unsigned int *MikuPan_GetNextUnpackAddr(unsigned int *prim);
-unsigned char* MikuPan_ConvertImageAlpha(unsigned char* img, int width, int height);
 unsigned char MikuPan_AdjustPS2Alpha(unsigned char alpha);
 int MikuPan_IsVisibleOnScreen(const sceVu0FVECTOR* vector);
 void MikuPan_GSToNDC(int Xgs, int Ygs, int Zgs, float* x, float* y, float* z, float window_width, float window_height);

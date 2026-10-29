@@ -100,6 +100,8 @@ typedef struct
     int gpu_debug;
     int finder_viewport_mask_mode; /* MikuPan_FinderViewportMaskMode */
     int hd_font_textures;
+    int aspect_mode;     /* MikuPan_AspectMode */
+    float aspect_custom; /* width / height, used when aspect_mode is CUSTOM */
 } MikuPan_ConfigRenderer;
 
 /* Apply a window display mode to the SDL window.
@@ -119,6 +121,21 @@ enum MikuPan_RenderResolutionMode
     MIKUPAN_RENDER_RESOLUTION_FIXED = 0,
     MIKUPAN_RENDER_RESOLUTION_MATCH_WINDOW = 1,
     MIKUPAN_RENDER_RESOLUTION_WINDOW_SCALE = 2,
+};
+
+/* The shape the game picture is composed for. AUTO takes the window's own,
+ * so it fills the window; every other mode is a fixed ratio and the window
+ * takes up the difference with black bars. ORIGINAL is the PS2's 640x448
+ * frame. The 3D view widens with the ratio (Hor+); the 2D stays centred. */
+enum MikuPan_AspectMode
+{
+    MIKUPAN_ASPECT_AUTO = 0,
+    MIKUPAN_ASPECT_ORIGINAL = 1,
+    MIKUPAN_ASPECT_4_3 = 2,
+    MIKUPAN_ASPECT_16_10 = 3,
+    MIKUPAN_ASPECT_16_9 = 4,
+    MIKUPAN_ASPECT_21_9 = 5,
+    MIKUPAN_ASPECT_CUSTOM = 6,
 };
 
 enum MikuPan_FinderViewportMaskMode

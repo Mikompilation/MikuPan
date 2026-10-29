@@ -6,6 +6,7 @@
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/mikupan_screenshot.h"
+#include "mikupan/rendering/mikupan_baked_texture.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/ui/mikupan_rmlui.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -15,6 +16,7 @@
 #include "mikupan_ui_theme.h"
 #include "mikupan_version.h"
 #include <stdio.h>
+#include <string.h>
 
 // -- Backend wrappers (defined in mikupan_ui.cpp) ----------------------------
 #ifdef __cplusplus
@@ -126,6 +128,54 @@ void MikuPan_DrawMissingDataUi(const char *missing_file)
     if (igButton("Select Folder", ImVec2{160.0f * scale, 0.0f}))
     {
         MikuPan_RequestDataFolderSelection(file);
+    }
+
+    igEnd();
+}
+
+void MikuPan_DrawTextureBakeUi(void)
+{
+    ImGuiIO* io = igGetIO_Nil();
+    const float ui_scale = MikuPan_UiThemeGetDisplayScale();
+    const float scale = ui_scale > 0.0f ? ui_scale : 1.0f;
+    const int failed = MikuPan_BakedTexture_GetState() == MIKUPAN_BAKE_FAILED;
+    const char *stage = "";
+    const float progress = MikuPan_BakedTexture_GetProgress(&stage);
+
+    igSetNextWindowPos(
+        ImVec2{io->DisplaySize.x * 0.5f, io->DisplaySize.y * 0.5f},
+        ImGuiCond_Always,
+        ImVec2{0.5f, 0.5f});
+    igSetNextWindowSize(ImVec2{520.0f * scale, 0.0f}, ImGuiCond_Always);
+    if (!igBegin(failed ? "Texture Preparation Failed" : "Preparing Textures",
+                 NULL,
+                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
+                 | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+    {
+        igEnd();
+        return;
+    }
+
+    if (failed)
+    {
+        igTextWrapped("MikuPan could not prepare the textures from the game "
+                      "data:");
+        igSpacing();
+        igTextWrapped("%s", MikuPan_BakedTexture_GetError());
+        igSpacing();
+
+        if (igButton("Retry", ImVec2{160.0f * scale, 0.0f}))
+        {
+            MikuPan_BakedTexture_Retry();
+        }
+    }
+    else
+    {
+        igTextWrapped("MikuPan is converting the textures of the game data. "
+                      "This happens once and takes a few seconds.");
+        igSpacing();
+        igText("%s", strcmp(stage, "verify") == 0 ? "Checking" : "Converting");
+        igProgressBar(progress, ImVec2{-1.0f, 0.0f}, NULL);
     }
 
     igEnd();

@@ -34,7 +34,6 @@ int MikuPan_IsMesh0x10Rendering(void);
 int MikuPan_IsMesh0x12Rendering(void);
 int MikuPan_IsMesh0x2Rendering(void);
 int MikuPan_IsLightingDisabled(void);
-int MikuPan_IsGsUploadsDisabled(void);
 int MikuPan_ShowStaticLighting(void);
 int MikuPan_GetMeshLightingMode(void);
 float MikuPan_GetNormalLength(void);

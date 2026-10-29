@@ -113,6 +113,9 @@ typedef struct MikuPan_GPUUniformBlock
 
     // x=paper white in output colorspace, y=usable HDR headroom
     float uHdrOutput[4];
+
+    // x=gray the sampled model texel (black & white mode, baked textures)
+    int uFlags3[4];
 } MikuPan_GPUUniformBlock;
 
 /// Create the SDL_GPU device and claim the window. gpu_driver requests an
@@ -183,6 +186,14 @@ void MikuPan_GPUUploadTextureRGBA8(unsigned int id, int width, int height,
                                    const void *pixels, int pitch);
 int MikuPan_GPUReadTextureRGBA8(unsigned int texture_id, int width, int height,
                                 unsigned char *out_rgba);
+/// Scale a region of one texture onto the top-left dst_w x dst_h of another
+/// (a render texture), nearest filter, every channel copied as is. Recorded
+/// into the frame's command buffer. Returns 0 if either texture is unknown or
+/// the region does not fit.
+int MikuPan_GPUBlitTextureRegion(unsigned int src_texture_id, int src_x,
+                                 int src_y, int src_w, int src_h,
+                                 unsigned int dst_texture_id, int dst_w,
+                                 int dst_h);
 int MikuPan_GPUReadTextureR8(unsigned int texture_id, int size,
                              unsigned char *out_r8);
 
@@ -273,6 +284,13 @@ void MikuPan_GPUSetMatrix4(const char *name, const float *mat);
 void MikuPan_GPUSetMatrix3(const char *name, const float *mat);
 void MikuPan_GPUSetVec4(const char *name, const float *vec);
 void MikuPan_GPUSetInt(const char *name, int value);
+/// Per-draw flag of the textured mesh shader: gray the sampled texel. Only
+/// marks the fragment uniforms dirty when the value changes.
+void MikuPan_GPUSetBlackWhiteTexel(int enabled);
+/* The sprite shader takes its output from sRGB to the HDR swapchain's linear
+ * scale (paper white from the last postprocess pass).  Only for UI drawn
+ * straight onto the window after that pass. */
+void MikuPan_GPUSetUiHdrOutput(int enabled);
 void MikuPan_GPUSetFloat(const char *name, float value);
 void MikuPan_GPUSetVec2(const char *name, float x, float y);
 

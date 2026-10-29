@@ -213,6 +213,54 @@ static void TrimUploadTransferPool(void)
     }
 }
 
+/// One download buffer shared by the synchronous readbacks. Each of them waits
+/// on its own fence before mapping, so the buffer is idle again before the
+/// next one records into it; creating one per call cost a driver allocation on
+/// every readback, and the photo screen reads back every frame. A one-off
+/// large read (a full-window texture) is not kept.
+#define MIKUPAN_READBACK_KEEP_MAX (8u * 1024u * 1024u)
+
+static SDL_GPUTransferBuffer* g_readback_transfer = NULL;
+static unsigned int g_readback_transfer_size = 0;
+
+static void ReleaseReadbackTransfer(void)
+{
+    if (g_readback_transfer != NULL)
+    {
+        SDL_ReleaseGPUTransferBuffer(g_device, g_readback_transfer);
+        g_readback_transfer = NULL;
+    }
+
+    g_readback_transfer_size = 0;
+}
+
+static SDL_GPUTransferBuffer* AcquireReadbackTransfer(unsigned int size)
+{
+    if (g_readback_transfer != NULL && g_readback_transfer_size >= size)
+    {
+        return g_readback_transfer;
+    }
+
+    ReleaseReadbackTransfer();
+
+    SDL_GPUTransferBufferCreateInfo info{};
+    info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
+    info.size = size;
+    g_readback_transfer = SDL_CreateGPUTransferBuffer(g_device, &info);
+    g_readback_transfer_size = g_readback_transfer != NULL ? size : 0;
+
+    return g_readback_transfer;
+}
+
+/// Called once the data has been copied out.
+static void DoneWithReadbackTransfer(void)
+{
+    if (g_readback_transfer_size > MIKUPAN_READBACK_KEEP_MAX)
+    {
+        ReleaseReadbackTransfer();
+    }
+}
+
 static GPUBufferEntry g_buffers[MIKUPAN_GPU_MAX_BUFFERS];
 static GPUTextureEntry g_textures[MIKUPAN_GPU_MAX_TEXTURES];
 static GPUVaoEntry g_vaos[MIKUPAN_GPU_MAX_VAOS];
@@ -791,6 +839,7 @@ void MikuPan_GPUShutdown(void)
         }
 
         g_xfer_pool_count = 0;
+        ReleaseReadbackTransfer();
         SDL_ReleaseWindowFromGPUDevice(g_device, g_window);
         SDL_DestroyGPUDevice(g_device);
     }
@@ -2061,11 +2110,7 @@ int MikuPan_GPUReadTextureRGBA8(unsigned int texture_id, int width, int height,
     MikuPan_GPUFlushRenderPass();
     const unsigned int pitch = (unsigned int) width * 4u;
     const unsigned int size = pitch * (unsigned int) height;
-    SDL_GPUTransferBufferCreateInfo info{};
-    info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
-    info.size = size;
-    SDL_GPUTransferBuffer* transfer =
-        SDL_CreateGPUTransferBuffer(g_device, &info);
+    SDL_GPUTransferBuffer* transfer = AcquireReadbackTransfer(size);
     if (transfer == NULL)
     {
         return 0;
@@ -2096,8 +2141,50 @@ int MikuPan_GPUReadTextureRGBA8(unsigned int texture_id, int width, int height,
         memcpy(out_rgba, mapped, size);
         SDL_UnmapGPUTransferBuffer(g_device, transfer);
     }
-    SDL_ReleaseGPUTransferBuffer(g_device, transfer);
+    DoneWithReadbackTransfer();
     return mapped != NULL;
+}
+
+int MikuPan_GPUBlitTextureRegion(unsigned int src_texture_id, int src_x,
+                                 int src_y, int src_w, int src_h,
+                                 unsigned int dst_texture_id, int dst_w,
+                                 int dst_h)
+{
+    GPUTextureEntry* src = TextureEntry(src_texture_id);
+    GPUTextureEntry* dst = TextureEntry(dst_texture_id);
+    if (src == NULL || dst == NULL || g_cmd == NULL || src_w <= 0
+        || src_h <= 0 || dst_w <= 0 || dst_h <= 0)
+    {
+        return 0;
+    }
+
+    if (src_x < 0 || src_y < 0 || src_x + src_w > src->width
+        || src_y + src_h > src->height || dst_w > dst->width
+        || dst_h > dst->height)
+    {
+        return 0;
+    }
+
+    if (src_texture_id == g_scene_texture_id)
+    {
+        MikuPan_GPUResolveSceneForSampling();
+    }
+    MikuPan_GPUFlushRenderPass();
+
+    SDL_GPUBlitInfo blit = {};
+    blit.source.texture = src->texture;
+    blit.source.x = (Uint32) src_x;
+    blit.source.y = (Uint32) src_y;
+    blit.source.w = (Uint32) src_w;
+    blit.source.h = (Uint32) src_h;
+    blit.destination.texture = dst->texture;
+    blit.destination.w = (Uint32) dst_w;
+    blit.destination.h = (Uint32) dst_h;
+    blit.load_op = SDL_GPU_LOADOP_DONT_CARE;
+    blit.filter = SDL_GPU_FILTER_NEAREST;
+    blit.cycle = false;
+    SDL_BlitGPUTexture(g_cmd, &blit);
+    return 1;
 }
 
 static int MikuPan_GPUReadTextureRGBA8Region(unsigned int texture_id, int x,
@@ -2124,11 +2211,7 @@ static int MikuPan_GPUReadTextureRGBA8Region(unsigned int texture_id, int x,
 
     const unsigned int pitch = (unsigned int)width * 4u;
     const unsigned int size = pitch * (unsigned int)height;
-    SDL_GPUTransferBufferCreateInfo info{};
-    info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
-    info.size = size;
-    SDL_GPUTransferBuffer* transfer =
-        SDL_CreateGPUTransferBuffer(g_device, &info);
+    SDL_GPUTransferBuffer* transfer = AcquireReadbackTransfer(size);
     if (transfer == NULL)
     {
         return 0;
@@ -2161,7 +2244,7 @@ static int MikuPan_GPUReadTextureRGBA8Region(unsigned int texture_id, int x,
         memcpy(out_rgba, mapped, size);
         SDL_UnmapGPUTransferBuffer(g_device, transfer);
     }
-    SDL_ReleaseGPUTransferBuffer(g_device, transfer);
+    DoneWithReadbackTransfer();
     return mapped != NULL;
 }
 
@@ -3949,6 +4032,28 @@ void MikuPan_GPUSetInt(const char* name, int value)
     (void) name;
     g_vertex_uniform_dirty = 1;
     g_fragment_uniform_dirty = 1;
+}
+
+void MikuPan_GPUSetBlackWhiteTexel(int enabled)
+{
+    enabled = enabled != 0;
+
+    if (g_uniforms.uFlags3[0] != enabled)
+    {
+        g_uniforms.uFlags3[0] = enabled;
+        g_fragment_uniform_dirty = 1;
+    }
+}
+
+void MikuPan_GPUSetUiHdrOutput(int enabled)
+{
+    enabled = enabled != 0;
+
+    if (g_uniforms.uFlags3[1] != enabled)
+    {
+        g_uniforms.uFlags3[1] = enabled;
+        g_fragment_uniform_dirty = 1;
+    }
 }
 
 void MikuPan_GPUSetFloat(const char* name, float value)

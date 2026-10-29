@@ -7,7 +7,6 @@
 #include "graphics/graph2d/tim2.h"
 #include "ingame/photo/pht_make.h"
 #include "main/glob.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_memory.h"

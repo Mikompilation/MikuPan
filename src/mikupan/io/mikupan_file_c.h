@@ -34,11 +34,17 @@ void MikuPan_RequestDataFolderSelection(const char *missing_path);
 bool MikuPan_HasRequiredDataFiles(char *missing_file, size_t missing_file_size);
 /* Records that file data was loaded at a PS2 main-memory offset; requests a
    texture-cache flush only when an address is loaded over a second time. */
-void MikuPan_NotifyPs2MemoryLoad(int ps2_address);
 void MikuPan_ReadFullFile(const char *filename, char *buffer);
 void MikuPan_ReadFileInArchive(int sector, int size, u_int *address);
 void MikuPan_BufferFile(int sector, int size, int64_t address);
 u_int MikuPan_GetFileSize(const char *filename);
+u_int MikuPan_GetDataFileSize(const char *relative_name);
+bool MikuPan_ReadDataFileRange(const char *relative_name, int64_t offset,
+                               void *buffer, size_t size);
+void *MikuPan_OpenDataFile(const char *relative_name);
+bool MikuPan_ReadOpenDataFile(void *file, int64_t offset, void *buffer,
+                              size_t size);
+void MikuPan_CloseDataFile(void *file);
 u_char MikuPan_OpenFile(const char *filename, void *buffer, int size);
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size);
 bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size);

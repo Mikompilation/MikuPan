@@ -56,6 +56,13 @@ float4 main(PSInput input) : SV_Target0
 {
     float4 color = uTexture.Sample(uTextureSampler, input.vUV);
 
+    // Baked model textures are stored in colour; black & white mode grays
+    // the texel here, where the game used to upload a gray CLUT.
+    if (uFlags3.x != 0)
+    {
+        color.rgb = ToBlackWhite(color.rgb);
+    }
+
     float materialAlpha = clamp(uMaterialAlpha.x, 0.0, 1.0);
     color.a *= materialAlpha;
 

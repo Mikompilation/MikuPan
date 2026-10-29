@@ -10,6 +10,7 @@
 #include "libcdvd.h"
 #include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/rendering/mikupan_baked_texture.h"
 #include "memory.h"
 #include "sif.h"
 #include "string.h"
@@ -796,12 +797,6 @@ static int ICdvdSectorLoad(CDVD_REQ_BUF* req_bufp)
 
 static void ICdvdFinishWholeFileLoad(CDVD_REQ_BUF* req_bufp)
 {
-    if (MikuPan_IsPs2MemoryPointer((int64_t)(uintptr_t)req_bufp->taddr))
-    {
-        MikuPan_NotifyPs2MemoryLoad(
-            MikuPan_GetPs2OffsetFromHostPointer(req_bufp->taddr));
-    }
-
     ICdvdSetRetStat(req_bufp->id, CDVD_LS_FINISHED);
     cdvd_stat.start_pos = (cdvd_stat.start_pos + 1) % 32;
     cdvd_stat.buf_use_num--;
@@ -876,12 +871,23 @@ static int ICdvdTryWholeFileLoad(CDVD_REQ_BUF* req_bufp)
         name = file_name[req_bufp->file_no];
     }
 
-    if (!ICdvdReadWholeNamedFile(name, req_bufp->taddr,
-            (u_int)req_bufp->size_sector)
+    /// Entries the texture bake rewrote are read from the texture pack.
+    if (!MikuPan_BakedTexture_ReadEntry(req_bufp->file_no,
+                                        (u_int)req_bufp->start_sector,
+                                        (u_int)req_bufp->size_sector,
+                                        req_bufp->taddr)
+        && !ICdvdReadWholeNamedFile(name, req_bufp->taddr,
+                                    (u_int)req_bufp->size_sector)
         && !ICdvdReadWholeArchiveFile(req_bufp))
     {
         return 0;
     }
+
+    /// 2D textures: each TIM2 picture names its texture id in its header.
+    MikuPan_BakedTexture_StampEntry(req_bufp->file_no,
+                                    (u_int)req_bufp->start_sector,
+                                    (u_int)req_bufp->size_sector,
+                                    req_bufp->taddr);
 
     ICdvdFinishWholeFileLoad(req_bufp);
     return 1;

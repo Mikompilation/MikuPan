@@ -363,7 +363,6 @@ void MikuPan_SetMaterial(const sceVu0FVECTOR* ambient,
                          const sceVu0FVECTOR* emission);
 void MikuPan_SetFontTexture(int fnt);
 void MikuPan_DeleteTexture(MikuPan_TextureInfo* texture_info);
-MikuPan_TextureInfo* MikuPan_CreateGLTexture(sceGsTex0 *tex0);
 MikuPan_TextureInfo* MikuPan_CreateStandaloneGLTexture(sceGsTex0 *tex0);
 void MikuPan_SetTexture(sceGsTex0 *tex0);
 void MikuPan_SetupCamera(MikuPan_Camera *camera);

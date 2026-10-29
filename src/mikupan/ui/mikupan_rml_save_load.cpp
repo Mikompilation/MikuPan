@@ -12,6 +12,7 @@
 #include "mc/mc.h"
 #include "mc/mc_exec.h"
 #include "mc/mc_main.h"
+#include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_i18n.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_utils.h"
@@ -176,6 +177,9 @@ static MikuPanRmlSaveLoadState g_save_load;
 static std::vector<MikuPanChapterCardRequest> g_chapter_card_requests;
 static int g_chapter_card_active_request = -1;
 static MikuPanSaveLoadFilmHeaderRequest g_film_header_request;
+/// The other menus' copy, in the user folder: theirs cannot ask the memory
+/// card code for the save folder (mcSetPathDir changes its state).
+static MikuPanSaveLoadFilmHeaderRequest g_menu_film_header_request;
 static constexpr int kPreviewWidth = 320;
 static constexpr int kPreviewHeight = 180;
 static constexpr int kChapterCardWidth = 640;
@@ -946,7 +950,8 @@ static void MikuPan_RmlSaveLoadBlendFilmHeaderPixel(
     destination[3] = static_cast<unsigned char>(output_alpha);
 }
 
-static bool MikuPan_RmlSaveLoadWriteFilmHeader(void)
+static bool MikuPan_RmlSaveLoadWriteFilmHeader(
+    MikuPanSaveLoadFilmHeaderRequest& request)
 {
     static constexpr std::array<int, 2> sprite_indices = {0, 7};
 
@@ -979,7 +984,7 @@ static bool MikuPan_RmlSaveLoadWriteFilmHeader(void)
     {
         const SPRT_DAT& sprite = msel_sprt[sprite_index];
         TIM2_PICTUREHEADER* picture = MikuPan_RmlSaveLoadFindFilmHeaderPicture(
-            g_film_header_request.package_data, sprite);
+            request.package_data, sprite);
         if (picture == nullptr || sprite.w <= 0 || sprite.h <= 0)
         {
             return false;
@@ -1003,14 +1008,14 @@ static bool MikuPan_RmlSaveLoadWriteFilmHeader(void)
 
     std::error_code error;
     std::filesystem::create_directories(
-        g_film_header_request.cache_path.parent_path(), error);
+        request.cache_path.parent_path(), error);
     if (error)
     {
         return false;
     }
 
     return MikuPan_ScreenshotWritePngRgba(
-        g_film_header_request.cache_path.string().c_str(),
+        request.cache_path.string().c_str(),
         pixels.data(),
         width,
         height) != 0;
@@ -1031,27 +1036,26 @@ static void MikuPan_RmlSaveLoadApplyFilmHeader(void)
     MikuPan_RmlSaveLoadSetHidden(g_save_load.film_strip, false);
 }
 
-static void MikuPan_RmlSaveLoadRequestFilmHeader(
-    const std::filesystem::path& directory)
+/// Starts building the film header at cache_path, unless it is there
+/// already (complete) or on its way.
+static void MikuPan_RmlSaveLoadStartFilmHeader(
+    MikuPanSaveLoadFilmHeaderRequest& request,
+    const std::filesystem::path& cache_path)
 {
-    const std::filesystem::path cache_path =
-        MikuPan_RmlSaveLoadFilmHeaderPath(directory);
-    if (g_film_header_request.cache_path != cache_path)
+    if (request.cache_path != cache_path)
     {
-        g_film_header_request = MikuPanSaveLoadFilmHeaderRequest();
-        g_film_header_request.cache_path = cache_path;
+        request = MikuPanSaveLoadFilmHeaderRequest();
+        request.cache_path = cache_path;
     }
 
     std::error_code error;
     if (std::filesystem::is_regular_file(cache_path, error))
     {
-        g_film_header_request.complete = true;
-        MikuPan_RmlSaveLoadApplyFilmHeader();
+        request.complete = true;
         return;
     }
 
-    if (g_film_header_request.load_id >= 0
-        || g_film_header_request.failed)
+    if (request.load_id >= 0 || request.failed)
     {
         return;
     }
@@ -1061,41 +1065,89 @@ static void MikuPan_RmlSaveLoadRequestFilmHeader(
     if (arrangement == nullptr || arrangement->size == 0
         || arrangement->size > 32 * 1024 * 1024)
     {
-        g_film_header_request.failed = true;
+        request.failed = true;
         return;
     }
 
-    g_film_header_request.package_data.assign(arrangement->size, 0);
-    g_film_header_request.load_id = LoadReqToHostPointer(
-        file_number, g_film_header_request.package_data.data());
-    if (g_film_header_request.load_id < 0)
+    request.package_data.assign(arrangement->size, 0);
+    request.load_id = LoadReqToHostPointer(
+        file_number, request.package_data.data());
+    if (request.load_id < 0)
     {
-        g_film_header_request.package_data.clear();
-        g_film_header_request.failed = true;
+        request.package_data.clear();
+        request.failed = true;
+    }
+}
+
+/// True on the frame the film header has just been written.
+static bool MikuPan_RmlSaveLoadPollFilmHeader(
+    MikuPanSaveLoadFilmHeaderRequest& request)
+{
+    if (request.complete || request.failed || request.load_id < 0)
+    {
+        return false;
+    }
+
+    if (IsLoadEnd(request.load_id) == 0)
+    {
+        return false;
+    }
+
+    request.load_id = -1;
+    request.complete = MikuPan_RmlSaveLoadWriteFilmHeader(request);
+    request.failed = !request.complete;
+    request.package_data.clear();
+    return request.complete;
+}
+
+static void MikuPan_RmlSaveLoadRequestFilmHeader(
+    const std::filesystem::path& directory)
+{
+    MikuPan_RmlSaveLoadStartFilmHeader(
+        g_film_header_request, MikuPan_RmlSaveLoadFilmHeaderPath(directory));
+    if (g_film_header_request.complete)
+    {
+        MikuPan_RmlSaveLoadApplyFilmHeader();
     }
 }
 
 static void MikuPan_RmlSaveLoadUpdateFilmHeader(void)
 {
-    if (g_film_header_request.complete || g_film_header_request.failed
-        || g_film_header_request.load_id < 0)
-    {
-        return;
-    }
-
-    if (IsLoadEnd(g_film_header_request.load_id) == 0)
-    {
-        return;
-    }
-
-    g_film_header_request.load_id = -1;
-    g_film_header_request.complete = MikuPan_RmlSaveLoadWriteFilmHeader();
-    g_film_header_request.failed = !g_film_header_request.complete;
-    g_film_header_request.package_data.clear();
-    if (g_film_header_request.complete)
+    if (MikuPan_RmlSaveLoadPollFilmHeader(g_film_header_request))
     {
         MikuPan_RmlSaveLoadApplyFilmHeader();
     }
+}
+
+const char* MikuPan_RmlFilmHeaderSource(void)
+{
+    static std::string source;
+    MikuPanSaveLoadFilmHeaderRequest& request = g_menu_film_header_request;
+    if (request.failed)
+    {
+        return "";
+    }
+
+    if (!request.complete && request.load_id < 0)
+    {
+        char path[1024];
+        if (!MikuPan_ResolveUserPath("MikuPanPreviewCache/film_header_full.png",
+                                     path, sizeof(path)))
+        {
+            request.failed = true;
+            return "";
+        }
+        MikuPan_RmlSaveLoadStartFilmHeader(request, path);
+    }
+    (void) MikuPan_RmlSaveLoadPollFilmHeader(request);
+    if (!request.complete)
+    {
+        return "";
+    }
+
+    source = "mikupan-save-preview://" + request.cache_path.generic_string()
+             + "?v=film-header-full";
+    return source.c_str();
 }
 
 static TIM2_PICTUREHEADER* MikuPan_RmlSaveLoadChapterPicture(

@@ -16,6 +16,7 @@
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/gameplay/mikupan_enemy_motion.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/rendering/mikupan_baked_texture.h"
 #include "mikupan/rendering/mikupan_profiler.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
@@ -565,6 +566,14 @@ void SetManmdlTm2(u_int *pak_addr, int offset, char mode)
 
     tm2_num = *pak_addr;
 
+    /// Baked: the TIM2 files became a texture list (pak count 0, list at
+    /// +16); nothing is uploaded.
+    if (tm2_num == 0)
+    {
+        MikuPan_BakedTexture_LoadList(&pak_addr[4]);
+        return;
+    }
+
     for (i = 0; i < tm2_num; i++)
     {
         tm2_addr = (u_int *)GetFileInPak(pak_addr, i);
@@ -1053,23 +1062,7 @@ u_int *plyr_bwc_addr = NULL;
 
 void SetPlyrClut(int bw_flg)
 {
-    u_int *clut_addr;
-    u_int i;
-    u_int num;
-
-    if (bw_flg == 0)
-    {
-        clut_addr = plyr_clut_addr;
-    }
-    else
-    {
-        clut_addr = plyr_bwc_addr;
-    }
-
-    num = *clut_addr;
-
-    for (i = 0; i < num; i++)
-    {
-        MakeTim2SendPacket((int64_t)GetFileInPak(clut_addr, i), 0);
-    }
+    /// The player's textures are baked in colour (IMG_TEX.BIN); black & white
+    /// mode grays them in the shader instead of uploading the .bwc CLUTs.
+    MikuPan_BakedTexture_SetPlayerBlackWhite(bw_flg);
 }

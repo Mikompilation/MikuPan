@@ -62,11 +62,6 @@ unsigned int sceSifSetDma(sceSifDmaData* sdd, int len)
         }
 
         memcpy(dst, src, sdd[i].size);
-
-        if (dst_is_ps2_memory)
-        {
-            MikuPan_NotifyPs2MemoryLoad(MikuPan_GetPs2OffsetFromHostPointer(dst));
-        }
     }
 
     return 1;

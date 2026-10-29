@@ -1,4958 +1,789 @@
-* {
-    box-sizing: border-box;
-}
+/*
+ * The options screen, in the manner of MioPan's menus and the look of Fatal
+ * Frame: a single column centred on the PS2's 640x448, the title and the
+ * sections at the top, the rows between two rules, help and button prompts
+ * below.
+ *
+ * The palette is an old photograph's -- sepia text over black, the warm gold
+ * of the title menu's dividers -- with the umber bar of that menu as the
+ * cursor, and the PS2 options screen's roll of film across the top.  Film
+ * grain lies over everything, as it does over the game.
+ *
+ *   ink        #e8ddc7   aged paper: text
+ *   ink-dim    #a39885   ash: help, notes
+ *   ink-off    #5d554b   disabled
+ *   void       #050403   the deepest black
+ *   panel      #080605   floating panels
+ *   lacquer    #14100c   keys and buttons at rest
+ *   slot       #1a140e   wells: slider tracks
+ *   gold-dim   #5b4b33   frames and rules at rest
+ *   gold       #b39360   frames
+ *   gold-hot   #e0c080   a frame with the cursor
+ *   amber      #d9a85a   the cursor, a value being changed
+ *   candle     #f0c060   a value waiting to be applied, warnings
+ *
+ * Sizes are in dp, and one dp is one pixel of the PS2's 640x448 screen
+ * scaled to the game picture (mikupan_rmlui.cpp), so a layout here is a
+ * layout on the original screen.
+ */
 
-body {
-    display: block;
-    nav: auto;
+body
+{
     width: 100%;
     height: 100%;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     font-family: MikuPanRml;
-    font-size: 9dp;
-    line-height: 12dp;
-    color: #d8d0c1;
-    background-color: transparent;
+    font-size: 13dp;
+    color: #e8ddc7;
 }
 
-#options-film-title {
+body.font-zapf
+{
+    font-family: MikuPanRmlZapf;
+}
+
+div, p, h1, h2
+{
+    display: block;
+}
+
+.hidden
+{
+    display: none;
+}
+
+/* Over the game: a dark wash, darker at the edges, and grain on top. */
+#backdrop
+{
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #050403c0;
+    decorator: image(images/vignette.png), image(images/grain.png repeat);
+}
+
+body.ingame #backdrop
+{
+    background-color: #050403b0;
+}
+
+/* While a side panel is open the room behind has to be seen as it is. */
+body.panel-open #backdrop
+{
+    display: none;
+}
+
+.rule
+{
+    height: 6dp;
+    decorator: image(images/rule.png);
+}
+
+/* ---- the frame --------------------------------------------------------- */
+
+#frame
+{
     position: absolute;
     left: 50%;
-    top: 50%;
-    z-index: 20;
+    top: 16dp;
+    bottom: 14dp;
+    width: 540dp;
+    margin-left: -270dp;
+    /* A fade rather than a rise: a transform on an ancestor would make
+     * RmlUi clip the scrolling rows with a mask, which the backend does not
+     * draw. */
+    animation: 0.2s quadratic-out fade-in;
+}
+
+body.panel-open #frame,
+body.panel-open #film
+{
+    display: none;
+}
+
+/* The roll of film the PS2 options screen had across its top -- the mode
+ * select's strip and canister, where the game puts them (46,18 to 594,88)
+ * -- with the title written on it, as the Load screen has it. */
+#film
+{
+    position: absolute;
+    left: 50%;
+    top: 18dp;
+    width: 548dp;
+    height: 70dp;
+    margin-left: -274dp;
+    animation: 0.2s quadratic-out fade-in;
+}
+
+#film-strip
+{
+    position: absolute;
     display: block;
+    left: 0;
+    top: 0;
+    width: 548dp;
+    height: 70dp;
+}
+
+#film-strip.hidden
+{
+    display: none;
+}
+
+#title
+{
+    position: absolute;
+    display: block;
+    left: 43dp;
+    top: 6dp;
     width: 505dp;
     height: 54dp;
-    margin-left: -252dp;
-    margin-top: -201dp;
-    color: #f7ecb6;
+    margin: 0;
     font-family: MikuPanRmlZapf;
     font-size: 27dp;
+    font-weight: normal;
     line-height: 54dp;
     letter-spacing: 3dp;
     text-align: center;
     text-transform: uppercase;
     white-space: nowrap;
+    color: #f7ecb6;
     font-effect: glow(4px 14px 0px 0px #7f481f78), glow(2px 7px 0px 0px #c77d3598), glow(1px 3px 0px 0px #f0bb5bb0);
-    pointer-events: none;
 }
 
-#options-film-title.ingame {
+/* ---- sections ---------------------------------------------------------- */
+
+/* Just under the film. */
+#tabs
+{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 74dp;
+    height: 20dp;
+    white-space: nowrap;
+}
+
+.tab
+{
+    display: inline-block;
+    padding: 0 6dp;
+    height: 18dp;
+    line-height: 18dp;
+    font-size: 10.5dp;
+    letter-spacing: 1dp;
+    text-transform: uppercase;
+    color: #8f8678;
+    border-bottom: 2dp #00000000;
+    cursor: pointer;
+}
+
+.tab:hover
+{
+    color: #ddd2bd;
+}
+
+.tab.active
+{
+    color: #fff4dc;
+    border-bottom-color: #d9a85a;
+    font-effect: glow(0dp 3dp 0dp 0dp #c77d3566);
+}
+
+#rule-top
+{
+    position: absolute;
+    left: -10dp;
+    right: -10dp;
+    top: 95dp;
+}
+
+/* ---- rows -------------------------------------------------------------- */
+
+#pages
+{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 104dp;
+    bottom: 66dp;
+    overflow-y: auto;
+}
+
+.page
+{
+    padding-right: 8dp;
+    padding-bottom: 4dp;
+}
+
+.heading
+{
+    margin: 10dp 0 3dp 0;
+    padding: 0 0 1dp 2dp;
+    font-size: 9.5dp;
+    letter-spacing: 2dp;
+    text-transform: uppercase;
+    color: #c7a66e;
+    border-bottom: 1dp #5b4b3388;
+}
+
+.note
+{
+    margin: 4dp 0 6dp 0;
+    padding: 0 0 0 12dp;
+    font-size: 11dp;
+    line-height: 14dp;
+    color: #f0c060;
+}
+
+.row
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 19dp;
+    line-height: 19dp;
+    padding: 0 10dp;
+    border-left: 2dp #00000000;
+    cursor: pointer;
+}
+
+.row.selected
+{
+    border-left-color: #d9a85a;
+    decorator: image(images/cursor_glow.png);
+    color: #fff4dc;
+}
+
+.row.disabled
+{
+    color: #5d554b;
+}
+
+.row.disabled.selected
+{
+    border-left-color: #5b4b33;
+}
+
+.row-label
+{
+    font-size: 13dp;
+    white-space: nowrap;
+}
+
+.row-value
+{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 236dp;
+    font-size: 12dp;
+    color: #cfc5b4;
+}
+
+.row.selected .row-value
+{
+    color: #fff4dc;
+}
+
+.row.disabled .row-value
+{
+    color: #5d554b;
+}
+
+.value
+{
+    display: inline-block;
+    min-width: 54dp;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.choice .value
+{
+    width: 180dp;
+}
+
+/* A display change that waits for Enter: the candle colour until it is
+ * applied. */
+.row.pending .value
+{
+    color: #f0c060;
+}
+
+.slider .value
+{
+    width: 64dp;
+    text-align: right;
+    padding-right: 4dp;
+}
+
+.action-value
+{
+    padding: 0 12dp;
+    border: 1dp #5b4b33;
+    background-color: #14100c;
+    line-height: 15dp;
+    font-size: 10.5dp;
+    letter-spacing: 1dp;
+    text-transform: uppercase;
+}
+
+.row.selected .action-value
+{
+    border-color: #e0c080;
+    background-color: #3a2a14;
+}
+
+.row.disabled .action-value
+{
+    border-color: #2a2219;
+    background-color: #0d0a08;
+}
+
+/* A path or other long text an action acts on: shown, not boxed. */
+.action-value.plain
+{
+    max-width: 220dp;
+    padding: 0 2dp;
+    border-width: 0;
+    background-color: transparent;
+    letter-spacing: 0;
+    text-transform: none;
+    font-size: 11dp;
+    text-align: right;
+}
+
+.row.selected .action-value.plain
+{
+    background-color: transparent;
+}
+
+/* A binding: the key or button it holds, on a key cap. */
+.binding-value
+{
+    width: 200dp;
+    padding: 0 8dp;
+    border: 1dp #5b4b33;
+    background-color: #14100c;
+    line-height: 15dp;
+    font-size: 11dp;
+}
+
+.row.selected .binding-value
+{
+    border-color: #e0c080;
+    background-color: #3a2a14;
+}
+
+.row.unbound .binding-value
+{
+    color: #7a7062;
+}
+
+/* The step arrows: dim at rest, lit on the cursor's row. */
+.arrow
+{
+    display: inline-block;
+    width: 14dp;
+    text-align: center;
+    font-size: 15dp;
+    color: #5b4b33;
+    cursor: pointer;
+}
+
+.row.selected .arrow
+{
+    color: #d9a85a;
+}
+
+.row.disabled .arrow,
+.row.disabled.selected .arrow
+{
+    color: #2a2219;
+}
+
+.arrow:hover
+{
+    color: #fff4dc;
+}
+
+/* A slider: a well with the umber fill inside it, and a tick where the
+ * setting sits by default. */
+.track
+{
+    display: inline-block;
+    position: relative;
+    width: 112dp;
+    height: 5dp;
+    margin: 0 4dp;
+    background-color: #1a140e;
+    border: 1dp #5b4b33;
+}
+
+.fill
+{
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    background-color: #8a6a3a;
+}
+
+.row.selected .fill
+{
+    background-color: #d9a85a;
+}
+
+.row.disabled .fill
+{
+    background-color: #2a2219;
+}
+
+.mark
+{
+    display: block;
+    position: absolute;
+    top: -2dp;
+    bottom: -2dp;
+    width: 1dp;
+    background-color: #c7a66e99;
+}
+
+/* ---- help and prompts -------------------------------------------------- */
+
+#rule-bottom
+{
+    position: absolute;
+    left: -10dp;
+    right: -10dp;
+    bottom: 56dp;
+}
+
+#help
+{
+    position: absolute;
+    left: 4dp;
+    right: 4dp;
+    bottom: 20dp;
+    height: 32dp;
+    font-size: 11.5dp;
+    line-height: 15dp;
+    color: #a39885;
+}
+
+#prompts
+{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 14dp;
+}
+
+.prompts
+{
+    text-align: right;
+    font-size: 10.5dp;
+    line-height: 14dp;
+    color: #8f8678;
+    white-space: nowrap;
+}
+
+.prompt
+{
+    display: inline-block;
+    margin-left: 14dp;
+    cursor: pointer;
+}
+
+.prompt:hover
+{
+    color: #e8ddc7;
+}
+
+.key
+{
+    display: inline-block;
+    padding: 0 4dp;
+    margin-right: 4dp;
+    border: 1dp #5b4b33;
+    background-color: #14100c;
+    color: #e8ddc7;
+    font-size: 9.5dp;
+    line-height: 12dp;
+}
+
+/* ---- the side panel (calibration, CRT) -------------------------------- */
+
+/* Both panels keep to the PS2's screen in the middle of the picture, however
+ * wide it is. */
+#panel
+{
+    position: absolute;
+    left: 50%;
+    margin-left: -300dp;
+    top: 20dp;
+    width: 312dp;
+    padding: 10dp 12dp 8dp 12dp;
+    background-color: #080605e0;
+    border: 1dp #5b4b33;
+    animation: 0.15s quadratic-out fade-in;
+}
+
+#panel.hidden
+{
     display: none;
 }
 
-#window {
+#panel-title
+{
+    margin: 0 0 4dp 0;
+    font-family: MikuPanRmlZapf;
+    font-size: 19dp;
+    font-weight: normal;
+    line-height: 24dp;
+    letter-spacing: 1dp;
+    color: #f7ecb6;
+    font-effect: glow(2px 7px 0px 0px #c77d3570), glow(1px 3px 0px 0px #f0bb5b90);
+}
+
+#panel .rule
+{
+    height: 1dp;
+    margin: 2dp 0;
+    decorator: horizontal-gradient(#b39360cc #b3936000);
+}
+
+#panel-rows
+{
+    max-height: 292dp;
+    padding: 4dp 0;
+    overflow-y: auto;
+}
+
+#panel .row
+{
+    padding: 0 6dp;
+}
+
+#panel .row-label
+{
+    font-size: 12dp;
+}
+
+#panel .row-value
+{
+    width: 168dp;
+    font-size: 11dp;
+}
+
+#panel .choice .value
+{
+    width: 120dp;
+}
+
+#panel .track
+{
+    width: 72dp;
+}
+
+#panel .slider .value
+{
+    width: 48dp;
+}
+
+#panel-help
+{
+    min-height: 28dp;
+    margin: 6dp 0 4dp 0;
+    font-size: 10.5dp;
+    line-height: 14dp;
+    color: #a39885;
+}
+
+#panel-prompts
+{
+    height: 14dp;
+}
+
+/* The grey ramp beside the calibration panel: every step should be told
+ * from its neighbours, the first from black, the last from white. */
+#levels
+{
+    position: absolute;
+    left: 50%;
+    margin-left: 122dp;
+    bottom: 20dp;
+    width: 156dp;
+    padding: 8dp 10dp 7dp 10dp;
+    background-color: #080605e0;
+    border: 1dp #5b4b33;
+}
+
+#levels.hidden
+{
+    display: none;
+}
+
+#levels-title
+{
+    margin: 0 0 4dp 0;
+    font-size: 10dp;
+    letter-spacing: 1dp;
+    text-transform: uppercase;
+    color: #c7a66e;
+}
+
+#levels-strip
+{
+    display: flex;
+    width: 136dp;
+    height: 18dp;
+    border: 1dp #5b4b33;
+    background-color: #000000;
+}
+
+.level
+{
+    display: block;
+    flex: 1;
+    height: 18dp;
+    background-color: #000000;
+}
+
+#levels-labels
+{
+    display: flex;
+    justify-content: space-between;
+    width: 136dp;
+    margin-top: 3dp;
+    font-size: 8dp;
+    letter-spacing: 1dp;
+    text-transform: uppercase;
+    color: #9a8f7f;
+}
+
+/* ---- the yes / no window ---------------------------------------------- */
+
+#confirm
+{
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #05040399;
+}
+
+#confirm.hidden
+{
+    display: none;
+}
+
+#confirm-box
+{
     position: absolute;
     left: 50%;
     top: 50%;
-    margin-left: -268dp;
-    margin-top: -103dp;
-    width: 536dp;
-    height: 306dp;
-    display: flex;
-    flex-direction: row;
-    background-color: #080706d8;
-    border: 1dp #8b7b61;
+    width: 320dp;
+    margin-left: -160dp;
+    margin-top: -52dp;
+    padding: 16dp 20dp 14dp 20dp;
+    background-color: #0a0807f5;
+    border: 1dp #b39360;
+    text-align: center;
+    animation: 0.15s quadratic-out fade-in;
 }
 
-#window.ingame {
-    margin-top: -126dp;
+#confirm-text
+{
+    margin-bottom: 4dp;
+    font-size: 14dp;
+    line-height: 18dp;
 }
 
-#side {
-    display: flex;
-    flex-direction: column;
-    flex: none;
-    width: 136dp;
-    height: 100%;
-    padding: 12dp;
-    background-color: #050504cc;
-    border-right: 1dp #4b4033;
+#confirm-note
+{
+    margin-bottom: 14dp;
+    font-size: 11dp;
+    line-height: 14dp;
+    color: #f0c060;
 }
 
-#side-title {
-    display: block;
-    margin: 0px 0px 14dp 0px;
-    color: #f0e6d2;
-    font-size: 17dp;
-    line-height: 20dp;
-    letter-spacing: 1dp;
-    white-space: nowrap;
-}
-
-#category-list {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.category-button {
-    display: block;
-    width: 100%;
-    height: 25dp;
-    margin: 0px 0px 7dp 0px;
-    padding: 0px 7dp;
-    text-align: left;
-    color: #cfc5b4;
-    background-color: #11100edd;
-    border: 1dp #4a4238;
-    font-family: MikuPanRml;
-    font-size: 8dp;
-    line-height: 23dp;
-    letter-spacing: 0.5dp;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.category-button:hover,
-.category-button.selected,
-.category-button:focus,
-.category-button:focus-visible {
-    color: #fff4d8;
-    background-color: #302719dd;
-    border-color: #b09b73;
-}
-
-#side-actions {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    margin-top: auto;
-}
-
-.side-action-button {
-    width: 100%;
-    height: 23dp;
-    margin: 0px 0px 6dp 0px;
-    font-size: 8dp;
-    line-height: 21dp;
-}
-
-#cancel-options-button {
-    margin-bottom: 0px;
-}
-
-#content {
-    display: block;
-    flex: none;
-    width: 399dp;
-    height: 100%;
-    padding: 12dp 14dp;
-}
-
-#header {
-    display: block;
-    width: 371dp;
-    height: 32dp;
-    border-bottom: 1dp #4b4033;
-}
-
-h1,
-#panel-title {
-    display: block;
-    margin: 0px;
-    color: #efe8d8;
-    font-size: 20dp;
-    line-height: 25dp;
-    letter-spacing: 2dp;
-    white-space: nowrap;
-}
-
-#page-area {
-    display: block;
-    width: 371dp;
-    height: 196dp;
-    margin: 8dp 0px 8dp 0px;
-    padding-right: 10dp;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    scrollbar-margin: 0dp;
-}
-
-.page {
-    display: block;
-    width: 100%;
-    padding-bottom: 14dp;
-}
-
-.page.hidden {
+#confirm-note.hidden
+{
     display: none;
 }
 
-.page.active {
-    display: block;
-}
-
-.subsection-title {
-    display: block;
-    margin: 0px 0px 7dp 0px;
-    padding: 0px 0px 5dp 0px;
-    color: #bda57c;
-    border-bottom: 1dp #352d25;
-    font-size: 8dp;
-    line-height: 10dp;
-    letter-spacing: 1dp;
-    text-transform: uppercase;
-}
-
-.setting-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 351dp;
-    min-height: 42dp;
-    margin: 0px 0px 6dp 0px;
-    padding: 7dp 8dp;
-    background-color: #0f0d0bdd;
-    border: 1dp #2f281f;
-}
-
-.setting-row:hover,
-.setting-row.controller-focus {
-    background-color: #17120eee;
-    border-color: #6c5d48;
-}
-
-.setting-row.compact {
-    min-height: 34dp;
-}
-
-.setting-copy {
-    display: block;
-    flex: none;
-    width: 188dp;
-    padding-right: 10dp;
-}
-
-.setting-title {
-    display: block;
-    color: #ddd2bd;
-    font-size: 8dp;
-    line-height: 10dp;
-    white-space: nowrap;
-}
-
-.setting-desc,
-p.setting-desc {
-    display: block;
-    margin: 2dp 0px 0px 0px;
-    color: #81786b;
-    font-size: 6.5dp;
-    line-height: 8dp;
-}
-
-.setting-control {
-    display: block;
-    flex: none;
-    width: 150dp;
+#confirm-choices
+{
     text-align: center;
 }
 
-.wide-control {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+#confirm-choices.hidden
+{
+    display: none;
 }
 
-.checkbox-control {
+.confirm-choice
+{
+    display: inline-block;
+    width: 76dp;
+    margin: 0 8dp;
+    padding: 2dp 0;
+    line-height: 18dp;
     text-align: center;
+    cursor: pointer;
 }
 
-.value {
-    color: #d0ad73;
-    font-size: 7dp;
-    line-height: 9dp;
+/* Centred, so the bar that fades both ways. */
+.confirm-choice.selected
+{
+    color: #fff4dc;
+    decorator: image(images/cursor_bar.png);
+    font-effect: glow(0dp 3dp 0dp 0dp #c77d3566);
 }
 
-.note,
-p.note {
-    display: block;
-    margin: 2dp 0px 0px 0px;
-    color: #8a7f6f;
-    font-size: 6.5dp;
-    line-height: 8dp;
+/* ---- scrolling -------------------------------------------------------- */
+
+scrollbarvertical
+{
+    width: 3dp;
+    margin-left: 4dp;
 }
 
-#gpu-restart-note,
-#save-status {
-    color: #c8ab77;
+scrollbarvertical slidertrack
+{
+    background-color: #14100c;
 }
 
-.placeholder {
-    display: block;
-    width: 351dp;
-    margin: 0px 0px 6dp 0px;
-    padding: 8dp;
-    color: #928879;
-    background-color: #0f0d0bdd;
-    border: 1dp #2f281f;
-    font-size: 7dp;
-    line-height: 10dp;
-}
-
-scrollbarvertical {
-    width: 7dp;
-    margin-right: -9dp;
-}
-
-scrollbarvertical sliderarrowdec,
-scrollbarvertical sliderarrowinc {
-    width: 7dp;
-    height: 0dp;
-}
-
-scrollbarvertical slidertrack {
-    width: 7dp;
-    background-color: #15120fdd;
-    border: 1dp #352d25;
-}
-
-scrollbarvertical sliderbar {
-    width: 5dp;
-    min-height: 18dp;
-    margin-left: 1dp;
-    background-color: #8b7b61;
+scrollbarvertical sliderbar
+{
+    min-height: 16dp;
+    background-color: #5b4b33;
 }
 
 scrollbarvertical sliderbar:hover,
-scrollbarvertical sliderbar:active {
-    background-color: #b09b73;
+scrollbarvertical sliderbar:active
+{
+    background-color: #e0c080;
 }
 
-select,
-input.text,
-input.checkbox,
-button {
-    font-family: MikuPanRml;
-    tab-index: auto;
-    nav: auto;
+scrollbarvertical sliderarrowdec,
+scrollbarvertical sliderarrowinc
+{
+    width: 0;
+    height: 0;
 }
 
-#options-root.rml-font-imgui-default,
-#options-root.rml-font-century {
-    font-family: MikuPanRml;
-}
-
-#options-root.rml-font-zapf {
-    font-family: MikuPanRmlZapf;
-}
-
-#options-root.rml-font-imgui-default .category-button,
-#options-root.rml-font-imgui-default select,
-#options-root.rml-font-imgui-default input.text,
-#options-root.rml-font-imgui-default input.checkbox,
-#options-root.rml-font-imgui-default button,
-#options-root.rml-font-century .category-button,
-#options-root.rml-font-century select,
-#options-root.rml-font-century input.text,
-#options-root.rml-font-century input.checkbox,
-#options-root.rml-font-century button {
-    font-family: MikuPanRml;
-}
-
-#options-root.rml-font-zapf .category-button,
-#options-root.rml-font-zapf select,
-#options-root.rml-font-zapf input.text,
-#options-root.rml-font-zapf input.checkbox,
-#options-root.rml-font-zapf button {
-    font-family: MikuPanRmlZapf;
-}
-
-#options-root.rml-font-zapf #side-title,
-#options-root.rml-font-zapf h1,
-#options-root.rml-font-zapf #panel-title,
-#options-root.rml-font-zapf #choice-picker-title,
-#options-root.rml-font-zapf #confirm-save-title,
-#options-root.rml-font-zapf #resolution-confirm-title,
-#options-root.rml-font-zapf #binding-capture-title {
-    letter-spacing: 0.5dp;
-}
-
-#options-root.rml-font-zapf .category-button,
-#options-root.rml-font-zapf .setting-title,
-#options-root.rml-font-zapf .subsection-title,
-#options-root.rml-font-zapf .controls-section-title {
-    letter-spacing: 0dp;
-}
-
-select,
-input.text {
-    display: block;
-    width: 150dp;
-    height: 20dp;
-    margin: 0px;
-    padding: 0px;
-    color: #f0e4cc;
-    background-color: transparent;
-    border: 0dp;
-    font-size: 8dp;
-    line-height: 18dp;
-    text-align: center;
-}
-
-select {
-    position: relative;
-    background-color: #0d0c0a;
-    border: 1dp #5b4f3e;
-    cursor: pointer;
-}
-
-select:hover,
-select:focus,
-select:focus-visible,
-select.controller-focus,
-select:checked {
-    color: #fff4d8;
-    background-color: #19150f;
-    border-color: #b09b73;
-}
-
-select selectvalue {
-    display: block;
-    width: 150dp;
-    height: 18dp;
-    margin: 0dp;
-    padding: 0dp;
-    color: #f0e4cc;
-    background-color: transparent;
-    border: 0dp;
-    text-align: center;
-    line-height: 18dp;
-    white-space: nowrap;
-    overflow: hidden;
-    cursor: pointer;
-}
-
-select:focus selectvalue,
-select:focus-visible selectvalue,
-select.controller-focus selectvalue,
-select:checked selectvalue,
-select:hover selectvalue {
-    color: #fff4d8;
-}
-
-select selectarrow {
-    display: block;
-    position: absolute;
-    right: 8dp;
-    top: 7dp;
-    width: 0dp;
-    height: 0dp;
-    margin: 0dp;
-    padding: 0dp;
-    color: transparent;
-    background-color: transparent;
-    border: 0dp;
-    border-left: 4dp transparent;
-    border-right: 4dp transparent;
-    border-top: 5dp #c7a66e;
-    cursor: pointer;
-}
-
-select selectarrow:hover,
-select selectarrow:active,
-select:focus selectarrow,
-select:focus-visible selectarrow,
-select.controller-focus selectarrow,
-select:checked selectarrow {
-    border-top-color: #fff1be;
-}
-
-select selectbox {
-    width: 150dp;
-    margin-top: 1dp;
-    padding: 2dp;
-    color: #f0e4cc;
-    background-color: #090807;
-    border: 1dp #8b7b61;
-}
-
-select selectbox option {
-    display: block;
-    width: auto;
-    min-height: 16dp;
-    padding: 2dp 5dp;
-    color: #d8d0c1;
-    background-color: #0e0d0b;
-    line-height: 12dp;
-    text-align: center;
-    cursor: pointer;
-}
-
-select selectbox option:hover,
-select selectbox option:checked {
-    color: #fff4d8;
-    background-color: #302719;
-}
-
-input.text {
-    display: block;
-    width: 150dp;
-    height: 20dp;
-    margin: 0px;
-    padding: 0px;
-    color: #f0e4cc;
-    background-color: transparent;
-    border: 0dp;
-    font-size: 8dp;
-    line-height: 18dp;
-    text-align: center;
-}
-
-input.text {
-    padding: 0px 5dp;
-    color: #f0e4cc;
-    background-color: #0d0c0a;
-    border: 1dp #5b4f3e;
-    line-height: 18dp;
-    text-align: center;
-}
-
-input.text:hover,
-input.text:focus,
-input.text:focus-visible,
-input.text.controller-focus {
-    color: #fff4d8;
-    background-color: #19150f;
-    border-color: #b09b73;
-}
-
-.stepper-control,
-.choice-picker {
-    display: block;
-    position: relative;
-    width: 150dp;
-    height: 20dp;
-    margin: 0px;
-    padding: 0px 4dp;
-    color: #f0e4cc;
-    background-color: #0d0c0a;
-    border: 1dp #5b4f3e;
-    font-size: 8dp;
-    line-height: 18dp;
-    text-align: center;
-    cursor: pointer;
-}
-
-.stepper-control:hover,
-.stepper-control:focus,
-.stepper-control:focus-visible,
-.stepper-control.controller-focus,
-.choice-picker:hover,
-.choice-picker:focus,
-.choice-picker:focus-visible,
-.choice-picker.controller-focus {
-    color: #fff4d8;
-    background-color: #19150f;
-    border-color: #b09b73;
-}
-
-.stepper-edge {
-    display: inline-block;
-    width: 12dp;
-    color: #c7a66e;
-    text-align: center;
-}
-
-.stepper-bars {
-    display: inline-block;
-    width: 112dp;
-    height: 10dp;
-    text-align: center;
-    letter-spacing: 0dp;
-    vertical-align: middle;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.stepper-segment {
-    display: inline-block;
-    width: 2dp;
-    height: 8dp;
-    margin: 0dp 0.5dp;
-    background-color: #302a22;
-}
-
-.stepper-segment.filled {
-    background-color: #c7a66e;
-}
-
-.stepper-segment.neutral {
-    background-color: #7b6b53;
-}
-
-.stepper-segment.filled.neutral {
-    background-color: #fff1be;
-}
-
-.stepper-control:focus .stepper-segment.filled,
-.stepper-control:focus-visible .stepper-segment.filled,
-.stepper-control.controller-focus .stepper-segment.filled {
-    background-color: #fff1be;
-}
-
-.choice-text {
-    display: block;
-    width: 126dp;
-    height: 18dp;
-    color: #f0e4cc;
-    text-align: center;
-    line-height: 18dp;
-    white-space: nowrap;
-    overflow: hidden;
-    cursor: pointer;
-    pointer-events: none;
-}
-
-.picker-arrow {
-    position: absolute;
-    right: 4dp;
-    top: 0dp;
-    width: 14dp;
-    height: 18dp;
-    cursor: pointer;
-    pointer-events: none;
-}
-
-.picker-arrow-shape {
-    display: block;
-    width: 0dp;
-    height: 0dp;
-    margin: 7dp auto 0dp auto;
-    border-left: 4dp transparent;
-    border-right: 4dp transparent;
-    border-top: 5dp #c7a66e;
-}
-
-.picker-arrow-shape.open {
-    margin-top: 6dp;
-    border-top: 0dp transparent;
-    border-bottom: 5dp #c7a66e;
-}
-
-.choice-picker:hover .picker-arrow-shape,
-.choice-picker:focus .picker-arrow-shape,
-.choice-picker:focus-visible .picker-arrow-shape,
-.choice-picker.controller-focus .picker-arrow-shape,
-select:hover .picker-arrow-shape,
-select:focus .picker-arrow-shape,
-select:focus-visible .picker-arrow-shape,
-select.controller-focus .picker-arrow-shape,
-select:checked .picker-arrow-shape {
-    border-top-color: #fff1be;
-    border-bottom-color: #fff1be;
-}
-
-.stepper-control *,
-.choice-picker *,
-.picker-option,
-.picker-option * {
-    cursor: pointer;
-}
-
-input.checkbox {
-    display: inline-block;
-    width: 13dp;
-    height: 13dp;
-    margin: 0px;
-    padding: 0px;
-    color: #fff4d8;
-    background-color: #0d0c0a;
-    border: 1dp #6c5d48;
-    text-align: center;
-    line-height: 11dp;
-}
-
-input.checkbox:hover,
-input.checkbox:focus,
-input.checkbox:focus-visible,
-input.checkbox.controller-focus {
-    border-color: #b09b73;
-    background-color: #19150f;
-}
-
-input.checkbox:checked {
-    background-color: #b09b73;
-    border-color: #efe4cc;
-}
-
-button {
-    display: inline-block;
-    height: 20dp;
-    margin: 0px 5dp 0px 0px;
-    padding: 0px 8dp;
-    color: #e8dcc8;
-    background-color: #11100e;
-    border: 1dp #6c5d48;
-    font-size: 7.5dp;
-    line-height: 18dp;
-    text-align: center;
-    cursor: pointer;
-}
-
-button:hover,
-button:focus,
-button:focus-visible,
-button.controller-focus {
-    color: #fff4d8;
-    background-color: #302719;
-    border-color: #b09b73;
-}
-
-#browse-folder-button {
-    flex: none;
-    width: 48dp;
-    margin-left: 5dp;
-}
-
-#data-folder-input {
-    flex: none;
-    width: 97dp;
-}
-
-
-/* Controller / keyboard spatial navigation. RmlUi only navigates between
- * tabbable elements, and automatic spatial navigation is intentionally scoped
- * around scroll containers, so the sidebar-to-panel jumps are explicit.
- */
-#cat-display {
-    nav-up: #cancel-options-button;
-    nav-down: #cat-graphics;
-}
-
-#cat-graphics {
-    nav-up: #cat-display;
-    nav-down: #cat-audio;
-}
-
-#cat-audio {
-    nav-up: #cat-graphics;
-    nav-down: #cat-controls;
-}
-
-#cat-controls {
-    nav-up: #cat-audio;
-    nav-down: #cat-advanced;
-}
-
-#cat-advanced {
-    nav-up: #cat-controls;
-    nav-down: #save-return-button;
-}
-
-#save-return-button {
-    nav-up: #cat-advanced;
-    nav-down: #cancel-options-button;
-}
-
-#cancel-options-button {
-    nav-up: #save-return-button;
-    nav-down: #cat-display;
-}
-
-#window-mode-picker,
-#window-size-picker,
-#resolution-picker,
-#open-calibration-button,
-#hdr-enabled-input,
-#vsync-input {
-    nav-left: #cat-display;
-}
-
-#master-volume-stepper {
-    nav-left: #cat-audio;
-}
-
-#movement-dpad-mode,
-#movement-stick-mode,
-#finder-stick-layout-mode,
-#finder-dpad-film-swap-mode,
-#controls-keyboard-tab,
-#controls-controller-tab,
-#controls-list,
-#controls-reset-button {
-    nav-left: #cat-controls;
-}
-
-#movement-dpad-mode {
-    nav-down: #movement-stick-mode;
-}
-
-#movement-stick-mode {
-    nav-up: #movement-dpad-mode;
-    nav-down: #finder-stick-layout-mode;
-}
-
-#finder-stick-layout-mode {
-    nav-up: #movement-stick-mode;
-    nav-down: #finder-dpad-film-swap-mode;
-}
-
-#finder-dpad-film-swap-mode {
-    nav-up: #finder-stick-layout-mode;
-    nav-down: #controls-keyboard-tab;
-}
-
-#controls-keyboard-tab,
-#controls-controller-tab {
-    nav-up: #finder-dpad-film-swap-mode;
-}
-
-#gpu-backend-picker,
-#msaa-picker,
-#shadow-resolution-picker,
-#lighting-mode-picker,
-#dither-mode-picker,
-#finder-surround-picker {
-    nav-left: #cat-graphics;
-}
-
-#theme-picker,
-#font-picker,
-#font-scale-stepper,
-#flashlight-style-picker,
-#keep-finder-raised-input,
-#number-door-fix-localization-input,
-#minimap-enabled-input,
-#finder-dpad-film-swap-input,
-#mirror-stone-hud-input,
-#improved-movement-collisions-input,
-#open-crt-button,
-#data-folder-input,
-#browse-folder-button {
-    nav-left: #cat-advanced;
-}
-
-#save-changes-yes-button {
-    nav-left: #save-changes-cancel-button;
-    nav-right: #save-changes-no-button;
-}
-
-#save-changes-no-button {
-    nav-left: #save-changes-yes-button;
-    nav-right: #save-changes-cancel-button;
-}
-
-#save-changes-cancel-button {
-    nav-left: #save-changes-no-button;
-    nav-right: #save-changes-yes-button;
-}
-
-.modal {
-    position: absolute;
-    left: 0dp;
-    top: 0dp;
-    width: 536dp;
-    height: 306dp;
-    background-color: #000000aa;
-}
-
-.modal.hidden {
-    display: none;
-}
-
-#confirm-save-card {
-    position: absolute;
-    left: 147dp;
-    top: 94dp;
-    width: 242dp;
-    min-height: 104dp;
-    padding: 14dp;
-    background-color: #080706f2;
-    border: 1dp #8b7b61;
-}
-
-#confirm-save-title {
-    display: block;
-    margin: 0px 0px 6dp 0px;
-    color: #efe8d8;
-    font-size: 12dp;
-    line-height: 15dp;
-    letter-spacing: 1dp;
-}
-
-#confirm-save-text {
-    display: block;
-    margin: 0px 0px 12dp 0px;
-    color: #cfc5b4;
-    font-size: 8dp;
-    line-height: 11dp;
-}
-
-#confirm-save-buttons {
-    display: block;
-    text-align: right;
-}
-
-#save-changes-yes-button,
-#save-changes-no-button,
-#save-changes-cancel-button {
-    width: 48dp;
-}
-
-
-#choice-picker-card {
-    position: absolute;
-    left: 136dp;
-    top: 60dp;
-    width: 264dp;
-    min-height: 198dp;
-    padding: 14dp;
-    background-color: #080706f2;
-    border: 1dp #b09b73;
-    text-align: center;
-}
-
-#choice-picker-title {
-    color: #fff4d8;
-    font-size: 13dp;
-    line-height: 16dp;
-    margin-bottom: 8dp;
-    letter-spacing: 1dp;
-}
-
-#choice-picker-list {
-    display: block;
-    width: 236dp;
-    height: 116dp;
-    margin: 0dp auto 8dp auto;
-    padding: 3dp;
-    background-color: #0e0c0a;
-    border: 1dp #4b4033;
-    overflow-y: scroll;
-    overflow-x: hidden;
-}
-
-.picker-option {
-    display: block;
-    width: 220dp;
-    min-height: 15dp;
-    margin: 0px 0px 1dp 0px;
-    padding: 2dp 4dp;
-    color: #766e62;
-    background-color: transparent;
-    border: 0dp transparent;
-    font-size: 7dp;
-    line-height: 11dp;
-    text-align: center;
-}
-
-.picker-option:hover,
-.picker-option:focus,
-.picker-option:focus-visible,
-.picker-option.controller-focus,
-.picker-option.selected {
-    color: #fff4d8;
-    background-color: #302719;
-}
-
-.picker-option.applied {
-    color: #d0ad73;
-}
-
-#choice-picker-help {
-    color: #9b9080;
-    font-size: 6.5dp;
-    line-height: 8dp;
-    margin-bottom: 10dp;
-}
-
-#choice-picker-buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-#choice-picker-buttons button {
-    width: 58dp;
-    height: 21dp;
-    margin: 0px 4dp;
-    line-height: 19dp;
-}
-
-#choice-picker-apply-button {
-    nav-right: #choice-picker-cancel-button;
-}
-
-#choice-picker-cancel-button {
-    nav-left: #choice-picker-apply-button;
-}
-
-#resolution-confirm-card {
-    position: absolute;
-    left: 163dp;
-    top: 94dp;
-    width: 210dp;
-    padding: 14dp;
-    background-color: #0b0907f2;
-    border: 1dp #b09b73;
-    text-align: center;
-}
-
-#resolution-confirm-title {
-    display: block;
-    width: 100%;
-    color: #fff4d8;
-    font-size: 13dp;
-    line-height: 16dp;
-    margin-bottom: 8dp;
-}
-
-#resolution-confirm-text {
-    display: block;
-    width: 100%;
-    color: #cfc5b4;
-    font-size: 8dp;
-    line-height: 11dp;
-    margin-bottom: 12dp;
-}
-
-#resolution-confirm-buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-#resolution-confirm-buttons button {
-    width: 52dp;
-    height: 21dp;
-    margin: 0px 4dp;
-    line-height: 19dp;
-}
-
-#resolution-keep-button {
-    nav-right: #resolution-revert-button;
-}
-
-#resolution-revert-button {
-    nav-left: #resolution-keep-button;
-}
-
-#window.calibration-hidden {
-    display: none;
-}
-
-.calibration-panel {
-    position: absolute;
-    left: 18dp;
-    bottom: 18dp;
-    width: 236dp;
-    padding: 10dp;
-    color: #d8d0c1;
-    background-color: #080706e6;
-    border: 1dp #8b7b61;
-}
-
-.calibration-panel.hidden {
-    display: none;
-}
-
-#calibration-title {
-    display: block;
-    margin: 0dp 0dp 7dp 0dp;
-    color: #efe8d8;
-    font-size: 14dp;
-    line-height: 17dp;
-    letter-spacing: 1dp;
-}
-
-#calibration-help {
-    display: none;
-}
-
-.calibration-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 216dp;
-    height: 24dp;
-    margin: 0dp 0dp 4dp 0dp;
-}
-
-.calibration-row label {
-    display: block;
-    flex: none;
-    width: 76dp;
-    color: #ddd2bd;
-    font-size: 7.5dp;
-    line-height: 9dp;
-}
-
-.calibration-row .stepper-control {
-    flex: none;
-    width: 140dp;
-}
-
-.calibration-row .stepper-bars {
-    width: 63dp;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-#calibration-actions {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    width: 216dp;
-    margin-top: 6dp;
-}
-
-#calibration-actions button {
-    width: 50dp;
-    margin-left: 4dp;
-    margin-right: 0dp;
-}
-
-#open-calibration-button,
-#open-crt-button {
-    width: 92dp;
-}
-
-.crt-panel {
-    position: absolute;
-    left: 18dp;
-    top: 18dp;
-    width: 236dp;
-    height: 270dp;
-    padding: 10dp;
-    color: #d8d0c1;
-    background-color: #080706e6;
-    border: 1dp #8b7b61;
-    overflow-y: scroll;
-}
-
-.crt-panel.hidden {
-    display: none;
-}
-
-#crt-title {
-    display: block;
-    margin: 0dp 0dp 7dp 0dp;
-    color: #efe8d8;
-    font-size: 14dp;
-    line-height: 17dp;
-    letter-spacing: 1dp;
-}
-
-.crt-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 216dp;
-    height: 24dp;
-    margin: 0dp 0dp 4dp 0dp;
-}
-
-.crt-row label {
-    display: block;
-    flex: none;
-    width: 76dp;
-    color: #ddd2bd;
-    font-size: 7.5dp;
-    line-height: 9dp;
-}
-
-.crt-row .stepper-control {
-    flex: none;
-    width: 140dp;
-}
-
-.crt-row .stepper-bars {
-    width: 63dp;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-#crt-actions {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    width: 216dp;
-    margin-top: 6dp;
-}
-
-#crt-actions button {
-    width: 50dp;
-    margin-left: 4dp;
-    margin-right: 0dp;
-}
-
-.calibration-level-panel {
-    position: absolute;
-    right: 18dp;
-    bottom: 18dp;
-    width: 142dp;
-    padding: 9dp;
-    color: #d8d0c1;
-    background-color: #080706d8;
-    border: 1dp #8b7b61;
-}
-
-.calibration-level-panel.hidden {
-    display: none;
-}
-
-#calibration-level-title {
-    display: block;
-    margin: 0dp 0dp 3dp 0dp;
-    color: #efe8d8;
-    font-size: 9dp;
-    line-height: 11dp;
-}
-
-#calibration-level-help {
-    display: none;
-}
-
-#calibration-level-strip {
-    display: flex;
-    flex-direction: row;
-    width: 128dp;
-    height: 18dp;
-    margin: 4dp auto 0dp auto;
-    padding: 0dp;
-    background-color: #000000;
-    border: 1dp #4b4033;
-}
-
-.calibration-level-swatch {
-    display: block;
-    flex: none;
-    width: 8dp;
-    height: 16dp;
-    margin: 0dp;
-    background-color: #000000;
-}
-
-#calibration-level-labels {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    width: 128dp;
-    margin: 3dp auto 0dp auto;
-    color: #8f8678;
-    font-size: 5.5dp;
-    line-height: 7dp;
-}
-
-#calibration-brightness-stepper {
-    nav-up: #calibration-back-button;
-    nav-down: #calibration-gamma-stepper;
-}
-
-#calibration-gamma-stepper {
-    nav-up: #calibration-brightness-stepper;
-    nav-down: #calibration-contrast-stepper;
-}
-
-#calibration-contrast-stepper {
-    nav-up: #calibration-gamma-stepper;
-    nav-down: #calibration-shadow-depth-stepper;
-}
-
-#calibration-shadow-depth-stepper {
-    nav-up: #calibration-contrast-stepper;
-    nav-down: #calibration-hdr-enabled-input;
-}
-
-#calibration-hdr-enabled-input {
-    nav-up: #calibration-shadow-depth-stepper;
-    nav-down: #calibration-hdr-paper-white-stepper;
-}
-
-#calibration-hdr-paper-white-stepper {
-    nav-up: #calibration-hdr-enabled-input;
-    nav-down: #calibration-hdr-peak-luminance-stepper;
-}
-
-#calibration-hdr-peak-luminance-stepper {
-    nav-up: #calibration-hdr-paper-white-stepper;
-    nav-down: #calibration-reset-button;
-}
-
-#calibration-reset-button {
-    nav-up: #calibration-hdr-peak-luminance-stepper;
-    nav-right: #calibration-ok-button;
-    nav-down: #calibration-brightness-stepper;
-}
-
-#calibration-ok-button {
-    nav-left: #calibration-reset-button;
-    nav-right: #calibration-back-button;
-    nav-up: #calibration-hdr-peak-luminance-stepper;
-    nav-down: #calibration-brightness-stepper;
-}
-
-#calibration-back-button {
-    nav-left: #calibration-ok-button;
-    nav-right: #calibration-reset-button;
-    nav-up: #calibration-hdr-peak-luminance-stepper;
-    nav-down: #calibration-brightness-stepper;
-}
-
-
-#crt-enabled-input {
-    nav-up: #crt-back-button;
-    nav-down: #crt-0-stepper;
-}
-
-#crt-0-stepper {
-    nav-up: #crt-enabled-input;
-    nav-down: #crt-1-stepper;
-}
-
-#crt-1-stepper {
-    nav-up: #crt-0-stepper;
-    nav-down: #crt-2-stepper;
-}
-
-#crt-2-stepper {
-    nav-up: #crt-1-stepper;
-    nav-down: #crt-3-stepper;
-}
-
-#crt-3-stepper {
-    nav-up: #crt-2-stepper;
-    nav-down: #crt-4-stepper;
-}
-
-#crt-4-stepper {
-    nav-up: #crt-3-stepper;
-    nav-down: #crt-5-stepper;
-}
-
-#crt-5-stepper {
-    nav-up: #crt-4-stepper;
-    nav-down: #crt-6-stepper;
-}
-
-#crt-6-stepper {
-    nav-up: #crt-5-stepper;
-    nav-down: #crt-7-stepper;
-}
-
-#crt-7-stepper {
-    nav-up: #crt-6-stepper;
-    nav-down: #crt-8-stepper;
-}
-
-#crt-8-stepper {
-    nav-up: #crt-7-stepper;
-    nav-down: #crt-9-stepper;
-}
-
-#crt-9-stepper {
-    nav-up: #crt-8-stepper;
-    nav-down: #crt-10-stepper;
-}
-
-#crt-10-stepper {
-    nav-up: #crt-9-stepper;
-    nav-down: #crt-11-stepper;
-}
-
-#crt-11-stepper {
-    nav-up: #crt-10-stepper;
-    nav-down: #crt-12-stepper;
-}
-
-#crt-12-stepper {
-    nav-up: #crt-11-stepper;
-    nav-down: #crt-13-stepper;
-}
-
-#crt-13-stepper {
-    nav-up: #crt-12-stepper;
-    nav-down: #crt-14-stepper;
-}
-
-#crt-14-stepper {
-    nav-up: #crt-13-stepper;
-    nav-down: #crt-15-stepper;
-}
-
-#crt-15-stepper {
-    nav-up: #crt-14-stepper;
-    nav-down: #reset-crt-button;
-}
-
-#reset-crt-button {
-    nav-up: #crt-15-stepper;
-    nav-right: #crt-ok-button;
-    nav-down: #crt-enabled-input;
-}
-
-#crt-ok-button {
-    nav-left: #reset-crt-button;
-    nav-right: #crt-back-button;
-    nav-up: #crt-15-stepper;
-    nav-down: #crt-enabled-input;
-}
-
-#crt-back-button {
-    nav-left: #crt-ok-button;
-    nav-right: #reset-crt-button;
-    nav-up: #crt-15-stepper;
-    nav-down: #crt-enabled-input;
-}
-
-#controls-tabs {
-    display: flex;
-    flex-direction: row;
-    width: 351dp;
-    margin: 4dp 0dp 6dp 0dp;
-}
-
-.controls-tab {
-    flex: 1;
-    height: 22dp;
-    margin: 0dp 4dp 0dp 0dp;
-    line-height: 20dp;
-}
-
-#controls-controller-tab {
-    margin-right: 0dp;
-}
-
-.controls-tab.selected {
-    color: #fff4d8;
-    background-color: #302719;
-    border-color: #b09b73;
-}
-
-.controls-tab:focus,
-.controls-tab:focus-visible,
-.controls-tab.controller-focus {
-    color: #fff4d8;
-    background-color: #1d1710;
-    border-color: #8f7953;
-}
-
-.controls-tab.selected:focus,
-.controls-tab.selected:focus-visible,
-.controls-tab.selected.controller-focus {
-    background-color: #382d1c;
-    border-color: #d0b87e;
-}
-
-#controls-help {
-    width: 351dp;
-    margin: 0dp 0dp 7dp 0dp;
-}
-
-.controls-section-title {
-    display: block;
-    width: 351dp;
-    margin: 8dp 0dp 5dp 0dp;
-    padding: 0dp 0dp 4dp 0dp;
-    color: #bda57c;
-    border-bottom: 1dp #352d25;
-    font-size: 7dp;
-    line-height: 9dp;
-    letter-spacing: 1dp;
-    text-transform: uppercase;
-}
-
-.controls-bind-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 351dp;
-    min-height: 24dp;
-    margin: 0dp 0dp 3dp 0dp;
-    padding: 3dp 5dp;
-    background-color: #0f0d0bdd;
-    border: 1dp #2f281f;
-}
-
-.controls-bind-row:hover,
-.controls-bind-row.controller-focus {
-    background-color: #17120eee;
-    border-color: #6c5d48;
-}
-
-.controls-bind-label {
-    display: block;
-    flex: none;
-    width: 104dp;
-    color: #ddd2bd;
-    font-size: 7dp;
-    line-height: 9dp;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.controls-bind-value {
-    flex: none;
-    width: 166dp;
-    height: 18dp;
-    margin: 0dp 4dp 0dp 0dp;
-    padding: 0dp 5dp;
-    line-height: 16dp;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.controls-bind-value.small {
-    width: 76dp;
-}
-
-.controls-clear-button,
-.controls-option-button {
-    flex: none;
-    width: 38dp;
-    height: 18dp;
-    margin: 0dp 0dp 0dp 3dp;
-    padding: 0dp 4dp;
-    line-height: 16dp;
-}
-
-.controls-option-row .controls-bind-label {
-    width: 274dp;
-}
-
-.controls-option-button {
-    width: 58dp;
-}
-
-.controls-actions-row button {
-    width: 92dp;
-}
-
-#binding-capture-card {
-    position: absolute;
-    left: 143dp;
-    top: 88dp;
-    width: 250dp;
-    padding: 14dp;
-    background-color: #080706f2;
-    border: 1dp #b09b73;
-    text-align: center;
-}
-
-#binding-capture-title {
-    display: block;
-    margin: 0dp 0dp 7dp 0dp;
-    color: #fff4d8;
-    font-size: 13dp;
-    line-height: 16dp;
-    letter-spacing: 1dp;
-}
-
-#binding-capture-text {
-    display: block;
-    width: 100%;
-    margin: 0dp 0dp 6dp 0dp;
-    color: #d8d0c1;
-    font-size: 8dp;
-    line-height: 11dp;
-}
-
-#binding-capture-help {
-    display: block;
-    width: 100%;
-    margin: 0dp;
-    color: #8f8678;
-    font-size: 6.5dp;
-    line-height: 8dp;
-}
-#binding-capture-buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-#binding-capture-buttons button {
-    width: 58dp;
-    margin: 0dp 4dp;
-}
-
-#binding-capture-clear-button {
-    nav-right: #binding-capture-cancel-button;
-}
-
-#binding-capture-cancel-button {
-    nav-left: #binding-capture-clear-button;
-}
-
-/* Theme palettes. Sepia Photo uses the base stylesheet colours above. */
-#options-root.theme-moonlit,
-#options-root.theme-moonlit .calibration-panel,
-#options-root.theme-moonlit .crt-panel,
-#options-root.theme-moonlit .calibration-level-panel {
-    color: #c7d1e0;
-}
-
-#options-root.theme-moonlit #window {
-    background-color: #0a0f1ad8;
-    border-color: #3d4759;
-}
-
-#options-root.theme-moonlit #side {
-    background-color: #070a10cc;
-    border-right-color: #253247;
-}
-
-#options-root.theme-moonlit #header,
-#options-root.theme-moonlit .subsection-title,
-#options-root.theme-moonlit .controls-section-title {
-    border-bottom-color: #253247;
-}
-
-#options-root.theme-moonlit #side-title,
-#options-root.theme-moonlit h1,
-#options-root.theme-moonlit #panel-title,
-#options-root.theme-moonlit #confirm-save-title,
-#options-root.theme-moonlit #choice-picker-title,
-#options-root.theme-moonlit #resolution-confirm-title,
-#options-root.theme-moonlit #calibration-title,
-#options-root.theme-moonlit #crt-title,
-#options-root.theme-moonlit #calibration-level-title,
-#options-root.theme-moonlit #binding-capture-title {
-    color: #eef5ff;
-}
-
-#options-root.theme-moonlit .subsection-title,
-#options-root.theme-moonlit .controls-section-title {
-    color: #99c7f5;
-}
-
-#options-root.theme-moonlit .setting-title,
-#options-root.theme-moonlit .calibration-row label,
-#options-root.theme-moonlit .crt-row label,
-#options-root.theme-moonlit .controls-bind-label {
-    color: #d4deec;
-}
-
-#options-root.theme-moonlit .setting-desc,
-#options-root.theme-moonlit p.setting-desc,
-#options-root.theme-moonlit .note,
-#options-root.theme-moonlit p.note,
-#options-root.theme-moonlit #choice-picker-help,
-#options-root.theme-moonlit #binding-capture-help,
-#options-root.theme-moonlit #calibration-level-labels {
-    color: #7f8da3;
-}
-
-#options-root.theme-moonlit .value,
-#options-root.theme-moonlit #gpu-restart-note,
-#options-root.theme-moonlit #save-status,
-#options-root.theme-moonlit .picker-option.applied {
-    color: #7aa8e0;
-}
-
-#options-root.theme-moonlit .category-button,
-#options-root.theme-moonlit .setting-row,
-#options-root.theme-moonlit .placeholder,
-#options-root.theme-moonlit .controls-bind-row,
-#options-root.theme-moonlit button,
-#options-root.theme-moonlit select,
-#options-root.theme-moonlit input.text,
-#options-root.theme-moonlit .stepper-control,
-#options-root.theme-moonlit .choice-picker,
-#options-root.theme-moonlit select selectbox option {
-    color: #c7d1e0;
-    background-color: #111722dd;
-    border-color: #344054;
-}
-
-#options-root.theme-moonlit .setting-row:hover,
-#options-root.theme-moonlit .setting-row.controller-focus,
-#options-root.theme-moonlit .controls-bind-row:hover,
-#options-root.theme-moonlit .controls-bind-row.controller-focus,
-#options-root.theme-moonlit .category-button:hover,
-#options-root.theme-moonlit .category-button.selected,
-#options-root.theme-moonlit .category-button:focus,
-#options-root.theme-moonlit .category-button:focus-visible,
-#options-root.theme-moonlit button:hover,
-#options-root.theme-moonlit button:focus,
-#options-root.theme-moonlit button:focus-visible,
-#options-root.theme-moonlit button.controller-focus,
-#options-root.theme-moonlit select:hover,
-#options-root.theme-moonlit select:focus,
-#options-root.theme-moonlit select:focus-visible,
-#options-root.theme-moonlit select.controller-focus,
-#options-root.theme-moonlit select:checked,
-#options-root.theme-moonlit input.text:hover,
-#options-root.theme-moonlit input.text:focus,
-#options-root.theme-moonlit input.text:focus-visible,
-#options-root.theme-moonlit input.text.controller-focus,
-#options-root.theme-moonlit .stepper-control:hover,
-#options-root.theme-moonlit .stepper-control:focus,
-#options-root.theme-moonlit .stepper-control:focus-visible,
-#options-root.theme-moonlit .stepper-control.controller-focus,
-#options-root.theme-moonlit .choice-picker:hover,
-#options-root.theme-moonlit .choice-picker:focus,
-#options-root.theme-moonlit .choice-picker:focus-visible,
-#options-root.theme-moonlit .choice-picker.controller-focus,
-#options-root.theme-moonlit .picker-option:hover,
-#options-root.theme-moonlit .picker-option:focus,
-#options-root.theme-moonlit .picker-option:focus-visible,
-#options-root.theme-moonlit .picker-option.controller-focus,
-#options-root.theme-moonlit .picker-option.selected,
-#options-root.theme-moonlit .controls-tab.selected {
-    color: #eef5ff;
-    background-color: #293647;
-    border-color: #99c7f5;
-}
-
-#options-root.theme-moonlit #confirm-save-card,
-#options-root.theme-moonlit #choice-picker-card,
-#options-root.theme-moonlit #resolution-confirm-card,
-#options-root.theme-moonlit #binding-capture-card {
-    background-color: #0a0f1af2;
-    border-color: #6b88ad;
-}
-
-#options-root.theme-moonlit .calibration-panel,
-#options-root.theme-moonlit .crt-panel,
-#options-root.theme-moonlit .calibration-level-panel {
-    background-color: #0d1420e6;
-    border-color: #3d4759;
-}
-
-#options-root.theme-moonlit scrollbarvertical slidertrack,
-#options-root.theme-moonlit #choice-picker-list,
-#options-root.theme-moonlit #calibration-level-strip {
-    background-color: #0b1119dd;
-    border-color: #253247;
-}
-
-#options-root.theme-moonlit scrollbarvertical sliderbar,
-#options-root.theme-moonlit input.checkbox:checked,
-#options-root.theme-moonlit .stepper-segment.filled {
-    background-color: #6ba3e0;
-    border-color: #eef5ff;
-}
-
-#options-root.theme-moonlit scrollbarvertical sliderbar:hover,
-#options-root.theme-moonlit scrollbarvertical sliderbar:active,
-#options-root.theme-moonlit .stepper-segment.filled.neutral,
-#options-root.theme-moonlit .stepper-control:focus .stepper-segment.filled,
-#options-root.theme-moonlit .stepper-control:focus-visible .stepper-segment.filled,
-#options-root.theme-moonlit .stepper-control.controller-focus .stepper-segment.filled {
-    background-color: #99c7f5;
-}
-
-#options-root.theme-moonlit .stepper-edge,
-#options-root.theme-moonlit select selectarrow,
-#options-root.theme-moonlit .picker-arrow-shape {
-    color: #99c7f5;
-    border-top-color: #99c7f5;
-    border-bottom-color: #99c7f5;
-}
-
-#options-root.theme-moonlit .stepper-segment {
-    background-color: #263040;
-}
-
-#options-root.theme-moonlit .stepper-segment.neutral {
-    background-color: #50617a;
-}
-
-#options-root.theme-ghost-cyan,
-#options-root.theme-ghost-cyan .calibration-panel,
-#options-root.theme-ghost-cyan .crt-panel,
-#options-root.theme-ghost-cyan .calibration-level-panel {
-    color: #d1dbe0;
-}
-
-#options-root.theme-ghost-cyan #window {
-    background-color: #0d1217d8;
-    border-color: #384752;
-}
-
-#options-root.theme-ghost-cyan #side {
-    background-color: #080c10cc;
-    border-right-color: #23333b;
-}
-
-#options-root.theme-ghost-cyan #header,
-#options-root.theme-ghost-cyan .subsection-title,
-#options-root.theme-ghost-cyan .controls-section-title {
-    border-bottom-color: #23333b;
-}
-
-#options-root.theme-ghost-cyan #side-title,
-#options-root.theme-ghost-cyan h1,
-#options-root.theme-ghost-cyan #panel-title,
-#options-root.theme-ghost-cyan #confirm-save-title,
-#options-root.theme-ghost-cyan #choice-picker-title,
-#options-root.theme-ghost-cyan #resolution-confirm-title,
-#options-root.theme-ghost-cyan #calibration-title,
-#options-root.theme-ghost-cyan #crt-title,
-#options-root.theme-ghost-cyan #calibration-level-title,
-#options-root.theme-ghost-cyan #binding-capture-title {
-    color: #effcff;
-}
-
-#options-root.theme-ghost-cyan .subsection-title,
-#options-root.theme-ghost-cyan .controls-section-title {
-    color: #a6e6f2;
-}
-
-#options-root.theme-ghost-cyan .setting-title,
-#options-root.theme-ghost-cyan .calibration-row label,
-#options-root.theme-ghost-cyan .crt-row label,
-#options-root.theme-ghost-cyan .controls-bind-label {
-    color: #d7e4e8;
-}
-
-#options-root.theme-ghost-cyan .setting-desc,
-#options-root.theme-ghost-cyan p.setting-desc,
-#options-root.theme-ghost-cyan .note,
-#options-root.theme-ghost-cyan p.note,
-#options-root.theme-ghost-cyan #choice-picker-help,
-#options-root.theme-ghost-cyan #binding-capture-help,
-#options-root.theme-ghost-cyan #calibration-level-labels {
-    color: #7d8c91;
-}
-
-#options-root.theme-ghost-cyan .value,
-#options-root.theme-ghost-cyan #gpu-restart-note,
-#options-root.theme-ghost-cyan #save-status,
-#options-root.theme-ghost-cyan .picker-option.applied {
-    color: #8adbe6;
-}
-
-#options-root.theme-ghost-cyan .category-button,
-#options-root.theme-ghost-cyan .setting-row,
-#options-root.theme-ghost-cyan .placeholder,
-#options-root.theme-ghost-cyan .controls-bind-row,
-#options-root.theme-ghost-cyan button,
-#options-root.theme-ghost-cyan select,
-#options-root.theme-ghost-cyan input.text,
-#options-root.theme-ghost-cyan .stepper-control,
-#options-root.theme-ghost-cyan .choice-picker,
-#options-root.theme-ghost-cyan select selectbox option {
-    color: #d1dbe0;
-    background-color: #141f26dd;
-    border-color: #33444c;
-}
-
-#options-root.theme-ghost-cyan .setting-row:hover,
-#options-root.theme-ghost-cyan .setting-row.controller-focus,
-#options-root.theme-ghost-cyan .controls-bind-row:hover,
-#options-root.theme-ghost-cyan .controls-bind-row.controller-focus,
-#options-root.theme-ghost-cyan .category-button:hover,
-#options-root.theme-ghost-cyan .category-button.selected,
-#options-root.theme-ghost-cyan .category-button:focus,
-#options-root.theme-ghost-cyan .category-button:focus-visible,
-#options-root.theme-ghost-cyan button:hover,
-#options-root.theme-ghost-cyan button:focus,
-#options-root.theme-ghost-cyan button:focus-visible,
-#options-root.theme-ghost-cyan button.controller-focus,
-#options-root.theme-ghost-cyan select:hover,
-#options-root.theme-ghost-cyan select:focus,
-#options-root.theme-ghost-cyan select:focus-visible,
-#options-root.theme-ghost-cyan select.controller-focus,
-#options-root.theme-ghost-cyan select:checked,
-#options-root.theme-ghost-cyan input.text:hover,
-#options-root.theme-ghost-cyan input.text:focus,
-#options-root.theme-ghost-cyan input.text:focus-visible,
-#options-root.theme-ghost-cyan input.text.controller-focus,
-#options-root.theme-ghost-cyan .stepper-control:hover,
-#options-root.theme-ghost-cyan .stepper-control:focus,
-#options-root.theme-ghost-cyan .stepper-control:focus-visible,
-#options-root.theme-ghost-cyan .stepper-control.controller-focus,
-#options-root.theme-ghost-cyan .choice-picker:hover,
-#options-root.theme-ghost-cyan .choice-picker:focus,
-#options-root.theme-ghost-cyan .choice-picker:focus-visible,
-#options-root.theme-ghost-cyan .choice-picker.controller-focus,
-#options-root.theme-ghost-cyan .picker-option:hover,
-#options-root.theme-ghost-cyan .picker-option:focus,
-#options-root.theme-ghost-cyan .picker-option:focus-visible,
-#options-root.theme-ghost-cyan .picker-option.controller-focus,
-#options-root.theme-ghost-cyan .picker-option.selected,
-#options-root.theme-ghost-cyan .controls-tab.selected {
-    color: #effcff;
-    background-color: #233740;
-    border-color: #a6e6f2;
-}
-
-#options-root.theme-ghost-cyan #confirm-save-card,
-#options-root.theme-ghost-cyan #choice-picker-card,
-#options-root.theme-ghost-cyan #resolution-confirm-card,
-#options-root.theme-ghost-cyan #binding-capture-card {
-    background-color: #0d1217f2;
-    border-color: #80c7d1;
-}
-
-#options-root.theme-ghost-cyan .calibration-panel,
-#options-root.theme-ghost-cyan .crt-panel,
-#options-root.theme-ghost-cyan .calibration-level-panel {
-    background-color: #0e171ce6;
-    border-color: #384752;
-}
-
-#options-root.theme-ghost-cyan scrollbarvertical slidertrack,
-#options-root.theme-ghost-cyan #choice-picker-list,
-#options-root.theme-ghost-cyan #calibration-level-strip {
-    background-color: #0a1014dd;
-    border-color: #23333b;
-}
-
-#options-root.theme-ghost-cyan scrollbarvertical sliderbar,
-#options-root.theme-ghost-cyan input.checkbox:checked,
-#options-root.theme-ghost-cyan .stepper-segment.filled {
-    background-color: #80c7d1;
-    border-color: #effcff;
-}
-
-#options-root.theme-ghost-cyan scrollbarvertical sliderbar:hover,
-#options-root.theme-ghost-cyan scrollbarvertical sliderbar:active,
-#options-root.theme-ghost-cyan .stepper-segment.filled.neutral,
-#options-root.theme-ghost-cyan .stepper-control:focus .stepper-segment.filled,
-#options-root.theme-ghost-cyan .stepper-control:focus-visible .stepper-segment.filled,
-#options-root.theme-ghost-cyan .stepper-control.controller-focus .stepper-segment.filled {
-    background-color: #a6e6f2;
-}
-
-#options-root.theme-ghost-cyan .stepper-edge,
-#options-root.theme-ghost-cyan select selectarrow,
-#options-root.theme-ghost-cyan .picker-arrow-shape {
-    color: #a6e6f2;
-    border-top-color: #a6e6f2;
-    border-bottom-color: #a6e6f2;
-}
-
-#options-root.theme-ghost-cyan .stepper-segment {
-    background-color: #26343a;
-}
-
-#options-root.theme-ghost-cyan .stepper-segment.neutral {
-    background-color: #52686d;
-}
-
-#options-root.theme-crimson,
-#options-root.theme-crimson .calibration-panel,
-#options-root.theme-crimson .crt-panel,
-#options-root.theme-crimson .calibration-level-panel {
-    color: #dbc79e;
-}
-
-#options-root.theme-crimson #window {
-    background-color: #0f0a08d8;
-    border-color: #66211a;
-}
-
-#options-root.theme-crimson #side {
-    background-color: #090605cc;
-    border-right-color: #3d1915;
-}
-
-#options-root.theme-crimson #header,
-#options-root.theme-crimson .subsection-title,
-#options-root.theme-crimson .controls-section-title {
-    border-bottom-color: #3d1915;
-}
-
-#options-root.theme-crimson #side-title,
-#options-root.theme-crimson h1,
-#options-root.theme-crimson #panel-title,
-#options-root.theme-crimson #confirm-save-title,
-#options-root.theme-crimson #choice-picker-title,
-#options-root.theme-crimson #resolution-confirm-title,
-#options-root.theme-crimson #calibration-title,
-#options-root.theme-crimson #crt-title,
-#options-root.theme-crimson #calibration-level-title,
-#options-root.theme-crimson #binding-capture-title {
-    color: #ffe6bf;
-}
-
-#options-root.theme-crimson .subsection-title,
-#options-root.theme-crimson .controls-section-title {
-    color: #d9662e;
-}
-
-#options-root.theme-crimson .setting-title,
-#options-root.theme-crimson .calibration-row label,
-#options-root.theme-crimson .crt-row label,
-#options-root.theme-crimson .controls-bind-label {
-    color: #ead8b2;
-}
-
-#options-root.theme-crimson .setting-desc,
-#options-root.theme-crimson p.setting-desc,
-#options-root.theme-crimson .note,
-#options-root.theme-crimson p.note,
-#options-root.theme-crimson #choice-picker-help,
-#options-root.theme-crimson #binding-capture-help,
-#options-root.theme-crimson #calibration-level-labels {
-    color: #8d7664;
-}
-
-#options-root.theme-crimson .value,
-#options-root.theme-crimson #gpu-restart-note,
-#options-root.theme-crimson #save-status,
-#options-root.theme-crimson .picker-option.applied {
-    color: #df8848;
-}
-
-#options-root.theme-crimson .category-button,
-#options-root.theme-crimson .setting-row,
-#options-root.theme-crimson .placeholder,
-#options-root.theme-crimson .controls-bind-row,
-#options-root.theme-crimson button,
-#options-root.theme-crimson select,
-#options-root.theme-crimson input.text,
-#options-root.theme-crimson .stepper-control,
-#options-root.theme-crimson .choice-picker,
-#options-root.theme-crimson select selectbox option {
-    color: #dbc79e;
-    background-color: #1f120ddd;
-    border-color: #4a2119;
-}
-
-#options-root.theme-crimson .setting-row:hover,
-#options-root.theme-crimson .setting-row.controller-focus,
-#options-root.theme-crimson .controls-bind-row:hover,
-#options-root.theme-crimson .controls-bind-row.controller-focus,
-#options-root.theme-crimson .category-button:hover,
-#options-root.theme-crimson .category-button.selected,
-#options-root.theme-crimson .category-button:focus,
-#options-root.theme-crimson .category-button:focus-visible,
-#options-root.theme-crimson button:hover,
-#options-root.theme-crimson button:focus,
-#options-root.theme-crimson button:focus-visible,
-#options-root.theme-crimson button.controller-focus,
-#options-root.theme-crimson select:hover,
-#options-root.theme-crimson select:focus,
-#options-root.theme-crimson select:focus-visible,
-#options-root.theme-crimson select.controller-focus,
-#options-root.theme-crimson select:checked,
-#options-root.theme-crimson input.text:hover,
-#options-root.theme-crimson input.text:focus,
-#options-root.theme-crimson input.text:focus-visible,
-#options-root.theme-crimson input.text.controller-focus,
-#options-root.theme-crimson .stepper-control:hover,
-#options-root.theme-crimson .stepper-control:focus,
-#options-root.theme-crimson .stepper-control:focus-visible,
-#options-root.theme-crimson .stepper-control.controller-focus,
-#options-root.theme-crimson .choice-picker:hover,
-#options-root.theme-crimson .choice-picker:focus,
-#options-root.theme-crimson .choice-picker:focus-visible,
-#options-root.theme-crimson .choice-picker.controller-focus,
-#options-root.theme-crimson .picker-option:hover,
-#options-root.theme-crimson .picker-option:focus,
-#options-root.theme-crimson .picker-option:focus-visible,
-#options-root.theme-crimson .picker-option.controller-focus,
-#options-root.theme-crimson .picker-option.selected,
-#options-root.theme-crimson .controls-tab.selected {
-    color: #ffe6bf;
-    background-color: #522018;
-    border-color: #d9662e;
-}
-
-#options-root.theme-crimson #confirm-save-card,
-#options-root.theme-crimson #choice-picker-card,
-#options-root.theme-crimson #resolution-confirm-card,
-#options-root.theme-crimson #binding-capture-card {
-    background-color: #0f0a08f2;
-    border-color: #a33a27;
-}
-
-#options-root.theme-crimson .calibration-panel,
-#options-root.theme-crimson .crt-panel,
-#options-root.theme-crimson .calibration-level-panel {
-    background-color: #120c09e6;
-    border-color: #66211a;
-}
-
-#options-root.theme-crimson scrollbarvertical slidertrack,
-#options-root.theme-crimson #choice-picker-list,
-#options-root.theme-crimson #calibration-level-strip {
-    background-color: #0d0806dd;
-    border-color: #3d1915;
-}
-
-#options-root.theme-crimson scrollbarvertical sliderbar,
-#options-root.theme-crimson input.checkbox:checked,
-#options-root.theme-crimson .stepper-segment.filled {
-    background-color: #a33a27;
-    border-color: #ffe6bf;
-}
-
-#options-root.theme-crimson scrollbarvertical sliderbar:hover,
-#options-root.theme-crimson scrollbarvertical sliderbar:active,
-#options-root.theme-crimson .stepper-segment.filled.neutral,
-#options-root.theme-crimson .stepper-control:focus .stepper-segment.filled,
-#options-root.theme-crimson .stepper-control:focus-visible .stepper-segment.filled,
-#options-root.theme-crimson .stepper-control.controller-focus .stepper-segment.filled {
-    background-color: #d9662e;
-}
-
-#options-root.theme-crimson .stepper-edge,
-#options-root.theme-crimson select selectarrow,
-#options-root.theme-crimson .picker-arrow-shape {
-    color: #d9662e;
-    border-top-color: #d9662e;
-    border-bottom-color: #d9662e;
-}
-
-#options-root.theme-crimson .stepper-segment {
-    background-color: #3d2118;
-}
-
-#options-root.theme-crimson .stepper-segment.neutral {
-    background-color: #7a4e35;
-}
-
-#options-root.theme-ff1-ritual,
-#options-root.theme-ff1-ritual .calibration-panel,
-#options-root.theme-ff1-ritual .crt-panel,
-#options-root.theme-ff1-ritual .calibration-level-panel {
-    color: #dbccb3;
-}
-
-#options-root.theme-ff1-ritual #window {
-    background-color: #0e090ad8;
-    border-color: #4f302e;
-}
-
-#options-root.theme-ff1-ritual #side {
-    background-color: #090506cc;
-    border-right-color: #2e1a1c;
-}
-
-#options-root.theme-ff1-ritual #header,
-#options-root.theme-ff1-ritual .subsection-title,
-#options-root.theme-ff1-ritual .controls-section-title {
-    border-bottom-color: #2e1a1c;
-}
-
-#options-root.theme-ff1-ritual #side-title,
-#options-root.theme-ff1-ritual h1,
-#options-root.theme-ff1-ritual #panel-title,
-#options-root.theme-ff1-ritual #confirm-save-title,
-#options-root.theme-ff1-ritual #choice-picker-title,
-#options-root.theme-ff1-ritual #resolution-confirm-title,
-#options-root.theme-ff1-ritual #calibration-title,
-#options-root.theme-ff1-ritual #crt-title,
-#options-root.theme-ff1-ritual #calibration-level-title,
-#options-root.theme-ff1-ritual #binding-capture-title {
-    color: #f4ead5;
-}
-
-#options-root.theme-ff1-ritual .subsection-title,
-#options-root.theme-ff1-ritual .controls-section-title {
-    color: #b482bc;
-}
-
-#options-root.theme-ff1-ritual .setting-title,
-#options-root.theme-ff1-ritual .calibration-row label,
-#options-root.theme-ff1-ritual .crt-row label,
-#options-root.theme-ff1-ritual .controls-bind-label {
-    color: #eadcc7;
-}
-
-#options-root.theme-ff1-ritual .setting-desc,
-#options-root.theme-ff1-ritual p.setting-desc,
-#options-root.theme-ff1-ritual .note,
-#options-root.theme-ff1-ritual p.note,
-#options-root.theme-ff1-ritual #choice-picker-help,
-#options-root.theme-ff1-ritual #binding-capture-help,
-#options-root.theme-ff1-ritual #calibration-level-labels {
-    color: #8a7774;
-}
-
-#options-root.theme-ff1-ritual .value,
-#options-root.theme-ff1-ritual #gpu-restart-note,
-#options-root.theme-ff1-ritual #save-status,
-#options-root.theme-ff1-ritual .picker-option.applied {
-    color: #b482bc;
-}
-
-#options-root.theme-ff1-ritual .category-button,
-#options-root.theme-ff1-ritual .setting-row,
-#options-root.theme-ff1-ritual .placeholder,
-#options-root.theme-ff1-ritual .controls-bind-row,
-#options-root.theme-ff1-ritual button,
-#options-root.theme-ff1-ritual select,
-#options-root.theme-ff1-ritual input.text,
-#options-root.theme-ff1-ritual .stepper-control,
-#options-root.theme-ff1-ritual .choice-picker,
-#options-root.theme-ff1-ritual select selectbox option {
-    color: #dbccb3;
-    background-color: #211314dd;
-    border-color: #3c2424;
-}
-
-#options-root.theme-ff1-ritual .setting-row:hover,
-#options-root.theme-ff1-ritual .setting-row.controller-focus,
-#options-root.theme-ff1-ritual .controls-bind-row:hover,
-#options-root.theme-ff1-ritual .controls-bind-row.controller-focus,
-#options-root.theme-ff1-ritual .category-button:hover,
-#options-root.theme-ff1-ritual .category-button.selected,
-#options-root.theme-ff1-ritual .category-button:focus,
-#options-root.theme-ff1-ritual .category-button:focus-visible,
-#options-root.theme-ff1-ritual button:hover,
-#options-root.theme-ff1-ritual button:focus,
-#options-root.theme-ff1-ritual button:focus-visible,
-#options-root.theme-ff1-ritual button.controller-focus,
-#options-root.theme-ff1-ritual select:hover,
-#options-root.theme-ff1-ritual select:focus,
-#options-root.theme-ff1-ritual select:focus-visible,
-#options-root.theme-ff1-ritual select.controller-focus,
-#options-root.theme-ff1-ritual select:checked,
-#options-root.theme-ff1-ritual input.text:hover,
-#options-root.theme-ff1-ritual input.text:focus,
-#options-root.theme-ff1-ritual input.text:focus-visible,
-#options-root.theme-ff1-ritual input.text.controller-focus,
-#options-root.theme-ff1-ritual .stepper-control:hover,
-#options-root.theme-ff1-ritual .stepper-control:focus,
-#options-root.theme-ff1-ritual .stepper-control:focus-visible,
-#options-root.theme-ff1-ritual .stepper-control.controller-focus,
-#options-root.theme-ff1-ritual .choice-picker:hover,
-#options-root.theme-ff1-ritual .choice-picker:focus,
-#options-root.theme-ff1-ritual .choice-picker:focus-visible,
-#options-root.theme-ff1-ritual .choice-picker.controller-focus,
-#options-root.theme-ff1-ritual .picker-option:hover,
-#options-root.theme-ff1-ritual .picker-option:focus,
-#options-root.theme-ff1-ritual .picker-option:focus-visible,
-#options-root.theme-ff1-ritual .picker-option.controller-focus,
-#options-root.theme-ff1-ritual .picker-option.selected,
-#options-root.theme-ff1-ritual .controls-tab.selected {
-    color: #f4ead5;
-    background-color: #3d1f26;
-    border-color: #9e5cad;
-}
-
-#options-root.theme-ff1-ritual #confirm-save-card,
-#options-root.theme-ff1-ritual #choice-picker-card,
-#options-root.theme-ff1-ritual #resolution-confirm-card,
-#options-root.theme-ff1-ritual #binding-capture-card {
-    background-color: #0e090af2;
-    border-color: #714180;
-}
-
-#options-root.theme-ff1-ritual .calibration-panel,
-#options-root.theme-ff1-ritual .crt-panel,
-#options-root.theme-ff1-ritual .calibration-level-panel {
-    background-color: #120b0de6;
-    border-color: #4f302e;
-}
-
-#options-root.theme-ff1-ritual scrollbarvertical slidertrack,
-#options-root.theme-ff1-ritual #choice-picker-list,
-#options-root.theme-ff1-ritual #calibration-level-strip {
-    background-color: #0b0708dd;
-    border-color: #2e1a1c;
-}
-
-#options-root.theme-ff1-ritual scrollbarvertical sliderbar,
-#options-root.theme-ff1-ritual input.checkbox:checked,
-#options-root.theme-ff1-ritual .stepper-segment.filled {
-    background-color: #714180;
-    border-color: #f4ead5;
-}
-
-#options-root.theme-ff1-ritual scrollbarvertical sliderbar:hover,
-#options-root.theme-ff1-ritual scrollbarvertical sliderbar:active,
-#options-root.theme-ff1-ritual .stepper-segment.filled.neutral,
-#options-root.theme-ff1-ritual .stepper-control:focus .stepper-segment.filled,
-#options-root.theme-ff1-ritual .stepper-control:focus-visible .stepper-segment.filled,
-#options-root.theme-ff1-ritual .stepper-control.controller-focus .stepper-segment.filled {
-    background-color: #9e5cad;
-}
-
-#options-root.theme-ff1-ritual .stepper-edge,
-#options-root.theme-ff1-ritual select selectarrow,
-#options-root.theme-ff1-ritual .picker-arrow-shape {
-    color: #b482bc;
-    border-top-color: #b482bc;
-    border-bottom-color: #b482bc;
-}
-
-#options-root.theme-ff1-ritual .stepper-segment {
-    background-color: #332023;
-}
-
-#options-root.theme-ff1-ritual .stepper-segment.neutral {
-    background-color: #634765;
-}
-
-#options-root.theme-mist-teal,
-#options-root.theme-mist-teal .calibration-panel,
-#options-root.theme-mist-teal .crt-panel,
-#options-root.theme-mist-teal .calibration-level-panel {
-    color: #c7d6d1;
-}
-
-#options-root.theme-mist-teal #window {
-    background-color: #091213d8;
-    border-color: #335759;
-}
-
-#options-root.theme-mist-teal #side {
-    background-color: #050b0ccc;
-    border-right-color: #203839;
-}
-
-#options-root.theme-mist-teal #header,
-#options-root.theme-mist-teal .subsection-title,
-#options-root.theme-mist-teal .controls-section-title {
-    border-bottom-color: #203839;
-}
-
-#options-root.theme-mist-teal #side-title,
-#options-root.theme-mist-teal h1,
-#options-root.theme-mist-teal #panel-title,
-#options-root.theme-mist-teal #confirm-save-title,
-#options-root.theme-mist-teal #choice-picker-title,
-#options-root.theme-mist-teal #resolution-confirm-title,
-#options-root.theme-mist-teal #calibration-title,
-#options-root.theme-mist-teal #crt-title,
-#options-root.theme-mist-teal #calibration-level-title,
-#options-root.theme-mist-teal #binding-capture-title {
-    color: #effcf7;
-}
-
-#options-root.theme-mist-teal .subsection-title,
-#options-root.theme-mist-teal .controls-section-title {
-    color: #9e8fcf;
-}
-
-#options-root.theme-mist-teal .setting-title,
-#options-root.theme-mist-teal .calibration-row label,
-#options-root.theme-mist-teal .crt-row label,
-#options-root.theme-mist-teal .controls-bind-label {
-    color: #d6e5df;
-}
-
-#options-root.theme-mist-teal .setting-desc,
-#options-root.theme-mist-teal p.setting-desc,
-#options-root.theme-mist-teal .note,
-#options-root.theme-mist-teal p.note,
-#options-root.theme-mist-teal #choice-picker-help,
-#options-root.theme-mist-teal #binding-capture-help,
-#options-root.theme-mist-teal #calibration-level-labels {
-    color: #78908c;
-}
-
-#options-root.theme-mist-teal .value,
-#options-root.theme-mist-teal #gpu-restart-note,
-#options-root.theme-mist-teal #save-status,
-#options-root.theme-mist-teal .picker-option.applied {
-    color: #9e8fcf;
-}
-
-#options-root.theme-mist-teal .category-button,
-#options-root.theme-mist-teal .setting-row,
-#options-root.theme-mist-teal .placeholder,
-#options-root.theme-mist-teal .controls-bind-row,
-#options-root.theme-mist-teal button,
-#options-root.theme-mist-teal select,
-#options-root.theme-mist-teal input.text,
-#options-root.theme-mist-teal .stepper-control,
-#options-root.theme-mist-teal .choice-picker,
-#options-root.theme-mist-teal select selectbox option {
-    color: #c7d6d1;
-    background-color: #122022dd;
-    border-color: #29484a;
-}
-
-#options-root.theme-mist-teal .setting-row:hover,
-#options-root.theme-mist-teal .setting-row.controller-focus,
-#options-root.theme-mist-teal .controls-bind-row:hover,
-#options-root.theme-mist-teal .controls-bind-row.controller-focus,
-#options-root.theme-mist-teal .category-button:hover,
-#options-root.theme-mist-teal .category-button.selected,
-#options-root.theme-mist-teal .category-button:focus,
-#options-root.theme-mist-teal .category-button:focus-visible,
-#options-root.theme-mist-teal button:hover,
-#options-root.theme-mist-teal button:focus,
-#options-root.theme-mist-teal button:focus-visible,
-#options-root.theme-mist-teal button.controller-focus,
-#options-root.theme-mist-teal select:hover,
-#options-root.theme-mist-teal select:focus,
-#options-root.theme-mist-teal select:focus-visible,
-#options-root.theme-mist-teal select.controller-focus,
-#options-root.theme-mist-teal select:checked,
-#options-root.theme-mist-teal input.text:hover,
-#options-root.theme-mist-teal input.text:focus,
-#options-root.theme-mist-teal input.text:focus-visible,
-#options-root.theme-mist-teal input.text.controller-focus,
-#options-root.theme-mist-teal .stepper-control:hover,
-#options-root.theme-mist-teal .stepper-control:focus,
-#options-root.theme-mist-teal .stepper-control:focus-visible,
-#options-root.theme-mist-teal .stepper-control.controller-focus,
-#options-root.theme-mist-teal .choice-picker:hover,
-#options-root.theme-mist-teal .choice-picker:focus,
-#options-root.theme-mist-teal .choice-picker:focus-visible,
-#options-root.theme-mist-teal .choice-picker.controller-focus,
-#options-root.theme-mist-teal .picker-option:hover,
-#options-root.theme-mist-teal .picker-option:focus,
-#options-root.theme-mist-teal .picker-option:focus-visible,
-#options-root.theme-mist-teal .picker-option.controller-focus,
-#options-root.theme-mist-teal .picker-option.selected,
-#options-root.theme-mist-teal .controls-tab.selected {
-    color: #effcf7;
-    background-color: #1f3637;
-    border-color: #9e8fcf;
-}
-
-#options-root.theme-mist-teal #confirm-save-card,
-#options-root.theme-mist-teal #choice-picker-card,
-#options-root.theme-mist-teal #resolution-confirm-card,
-#options-root.theme-mist-teal #binding-capture-card {
-    background-color: #091213f2;
-    border-color: #8f73b8;
-}
-
-#options-root.theme-mist-teal .calibration-panel,
-#options-root.theme-mist-teal .crt-panel,
-#options-root.theme-mist-teal .calibration-level-panel {
-    background-color: #0e1819e6;
-    border-color: #335759;
-}
-
-#options-root.theme-mist-teal scrollbarvertical slidertrack,
-#options-root.theme-mist-teal #choice-picker-list,
-#options-root.theme-mist-teal #calibration-level-strip {
-    background-color: #081012dd;
-    border-color: #203839;
-}
-
-#options-root.theme-mist-teal scrollbarvertical sliderbar,
-#options-root.theme-mist-teal input.checkbox:checked,
-#options-root.theme-mist-teal .stepper-segment.filled {
-    background-color: #657d9f;
-    border-color: #effcf7;
-}
-
-#options-root.theme-mist-teal scrollbarvertical sliderbar:hover,
-#options-root.theme-mist-teal scrollbarvertical sliderbar:active,
-#options-root.theme-mist-teal .stepper-segment.filled.neutral,
-#options-root.theme-mist-teal .stepper-control:focus .stepper-segment.filled,
-#options-root.theme-mist-teal .stepper-control:focus-visible .stepper-segment.filled,
-#options-root.theme-mist-teal .stepper-control.controller-focus .stepper-segment.filled {
-    background-color: #9e8fcf;
-}
-
-#options-root.theme-mist-teal .stepper-edge,
-#options-root.theme-mist-teal select selectarrow,
-#options-root.theme-mist-teal .picker-arrow-shape {
-    color: #9e8fcf;
-    border-top-color: #9e8fcf;
-    border-bottom-color: #9e8fcf;
-}
-
-#options-root.theme-mist-teal .stepper-segment {
-    background-color: #223638;
-}
-
-#options-root.theme-mist-teal .stepper-segment.neutral {
-    background-color: #476466;
-}
-
-/* Fatal Frame tone pass: keep the palette hooks, but make the UI read like a
- * sparse in-game menu instead of a stacked web form.
- */
-#options-root .setting-desc,
-#options-root p.setting-desc,
-#options-root #controls-help,
-#options-root #choice-picker-help,
-#options-root #binding-capture-help {
-    display: none;
-}
-
-#options-root #window,
-#options-root.theme-moonlit #window,
-#options-root.theme-ghost-cyan #window,
-#options-root.theme-crimson #window,
-#options-root.theme-ff1-ritual #window,
-#options-root.theme-mist-teal #window,
-#options-root.theme-sepia #window {
-    background-color: #030202ee;
-    border-color: #291615;
-}
-
-#options-root #side,
-#options-root.theme-moonlit #side,
-#options-root.theme-ghost-cyan #side,
-#options-root.theme-crimson #side,
-#options-root.theme-ff1-ritual #side,
-#options-root.theme-mist-teal #side,
-#options-root.theme-sepia #side {
-    background-color: #050303d8;
-    border-right-color: #321b18;
-}
-
-#options-root #header,
-#options-root.theme-moonlit #header,
-#options-root.theme-ghost-cyan #header,
-#options-root.theme-crimson #header,
-#options-root.theme-ff1-ritual #header,
-#options-root.theme-mist-teal #header,
-#options-root.theme-sepia #header {
-    height: 28dp;
-    border-bottom-color: #321b18;
-}
-
-#options-root #side-title {
-    margin-bottom: 16dp;
-    color: #eadcc4;
-    font-size: 15dp;
-    line-height: 18dp;
-    letter-spacing: 2dp;
-}
-
-#options-root h1,
-#options-root #panel-title {
-    color: #e6d9c4;
-    font-size: 18dp;
-    line-height: 22dp;
-    letter-spacing: 3dp;
-}
-
-#options-root #page-area {
-    height: 212dp;
-    margin-top: 7dp;
-    padding-right: 8dp;
-}
-
-#options-root .subsection-title,
-#options-root .controls-section-title,
-#options-root.theme-moonlit .subsection-title,
-#options-root.theme-moonlit .controls-section-title,
-#options-root.theme-ghost-cyan .subsection-title,
-#options-root.theme-ghost-cyan .controls-section-title,
-#options-root.theme-crimson .subsection-title,
-#options-root.theme-crimson .controls-section-title,
-#options-root.theme-ff1-ritual .subsection-title,
-#options-root.theme-ff1-ritual .controls-section-title,
-#options-root.theme-mist-teal .subsection-title,
-#options-root.theme-mist-teal .controls-section-title,
-#options-root.theme-sepia .subsection-title,
-#options-root.theme-sepia .controls-section-title {
-    margin: 9dp 0dp 3dp 0dp;
-    padding-bottom: 3dp;
-    color: #8f6b55;
-    border-bottom-color: #2c1816;
-    font-size: 6.5dp;
-    line-height: 8dp;
-    letter-spacing: 2dp;
-}
-
-#options-root .setting-row,
-#options-root .controls-bind-row,
-#options-root .placeholder,
-#options-root.theme-moonlit .setting-row,
-#options-root.theme-moonlit .controls-bind-row,
-#options-root.theme-moonlit .placeholder,
-#options-root.theme-ghost-cyan .setting-row,
-#options-root.theme-ghost-cyan .controls-bind-row,
-#options-root.theme-ghost-cyan .placeholder,
-#options-root.theme-crimson .setting-row,
-#options-root.theme-crimson .controls-bind-row,
-#options-root.theme-crimson .placeholder,
-#options-root.theme-ff1-ritual .setting-row,
-#options-root.theme-ff1-ritual .controls-bind-row,
-#options-root.theme-ff1-ritual .placeholder,
-#options-root.theme-mist-teal .setting-row,
-#options-root.theme-mist-teal .controls-bind-row,
-#options-root.theme-mist-teal .placeholder,
-#options-root.theme-sepia .setting-row,
-#options-root.theme-sepia .controls-bind-row,
-#options-root.theme-sepia .placeholder {
-    min-height: 27dp;
-    margin: 0dp;
-    padding: 4dp 5dp;
-    background-color: transparent;
-    border: 0dp transparent;
-    border-bottom: 2dp #241514;
-}
-
-#options-root .setting-row:hover,
-#options-root .setting-row.controller-focus,
-#options-root .controls-bind-row:hover,
-#options-root .controls-bind-row.controller-focus,
-#options-root.theme-moonlit .setting-row:hover,
-#options-root.theme-moonlit .setting-row.controller-focus,
-#options-root.theme-moonlit .controls-bind-row:hover,
-#options-root.theme-moonlit .controls-bind-row.controller-focus,
-#options-root.theme-ghost-cyan .setting-row:hover,
-#options-root.theme-ghost-cyan .setting-row.controller-focus,
-#options-root.theme-ghost-cyan .controls-bind-row:hover,
-#options-root.theme-ghost-cyan .controls-bind-row.controller-focus,
-#options-root.theme-crimson .setting-row:hover,
-#options-root.theme-crimson .setting-row.controller-focus,
-#options-root.theme-crimson .controls-bind-row:hover,
-#options-root.theme-crimson .controls-bind-row.controller-focus,
-#options-root.theme-ff1-ritual .setting-row:hover,
-#options-root.theme-ff1-ritual .setting-row.controller-focus,
-#options-root.theme-ff1-ritual .controls-bind-row:hover,
-#options-root.theme-ff1-ritual .controls-bind-row.controller-focus,
-#options-root.theme-mist-teal .setting-row:hover,
-#options-root.theme-mist-teal .setting-row.controller-focus,
-#options-root.theme-mist-teal .controls-bind-row:hover,
-#options-root.theme-mist-teal .controls-bind-row.controller-focus,
-#options-root.theme-sepia .setting-row:hover,
-#options-root.theme-sepia .setting-row.controller-focus,
-#options-root.theme-sepia .controls-bind-row:hover,
-#options-root.theme-sepia .controls-bind-row.controller-focus {
-    background-color: #160b0acc;
-    border-bottom-color: #7a2d25;
-}
-
-#options-root .setting-copy {
-    width: 202dp;
-}
-
-#options-root .setting-control {
-    width: 136dp;
-    text-align: right;
-}
-
-#options-root .setting-title,
-#options-root .calibration-row label,
-#options-root .crt-row label,
-#options-root .controls-bind-label {
-    color: #d9cbb4;
-    font-size: 7.5dp;
-    line-height: 9dp;
-    letter-spacing: 1dp;
-    text-transform: uppercase;
-}
-
-#options-root .value,
-#options-root .note,
-#options-root p.note {
-    color: #a77952;
-}
-
-#options-root .category-button,
-#options-root .side-action-button,
-#options-root.theme-moonlit .category-button,
-#options-root.theme-moonlit .side-action-button,
-#options-root.theme-ghost-cyan .category-button,
-#options-root.theme-ghost-cyan .side-action-button,
-#options-root.theme-crimson .category-button,
-#options-root.theme-crimson .side-action-button,
-#options-root.theme-ff1-ritual .category-button,
-#options-root.theme-ff1-ritual .side-action-button,
-#options-root.theme-mist-teal .category-button,
-#options-root.theme-mist-teal .side-action-button,
-#options-root.theme-sepia .category-button,
-#options-root.theme-sepia .side-action-button {
-    height: 22dp;
-    margin-bottom: 3dp;
-    padding: 0dp 0dp 0dp 8dp;
-    color: #c8b9a4;
-    background-color: transparent;
-    border: 0dp transparent;
-    border-left: 2dp transparent;
-    line-height: 22dp;
-    letter-spacing: 1dp;
-}
-
-#options-root .category-button:hover,
-#options-root .category-button.selected,
-#options-root .category-button:focus,
-#options-root .category-button:focus-visible,
-#options-root .side-action-button:hover,
-#options-root .side-action-button:focus,
-#options-root .side-action-button:focus-visible,
-#options-root .side-action-button.controller-focus,
-#options-root.theme-moonlit .category-button:hover,
-#options-root.theme-moonlit .category-button.selected,
-#options-root.theme-moonlit .category-button:focus,
-#options-root.theme-moonlit .category-button:focus-visible,
-#options-root.theme-moonlit .side-action-button:hover,
-#options-root.theme-moonlit .side-action-button:focus,
-#options-root.theme-moonlit .side-action-button:focus-visible,
-#options-root.theme-moonlit .side-action-button.controller-focus,
-#options-root.theme-ghost-cyan .category-button:hover,
-#options-root.theme-ghost-cyan .category-button.selected,
-#options-root.theme-ghost-cyan .category-button:focus,
-#options-root.theme-ghost-cyan .category-button:focus-visible,
-#options-root.theme-ghost-cyan .side-action-button:hover,
-#options-root.theme-ghost-cyan .side-action-button:focus,
-#options-root.theme-ghost-cyan .side-action-button:focus-visible,
-#options-root.theme-ghost-cyan .side-action-button.controller-focus,
-#options-root.theme-crimson .category-button:hover,
-#options-root.theme-crimson .category-button.selected,
-#options-root.theme-crimson .category-button:focus,
-#options-root.theme-crimson .category-button:focus-visible,
-#options-root.theme-crimson .side-action-button:hover,
-#options-root.theme-crimson .side-action-button:focus,
-#options-root.theme-crimson .side-action-button:focus-visible,
-#options-root.theme-crimson .side-action-button.controller-focus,
-#options-root.theme-ff1-ritual .category-button:hover,
-#options-root.theme-ff1-ritual .category-button.selected,
-#options-root.theme-ff1-ritual .category-button:focus,
-#options-root.theme-ff1-ritual .category-button:focus-visible,
-#options-root.theme-ff1-ritual .side-action-button:hover,
-#options-root.theme-ff1-ritual .side-action-button:focus,
-#options-root.theme-ff1-ritual .side-action-button:focus-visible,
-#options-root.theme-ff1-ritual .side-action-button.controller-focus,
-#options-root.theme-mist-teal .category-button:hover,
-#options-root.theme-mist-teal .category-button.selected,
-#options-root.theme-mist-teal .category-button:focus,
-#options-root.theme-mist-teal .category-button:focus-visible,
-#options-root.theme-mist-teal .side-action-button:hover,
-#options-root.theme-mist-teal .side-action-button:focus,
-#options-root.theme-mist-teal .side-action-button:focus-visible,
-#options-root.theme-mist-teal .side-action-button.controller-focus,
-#options-root.theme-sepia .category-button:hover,
-#options-root.theme-sepia .category-button.selected,
-#options-root.theme-sepia .category-button:focus,
-#options-root.theme-sepia .category-button:focus-visible,
-#options-root.theme-sepia .side-action-button:hover,
-#options-root.theme-sepia .side-action-button:focus,
-#options-root.theme-sepia .side-action-button:focus-visible,
-#options-root.theme-sepia .side-action-button.controller-focus {
-    color: #f4ead8;
-    background-color: #1a0c0ccc;
-    border-left-color: #a1352c;
-}
-
-#options-root select,
-#options-root input.text,
-#options-root .stepper-control,
-#options-root .choice-picker,
-#options-root button,
-#options-root .controls-bind-value,
-#options-root.theme-moonlit select,
-#options-root.theme-moonlit input.text,
-#options-root.theme-moonlit .stepper-control,
-#options-root.theme-moonlit .choice-picker,
-#options-root.theme-moonlit button,
-#options-root.theme-moonlit .controls-bind-value,
-#options-root.theme-ghost-cyan select,
-#options-root.theme-ghost-cyan input.text,
-#options-root.theme-ghost-cyan .stepper-control,
-#options-root.theme-ghost-cyan .choice-picker,
-#options-root.theme-ghost-cyan button,
-#options-root.theme-ghost-cyan .controls-bind-value,
-#options-root.theme-crimson select,
-#options-root.theme-crimson input.text,
-#options-root.theme-crimson .stepper-control,
-#options-root.theme-crimson .choice-picker,
-#options-root.theme-crimson button,
-#options-root.theme-crimson .controls-bind-value,
-#options-root.theme-ff1-ritual select,
-#options-root.theme-ff1-ritual input.text,
-#options-root.theme-ff1-ritual .stepper-control,
-#options-root.theme-ff1-ritual .choice-picker,
-#options-root.theme-ff1-ritual button,
-#options-root.theme-ff1-ritual .controls-bind-value,
-#options-root.theme-mist-teal select,
-#options-root.theme-mist-teal input.text,
-#options-root.theme-mist-teal .stepper-control,
-#options-root.theme-mist-teal .choice-picker,
-#options-root.theme-mist-teal button,
-#options-root.theme-mist-teal .controls-bind-value,
-#options-root.theme-sepia select,
-#options-root.theme-sepia input.text,
-#options-root.theme-sepia .stepper-control,
-#options-root.theme-sepia .choice-picker,
-#options-root.theme-sepia button,
-#options-root.theme-sepia .controls-bind-value {
-    color: #e5d6bf;
-    background-color: #06040499;
-    border: 0dp transparent;
-    border-bottom: 1dp #4a3129;
-}
-
-#options-root select:hover,
-#options-root select:focus,
-#options-root select:focus-visible,
-#options-root select.controller-focus,
-#options-root select:checked,
-#options-root input.text:hover,
-#options-root input.text:focus,
-#options-root input.text:focus-visible,
-#options-root input.text.controller-focus,
-#options-root .stepper-control:hover,
-#options-root .stepper-control:focus,
-#options-root .stepper-control:focus-visible,
-#options-root .stepper-control.controller-focus,
-#options-root .choice-picker:hover,
-#options-root .choice-picker:focus,
-#options-root .choice-picker:focus-visible,
-#options-root .choice-picker.controller-focus,
-#options-root button:hover,
-#options-root button:focus,
-#options-root button:focus-visible,
-#options-root button.controller-focus {
-    color: #fff4d8;
-    background-color: #1b0d0dcc;
-    border-bottom-color: #a1352c;
-}
-
-#options-root select selectvalue,
-#options-root .choice-text,
-#options-root input.text {
-    text-align: right;
-}
-
-#options-root .choice-text {
-    width: 118dp;
-}
-
-#options-root .picker-arrow {
-    right: 1dp;
-}
-
-#options-root .stepper-edge,
-#options-root select selectarrow,
-#options-root .picker-arrow-shape {
-    color: #a77952;
-    border-top-color: #a77952;
-    border-bottom-color: #a77952;
-}
-
-#options-root .stepper-segment {
-    background-color: #1f1714;
-}
-
-#options-root .stepper-segment.filled,
-#options-root input.checkbox:checked {
-    background-color: #8a332a;
-}
-
-#options-root .stepper-segment.filled.neutral,
-#options-root .stepper-control:focus .stepper-segment.filled,
-#options-root .stepper-control:focus-visible .stepper-segment.filled,
-#options-root .stepper-control.controller-focus .stepper-segment.filled {
-    background-color: #d0a171;
-}
-
-#options-root #confirm-save-card,
-#options-root #choice-picker-card,
-#options-root #resolution-confirm-card,
-#options-root #binding-capture-card,
-#options-root .calibration-panel,
-#options-root .crt-panel,
-#options-root .calibration-level-panel {
-    background-color: #050303f2;
-    border-color: #4c211c;
-}
-
-#options-root #confirm-save-title,
-#options-root #choice-picker-title,
-#options-root #resolution-confirm-title,
-#options-root #binding-capture-title,
-#options-root #calibration-title,
-#options-root #crt-title,
-#options-root #calibration-level-title {
-    color: #eadcc4;
-    letter-spacing: 2dp;
-    text-transform: uppercase;
-}
-
-#options-root #choice-picker-list,
-#options-root scrollbarvertical slidertrack,
-#options-root #calibration-level-strip {
-    background-color: #030202dd;
-    border-color: #281614;
-}
-
-#options-root .picker-option {
-    color: #806f60;
-    background-color: transparent;
-    border: 0dp transparent;
-    border-left: 2dp transparent;
-    text-align: left;
-}
-
-#options-root .picker-option:hover,
-#options-root .picker-option:focus,
-#options-root .picker-option:focus-visible,
-#options-root .picker-option.controller-focus,
-#options-root .picker-option.selected {
-    color: #f4ead8;
-    background-color: #1a0c0ccc;
-    border-left-color: #a1352c;
-}
-
-#options-root .picker-option.applied {
-    color: #b98c60;
-    border-left-color: #5b3027;
-}
-
-#options-root .picker-option.applied.selected {
-    color: #f4ead8;
-    border-left-color: #a1352c;
-}
-
-#options-root scrollbarvertical sliderbar {
-    background-color: #5b3027;
-}
-
-#options-root scrollbarvertical sliderbar:hover,
-#options-root scrollbarvertical sliderbar:active {
-    background-color: #a1352c;
-}
-
-#options-root.theme-moonlit .subsection-title,
-#options-root.theme-moonlit .controls-section-title,
-#options-root.theme-moonlit .value,
-#options-root.theme-moonlit .note,
-#options-root.theme-moonlit p.note,
-#options-root.theme-moonlit .picker-option.applied {
-    color: #8fb8e8;
-}
-
-#options-root.theme-moonlit .setting-row:hover,
-#options-root.theme-moonlit .setting-row.controller-focus,
-#options-root.theme-moonlit .controls-bind-row:hover,
-#options-root.theme-moonlit .controls-bind-row.controller-focus,
-#options-root.theme-moonlit select:hover,
-#options-root.theme-moonlit select:focus,
-#options-root.theme-moonlit select:focus-visible,
-#options-root.theme-moonlit select.controller-focus,
-#options-root.theme-moonlit select:checked,
-#options-root.theme-moonlit input.text:hover,
-#options-root.theme-moonlit input.text:focus,
-#options-root.theme-moonlit input.text:focus-visible,
-#options-root.theme-moonlit input.text.controller-focus,
-#options-root.theme-moonlit .stepper-control:hover,
-#options-root.theme-moonlit .stepper-control:focus,
-#options-root.theme-moonlit .stepper-control:focus-visible,
-#options-root.theme-moonlit .stepper-control.controller-focus,
-#options-root.theme-moonlit .choice-picker:hover,
-#options-root.theme-moonlit .choice-picker:focus,
-#options-root.theme-moonlit .choice-picker:focus-visible,
-#options-root.theme-moonlit .choice-picker.controller-focus,
-#options-root.theme-moonlit button:hover,
-#options-root.theme-moonlit button:focus,
-#options-root.theme-moonlit button:focus-visible,
-#options-root.theme-moonlit button.controller-focus {
-    background-color: #0d1521cc;
-    border-bottom-color: #6f98c9;
-}
-
-#options-root.theme-moonlit .category-button:hover,
-#options-root.theme-moonlit .category-button.selected,
-#options-root.theme-moonlit .category-button:focus,
-#options-root.theme-moonlit .category-button:focus-visible,
-#options-root.theme-moonlit .side-action-button:hover,
-#options-root.theme-moonlit .side-action-button:focus,
-#options-root.theme-moonlit .side-action-button:focus-visible,
-#options-root.theme-moonlit .side-action-button.controller-focus,
-#options-root.theme-moonlit .picker-option:hover,
-#options-root.theme-moonlit .picker-option:focus,
-#options-root.theme-moonlit .picker-option:focus-visible,
-#options-root.theme-moonlit .picker-option.controller-focus,
-#options-root.theme-moonlit .picker-option.selected {
-    background-color: #0d1521cc;
-    border-left-color: #8fb8e8;
-}
-
-#options-root.theme-moonlit .stepper-edge,
-#options-root.theme-moonlit select selectarrow,
-#options-root.theme-moonlit .picker-arrow-shape {
-    color: #8fb8e8;
-    border-top-color: #8fb8e8;
-    border-bottom-color: #8fb8e8;
-}
-
-#options-root.theme-moonlit .stepper-segment.filled,
-#options-root.theme-moonlit input.checkbox:checked,
-#options-root.theme-moonlit scrollbarvertical sliderbar {
-    background-color: #5f8fca;
-}
-
-#options-root.theme-ghost-cyan .subsection-title,
-#options-root.theme-ghost-cyan .controls-section-title,
-#options-root.theme-ghost-cyan .value,
-#options-root.theme-ghost-cyan .note,
-#options-root.theme-ghost-cyan p.note,
-#options-root.theme-ghost-cyan .picker-option.applied {
-    color: #9de2ea;
-}
-
-#options-root.theme-ghost-cyan .setting-row:hover,
-#options-root.theme-ghost-cyan .setting-row.controller-focus,
-#options-root.theme-ghost-cyan .controls-bind-row:hover,
-#options-root.theme-ghost-cyan .controls-bind-row.controller-focus,
-#options-root.theme-ghost-cyan select:hover,
-#options-root.theme-ghost-cyan select:focus,
-#options-root.theme-ghost-cyan select:focus-visible,
-#options-root.theme-ghost-cyan select.controller-focus,
-#options-root.theme-ghost-cyan select:checked,
-#options-root.theme-ghost-cyan input.text:hover,
-#options-root.theme-ghost-cyan input.text:focus,
-#options-root.theme-ghost-cyan input.text:focus-visible,
-#options-root.theme-ghost-cyan input.text.controller-focus,
-#options-root.theme-ghost-cyan .stepper-control:hover,
-#options-root.theme-ghost-cyan .stepper-control:focus,
-#options-root.theme-ghost-cyan .stepper-control:focus-visible,
-#options-root.theme-ghost-cyan .stepper-control.controller-focus,
-#options-root.theme-ghost-cyan .choice-picker:hover,
-#options-root.theme-ghost-cyan .choice-picker:focus,
-#options-root.theme-ghost-cyan .choice-picker:focus-visible,
-#options-root.theme-ghost-cyan .choice-picker.controller-focus,
-#options-root.theme-ghost-cyan button:hover,
-#options-root.theme-ghost-cyan button:focus,
-#options-root.theme-ghost-cyan button:focus-visible,
-#options-root.theme-ghost-cyan button.controller-focus {
-    background-color: #0c171bcc;
-    border-bottom-color: #72b7bf;
-}
-
-#options-root.theme-ghost-cyan .category-button:hover,
-#options-root.theme-ghost-cyan .category-button.selected,
-#options-root.theme-ghost-cyan .category-button:focus,
-#options-root.theme-ghost-cyan .category-button:focus-visible,
-#options-root.theme-ghost-cyan .side-action-button:hover,
-#options-root.theme-ghost-cyan .side-action-button:focus,
-#options-root.theme-ghost-cyan .side-action-button:focus-visible,
-#options-root.theme-ghost-cyan .side-action-button.controller-focus,
-#options-root.theme-ghost-cyan .picker-option:hover,
-#options-root.theme-ghost-cyan .picker-option:focus,
-#options-root.theme-ghost-cyan .picker-option:focus-visible,
-#options-root.theme-ghost-cyan .picker-option.controller-focus,
-#options-root.theme-ghost-cyan .picker-option.selected {
-    background-color: #0c171bcc;
-    border-left-color: #9de2ea;
-}
-
-#options-root.theme-ghost-cyan .stepper-edge,
-#options-root.theme-ghost-cyan select selectarrow,
-#options-root.theme-ghost-cyan .picker-arrow-shape {
-    color: #9de2ea;
-    border-top-color: #9de2ea;
-    border-bottom-color: #9de2ea;
-}
-
-#options-root.theme-ghost-cyan .stepper-segment.filled,
-#options-root.theme-ghost-cyan input.checkbox:checked,
-#options-root.theme-ghost-cyan scrollbarvertical sliderbar {
-    background-color: #72b7bf;
-}
-
-#options-root.theme-crimson .subsection-title,
-#options-root.theme-crimson .controls-section-title,
-#options-root.theme-crimson .value,
-#options-root.theme-crimson .note,
-#options-root.theme-crimson p.note,
-#options-root.theme-crimson .picker-option.applied {
-    color: #df8848;
-}
-
-#options-root.theme-crimson .setting-row:hover,
-#options-root.theme-crimson .setting-row.controller-focus,
-#options-root.theme-crimson .controls-bind-row:hover,
-#options-root.theme-crimson .controls-bind-row.controller-focus,
-#options-root.theme-crimson select:hover,
-#options-root.theme-crimson select:focus,
-#options-root.theme-crimson select:focus-visible,
-#options-root.theme-crimson select.controller-focus,
-#options-root.theme-crimson select:checked,
-#options-root.theme-crimson input.text:hover,
-#options-root.theme-crimson input.text:focus,
-#options-root.theme-crimson input.text:focus-visible,
-#options-root.theme-crimson input.text.controller-focus,
-#options-root.theme-crimson .stepper-control:hover,
-#options-root.theme-crimson .stepper-control:focus,
-#options-root.theme-crimson .stepper-control:focus-visible,
-#options-root.theme-crimson .stepper-control.controller-focus,
-#options-root.theme-crimson .choice-picker:hover,
-#options-root.theme-crimson .choice-picker:focus,
-#options-root.theme-crimson .choice-picker:focus-visible,
-#options-root.theme-crimson .choice-picker.controller-focus,
-#options-root.theme-crimson button:hover,
-#options-root.theme-crimson button:focus,
-#options-root.theme-crimson button:focus-visible,
-#options-root.theme-crimson button.controller-focus {
-    background-color: #1d0d0bcc;
-    border-bottom-color: #a33a27;
-}
-
-#options-root.theme-crimson .category-button:hover,
-#options-root.theme-crimson .category-button.selected,
-#options-root.theme-crimson .category-button:focus,
-#options-root.theme-crimson .category-button:focus-visible,
-#options-root.theme-crimson .side-action-button:hover,
-#options-root.theme-crimson .side-action-button:focus,
-#options-root.theme-crimson .side-action-button:focus-visible,
-#options-root.theme-crimson .side-action-button.controller-focus,
-#options-root.theme-crimson .picker-option:hover,
-#options-root.theme-crimson .picker-option:focus,
-#options-root.theme-crimson .picker-option:focus-visible,
-#options-root.theme-crimson .picker-option.controller-focus,
-#options-root.theme-crimson .picker-option.selected {
-    background-color: #1d0d0bcc;
-    border-left-color: #d9662e;
-}
-
-#options-root.theme-crimson .stepper-edge,
-#options-root.theme-crimson select selectarrow,
-#options-root.theme-crimson .picker-arrow-shape {
-    color: #df8848;
-    border-top-color: #df8848;
-    border-bottom-color: #df8848;
-}
-
-#options-root.theme-crimson .stepper-segment.filled,
-#options-root.theme-crimson input.checkbox:checked,
-#options-root.theme-crimson scrollbarvertical sliderbar {
-    background-color: #a33a27;
-}
-
-#options-root.theme-ff1-ritual .subsection-title,
-#options-root.theme-ff1-ritual .controls-section-title,
-#options-root.theme-ff1-ritual .value,
-#options-root.theme-ff1-ritual .note,
-#options-root.theme-ff1-ritual p.note,
-#options-root.theme-ff1-ritual .picker-option.applied {
-    color: #b482bc;
-}
-
-#options-root.theme-ff1-ritual .setting-row:hover,
-#options-root.theme-ff1-ritual .setting-row.controller-focus,
-#options-root.theme-ff1-ritual .controls-bind-row:hover,
-#options-root.theme-ff1-ritual .controls-bind-row.controller-focus,
-#options-root.theme-ff1-ritual select:hover,
-#options-root.theme-ff1-ritual select:focus,
-#options-root.theme-ff1-ritual select:focus-visible,
-#options-root.theme-ff1-ritual select.controller-focus,
-#options-root.theme-ff1-ritual select:checked,
-#options-root.theme-ff1-ritual input.text:hover,
-#options-root.theme-ff1-ritual input.text:focus,
-#options-root.theme-ff1-ritual input.text:focus-visible,
-#options-root.theme-ff1-ritual input.text.controller-focus,
-#options-root.theme-ff1-ritual .stepper-control:hover,
-#options-root.theme-ff1-ritual .stepper-control:focus,
-#options-root.theme-ff1-ritual .stepper-control:focus-visible,
-#options-root.theme-ff1-ritual .stepper-control.controller-focus,
-#options-root.theme-ff1-ritual .choice-picker:hover,
-#options-root.theme-ff1-ritual .choice-picker:focus,
-#options-root.theme-ff1-ritual .choice-picker:focus-visible,
-#options-root.theme-ff1-ritual .choice-picker.controller-focus,
-#options-root.theme-ff1-ritual button:hover,
-#options-root.theme-ff1-ritual button:focus,
-#options-root.theme-ff1-ritual button:focus-visible,
-#options-root.theme-ff1-ritual button.controller-focus {
-    background-color: #1b0d12cc;
-    border-bottom-color: #714180;
-}
-
-#options-root.theme-ff1-ritual .category-button:hover,
-#options-root.theme-ff1-ritual .category-button.selected,
-#options-root.theme-ff1-ritual .category-button:focus,
-#options-root.theme-ff1-ritual .category-button:focus-visible,
-#options-root.theme-ff1-ritual .side-action-button:hover,
-#options-root.theme-ff1-ritual .side-action-button:focus,
-#options-root.theme-ff1-ritual .side-action-button:focus-visible,
-#options-root.theme-ff1-ritual .side-action-button.controller-focus,
-#options-root.theme-ff1-ritual .picker-option:hover,
-#options-root.theme-ff1-ritual .picker-option:focus,
-#options-root.theme-ff1-ritual .picker-option:focus-visible,
-#options-root.theme-ff1-ritual .picker-option.controller-focus,
-#options-root.theme-ff1-ritual .picker-option.selected {
-    background-color: #1b0d12cc;
-    border-left-color: #9e5cad;
-}
-
-#options-root.theme-ff1-ritual .stepper-edge,
-#options-root.theme-ff1-ritual select selectarrow,
-#options-root.theme-ff1-ritual .picker-arrow-shape {
-    color: #b482bc;
-    border-top-color: #b482bc;
-    border-bottom-color: #b482bc;
-}
-
-#options-root.theme-ff1-ritual .stepper-segment.filled,
-#options-root.theme-ff1-ritual input.checkbox:checked,
-#options-root.theme-ff1-ritual scrollbarvertical sliderbar {
-    background-color: #714180;
-}
-
-#options-root.theme-mist-teal .subsection-title,
-#options-root.theme-mist-teal .controls-section-title,
-#options-root.theme-mist-teal .value,
-#options-root.theme-mist-teal .note,
-#options-root.theme-mist-teal p.note,
-#options-root.theme-mist-teal .picker-option.applied {
-    color: #9e8fcf;
-}
-
-#options-root.theme-mist-teal .setting-row:hover,
-#options-root.theme-mist-teal .setting-row.controller-focus,
-#options-root.theme-mist-teal .controls-bind-row:hover,
-#options-root.theme-mist-teal .controls-bind-row.controller-focus,
-#options-root.theme-mist-teal select:hover,
-#options-root.theme-mist-teal select:focus,
-#options-root.theme-mist-teal select:focus-visible,
-#options-root.theme-mist-teal select.controller-focus,
-#options-root.theme-mist-teal select:checked,
-#options-root.theme-mist-teal input.text:hover,
-#options-root.theme-mist-teal input.text:focus,
-#options-root.theme-mist-teal input.text:focus-visible,
-#options-root.theme-mist-teal input.text.controller-focus,
-#options-root.theme-mist-teal .stepper-control:hover,
-#options-root.theme-mist-teal .stepper-control:focus,
-#options-root.theme-mist-teal .stepper-control:focus-visible,
-#options-root.theme-mist-teal .stepper-control.controller-focus,
-#options-root.theme-mist-teal .choice-picker:hover,
-#options-root.theme-mist-teal .choice-picker:focus,
-#options-root.theme-mist-teal .choice-picker:focus-visible,
-#options-root.theme-mist-teal .choice-picker.controller-focus,
-#options-root.theme-mist-teal button:hover,
-#options-root.theme-mist-teal button:focus,
-#options-root.theme-mist-teal button:focus-visible,
-#options-root.theme-mist-teal button.controller-focus {
-    background-color: #0b1717cc;
-    border-bottom-color: #657d9f;
-}
-
-#options-root.theme-mist-teal .category-button:hover,
-#options-root.theme-mist-teal .category-button.selected,
-#options-root.theme-mist-teal .category-button:focus,
-#options-root.theme-mist-teal .category-button:focus-visible,
-#options-root.theme-mist-teal .side-action-button:hover,
-#options-root.theme-mist-teal .side-action-button:focus,
-#options-root.theme-mist-teal .side-action-button:focus-visible,
-#options-root.theme-mist-teal .side-action-button.controller-focus,
-#options-root.theme-mist-teal .picker-option:hover,
-#options-root.theme-mist-teal .picker-option:focus,
-#options-root.theme-mist-teal .picker-option:focus-visible,
-#options-root.theme-mist-teal .picker-option.controller-focus,
-#options-root.theme-mist-teal .picker-option.selected {
-    background-color: #0b1717cc;
-    border-left-color: #9e8fcf;
-}
-
-#options-root.theme-mist-teal .stepper-edge,
-#options-root.theme-mist-teal select selectarrow,
-#options-root.theme-mist-teal .picker-arrow-shape {
-    color: #9e8fcf;
-    border-top-color: #9e8fcf;
-    border-bottom-color: #9e8fcf;
-}
-
-#options-root.theme-mist-teal .stepper-segment.filled,
-#options-root.theme-mist-teal input.checkbox:checked,
-#options-root.theme-mist-teal scrollbarvertical sliderbar {
-    background-color: #657d9f;
-}
-
-/* Layout guardrails for the sparse menu treatment above. */
-#options-root .setting-row,
-#options-root .controls-bind-row {
-    overflow: hidden;
-}
-
-#options-root .setting-copy {
-    width: 184dp;
-    padding-right: 8dp;
-    overflow: hidden;
-}
-
-#options-root .setting-title {
-    overflow: hidden;
-}
-
-#options-root .setting-control {
-    width: 150dp;
-    overflow: hidden;
-}
-
-#options-root .wide-control {
-    width: 150dp;
-}
-
-#options-root select,
-#options-root input.text,
-#options-root .stepper-control,
-#options-root .choice-picker {
-    width: 144dp;
-    overflow: hidden;
-}
-
-#options-root select selectvalue {
-    width: 120dp;
-    padding: 0dp 18dp 0dp 0dp;
-    overflow: hidden;
-}
-
-#options-root select selectbox {
-    width: 144dp;
-}
-
-#options-root .choice-text {
-    width: 118dp;
-    overflow: hidden;
-}
-
-#options-root .choice-picker.disabled,
-#options-root .choice-picker.disabled:hover,
-#options-root .choice-picker.disabled:focus,
-#options-root .choice-picker.disabled:focus-visible,
-#options-root .choice-picker.disabled.controller-focus {
-    color: #776c5d;
-    background-color: #05030366;
-    border-bottom-color: #33211d;
-}
-
-#options-root .choice-picker.disabled .choice-text,
-#options-root .choice-picker.disabled .picker-arrow,
-#options-root .choice-picker.disabled .picker-arrow-shape {
-    color: #776c5d;
-    border-top-color: #776c5d;
-    border-bottom-color: #776c5d;
-    cursor: default;
-}
-
-#options-root .picker-arrow {
-    right: 1dp;
-    width: 12dp;
-}
-
-#options-root .stepper-control {
-    padding: 0dp 2dp;
-}
-
-#options-root .stepper-edge {
-    width: 9dp;
-}
-
-#options-root .stepper-bars {
-    width: 104dp;
-}
-
-#options-root .checkbox-control {
-    width: 150dp;
-}
-
-#options-root input.checkbox {
-    width: 13dp;
-    height: 13dp;
-}
-
-#options-root #open-calibration-button,
-#options-root #open-crt-button,
-#options-root #controls-reset-button {
-    width: 86dp;
-}
-
-#options-root #data-folder-input {
-    width: 90dp;
-}
-
-#options-root #browse-folder-button {
-    width: 42dp;
-    margin-left: 4dp;
-    margin-right: 0dp;
-    padding: 0dp 4dp;
-}
-
-#options-root .controls-bind-label {
-    width: 102dp;
-    overflow: hidden;
-}
-
-#options-root .controls-bind-value {
-    width: 158dp;
-    overflow: hidden;
-}
-
-#options-root .controls-bind-value.small {
-    width: 70dp;
-}
-
-#options-root .controls-clear-button {
-    width: 37dp;
-    margin-left: 3dp;
-    margin-right: 0dp;
-    padding: 0dp 4dp;
-}
-
-#options-root .controls-option-row .controls-bind-label {
-    width: 264dp;
-}
-
-#options-root .controls-option-button {
-    width: 52dp;
-    margin-left: 3dp;
-    margin-right: 0dp;
-}
-
-#options-root select selectbox option {
-    border-left: 2dp transparent;
-    text-align: left;
-}
-
-#options-root select selectbox option:hover,
-#options-root select selectbox option:focus,
-#options-root select selectbox option:focus-visible,
-#options-root select selectbox option:checked {
-    color: #f4ead8;
-    background-color: #1a0c0ccc;
-    border-left-color: #a1352c;
-}
-
-#options-root.theme-moonlit select selectbox option:hover,
-#options-root.theme-moonlit select selectbox option:focus,
-#options-root.theme-moonlit select selectbox option:focus-visible,
-#options-root.theme-moonlit select selectbox option:checked {
-    color: #e6f0ff;
-    background-color: #0d1521cc;
-    border-left-color: #8fb8e8;
-}
-
-#options-root.theme-ghost-cyan select selectbox option:hover,
-#options-root.theme-ghost-cyan select selectbox option:focus,
-#options-root.theme-ghost-cyan select selectbox option:focus-visible,
-#options-root.theme-ghost-cyan select selectbox option:checked {
-    color: #e8ffff;
-    background-color: #0c171bcc;
-    border-left-color: #9de2ea;
-}
-
-#options-root.theme-crimson select selectbox option:hover,
-#options-root.theme-crimson select selectbox option:focus,
-#options-root.theme-crimson select selectbox option:focus-visible,
-#options-root.theme-crimson select selectbox option:checked {
-    color: #fff1d8;
-    background-color: #1d0d0bcc;
-    border-left-color: #d9662e;
-}
-
-#options-root.theme-ff1-ritual select selectbox option:hover,
-#options-root.theme-ff1-ritual select selectbox option:focus,
-#options-root.theme-ff1-ritual select selectbox option:focus-visible,
-#options-root.theme-ff1-ritual select selectbox option:checked {
-    color: #f6e6fb;
-    background-color: #1b0d12cc;
-    border-left-color: #9e5cad;
-}
-
-#options-root.theme-mist-teal select selectbox option:hover,
-#options-root.theme-mist-teal select selectbox option:focus,
-#options-root.theme-mist-teal select selectbox option:focus-visible,
-#options-root.theme-mist-teal select selectbox option:checked {
-    color: #eee9ff;
-    background-color: #0b1717cc;
-    border-left-color: #9e8fcf;
-}
-
-/* Option 6: photographic ritual pass. Inert overlay marks and more severe
- * menu geometry push the screen away from a clean app surface.
- */
-#options-root #window {
-    overflow: hidden;
-    background-color: #020101f4;
-    border: 1dp #2a1715;
-    border-top-color: #3a1f1b;
-    border-bottom-color: #241311;
-}
-
-#options-root #side {
-    background-color: #030202e6;
-    border-right-color: #241313;
-}
-
-#options-root #content {
-    background-color: #01010133;
-}
-
-#ritual-overlay {
-    display: block;
-    position: absolute;
-    left: 0dp;
-    top: 0dp;
-    width: 536dp;
-    height: 306dp;
-    pointer-events: none;
-}
-
-#ritual-edge-top,
-#ritual-edge-bottom,
-#ritual-edge-left,
-#ritual-edge-right,
-.ritual-corner,
-.ritual-scratch,
-.ritual-speck {
-    display: block;
-    position: absolute;
-    pointer-events: none;
-}
-
-#ritual-edge-top {
-    left: 0dp;
-    top: 0dp;
-    width: 536dp;
-    height: 7dp;
-    background-color: #00000034;
-    border: 0dp transparent;
-    border-top: 2dp #3a1f1b;
-}
-
-#ritual-edge-bottom {
-    left: 0dp;
-    bottom: 0dp;
-    width: 536dp;
-    height: 8dp;
-    background-color: #0000003c;
-    border: 0dp transparent;
-    border-bottom: 2dp #241311;
-}
-
-#ritual-edge-left {
-    left: 0dp;
-    top: 0dp;
-    width: 6dp;
-    height: 306dp;
-    background-color: #00000030;
-    border: 0dp transparent;
-    border-left: 2dp #2a1715;
-}
-
-#ritual-edge-right {
-    right: 0dp;
-    top: 0dp;
-    width: 6dp;
-    height: 306dp;
-    background-color: #0000003a;
-    border: 0dp transparent;
-    border-right: 2dp #2a1715;
-}
-
-.ritual-corner {
-    width: 21dp;
-    height: 21dp;
-    border: 0dp transparent;
-}
-
-#ritual-corner-tl {
-    left: 6dp;
-    top: 6dp;
-    border-left: 2dp #6f2a22;
-    border-top: 2dp #6f2a22;
-}
-
-#ritual-corner-tr {
-    right: 6dp;
-    top: 6dp;
-    border-right: 2dp #5b3027;
-    border-top: 2dp #5b3027;
-}
-
-#ritual-corner-bl {
-    left: 6dp;
-    bottom: 6dp;
-    border-left: 2dp #5b3027;
-    border-bottom: 2dp #5b3027;
-}
-
-#ritual-corner-br {
-    right: 6dp;
-    bottom: 6dp;
-    border-right: 2dp #6f2a22;
-    border-bottom: 2dp #6f2a22;
-}
-
-#ritual-scratch-a {
-    left: 21dp;
-    top: 38dp;
-    width: 16dp;
-    height: 1dp;
-    background-color: #f4dcc512;
-}
-
-#ritual-scratch-b {
-    right: 27dp;
-    top: 263dp;
-    width: 20dp;
-    height: 1dp;
-    background-color: #d0a17112;
-}
-
-#ritual-scratch-c {
-    right: 22dp;
-    top: 73dp;
-    width: 1dp;
-    height: 18dp;
-    background-color: #f4dcc50e;
-}
-
-#ritual-speck-a {
-    left: 109dp;
-    top: 49dp;
-    width: 2dp;
-    height: 1dp;
-    background-color: #f4dcc520;
-}
-
-#ritual-speck-b {
-    left: 319dp;
-    top: 231dp;
-    width: 1dp;
-    height: 1dp;
-    background-color: #d0a17128;
-}
-
-#ritual-speck-c {
-    left: 487dp;
-    top: 103dp;
-    width: 2dp;
-    height: 2dp;
-    background-color: #f4dcc51c;
-}
-
-#options-root .setting-row,
-#options-root .controls-bind-row,
-#options-root .placeholder {
-    border-left: 2dp transparent;
-    border-bottom: 2dp #1b0d0c;
-}
-
-#options-root .setting-row:hover,
-#options-root .setting-row.controller-focus,
-#options-root .controls-bind-row:hover,
-#options-root .controls-bind-row.controller-focus {
-    background-color: #120706d8;
-    border-left-color: #a1352c;
-    border-bottom-color: #3d1b17;
-}
-
-#options-root .setting-row.controller-focus .setting-title,
-#options-root .controls-bind-row.controller-focus .controls-bind-label {
-    color: #f4ead8;
-}
-
-#options-root .category-button,
-#options-root .side-action-button {
-    color: #a99a85;
-}
-
-#options-root #category-list .category-button,
-#options-root #side-actions .side-action-button {
-    border-bottom: 1dp #1d1110;
-}
-
-#options-root #category-list .category-button.selected,
-#options-root #category-list .category-button.controller-focus,
-#options-root #side-actions .side-action-button.controller-focus {
-    border-bottom-color: #a1352c;
-}
-
-#options-root .category-button.selected,
-#options-root .category-button.controller-focus,
-#options-root .side-action-button.controller-focus {
-    color: #f4ead8;
-    background-color: #120706cc;
-    border-left-color: #a1352c;
-}
-
-#options-root select,
-#options-root input.text,
-#options-root .stepper-control,
-#options-root .choice-picker,
-#options-root button,
-#options-root .controls-bind-value {
-    background-color: #020101b8;
-    border-bottom-color: #281613;
-}
-
-#options-root .choice-picker:hover,
-#options-root .choice-picker:focus,
-#options-root .choice-picker:focus-visible,
-#options-root .choice-picker.controller-focus,
-#options-root .stepper-control:hover,
-#options-root .stepper-control:focus,
-#options-root .stepper-control:focus-visible,
-#options-root .stepper-control.controller-focus,
-#options-root button:hover,
-#options-root button:focus,
-#options-root button:focus-visible,
-#options-root button.controller-focus {
-    background-color: #160706d8;
-    border-bottom-color: #8a332a;
-}
-
-#options-root #choice-picker-card,
-#options-root #confirm-save-card,
-#options-root #resolution-confirm-card,
-#options-root #binding-capture-card {
-    background-color: #020101fa;
-    border: 0dp transparent;
-    border-left: 2dp #5b3027;
-    border-bottom: 2dp #3a1f1b;
-}
-
-#options-root #choice-picker-list {
-    background-color: #010101e8;
-    border: 0dp transparent;
-    border-top: 2dp #281613;
-    border-bottom: 2dp #281613;
-}
-
-#options-root .picker-option {
-    min-height: 16dp;
-    padding-left: 8dp;
-    color: #6f6255;
-    border-left: 2dp transparent;
-}
-
-#options-root .picker-option:hover,
-#options-root .picker-option:focus,
-#options-root .picker-option:focus-visible,
-#options-root .picker-option.controller-focus,
-#options-root .picker-option.selected {
-    background-color: #120706d8;
-    border-left-color: #a1352c;
-}
-
-#options-root.theme-moonlit .ritual-corner {
-    border-color: #6f98c9;
-}
-
-#options-root.theme-ghost-cyan .ritual-corner {
-    border-color: #72b7bf;
-}
-
-#options-root.theme-crimson .ritual-corner {
-    border-color: #d9662e;
-}
-
-#options-root.theme-ff1-ritual .ritual-corner {
-    border-color: #9e5cad;
-}
-
-#options-root.theme-mist-teal .ritual-corner {
-    border-color: #657d9f;
-}
-
-#options-root.theme-moonlit #window {
-    background-color: #020711f4;
-    border-color: #182a40;
-    border-top-color: #274766;
-    border-bottom-color: #102033;
-}
-
-#options-root.theme-moonlit #side {
-    background-color: #02050de8;
-    border-right-color: #18304a;
-}
-
-#options-root.theme-moonlit #content {
-    background-color: #07122640;
-}
-
-#options-root.theme-moonlit #side-title,
-#options-root.theme-moonlit h1,
-#options-root.theme-moonlit #panel-title,
-#options-root.theme-moonlit #choice-picker-title,
-#options-root.theme-moonlit #confirm-save-title,
-#options-root.theme-moonlit #resolution-confirm-title,
-#options-root.theme-moonlit #binding-capture-title {
-    color: #dce9fb;
-}
-
-#options-root.theme-moonlit .setting-title,
-#options-root.theme-moonlit .controls-bind-label {
-    color: #c6d7e8;
-}
-
-#options-root.theme-moonlit #ritual-edge-top,
-#options-root.theme-moonlit #ritual-edge-bottom,
-#options-root.theme-moonlit #ritual-edge-left,
-#options-root.theme-moonlit #ritual-edge-right {
-    background-color: #06152b66;
-    border-color: #274766;
-}
-
-#options-root.theme-moonlit .ritual-scratch,
-#options-root.theme-moonlit .ritual-speck {
-    background-color: #8fb8e824;
-}
-
-#options-root.theme-moonlit .setting-row,
-#options-root.theme-moonlit .controls-bind-row,
-#options-root.theme-moonlit .placeholder {
-    border-bottom-color: #102033;
-}
-
-#options-root.theme-moonlit #category-list .category-button,
-#options-root.theme-moonlit #side-actions .side-action-button {
-    border-bottom-color: #102033;
-}
-
-#options-root.theme-moonlit .setting-row:hover,
-#options-root.theme-moonlit .setting-row.controller-focus,
-#options-root.theme-moonlit .controls-bind-row:hover,
-#options-root.theme-moonlit .controls-bind-row.controller-focus,
-#options-root.theme-moonlit .category-button.selected,
-#options-root.theme-moonlit .category-button.controller-focus,
-#options-root.theme-moonlit .side-action-button.controller-focus,
-#options-root.theme-moonlit .picker-option:hover,
-#options-root.theme-moonlit .picker-option:focus,
-#options-root.theme-moonlit .picker-option:focus-visible,
-#options-root.theme-moonlit .picker-option.controller-focus,
-#options-root.theme-moonlit .picker-option.selected {
-    background-color: #071528d8;
-    border-left-color: #6f98c9;
-    border-bottom-color: #284966;
-}
-
-#options-root.theme-moonlit select,
-#options-root.theme-moonlit input.text,
-#options-root.theme-moonlit .stepper-control,
-#options-root.theme-moonlit .choice-picker,
-#options-root.theme-moonlit button,
-#options-root.theme-moonlit .controls-bind-value {
-    background-color: #020712b8;
-    border-bottom-color: #1b334c;
-}
-
-#options-root.theme-moonlit .choice-picker:hover,
-#options-root.theme-moonlit .choice-picker:focus,
-#options-root.theme-moonlit .choice-picker:focus-visible,
-#options-root.theme-moonlit .choice-picker.controller-focus,
-#options-root.theme-moonlit .stepper-control:hover,
-#options-root.theme-moonlit .stepper-control:focus,
-#options-root.theme-moonlit .stepper-control:focus-visible,
-#options-root.theme-moonlit .stepper-control.controller-focus,
-#options-root.theme-moonlit button:hover,
-#options-root.theme-moonlit button:focus,
-#options-root.theme-moonlit button:focus-visible,
-#options-root.theme-moonlit button.controller-focus {
-    background-color: #071528d8;
-    border-bottom-color: #6f98c9;
-}
-
-#options-root.theme-moonlit #choice-picker-card,
-#options-root.theme-moonlit #confirm-save-card,
-#options-root.theme-moonlit #resolution-confirm-card,
-#options-root.theme-moonlit #binding-capture-card {
-    background-color: #020711fa;
-    border-left-color: #385f86;
-    border-bottom-color: #1d3853;
-}
-
-#options-root.theme-moonlit #choice-picker-list {
-    background-color: #01050de8;
-    border-top-color: #172a40;
-    border-bottom-color: #172a40;
-}
-
-#options-root.theme-ghost-cyan #window {
-    background-color: #010809f4;
-    border-color: #173337;
-    border-top-color: #28575e;
-    border-bottom-color: #102729;
-}
-
-#options-root.theme-ghost-cyan #side {
-    background-color: #010606e8;
-    border-right-color: #173a3d;
-}
-
-#options-root.theme-ghost-cyan #content {
-    background-color: #061a1d40;
-}
-
-#options-root.theme-ghost-cyan #side-title,
-#options-root.theme-ghost-cyan h1,
-#options-root.theme-ghost-cyan #panel-title,
-#options-root.theme-ghost-cyan #choice-picker-title,
-#options-root.theme-ghost-cyan #confirm-save-title,
-#options-root.theme-ghost-cyan #resolution-confirm-title,
-#options-root.theme-ghost-cyan #binding-capture-title {
-    color: #dcf4f5;
-}
-
-#options-root.theme-ghost-cyan .setting-title,
-#options-root.theme-ghost-cyan .controls-bind-label {
-    color: #c4dfe1;
-}
-
-#options-root.theme-ghost-cyan #ritual-edge-top,
-#options-root.theme-ghost-cyan #ritual-edge-bottom,
-#options-root.theme-ghost-cyan #ritual-edge-left,
-#options-root.theme-ghost-cyan #ritual-edge-right {
-    background-color: #061b1f66;
-    border-color: #28575e;
-}
-
-#options-root.theme-ghost-cyan .ritual-scratch,
-#options-root.theme-ghost-cyan .ritual-speck {
-    background-color: #9de2ea24;
-}
-
-#options-root.theme-ghost-cyan .setting-row,
-#options-root.theme-ghost-cyan .controls-bind-row,
-#options-root.theme-ghost-cyan .placeholder {
-    border-bottom-color: #102729;
-}
-
-#options-root.theme-ghost-cyan #category-list .category-button,
-#options-root.theme-ghost-cyan #side-actions .side-action-button {
-    border-bottom-color: #102729;
-}
-
-#options-root.theme-ghost-cyan .setting-row:hover,
-#options-root.theme-ghost-cyan .setting-row.controller-focus,
-#options-root.theme-ghost-cyan .controls-bind-row:hover,
-#options-root.theme-ghost-cyan .controls-bind-row.controller-focus,
-#options-root.theme-ghost-cyan .category-button.selected,
-#options-root.theme-ghost-cyan .category-button.controller-focus,
-#options-root.theme-ghost-cyan .side-action-button.controller-focus,
-#options-root.theme-ghost-cyan .picker-option:hover,
-#options-root.theme-ghost-cyan .picker-option:focus,
-#options-root.theme-ghost-cyan .picker-option:focus-visible,
-#options-root.theme-ghost-cyan .picker-option.controller-focus,
-#options-root.theme-ghost-cyan .picker-option.selected {
-    background-color: #051719d8;
-    border-left-color: #72b7bf;
-    border-bottom-color: #28575e;
-}
-
-#options-root.theme-ghost-cyan select,
-#options-root.theme-ghost-cyan input.text,
-#options-root.theme-ghost-cyan .stepper-control,
-#options-root.theme-ghost-cyan .choice-picker,
-#options-root.theme-ghost-cyan button,
-#options-root.theme-ghost-cyan .controls-bind-value {
-    background-color: #010809b8;
-    border-bottom-color: #183b40;
-}
-
-#options-root.theme-ghost-cyan .choice-picker:hover,
-#options-root.theme-ghost-cyan .choice-picker:focus,
-#options-root.theme-ghost-cyan .choice-picker:focus-visible,
-#options-root.theme-ghost-cyan .choice-picker.controller-focus,
-#options-root.theme-ghost-cyan .stepper-control:hover,
-#options-root.theme-ghost-cyan .stepper-control:focus,
-#options-root.theme-ghost-cyan .stepper-control:focus-visible,
-#options-root.theme-ghost-cyan .stepper-control.controller-focus,
-#options-root.theme-ghost-cyan button:hover,
-#options-root.theme-ghost-cyan button:focus,
-#options-root.theme-ghost-cyan button:focus-visible,
-#options-root.theme-ghost-cyan button.controller-focus {
-    background-color: #051719d8;
-    border-bottom-color: #72b7bf;
-}
-
-#options-root.theme-ghost-cyan #choice-picker-card,
-#options-root.theme-ghost-cyan #confirm-save-card,
-#options-root.theme-ghost-cyan #resolution-confirm-card,
-#options-root.theme-ghost-cyan #binding-capture-card {
-    background-color: #010809fa;
-    border-left-color: #3a747b;
-    border-bottom-color: #1e454a;
-}
-
-#options-root.theme-ghost-cyan #choice-picker-list {
-    background-color: #010708e8;
-    border-top-color: #183538;
-    border-bottom-color: #183538;
-}
-
-#options-root.theme-crimson #window {
-    background-color: #100302f4;
-    border-color: #3d1915;
-    border-top-color: #7a2d25;
-    border-bottom-color: #2b100d;
-}
-
-#options-root.theme-crimson #side {
-    background-color: #0a0201e8;
-    border-right-color: #3d1712;
-}
-
-#options-root.theme-crimson #content {
-    background-color: #27070640;
-}
-
-#options-root.theme-crimson #side-title,
-#options-root.theme-crimson h1,
-#options-root.theme-crimson #panel-title,
-#options-root.theme-crimson #choice-picker-title,
-#options-root.theme-crimson #confirm-save-title,
-#options-root.theme-crimson #resolution-confirm-title,
-#options-root.theme-crimson #binding-capture-title {
-    color: #f4dac4;
-}
-
-#options-root.theme-crimson .setting-title,
-#options-root.theme-crimson .controls-bind-label {
-    color: #e3c5a6;
-}
-
-#options-root.theme-crimson #ritual-edge-top,
-#options-root.theme-crimson #ritual-edge-bottom,
-#options-root.theme-crimson #ritual-edge-left,
-#options-root.theme-crimson #ritual-edge-right {
-    background-color: #2b080566;
-    border-color: #7a2d25;
-}
-
-#options-root.theme-crimson .ritual-scratch,
-#options-root.theme-crimson .ritual-speck {
-    background-color: #d9662e24;
-}
-
-#options-root.theme-crimson #category-list .category-button,
-#options-root.theme-crimson #side-actions .side-action-button {
-    border-bottom-color: #2b100d;
-}
-
-#options-root.theme-crimson .setting-row:hover,
-#options-root.theme-crimson .setting-row.controller-focus,
-#options-root.theme-crimson .controls-bind-row:hover,
-#options-root.theme-crimson .controls-bind-row.controller-focus,
-#options-root.theme-crimson .category-button.selected,
-#options-root.theme-crimson .category-button.controller-focus,
-#options-root.theme-crimson .side-action-button.controller-focus,
-#options-root.theme-crimson .picker-option:hover,
-#options-root.theme-crimson .picker-option:focus,
-#options-root.theme-crimson .picker-option:focus-visible,
-#options-root.theme-crimson .picker-option.controller-focus,
-#options-root.theme-crimson .picker-option.selected {
-    background-color: #210706d8;
-    border-left-color: #d9662e;
-    border-bottom-color: #7a2d25;
-}
-
-#options-root.theme-crimson select,
-#options-root.theme-crimson input.text,
-#options-root.theme-crimson .stepper-control,
-#options-root.theme-crimson .choice-picker,
-#options-root.theme-crimson button,
-#options-root.theme-crimson .controls-bind-value {
-    background-color: #110302b8;
-    border-bottom-color: #4e1c17;
-}
-
-#options-root.theme-crimson .choice-picker:hover,
-#options-root.theme-crimson .choice-picker:focus,
-#options-root.theme-crimson .choice-picker:focus-visible,
-#options-root.theme-crimson .choice-picker.controller-focus,
-#options-root.theme-crimson .stepper-control:hover,
-#options-root.theme-crimson .stepper-control:focus,
-#options-root.theme-crimson .stepper-control:focus-visible,
-#options-root.theme-crimson .stepper-control.controller-focus,
-#options-root.theme-crimson button:hover,
-#options-root.theme-crimson button:focus,
-#options-root.theme-crimson button:focus-visible,
-#options-root.theme-crimson button.controller-focus {
-    background-color: #210706d8;
-    border-bottom-color: #d9662e;
-}
-
-#options-root.theme-crimson #choice-picker-card,
-#options-root.theme-crimson #confirm-save-card,
-#options-root.theme-crimson #resolution-confirm-card,
-#options-root.theme-crimson #binding-capture-card {
-    background-color: #100302fa;
-    border-left-color: #7a2d25;
-    border-bottom-color: #4e1c17;
-}
-
-#options-root.theme-crimson #choice-picker-list {
-    background-color: #0b0201e8;
-    border-top-color: #3a1512;
-    border-bottom-color: #3a1512;
-}
-
-#options-root.theme-ff1-ritual #window {
-    background-color: #09030af4;
-    border-color: #2e1a33;
-    border-top-color: #5a2d63;
-    border-bottom-color: #211225;
-}
-
-#options-root.theme-ff1-ritual #side {
-    background-color: #070207e8;
-    border-right-color: #301734;
-}
-
-#options-root.theme-ff1-ritual #content {
-    background-color: #1a071e40;
-}
-
-#options-root.theme-ff1-ritual #side-title,
-#options-root.theme-ff1-ritual h1,
-#options-root.theme-ff1-ritual #panel-title,
-#options-root.theme-ff1-ritual #choice-picker-title,
-#options-root.theme-ff1-ritual #confirm-save-title,
-#options-root.theme-ff1-ritual #resolution-confirm-title,
-#options-root.theme-ff1-ritual #binding-capture-title {
-    color: #ead8f2;
-}
-
-#options-root.theme-ff1-ritual .setting-title,
-#options-root.theme-ff1-ritual .controls-bind-label {
-    color: #d8c3df;
-}
-
-#options-root.theme-ff1-ritual #ritual-edge-top,
-#options-root.theme-ff1-ritual #ritual-edge-bottom,
-#options-root.theme-ff1-ritual #ritual-edge-left,
-#options-root.theme-ff1-ritual #ritual-edge-right {
-    background-color: #1b082166;
-    border-color: #5a2d63;
-}
-
-#options-root.theme-ff1-ritual .ritual-scratch,
-#options-root.theme-ff1-ritual .ritual-speck {
-    background-color: #b482bc24;
-}
-
-#options-root.theme-ff1-ritual #category-list .category-button,
-#options-root.theme-ff1-ritual #side-actions .side-action-button {
-    border-bottom-color: #211225;
-}
-
-#options-root.theme-ff1-ritual .setting-row:hover,
-#options-root.theme-ff1-ritual .setting-row.controller-focus,
-#options-root.theme-ff1-ritual .controls-bind-row:hover,
-#options-root.theme-ff1-ritual .controls-bind-row.controller-focus,
-#options-root.theme-ff1-ritual .category-button.selected,
-#options-root.theme-ff1-ritual .category-button.controller-focus,
-#options-root.theme-ff1-ritual .side-action-button.controller-focus,
-#options-root.theme-ff1-ritual .picker-option:hover,
-#options-root.theme-ff1-ritual .picker-option:focus,
-#options-root.theme-ff1-ritual .picker-option:focus-visible,
-#options-root.theme-ff1-ritual .picker-option.controller-focus,
-#options-root.theme-ff1-ritual .picker-option.selected {
-    background-color: #18071bd8;
-    border-left-color: #9e5cad;
-    border-bottom-color: #5a2d63;
-}
-
-#options-root.theme-ff1-ritual select,
-#options-root.theme-ff1-ritual input.text,
-#options-root.theme-ff1-ritual .stepper-control,
-#options-root.theme-ff1-ritual .choice-picker,
-#options-root.theme-ff1-ritual button,
-#options-root.theme-ff1-ritual .controls-bind-value {
-    background-color: #09030ab8;
-    border-bottom-color: #3a1f40;
-}
-
-#options-root.theme-ff1-ritual .choice-picker:hover,
-#options-root.theme-ff1-ritual .choice-picker:focus,
-#options-root.theme-ff1-ritual .choice-picker:focus-visible,
-#options-root.theme-ff1-ritual .choice-picker.controller-focus,
-#options-root.theme-ff1-ritual .stepper-control:hover,
-#options-root.theme-ff1-ritual .stepper-control:focus,
-#options-root.theme-ff1-ritual .stepper-control:focus-visible,
-#options-root.theme-ff1-ritual .stepper-control.controller-focus,
-#options-root.theme-ff1-ritual button:hover,
-#options-root.theme-ff1-ritual button:focus,
-#options-root.theme-ff1-ritual button:focus-visible,
-#options-root.theme-ff1-ritual button.controller-focus {
-    background-color: #18071bd8;
-    border-bottom-color: #9e5cad;
-}
-
-#options-root.theme-ff1-ritual #choice-picker-card,
-#options-root.theme-ff1-ritual #confirm-save-card,
-#options-root.theme-ff1-ritual #resolution-confirm-card,
-#options-root.theme-ff1-ritual #binding-capture-card {
-    background-color: #09030afa;
-    border-left-color: #5a2d63;
-    border-bottom-color: #3a1f40;
-}
-
-#options-root.theme-ff1-ritual #choice-picker-list {
-    background-color: #060207e8;
-    border-top-color: #301734;
-    border-bottom-color: #301734;
-}
-
-#options-root.theme-mist-teal #window {
-    background-color: #02090af4;
-    border-color: #1f3639;
-    border-top-color: #415369;
-    border-bottom-color: #14282a;
-}
-
-#options-root.theme-mist-teal #side {
-    background-color: #020707e8;
-    border-right-color: #21393c;
-}
-
-#options-root.theme-mist-teal #content {
-    background-color: #07191b40;
-}
-
-#options-root.theme-mist-teal #side-title,
-#options-root.theme-mist-teal h1,
-#options-root.theme-mist-teal #panel-title,
-#options-root.theme-mist-teal #choice-picker-title,
-#options-root.theme-mist-teal #confirm-save-title,
-#options-root.theme-mist-teal #resolution-confirm-title,
-#options-root.theme-mist-teal #binding-capture-title {
-    color: #dedcf2;
-}
-
-#options-root.theme-mist-teal .setting-title,
-#options-root.theme-mist-teal .controls-bind-label {
-    color: #c8d6d4;
-}
-
-#options-root.theme-mist-teal #ritual-edge-top,
-#options-root.theme-mist-teal #ritual-edge-bottom,
-#options-root.theme-mist-teal #ritual-edge-left,
-#options-root.theme-mist-teal #ritual-edge-right {
-    background-color: #071d1f66;
-    border-color: #415369;
-}
-
-#options-root.theme-mist-teal .ritual-scratch,
-#options-root.theme-mist-teal .ritual-speck {
-    background-color: #9e8fcf24;
-}
-
-#options-root.theme-mist-teal #category-list .category-button,
-#options-root.theme-mist-teal #side-actions .side-action-button {
-    border-bottom-color: #14282a;
-}
-
-#options-root.theme-mist-teal .setting-row:hover,
-#options-root.theme-mist-teal .setting-row.controller-focus,
-#options-root.theme-mist-teal .controls-bind-row:hover,
-#options-root.theme-mist-teal .controls-bind-row.controller-focus,
-#options-root.theme-mist-teal .category-button.selected,
-#options-root.theme-mist-teal .category-button.controller-focus,
-#options-root.theme-mist-teal .side-action-button.controller-focus,
-#options-root.theme-mist-teal .picker-option:hover,
-#options-root.theme-mist-teal .picker-option:focus,
-#options-root.theme-mist-teal .picker-option:focus-visible,
-#options-root.theme-mist-teal .picker-option.controller-focus,
-#options-root.theme-mist-teal .picker-option.selected {
-    background-color: #061719d8;
-    border-left-color: #657d9f;
-    border-bottom-color: #415369;
-}
-
-#options-root.theme-mist-teal select,
-#options-root.theme-mist-teal input.text,
-#options-root.theme-mist-teal .stepper-control,
-#options-root.theme-mist-teal .choice-picker,
-#options-root.theme-mist-teal button,
-#options-root.theme-mist-teal .controls-bind-value {
-    background-color: #02090ab8;
-    border-bottom-color: #284047;
-}
-
-#options-root.theme-mist-teal .choice-picker:hover,
-#options-root.theme-mist-teal .choice-picker:focus,
-#options-root.theme-mist-teal .choice-picker:focus-visible,
-#options-root.theme-mist-teal .choice-picker.controller-focus,
-#options-root.theme-mist-teal .stepper-control:hover,
-#options-root.theme-mist-teal .stepper-control:focus,
-#options-root.theme-mist-teal .stepper-control:focus-visible,
-#options-root.theme-mist-teal .stepper-control.controller-focus,
-#options-root.theme-mist-teal button:hover,
-#options-root.theme-mist-teal button:focus,
-#options-root.theme-mist-teal button:focus-visible,
-#options-root.theme-mist-teal button.controller-focus {
-    background-color: #061719d8;
-    border-bottom-color: #657d9f;
-}
-
-#options-root.theme-mist-teal #choice-picker-card,
-#options-root.theme-mist-teal #confirm-save-card,
-#options-root.theme-mist-teal #resolution-confirm-card,
-#options-root.theme-mist-teal #binding-capture-card {
-    background-color: #02090afa;
-    border-left-color: #415369;
-    border-bottom-color: #284047;
-}
-
-#options-root.theme-mist-teal #choice-picker-list {
-    background-color: #010607e8;
-    border-top-color: #21393c;
-    border-bottom-color: #21393c;
-}
-
-#options-root.theme-sepia #window {
-    background-color: #070302f4;
-    border-color: #2a1715;
-    border-top-color: #5b3027;
-    border-bottom-color: #241311;
-}
-
-#options-root.theme-sepia #side {
-    background-color: #050202e8;
-    border-right-color: #321b18;
-}
-
-#options-root.theme-sepia #content {
-    background-color: #1a0a0640;
-}
-
-#options-root.theme-sepia #side-title,
-#options-root.theme-sepia h1,
-#options-root.theme-sepia #panel-title,
-#options-root.theme-sepia #choice-picker-title,
-#options-root.theme-sepia #confirm-save-title,
-#options-root.theme-sepia #resolution-confirm-title,
-#options-root.theme-sepia #binding-capture-title {
-    color: #eadcc4;
-}
-
-#options-root.theme-sepia .setting-title,
-#options-root.theme-sepia .controls-bind-label {
-    color: #d9cbb4;
-}
-
-#options-root.theme-sepia #ritual-edge-top,
-#options-root.theme-sepia #ritual-edge-bottom,
-#options-root.theme-sepia #ritual-edge-left,
-#options-root.theme-sepia #ritual-edge-right {
-    background-color: #19080566;
-    border-color: #5b3027;
-}
-
-#options-root.theme-sepia .ritual-corner {
-    border-color: #a77952;
-}
-
-#options-root.theme-sepia .ritual-scratch,
-#options-root.theme-sepia .ritual-speck {
-    background-color: #d0a17124;
-}
-
-#options-root.theme-sepia .setting-row,
-#options-root.theme-sepia .controls-bind-row,
-#options-root.theme-sepia .placeholder {
-    border-bottom-color: #241311;
-}
-
-#options-root.theme-sepia #category-list .category-button,
-#options-root.theme-sepia #side-actions .side-action-button {
-    border-bottom-color: #241311;
-}
-
-#options-root.theme-sepia .setting-row:hover,
-#options-root.theme-sepia .setting-row.controller-focus,
-#options-root.theme-sepia .controls-bind-row:hover,
-#options-root.theme-sepia .controls-bind-row.controller-focus,
-#options-root.theme-sepia .category-button.selected,
-#options-root.theme-sepia .category-button.controller-focus,
-#options-root.theme-sepia .side-action-button.controller-focus,
-#options-root.theme-sepia .picker-option:hover,
-#options-root.theme-sepia .picker-option:focus,
-#options-root.theme-sepia .picker-option:focus-visible,
-#options-root.theme-sepia .picker-option.controller-focus,
-#options-root.theme-sepia .picker-option.selected {
-    background-color: #170806d8;
-    border-left-color: #b78a62;
-    border-bottom-color: #5b3027;
-}
-
-#options-root.theme-sepia select,
-#options-root.theme-sepia input.text,
-#options-root.theme-sepia .stepper-control,
-#options-root.theme-sepia .choice-picker,
-#options-root.theme-sepia button,
-#options-root.theme-sepia .controls-bind-value {
-    background-color: #070302b8;
-    border-bottom-color: #321b18;
-}
-
-#options-root.theme-sepia .choice-picker:hover,
-#options-root.theme-sepia .choice-picker:focus,
-#options-root.theme-sepia .choice-picker:focus-visible,
-#options-root.theme-sepia .choice-picker.controller-focus,
-#options-root.theme-sepia .stepper-control:hover,
-#options-root.theme-sepia .stepper-control:focus,
-#options-root.theme-sepia .stepper-control:focus-visible,
-#options-root.theme-sepia .stepper-control.controller-focus,
-#options-root.theme-sepia button:hover,
-#options-root.theme-sepia button:focus,
-#options-root.theme-sepia button:focus-visible,
-#options-root.theme-sepia button.controller-focus {
-    background-color: #170806d8;
-    border-bottom-color: #b78a62;
-}
-
-#options-root.theme-sepia #choice-picker-card,
-#options-root.theme-sepia #confirm-save-card,
-#options-root.theme-sepia #resolution-confirm-card,
-#options-root.theme-sepia #binding-capture-card {
-    background-color: #070302fa;
-    border-left-color: #6f442f;
-    border-bottom-color: #321b18;
-}
-
-#options-root.theme-sepia #choice-picker-list {
-    background-color: #040201e8;
-    border-top-color: #281613;
-    border-bottom-color: #281613;
-}
-
-#options-root.theme-mikupan-classic,
-#options-root.theme-mikupan-classic .calibration-panel,
-#options-root.theme-mikupan-classic .crt-panel,
-#options-root.theme-mikupan-classic .calibration-level-panel {
-    color: #d8d0c1;
-}
-
-#options-root.theme-mikupan-classic #window {
-    background-color: #030302f2;
-    border-color: #8f734c99;
-    border-top-color: #c6a66fcc;
-    border-bottom-color: #5f4a31cc;
-}
-
-#options-root.theme-mikupan-classic #side {
-    background-color: #040403e6;
-    border-right-color: #5f4a3188;
-}
-
-#options-root.theme-mikupan-classic #content {
-    background-color: #07050338;
-}
-
-#options-root.theme-mikupan-classic #header {
-    border-bottom-color: #8f734c80;
-}
-
-#options-root.theme-mikupan-classic #side-title,
-#options-root.theme-mikupan-classic h1,
-#options-root.theme-mikupan-classic #panel-title,
-#options-root.theme-mikupan-classic #choice-picker-title,
-#options-root.theme-mikupan-classic #confirm-save-title,
-#options-root.theme-mikupan-classic #resolution-confirm-title,
-#options-root.theme-mikupan-classic #calibration-title,
-#options-root.theme-mikupan-classic #crt-title,
-#options-root.theme-mikupan-classic #calibration-level-title,
-#options-root.theme-mikupan-classic #binding-capture-title {
-    color: #f0e6d2;
-    font-effect: shadow(0dp 1dp #000000e8);
-}
-
-#options-root.theme-mikupan-classic .subsection-title,
-#options-root.theme-mikupan-classic .controls-section-title {
-    color: #c6a66f;
-    border-bottom-color: #8f734c70;
-}
-
-#options-root.theme-mikupan-classic .setting-title,
-#options-root.theme-mikupan-classic .calibration-row label,
-#options-root.theme-mikupan-classic .crt-row label,
-#options-root.theme-mikupan-classic .controls-bind-label {
-    color: #ddd2bd;
-}
-
-#options-root.theme-mikupan-classic .value,
-#options-root.theme-mikupan-classic .note,
-#options-root.theme-mikupan-classic p.note,
-#options-root.theme-mikupan-classic #gpu-restart-note,
-#options-root.theme-mikupan-classic #save-status,
-#options-root.theme-mikupan-classic .picker-option.applied,
-#options-root.theme-mikupan-classic #calibration-level-labels {
-    color: #c6a66f;
-}
-
-#options-root.theme-mikupan-classic #ritual-edge-top,
-#options-root.theme-mikupan-classic #ritual-edge-bottom,
-#options-root.theme-mikupan-classic #ritual-edge-left,
-#options-root.theme-mikupan-classic #ritual-edge-right {
-    background-color: #00000028;
-    border-color: #8f734c88;
-}
-
-#options-root.theme-mikupan-classic .ritual-corner {
-    border-color: #c6a66fa8;
-}
-
-#options-root.theme-mikupan-classic .ritual-scratch,
-#options-root.theme-mikupan-classic .ritual-speck {
-    display: none;
-}
-
-#options-root.theme-mikupan-classic .setting-row,
-#options-root.theme-mikupan-classic .controls-bind-row,
-#options-root.theme-mikupan-classic .placeholder {
-    background-color: transparent;
-    border-left-color: transparent;
-    border-bottom-color: #5f4a315c;
-}
-
-#options-root.theme-mikupan-classic .setting-row:hover,
-#options-root.theme-mikupan-classic .setting-row.controller-focus,
-#options-root.theme-mikupan-classic .controls-bind-row:hover,
-#options-root.theme-mikupan-classic .controls-bind-row.controller-focus {
-    color: #f0e6d2;
-    background-color: transparent;
-    border-left-color: #c6a66f;
-    border-bottom-color: #8f734c;
-    decorator: horizontal-gradient(#5f431fb8 #00000000);
-}
-
-#options-root.theme-mikupan-classic .category-button,
-#options-root.theme-mikupan-classic .side-action-button {
-    color: #c9beb0;
-    background-color: transparent;
-    border-left-color: transparent;
-    border-bottom-color: #5f4a3150;
-}
-
-#options-root.theme-mikupan-classic .category-button:hover,
-#options-root.theme-mikupan-classic .category-button.selected,
-#options-root.theme-mikupan-classic .category-button:focus,
-#options-root.theme-mikupan-classic .category-button:focus-visible,
-#options-root.theme-mikupan-classic .category-button.controller-focus,
-#options-root.theme-mikupan-classic .side-action-button:hover,
-#options-root.theme-mikupan-classic .side-action-button:focus,
-#options-root.theme-mikupan-classic .side-action-button:focus-visible,
-#options-root.theme-mikupan-classic .side-action-button.controller-focus {
-    color: #fff1d3;
-    background-color: transparent;
-    border-left-color: #c6a66f;
-    border-bottom-color: #8f734c;
-    decorator: horizontal-gradient(#5f431fd0 #00000000);
-}
-
-#options-root.theme-mikupan-classic select,
-#options-root.theme-mikupan-classic input.text,
-#options-root.theme-mikupan-classic .stepper-control,
-#options-root.theme-mikupan-classic .choice-picker,
-#options-root.theme-mikupan-classic button,
-#options-root.theme-mikupan-classic .controls-bind-value {
-    color: #e8ddc7;
-    background-color: #0505059c;
-    border: 0dp transparent;
-    border-top: 1dp #3f332770;
-    border-bottom: 1dp #8f734c88;
-}
-
-#options-root.theme-mikupan-classic select:hover,
-#options-root.theme-mikupan-classic select:focus,
-#options-root.theme-mikupan-classic select:focus-visible,
-#options-root.theme-mikupan-classic select.controller-focus,
-#options-root.theme-mikupan-classic select:checked,
-#options-root.theme-mikupan-classic input.text:hover,
-#options-root.theme-mikupan-classic input.text:focus,
-#options-root.theme-mikupan-classic input.text:focus-visible,
-#options-root.theme-mikupan-classic input.text.controller-focus,
-#options-root.theme-mikupan-classic .stepper-control:hover,
-#options-root.theme-mikupan-classic .stepper-control:focus,
-#options-root.theme-mikupan-classic .stepper-control:focus-visible,
-#options-root.theme-mikupan-classic .stepper-control.controller-focus,
-#options-root.theme-mikupan-classic .choice-picker:hover,
-#options-root.theme-mikupan-classic .choice-picker:focus,
-#options-root.theme-mikupan-classic .choice-picker:focus-visible,
-#options-root.theme-mikupan-classic .choice-picker.controller-focus,
-#options-root.theme-mikupan-classic button:hover,
-#options-root.theme-mikupan-classic button:focus,
-#options-root.theme-mikupan-classic button:focus-visible,
-#options-root.theme-mikupan-classic button.controller-focus {
-    color: #fff1d3;
-    background-color: transparent;
-    border-top-color: #8f734c;
-    border-bottom-color: #c6a66f;
-    decorator: horizontal-gradient(#5f431fd0 #00000000);
-}
-
-#options-root.theme-mikupan-classic input.checkbox {
-    color: #fff1d3;
-    background-color: #050505c8;
-    border: 1dp #8f734c88;
-}
-
-#options-root.theme-mikupan-classic input.checkbox:hover,
-#options-root.theme-mikupan-classic input.checkbox:focus,
-#options-root.theme-mikupan-classic input.checkbox:focus-visible,
-#options-root.theme-mikupan-classic input.checkbox.controller-focus {
-    background-color: #5f431f88;
-    border-color: #c6a66f;
-}
-
-#options-root.theme-mikupan-classic input.checkbox:checked {
-    background-color: #8f734c;
-    border-color: #f0e6d2;
-}
-
-#options-root.theme-mikupan-classic .choice-text,
-#options-root.theme-mikupan-classic select selectvalue {
-    color: #e8ddc7;
-}
-
-#options-root.theme-mikupan-classic .choice-picker:hover .choice-text,
-#options-root.theme-mikupan-classic .choice-picker:focus .choice-text,
-#options-root.theme-mikupan-classic .choice-picker:focus-visible .choice-text,
-#options-root.theme-mikupan-classic .choice-picker.controller-focus .choice-text,
-#options-root.theme-mikupan-classic select:hover selectvalue,
-#options-root.theme-mikupan-classic select:focus selectvalue,
-#options-root.theme-mikupan-classic select:focus-visible selectvalue,
-#options-root.theme-mikupan-classic select.controller-focus selectvalue,
-#options-root.theme-mikupan-classic select:checked selectvalue {
-    color: #fff1d3;
-}
-
-#options-root.theme-mikupan-classic .stepper-edge,
-#options-root.theme-mikupan-classic select selectarrow,
-#options-root.theme-mikupan-classic .picker-arrow-shape {
-    color: #c6a66f;
-    border-top-color: #c6a66f;
-    border-bottom-color: #c6a66f;
-}
-
-#options-root.theme-mikupan-classic .stepper-segment {
-    background-color: #30281e;
-}
-
-#options-root.theme-mikupan-classic .stepper-segment.neutral {
-    background-color: #6d5b42;
-}
-
-#options-root.theme-mikupan-classic .stepper-segment.filled,
-#options-root.theme-mikupan-classic input.checkbox:checked,
-#options-root.theme-mikupan-classic scrollbarvertical sliderbar {
-    background-color: #8f734c;
-}
-
-#options-root.theme-mikupan-classic .stepper-segment.filled.neutral,
-#options-root.theme-mikupan-classic .stepper-control:focus .stepper-segment.filled,
-#options-root.theme-mikupan-classic .stepper-control:focus-visible .stepper-segment.filled,
-#options-root.theme-mikupan-classic .stepper-control.controller-focus .stepper-segment.filled {
-    background-color: #c6a66f;
-}
-
-#options-root.theme-mikupan-classic scrollbarvertical slidertrack {
-    background-color: #050403c8;
-    border-color: #3f332777;
-}
-
-#options-root.theme-mikupan-classic scrollbarvertical sliderbar:hover,
-#options-root.theme-mikupan-classic scrollbarvertical sliderbar:active {
-    background-color: #c6a66f;
-}
-
-#options-root.theme-mikupan-classic select selectbox,
-#options-root.theme-mikupan-classic #choice-picker-list {
-    color: #e8ddc7;
-    background-color: #030302ff;
-    border-color: #8f734c88;
-}
-
-#options-root.theme-mikupan-classic select selectbox option,
-#options-root.theme-mikupan-classic .picker-option {
-    color: #bdb2a2;
-    background-color: transparent;
-    border-left-color: transparent;
-}
-
-#options-root.theme-mikupan-classic select selectbox option {
-    background-color: #030302ff;
-}
-
-#options-root.theme-mikupan-classic select selectbox option:hover,
-#options-root.theme-mikupan-classic select selectbox option:focus,
-#options-root.theme-mikupan-classic select selectbox option:focus-visible,
-#options-root.theme-mikupan-classic select selectbox option:checked,
-#options-root.theme-mikupan-classic .picker-option:hover,
-#options-root.theme-mikupan-classic .picker-option:focus,
-#options-root.theme-mikupan-classic .picker-option:focus-visible,
-#options-root.theme-mikupan-classic .picker-option.controller-focus,
-#options-root.theme-mikupan-classic .picker-option.selected {
-    color: #fff1d3;
-    background-color: transparent;
-    border-left-color: #c6a66f;
-    decorator: horizontal-gradient(#5f431fd0 #00000000);
-}
-
-#options-root.theme-mikupan-classic select selectbox option:hover,
-#options-root.theme-mikupan-classic select selectbox option:focus,
-#options-root.theme-mikupan-classic select selectbox option:focus-visible,
-#options-root.theme-mikupan-classic select selectbox option:checked {
-    background-color: #030302ff;
-}
-
-#options-root.theme-mikupan-classic .modal {
-    background-color: #000000c0;
-    z-index: 20;
-}
-
-#options-root.theme-mikupan-classic #confirm-save-card,
-#options-root.theme-mikupan-classic #resolution-confirm-card,
-#options-root.theme-mikupan-classic #binding-capture-card,
-#options-root.theme-mikupan-classic .calibration-panel,
-#options-root.theme-mikupan-classic .crt-panel,
-#options-root.theme-mikupan-classic .calibration-level-panel {
-    background-color: #070503f4;
-    border-color: #8f734ca8;
-    border-top-color: #c6a66fcc;
-    border-bottom-color: #5f4a31cc;
-}
-
-#options-root.theme-mikupan-classic #choice-picker-card {
-    background-color: #070503ff;
-    border: 0dp transparent;
-    border-top: 1dp #c6a66fcc;
-    border-bottom: 1dp #8f734ca8;
-}
-
-#options-root.theme-mikupan-classic .choice-picker.disabled,
-#options-root.theme-mikupan-classic .choice-picker.disabled:hover,
-#options-root.theme-mikupan-classic .choice-picker.disabled:focus,
-#options-root.theme-mikupan-classic .choice-picker.disabled:focus-visible,
-#options-root.theme-mikupan-classic .choice-picker.disabled.controller-focus {
-    color: #776c5d;
-    background-color: #05040366;
-    border-top-color: #33291f66;
-    border-bottom-color: #33291f88;
-    decorator: horizontal-gradient(#17110b66 #00000000);
-}
-
-#classic-window-backdrop,
-.classic-window-backdrop-part,
-.classic-edge-part {
-    display: none;
-    position: absolute;
-    pointer-events: none;
-}
-
-#options-root.theme-mikupan-classic #window {
-    background-color: transparent;
-    border: 0dp transparent;
-}
-
-#options-root.theme-mikupan-classic #classic-window-backdrop {
-    display: block;
-    left: 0dp;
-    top: 0dp;
-    width: 536dp;
-    height: 306dp;
-    z-index: 0;
-}
-
-#options-root.theme-mikupan-classic .classic-window-backdrop-part {
-    display: block;
-    top: 0dp;
-    height: 306dp;
-}
-
-#options-root.theme-mikupan-classic .classic-window-backdrop-part.left {
-    left: 0dp;
-    width: 48dp;
-    decorator: horizontal-gradient(#00000000 #050403e8);
-}
-
-#options-root.theme-mikupan-classic .classic-window-backdrop-part.center {
-    left: 48dp;
-    width: 440dp;
-    background-color: #050403e8;
-}
-
-#options-root.theme-mikupan-classic .classic-window-backdrop-part.right {
-    right: 0dp;
-    width: 48dp;
-    decorator: horizontal-gradient(#050403e8 #00000000);
-}
-
-#options-root.theme-mikupan-classic #side,
-#options-root.theme-mikupan-classic #content {
-    position: relative;
-    z-index: 1;
-    background-color: transparent;
-}
-
-#options-root.theme-mikupan-classic #ritual-overlay {
-    z-index: 2;
-}
-
-#options-root.theme-mikupan-classic #side {
-    border-right-color: #8f734c40;
-}
-
-#options-root.theme-mikupan-classic #ritual-edge-left,
-#options-root.theme-mikupan-classic #ritual-edge-right,
-#options-root.theme-mikupan-classic .ritual-corner {
-    display: none;
-}
-
-#options-root.theme-mikupan-classic #ritual-edge-top,
-#options-root.theme-mikupan-classic #ritual-edge-bottom {
-    display: block;
-    width: 536dp;
-    height: 1dp;
-    background-color: transparent;
-    border: 0dp transparent;
-}
-
-#options-root.theme-mikupan-classic .classic-edge-part {
-    display: block;
-    top: 0dp;
-    height: 1dp;
-}
-
-#options-root.theme-mikupan-classic .classic-edge-part.left {
-    left: 0dp;
-    width: 48dp;
-    decorator: horizontal-gradient(#00000000 #b39360c8);
-}
-
-#options-root.theme-mikupan-classic .classic-edge-part.center {
-    left: 48dp;
-    width: 440dp;
-    background-color: #b39360c8;
-}
-
-#options-root.theme-mikupan-classic .classic-edge-part.right {
-    right: 0dp;
-    width: 48dp;
-    decorator: horizontal-gradient(#b39360c8 #00000000);
-}
-
-#options-root.theme-mikupan-classic .setting-row,
-#options-root.theme-mikupan-classic .controls-bind-row,
-#options-root.theme-mikupan-classic .placeholder {
-    background-color: #07050378;
-    border: 0dp transparent;
-    border-top: 1dp #2d21165a;
-    border-bottom: 1dp #5f4a314c;
-    decorator: none;
-}
-
-#options-root.theme-mikupan-classic .setting-row:hover,
-#options-root.theme-mikupan-classic .setting-row.controller-focus,
-#options-root.theme-mikupan-classic .controls-bind-row:hover,
-#options-root.theme-mikupan-classic .controls-bind-row.controller-focus {
-    color: #f0e6d2;
-    background-color: #21170d8c;
-    border-top-color: #8f734c78;
-    border-bottom-color: #c6a66f9c;
-    decorator: horizontal-gradient(#6f542c88 #00000000);
-}
-
-#options-root.theme-mikupan-classic .setting-row .setting-control select,
-#options-root.theme-mikupan-classic .setting-row .setting-control input.text,
-#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control,
-#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker,
-#options-root.theme-mikupan-classic .setting-row .setting-control button,
-#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value,
-#options-root.theme-mikupan-classic .controls-bind-row button {
-    color: #e8ddc7;
-    background-color: #00000030;
-    border: 0dp transparent;
-    border-top: 1dp #3f332750;
-    border-bottom: 1dp #8f734c68;
-    decorator: none;
-}
-
-#options-root.theme-mikupan-classic .setting-row .setting-control select:hover,
-#options-root.theme-mikupan-classic .setting-row .setting-control select:focus,
-#options-root.theme-mikupan-classic .setting-row .setting-control select:focus-visible,
-#options-root.theme-mikupan-classic .setting-row .setting-control select.controller-focus,
-#options-root.theme-mikupan-classic .setting-row .setting-control select:checked,
-#options-root.theme-mikupan-classic .setting-row .setting-control input.text:hover,
-#options-root.theme-mikupan-classic .setting-row .setting-control input.text:focus,
-#options-root.theme-mikupan-classic .setting-row .setting-control input.text:focus-visible,
-#options-root.theme-mikupan-classic .setting-row .setting-control input.text.controller-focus,
-#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control:hover,
-#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control:focus,
-#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control:focus-visible,
-#options-root.theme-mikupan-classic .setting-row .setting-control .stepper-control.controller-focus,
-#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker:hover,
-#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker:focus,
-#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker:focus-visible,
-#options-root.theme-mikupan-classic .setting-row .setting-control .choice-picker.controller-focus,
-#options-root.theme-mikupan-classic .setting-row .setting-control button:hover,
-#options-root.theme-mikupan-classic .setting-row .setting-control button:focus,
-#options-root.theme-mikupan-classic .setting-row .setting-control button:focus-visible,
-#options-root.theme-mikupan-classic .setting-row .setting-control button.controller-focus,
-#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value:hover,
-#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value:focus,
-#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value:focus-visible,
-#options-root.theme-mikupan-classic .controls-bind-row .controls-bind-value.controller-focus,
-#options-root.theme-mikupan-classic .controls-bind-row button:hover,
-#options-root.theme-mikupan-classic .controls-bind-row button:focus,
-#options-root.theme-mikupan-classic .controls-bind-row button:focus-visible,
-#options-root.theme-mikupan-classic .controls-bind-row button.controller-focus {
-    color: #fff1d3;
-    background-color: #00000030;
-    border-top-color: #3f332750;
-    border-bottom-color: #8f734c68;
-    decorator: none;
-}
-
-#options-root.theme-mikupan-classic .setting-row input.checkbox {
-    background-color: #00000030;
-    border-color: #8f734c88;
-}
-
-#options-root.theme-mikupan-classic .setting-row input.checkbox:hover,
-#options-root.theme-mikupan-classic .setting-row input.checkbox:focus,
-#options-root.theme-mikupan-classic .setting-row input.checkbox:focus-visible,
-#options-root.theme-mikupan-classic .setting-row input.checkbox.controller-focus {
-    background-color: #00000030;
-    border-color: #8f734c88;
-}
-
-#options-root.theme-mikupan-classic .setting-row input.checkbox:checked {
-    background-color: #8f734c;
-    border-color: #f0e6d2;
-}
-
-#options-root.theme-mikupan-classic #category-list .category-button,
-#options-root.theme-mikupan-classic #side-actions .side-action-button {
-    color: #c9beb0;
-    background-color: transparent;
-    border: 0dp transparent;
-    border-top: 1dp transparent;
-    border-bottom: 1dp #5f4a3148;
-    text-align: center;
-    decorator: none;
-}
-
-#options-root.theme-mikupan-classic #category-list .category-button:hover,
-#options-root.theme-mikupan-classic #category-list .category-button.selected,
-#options-root.theme-mikupan-classic #category-list .category-button:focus,
-#options-root.theme-mikupan-classic #category-list .category-button:focus-visible,
-#options-root.theme-mikupan-classic #category-list .category-button.controller-focus,
-#options-root.theme-mikupan-classic #side-actions .side-action-button:hover,
-#options-root.theme-mikupan-classic #side-actions .side-action-button:focus,
-#options-root.theme-mikupan-classic #side-actions .side-action-button:focus-visible,
-#options-root.theme-mikupan-classic #side-actions .side-action-button.controller-focus {
-    color: #fff1d3;
-    background-color: #1c130b7a;
-    border-left-color: transparent;
-    border-top-color: #8f734c60;
-    border-bottom-color: #c6a66f98;
-    decorator: horizontal-gradient(#6f542c98 #00000000);
-}
-
-#options-root.theme-mikupan-classic select selectvalue,
-#options-root.theme-mikupan-classic .choice-text,
-#options-root.theme-mikupan-classic input.text,
-#options-root.theme-mikupan-classic .controls-bind-value,
-#options-root.theme-mikupan-classic select selectbox option,
-#options-root.theme-mikupan-classic .picker-option {
-    text-align: center;
-}
-
-
-#options-root.theme-mikupan-classic .controls-tab {
-    color: #c9beb0;
-    background-color: #00000030;
-    border: 0dp transparent;
-    border-top: 1dp #3f332750;
-    border-bottom: 1dp #8f734c68;
-    decorator: none;
-}
-
-#options-root.theme-mikupan-classic .controls-tab:hover,
-#options-root.theme-mikupan-classic .controls-tab.selected,
-#options-root.theme-mikupan-classic .controls-tab:focus,
-#options-root.theme-mikupan-classic .controls-tab:focus-visible,
-#options-root.theme-mikupan-classic .controls-tab.controller-focus,
-#options-root.theme-mikupan-classic .controls-tab.selected:focus,
-#options-root.theme-mikupan-classic .controls-tab.selected:focus-visible,
-#options-root.theme-mikupan-classic .controls-tab.selected.controller-focus {
-    color: #fff1d3;
-    background-color: #1c130b7a;
-    border-top-color: #8f734c60;
-    border-bottom-color: #c6a66f98;
-    decorator: horizontal-gradient(#6f542c98 #00000000);
-}
-
-#options-root.theme-mikupan-classic .picker-option.applied {
-    border-left-color: #8f734c70;
+@keyframes fade-in
+{
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }

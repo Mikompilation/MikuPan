@@ -29,7 +29,6 @@
 #include "mikupan/gameplay/mikupan_effect_compat.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_utils.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui_debug.h"
 #include "os/eeiop/cdvd/eecdvd.h"
@@ -3204,7 +3203,6 @@ void MakeRDither3()
     sceGsExecLoadImage(&gs_limage2, (u_long128 *)pal);
     
     sceGsSyncPath(0, 0);
-    MikuPan_InvalidateTex0Cache();
 }
 
 void SubDither3(/* s0 16 */ int type, /* f27 65 */ float alp, /* f28 66 */ float spd, /* 0x4530(sp) */ u_char alpmx, /* 0x4534(sp) */ u_char colmx)
@@ -3404,7 +3402,6 @@ void SubDither3(/* s0 16 */ int type, /* f27 65 */ float alp, /* f28 66 */ float
             sceGsExecLoadImage(&gs_limage1, (u_long128 *)pat);
             sceGsExecLoadImage(&gs_limage2, (u_long128 *)pal);
             sceGsSyncPath(0,0);
-            MikuPan_InvalidateTex0Cache();
             WaitFrameTop(0);
         }
     }

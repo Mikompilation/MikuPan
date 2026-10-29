@@ -4,6 +4,7 @@
 #include "mikupan_shader.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_gpu.h"
+#include "mikupan_texture_slots.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include <stdlib.h>
 #include <string.h>
@@ -51,14 +52,6 @@ static int g_mesh_cache_misses_full_curr = 0;
 static int g_mesh_cache_hits_last        = 0;
 static int g_mesh_cache_misses_new_last  = 0;
 static int g_mesh_cache_misses_full_last = 0;
-
-/// Texture L1 hit/miss instrumentation. An L1 miss falls through to
-/// MikuPan_GetTextureHash, which XXH3-hashes potentially many KB of GS
-/// memory — that's the suspected hot spot in PERF_SECT_SC_TEXTURE.
-static int g_tex_l1_hits_curr   = 0;
-static int g_tex_l1_misses_curr = 0;
-static int g_tex_l1_hits_last   = 0;
-static int g_tex_l1_misses_last = 0;
 
 static MikuPan_PerfDiagSnapshot g_perf_diag = {0};
 static MikuPan_PerfDiagSnapshot g_perf_diag_last = {0};
@@ -337,7 +330,7 @@ static void PerfDiagMaybeLog(void)
         return;
     }
 
-    info_log("[PERFDIAG] frame=%u cpu=%.3fms gpuwait=%.3fms draws=%d state=%d uploads=%d bytes=%llu grows=%d upload_flushes=%d renderpass_flushes=%d meshcache=%d/%d/%d tex_l1=%d/%d",
+    info_log("[PERFDIAG] frame=%u cpu=%.3fms gpuwait=%.3fms draws=%d state=%d uploads=%d bytes=%llu grows=%d upload_flushes=%d renderpass_flushes=%d meshcache=%d/%d/%d tex_created=%d tex_misses=%d",
              g_perf_diag.frame,
              g_last_frame_cpu_ms,
              g_last_frame_gpu_ms,
@@ -351,8 +344,8 @@ static void PerfDiagMaybeLog(void)
              g_mesh_cache_hits_curr,
              g_mesh_cache_misses_new_curr,
              g_mesh_cache_misses_full_curr,
-             g_tex_l1_hits_curr,
-             g_tex_l1_misses_curr);
+             MikuPan_TexSlots_GetTexturesCreated(),
+             MikuPan_TexSlots_GetMisses());
 
     info_log("[PERFDIAG] mesh0x2 calls=%d mesh0xA=%d cpu=%d gpu=%d shadow=%d receiver=%d cache_on=%d cache_hit=%d static_miss=%d submeshes=%d vertices=%d indices=%d max_sub=%d max_vtx=%d max_idx=%d stream_skip=%d stream_skip_bytes=%llu",
              g_perf_diag.mesh0x2_calls,
@@ -464,8 +457,8 @@ static void PerfDiagSnapshotCurrent(void)
     g_perf_diag.mesh_cache_hits = g_mesh_cache_hits_curr;
     g_perf_diag.mesh_cache_misses_new = g_mesh_cache_misses_new_curr;
     g_perf_diag.mesh_cache_misses_full = g_mesh_cache_misses_full_curr;
-    g_perf_diag.tex_l1_hits = g_tex_l1_hits_curr;
-    g_perf_diag.tex_l1_misses = g_tex_l1_misses_curr;
+    g_perf_diag.tex_created = MikuPan_TexSlots_GetTexturesCreated();
+    g_perf_diag.tex_misses = MikuPan_TexSlots_GetMisses();
     g_perf_diag_last = g_perf_diag;
 }
 
@@ -876,11 +869,6 @@ void MikuPan_PerfResetFrame(void)
     g_mesh_cache_misses_new_curr  = 0;
     g_mesh_cache_misses_full_curr = 0;
 
-    g_tex_l1_hits_last   = g_tex_l1_hits_curr;
-    g_tex_l1_misses_last = g_tex_l1_misses_curr;
-    g_tex_l1_hits_curr   = 0;
-    g_tex_l1_misses_curr = 0;
-
     PerfDiagReset();
 }
 
@@ -894,8 +882,6 @@ void MikuPan_PerfDrawCall(void)          { g_draw_calls_curr++; }
 void MikuPan_PerfMeshCacheHit(void)      { g_mesh_cache_hits_curr++; }
 void MikuPan_PerfMeshCacheMissNew(void)  { g_mesh_cache_misses_new_curr++; }
 void MikuPan_PerfMeshCacheMissFull(void) { g_mesh_cache_misses_full_curr++; }
-void MikuPan_PerfTexL1Hit(void)          { g_tex_l1_hits_curr++; }
-void MikuPan_PerfTexL1Miss(void)         { g_tex_l1_misses_curr++; }
 
 /* ── Last-frame queries ─────────────────────────────────────────────── */
 
@@ -908,8 +894,6 @@ float MikuPan_PerfGetSectionMs(int section)
 int MikuPan_PerfGetMeshCacheHits(void)        { return g_mesh_cache_hits_last; }
 int MikuPan_PerfGetMeshCacheMissesNew(void)   { return g_mesh_cache_misses_new_last; }
 int MikuPan_PerfGetMeshCacheMissesFull(void)  { return g_mesh_cache_misses_full_last; }
-int MikuPan_PerfGetTexL1Hits(void)            { return g_tex_l1_hits_last; }
-int MikuPan_PerfGetTexL1Misses(void)          { return g_tex_l1_misses_last; }
 
 /* ── Current-frame snapshots ────────────────────────────────────────── */
 

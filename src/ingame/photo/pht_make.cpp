@@ -18,7 +18,6 @@
 #include "graphics/graph2d/tim2.h"
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/sglib.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/gameplay/mikupan_photo_capture.h"
 #include "mikupan/gameplay/mikupan_photo_hint.h"
@@ -237,7 +236,6 @@ void DrawPhotoBuffer(u_int pri, int addr, int szfl, int x, int y, int szw,
     FlushCache(0);
     sceGsExecLoadImage(&gs_limage, data_i);
     sceGsSyncPath(0, 0);
-    MikuPan_InvalidateTex0Cache();
 
     sd.g_GsTex0.TBP0 = 0x2780;
     sd.g_GsTex0.TBW = dbw;

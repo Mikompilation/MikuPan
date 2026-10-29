@@ -1250,6 +1250,8 @@ enum MikuPanRmlPadAction
     MIKUPAN_RML_PAD_CONFIRM,
     MIKUPAN_RML_PAD_ALT_CONFIRM,
     MIKUPAN_RML_PAD_CANCEL,
+    MIKUPAN_RML_PAD_PREV_SECTION,
+    MIKUPAN_RML_PAD_NEXT_SECTION,
     MIKUPAN_RML_PAD_COUNT,
 };
 
@@ -1712,17 +1714,6 @@ Rml::Input::KeyIdentifier ConvertKey(SDL_Keycode key)
     }
 }
 
-void PulseKey(Rml::Input::KeyIdentifier key)
-{
-    if (g_rml.context == nullptr || key == Rml::Input::KI_UNKNOWN)
-    {
-        return;
-    }
-
-    g_rml.context->ProcessKeyDown(key, 0);
-    g_rml.context->ProcessKeyUp(key, 0);
-}
-
 SDL_Gamepad* GetRmlNavigationGamepad(void)
 {
     SDL_Gamepad* gamepad = MikuPan_GetController();
@@ -1764,11 +1755,6 @@ bool AxisPositive(SDL_Gamepad* gamepad, SDL_GamepadAxis axis)
     return gamepad != nullptr && SDL_GetGamepadAxis(gamepad, axis) > kDeadZone;
 }
 
-Rml::Element* GetCurrentFocusElement(void)
-{
-    return g_rml.context != nullptr ? g_rml.context->GetFocusElement() : nullptr;
-}
-
 // These are the stock menu SFX IDs from iop/se/iopse.h.
 static constexpr int kRmlSeCursor = 0; // SE_CSR0
 static constexpr int kRmlSeClick = 1;  // SE_CLIC
@@ -1777,16 +1763,6 @@ static constexpr int kRmlSeCancel = 3; // SE_CANCEL
 void PlayRmlUiSound(int se_no)
 {
     (void) SeStartFix(se_no, 0, 0x1000, 0x1000, 1);
-}
-
-void PlayRmlCursorSoundIfMoved(Rml::Element* previous_focus)
-{
-    const bool focus_changed = previous_focus != GetCurrentFocusElement();
-    const bool value_changed = MikuPan_RmlOptionsConsumeMoveSoundRequest() != 0;
-    if (focus_changed || value_changed)
-    {
-        PlayRmlUiSound(kRmlSeCursor);
-    }
 }
 
 void DispatchPadAction(MikuPanRmlPadAction action)
@@ -1868,96 +1844,37 @@ void DispatchPadAction(MikuPanRmlPadAction action)
         return;
     }
 
+    // The options screen plays its own sounds, only for what actually moved
+    // or changed.
+    MikuPan_RmlOptionsNoteInputDevice(1);
     switch (action)
     {
         case MIKUPAN_RML_PAD_UP:
-        {
-            Rml::Element* previous_focus = GetCurrentFocusElement();
-            const bool native_select_open = MikuPan_RmlOptionsAnySelectOpen() != 0;
-            if (!MikuPan_RmlOptionsHandleVerticalInput(-1))
-            {
-                PulseKey(Rml::Input::KI_UP);
-            }
-            MikuPan_RmlOptionsEnsureFocusedControlVisible();
-            if (native_select_open)
-            {
-                PlayRmlUiSound(kRmlSeCursor);
-            }
-            else
-            {
-                PlayRmlCursorSoundIfMoved(previous_focus);
-            }
+            MikuPan_RmlOptionsHandleVerticalInput(-1);
             break;
-        }
         case MIKUPAN_RML_PAD_DOWN:
-        {
-            Rml::Element* previous_focus = GetCurrentFocusElement();
-            const bool native_select_open = MikuPan_RmlOptionsAnySelectOpen() != 0;
-            if (!MikuPan_RmlOptionsHandleVerticalInput(1))
-            {
-                PulseKey(Rml::Input::KI_DOWN);
-            }
-            MikuPan_RmlOptionsEnsureFocusedControlVisible();
-            if (native_select_open)
-            {
-                PlayRmlUiSound(kRmlSeCursor);
-            }
-            else
-            {
-                PlayRmlCursorSoundIfMoved(previous_focus);
-            }
+            MikuPan_RmlOptionsHandleVerticalInput(1);
             break;
-        }
         case MIKUPAN_RML_PAD_LEFT:
-        {
-            Rml::Element* previous_focus = GetCurrentFocusElement();
-            if (!MikuPan_RmlOptionsHandleHorizontalInput(-1))
-            {
-                PulseKey(Rml::Input::KI_LEFT);
-            }
-            MikuPan_RmlOptionsEnsureFocusedControlVisible();
-            PlayRmlCursorSoundIfMoved(previous_focus);
+            MikuPan_RmlOptionsHandleHorizontalInput(-1);
             break;
-        }
         case MIKUPAN_RML_PAD_RIGHT:
-        {
-            Rml::Element* previous_focus = GetCurrentFocusElement();
-            if (!MikuPan_RmlOptionsHandleHorizontalInput(1))
-            {
-                PulseKey(Rml::Input::KI_RIGHT);
-            }
-            MikuPan_RmlOptionsEnsureFocusedControlVisible();
-            PlayRmlCursorSoundIfMoved(previous_focus);
+            MikuPan_RmlOptionsHandleHorizontalInput(1);
             break;
-        }
         case MIKUPAN_RML_PAD_CONFIRM:
-            if (!MikuPan_RmlOptionsActivateFocusedControl())
-            {
-                PulseKey(Rml::Input::KI_RETURN);
-            }
-            MikuPan_RmlOptionsEnsureFocusedControlVisible();
-            PlayRmlUiSound(kRmlSeClick);
+            MikuPan_RmlOptionsActivateFocusedControl();
             break;
         case MIKUPAN_RML_PAD_ALT_CONFIRM:
-            if (!MikuPan_RmlOptionsActivateFocusedControl())
-            {
-                PulseKey(Rml::Input::KI_SPACE);
-            }
-            MikuPan_RmlOptionsEnsureFocusedControlVisible();
-            PlayRmlUiSound(kRmlSeClick);
+            MikuPan_RmlOptionsHandleAltConfirm();
             break;
         case MIKUPAN_RML_PAD_CANCEL:
-            if (MikuPan_RmlOptionsAnySelectOpen())
-            {
-                PulseKey(Rml::Input::KI_ESCAPE);
-                MikuPan_RmlOptionsClearNativeSelectOpen();
-            }
-            else
-            {
-                MikuPan_RmlOptionsHandleCancel();
-            }
-            MikuPan_RmlOptionsEnsureFocusedControlVisible();
-            PlayRmlUiSound(kRmlSeCancel);
+            MikuPan_RmlOptionsHandleCancel();
+            break;
+        case MIKUPAN_RML_PAD_PREV_SECTION:
+            MikuPan_RmlOptionsHandleSection(-1);
+            break;
+        case MIKUPAN_RML_PAD_NEXT_SECTION:
+            MikuPan_RmlOptionsHandleSection(1);
             break;
         default:
             break;
@@ -2044,6 +1961,10 @@ void UpdateGamepadNavigation(void)
     const bool cancel = SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_EAST)
                         || SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_NORTH)
                         || SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_BACK);
+    const bool prev_section =
+        SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER);
+    const bool next_section =
+        SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER);
 
     const uint64_t now = SDL_GetTicks();
     UpdatePadAction(MIKUPAN_RML_PAD_UP, up, true, now);
@@ -2053,6 +1974,8 @@ void UpdateGamepadNavigation(void)
     UpdatePadAction(MIKUPAN_RML_PAD_CONFIRM, confirm, false, now);
     UpdatePadAction(MIKUPAN_RML_PAD_ALT_CONFIRM, alt_confirm, false, now);
     UpdatePadAction(MIKUPAN_RML_PAD_CANCEL, cancel, false, now);
+    UpdatePadAction(MIKUPAN_RML_PAD_PREV_SECTION, prev_section, false, now);
+    UpdatePadAction(MIKUPAN_RML_PAD_NEXT_SECTION, next_section, false, now);
 }
 
 } // namespace
@@ -2199,7 +2122,13 @@ void MikuPan_RmlUiRender(void)
         return;
     }
 
+    // The menus are drawn after the postprocess pass, onto the window: with
+    // an HDR swapchain their sRGB colours have to be taken to its linear
+    // scale, as the game picture is, or they read as dim and washed out.
+    MikuPan_GPUSetUiHdrOutput(MikuPan_IsHdrEnabled()
+                              && MikuPan_GPUIsHdrSwapchainEnabled());
     g_rml.context->Render();
+    MikuPan_GPUSetUiHdrOutput(0);
     MikuPan_GPUDisableScissor();
 }
 
@@ -2369,6 +2298,7 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
                 {
                     break;
                 }
+                MikuPan_RmlOptionsNoteInputDevice(0);
                 if (key == Rml::Input::KI_UP
                     && MikuPan_RmlOptionsHandleVerticalInput(-1))
                 {
@@ -2389,8 +2319,7 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
                 {
                     break;
                 }
-                if (key == Rml::Input::KI_ESCAPE
-                    && !MikuPan_RmlOptionsAnySelectOpen())
+                if (key == Rml::Input::KI_ESCAPE)
                 {
                     MikuPan_RmlOptionsHandleCancel();
                     break;

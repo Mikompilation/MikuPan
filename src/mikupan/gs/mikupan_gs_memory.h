@@ -1,11 +1,16 @@
-#ifndef MIKUPAN_GS_SERVER_H
-#define MIKUPAN_GS_SERVER_H
+#ifndef MIKUPAN_GS_MEMORY_H
+#define MIKUPAN_GS_MEMORY_H
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
-#include "ee/eestruct.h"
-#include "sce/libgraph.h"
+/// Dependency-free emulation of the PS2 GS local memory: the swizzled VRAM
+/// layout, image uploads and the texture decode MikuPan performed for a TEX0
+/// before its textures were baked. Only the texture baker uses it now (in
+/// the game for the first-launch bake, and in tools/sgdstitch): the bake
+/// decodes model textures with it and checks every baked texture against
+/// it. Keep it free of SDL, logging and game headers.
 
 enum PixelStorageFormat
 {
@@ -26,6 +31,15 @@ enum PixelStorageFormat
 
 namespace GS
 {
+/// Size of the GS local memory. Region checks (texture hashes, cache
+/// invalidation, "can this TEX0 be drawn") use this size.
+constexpr int kVramSize = 4 * 1024 * 1024;
+
+/// The PSMCT32/PSMCT16 address functions wrap at 4 MB, the PSMT8/PSMT4 ones
+/// do not, so a T8/T4 access near the top of VRAM can land past 4 MB. The
+/// memory is allocated twice as large so those accesses stay inside it.
+constexpr int kVramAllocSize = 2 * kVramSize;
+
 constexpr int kBlockTablePSMCT32[] = {
     0, 1, 4,  5,  16, 17, 20, 21, 2,  3,  6,  7,  18, 19, 22, 23,
     8, 9, 12, 13, 24, 25, 28, 29, 10, 11, 14, 15, 26, 27, 30, 31,
@@ -106,12 +120,57 @@ constexpr int kColumnTablePSMT4[] = {
     413, 437, 445, 469, 477, 501, 509, 407, 415, 439, 447, 471, 479, 503, 511,
 };
 
+/// Byte address of pixel (x, y) of a buffer at `block` (256-byte units) with
+/// a buffer width of `width` * 64 pixels. PSMT4 returns a nibble address.
+int GetPixelAddressPSMCT32(int block, int width, int x, int y);
+int GetPixelAddressPSMCT16(int block, int width, int x, int y);
+int GetPixelAddressPSMT8(int block, int width, int x, int y);
+int GetPixelAddressPSMT4(int block, int width, int x, int y);
+
+/// The TEX0_1 fields the texture decode reads.
+struct Tex0
+{
+    int tbp0 = 0;///< texture base, 256-byte blocks
+    int tbw = 0; ///< buffer width / 64
+    int psm = 0;
+    int tw = 0;  ///< log2 width
+    int th = 0;  ///< log2 height
+    int cbp = 0; ///< CLUT base, 256-byte blocks
+    int csa = 0; ///< CLUT entry offset (PSMT4)
+};
+
+/// Splits a raw 64-bit GS TEX0 register value into its fields.
+Tex0 DecodeTex0(uint64_t value);
+
+/// Linear byte range [addr, addr + size) that starts at the texture's first
+/// texel and covers width * height texels. The game hashes this range and
+/// uses it for cache invalidation; a TEX0 whose range is not inside the 4 MB
+/// of VRAM (or whose PSM is not a colour/depth format) is never bound.
+bool GetRawTextureRegion(const Tex0& tex0, int* out_addr, int* out_size);
+
+/// True when the game can decode this TEX0 into an RGBA8 image: both sides
+/// at most 4096 and a PSM of PSMCT32, PSMCT16, PSMCT16S, PSMT8 or PSMT4.
+bool IsDecodableTexture(const Tex0& tex0);
+
+/// PS2 alpha (0x80 = opaque) to 8-bit alpha: a <= 127 ? a * 2 : 0xFF.
+unsigned char AdjustPS2Alpha(unsigned char alpha);
+
+/// Applies AdjustPS2Alpha to every pixel of an RGBA8 image, in place.
+void ConvertImageAlpha(unsigned char* rgba, int width, int height);
+
 class GSHelper
 {
 
    public:
     GSHelper();
     ~GSHelper() = default;
+
+    /// Stores an image transfer the way the game's GS uploads did: PSMZ32 as
+    /// PSMCT32, every 16-bit format as PSMCT16, PSMT8 and PSMT4. Returns false
+    /// (and writes nothing) for any other DPSM.
+    bool Upload(int dpsm, int dbp, int dbw, int dsax, int dsay, int rrw,
+                int rrh, const uint8_t* inbuf);
+
     void UploadPSMCT32(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh,
                        const uint8_t *inbuf);
     void UploadPSMCT16(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh,
@@ -120,33 +179,30 @@ class GSHelper
                      const uint8_t *inbuf);
     void UploadPSMT4(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh,
                      const uint8_t *inbuf);
-    void DownloadPSMCT32(unsigned char* outbuf, int dbp, int dbw, int dsax, int dsay,
-                                         int rrw, int rrh);
-    void DownloadPSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax, int dsay,
-                                         int rrw, int rrh);
-    void StorePSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax, int dsay,
-                                      int rrw, int rrh);
+    void DownloadPSMCT32(unsigned char* outbuf, int dbp, int dbw, int dsax,
+                         int dsay, int rrw, int rrh) const;
+    void DownloadPSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax,
+                         int dsay, int rrw, int rrh) const;
+    void StorePSMCT16(unsigned char* outbuf, int dbp, int dbw, int dsax,
+                      int dsay, int rrw, int rrh) const;
     void DownloadImagePSMT8(unsigned char* outbuf, int dbp, int dbw, int dsax,
-                                            int dsay, int rrw, int rrh, int cbp,
-                                            int cbw, int alpha_reg);
+                            int dsay, int rrw, int rrh, int cbp, int cbw,
+                            int alpha_reg) const;
     void DownloadImagePSMT4(unsigned char* outbuf, int dbp, int dbw, int dsax,
-                                            int dsay, int rrw, int rrh, int cbp,
-                                            int cbw, int csa, int alpha_reg);
+                            int dsay, int rrw, int rrh, int cbp, int cbw,
+                            int csa, int alpha_reg) const;
+
+    /// Decodes the texture `tex0` names into `outbuf` (width * height RGBA8
+    /// pixels, rows top-down) exactly as the game's texture binding did:
+    /// de-swizzle, CLUT lookup (16x16 PSMCT32 CLUT with the CSM1 index
+    /// shuffle for PSMT8, 8x2 entries at CSA for PSMT4), then
+    /// ConvertImageAlpha(). Returns false when !IsDecodableTexture(tex0).
+    bool DecodeTexture(const Tex0& tex0, unsigned char* outbuf) const;
+
     void Clear();
 
-    std::vector<char> mem_ = std::vector<char> (8 * 1024 * 1024);
+    std::vector<char> mem_;
 };
 }// namespace GS
 
-extern GS::GSHelper gsHelper;
-
-extern "C" {
-void MikuPan_GsUpload(sceGsLoadImage *image_load, unsigned char *image);
-unsigned char *MikuPan_GsDownloadTexture(sceGsTex0 *tex0, uint64_t* hash);
-uint64_t MikuPan_GetTextureHash(sceGsTex0 *tex0);
-void MikuPan_GsStore(sceGsStoreImage *sp, unsigned char *out);
-}
-
-// Texture *DownloadGsTexture(sceGsTex0* pMeshTexReg);
-
-#endif//MIKUPAN_GS_SERVER_H
+#endif//MIKUPAN_GS_MEMORY_H

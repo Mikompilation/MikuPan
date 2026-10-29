@@ -33,18 +33,15 @@ extern "C" {
 #define MP_PERF_MESH_0x32 16
 #define MP_PERF_MESH_0x82 17
 
-    /// Sub-sections decomposing MP_PERF_SC_TEXTURE — fine-grained breakdown of
-/// where MikuPan_SetTexture spends its time.
-#define MP_PERF_TEX_L1_LOOKUP 18
-#define MP_PERF_TEX_HASH 19
-#define MP_PERF_TEX_L2_LOOKUP 20
-#define MP_PERF_TEX_CREATE 21
-#define MP_PERF_TEX_BIND 22
+    /// Sub-sections decomposing MP_PERF_SC_TEXTURE — where MikuPan_SetTexture
+/// spends its time.
+#define MP_PERF_TEX_RESOLVE 18
+#define MP_PERF_TEX_BIND 19
 
     /// "Other / unknown" breakdown — uninstrumented PS2/SG scene-graph emulation.
-#define MP_PERF_SKIN_PREP 23
-#define MP_PERF_COORD_CALC 24
-#define MP_PERF_LIGHT_SETUP 25
+#define MP_PERF_SKIN_PREP 20
+#define MP_PERF_COORD_CALC 21
+#define MP_PERF_LIGHT_SETUP 22
 
 /// CPU section IDs for the per-section perf graph. Stable integers — the UI
 /// panel feeds matching values into MikuPan_PerfGetSectionMs(). Append new
@@ -60,7 +57,7 @@ typedef enum
     PERF_SECT_BUFFER_UPLOAD,      ///< wall-clock in stream-upload helper (map+memcpy+unmap)
     PERF_SECT_STATE_CHANGE,       ///< wall-clock in shader/texture/render-state setters (outer)
     PERF_SECT_SC_SHADER,          ///< sub: glUseProgram / MikuPan_SetCurrentShaderProgram
-    PERF_SECT_SC_TEXTURE,         ///< sub: MikuPan_SetTexture (incl. hash lookup + bind)
+    PERF_SECT_SC_TEXTURE,         ///< sub: MikuPan_SetTexture (slot lookup + bind)
     PERF_SECT_SC_RS3D,            ///< sub: MikuPan_SetRenderState3D (depth/cull/blend)
     PERF_SECT_SC_VAO,             ///< sub: MikuPan_BindVAO (glBindVertexArray)
     /// Per-mesh-type sub-sections of MESH_RENDER. Their sum is approximately
@@ -74,10 +71,7 @@ typedef enum
     /// Sub-sections of SC_TEXTURE — answer "where exactly does the texture
     /// state change spend its time?". Their sum is approximately SC_TEXTURE
     /// minus the dispatch overhead between the inner timers.
-    PERF_SECT_TEX_L1_LOOKUP,      ///< sub: MikuPan_LookupTextureByTex0 (raw tex0 → info hash table)
-    PERF_SECT_TEX_HASH,           ///< sub: MikuPan_GetTextureHash (XXH3 over GS memory — hot on L1 miss)
-    PERF_SECT_TEX_L2_LOOKUP,      ///< sub: MikuPan_GetTextureInfo (by GS-memory hash)
-    PERF_SECT_TEX_CREATE,         ///< sub: MikuPan_CreateGLTexture (glTexImage2D + glGenerateMipmap)
+    PERF_SECT_TEX_RESOLVE,        ///< sub: MikuPan_TexSlots_Resolve (slot lookup; decodes a texture on first use)
     PERF_SECT_TEX_BIND,           ///< sub: MikuPan_BindTexture2DCached (glBindTexture under the cache)
     /// "Other / unknown" breakdown — uninstrumented PS2/SG scene-graph emulation
     /// that runs between frame-start and the timed render calls. These are
@@ -171,8 +165,6 @@ void MikuPan_PerfDrawCall(void);
 void MikuPan_PerfMeshCacheHit(void);
 void MikuPan_PerfMeshCacheMissNew(void);
 void MikuPan_PerfMeshCacheMissFull(void);
-void MikuPan_PerfTexL1Hit(void);
-void MikuPan_PerfTexL1Miss(void);
 
 
 typedef enum
@@ -231,8 +223,8 @@ typedef struct
     int mesh_cache_hits;
     int mesh_cache_misses_new;
     int mesh_cache_misses_full;
-    int tex_l1_hits;
-    int tex_l1_misses;
+    int tex_created;
+    int tex_misses;
     int upload_context;
     int gpu_uploads;
     unsigned long long gpu_upload_bytes;
@@ -311,8 +303,6 @@ float MikuPan_PerfGetSectionMs(int section);
 int   MikuPan_PerfGetMeshCacheHits(void);
 int   MikuPan_PerfGetMeshCacheMissesNew(void);
 int   MikuPan_PerfGetMeshCacheMissesFull(void);
-int   MikuPan_PerfGetTexL1Hits(void);
-int   MikuPan_PerfGetTexL1Misses(void);
 
 /* ── Current-frame snapshots (read mid-frame, e.g. for debug logging) ─ */
 

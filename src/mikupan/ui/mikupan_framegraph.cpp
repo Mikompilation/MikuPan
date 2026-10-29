@@ -4,11 +4,11 @@
 #include "implot.h"
 #include "mikupan_framegraph.h"
 
-#include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/rendering/mikupan_gpu.h"
 #include "mikupan/rendering/mikupan_meshcache.h"
 #include "mikupan/rendering/mikupan_profiler.h"
+#include "mikupan/rendering/mikupan_texture_slots.h"
 
 #include <string.h>
 
@@ -267,15 +267,14 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
     float perf_flush = MikuPan_PerfGetSectionMs(MP_PERF_BATCH_FLUSH);
     float perf_drawui = MikuPan_PerfGetSectionMs(MP_PERF_DRAWUI);
     float perf_render = MikuPan_PerfGetSectionMs(MP_PERF_RENDERUI);
-    float perf_gs_up = MikuPan_GsGetUploadMs();
-    float perf_gs_dl = MikuPan_GsGetDownloadMs();
+    float perf_tex2d = MikuPan_TexSlots_GetCreateMs();
 
     float perf_skin = MikuPan_PerfGetSectionMs(MP_PERF_SKIN_PREP);
     float perf_coord = MikuPan_PerfGetSectionMs(MP_PERF_COORD_CALC);
     float perf_light = MikuPan_PerfGetSectionMs(MP_PERF_LIGHT_SETUP);
 
     float perf_known = perf_mesh + perf_sprite + perf_flush + perf_drawui
-                       + perf_render + perf_gs_up + perf_gs_dl + perf_skin
+                       + perf_render + perf_tex2d + perf_skin
                        + perf_coord + perf_light;
     float perf_other = cpu_latest - perf_known;
 
@@ -291,8 +290,7 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
         PerfRow("Batch flushes", perf_flush, cpu_latest);
         PerfRow("DrawUi (game)", perf_drawui, cpu_latest);
         PerfRow("RenderUi (ImGui)", perf_render, cpu_latest);
-        PerfRow("GS uploads", perf_gs_up, cpu_latest);
-        PerfRow("GS downloads", perf_gs_dl, cpu_latest);
+        PerfRow("2D texture decodes", perf_tex2d, cpu_latest);
         PerfRow("Skin prep (SetVUVN)", perf_skin, cpu_latest);
         PerfRow("Coord calc (SetLWS)", perf_coord, cpu_latest);
         PerfRow("Light setup", perf_light, cpu_latest);
@@ -335,13 +333,8 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
         float perf_sc_texture = MikuPan_PerfGetSectionMs(MP_PERF_SC_TEXTURE);
         float perf_sc_rs3d = MikuPan_PerfGetSectionMs(MP_PERF_SC_RS3D);
         float perf_sc_vao = MikuPan_PerfGetSectionMs(MP_PERF_SC_VAO);
-        float perf_tex_l1 = MikuPan_PerfGetSectionMs(MP_PERF_TEX_L1_LOOKUP);
-        float perf_tex_hash = MikuPan_PerfGetSectionMs(MP_PERF_TEX_HASH);
-        float perf_tex_l2 = MikuPan_PerfGetSectionMs(MP_PERF_TEX_L2_LOOKUP);
-        float perf_tex_create = MikuPan_PerfGetSectionMs(MP_PERF_TEX_CREATE);
+        float perf_tex_resolve = MikuPan_PerfGetSectionMs(MP_PERF_TEX_RESOLVE);
         float perf_tex_bind = MikuPan_PerfGetSectionMs(MP_PERF_TEX_BIND);
-        int l1_hits = MikuPan_PerfGetTexL1Hits();
-        int l1_misses = MikuPan_PerfGetTexL1Misses();
 
         if (PerfTableBegin("##cross_cutting"))
         {
@@ -350,10 +343,7 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
             PerfRow("State changes (cached path)", perf_state, cpu_latest);
             PerfRow("    Shader (glUseProgram)", perf_sc_shader, cpu_latest);
             PerfRow("    Texture (lookup+bind)", perf_sc_texture, cpu_latest);
-            PerfRow("        L1 lookup (tex0->info)", perf_tex_l1, cpu_latest);
-            PerfRow("        Hash (XXH3/GS mem)", perf_tex_hash, cpu_latest);
-            PerfRow("        L2 lookup (hash->info)", perf_tex_l2, cpu_latest);
-            PerfRow("        Create (glTexImage+mip)", perf_tex_create,
+            PerfRow("        Slot lookup (+ first decode)", perf_tex_resolve,
                     cpu_latest);
             PerfRow("        Bind (glBindTexture)", perf_tex_bind, cpu_latest);
             PerfRow("    RenderState (depth/cull/blend)", perf_sc_rs3d,
@@ -361,20 +351,20 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
             PerfRow("    VAO (glBindVertexArray)", perf_sc_vao, cpu_latest);
             ImGui::EndTable();
         }
-        ImGui::Text("Texture L1: %d hits / %d misses  (miss -> XXH3 over GS memory)", l1_hits, l1_misses);
         ImGui::TextDisabled("subsets of the buckets above — not additional time");
         ImGui::TreePop();
     }
 
     ImGui::Spacing();
-    ImGui::SeparatorText("GS texture traffic (last frame)");
+    ImGui::SeparatorText("2D textures (last frame)");
 
-    int ul_count = MikuPan_GsGetUploadCount();
-    int ul_bytes = MikuPan_GsGetUploadBytes();
-    int dl_count = MikuPan_GsGetDownloadCount();
-    int dl_bytes = MikuPan_GsGetDownloadBytes();
-
-    ImGui::Text("Up %d calls / %.1f KB     Down %d calls / %.1f KB", ul_count, ul_bytes / 1024.0f, dl_count, dl_bytes / 1024.0f);
+    ImGui::Text("Pictures %d     Runtime images %d / %.1f KB",
+                MikuPan_TexSlots_GetPictureUploads(),
+                MikuPan_TexSlots_GetRawUploads(),
+                MikuPan_TexSlots_GetRawUploadBytes() / 1024.0f);
+    ImGui::Text("Textures created %d     TEX0 showing nothing %d",
+                MikuPan_TexSlots_GetTexturesCreated(),
+                MikuPan_TexSlots_GetMisses());
 
     ImGui::End();
 }

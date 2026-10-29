@@ -397,40 +397,40 @@ msgid "Blur"
 msgstr "Flou"
 
 msgid "Triangle"
-msgstr "TRIANGLE"
+msgstr "Triangle"
 
 msgid "Cross / Confirm"
-msgstr "CROSS / CONFIRM"
+msgstr "Croix / Confirmer"
 
 msgid "Square"
-msgstr "CARRE"
+msgstr "Carré"
 
 msgid "Circle / Cancel"
-msgstr "CIRCLE / CANCEL"
+msgstr "Rond / Annuler"
 
 msgid "D-Pad Up"
-msgstr "D-PAD UP"
+msgstr "Croix directionnelle haut"
 
 msgid "D-Pad Down"
-msgstr "D-PAD DOWN"
+msgstr "Croix directionnelle bas"
 
 msgid "D-Pad Left"
-msgstr "D-PAD LEFT"
+msgstr "Croix directionnelle gauche"
 
 msgid "D-Pad Right"
-msgstr "D-PAD RIGHT"
+msgstr "Croix directionnelle droite"
 
 msgid "R3 / Right Stick"
-msgstr "R3 / RIGHT STICK"
+msgstr "R3 / Stick droit"
 
 msgid "Select"
 msgstr "SÉLECTIONNER"
 
 msgid "Start / Pause"
-msgstr "START / PAUSE"
+msgstr "Start / Pause"
 
 msgid "L3 / Left Stick"
-msgstr "L3 / LEFT STICK"
+msgstr "L3 / Stick gauche"
 
 msgid "R1 / RB"
 msgstr "R1 / RB"
@@ -445,52 +445,52 @@ msgid "L1 / LB"
 msgstr "L1 / LB"
 
 msgid "Move X"
-msgstr "DÉPLACEMENT X"
+msgstr "Déplacement X"
 
 msgid "Move Y"
-msgstr "DÉPLACEMENT Y"
+msgstr "Déplacement Y"
 
 msgid "Aim X"
-msgstr "VISÉE X"
+msgstr "Visée X"
 
 msgid "Aim Y"
-msgstr "VISÉE Y"
+msgstr "Visée Y"
 
 msgid "Invert Move X"
-msgstr "INVERSER DÉPLACEMENT X"
+msgstr "Inverser déplacement X"
 
 msgid "Invert Move Y"
-msgstr "INVERSER DÉPLACEMENT Y"
+msgstr "Inverser déplacement Y"
 
 msgid "Invert Aim X"
-msgstr "INVERSER VISÉE X"
+msgstr "Inverser visée X"
 
 msgid "Invert Aim Y"
-msgstr "INVERSER VISÉE Y"
+msgstr "Inverser visée Y"
 
 msgid "Forward"
-msgstr "AVANCER"
+msgstr "Avancer"
 
 msgid "Backward"
-msgstr "RECULER"
+msgstr "Reculer"
 
 msgid "Left"
-msgstr "GAUCHE"
+msgstr "Gauche"
 
 msgid "Right"
-msgstr "DROITE"
+msgstr "Droite"
 
 msgid "Aim Up"
-msgstr "VISER EN HAUT"
+msgstr "Viser en haut"
 
 msgid "Aim Down"
-msgstr "VISER EN BAS"
+msgstr "Viser en bas"
 
 msgid "Aim Left"
-msgstr "VISER À GAUCHE"
+msgstr "Viser à gauche"
 
 msgid "Aim Right"
-msgstr "VISER À DROITE"
+msgstr "Viser à droite"
 
 msgid "On"
 msgstr "Activé"
@@ -580,37 +580,37 @@ msgid "Advanced"
 msgstr "Avancé"
 
 msgid "Bind Control"
-msgstr "ASSIGNER LA COMMANDE"
+msgstr "Assigner la commande"
 
 msgid "Unavailable"
 msgstr "Indisponible"
 
 msgid "Controller Rumble"
-msgstr "VIBRATION DE LA MANETTE"
+msgstr "Vibration de la manette"
 
 msgid "Camera Activation"
-msgstr "ACTIVATION DE LA CAMÉRA"
+msgstr "Activation de la caméra"
 
 msgid "Gameplay Actions"
-msgstr "ACTIONS DE JEU"
+msgstr "Actions de jeu"
 
 msgid "Keyboard Buttons"
-msgstr "TOUCHES DU CLAVIER"
+msgstr "Touches du clavier"
 
 msgid "Movement"
-msgstr "DÉPLACEMENT"
+msgstr "Déplacement"
 
 msgid "Aim"
-msgstr "VISÉE"
+msgstr "Visée"
 
 msgid "Controller"
-msgstr "MANETTE"
+msgstr "Manette"
 
 msgid "Buttons"
-msgstr "BOUTONS"
+msgstr "Boutons"
 
 msgid "Sticks"
-msgstr "STICKS"
+msgstr "Sticks"
 
 msgid "Stick Invert"
 msgstr "INVERSION DU STICK"
@@ -652,31 +652,31 @@ msgid "Reset"
 msgstr "Réinitialiser"
 
 msgid "Enable"
-msgstr "ACTIVER"
+msgstr "Activer"
 
 msgid "Defaults"
 msgstr "Par défaut"
 
 msgid "HDR Output"
-msgstr "SORTIE HDR"
+msgstr "Sortie HDR"
 
 msgid "Image Calibration"
-msgstr "CALIBRATION DE L'IMAGE"
+msgstr "Calibrage de l'image"
 
 msgid "CRT Filter"
-msgstr "FILTRE CRT"
+msgstr "Filtre CRT"
 
 msgid "OPTIONS"
 msgstr "OPTIONS"
 
 msgid "Display Mode"
-msgstr "MODE D'AFFICHAGE"
+msgstr "Mode d'affichage"
 
 msgid "Windowed or borderless fullscreen."
 msgstr "Fenêtre ou plein écran sans bordure."
 
 msgid "Windowed Resolution"
-msgstr "RÉSOLUTION FENÊTRÉE"
+msgstr "Résolution en fenêtre"
 
 msgid "Window size used in Windowed mode. Fullscreen uses borderless desktop size."
 msgstr "Taille de fenêtre utilisée en mode Fenêtre. Le plein écran utilise la taille du bureau sans bordure."
@@ -694,13 +694,13 @@ msgid "Synchronise presentation to the display refresh."
 msgstr "Synchronise l'affichage avec le taux de rafraîchissement de l'écran."
 
 msgid "Render Resolution"
-msgstr "RÉSOLUTION DE RENDU"
+msgstr "Résolution de rendu"
 
 msgid "Match the window, scale from it, or use exact PS2 multiples."
 msgstr "Correspond à la fenêtre, la met à l'échelle, ou utilise des multiples exacts de la PS2."
 
 msgid "GPU Backend"
-msgstr "MOTEUR GPU"
+msgstr "Moteur GPU"
 
 msgid "Renderer backend selection. A restart may be required."
 msgstr "Sélection du moteur de rendu. Un redémarrage peut être nécessaire."
@@ -709,52 +709,52 @@ msgid "Smooth geometry edges using multisampling."
 msgstr "Adoucit les bords de la géométrie grâce au multi-échantillonnage."
 
 msgid "Shadow Resolution"
-msgstr "RÉSOLUTION DES OMBRES"
+msgstr "Résolution des ombres"
 
 msgid "Higher values sharpen shadows at a performance cost."
 msgstr "Des valeurs plus élevées affinent les ombres au prix de performances."
 
 msgid "Lighting Mode"
-msgstr "MODE D'ÉCLAIRAGE"
+msgstr "Mode d'éclairage"
 
 msgid "Modern pixel lighting or PS2-style vertex lighting."
 msgstr "Éclairage par pixel moderne ou éclairage par sommet de style PS2."
 
 msgid "Dither Filtering"
-msgstr "FILTRAGE DE TRAME"
+msgstr "Filtrage de trame"
 
 msgid "Native keeps the PS2 dither texture crisp. Soft smooths it for modern displays."
 msgstr "Natif conserve la texture de trame PS2 nette. Doux l'adoucit pour les écrans modernes."
 
 msgid "Finder Surround"
-msgstr "CONTOUR DU VISEUR"
+msgstr "Contour du viseur"
 
 msgid "Choose the area outside the Camera Obscura frame."
 msgstr "Choisissez la zone en dehors du cadre de la Camera Obscura."
 
 msgid "Master Volume"
-msgstr "VOLUME GÉNÉRAL"
+msgstr "Volume général"
 
 msgid "Set the overall game volume."
 msgstr "Règle le volume général du jeu."
 
 msgid "Movement Style"
-msgstr "STYLE DE DÉPLACEMENT"
+msgstr "Style de déplacement"
 
 msgid "D-Pad / Arrow Keys"
-msgstr "CROIX DIRECTIONNELLE / FLÈCHES"
+msgstr "Croix directionnelle / Flèches"
 
 msgid "Left Stick / WASD"
-msgstr "STICK GAUCHE / WASD"
+msgstr "Stick gauche / WASD"
 
 msgid "Viewfinder"
-msgstr "VISEUR"
+msgstr "Viseur"
 
 msgid "Stick Layout"
-msgstr "DISPOSITION DU STICK"
+msgstr "Disposition des sticks"
 
 msgid "D-Pad Film Swap"
-msgstr "CHANGEMENT DE PELLICULE (CROIX)"
+msgstr "Changement de pellicule (croix)"
 
 msgid "Restore keyboard, mouse, and controller bindings."
 msgstr "Restaure les assignations clavier, souris et manette."
@@ -766,7 +766,7 @@ msgid "Select a movement style, or click a binding then press a key, mouse input
 msgstr "Choisissez un style de déplacement, ou cliquez sur une assignation puis appuyez sur une touche, la souris, ou une entrée manette pour l'assigner."
 
 msgid "Interface"
-msgstr "INTERFACE"
+msgstr "Interface"
 
 msgid "Theme"
 msgstr "THÈME"
@@ -775,7 +775,7 @@ msgid "Use the same colour palette as the ImGui overlay."
 msgstr "Utilise la même palette de couleurs que l'overlay ImGui."
 
 msgid "Font"
-msgstr "POLICE"
+msgstr "Police"
 
 msgid "Choose the options-menu font."
 msgstr "Choisissez la police du menu des options."
@@ -790,31 +790,31 @@ msgid "Gameplay"
 msgstr "Gameplay"
 
 msgid "Flashlight Style"
-msgstr "STYLE DE LAMPE TORCHE"
+msgstr "Style de lampe torche"
 
 msgid "Choose the original PS2 light, the simpler Xbox light, or disable it."
 msgstr "Choisissez la lumière PS2 originale, la lumière Xbox plus simple, ou désactivez-la."
 
 msgid "Keep Finder Raised"
-msgstr "GARDER LE VISEUR LEVÉ"
+msgstr "Garder le viseur levé"
 
 msgid "Do not lower the Camera Obscura when an apparition event begins."
 msgstr "Ne baisse pas la Camera Obscura au début d'un événement d'apparition."
 
 msgid "Mini Map"
-msgstr "MINI-CARTE"
+msgstr "Mini-carte"
 
 msgid "Show the corner map while exploring."
 msgstr "Affiche la carte dans le coin pendant l'exploration."
 
 msgid "Save Album Photos as PNG"
-msgstr "ENREGISTRER LES PHOTOS DE L'ALBUM EN PNG"
+msgstr "Enregistrer les photos de l'album en PNG"
 
 msgid "Also write album photos as PNG files next to the game."
 msgstr "Enregistre aussi les photos de l'album sous forme de fichiers PNG à côté du jeu."
 
 msgid "Auto-hide Cursor"
-msgstr "MASQUER LE CURSEUR AUTOMATIQUEMENT"
+msgstr "Masquer le curseur automatiquement"
 
 msgid "Hide the mouse cursor after 5 seconds of inactivity."
 msgstr "Masque le curseur de la souris après 5 secondes d'inactivité."
@@ -826,28 +826,28 @@ msgid "Use D-Pad Up / Down in finder mode to switch film.<br />D-Pad finder aim 
 msgstr "Utilisez Haut / Bas de la croix directionnelle en mode viseur pour changer de pellicule.<br />La visée à la croix est désactivée lorsque active."
 
 msgid "Mirror Stone Indicator"
-msgstr "INDICATEUR DE PIERRE MIROIR"
+msgstr "Indicateur de pierre miroir"
 
 msgid "Show a Mirror Stone icon next to the filament."
 msgstr "Affiche une icône de pierre miroir à côté du filament."
 
 msgid "Improved Movement Collisions"
-msgstr "COLLISIONS DE DÉPLACEMENT AMÉLIORÉES"
+msgstr "Collisions de déplacement améliorées"
 
 msgid "Uses an improved movement collision method to reduce snagging."
 msgstr "Utilise une méthode de collision de déplacement améliorée pour réduire les accrochages."
 
 msgid "Video Filters"
-msgstr "FILTRES VIDÉO"
+msgstr "Filtres vidéo"
 
 msgid "Open the CRT post-process tuning panel."
 msgstr "Ouvre le panneau de réglage du post-traitement CRT."
 
 msgid "Files"
-msgstr "FICHIERS"
+msgstr "Fichiers"
 
 msgid "Data Folder"
-msgstr "DOSSIER DE DONNÉES"
+msgstr "Dossier de données"
 
 msgid "Folder containing extracted MikuPan game data."
 msgstr "Dossier contenant les données de jeu MikuPan extraites."
@@ -877,73 +877,73 @@ msgid " seconds"
 msgstr " secondes"
 
 msgid "Brightness"
-msgstr "LUMINOSITÉ"
+msgstr "Luminosité"
 
 msgid "Gamma"
 msgstr "Gamma"
 
 msgid "Contrast"
-msgstr "CONTRASTE"
+msgstr "Contraste"
 
 msgid "Shadow Depth"
-msgstr "PROFONDEUR DES OMBRES"
+msgstr "Profondeur des ombres"
 
 msgid "Paper White"
-msgstr "BLANC PAPIER"
+msgstr "Blanc papier"
 
 msgid "Peak"
-msgstr "PIC"
+msgstr "Pic"
 
 msgid "Strength"
-msgstr "INTENSITÉ"
+msgstr "Intensité"
 
 msgid "Curvature"
-msgstr "COURBURE"
+msgstr "Courbure"
 
 msgid "Overscan"
-msgstr "SURBALAYAGE"
+msgstr "Overscan"
 
 msgid "Scanlines"
 msgstr "LIGNES DE BALAYAGE"
 
 msgid "Scanline Scale"
-msgstr "ÉCHELLE DES LIGNES"
+msgstr "Échelle des lignes"
 
 msgid "Scanline Thickness"
-msgstr "ÉPAISSEUR DES LIGNES"
+msgstr "Épaisseur des lignes"
 
 msgid "Mask"
 msgstr "MASQUE"
 
 msgid "Mask Scale"
-msgstr "ÉCHELLE DU MASQUE"
+msgstr "Échelle du masque"
 
 msgid "Vignette"
 msgstr "VIGNETTAGE"
 
 msgid "Vignette Size"
-msgstr "TAILLE DU VIGNETTAGE"
+msgstr "Taille du vignettage"
 
 msgid "Chroma Offset"
-msgstr "DÉCALAGE CHROMA"
+msgstr "Décalage chromatique"
 
 msgid "Blend"
 msgstr "FONDU"
 
 msgid "Blend Radius"
-msgstr "RAYON DE FONDU"
+msgstr "Rayon du mélange"
 
 msgid "Noise"
-msgstr "BRUIT"
+msgstr "Bruit"
 
 msgid "Flicker"
-msgstr "SCINTILLEMENT"
+msgstr "Scintillement"
 
 msgid "Glow"
-msgstr "LUEUR"
+msgstr "Halo"
 
 msgid "Grey Levels"
-msgstr "NIVEAUX DE GRIS"
+msgstr "Niveaux de gris"
 
 msgid "BLACK"
 msgstr "NOIR"
@@ -1292,3 +1292,199 @@ msgstr "Appuyez sur une entrée... (Échap)"
 # --- outgame/title.cpp ---
 msgid "PRESS   TO LEAVE"
 msgstr "APPUYEZ   POUR QUITTER"
+
+# --- mikupan_rml_options.cpp (options revamp) ---
+msgid "Scanline Strength"
+msgstr "Intensité des lignes"
+
+msgid "Mask Strength"
+msgstr "Intensité du masque"
+
+msgid "Vignette Strength"
+msgstr "Intensité du vignettage"
+
+msgid "Blend Strength"
+msgstr "Intensité du mélange"
+
+msgid "Options"
+msgstr "Options"
+
+msgid "Game"
+msgstr "Jeu"
+
+msgid "Keyboard"
+msgstr "Clavier"
+
+msgid "Picture"
+msgstr "Image"
+
+msgid "HDR"
+msgstr "HDR"
+
+msgid "Camera Obscura"
+msgstr "Camera Obscura"
+
+msgid "Aspect Ratio"
+msgstr "Format d'image"
+
+msgid "Auto fills the window and widens the view to its sides. Original keeps the PS2's 640x448 frame; a fixed ratio adds bars where the window differs."
+msgstr "Auto remplit la fenêtre et élargit la vue sur les côtés. Original garde le cadre 640x448 de la PS2 ; un format fixe ajoute des bandes là où la fenêtre diffère."
+
+msgid "Auto"
+msgstr "Auto"
+
+msgid "Original (PS2)"
+msgstr "Original (PS2)"
+
+msgid "Custom"
+msgstr "Personnalisé"
+
+msgid "Custom Ratio"
+msgstr "Format personnalisé"
+
+msgid "Width over height, for Custom."
+msgstr "Largeur divisée par la hauteur, pour Personnalisé."
+
+msgid "The game is drawn at"
+msgstr "Le jeu est rendu en"
+
+msgid "How bright the game's white is in HDR, in nits."
+msgstr "Luminosité du blanc du jeu en HDR, en nits."
+
+msgid "Peak Brightness"
+msgstr "Luminosité de crête"
+
+msgid "The brightest the picture may go in HDR, in nits."
+msgstr "La luminosité maximale de l'image en HDR, en nits."
+
+msgid "Restart the game to apply."
+msgstr "Redémarrez le jeu pour appliquer."
+
+msgid "Off while the render resolution is above the window's."
+msgstr "Désactivé tant que la résolution de rendu dépasse celle de la fenêtre."
+
+msgid "The filter is on."
+msgstr "Le filtre est activé."
+
+msgid "The filter is off."
+msgstr "Le filtre est désactivé."
+
+msgid "Overlay Theme"
+msgstr "Thème de l'overlay"
+
+msgid "Colour palette of the ImGui overlay."
+msgstr "Palette de couleurs de l'overlay ImGui."
+
+msgid "Overlay Font Scale"
+msgstr "Taille du texte de l'overlay"
+
+msgid "Text size of the ImGui overlay."
+msgstr "Taille du texte de l'overlay ImGui."
+
+msgid "Select it to browse; a change applies on the next launch."
+msgstr "Sélectionnez-le pour parcourir ; un changement s'applique au prochain lancement."
+
+msgid "Not set"
+msgstr "Non défini"
+
+msgid "Objective walks Miku where you push, as the camera sees it. Subjective turns her and walks forward."
+msgstr "Objectif fait marcher Miku dans la direction poussée, vue par la caméra. Subjectif la fait tourner et avancer."
+
+msgid "Classic aims the Camera Obscura with the left stick, Modern with the right."
+msgstr "Classique vise avec la Camera Obscura au stick gauche, Moderne au stick droit."
+
+msgid "Use D-Pad Up / Down in finder mode to switch film. D-Pad finder aim is disabled while enabled."
+msgstr "Utilise Haut / Bas de la croix en mode viseur pour changer de pellicule. La visée à la croix est alors désactivée."
+
+msgid "Hold raises the Camera Obscura while the button is held; Toggle raises and lowers it with each press."
+msgstr "Maintenir lève la Camera Obscura tant que le bouton est enfoncé ; Basculer la lève et la baisse à chaque pression."
+
+msgid "Let the controller shake when the game calls for it."
+msgstr "Fait vibrer la manette quand le jeu le demande."
+
+msgid "Reverse this stick axis on the controller."
+msgstr "Inverse cet axe de stick sur la manette."
+
+msgid "Restore"
+msgstr "Restaurer"
+
+msgid "Restore every control and binding to its default?"
+msgstr "Rétablir toutes les commandes et assignations par défaut ?"
+
+msgid "Select it, then press the input to bind to it."
+msgstr "Sélectionnez-la, puis appuyez sur l'entrée à lui assigner."
+
+msgid "Select it, then press a key, mouse button or the scroll wheel."
+msgstr "Sélectionnez-la, puis appuyez sur une touche, un bouton de souris ou la molette."
+
+msgid "Select it, then move a stick to bind its axis."
+msgstr "Sélectionnez-le, puis bougez un stick pour assigner son axe."
+
+msgid "Press a key, mouse button, or scroll wheel..."
+msgstr "Appuyez sur une touche, un bouton de souris ou la molette..."
+
+msgid "Press a key..."
+msgstr "Appuyez sur une touche..."
+
+msgid "Press a controller button or trigger..."
+msgstr "Appuyez sur un bouton ou une gâchette de la manette..."
+
+msgid "Move a controller stick..."
+msgstr "Bougez un stick de la manette..."
+
+msgid "Raise it until the darkest step of the ramp just parts from black."
+msgstr "Augmentez-la jusqu'à ce que le palier le plus sombre se détache tout juste du noir."
+
+msgid "Lifts or deepens the mid-tones."
+msgstr "Éclaircit ou assombrit les tons moyens."
+
+msgid "Spread between the darkest and lightest tones."
+msgstr "Écart entre les tons les plus sombres et les plus clairs."
+
+msgid "How dark the shadows cast in the rooms are."
+msgstr "L'obscurité des ombres projetées dans les pièces."
+
+msgid "Put every value back to its default."
+msgstr "Remet chaque valeur à sa valeur par défaut."
+
+msgid "Done"
+msgstr "Terminé"
+
+msgid "Keep these values. Back puts them all back as they were."
+msgstr "Garde ces valeurs. Retour les remet toutes comme avant."
+
+msgid "Run the picture through the CRT filter."
+msgstr "Fait passer l'image par le filtre CRT."
+
+msgid "Keep this display setting?"
+msgstr "Garder ce réglage d'affichage ?"
+
+msgid "The settings could not be saved."
+msgstr "Les réglages n'ont pas pu être enregistrés."
+
+msgid "Leave anyway?"
+msgstr "Quitter quand même ?"
+
+msgid "Confirm to apply."
+msgstr "Confirmez pour appliquer."
+
+msgid "(Not available with the current settings.)"
+msgstr "(Indisponible avec les réglages actuels.)"
+
+msgid "Enter"
+msgstr "Entrée"
+
+msgid "Del"
+msgstr "Suppr"
+
+msgid "Confirm"
+msgstr "Confirmer"
+
+msgid "Section"
+msgstr "Section"
+
+msgid "Unbind"
+msgstr "Effacer"
+
+msgid "White"
+msgstr "Blanc"

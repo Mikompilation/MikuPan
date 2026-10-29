@@ -17,6 +17,7 @@
 #include "graphics/graph3d/sglight.h"
 #include "main/glob.h"
 #include "mikupan/debug/mikupan_logging_c.h"
+#include "mikupan/rendering/mikupan_baked_texture.h"
 #include "mikupan/rendering/mikupan_profiler.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
@@ -1193,11 +1194,18 @@ void SgSortPreProcess(u_int *prim)
             case 10:
                 LoadTRI2Files(prim);
                 break;
+            case 12:
+                SelectTextureAnimationFrame(prim);
+                break;
             case 13:
                 if (loadbw_flg != 0)
                 {
                     LoadTRI2Files(prim);
                 }
+                break;
+            case 0x50:
+                /// Baked model: the texture list that replaced its uploads.
+                MikuPan_BakedTexture_LoadList(&prim[4]);
                 break;
         }
 

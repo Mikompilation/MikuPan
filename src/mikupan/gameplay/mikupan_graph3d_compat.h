@@ -12,7 +12,6 @@ extern "C" {
 #endif
 
 void MikuPan_OnBlackWhiteClutTransition(u_int **previous_tri2_prim);
-void MikuPan_MirrorTri2PacketToHostGs(u_int *prim);
 void MikuPan_ApplyBlackWhiteToBaseVertexColor(sceVu0FVECTOR col);
 void MikuPan_UploadSgMaterialLighting(SgMaterialC *pmatC,
                                       SgVULightParallel *parallelp,

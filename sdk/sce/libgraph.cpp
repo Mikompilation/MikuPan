@@ -1,7 +1,7 @@
 #include "libgraph.h"
 
 #include "graphics/graph2d/sprt.h"
-#include "mikupan/gs/mikupan_gs_c.h"
+#include "mikupan/rendering/mikupan_texture_slots.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -78,7 +78,10 @@ int sceGsSetDefStoreImage(sceGsStoreImage* sp, short sbp, short sbw, short spsm,
 
 int sceGsExecStoreImage(sceGsStoreImage* sp, u_long128* dstaddr)
 {
-    MikuPan_GsStore(sp, (unsigned char *)dstaddr);
+    MikuPan_TexSlots_StoreRaw((int)sp->bitbltbuf.SBP, (int)sp->bitbltbuf.SBW,
+                              (int)sp->bitbltbuf.SPSM, (int)sp->trxpos.SSAX,
+                              (int)sp->trxpos.SSAY, (int)sp->trxreg.RRW,
+                              (int)sp->trxreg.RRH, dstaddr);
     return 1;
 }
 
@@ -120,7 +123,10 @@ int sceGsSetDefLoadImage(sceGsLoadImage* lp, short dbp, short dbw, short dpsm, s
 
 int sceGsExecLoadImage(sceGsLoadImage* lp, u_long128* srcaddr)
 {
-    MikuPan_GsUpload(lp, (unsigned char*)srcaddr);
+    MikuPan_TexSlots_UploadRaw((int)lp->bitbltbuf.DBP, (int)lp->bitbltbuf.DBW,
+                               (int)lp->bitbltbuf.DPSM, (int)lp->trxpos.DSAX,
+                               (int)lp->trxpos.DSAY, (int)lp->trxreg.RRW,
+                               (int)lp->trxreg.RRH, srcaddr);
     return 1;
 }
 

@@ -328,11 +328,17 @@ void ModeSlctCtrl(u_char mode)
                     mode == 3 && MikuPan_RmlOptionsIsOpen() != 0;
 
                 ModeSlctDspBak(dsp_ms.bak_alp, mode);
-                ModeSlctDspFlm(
-                    dsp_ms.flm_lng,
-                    dsp_ms.flm_alp,
-                    mode,
-                    (rml_mode_select || rml_options) ? 1 : 0);
+                /* The RmlUi options screen draws this film itself, so it is
+                 * the same from the title and in game and stays under its
+                 * own windows. */
+                if (!rml_options)
+                {
+                    ModeSlctDspFlm(
+                        dsp_ms.flm_lng,
+                        dsp_ms.flm_alp,
+                        mode,
+                        rml_mode_select ? 1 : 0);
+                }
 
                 if (rml_mode_select)
                 {

@@ -8,8 +8,7 @@
 #include "graphics/graph2d/message.h"
 #include "graphics/graph3d/sgsu.h"
 #include "mikupan/gameplay/mikupan_effect_compat.h"
-#include "mikupan/gs/mikupan_gs_c.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
+#include "mikupan_texture_slots.h"
 #include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_screenshot.h"
@@ -60,6 +59,11 @@ static int g_photo_framebuffer_height = 0;
 static unsigned int g_photo_capture_readback_texture_id = 0;
 static int g_photo_capture_readback_texture_width = 0;
 static int g_photo_capture_readback_texture_height = 0;
+/// Where MikuPan_ReadTextureRGBA8TopLeft() scales a texture down before
+/// reading it back (640x448 in practice).
+static unsigned int g_texture_readback_target_id = 0;
+static int g_texture_readback_target_width = 0;
+static int g_texture_readback_target_height = 0;
 static unsigned int g_screen_negative_scene_copy_id = 0;
 static unsigned int g_pause_capture_texture_id = 0;
 static int g_pause_capture_valid = 0;
@@ -525,6 +529,14 @@ void MikuPan_DestroyInternalBuffer()
     g_photo_capture_readback_texture_width = 0;
     g_photo_capture_readback_texture_height = 0;
 
+    if (g_texture_readback_target_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_texture_readback_target_id);
+        g_texture_readback_target_id = 0;
+    }
+    g_texture_readback_target_width = 0;
+    g_texture_readback_target_height = 0;
+
     if (g_screen_negative_scene_copy_id != 0)
     {
         MikuPan_GPUReleaseTexture(g_screen_negative_scene_copy_id);
@@ -537,19 +549,12 @@ void MikuPan_DestroyInternalBuffer()
     memset(&render_back_msaa, 0, sizeof(render_back_msaa));
 }
 
-static void MikuPan_CopyTextureAspectCropRGBA8(const unsigned char *src_rgba,
-                                                int src_w,
-                                                int src_h,
-                                                int dst_w,
-                                                int dst_h,
-                                                unsigned char *dst_rgba)
+/// The centred part of a src_w x src_h image that has the aspect of
+/// dst_w x dst_h: the longer axis is cropped, nothing is stretched.
+static void MikuPan_GetAspectCropRect(int src_w, int src_h, int dst_w,
+                                      int dst_h, int *out_x, int *out_y,
+                                      int *out_w, int *out_h)
 {
-    if (src_rgba == NULL || dst_rgba == NULL ||
-        src_w <= 0 || src_h <= 0 || dst_w <= 0 || dst_h <= 0)
-    {
-        return;
-    }
-
     const float src_aspect = (float)src_w / (float)src_h;
     const float dst_aspect = (float)dst_w / (float)dst_h;
     int crop_x = 0;
@@ -572,23 +577,40 @@ static void MikuPan_CopyTextureAspectCropRGBA8(const unsigned char *src_rgba,
         crop_y = (src_h - crop_h) / 2;
     }
 
-    for (int y = 0; y < dst_h; y++)
+    *out_x = crop_x;
+    *out_y = crop_y;
+    *out_w = crop_w;
+    *out_h = crop_h;
+}
+
+static int MikuPan_EnsureTextureReadbackTarget(int width, int height)
+{
+    if (width <= 0 || height <= 0)
     {
-        int sy = crop_y + (int)(((long long)y * crop_h) / dst_h);
-        if (sy < 0) sy = 0;
-        if (sy >= src_h) sy = src_h - 1;
-
-        for (int x = 0; x < dst_w; x++)
-        {
-            int sx = crop_x + (int)(((long long)x * crop_w) / dst_w);
-            if (sx < 0) sx = 0;
-            if (sx >= src_w) sx = src_w - 1;
-
-            memcpy(dst_rgba + ((size_t)y * dst_w + x) * 4u,
-                   src_rgba + ((size_t)sy * src_w + sx) * 4u,
-                   4);
-        }
+        return 0;
     }
+
+    if (g_texture_readback_target_id != 0 &&
+        g_texture_readback_target_width == width &&
+        g_texture_readback_target_height == height)
+    {
+        return 1;
+    }
+
+    if (g_texture_readback_target_id != 0)
+    {
+        MikuPan_GPUReleaseTexture(g_texture_readback_target_id);
+        g_texture_readback_target_id = 0;
+    }
+
+    g_texture_readback_target_id =
+        MikuPan_GPUCreateRenderTextureRGBA8(width, height);
+    g_texture_readback_target_width =
+        g_texture_readback_target_id != 0 ? width : 0;
+    g_texture_readback_target_height =
+        g_texture_readback_target_id != 0 ? height : 0;
+
+    return g_texture_readback_target_id != 0;
 }
 
 static int MikuPan_ReadTextureRGBA8TopLeft(unsigned int texture_id,
@@ -617,21 +639,31 @@ static int MikuPan_ReadTextureRGBA8TopLeft(unsigned int texture_id,
     }
     else
     {
-        const size_t src_bytes = (size_t)src_w * (size_t)src_h * 4u;
-        unsigned char *src_rgba = (unsigned char *)malloc(src_bytes);
-        if (src_rgba == NULL)
-        {
-            return 0;
-        }
-        if (!MikuPan_GPUReadTextureRGBA8(texture_id, src_w, src_h, src_rgba))
-        {
-            free(src_rgba);
-            return 0;
-        }
+        /// Scale on the GPU and read back only the result. Reading the whole
+        /// texture and scaling it here moved the full render target (15 MB at
+        /// 2560x1440) through a fresh allocation for a 640x448 image, and the
+        /// photo screen asks for one every frame: DispPhotoFrame1() copies its
+        /// live 0x2d00 picture back to the frame buffer. Still nearest, like
+        /// the copy this replaces, but sampled at each pixel's centre rather
+        /// than its first source pixel.
+        int crop_x;
+        int crop_y;
+        int crop_w;
+        int crop_h;
 
-        MikuPan_CopyTextureAspectCropRGBA8(src_rgba, src_w, src_h,
-                                           width, height, out_rgba);
-        free(src_rgba);
+        MikuPan_GetAspectCropRect(src_w, src_h, width, height,
+                                  &crop_x, &crop_y, &crop_w, &crop_h);
+
+        if (!MikuPan_EnsureTextureReadbackTarget(width, height) ||
+            !MikuPan_GPUBlitTextureRegion(texture_id, crop_x, crop_y,
+                                          crop_w, crop_h,
+                                          g_texture_readback_target_id,
+                                          width, height) ||
+            !MikuPan_GPUReadTextureRGBA8(g_texture_readback_target_id,
+                                         width, height, out_rgba))
+        {
+            return 0;
+        }
     }
 
     if (MikuPan_IsBlackWhiteModeActive())
@@ -1732,7 +1764,7 @@ void MikuPan_Clear()
     MikuPan_PerfBeginFrame();
     MikuPan_ShadowDebugBeginFrame();
 
-    MikuPan_GsResetFrameMetrics();
+    MikuPan_TexSlots_ResetFrameStats();
     MikuPan_PerfResetFrame();
 
     MikuPan_ResetShaderCache();

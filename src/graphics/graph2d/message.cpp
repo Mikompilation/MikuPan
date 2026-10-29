@@ -20,8 +20,6 @@
 #include "main/glob.h"
 #include "mc/mc_main.h"
 #include "os/eeiop/eese.h"
-#include "mikupan/gs/mikupan_gs_c.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #ifdef BUILD_EU_VERSION
 #include "graphics/graph2d/subtitles.h"

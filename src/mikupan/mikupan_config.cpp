@@ -37,7 +37,9 @@ MikuPan_Config mikupan_configuration = {
         "",
         0,
         MIKUPAN_FINDER_VIEWPORT_MASK_BLUR,
-        1
+        1,
+        MIKUPAN_ASPECT_AUTO,
+        16.0f / 9.0f
     },
     {
         0,
@@ -229,6 +231,19 @@ static void MikuPan_ConfigurationValidateRenderer(
         renderer->finder_viewport_mask_mode == MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
             ? MIKUPAN_FINDER_VIEWPORT_MASK_BLACK
             : MIKUPAN_FINDER_VIEWPORT_MASK_BLUR;
+
+    if (renderer->aspect_mode < MIKUPAN_ASPECT_AUTO
+        || renderer->aspect_mode > MIKUPAN_ASPECT_CUSTOM)
+    {
+        renderer->aspect_mode = MIKUPAN_ASPECT_AUTO;
+    }
+
+    if (!MikuPan_IsFiniteFloat(renderer->aspect_custom))
+    {
+        renderer->aspect_custom = 16.0f / 9.0f;
+    }
+    renderer->aspect_custom =
+        MikuPan_ClampFloat(renderer->aspect_custom, 1.0f, 4.0f);
 }
 
 static void MikuPan_ConfigurationValidateCrt(MikuPan_ConfigCrt* crt)

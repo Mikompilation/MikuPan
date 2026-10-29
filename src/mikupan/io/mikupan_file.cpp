@@ -1,7 +1,6 @@
 #include "typedefs.h"
 #include "mikupan_file.h"
 #include "mikupan/mikupan_config.h"
-#include "mikupan/gs/mikupan_texture_manager.h"
 #include "mikupan/debug/mikupan_logging.h"
 #include "spdlog/spdlog.h"
 #include <SDL3/SDL_dialog.h>
@@ -27,8 +26,6 @@
 #include <vector>
 
 #include "mikupan/mikupan_memory.h"
-
-static inline std::vector<int> file_loaded_address;
 
 static std::mutex missing_data_dialog_mutex;
 static std::condition_variable missing_data_dialog_cv;
@@ -809,23 +806,6 @@ void MikuPan_ReadFullFile(const char *filename, char *buffer)
     infile.close();
 }
 
-void MikuPan_NotifyPs2MemoryLoad(int ps2_address)
-{
-    if (ps2_address < 0)
-    {
-        return;
-    }
-
-    if (std::find(file_loaded_address.begin(), file_loaded_address.end(),
-                  ps2_address)
-        != file_loaded_address.end())
-    {
-        MikuPan_RequestFlushTextureCache();
-        return;
-    }
-
-    file_loaded_address.push_back(ps2_address);
-}
 
 void MikuPan_ReadFileInArchive(int sector, int size, u_int *address)
 {
@@ -858,17 +838,8 @@ void MikuPan_ReadFileInArchive(int sector, int size, u_int *address)
             return;
         }
 
-        auto ps2_address = MikuPan_GetPs2OffsetFromHostPointer(address);
-
-        if (std::find(file_loaded_address.begin(), file_loaded_address.end(),
-                      ps2_address)
-            != file_loaded_address.end())
-        {
-            MikuPan_RequestFlushTextureCache();
-        }
-
-        file_loaded_address.push_back(ps2_address);
-        info_log("PS2 Address 0x%x", ps2_address);
+        info_log("PS2 Address 0x%x",
+                 MikuPan_GetPs2OffsetFromHostPointer(address));
 
         MikuPan_ReadSdlFileRange(archive_string.c_str(),
                                  static_cast<Sint64>(sector) * 0x800,
@@ -912,17 +883,7 @@ void MikuPan_ReadFileInArchive(int sector, int size, u_int *address)
         return;
     }
 
-    auto ps2_address = MikuPan_GetPs2OffsetFromHostPointer(address);
-
-    if (std::find(file_loaded_address.begin(), file_loaded_address.end(),
-                  ps2_address)
-        != file_loaded_address.end())
-    {
-        MikuPan_RequestFlushTextureCache();
-    }
-
-    file_loaded_address.push_back(ps2_address);
-    info_log("PS2 Address 0x%x", ps2_address);
+    info_log("PS2 Address 0x%x", MikuPan_GetPs2OffsetFromHostPointer(address));
 
     std::ifstream infile(archive, std::ios::binary);
     infile.seekg(sector * 0x800, std::ios::beg);
@@ -975,6 +936,50 @@ bool MikuPan_ReadDataFileRange(const char *relative_name, int64_t offset,
     infile.seekg(offset, std::ios::beg);
     infile.read(static_cast<char *>(buffer), static_cast<std::streamsize>(size));
     return !infile.bad() && static_cast<size_t>(infile.gcount()) == size;
+}
+
+void *MikuPan_OpenDataFile(const char *relative_name)
+{
+    const std::string path_string = MikuPan_GetDataPathString(relative_name);
+    return SDL_IOFromFile(path_string.c_str(), "rb");
+}
+
+bool MikuPan_ReadOpenDataFile(void *file, int64_t offset, void *buffer,
+                              size_t size)
+{
+    SDL_IOStream *io = static_cast<SDL_IOStream *>(file);
+
+    if (io == nullptr || buffer == nullptr
+        || SDL_SeekIO(io, offset, SDL_IO_SEEK_SET) < 0)
+    {
+        return false;
+    }
+
+    auto *dst = static_cast<uint8_t *>(buffer);
+    size_t remaining = size;
+
+    while (remaining > 0)
+    {
+        const size_t got = SDL_ReadIO(io, dst, remaining);
+
+        if (got == 0)
+        {
+            return false;
+        }
+
+        dst += got;
+        remaining -= got;
+    }
+
+    return true;
+}
+
+void MikuPan_CloseDataFile(void *file)
+{
+    if (file != nullptr)
+    {
+        SDL_CloseIO(static_cast<SDL_IOStream *>(file));
+    }
 }
 
 void MikuPan_BufferFile(int sector, int size, int64_t address)

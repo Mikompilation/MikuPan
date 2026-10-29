@@ -25,7 +25,6 @@
 #include "ingame/map/furn_eff.h"
 #include "ingame/map/furn_spe/furn_spe.h"
 #include "ingame/map/map_ctrl.h"
-#include "mikupan/gs/mikupan_gs_c.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_rng.h"

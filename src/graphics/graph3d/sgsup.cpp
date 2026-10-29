@@ -20,6 +20,7 @@
 #include "graphics/graph3d/sglight.h"
 #include "graphics/graph3d/sgsu.h"
 #include "mikupan/debug/mikupan_logging_c.h"
+#include "mikupan/rendering/mikupan_baked_texture.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #include <enums.h>
@@ -507,6 +508,11 @@ void SgSortPreProcessP(u_int *prim)
                 break;
             case 14:
                 pGroupPacket = prim;
+                break;
+            case 0x50:
+                /// Baked model: the texture list that replaced its uploads.
+                MikuPan_BakedTexture_LoadList(&prim[4]);
+                break;
         }
 
         prim = GetNextProcUnitHeaderPtr(prim);

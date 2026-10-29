@@ -12,6 +12,7 @@ if(WIN32)
 endif()
 
 option(BUILD_EU_VERSION "Build the PAL/EU version data and code paths." OFF)
+option(MIKUPAN_BUILD_TOOLS "Build the offline asset tools (sgdstitch)." OFF)
 
 if(ANDROID)
     set(MIKUPAN_ANDROID_PAGE_SIZE "16384"
@@ -41,7 +42,6 @@ include(implot)
 include(spdlog)
 include(cglm)
 include(ffmpeg)
-include(xxhash)
 include(inipp)
 include(shadercross)
 
@@ -304,8 +304,12 @@ set(MIKUPAN_SOURCES
         src/mikupan/rendering/mikupan_shader.cpp
         src/mikupan/rendering/mikupan_sprite.cpp
         src/mikupan/rendering/mikupan_texture.cpp
-        src/mikupan/gs/mikupan_gs.cpp
-        src/mikupan/gs/mikupan_texture_manager.cpp
+        src/mikupan/rendering/mikupan_texture_slots.cpp
+        src/mikupan/gs/mikupan_gs_memory.cpp
+        src/mikupan/bake/mikupan_bake.cpp
+        src/mikupan/bake/mikupan_bake_data.cpp
+        src/mikupan/bake/mikupan_tim2.cpp
+        src/mikupan/rendering/mikupan_baked_texture.cpp
         "src/mikupan/debug/mikupan_logging.cpp"
         src/graphics/graph3d/libsg.cpp
         src/ingame/map/find_dat.cpp
@@ -352,8 +356,12 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/av/mikupan_video_decoder.cpp"
         "src/mikupan/av/mikupan_video_decoder_c.cpp"
         "src/mikupan/gameplay/mikupan_title_scene.cpp"
-        "src/mikupan/gs/mikupan_gs.cpp"
-        "src/mikupan/gs/mikupan_texture_manager.cpp"
+        "src/mikupan/gs/mikupan_gs_memory.cpp"
+        "src/mikupan/bake/mikupan_bake.cpp"
+        "src/mikupan/bake/mikupan_bake_data.cpp"
+        "src/mikupan/bake/mikupan_tim2.cpp"
+        "src/mikupan/rendering/mikupan_baked_texture.cpp"
+        "src/mikupan/rendering/mikupan_texture_slots.cpp"
         "src/mikupan/mikupan_audio_bus.cpp"
         "src/mikupan/mikupan_config_ini.cpp"
         "src/mikupan/debug/mikupan_logging.cpp"
@@ -482,7 +490,6 @@ target_link_libraries(MikuPan PRIVATE
         spdlog::spdlog
         cglm
         ${MIKUPAN_FFMPEG_LIBS}
-        xxHash::xxhash
         inipp::inipp
 )
 
@@ -505,6 +512,10 @@ if(NOT ANDROID)
                 $<TARGET_FILE_DIR:MikuPan>
         )
     endif()
+endif()
+
+if(MIKUPAN_BUILD_TOOLS AND NOT ANDROID)
+    add_subdirectory(tools/sgdstitch)
 endif()
 
 include(mikupan_android)

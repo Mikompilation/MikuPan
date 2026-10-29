@@ -13,11 +13,10 @@
 #include "graphics/graph3d/libsg.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sgsu.h"
-#include "mikupan/gs/mikupan_gs_c.h"
-#include "mikupan/gs/mikupan_texture_manager_c.h"
 #include "mikupan/gameplay/mikupan_graph3d_compat.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_types.h"
+#include "mikupan/rendering/mikupan_baked_texture.h"
 
 #define REG_VIF1_STAT        ((volatile u_int *)(0x10003c00))
 #define REG_DMAC_ENABLEW     ((volatile u_int *)(0x1000f590))
@@ -287,8 +286,6 @@ void LoadTRI2Files(u_int *prim)
     {
         tri2size = *(u_short *)(prim + 3);
 
-        MikuPan_MirrorTri2PacketToHostGs(prim);
-
         AppendDmaTag((int64_t)prim, tri2size + 1);
 
         prim = (u_int *)((int64_t)prim + 0x10 + (u_int)tri2size * 0x10);
@@ -367,7 +364,6 @@ void RebuildTRI2Files(u_int *prim)
         SGDTRI2FILEHEADER * tri2 = (SGDTRI2FILEHEADER *) prim;
 
         info_log("Packet TRi2 archive request buffer %x %d", (int)tri2->gsli.bitbltbuf.DBP, (int) tri2->gsli.bitbltbuf.DPSM);
-        MikuPan_MirrorTri2PacketToHostGs(prim);
 
         while (((uint64_t)search_addr - (uint64_t)(prim)) / 16 < tri2size - 8)
         {
@@ -507,6 +503,19 @@ TextureAnimation* GetTextureAnimation(void *sgd_top)
     return NULL;
 }
 
+/// SgSortPreProcess(): a texture animation unit met by a pass that does not
+/// advance the animation selects the frame its model last showed.
+void SelectTextureAnimationFrame(u_int *prim)
+{
+    TextureAnimation *pta = (TextureAnimation *)&prim[2];
+    u_int *list = (u_int *)((int64_t)&prim[4] + (pta->pads / 4) * 4);
+
+    if (MikuPan_BakedTexture_IsList(list))
+    {
+        MikuPan_BakedTexture_SetAnimationFrame((int)list[6]);
+    }
+}
+
 void LoadTextureAnimation(u_int *prim)
 {
     TextureAnimation *pta;
@@ -548,13 +557,18 @@ void LoadTextureAnimation(u_int *prim)
 
     prim = (u_int *)((int64_t)&prim[4] + (pta->pads / 4) * 4);
 
-    for (i = 0; i < tnum+1; i++)
+    /// Baked: the frames became a texture list, and frame `tnum` is the
+    /// texture id + tnum of the animated meshes. Keep the frame in the list
+    /// header (reserved[0]) for passes that draw the model again.
+    if (MikuPan_BakedTexture_IsList(prim))
     {
-        MikuPan_MirrorTri2PacketToHostGs(prim);
-        tri2size = *(u_short *)&prim[3];
-        prim = (u_int *)((int64_t)&prim[4] + tri2size * 16);
+        prim[6] = tnum;
+        MikuPan_BakedTexture_SetAnimationFrame(tnum);
+        MikuPan_BakedTexture_LoadList(prim);
+        return;
     }
 
+    /// Unbaked frames: the texture pack is required, nothing shows them.
     return;
 
     tri2size = *(u_short *)&prim[3];
