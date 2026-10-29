@@ -10,6 +10,8 @@ struct VSOutput
 {
     float4 position : SV_Position;
     float4 outColor : TEXCOORD0;
+    // Vulkan point primitives require an explicit size without maintenance5.
+    [[vk::builtin("PointSize")]] float pointSize : PSIZE;
 };
 
 VSOutput main(VSInput input)
@@ -17,5 +19,6 @@ VSOutput main(VSInput input)
     VSOutput output;
     output.position = MikuPanFixClipZ(mul(projection, mul(view, mul(model, input.aPos))));
     output.outColor = uColor;
+    output.pointSize = 1.0;
     return output;
 }
