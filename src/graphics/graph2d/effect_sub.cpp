@@ -2882,7 +2882,17 @@ void SetTexDirect(SPRITE_DATA *sd, int atype)
         mikupan_texture_load, &vertices[0][0], 4,
         EffectSubIsNominalFullscreenRect(x0, y0, x1, y1));
 
-    EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &vertices[0][0], 1);
+    if (atype != 0)
+    {
+        EffectSubRenderTexturedSpriteVerticesGSAlpha(
+            mikupan_texture_load, &vertices[0][0], 1,
+            SCE_GS_SET_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD,
+                               SCE_GS_ALPHA_FIX, SCE_GS_ALPHA_CD, malp), 0);
+    }
+    else
+    {
+        EffectSubRenderTexturedSpriteVertices(mikupan_texture_load, &vertices[0][0], 1);
+    }
 
     pbuf[ndpkt].ui32[0] = r;
     pbuf[ndpkt].ui32[1] = g;

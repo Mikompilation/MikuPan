@@ -74,6 +74,7 @@ typedef struct
     SDL_GPUCompareOp compare;
     int blend;
     MikuPan_GPUBlendMode blend_mode;
+    float blend_constant;
     SDL_GPUCullMode cull_mode;
     SDL_GPUFillMode fill_mode;
     SDL_GPUColorComponentFlags color_mask;
@@ -83,6 +84,11 @@ typedef struct
 
 MikuPan_GPUBlendMode MikuPan_GPUBlendModeFromGSAlpha(u_long gs_alpha)
 {
+    if ((gs_alpha & 0xff) == 0x64 && ((gs_alpha >> 32) & 0xff) <= 128)
+    {
+        return (MikuPan_GPUBlendMode)(MIKUPAN_GPU_BLEND_FIXED_ALPHA |
+                                      (((gs_alpha >> 32) & 0xff) << 8));
+    }
     switch (gs_alpha & 0xff)
     {
         case MIKUPAN_GS_ALPHA_ADDITIVE:
@@ -3056,6 +3062,11 @@ static SDL_GPUGraphicsPipeline* GetPipeline(unsigned int primitive)
     blend.enable_blend = g_state.blend ? true : false;
     switch (g_state.blend_mode)
     {
+        case MIKUPAN_GPU_BLEND_FIXED_ALPHA:
+            blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_CONSTANT_COLOR;
+            blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_CONSTANT_COLOR;
+            blend.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            break;
         case MIKUPAN_GPU_BLEND_ADDITIVE:
             blend.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
             blend.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
@@ -3372,7 +3383,8 @@ void MikuPan_GPUSetDepthFunc(unsigned int gl_func)
 void MikuPan_GPUSetBlendMode(int enabled, MikuPan_GPUBlendMode mode)
 {
     g_state.blend = enabled ? 1 : 0;
-    g_state.blend_mode = mode;
+    g_state.blend_mode = (MikuPan_GPUBlendMode)((unsigned int)mode & 0xff);
+    g_state.blend_constant = ((unsigned int)mode >> 8) / 128.0f;
 }
 void MikuPan_GPUSetCullBack(void)
 {
@@ -3652,6 +3664,12 @@ static void BindDrawState(unsigned int primitive)
     {
         SDL_BindGPUGraphicsPipeline(g_pass, pipeline);
         g_last_bound_pipeline = pipeline;
+    }
+
+    if (g_state.blend_mode == MIKUPAN_GPU_BLEND_FIXED_ALPHA)
+    {
+        const float weight = g_state.blend_constant;
+        SDL_SetGPUBlendConstants(g_pass, SDL_FColor{weight, weight, weight, weight});
     }
 
     /* Skinned draws supply a bone-matrix palette in vertex storage slot 0. The

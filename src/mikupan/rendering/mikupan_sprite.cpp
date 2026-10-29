@@ -714,6 +714,11 @@ static void MikuPan_RenderSprite2DGSAlphaInternal(
 {
     switch (gs_alpha & 0xff)
     {
+        case 0x64: /* (Cs - Cd) * FIX / 128 + Cd */
+            MikuPan_RenderSprite2DInternal(
+                tex, buffer, depth_test, depth_write, depth_func, SPRITE_SHADER,
+                MikuPan_GPUBlendModeFromGSAlpha(gs_alpha), nearest_sampler);
+            break;
         case MIKUPAN_GS_ALPHA_DST_MINUS_SRC:
             /*
              * GS ALPHA 0x41:

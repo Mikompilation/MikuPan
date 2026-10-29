@@ -44,6 +44,8 @@ typedef enum MikuPan_GPUBlendMode
     MIKUPAN_GPU_BLEND_ADDITIVE,
     MIKUPAN_GPU_BLEND_SUBTRACTIVE,
     MIKUPAN_GPU_BLEND_SRC_TIMES_DST_ADD,
+    /* The upper byte carries GS FIX until GPUSetBlendMode decodes it. */
+    MIKUPAN_GPU_BLEND_FIXED_ALPHA,
 } MikuPan_GPUBlendMode;
 
 typedef enum MikuPan_GSAlphaMode
