@@ -2769,7 +2769,7 @@ int CallMissionAllClear()
         for (i = 0; i < 11; i++)
         {
             ssd = clear_all[i];
-            CopySprDToSpr(&ds, &ssd);
+            CopyEffectSprDToSpr(&ds, &ssd);
             DispSprD(&ds);
         }
 
@@ -2871,7 +2871,7 @@ int CallStoryClear()
     for (i = 0; i < 11; i++)
     {
         ssd = story_end[i];
-        CopySprDToSpr(&ds, &ssd);
+        CopyEffectSprDToSpr(&ds, &ssd);
         ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, 1, 5, 0, 0, 0);
         DispSprD(&ds);
     }
@@ -3583,7 +3583,7 @@ void DispSprt2(/* s0 16 */ SPRT_SDAT *ssd, /* a1 5 */ int64_t addr, /* a2 6 */ i
     sd.pri = ssd->pri * 4096;
     sd.alpha = (ssd->alp * alp_rate) / 100;
     
-    CopySprDToSpr(&ds, &sd);
+    CopyEffectSprDToSpr(&ds, &sd);
     
     ds.alphar = 0x48;
     
@@ -3631,7 +3631,7 @@ void DispSprt3(/* s0 16 */ SPRT_SDAT *ssd, /* a1 5 */ int64_t addr, /* a2 6 */ i
     sd.alpha = ssd->alp;
     sd.pri = ssd->pri * 4096;
     
-    CopySprDToSpr(&ds, &sd);
+    CopyEffectSprDToSpr(&ds, &sd);
     
     ds.alphar = 0x48;
     
@@ -3688,7 +3688,7 @@ void DispSprtTemp(/* s1 17 */ SPRT_SDAT *ssd, /* a1 5 */ int64_t addr, /* a2 6 *
         sd.alpha = (ssd->alp * alp_rate) / 100;
     }
     
-    CopySprDToSpr(&ds, &sd);
+    CopyEffectSprDToSpr(&ds, &sd);
     
     if (srot != NULL)
     {

@@ -186,5 +186,9 @@ On Android 11 and newer, normal file managers usually cannot write to
 like `Documents/MikuPan`, then use MikuPan's in-game folder picker to grant
 access to that folder.
 
+**Smooth 2D sprites** in renderer settings enables optional bilinear
+magnification for UI sprites. It defaults to on; use **Save Configuration**
+to retain changes. Effects and screen captures keep their original filtering.
+
 # Special Thanks
 Thank you to prinsep for making the logo!

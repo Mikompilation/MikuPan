@@ -674,7 +674,7 @@ void SimpleDispSprt(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SP
         sd.alpha = (ssd->alp * alp_rate) / 100;
     }
 
-    CopySprDToSpr(&ds, &sd);
+    CopyEffectSprDToSpr(&ds, &sd);
 
     if (srot != NULL)
     {
@@ -732,7 +732,7 @@ void SimpleDispAlphaSprt(SPRT_SDAT *ssd, int64_t addr, int sp_no, u_char alp_rat
 
     sd.alpha = (ssd->alp * alp_rate) / 100;
 
-    CopySprDToSpr(&ds, &sd);
+    CopyEffectSprDToSpr(&ds, &sd);
 
     DispSprD(&ds);
 }
@@ -752,7 +752,7 @@ void SimpleDispSprtRGB(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot,
     sd.pri = ssd->pri << 12;
     sd.alpha = ((ssd->alp * alp_rate) / 100);
 
-    CopySprDToSpr(&ds,&sd);
+    CopyEffectSprDToSpr(&ds,&sd);
 
     if (srot != NULL)
     {
@@ -810,7 +810,7 @@ void SimpleDispSprtLNR(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot,
         sd.alpha = (ssd->alp * alp_rate) / 100;
     }
 
-    CopySprDToSpr(&ds, &sd);
+    CopyEffectSprDToSpr(&ds, &sd);
 
     if (srot != NULL)
     {

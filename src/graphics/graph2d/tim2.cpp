@@ -1,6 +1,7 @@
 #include "common.h"
 #include "typedefs.h"
 #include "tim2.h"
+#include "mikupan/mikupan_config.h"
 
 #include "mikupan/mikupan_memory.h"
 #include "ee/kernel.h"
@@ -1774,7 +1775,7 @@ void ResetScissor(int pri)
 
 void CopySprDToSpr(DISP_SPRT *s, SPRT_DAT *d)
 {
-    s->att = 0;
+    s->att = MIKUPAN_SPRITE_SMOOTHABLE;
     s->u = d->u;
     s->v = d->v;
     s->w = d->w;
@@ -1806,6 +1807,13 @@ void CopySprDToSpr(DISP_SPRT *s, SPRT_DAT *d)
     s->alpha = d->alpha;
     s->col = 0;
 }
+
+void CopyEffectSprDToSpr(DISP_SPRT *s, SPRT_DAT *d)
+{
+    CopySprDToSpr(s, d);
+    s->att &= ~MIKUPAN_SPRITE_SMOOTHABLE;
+}
+
 
 void _ftoi0(int *out, float *in)
 {
@@ -2157,13 +2165,10 @@ static void DispSprDInternal(DISP_SPRT *s,
         //pbuf[ndpkt++].ui32[3] = 0;
     }
 
-    /*
-     * CopySprDToSpr/Himuro sets TEX1.MMAG to SCE_GS_NEAREST for normal 2D
-     * sprites. Honour that here; using the global linear sampler causes
-     * atlas/transparent-edge bleeding on sprites such as the candle puzzle
-     * flame halos.
-     */
+    // Template UI sprites may opt into smoothing; direct effect/capture draws keep MMAG.
     int nearest_sampler = ((sceGsTex1 *)&mtex1)->MMAG == SCE_GS_NEAREST;
+    if (mikupan_configuration.renderer.smooth_2d && (matt & MIKUPAN_SPRITE_SMOOTHABLE))
+        nearest_sampler = 0;
 
     if (texture_info != NULL &&
         texture_info->id != 0 &&

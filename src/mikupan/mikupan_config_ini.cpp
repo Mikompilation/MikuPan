@@ -190,6 +190,7 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
     ApplyValue(ini, "renderer", "hdr_paper_white", mikupan_configuration.renderer.hdr_paper_white);
     ApplyValue(ini, "renderer", "hdr_peak_luminance", mikupan_configuration.renderer.hdr_peak_luminance);
     ApplyValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
+    ApplyValue(ini, "renderer", "smooth_2d", mikupan_configuration.renderer.smooth_2d);
     ApplyString(ini, "renderer", "gpu_driver",
                 mikupan_configuration.renderer.gpu_driver,
                 sizeof(mikupan_configuration.renderer.gpu_driver));
@@ -403,6 +404,7 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     SetValue(ini, "renderer", "hdr_paper_white", mikupan_configuration.renderer.hdr_paper_white);
     SetValue(ini, "renderer", "hdr_peak_luminance", mikupan_configuration.renderer.hdr_peak_luminance);
     SetValue(ini, "renderer", "dither_mode", mikupan_configuration.renderer.dither_mode);
+    SetValue(ini, "renderer", "smooth_2d", mikupan_configuration.renderer.smooth_2d);
     ini.sections["renderer"]["gpu_driver"] =
         mikupan_configuration.renderer.gpu_driver;
     SetValue(ini, "renderer", "gpu_debug", mikupan_configuration.renderer.gpu_debug);

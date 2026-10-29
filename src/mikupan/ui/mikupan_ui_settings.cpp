@@ -1110,6 +1110,11 @@ void MikuPan_UiSettingsRender(void)
             igCheckbox("VSync", (bool*) &mikupan_configuration.renderer.vsync);
 
             igSeparatorText("Graphics");
+            bool smooth_2d = mikupan_configuration.renderer.smooth_2d != 0;
+            if (igCheckbox("Smooth 2D sprites", &smooth_2d))
+                mikupan_configuration.renderer.smooth_2d = smooth_2d ? 1 : 0;
+            if (igIsItemHovered(0))
+                igSetTooltip("Bilinear filtering for enlarged UI sprites. Effects and screen captures retain their own filtering.");
 
             bool hd_font_textures = mikupan_configuration.renderer.hd_font_textures != 0;
 

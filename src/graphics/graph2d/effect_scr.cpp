@@ -4476,7 +4476,7 @@ int SetNowLoading()
     }
 
     SetSprFile3(N_LOAD_PK2_ADDRESS, 0);
-    CopySprDToSpr(&ds, sprt_dat);
+    CopyEffectSprDToSpr(&ds, sprt_dat);
     
     ds.tex1 = SCE_GS_SET_TEX1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
     ds.zbuf = SCE_GS_SET_ZBUF_1(0x8c, SCE_GS_PSMCT24, 1);
@@ -5010,7 +5010,7 @@ int SetGameOver()
         
         if (gameover_flow > 2)
         {            
-            CopySprDToSpr(&ds, &gameover_tbl[0]);
+            CopyEffectSprDToSpr(&ds, &gameover_tbl[0]);
             
             ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
             ds.zbuf = SCE_GS_SET_ZBUF_1(0x8c, SCE_GS_PSMCT24, 1);
@@ -5021,7 +5021,7 @@ int SetGameOver()
             
             if (gameover_flow > 2)
             {
-                CopySprDToSpr(&ds, &gameover_tbl[1]);
+                CopyEffectSprDToSpr(&ds, &gameover_tbl[1]);
                 
                 ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
                 ds.zbuf = SCE_GS_SET_ZBUF_1(0x8c, SCE_GS_PSMCT24, 1);
@@ -5390,7 +5390,7 @@ void SetScreenSaver()
                 {
                     u_int att;
 
-                    CopySprDToSpr(&ds, &hand_dat);
+                    CopyEffectSprDToSpr(&ds, &hand_dat);
                     
                     ds.pri = 0x10;
                     ds.z = 0xfffffef;

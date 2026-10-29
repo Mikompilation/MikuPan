@@ -1,6 +1,8 @@
 #ifndef GRAPHICS_GRAPH2D_TIM2_H
 #define GRAPHICS_GRAPH2D_TIM2_H
 
+#define MIKUPAN_SPRITE_SMOOTHABLE (0x80000000u)
+
 #include <stdint.h>
 
 #include "typedefs.h"
@@ -127,6 +129,7 @@ void LoadTIM2File();
 void SetScissor(int pri, int x, int y, int w, int h);
 void ResetScissor(int pri);
 void CopySprDToSpr(DISP_SPRT *s, SPRT_DAT *d);
+void CopyEffectSprDToSpr(DISP_SPRT *s, SPRT_DAT *d);
 
 void _ftoi4(int *out, float *in);
 void DispSprD(DISP_SPRT *s);

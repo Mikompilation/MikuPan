@@ -102,6 +102,7 @@ typedef struct
     int hd_font_textures;
     int aspect_mode;     /* MikuPan_AspectMode */
     float aspect_custom; /* width / height, used when aspect_mode is CUSTOM */
+    int smooth_2d;
 } MikuPan_ConfigRenderer;
 
 /* Apply a window display mode to the SDL window.

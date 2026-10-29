@@ -3105,7 +3105,7 @@ void DrawScreen(u_int pri, u_int addr, u_char r, u_char g, u_char b, u_char a)
     };
 
     LocalCopyBtoL(1, addr);
-    CopySprDToSpr(&ds, &sd); 
+    CopyEffectSprDToSpr(&ds, &sd);
     
     ds.tex0 = SCE_GS_SET_TEX0(addr, 640 / 64, SCE_GS_PSMCT32, 10, 8, 0, SCE_GS_MODULATE, 0, 0, 0, 0, 1); // addr | 0x2000000228028000;
     ds.tex1 = SCE_GS_SET_TEX1(1, 0, SCE_GS_NEAREST, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0); // 0x141;
@@ -4102,7 +4102,7 @@ int SetTecmoLogo()
     }
     
     SetSprFile3((int64_t)EFFECT_ADDRESS, 0);
-    CopySprDToSpr(&ds, logotex);
+    CopyEffectSprDToSpr(&ds, logotex);
     
     ds.zbuf = 0x10100008c;
     ds.test = 0x5000d;
