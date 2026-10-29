@@ -1095,12 +1095,8 @@ void FActExecOccur(FURN_ACT_WRK *fawp, void *point)
         break;
         case ACT_BLOOD:
         {
-            float* blood_drop_pos;
-
-            blood_drop_pos =
-                (float*)((u_char*)map_item_dat + fawp->furn_id * 16 + 0x4d0);
-
-            SetRDBloodDrop(blood_drop_pos, pointer[1], fawp->furn_id);
+            SetRDBloodDrop(special_furn_pos[fawp->furn_id - M1_FRN_318],
+                           pointer[1], fawp->furn_id);
 
             pointer += 2;
             break;
