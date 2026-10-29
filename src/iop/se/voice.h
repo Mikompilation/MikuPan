@@ -45,17 +45,21 @@ typedef struct
     s32 histL[2], histR[2];
 
 
-    u_short volL;
-    u_short volR;
+    s32 volL;
+    s32 volR;
 
     u_short pitch;
     u_short adsr1;
     u_short adsr2;
-    // Q16 fixed-point envelope level, in SPU2 0..0x7fff volume units.
+    // Register-clock envelope at the 48 kHz output rate.
     s32 adsr_level;
+    u_int adsr_counter;
     VOICE_ADSR_PHASE adsr_phase;
     float frequency_ratio;
     SDL_AudioStream *stream;
+    SDL_AudioStream *resampler;
+    int resampler_channels;
+    bool resampler_flushed;
 } VOICE;
 
 extern VOICE voices[VOICE_NUM];
@@ -73,19 +77,10 @@ void VoiceSetKeySwitch(int core, u_int value, int key_on);
 void VoiceLock(void);
 void VoiceUnlock(void);
 
-static inline u_short DecodeSpu2PositiveVolume(u_short val)
+static inline s32 DecodeSpu2Volume(u_short value)
 {
-    if ((val & 0x8000) != 0)
-    {
-        return 0;
-    }
-
-    if (val > 0x3fff)
-    {
-        val = 0x3fff;
-    }
-
-    return val << 1;
+    if (value & 0x8000) return 0; // Sweep registers are not fixed amplitudes.
+    return s32(value & 0x3fff) * 2 - ((value & 0x4000) ? 32768 : 0);
 }
 
 static inline void SetPitch(int vNo, u_short val)
@@ -95,12 +90,12 @@ static inline void SetPitch(int vNo, u_short val)
 
 static inline void SetVolLeft(int vNo, u_short val)
 {
-    voices[vNo].volL = DecodeSpu2PositiveVolume(val);
+    voices[vNo].volL = DecodeSpu2Volume(val);
 }
 
 static inline void SetVolRight(int vNo, u_short val)
 {
-    voices[vNo].volR = DecodeSpu2PositiveVolume(val);
+    voices[vNo].volR = DecodeSpu2Volume(val);
 }
 
 static inline void SetAdsr1(int vNo, u_short val)

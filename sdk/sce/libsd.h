@@ -61,8 +61,8 @@ typedef struct {
 } sceSdEffectAttr;
 
 extern s16 spuRam[(1024 * 1024 * 2) >> 1];
-extern s32 mVolL;
-extern s32 mVolR;
+extern s32 mVolL[2];
+extern s32 mVolR[2];
 
 int sceSdInit(int flag);
 void sceSdSetParam(u_short entry, u_short value);

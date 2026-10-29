@@ -10,8 +10,8 @@
 #include <string.h>
 
 s16 spuRam[(1024 * 1024 * 2) >> 1];
-s32 mVolL;
-s32 mVolR;
+s32 mVolL[2];
+s32 mVolR[2];
 SDL_AudioDeviceID audio_dev;
 
 static u_short sd_param_regs[0x10000];
@@ -208,14 +208,14 @@ void sceSdSetAddr(u_short entry, u_int value)
     VoiceUnlock();
 }
 
-static void SetMasterVolLeft(s32 val)
+static void SetMasterVolLeft(int core, u_short val)
 {
-    mVolL = val << 1;
+    mVolL[core] = DecodeSpu2Volume(val);
 }
 
-static void SetMasterVolRight(s32 val)
+static void SetMasterVolRight(int core, u_short val)
 {
-    mVolR = val << 1;
+    mVolR[core] = DecodeSpu2Volume(val);
 }
 
 void sceSdSetParam(u_short entry, u_short value)
@@ -243,10 +243,10 @@ void sceSdSetParam(u_short entry, u_short value)
         }
         break;
     case SD_P_MVOLL:
-        SetMasterVolLeft(value);
+        SetMasterVolLeft(entry & SD_CORE_1, value);
         break;
     case SD_P_MVOLR:
-        SetMasterVolRight(value);
+        SetMasterVolRight(entry & SD_CORE_1, value);
         break;
     case SD_VP_ADSR1:
         if (voice_index < VOICE_NUM) {
