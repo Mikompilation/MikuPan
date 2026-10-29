@@ -42,6 +42,7 @@ include(implot)
 include(spdlog)
 include(cglm)
 include(ffmpeg)
+include(save_zlib)
 include(inipp)
 include(shadercross)
 
@@ -276,6 +277,10 @@ set(MIKUPAN_SOURCES
         "src/mikupan/av/mikupan_audio_decoder.cpp"
         "src/mikupan/av/mikupan_audio_decoder_c.h"
         src/mikupan/av/mikupan_audio_decoder_c.cpp
+        src/mikupan/save/mikupan_memory_card.cpp
+        src/mikupan/save/mikupan_save_codec.cpp
+        src/mikupan/save/mikupan_save_archive.cpp
+        src/mikupan/save/mikupan_save_transfer.cpp
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui_c.cpp
         src/mikupan/ui/mikupan_rmlui.cpp
@@ -483,6 +488,7 @@ target_include_directories(MikuPan PRIVATE
 )
 
 target_link_libraries(MikuPan PRIVATE
+    ZLIB::ZLIBSTATIC
         RmlUi::RmlUi
         cimgui
         implot
