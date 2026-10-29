@@ -1389,8 +1389,20 @@ char mcCtrl3taku(int def_pos)
     return 0;
 }
 
+namespace { bool transfer_card_in_use = false; }
+bool mcIsInUse()
+{
+#ifdef BUILD_EU_VERSION
+    // Language selection keeps the startup bracket open without accessing the card.
+    if (sys_wrk.game_mode == GAME_MODE_LANGUAGE)
+        return mc_ctrl.acs.req != 0;
+#endif
+    return transfer_card_in_use || mc_ctrl.acs.req != 0;
+}
+
 void mcInit(u_char mode, u_int *work_addr, u_char msn_flg)
 {
+    transfer_card_in_use = true;
     mcSetMessage(MC_MSG_NONE);
 
     mc_ctrl.step = 0;
@@ -1480,6 +1492,7 @@ void mcClearHeader()
 
 void mcEnd()
 {
+    transfer_card_in_use = false;
     sys_wrk.sreset_ng = 0;
 #ifdef BUILD_EU_VERSION
     sys_wrk.language = mc_language & 0x7f;

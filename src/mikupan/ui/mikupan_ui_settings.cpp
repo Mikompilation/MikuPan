@@ -1,3 +1,4 @@
+#include "mikupan_ui_saves.h"
 #include "mikupan_ui_settings.h"
 
 #include "typedefs.h"
@@ -1040,6 +1041,8 @@ void MikuPan_UiSettingsRender(void)
 {
     if (igBeginMenu("Settings", 1))
     {
+        MikuPanUiSaves::MenuItem();
+        igSeparator();
         if (igBeginMenu("Display", 1))
         {
             const char* window_modes[] = {"Windowed", "Fullscreen"};

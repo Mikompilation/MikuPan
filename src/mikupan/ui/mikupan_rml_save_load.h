@@ -2,6 +2,9 @@
 #define MIKUPAN_RML_SAVE_LOAD_H
 
 #ifdef __cplusplus
+#include <vector>
+bool MikuPan_RmlSaveLoadBuildTransferPreview(unsigned mission, unsigned room, bool chapter,
+                                           std::vector<unsigned char>& pixels);
 namespace Rml
 {
 class Context;

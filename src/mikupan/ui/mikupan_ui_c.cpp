@@ -1,3 +1,4 @@
+#include "mikupan_ui_saves.h"
 #include "typedefs.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -48,7 +49,7 @@ SDL_Window* MikuPan_GetUiWindow(void)
 
 int MikuPan_UiIsMenuOpen(void)
 {
-    return show_menu_bar != 0;
+    return show_menu_bar != 0 || MikuPanUiSaves::IsOpen();
 }
 
 void MikuPan_InitUi(SDL_Window* window)
@@ -92,6 +93,7 @@ void MikuPan_DrawUi(void)
     MikuPan_UiMenuBar();
 
     MikuPan_UiDebugWindowsRender();
+    MikuPanUiSaves::Draw(ui_window);
 }
 
 void MikuPan_DrawMissingDataUi(const char *missing_file)

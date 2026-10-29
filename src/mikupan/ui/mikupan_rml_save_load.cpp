@@ -1595,9 +1595,8 @@ static TIM2_PICTUREHEADER* MikuPan_RmlSaveLoadFindPreviewPicture(
     return nullptr;
 }
 
-static bool MikuPan_RmlSaveLoadWriteOriginalPreview(
-    const std::filesystem::path& path,
-    const MC_GAME_HEADER& header)
+static bool MikuPan_RmlSaveLoadBuildOriginalPreview(
+    const MC_GAME_HEADER& header, std::vector<unsigned char>& pixels)
 {
     const int sprite_index = MikuPan_RmlSaveLoadOriginalPreviewSprite(header);
     if (sprite_index < 0)
@@ -1647,8 +1646,7 @@ static bool MikuPan_RmlSaveLoadWriteOriginalPreview(
 
     const int preview_x = (kPreviewWidth - preview_width) / 2;
     const int preview_y = (kPreviewHeight - preview_height) / 2;
-    std::vector<unsigned char> pixels(
-        static_cast<size_t>(kPreviewWidth * kPreviewHeight * 4), 0);
+    pixels.assign(static_cast<size_t>(kPreviewWidth * kPreviewHeight * 4), 0);
     for (size_t index = 3; index < pixels.size(); index += 4)
     {
         pixels[index] = 255;
@@ -1670,6 +1668,22 @@ static bool MikuPan_RmlSaveLoadWriteOriginalPreview(
         }
     }
 
+    return true;
+}
+
+bool MikuPan_RmlSaveLoadBuildTransferPreview(unsigned mission, unsigned room, bool chapter,
+                                           std::vector<unsigned char>& pixels)
+{
+    MC_GAME_HEADER header{};
+    header.msn_no=mission;header.room_no=room;header.msn_flg=chapter;
+    return MikuPan_RmlSaveLoadBuildOriginalPreview(header,pixels);
+}
+
+static bool MikuPan_RmlSaveLoadWriteOriginalPreview(const std::filesystem::path& path,
+                                                  const MC_GAME_HEADER& header)
+{
+    std::vector<unsigned char> pixels;
+    if(!MikuPan_RmlSaveLoadBuildOriginalPreview(header,pixels)) return false;
     std::error_code error;
     std::filesystem::create_directories(path.parent_path(), error);
     if (error)

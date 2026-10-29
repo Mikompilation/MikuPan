@@ -190,5 +190,31 @@ access to that folder.
 magnification for UI sprites. It defaults to on; use **Save Configuration**
 to retain changes. Effects and screen captures keep their original filtering.
 
+# PS2 save transfer
+
+Open **Settings → PS2 save transfer…** in the overlay to transfer gameplay saves.
+Each build accepts its own region: US (SLUS-20388) or EU (SLES-50821,
+with `BUILD_EU_VERSION=ON`). Cross-region conversion is not supported.
+
+Import from an extracted save folder, an 8 MB memory card, or a PSU/MAX/XPS/SPS/CBS
+archive. Select saves and assign their destination slots. Export formats are:
+
+- **ECC (.ps2):** a memory card with spare/ECC bytes, for PCSX2.
+- **Raw (.bin):** an 8 MB card without ECC bytes, for OPL.
+- **PSU (.psu):** an EMS archive, for uLaunchELF and PS2 save-transfer tools.
+- **MAX (.max):** an Action Replay MAX archive.
+- **XPS/SPS (.xps/.sps):** an X-Port V2 / SharkPort archive.
+- **CBS (.cbs):** a CodeBreaker archive.
+- **Extracted folder:** the game's save files, for tools that accept folders.
+
+Archives contain this game's selected saves, not an entire memory card. Card
+exports create a blank card populated with the selected saves. Choosing a format
+opens its picker; confirming the destination exports immediately. Missing
+extensions are added automatically; existing output files/folders are refused.
+Imports replace only the selected destination slots. Load imported saves normally
+afterward, and close the game's save/load screen before transferring.
+Embedded photographs and battle records are retained. Saves with an active
+wandering soul must be saved again after it disappears before conversion.
+
 # Special Thanks
 Thank you to prinsep for making the logo!

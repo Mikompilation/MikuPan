@@ -281,6 +281,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/save/mikupan_save_codec.cpp
         src/mikupan/save/mikupan_save_archive.cpp
         src/mikupan/save/mikupan_save_transfer.cpp
+        src/mikupan/ui/mikupan_ui_saves.cpp
+        src/mikupan/ui/mikupan_ui_save_preview.cpp
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui_c.cpp
         src/mikupan/ui/mikupan_rmlui.cpp

@@ -1,3 +1,4 @@
+#include "mikupan_ui_saves.h"
 #include "SDL3/SDL.h"
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
@@ -114,10 +115,12 @@ void MikuPan_ImGui_ImplInit(SDL_Window* window)
     init_info.SwapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR;
     init_info.PresentMode = SDL_GPU_PRESENTMODE_VSYNC;
     ImGui_ImplSDLGPU3_Init(&init_info);
+    MikuPanUiSaves::Init(MikuPan_GPUGetDevice());
 }
 
 void MikuPan_ImGui_ImplShutdown(void)
 {
+    MikuPanUiSaves::Shutdown();
     ImGui_ImplSDLGPU3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
 }

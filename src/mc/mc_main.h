@@ -143,4 +143,6 @@ void mcFormatEndInit();
 int mcFormatEnd();
 #endif
 
+bool mcIsInUse();
+
 #endif // MC_MC_MAIN_H
