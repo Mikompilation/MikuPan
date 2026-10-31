@@ -425,7 +425,7 @@ static bool MikuPan_RmlTitleLoadDocument(void)
     {
         MikuPan_RmlTitleAddListener(
             g_title.menu_buttons[i],
-            Rml::EventId::Mouseover,
+            Rml::EventId::Mousemove,
             std::make_unique<MikuPanTitleHoverListener>(i));
         MikuPan_RmlTitleAddListener(
             g_title.menu_buttons[i],

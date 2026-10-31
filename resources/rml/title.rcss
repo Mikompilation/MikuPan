@@ -269,27 +269,19 @@ body {
     pointer-events: none;
 }
 
-.title-menu-button:hover,
-.title-menu-button:focus,
 .title-menu-button.selected {
     color: #fff1d3;
     background-color: transparent;
 }
 
-.title-menu-button:hover .title-menu-backing-left,
-.title-menu-button:focus .title-menu-backing-left,
 .title-menu-button.selected .title-menu-backing-left {
     decorator: horizontal-gradient(#00000000 #5f431fc8);
 }
 
-.title-menu-button:hover .title-menu-backing-center,
-.title-menu-button:focus .title-menu-backing-center,
 .title-menu-button.selected .title-menu-backing-center {
     background-color: #5f431fc8;
 }
 
-.title-menu-button:hover .title-menu-backing-right,
-.title-menu-button:focus .title-menu-backing-right,
 .title-menu-button.selected .title-menu-backing-right {
     decorator: horizontal-gradient(#5f431fc8 #00000000);
 }
