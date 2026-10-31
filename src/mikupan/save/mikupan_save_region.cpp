@@ -180,6 +180,20 @@ void CheckPosition(const Bytes& data, SaveRegion source, SaveRegion target)
         }
     }
 }
+void NormalizeChapterStart(Bytes& data)
+{
+    if (data[44] != 1)
+    {
+        return;
+    }
+    // Chapter initialization discards this entire resource table.
+    std::fill_n(data.data() + Offset(3), sizes[3], 0);
+    for (unsigned i = 0; i < 40; ++i)
+    {
+        Put(data.data() + Offset(3) + i * 8, 65535, 2);
+    }
+    Seal(data);
+}
 }// namespace
 const char* RegionLabel(SaveRegion region)
 {
@@ -250,9 +264,11 @@ bool ValidateRegion(const Bytes& data, SaveRegion source, std::string& error)
                 "Save again after the wandering soul disappears before "
                 "converting.");
         }
+        Bytes checked = data;
+        NormalizeChapterStart(checked);
         for (unsigned i = 0; i < 40; ++i)
         {
-            const auto* p = data.data() + Offset(3) + i * 8;
+            const auto* p = checked.data() + Offset(3) + i * 8;
             const uint16_t id = Get(p, 2);
             const unsigned type = p[2];
             if (id == 65535)
@@ -300,13 +316,14 @@ bool ConvertRegion(const Bytes& data, SaveRegion source, SaveRegion target,
         {
             throw std::runtime_error("Unknown EU language.");
         }
+        Bytes next = data;
+        NormalizeChapterStart(next);
         if (source == target)
         {
-            output = data;
+            output = std::move(next);
             return true;
         }
         CheckPosition(data, source, target);
-        Bytes next = data;
         for (unsigned i = 0; i < 40; ++i)
         {
             auto* p = next.data() + Offset(3) + i * 8;
