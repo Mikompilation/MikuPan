@@ -1,3 +1,4 @@
+#include "graphics/graph3d/mirror.h"
 #include "mikupan_renderer_internal.h"
 #include "graphics/graph3d/sglib.h"
 #include "sce/libvu0.h"
@@ -198,9 +199,42 @@ void MikuPan_SetupMirrorMtx(float* mtx)
     mat4 out = {0};
     mat4 m = {0};
 
+    mat4 original_inverse;
+    glm_mat4_inv(WorldView, original_inverse);
     glm_mat4_make(mtx, m);
     glm_mat4_mul(WorldView, m, out);
     memcpy(WorldView, out, sizeof(WorldView));
+
+    // Clip the reflected view at the mirror, excluding geometry behind its surface.
+    vec4 plane = {mir_norm[0], mir_norm[1], mir_norm[2],
+        -(mir_norm[0] * mir_center[0] + mir_norm[1] * mir_center[1] +
+          mir_norm[2] * mir_center[2])};
+    float side = plane[0] * original_inverse[3][0] +
+                 plane[1] * original_inverse[3][1] +
+                 plane[2] * original_inverse[3][2] + plane[3];
+    if (side < 0.0f)
+    {
+        for (int i = 0; i < 4; ++i)
+            plane[i] = -plane[i];
+    }
+
+    mat4 inverse_view, inverse_projection;
+    glm_mat4_inv(WorldView, inverse_view);
+    glm_mat4_transpose(inverse_view);
+    vec4 eye_plane;
+    glm_mat4_mulv(inverse_view, plane, eye_plane);
+    glm_mat4_inv(projection, inverse_projection);
+    vec4 corner = {eye_plane[0] >= 0.0f ? 1.0f : -1.0f,
+                   eye_plane[1] >= 0.0f ? 1.0f : -1.0f, 1.0f, 1.0f};
+    vec4 q;
+    glm_mat4_mulv(inverse_projection, corner, q);
+    float dot = glm_vec4_dot(eye_plane, q);
+    if (fabsf(dot) > 0.00001f)
+    {
+        for (int i = 0; i < 4; ++i)
+            projection[i][2] = eye_plane[i] * (2.0f / dot) - projection[i][3];
+        MikuPan_SetUniformMatrix4fvToAllShaders((float*)projection, "projection");
+    }
     glm_mat4_mul(projection, WorldView, WorldClipView);
 
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)WorldView, "view");
