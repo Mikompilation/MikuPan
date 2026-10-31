@@ -1008,6 +1008,10 @@ static int isAudioOK()
 void initMov(char *bsfilename)
 {
     termMov();
+    g_vd.current_frame = 0;
+#ifdef BUILD_EU_VERSION
+    InitSubtitlesSys();
+#endif
 
     char resolvedPath[256];
     if (!MikuPan_ResolveCdPath(bsfilename, resolvedPath, sizeof(resolvedPath)))
