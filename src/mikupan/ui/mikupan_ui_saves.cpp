@@ -165,7 +165,15 @@ void Refresh()
     }
     if (source_ok && !source.has_save)
     {
-        source_error = "No EU MikuPan saves found at this source.";
+        source_error = "No supported Fatal Frame saves found.";
+    }
+    if (!source_error.empty())
+    {
+        source_error = std::string(exporting ? "PC source: " : "PS2 source: ") + source_error;
+    }
+    if (!target_error.empty())
+    {
+        target_error = std::string(exporting ? "PS2 destination: " : "PC destination: ") + target_error;
     }
     initialized = true;
 }
@@ -440,9 +448,14 @@ void AdoptPicker()
             }
             Refresh();
             message.clear();
-            if (Unavailable(false, false, false).empty())
+            const auto reason = Unavailable(false, false, false);
+            if (reason.empty())
             {
                 step = Step::Slots;
+            }
+            else
+            {
+                message = reason;
             }
         }
     }
@@ -793,8 +806,7 @@ void Draw(SDL_Window* window)
                 titles[int(step)]);
     ImGui::Separator();
     ImGui::BeginDisabled(picking.load());
-    const float footer_height = ImGui::GetFrameHeightWithSpacing()
-                                + ImGui::GetTextLineHeightWithSpacing() * 4;
+    const float footer_height = ImGui::GetFrameHeightWithSpacing();
     ImGui::BeginChild("wizard-page", ImVec2(0, -footer_height), 0,
                       ImGuiWindowFlags_NoBackground);
     const bool centered = step != Step::Slots;
@@ -817,7 +829,6 @@ void Draw(SDL_Window* window)
     if (step == Step::Operation)
     {
         ImGui::TextUnformatted("Where would you like to send your saves?");
-        ImGui::TextDisabled("Project Zero II - EU / SLES_523.84");
         ImGui::Spacing();
         const float available = ImGui::GetContentRegionAvail().x;
         const bool side_by_side = available >= 650.f;
@@ -1066,27 +1077,6 @@ void Draw(SDL_Window* window)
     {
         reason = Unavailable(true, false, final_step || step == Step::Format);
     }
-    ImGui::BeginChild("transfer-status",
-                      ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 3));
-    if (!reason.empty())
-    {
-        ImGui::TextWrapped("Cannot %s: %s",
-                           final_step ? (exporting ? "export" : "import")
-                                      : "continue",
-                           reason.c_str());
-    }
-    else if (!final_step && (mcIsInUse() || MikuPan_RmlSaveLoadIsOpen()))
-    {
-        ImGui::TextWrapped(
-            "You can continue setup. Transfer must wait until the game's "
-            "save/load "
-            "screen and card access finish.");
-    }
-    if (!message.empty())
-    {
-        ImGui::TextWrapped("%s", message.c_str());
-    }
-    ImGui::EndChild();
     ImGui::BeginDisabled(step == Step::Operation);
     if (ImGui::Button("Back", ImVec2(120, 0)))
     {
@@ -1122,8 +1112,29 @@ void Draw(SDL_Window* window)
             }
         }
         ImGui::EndDisabled();
+        if (!reason.empty() && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        {
+            ImGui::SetTooltip("%s", reason.c_str());
+        }
     }
     ImGui::EndDisabled();
+    if (!message.empty() && !ImGui::IsPopupOpen("Save transfer message"))
+    {
+        ImGui::OpenPopup("Save transfer message");
+    }
+    ImGui::SetNextWindowSize(ImVec2(std::min(480.f, viewport->WorkSize.x * .9f), 0),
+                             ImGuiCond_Appearing);
+    if (ImGui::BeginPopupModal("Save transfer message", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::TextWrapped("%s", message.c_str());
+        if (ImGui::Button("OK", ImVec2(120, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
+        {
+            message.clear();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::EndPopup();
+    }
     ImGui::End();
 }
 }// namespace MikuPanUiSaves

@@ -1041,8 +1041,6 @@ void MikuPan_UiSettingsRender(void)
 {
     if (igBeginMenu("Settings", 1))
     {
-        MikuPanUiSaves::MenuItem();
-        igSeparator();
         if (igBeginMenu("Display", 1))
         {
             const char* window_modes[] = {"Windowed", "Fullscreen"};
@@ -1487,6 +1485,9 @@ void MikuPan_UiSettingsRender(void)
 
             igEndMenu();
         }
+
+        igSeparator();
+        MikuPanUiSaves::MenuItem();
 
         igSeparatorText("Game Data Folder");
         igInputText("Folder", mikupan_configuration.data_folder, sizeof(mikupan_configuration.data_folder), 0, NULL, NULL);
