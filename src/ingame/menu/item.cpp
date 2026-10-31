@@ -2389,7 +2389,9 @@ void YesNoCrslOKR(int pri, float pos_x, float pos_y, int rgb, float alp, float s
 
     ds.tex1 = SCE_GS_SET_TEX1_1(1, 0, SCE_GS_LINEAR, SCE_GS_LINEAR_MIPMAP_LINEAR, 0, 0, 0);
 
+    MikuPan_BeginLate2DOverlayQueue();
     DispSprD(&ds);
+    MikuPan_EndLate2DOverlayQueue();
 }
 
 void XYAdefaultYW(u_char no)

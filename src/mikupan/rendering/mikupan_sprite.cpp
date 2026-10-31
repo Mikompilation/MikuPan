@@ -58,6 +58,7 @@ typedef struct
     int depth_enabled;
     int depth_write;
     unsigned int depth_func;
+    MikuPan_GPUBlendMode blend_mode;
 } MikuPan_Late2DOverlayPrimitive;
 
 static MikuPan_TexturedSpriteBatch g_textured_sprite_batch = {0};
@@ -87,6 +88,10 @@ static void MikuPan_RenderSpriteInternal(MikuPan_Rect src, MikuPan_Rect dst,
                                          MikuPan_TextureInfo *texture_info,
                                          float depth, int depth_enabled);
 
+static void MikuPan_RenderSprite2DInternal(sceGsTex0 *tex, float *buffer,
+    int depth_enabled, int depth_write, unsigned int depth_func,
+    int shader, MikuPan_GPUBlendMode blend_mode, int nearest_sampler);
+
 static int MikuPan_IsLate2DOverlayQueueActive(void)
 {
     return g_late_2d_overlay_queue_depth > 0 &&
@@ -97,7 +102,8 @@ static int MikuPan_QueueLate2DTexturedOverlay(sceGsTex0 *tex,
                                               const float *buffer,
                                               int depth_enabled,
                                               int depth_write,
-                                              unsigned int depth_func)
+                                              unsigned int depth_func,
+                                              MikuPan_GPUBlendMode blend_mode)
 {
     if (tex == NULL || buffer == NULL ||
         g_late_2d_overlay_queue_count >= LATE_2D_OVERLAY_QUEUE_MAX)
@@ -109,6 +115,7 @@ static int MikuPan_QueueLate2DTexturedOverlay(sceGsTex0 *tex,
         &g_late_2d_overlay_queue[g_late_2d_overlay_queue_count++];
     queued->kind = MIKUPAN_LATE_2D_TEXTURED;
     queued->tex = *tex;
+    queued->blend_mode = blend_mode;
     memcpy(queued->vertices.textured, buffer, sizeof(queued->vertices.textured));
     queued->depth_enabled = depth_enabled;
     queued->depth_write = depth_write;
@@ -280,20 +287,10 @@ void MikuPan_FlushLate2DOverlayQueue(void)
 
         if (queued->kind == MIKUPAN_LATE_2D_TEXTURED)
         {
-            if (queued->depth_enabled)
-            {
-                MikuPan_RenderSprite2DDepthState(
-                    &queued->tex,
-                    &queued->vertices.textured[0][0],
-                    queued->depth_enabled,
-                    queued->depth_write,
-                    queued->depth_func);
-            }
-            else
-            {
-                MikuPan_RenderSprite2D(&queued->tex,
-                                       &queued->vertices.textured[0][0]);
-            }
+            MikuPan_RenderSprite2DInternal(
+                &queued->tex, &queued->vertices.textured[0][0],
+                queued->depth_enabled, queued->depth_write, queued->depth_func,
+                SPRITE_SHADER, queued->blend_mode, 0);
         }
         else if (queued->kind == MIKUPAN_LATE_2D_MESSAGE)
         {
@@ -561,11 +558,10 @@ static void MikuPan_RenderSprite2DInternal(sceGsTex0 *tex, float *buffer,
 
     if (MikuPan_IsLate2DOverlayQueueActive()
         && shader == SPRITE_SHADER
-        && blend_mode == MIKUPAN_GPU_BLEND_NORMAL
         && nearest_sampler == 0)
     {
         if (!MikuPan_QueueLate2DTexturedOverlay(tex, buffer, depth_enabled,
-                                                depth_write, depth_func))
+                                                depth_write, depth_func, blend_mode))
         {
             info_log("Late 2D textured overlay queue overflow");
         }
