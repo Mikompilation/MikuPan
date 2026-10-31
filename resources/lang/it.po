@@ -1488,3 +1488,9 @@ msgstr "Cancella"
 
 msgid "White"
 msgstr "Bianco"
+
+msgid "Use HD Fonts when available"
+msgstr "Usa i caratteri HD se disponibili"
+
+msgid "Use matching HD font textures when installed; otherwise use the original fonts."
+msgstr "Usa le texture dei caratteri HD corrispondenti se installate; altrimenti usa i caratteri originali."

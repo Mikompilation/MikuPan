@@ -1488,3 +1488,9 @@ msgstr "Borrar"
 
 msgid "White"
 msgstr "Blanco"
+
+msgid "Use HD Fonts when available"
+msgstr "Usar fuentes HD si están disponibles"
+
+msgid "Use matching HD font textures when installed; otherwise use the original fonts."
+msgstr "Usar las texturas de fuentes HD correspondientes si están instaladas; de lo contrario, usar las fuentes originales."

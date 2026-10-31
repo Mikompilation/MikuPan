@@ -1119,7 +1119,7 @@ void MikuPan_UiSettingsRender(void)
 
             bool hd_font_textures = mikupan_configuration.renderer.hd_font_textures != 0;
 
-            if (igCheckbox("HD Font Textures", &hd_font_textures))
+            if (igCheckbox("HD Font Textures (if available)", &hd_font_textures))
             {
                 mikupan_configuration.renderer.hd_font_textures = hd_font_textures ? 1 : 0;
 

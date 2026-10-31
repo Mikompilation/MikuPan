@@ -4,6 +4,7 @@
 #include "main/glob.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan/mikupan_config.h"
+#include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
@@ -1409,6 +1410,15 @@ Page GamePage(void)
         Fixed("Uses an improved movement collision method to reduce snagging."),
         [] { return MikuPan_ImprovedMovementCollisionsEnabled() != 0; },
         [](bool on) { MikuPan_SetImprovedMovementCollisionsEnabled(on ? 1 : 0); }));
+
+    rows.push_back(Toggle(
+        "Use HD Fonts when available",
+        Fixed("Use matching HD font textures when installed; otherwise use the original fonts."),
+        [] { return mikupan_configuration.renderer.hd_font_textures != 0; },
+        [](bool on) {
+            mikupan_configuration.renderer.hd_font_textures = on ? 1 : 0;
+            MikuPan_SetHdFontTexturesEnabled(on ? 1 : 0);
+        }));
 
     rows.push_back(Heading("Interface"));
     rows.push_back(Toggle(
