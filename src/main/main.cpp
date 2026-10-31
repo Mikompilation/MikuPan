@@ -17,6 +17,7 @@
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "mikupan/rendering/mikupan_baked_texture.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/rendering/mikupan_font_textures.h"
 
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include "iop/adpcm/iopadpcm.h"
@@ -75,6 +76,8 @@ static int MikuPan_TryInitializeGame(void)
     {
         return 0;
     }
+
+    MikuPanFonts::Prepare();
 
     /// GAME LOGIC ///
     InitSystem();

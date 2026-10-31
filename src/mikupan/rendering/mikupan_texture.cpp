@@ -6,6 +6,7 @@
 #include "mikupan/ui/mikupan_ui.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_gpu.h"
+#include "mikupan_font_textures.h"
 #include "mikupan_profiler.h"
 #include "mikupan_shader.h"
 #include "mikupan_texture_slots.h"
@@ -173,14 +174,6 @@ void MikuPan_TextureShutdown(void)
                 MikuPan_GPUReleaseTexture(original_fnt_texture_id[i]);
             }
 
-            if (
-                hd_fnt_texture_id[i] != 0 &&
-                hd_fnt_texture_id[i] != original_fnt_texture_id[i]
-            )
-            {
-                MikuPan_GPUReleaseTexture(hd_fnt_texture_id[i]);
-            }
-
             free(fnt_texture[i]);
 
             fnt_texture[i] = NULL;
@@ -190,6 +183,7 @@ void MikuPan_TextureShutdown(void)
         hd_fnt_texture_id[i] = 0;
     }
 
+    MikuPanFonts::ShutdownGpu();
     curr_fnt_texture = NULL;
     curr_fnt_texture_index = 0;
 
@@ -289,11 +283,12 @@ void MikuPan_SetupFntTexture()
     {
         if (fnt_texture[i] != NULL)
         {
-            MikuPan_GPUReleaseTexture(fnt_texture[i]->id);
+            MikuPan_GPUReleaseTexture(original_fnt_texture_id[i]);
             free(fnt_texture[i]);
             fnt_texture[i] = NULL;
         }
 
+        original_fnt_texture_id[i] = hd_fnt_texture_id[i] = 0;
         fnt_texture[i] = MikuPan_CreateStandaloneGLTexture((sceGsTex0*) &fntdat[i].tex0);
 
         if (fnt_texture[i] == NULL)
@@ -303,22 +298,8 @@ void MikuPan_SetupFntTexture()
 
         original_fnt_texture_id[i] = fnt_texture[i]->id;
 
-        if (hd_fnt_texture_id[i] == 0)
-        {
-            std::string texture_path = std::format("./resources/fonts/hd_texture_font_{}.png", i);
-
-            if (MikuPan_GetFileSize(texture_path.c_str()) != 0)
-            {
-                SDL_Surface* surface = SDL_LoadPNG(texture_path.c_str());
-
-                if (surface != NULL)
-                {
-                    hd_fnt_texture_id[i] = MikuPan_GPUCreateTextureFromSurface(surface);
-
-                    SDL_DestroySurface(surface);
-                }
-            }
-        }
+        hd_fnt_texture_id[i] = MikuPanFonts::Texture(i, fnt_texture[i]->width,
+                                                    fnt_texture[i]->height);
     }
 
     MikuPan_SetHdFontTexturesEnabled(mikupan_configuration.renderer.hd_font_textures);

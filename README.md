@@ -225,5 +225,30 @@ and positions blocked by a different regional map are refused with an explanatio
 For a card containing multiple Fatal Frame regions, import an extracted folder
 or archive for the desired region.
 
+## HD font textures
+
+HD fonts are bundled for the US and EU versions. Enable **Use HD Fonts when
+available** in the Game settings, or **HD Font Textures (if available)** in
+ImGui. The original font is used when no matching replacement is available.
+
+Replacement packs go in `resources/fonts/<fingerprint>/` beside the executable.
+Each fingerprint identifies the original font, so different languages and
+modified fonts can use separate replacements.
+
+To export the original atlases for a replacement pack:
+
+```sh
+cmake --build build --target MikuPanFontTool
+./build/MikuPan/MikuPanFontTool --data path/to/game-data --region us --out font-originals
+```
+
+Use `--region eu` for the EU language sets, or `--pk2 path/to/font.pk2` instead
+of `--data` to export an individual font pack. The exporter leaves existing
+output folders untouched.
+
+Edit or upscale the exported PNGs, keeping their filenames, glyph layout and
+transparency. Uniform 1×, 2×, 3× and 4× sizes are supported. Copy the resulting
+fingerprint folder into `resources/fonts/` and restart the game.
+
 # Special Thanks
 Thank you to prinsep for making the logo!

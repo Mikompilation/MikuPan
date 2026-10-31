@@ -14,6 +14,7 @@
 #include "main/glob.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+#include "mikupan/rendering/mikupan_font_textures.h"
 #include "mikupan/rendering/mikupan_texture_slots.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 
@@ -314,7 +315,7 @@ void MakeFontTexSendPacket()
     MikuPan_SetupFntTexture();
 
 #ifdef BUILD_EU_VERSION
-    s_font_tex_uploaded_language = sys_wrk.language;
+    s_font_tex_uploaded_language = MikuPanFonts::LoadedLanguage();
 #endif
 }
 

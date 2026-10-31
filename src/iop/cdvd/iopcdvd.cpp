@@ -871,11 +871,13 @@ static int ICdvdTryWholeFileLoad(CDVD_REQ_BUF* req_bufp)
         name = file_name[req_bufp->file_no];
     }
 
-    /// Entries the texture bake rewrote are read from the texture pack.
-    if (!MikuPan_BakedTexture_ReadEntry(req_bufp->file_no,
+    // Font identities and glyphs must come from the same original source bytes.
+    const bool font = req_bufp->tmem == TRANS_MEM_EE &&
+        req_bufp->taddr == MikuPan_GetHostPointer(FontTextAddress);
+    if ((font || !MikuPan_BakedTexture_ReadEntry(req_bufp->file_no,
                                         (u_int)req_bufp->start_sector,
                                         (u_int)req_bufp->size_sector,
-                                        req_bufp->taddr)
+                                        req_bufp->taddr))
         && !ICdvdReadWholeNamedFile(name, req_bufp->taddr,
                                     (u_int)req_bufp->size_sector)
         && !ICdvdReadWholeArchiveFile(req_bufp))
@@ -884,10 +886,13 @@ static int ICdvdTryWholeFileLoad(CDVD_REQ_BUF* req_bufp)
     }
 
     /// 2D textures: each TIM2 picture names its texture id in its header.
-    MikuPan_BakedTexture_StampEntry(req_bufp->file_no,
-                                    (u_int)req_bufp->start_sector,
-                                    (u_int)req_bufp->size_sector,
-                                    req_bufp->taddr);
+    if (!font)
+    {
+        MikuPan_BakedTexture_StampEntry(req_bufp->file_no,
+                                        (u_int)req_bufp->start_sector,
+                                        (u_int)req_bufp->size_sector,
+                                        req_bufp->taddr);
+    }
 
     ICdvdFinishWholeFileLoad(req_bufp);
     return 1;

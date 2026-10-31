@@ -4,6 +4,7 @@
 #include "main/glob.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/rendering/mikupan_font_textures.h"
 #include "os/eeiop/eeiop.h"
 #include "typedefs.h"
 #include <stdint.h>
@@ -50,6 +51,7 @@ static void CdvdInitEe()
 {
     int i;
     
+    MikuPanFonts::ResetLoads();
     cdvd_rstat.start_pos = 0;
     cdvd_rstat.req_pos = 0;
     cdvd_rstat.com_num = 0;
@@ -159,6 +161,7 @@ int64_t LoadReqNSectorToHostPointer(int file_no, int sector, int size, void *hos
     {
         SetIopCmdLg(IC_CDVD_LOAD_SECT, file_no, sector, size,
                     (int64_t)(uintptr_t)host_addr, 0, ret, 0);
+        MikuPanFonts::LoadRequested(ret,file_no,host_addr,sector,size);
     }
     
     return ret;
@@ -306,6 +309,7 @@ static void RetireFinishedLoadIds()
 {
     while (cdvd_rstat.com_num != 0 && load_finish[cdvd_rstat.start_pos].stat == 0)
     {
+        MikuPanFonts::LoadCompleted(cdvd_rstat.start_pos);
         cdvd_rstat.start_pos = (cdvd_rstat.start_pos + 1) % 32;
         cdvd_rstat.com_num--;
     }
@@ -317,6 +321,7 @@ static void RetireLoadIdsThrough(int id)
     {
         int pos = cdvd_rstat.start_pos;
 
+        MikuPanFonts::LoadCompleted(pos);
         load_finish[pos].stat = 0;
         cdvd_rstat.start_pos = (cdvd_rstat.start_pos + 1) % 32;
         cdvd_rstat.com_num--;

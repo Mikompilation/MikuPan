@@ -312,6 +312,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/rendering/mikupan_shader.cpp
         src/mikupan/rendering/mikupan_sprite.cpp
         src/mikupan/rendering/mikupan_texture.cpp
+        src/mikupan/rendering/mikupan_font_identity.cpp
+        src/mikupan/rendering/mikupan_font_textures.cpp
         src/mikupan/rendering/mikupan_texture_slots.cpp
         src/mikupan/gs/mikupan_gs_memory.cpp
         src/mikupan/bake/mikupan_bake.cpp
@@ -368,6 +370,8 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/bake/mikupan_bake.cpp"
         "src/mikupan/bake/mikupan_bake_data.cpp"
         "src/mikupan/bake/mikupan_tim2.cpp"
+        "src/mikupan/rendering/mikupan_font_identity.cpp"
+        "src/mikupan/rendering/mikupan_font_textures.cpp"
         "src/mikupan/rendering/mikupan_baked_texture.cpp"
         "src/mikupan/rendering/mikupan_texture_slots.cpp"
         "src/mikupan/mikupan_audio_bus.cpp"
@@ -528,3 +532,12 @@ if(MIKUPAN_BUILD_TOOLS AND NOT ANDROID)
 endif()
 
 include(mikupan_android)
+
+# Optional exporter; shares the game's decoder and fingerprint format.
+add_executable(MikuPanFontTool EXCLUDE_FROM_ALL
+        tools/export_fonts.cpp
+        src/mikupan/rendering/mikupan_font_identity.cpp
+        src/mikupan/bake/mikupan_tim2.cpp)
+target_compile_features(MikuPanFontTool PRIVATE cxx_std_17)
+target_include_directories(MikuPanFontTool PRIVATE src)
+target_link_libraries(MikuPanFontTool PRIVATE SDL3::SDL3)
