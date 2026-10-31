@@ -205,12 +205,6 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
 {
     try
     {
-        if (files.size() != 5)
-        {
-            throw std::runtime_error(
-                "A gameplay save folder must contain three slots and two icon "
-                "files.");
-        }
         for (auto name : {"icon.sys", Icon})
         {
             if (!files.count(name))
@@ -223,7 +217,8 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
         bool identified = false;
         for (auto region : {SaveRegion::JP, SaveRegion::US, SaveRegion::EU})
         {
-            if (files.count(Name(0, region)))
+            if (files.count(Name(0, region)) || files.count(Name(1, region))
+                || files.count(Name(2, region)))
             {
                 if (identified)
                 {
@@ -247,22 +242,24 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
         }
         for (int i = 0; i < 3; ++i)
         {
+            auto& slot = result.slots[i];
             if (!files.count(Name(i, result.region)))
             {
-                throw std::runtime_error("Missing gameplay slot: "
-                                         + Name(i, result.region));
+                slot.issue = "Missing gameplay slot: " + Name(i, result.region);
+                slot.description = "Unavailable save";
+                continue;
             }
             const auto& data = files.at(Name(i, result.region));
-            auto& slot = result.slots[i];
+            slot.occupied = !Empty(data);
             if (data.size() != Ps2Size
                 && (!native_allowed
                     || (data.size() != NativeSize()
                         && data.size() != NativeSize() - 160)))
             {
-                throw std::runtime_error(
-                    "Unsupported save size/version for this build.");
+                slot.issue = "Unsupported save size/version for this build.";
+                slot.description = "Unavailable save";
+                continue;
             }
-            slot.occupied = !Empty(data);
             if (!slot.occupied)
             {
                 slot.description = "Empty";
@@ -270,14 +267,17 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
             }
             if (data.size() != Ps2Size && result.region != BuildRegion)
             {
-                throw std::runtime_error(
-                    "PC save files must match this build's region.");
+                slot.issue = "PC save files must match this build's region.";
+                slot.description = "Unavailable save";
+                continue;
             }
             if (!(data.size() == Ps2Size
-                      ? ValidateRegion(data, result.region, error)
-                      : Validate(data, error)))
+                      ? ValidateRegion(data, result.region, slot.issue)
+                      : Validate(data, slot.issue)))
             {
-                return false;
+                slot.issue += " This slot cannot be imported. Other compatible slots can still be selected.";
+                slot.description = "Unavailable save";
+                continue;
             }
             const auto* head = data.data() + 16;
             slot.player = "Miku";
@@ -296,6 +296,34 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
     }
     catch (const std::exception& e)
     {
+        // Keep identifiable damaged saves visible, but never transfer them.
+        Folder damaged;
+        unsigned regions = 0;
+        for (auto region : {SaveRegion::JP, SaveRegion::US, SaveRegion::EU})
+        {
+            if (files.count(Name(0, region)) || files.count(Name(1, region))
+                || files.count(Name(2, region)))
+            {
+                damaged.region = region;
+                ++regions;
+            }
+        }
+        if (regions == 1)
+        {
+            damaged.files = files;
+            damaged.issue = e.what();
+            for (int i = 0; i < 3; ++i)
+            {
+                auto& slot = damaged.slots[i];
+                const auto found = files.find(Name(i, damaged.region));
+                slot.occupied = found != files.end() && !Empty(found->second);
+                slot.description = "Unavailable save";
+                slot.issue = damaged.issue;
+            }
+            folder = std::move(damaged);
+            error.clear();
+            return true;
+        }
         error = e.what();
         return false;
     }
@@ -366,19 +394,7 @@ bool ReadStorage(const fs::path& path, StorageKind kind, bool native_allowed,
                     {
                         return false;
                     }
-                    if (directory != RegionFolder(SaveRegion::JP)
-                        && directory != RegionFolder(SaveRegion::US)
-                        && directory != RegionFolder(SaveRegion::EU))
-                    {
-                        throw std::runtime_error(
-                            "This archive is not a supported Fatal Frame "
-                            "gameplay save.");
-                    }
-                    if (!files.count(directory))
-                    {
-                        throw std::runtime_error(
-                            "Archive folder and save filenames disagree.");
-                    }
+                    // Archive display names can differ; the internal files identify the game/region.
                     result.has_save = true;
                 }
                 if (result.has_save
@@ -420,15 +436,23 @@ bool BuildBatch(const Folder& source, const Folder* destination,
         {
             throw std::runtime_error("Select between one and three saves.");
         }
-        Folder checked;
-        if (!InspectFiles(source.files, export_ps2, checked, error))
+        Folder checked_source, checked_destination;
+        if (!InspectFiles(source.files, export_ps2, checked_source, error))
         {
             return false;
         }
         if (destination
-            && !InspectFiles(destination->files, !export_ps2, checked, error))
+            && !InspectFiles(destination->files, !export_ps2, checked_destination, error))
         {
             return false;
+        }
+        if (!checked_source.issue.empty())
+        {
+            throw std::runtime_error(checked_source.issue);
+        }
+        if (destination && !checked_destination.issue.empty())
+        {
+            throw std::runtime_error(checked_destination.issue);
         }
         const auto region = export_ps2 ? output_region : BuildRegion;
         if (destination && destination->region != region)
@@ -453,7 +477,11 @@ bool BuildBatch(const Folder& source, const Folder* destination,
                 throw std::runtime_error(
                     "Each source and destination slot can be used only once.");
             }
-            if (!source.slots[slot.source].occupied)
+            if (!checked_source.slots[slot.source].issue.empty())
+            {
+                throw std::runtime_error(checked_source.slots[slot.source].issue);
+            }
+            if (!checked_source.slots[slot.source].occupied)
             {
                 throw std::runtime_error("Cannot transfer an empty slot.");
             }
@@ -484,7 +512,14 @@ bool BuildBatch(const Folder& source, const Folder* destination,
             }
             next.files[Name(slot.destination, region)] = std::move(payload);
         }
-        return InspectFiles(next.files, !export_ps2, result, error);
+        if (!InspectFiles(next.files, !export_ps2, result, error)) return false;
+        if (!result.issue.empty()) throw std::runtime_error(result.issue);
+        for (const auto& slot : slots)
+        {
+            if (!result.slots[slot.destination].issue.empty())
+                throw std::runtime_error(result.slots[slot.destination].issue);
+        }
+        return true;
     }
     catch (const std::exception& e)
     {

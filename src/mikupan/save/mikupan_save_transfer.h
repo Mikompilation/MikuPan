@@ -12,6 +12,7 @@ struct SlotInfo
 {
     bool occupied = false;
     std::string description;
+    std::string issue;
     std::string player;
     unsigned chapter = 0, hours = 0, minutes = 0, seconds = 0;
     int area = 0, place = 0;
@@ -19,6 +20,7 @@ struct SlotInfo
 };
 struct Folder
 {
+    std::string issue;
     SaveRegion region = BuildRegion;
     std::map<std::string, Bytes> files;
     std::array<SlotInfo, 3> slots;

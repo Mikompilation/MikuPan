@@ -270,10 +270,17 @@ std::string Unavailable(bool require_selection = true,
     {
         return {};
     }
+    if (!target.save.issue.empty())
+    {
+        return "Destination saves are damaged: " + target.save.issue;
+    }
     const auto slots = Mappings();
     if (slots.empty())
     {
-        return "Select one or more source saves.";
+        const bool any = std::any_of(source.save.slots.begin(), source.save.slots.end(),
+            [](const SlotInfo& slot) { return slot.occupied && slot.issue.empty(); });
+        return any ? "Select one or more source saves."
+                   : "No compatible saves. Open a warning icon for details.";
     }
     std::set<int> used;
     for (const auto& s : slots)
@@ -550,7 +557,7 @@ void Rows(bool is_source)
         ImGui::BeginGroup();
         if (is_source)
         {
-            ImGui::BeginDisabled(!slot.occupied || !source_ok);
+            ImGui::BeginDisabled(!slot.occupied || !slot.issue.empty() || !source_ok);
             if (ImGui::Checkbox("##select", &selected[i]))
             {
                 if (!selected[i])
@@ -569,6 +576,43 @@ void Rows(bool is_source)
             ImGui::SameLine();
         }
         ImGui::Text("%d", i + 1);
+        ImGui::SameLine();
+        if (!slot.issue.empty())
+        {
+            const float side = ImGui::GetFrameHeight();
+            const ImVec2 at = ImGui::GetCursorScreenPos();
+            const bool clicked = ImGui::InvisibleButton("warning", ImVec2(side, side));
+            auto* draw = ImGui::GetWindowDrawList();
+            draw->AddTriangleFilled(ImVec2(at.x + side * .5f, at.y),
+                                    ImVec2(at.x + side, at.y + side),
+                                    ImVec2(at.x, at.y + side), IM_COL32(220, 55, 45, 255));
+            const ImVec2 text = ImGui::CalcTextSize("!");
+            draw->AddText(ImVec2(at.x + (side - text.x) * .5f, at.y + side - text.y),
+                          IM_COL32(255, 255, 255, 255), "!");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 28);
+                ImGui::TextUnformatted(slot.issue.c_str());
+                ImGui::PopTextWrapPos();
+                ImGui::EndTooltip();
+            }
+            if (clicked)
+            {
+                ImGui::OpenPopup("Save issue");
+            }
+            if (ImGui::BeginPopup("Save issue"))
+            {
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 28);
+                ImGui::TextUnformatted(slot.issue.c_str());
+                ImGui::PopTextWrapPos();
+                ImGui::EndPopup();
+            }
+        }
+        else
+        {
+            ImGui::Dummy(ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
+        }
         ImGui::EndGroup();
         ImGui::SameLine();
         const auto& preview =
@@ -576,7 +620,11 @@ void Rows(bool is_source)
         MikuPanUiSavePreview::Draw(preview, ImVec2(116, 58));
         ImGui::SameLine();
         ImGui::BeginGroup();
-        if (preview.occupied)
+        if (preview.description == "Unavailable save")
+        {
+            ImGui::TextDisabled("Unavailable save");
+        }
+        else if (preview.occupied)
         {
             ImGui::TextUnformatted(preview.player.c_str());
             ImGui::Text("Chapter %u / Room %d", preview.chapter, preview.area);
@@ -607,7 +655,7 @@ void Rows(bool is_source)
             ImGui::TextDisabled("%s", slot.occupied ? "Keep existing save"
                                                     : "Empty slot");
         }
-        if (is_source && slot.occupied && source_ok && ImGui::IsWindowHovered()
+        if (is_source && slot.occupied && slot.issue.empty() && source_ok && ImGui::IsWindowHovered()
             && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
             && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
         {
@@ -828,7 +876,7 @@ void Draw(SDL_Window* window)
         const int available = int(std::count_if(source.save.slots.begin(),
                                                 source.save.slots.end(),
                                                 [](const SlotInfo& slot) {
-                                                    return slot.occupied;
+                                                    return slot.occupied && slot.issue.empty();
                                                 }));
         ImGui::Text("%d of %d saves selected", count, available);
         ImGui::SameLine();
@@ -836,7 +884,8 @@ void Draw(SDL_Window* window)
         {
             for (int i = 0; i < 3; ++i)
             {
-                selected[i] = source_ok && source.save.slots[i].occupied;
+                selected[i] = source_ok && source.save.slots[i].occupied
+                              && source.save.slots[i].issue.empty();
             }
             AssignEmptySlots();
         }
