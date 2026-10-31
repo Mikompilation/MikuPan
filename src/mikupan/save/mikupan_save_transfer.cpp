@@ -187,8 +187,7 @@ bool Inspect(const fs::path& path, bool native_allowed, Folder& folder,
             }
             if (!names.count(n))
             {
-                throw std::runtime_error("Unexpected file in save folder: "
-                                         + n);
+                continue;
             }
             result.files[n] = Read(e.path());
         }
@@ -556,6 +555,12 @@ void CommitFolder(const Storage& expected, const Folder& folder, bool native,
         if (!fs::create_directory(stage))
         {
             throw std::runtime_error("Cannot create staging directory.");
+        }
+        // Preserve preview caches and unrelated files when replacing the folder.
+        if (expected.exists)
+        {
+            fs::copy(dest, stage, fs::copy_options::recursive
+                                     | fs::copy_options::copy_symlinks);
         }
         WriteFolder(stage, folder, native);
         Folder verified;
