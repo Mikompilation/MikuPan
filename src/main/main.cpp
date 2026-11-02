@@ -98,7 +98,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
     MikuPan_TryInitializeGame();
 
-    MikuPan_FrameLimiter_Init(&frame_limiter, 20000.0f);
+    MikuPan_FrameLimiter_Init(&frame_limiter, 60.0f);
 
     return result;
 }
