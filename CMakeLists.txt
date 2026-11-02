@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28.0)
+cmake_minimum_required(VERSION 3.25)
 project(MikuPan LANGUAGES C CXX)
 
 if (NOT MSVC)
@@ -9,6 +9,11 @@ endif()
 if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "-static")
     set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/extern/icon.rc")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # The Steam Runtime 3 SDK's gcc-14 has a newer C++ runtime than older
+    # distros carry, so link it in. Keep glibc dynamic: SDL dlopens the GPU
+    # drivers and windowing libraries through it.
+    string(APPEND CMAKE_EXE_LINKER_FLAGS " -static-libstdc++ -static-libgcc")
 endif()
 
 option(BUILD_EU_VERSION "Build the PAL/EU version data and code paths." OFF)

@@ -218,6 +218,7 @@ else()
             CONFIGURE_COMMAND
                 ${BASH_EXECUTABLE} <SOURCE_DIR>/configure
                 --prefix=${FFMPEG_ROOT}
+                --cc=${CMAKE_C_COMPILER}
                 --disable-shared
                 --enable-static
                 --disable-programs

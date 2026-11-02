@@ -79,12 +79,19 @@ jobs:
     # Don't run the schedule on forks.
     if: ${{ github.repository == 'Mikompilation/MikuPan' }}
     runs-on: ${{ matrix.sys.os }}
+    # Empty for Windows and macOS, which run on the host.
+    container: ${{ matrix.sys.container }}
     strategy:
       fail-fast: false
       matrix:
         sys:
           - { os: windows-latest, shell: pwsh, name: windows }
-          - { os: ubuntu-latest,  shell: bash, name: linux  }
+          # Linux builds inside Valve's Steam Runtime 3 "sniper" SDK (Debian 11,
+          # glibc 2.31), not on the runner: a binary needs at least the glibc it
+          # was linked against, and ubuntu-latest's is newer than SteamOS's.
+          # Pin the tested SDK image so local builds and CI use the same environment.
+          - { os: ubuntu-latest,  shell: bash, name: linux,
+              container: 'registry.gitlab.steamos.cloud/steamrt/sniper/sdk@sha256:bb30053d3cd19d35c76ae69b2790dbaa1430448006f8240cb6d7e723f2d1940e' }
           - { os: macos-latest,   shell: bash, name: macos  }
     defaults:
       run:
@@ -116,14 +123,6 @@ jobs:
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-ninja
 
-      - name: Install Dependencies
-        if: ${{ matrix.sys.os == 'ubuntu-latest' }}
-        run: |
-          sudo apt update
-          sudo apt install zip libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev build-essential git make pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev
-          sudo apt update
-          sudo apt upgrade
-
       - name: Build (Windows / MinGW)
         if: ${{ matrix.sys.os == 'windows-latest' }}
         shell: msys2 {0}
@@ -132,8 +131,28 @@ jobs:
           cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_STATIC=${{ env.BUILD_STATIC }} -DMIKUPAN_COMPILE_SHADERS=OFF
           cmake --build build -j 12 --target MikuPan
 
-      - name: Build (Unix)
-        if: ${{ matrix.sys.os != 'windows-latest' }}
+      # The SDK already carries CMake, Ninja and every SDL development package.
+      # Its default gcc is 10; gcc-14 is the newer one it ships.
+      - name: Build (Linux / Steam Runtime)
+        if: ${{ matrix.sys.os == 'ubuntu-latest' }}
+        shell: bash
+        env:
+          CC: gcc-14
+          CXX: g++-14
+        run: |
+          git config --global --add safe.directory '*'
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF
+          cmake --build build --target MikuPan
+
+      # Guard the Steam Runtime 3 floor: newer GLIBC symbols or dynamic C++
+      # runtimes can prevent the binary from starting on SteamOS or older distros.
+      - name: Check Linux compatibility
+        if: ${{ matrix.sys.os == 'ubuntu-latest' }}
+        shell: bash
+        run: bash .github/scripts/check-linux-abi.sh build/MikuPan/MikuPan
+
+      - name: Build (macOS)
+        if: ${{ matrix.sys.os == 'macos-latest' }}
         run: |
           cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=${{env.BUILD_STATIC}} -DMIKUPAN_COMPILE_SHADERS=OFF
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target MikuPan
