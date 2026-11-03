@@ -60,6 +60,9 @@ jobs:
     container: ${{ matrix.sys.container }}
     strategy:
       matrix:
+        region:
+          - { name: US, eu: "OFF" }
+          - { name: EU, eu: "ON" }
         sys:
           - { os: windows-latest, shell: pwsh, name: windows }
           # Linux builds inside Valve's Steam Runtime 3 "sniper" SDK (Debian 11,
@@ -104,7 +107,7 @@ jobs:
         shell: msys2 {0}
         run: |
           git config --global --add safe.directory '*'
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_STATIC=${{ env.BUILD_STATIC }} -DMIKUPAN_COMPILE_SHADERS=OFF
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_STATIC=${{ env.BUILD_STATIC }} -DMIKUPAN_COMPILE_SHADERS=OFF -DBUILD_EU_VERSION=${{ matrix.region.eu }}
           cmake --build build -j 12 --target MikuPan
 
       # The SDK already carries CMake, Ninja and every SDL development package.
@@ -117,7 +120,7 @@ jobs:
           CXX: g++-14
         run: |
           git config --global --add safe.directory '*'
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF -DBUILD_EU_VERSION=${{ matrix.region.eu }}
           cmake --build build --target MikuPan
 
       # Guard the Steam Runtime 3 floor: newer GLIBC symbols or dynamic C++
@@ -130,7 +133,7 @@ jobs:
       - name: Build (macOS)
         if: ${{ matrix.sys.os == 'macos-latest' }}
         run: |
-          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=${{env.BUILD_STATIC}} -DMIKUPAN_COMPILE_SHADERS=OFF
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=${{env.BUILD_STATIC}} -DMIKUPAN_COMPILE_SHADERS=OFF -DBUILD_EU_VERSION=${{ matrix.region.eu }}
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 12 --target MikuPan
 
       - name: Zip Windows App
@@ -138,20 +141,20 @@ jobs:
         working-directory: build
         shell: pwsh
         run: |
-          Compress-Archive -Path MikuPan/* -DestinationPath MikuPan_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip
+          Compress-Archive -Path MikuPan/* -DestinationPath MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip
 
       - name: Zip OSX App
         if: ${{ matrix.sys.os == 'macos-latest' }}
         working-directory: build/
         shell: pwsh
         run: |
-          Get-ChildItem -Path MikuPan/* | Compress-Archive -DestinationPath MikuPan_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip
+          Get-ChildItem -Path MikuPan/* | Compress-Archive -DestinationPath MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip
 
       - name: Zip Ubuntu App
         if: ${{ matrix.sys.os == 'ubuntu-latest' }}
         working-directory: build
         run: |
-          zip -r MikuPan_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip MikuPan/*
+          zip -r MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip MikuPan/*
 
       - name: Release
         uses: ncipollo/release-action@a2e71bdd4e7dab70ca26a852f29600c98b33153e
@@ -161,4 +164,4 @@ jobs:
           replacesArtifacts: false
           name: "MikuPan v${{ github.event.inputs.version }}"
           tag: "v${{ github.event.inputs.version }}"
-          artifacts: build/MikuPan_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip
+          artifacts: build/MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_v${{ github.event.inputs.version }}.zip

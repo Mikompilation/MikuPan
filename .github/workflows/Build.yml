@@ -57,6 +57,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        region:
+          - { name: US, eu: "OFF" }
+          - { name: EU, eu: "ON" }
         sys:
           - { os: windows-latest, name: windows }
           # Linux builds inside Valve's Steam Runtime 3 "sniper" SDK (Debian 11,
@@ -99,7 +102,7 @@ jobs:
       shell: msys2 {0}
       run: |
         git config --global --add safe.directory '*'
-        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF -DBUILD_EU_VERSION=${{ matrix.region.eu }}
         cmake --build build --target MikuPan
 
     # The SDK already carries CMake, Ninja and every SDL development package.
@@ -112,7 +115,7 @@ jobs:
         CXX: g++-14
       run: |
         git config --global --add safe.directory '*'
-        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF -DBUILD_EU_VERSION=${{ matrix.region.eu }}
         cmake --build build --target MikuPan
 
     # Guard the Steam Runtime 3 floor: newer GLIBC symbols or dynamic C++
@@ -125,7 +128,7 @@ jobs:
     - name: Build (macOS)
       if: ${{ matrix.sys.os == 'macos-latest' }}
       run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF
+        cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF -DBUILD_EU_VERSION=${{ matrix.region.eu }}
         cmake --build build --config ${{ env.BUILD_TYPE }} --target MikuPan
 
     - name: Zip Windows App
@@ -133,23 +136,23 @@ jobs:
       working-directory: build
       shell: pwsh
       run: |
-        Compress-Archive -Path MikuPan/* -DestinationPath MikuPan_${{ matrix.sys.name }}_build.zip
+        Compress-Archive -Path MikuPan/* -DestinationPath MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_build.zip
 
     - name: Zip macOS App
       if: ${{ matrix.sys.os == 'macos-latest' }}
       working-directory: build
       run: |
-        zip -r MikuPan_${{ matrix.sys.name }}_build.zip MikuPan/*
+        zip -r MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_build.zip MikuPan/*
 
     - name: Zip Ubuntu App
       if: ${{ matrix.sys.os == 'ubuntu-latest' }}
       working-directory: build
       run: |
-        zip -r MikuPan_${{ matrix.sys.name }}_build.zip MikuPan/*
+        zip -r MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_build.zip MikuPan/*
 
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
-        name: MikuPan-${{ matrix.sys.name }}-build
+        name: MikuPan-${{ matrix.region.name }}-${{ matrix.sys.name }}-build
         if-no-files-found: error
-        path: build/MikuPan_${{ matrix.sys.name }}_build.zip
+        path: build/MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_build.zip
