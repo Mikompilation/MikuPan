@@ -1,5 +1,6 @@
 #include "typedefs.h"
 #include "mikupan_ui_debug.h"
+#include "mikupan_ui.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
@@ -1877,8 +1878,12 @@ void MikuPan_UiDebugMenuRender(void)
             }
             igTextDisabled("Writes to resources/mods/text/<lang>/game_text.po");
 
-            igCheckbox("Enable Text Override",
-                       (bool*) &mikupan_configuration.text_mods_enabled);
+            bool text_override_enabled = mikupan_configuration.text_mods_enabled != 0;
+            if (igCheckbox("Enable Text Override", &text_override_enabled))
+            {
+                mikupan_configuration.text_mods_enabled = text_override_enabled;
+                MikuPan_SaveConfigurationFromUi();
+            }
             igTextDisabled("Applies overrides from resources/mods/text/<lang>/game_text.po in-game");
 
             igEndMenu();
