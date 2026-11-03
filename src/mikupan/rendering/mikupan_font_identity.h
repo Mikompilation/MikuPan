@@ -21,5 +21,6 @@ constexpr std::array<uint64_t, BankCount> BankTex0 = {
 bool Decode(const uint8_t *data, size_t size, const std::array<uint64_t, BankCount> &tex0,
             Atlases &atlases, std::string &error);
 std::string Fingerprint(const Atlases &atlases);
+std::string HashBytes(const uint8_t *data, size_t size);
 }
 #endif

@@ -13,6 +13,7 @@
 #include "graphics/graph3d/sgdma.h"
 #include "main/glob.h"
 #include "mikupan/mikupan_memory.h"
+#include "mikupan/mikupan_textoverride.h"
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/rendering/mikupan_font_textures.h"
 #include "mikupan/rendering/mikupan_texture_slots.h"
@@ -832,7 +833,7 @@ void DrawAll2DMes_P2()
 #ifdef BUILD_EU_VERSION
 void SendFontTex()
 {
-    if (sys_wrk.language != 0)
+    if (sys_wrk.language != 0 || MikuPan_EnglishSubtitlesReady())
     {
         tm2_end_pkt[0] = DMAend;
         tm2_end_pkt[1] = 0;

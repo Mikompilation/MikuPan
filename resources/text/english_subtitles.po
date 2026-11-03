@@ -1,0 +1,815 @@
+# Complete English EU subtitles. Message IDs match the original subtitle timelines.
+
+msgid "ig_msg#53#0"
+msgstr "DUMMY MESSAGE"
+
+msgid "ig_msg#53#1"
+msgstr "I wonder how long it's been\\nsince my brother and I"
+
+msgid "ig_msg#53#2"
+msgstr "began to see things\\nother people can't see."
+
+msgid "ig_msg#53#3"
+msgstr "My big brother..."
+
+msgid "ig_msg#53#4"
+msgstr "he was so sweet and kind."
+
+msgid "ig_msg#53#5"
+msgstr "He was the only one i could\\nopen up to about these visions."
+
+msgid "ig_msg#53#6"
+msgstr "After our mother died,"
+
+msgid "ig_msg#53#7"
+msgstr "he was my only family."
+
+msgid "ig_msg#53#8"
+msgstr "So this is Himuro Mansion."
+
+msgid "ig_msg#53#9"
+msgstr "My brother was in search of someone."
+
+msgid "ig_msg#53#10"
+msgstr "Junsei Takamine,\\na famous novelist"
+
+msgid "ig_msg#53#11"
+msgstr "and a man my brother\\nwas very indebted to,"
+
+msgid "ig_msg#53#12"
+msgstr "disappeared while\\nresearching a book."
+
+msgid "ig_msg#53#13"
+msgstr "When he told me that he got a lead\\non Takamine's whereabouts,"
+
+msgid "ig_msg#53#14"
+msgstr "I felt uneasy"
+
+msgid "ig_msg#53#15"
+msgstr "like he was going far away."
+
+msgid "ig_msg#53#16"
+msgstr " \\nSeptember 24, 1986"
+
+msgid "ig_msg#53#17"
+msgstr "This notebook...\\nIt's Mr. Takamine's."
+
+msgid "ig_msg#53#18"
+msgstr "That was Mr. Takamine...\\nSo he did come here."
+
+msgid "ig_msg#53#19"
+msgstr "Miku!"
+
+msgid "ig_msg#53#20"
+msgstr "It's been two weeks since I\\nlast heard from my brother."
+
+msgid "ig_msg#53#21"
+msgstr "But he left a note that\\nled me to this place."
+
+msgid "ig_msg#53#22"
+msgstr "I felt as though...something\\nwas calling me here."
+
+msgid "ig_msg#53#23"
+msgstr "Mafuyu..."
+
+msgid "ig_msg#53#24"
+msgstr "My brother was here."
+
+msgid "ig_msg#53#25"
+msgstr "What is this place?"
+
+msgid "ig_msg#53#26"
+msgstr "Help..."
+
+msgid "ig_msg#53#27"
+msgstr "Did someone just...?"
+
+msgid "ig_msg#53#28"
+msgstr "I wonder if we'll find\\nanything here."
+
+msgid "ig_msg#53#29"
+msgstr "It's cold."
+
+msgid "ig_msg#53#30"
+msgstr "What a wreck."
+
+msgid "ig_msg#53#31"
+msgstr "Did something happen to\\nmy brother?"
+
+msgid "ig_msg#53#32"
+msgstr "Just like in the photo."
+
+msgid "ig_msg#53#33"
+msgstr "What was that?"
+
+msgid "ig_msg#53#34"
+msgstr "Hey."
+
+msgid "ig_msg#53#35"
+msgstr "Help me!"
+
+msgid "ig_msg#53#36"
+msgstr "Should I take a photo?"
+
+msgid "ig_msg#53#37"
+msgstr "It's that person I just saw."
+
+msgid "ig_msg#53#38"
+msgstr "The ropes."
+
+msgid "ig_msg#53#39"
+msgstr "Mafuyu!"
+
+msgid "ig_msg#53#40"
+msgstr "Wait!"
+
+msgid "ig_msg#53#41"
+msgstr "Help me!"
+
+msgid "ig_msg#53#42"
+msgstr "Mr. Takamine!"
+
+msgid "ig_msg#53#43"
+msgstr "Kirie..."
+
+msgid "ig_msg#53#44"
+msgstr "Tell him...tell him..."
+
+msgid "ig_msg#53#45"
+msgstr "Tell him what?"
+
+msgid "ig_msg#53#46"
+msgstr "Why...?"
+
+msgid "ig_msg#53#47"
+msgstr "Is this the Holy Mirror?"
+
+msgid "ig_msg#53#48"
+msgstr "It's just a piece of it."
+
+msgid "ig_msg#53#49"
+msgstr "I'll make you feel my pain."
+
+msgid "ig_msg#53#50"
+msgstr "A demon!"
+
+msgid "ig_msg#53#51"
+msgstr "A new demon!"
+
+msgid "ig_msg#53#52"
+msgstr "Quick! Find him!"
+
+msgid "ig_msg#53#53"
+msgstr "Look around..."
+
+msgid "ig_msg#53#54"
+msgstr "The rope?"
+
+msgid "ig_msg#53#55"
+msgstr "No!"
+
+msgid "ig_msg#53#56"
+msgstr "That mirror!"
+
+msgid "ig_msg#53#57"
+msgstr "Give it back!"
+
+msgid "ig_msg#53#58"
+msgstr "I came to research the\\nHimuro family's secret\\nritual because..."
+
+msgid "ig_msg#53#59"
+msgstr "this blinding mask is the\\nkey to the door."
+
+msgid "ig_msg#53#60"
+msgstr "The altar's got to be\\nbehind this door."
+
+msgid "ig_msg#53#61"
+msgstr "Mom..."
+
+msgid "ig_msg#53#62"
+msgstr "Mom!"
+
+msgid "ig_msg#53#63"
+msgstr "Why?\\nWhat happened?"
+
+msgid "ig_msg#53#64"
+msgstr "Yae..."
+
+msgid "ig_msg#53#65"
+msgstr "How could this be?"
+
+msgid "ig_msg#53#66"
+msgstr "Mom?"
+
+msgid "ig_msg#53#67"
+msgstr "What's that?"
+
+msgid "ig_msg#53#68"
+msgstr "My eyes!"
+
+msgid "ig_msg#53#69"
+msgstr "My eyes!"
+
+msgid "ig_msg#53#70"
+msgstr "What was that?"
+
+msgid "ig_msg#53#71"
+msgstr "It's so dark..."
+
+msgid "ig_msg#53#72"
+msgstr "It's Mafuyu!"
+
+msgid "ig_msg#53#73"
+msgstr "The door is finally opening."
+
+msgid "ig_msg#53#74"
+msgstr "It's another piece of the Mirror."
+
+msgid "ig_msg#53#75"
+msgstr "Kirie!"
+
+msgid "ig_msg#53#76"
+msgstr "It's dark! It's so dark!"
+
+msgid "ig_msg#53#77"
+msgstr "These photos..."
+
+msgid "ig_msg#53#78"
+msgstr "They're exactly the same\\nas the ones Mom took."
+
+msgid "ig_msg#53#79"
+msgstr "Were they taken with\\nthis camera?"
+
+msgid "ig_msg#53#80"
+msgstr "Mafuyu..."
+
+msgid "ig_msg#53#81"
+msgstr "Mafuyu!"
+
+msgid "ig_msg#53#82"
+msgstr "Don't you recognize me?"
+
+msgid "ig_msg#53#83"
+msgstr "Down here...?"
+
+msgid "ig_msg#53#84"
+msgstr "No! Kirie!"
+
+msgid "ig_msg#53#85"
+msgstr "This way!"
+
+msgid "ig_msg#53#86"
+msgstr "We need to hurry!"
+
+msgid "ig_msg#53#87"
+msgstr "Please! Please make it stop!"
+
+msgid "ig_msg#53#88"
+msgstr "Stop me!"
+
+msgid "ig_msg#53#89"
+msgstr "Who are you?"
+
+msgid "ig_msg#53#90"
+msgstr "I don't want to die."
+
+msgid "ig_msg#53#91"
+msgstr ""
+
+msgid "ig_msg#53#92"
+msgstr "I want to see him one more time!"
+
+msgid "ig_msg#53#93"
+msgstr "Stop..."
+
+msgid "ig_msg#53#94"
+msgstr "No...!"
+
+msgid "ig_msg#53#95"
+msgstr "Mafuyu...!"
+
+msgid "ig_msg#53#96"
+msgstr "Miku..."
+
+msgid "ig_msg#53#97"
+msgstr "We...will always be together!"
+
+msgid "ig_msg#53#98"
+msgstr "It's the last piece of the Mirror."
+
+msgid "ig_msg#53#99"
+msgstr "Mafuyu! Thank goodness!"
+
+msgid "ig_msg#53#100"
+msgstr "Don't forget your duty."
+
+msgid "ig_msg#53#101"
+msgstr "My duty is to keep\\nthis door closed."
+
+msgid "ig_msg#53#102"
+msgstr "Leave this gate to me."
+
+msgid "ig_msg#53#103"
+msgstr "The rest of you hurry and escape!"
+
+msgid "ig_msg#53#104"
+msgstr "But what about you?"
+
+msgid "ig_msg#53#105"
+msgstr "I must stop the Calamity,\\nor else it will happen again."
+
+msgid "ig_msg#53#106"
+msgstr "Don't worry about me.\\nYou must go!"
+
+msgid "ig_msg#53#107"
+msgstr "Mafuyu, come on!"
+
+msgid "ig_msg#53#108"
+msgstr "Miku,"
+
+msgid "ig_msg#53#109"
+msgstr "I must stay."
+
+msgid "ig_msg#53#110"
+msgstr "What are you saying?"
+
+msgid "ig_msg#53#111"
+msgstr "I think I can help her."
+
+msgid "ig_msg#53#112"
+msgstr "Miku, you go out without me."
+
+msgid "ig_msg#53#113"
+msgstr "Miku..."
+
+msgid "ig_msg#53#114"
+msgstr "the whole time Kirie was\\nguiding me, I could hear\\nher screaming..."
+
+msgid "ig_msg#53#115"
+msgstr "Screaming for help."
+
+msgid "ig_msg#53#116"
+msgstr "As the Rope Shrine Maiden, she\\nwas destined to seal the gate."
+
+msgid "ig_msg#53#117"
+msgstr "Yet she also wanted to be\\nwith the one she loved."
+
+msgid "ig_msg#53#118"
+msgstr "But she couldn't have both,\\nand was being torn apart\\nby those two feelings,"
+
+msgid "ig_msg#53#119"
+msgstr "which resulted in the Calamity."
+
+msgid "ig_msg#53#120"
+msgstr "Her spirit was touched by the Malice,\\nand she became a creature that wanted\\nto make others suffer as she had."
+
+msgid "ig_msg#53#121"
+msgstr "Now free of the Malice, she is\\nabout to fulfill her duties as\\nthe Rope Shrine Maiden."
+
+msgid "ig_msg#53#122"
+msgstr "Her soul must remain here,\\nkeeping this gate sealed off\\nfor all eternity."
+
+msgid "ig_msg#53#123"
+msgstr "All alone..."
+
+msgid "ig_msg#53#124"
+msgstr "Endless pain."
+
+msgid "ig_msg#53#125"
+msgstr "As long as she is free of pain,"
+
+msgid "ig_msg#53#126"
+msgstr "as long as she is not left hopeless,"
+
+msgid "ig_msg#53#127"
+msgstr "I wish...to be by her side."
+
+msgid "ig_msg#53#128"
+msgstr "...Miku."
+
+msgid "ig_msg#53#129"
+msgstr "Mafuyu..."
+
+msgid "ig_msg#53#130"
+msgstr "Look!"
+
+msgid "ig_msg#53#131"
+msgstr "Their souls are all going back\\nto where they belong."
+
+msgid "ig_msg#53#132"
+msgstr "Miku..."
+
+msgid "ig_msg#53#133"
+msgstr "I now realize why I was\\nbrought here,"
+
+msgid "ig_msg#53#134"
+msgstr "and I will accept this destiny of mine."
+
+msgid "ig_msg#53#135"
+msgstr "Miku..."
+
+msgid "ig_msg#53#136"
+msgstr "Thank you...for everything."
+
+msgid "ig_msg#53#137"
+msgstr "Ever since that day, I stopped\\nseeing things that other people\\ndon't see."
+
+msgid "ig_msg#53#138"
+msgstr "Mafuyu! Thank goodness!"
+
+msgid "ig_msg#53#139"
+msgstr "Don't forget your duty."
+
+msgid "ig_msg#53#140"
+msgstr "My duty is to keep\\nthis gate closed..."
+
+msgid "ig_msg#53#141"
+msgstr "Leave this gate to me..."
+
+msgid "ig_msg#53#142"
+msgstr "the rest of you hurry and escape!"
+
+msgid "ig_msg#53#143"
+msgstr "But what about you..."
+
+msgid "ig_msg#53#144"
+msgstr "I must stop the Calamity,\\nor else it will happen again."
+
+msgid "ig_msg#53#145"
+msgstr "Don't worry about me.\\nYou must go!"
+
+msgid "ig_msg#53#146"
+msgstr "Mafuyu, come on!"
+
+msgid "ig_msg#53#147"
+msgstr "Look!"
+
+msgid "ig_msg#53#148"
+msgstr "Their souls are all going back\\nto where they belong."
+
+msgid "ig_msg#53#149"
+msgstr "Kirie..."
+
+msgid "ig_msg#53#150"
+msgstr "She was always struggling for life."
+
+msgid "ig_msg#53#151"
+msgstr "Her soul must remain there, keeping\\nthe gate sealed off for all eternity."
+
+msgid "ig_msg#53#152"
+msgstr "She had to sacrifice everything."
+
+msgid "ig_msg#53#153"
+msgstr "These souls may rest in peace, but her soul\\nwill always suffer."
+
+msgid "ig_msg#53#154"
+msgstr "Forever and ever..."
+
+msgid "ig_msg#53#155"
+msgstr "Ever since that day, we stopped seeing\\nthings that other people don't see."
+
+msgid "ig_msg#53#156"
+msgstr "September 9th, 5:40 PM"
+
+msgid "ig_msg#53#157"
+msgstr "The mansion was nowhere to be\\nseen on the map, so we finally had\\nto ask the locals how to find it."
+
+msgid "ig_msg#53#158"
+msgstr "They told us that Himuro\\nMansion had been empty\\nfor several decades now."
+
+msgid "ig_msg#53#159"
+msgstr "The same ones who told us where it\\nwas also warned us not to come here,\\nwhich was quite disconcerting."
+
+msgid "ig_msg#53#160"
+msgstr "September 9th, 9:40 PM"
+
+msgid "ig_msg#53#161"
+msgstr "It seemed dangerous to walk through the\\nmountain at night, so we decided to spend\\nthe night here and continue our work."
+
+msgid "ig_msg#53#162"
+msgstr "I've been through several rooms already.\\nUnlike the exterior, the interior\\nis still in quite good shape."
+
+msgid "ig_msg#53#163"
+msgstr "A little earlier, I thought I saw\\na white shadowy figure of a woman\\nin the hallway near the entrance."
+
+msgid "ig_msg#53#164"
+msgstr "I'll keep track of such sightings\\nand publish them in a later account."
+
+msgid "ig_msg#53#165"
+msgstr "September 10th, 10:20 AM"
+
+msgid "ig_msg#53#166"
+msgstr "We discovered some disturbing\\nphotos in a chest of drawers."
+
+msgid "ig_msg#53#167"
+msgstr "Could these be the folklorist's\\nchildren mentioned in Koji's notes?"
+
+msgid "ig_msg#53#168"
+msgstr "The photo is quite old and\\nshows some kids playing tag."
+
+msgid "ig_msg#53#169"
+msgstr "In the corner of the photo,\\nthere is a faint image of a\\nyoung girl in a white kimono."
+
+msgid "ig_msg#53#170"
+msgstr "Her finger is pointed this way,\\nand her eyes look as if she's\\nmaking some silent accusation."
+
+msgid "ig_msg#53#171"
+msgstr "September 11th, 8:16 PM"
+
+msgid "ig_msg#53#172"
+msgstr "We looked all over the mansion,\\nbut we still couldn't find Koji."
+
+msgid "ig_msg#53#173"
+msgstr "While true that this mansion is huge,\\nI'm certain we would've found him by now.\\nCould he have already left?"
+
+msgid "ig_msg#53#174"
+msgstr "He's been saying something about\\n\"more ropes\", since we took some\\nphotos yesterday."
+
+msgid "ig_msg#53#175"
+msgstr "September 12th, 9:00 AM"
+
+msgid "ig_msg#53#176"
+msgstr "I found Koji."
+
+msgid "ig_msg#53#177"
+msgstr "His death was just like the\\none in the mountain village."
+
+msgid "ig_msg#53#178"
+msgstr "His head and limbs were severed."
+
+msgid "ig_msg#53#179"
+msgstr "I can't believe what's happening!"
+
+msgid "ig_msg#53#180"
+msgstr "Since we met that girl, I've\\nseen many strange visions."
+
+msgid "ig_msg#53#181"
+msgstr "All the ghosts in the mansion\\nhowl and scream at me."
+
+msgid "ig_msg#53#182"
+msgstr "I don't think they'll ever\\nlet me out of this mansion."
+
+msgid "ig_msg#53#183"
+msgstr "I don't even know how long\\nI can hold on to my sanity."
+
+msgid "ig_msg#53#184"
+msgstr "Anyway, I'm leaving this tape."
+
+msgid "ig_msg#53#185"
+msgstr "If ever someone listens to\\nthis, please, tell me what\\nhas happened to me."
+
+msgid "ig_msg#53#186"
+msgstr "But still...I hope it's just a dream."
+
+msgid "ig_msg#53#187"
+msgstr "September 12th, 3:20 PM"
+
+msgid "ig_msg#53#188"
+msgstr "I know this sounds crazy, but\\nthere's something here\\nbesides us in this mansion."
+
+msgid "ig_msg#53#189"
+msgstr "I've seen it myself. It was\\na woman in a white kimono."
+
+msgid "ig_msg#53#190"
+msgstr "Something is definitely happening here."
+
+msgid "ig_msg#53#191"
+msgstr "Have we unknowingly awakened something?"
+
+msgid "ig_msg#53#192"
+msgstr "Or perhaps we've been lured here to die?"
+
+msgid "ig_msg#53#193"
+msgstr "Is she the one causing this disaster?"
+
+msgid "ig_msg#53#194"
+msgstr "All of those earlier deaths?\\nKoji, Tomoe, all of them?"
+
+msgid "ig_msg#53#195"
+msgstr "Am I the next to die?"
+
+msgid "ig_msg#53#196"
+msgstr "The Rope Shrine Maiden Ritual\\nas told of in legend..."
+
+msgid "ig_msg#53#197"
+msgstr "Both arms, legs, and the neck.\\nIt is said when all five have been\\nmarked, the curse is complete."
+
+msgid "ig_msg#53#198"
+msgstr "Ropes are beginning to appear on\\nmy photo. I'm running out of time."
+
+msgid "ig_msg#53#199"
+msgstr "The forbidden rituals\\nof this area..."
+
+msgid "ig_msg#53#200"
+msgstr "it looks like Mr. Takamine was\\ndoing research into them."
+
+msgid "ig_msg#53#201"
+msgstr "I wonder if his group is\\nstill here?"
+
+msgid "ig_msg#53#202"
+msgstr "I captured a ghost...\\nwith this camera."
+
+msgid "ig_msg#53#203"
+msgstr "This camera has the power\\nto expose things the\\nnormal eye can't see."
+
+msgid "ig_msg#53#204"
+msgstr "I remember the incident from\\nwhich I learned of its unique\\npower to capture ghosts."
+
+msgid "ig_msg#53#205"
+msgstr " "
+
+msgid "ig_msg#53#206"
+msgstr "Ropes! Ropes! Always\\nmore ropes!"
+
+msgid "ig_msg#53#207"
+msgstr "Mr. Takamine?! Tomoe?! \\nWhere are have you all gone?!"
+
+msgid "ig_msg#53#208"
+msgstr "There's something here!"
+
+msgid "ig_msg#53#209"
+msgstr "That woman! That woman\\nin a kimono's coming!"
+
+msgid "ig_msg#53#210"
+msgstr "Where have they gone?"
+
+msgid "ig_msg#53#211"
+msgstr "How can I break the\\ncurse of the rope?"
+
+msgid "ig_msg#53#212"
+msgstr "Help... Help..."
+
+msgid "ig_msg#53#213"
+msgstr "The Rope Shrine Maiden...\\nThe curse..."
+
+msgid "ig_msg#53#214"
+msgstr "She is the last Maiden...\\nKirie..."
+
+msgid "ig_msg#53#215"
+msgstr "I didn't want to come here. My\\ninstincts told me not to."
+
+msgid "ig_msg#53#216"
+msgstr "This way!\\nThis way!"
+
+msgid "ig_msg#53#217"
+msgstr "Kirie..."
+
+msgid "ig_msg#53#218"
+msgstr "Tomoe..."
+
+msgid "ig_msg#53#219"
+msgstr "I can't find the key...\\nWhere is it?"
+
+msgid "ig_msg#53#220"
+msgstr "That girl is trying\\nto say something.\\nSomething...important."
+
+msgid "ig_msg#53#221"
+msgstr "Kirie... Kirie..."
+
+msgid "ig_msg#53#222"
+msgstr "Mr. Takamine...save me..."
+
+msgid "ig_msg#53#223"
+msgstr "I wish this were a dream..."
+
+msgid "ig_msg#53#224"
+msgstr "Come play with me!"
+
+msgid "ig_msg#53#225"
+msgstr "This way!"
+
+msgid "ig_msg#53#226"
+msgstr "Beyond this door,\\nthe Mirror must be there..."
+
+msgid "ig_msg#53#227"
+msgstr "Mikoto, you're too slow..."
+
+msgid "ig_msg#53#228"
+msgstr "Mikoto..."
+
+msgid "ig_msg#53#229"
+msgstr "Play with me!"
+
+msgid "ig_msg#53#230"
+msgstr "This way!\\nThis way!"
+
+msgid "ig_msg#53#231"
+msgstr "I have to give this Mirror\\nto that man."
+
+msgid "ig_msg#53#232"
+msgstr "Oh, Yae...! Why did you have\\nto take your own life?"
+
+msgid "ig_msg#53#233"
+msgstr "If only you hadn't found\\nthat camera, Yae."
+
+msgid "ig_msg#53#234"
+msgstr "Come back to me..."
+
+msgid "ig_msg#53#235"
+msgstr "The Rope Altar... The\\nStrangling Ritual..."
+
+msgid "ig_msg#53#236"
+msgstr "Please...stop me."
+
+msgid "ig_msg#53#237"
+msgstr "Let me out! Let me out\\nof this mansion!"
+
+msgid "ig_msg#53#238"
+msgstr "You have to tell him! The Mirror!\\nThe Mirror!"
+
+msgid "ig_msg#53#239"
+msgstr "The last Buddha statue is...\\nat the Shinto gate..."
+
+msgid "ig_msg#53#240"
+msgstr "Come find me! I've been waiting\\nso long... so long..."
+
+msgid "ig_msg#53#241"
+msgstr "I have to give the Mirror\\nto that man."
+
+msgid "ig_msg#53#242"
+msgstr "Mikoto...hurry..."
+
+msgid "ig_msg#53#243"
+msgstr "Where did my daughter go?"
+
+msgid "ig_msg#53#244"
+msgstr "The Blinding Mask is the\\nkey to the door."
+
+msgid "ig_msg#53#245"
+msgstr "The Blinding Mask..."
+
+msgid "ig_msg#53#246"
+msgstr "The sacrifice is tainted now!"
+
+msgid "ig_msg#53#247"
+msgstr "When the Calamity comes,\\nwe're all dead."
+
+msgid "ig_msg#53#248"
+msgstr "We must seal it again\\nbefore it's too late!\\nHurry!"
+
+msgid "ig_msg#53#249"
+msgstr "He went insane! He began to\\nmurder every person in his\\nsight."
+
+msgid "ig_msg#53#250"
+msgstr "Rope Shrine Maiden, eh? Her only\\npurpose is to die."
+
+msgid "ig_msg#53#251"
+msgstr "Kirie, the Strangling\\nRitual!"
+
+msgid "ig_msg#53#252"
+msgstr "The ritual has failed.\\nIt's all over..."
+
+msgid "ig_msg#53#253"
+msgstr "Let the ritual begin.\\nBring along Kirie."
+
+msgid "ig_msg#53#254"
+msgstr "Kirie... Why did you become\\nattached to this world?!\\nYou'll only suffer!"
+
+msgid "ig_msg#53#255"
+msgstr "Kirie...poor girl. It's too\\nbad, but it must be sealed."
+
+msgid "ig_msg#53#256"
+msgstr "The Ropes! There are\\nmore ropes now!"
+
+msgid "ig_msg#53#257"
+msgstr "I can't find the key.\\nWhere is it?"
+
+msgid "ig_msg#53#258"
+msgstr "What are you trying\\nto say?"
+
+msgid "ig_msg#53#259"
+msgstr "There are rope marks on my\\nbody...just like Koji..."
+
+msgid "ig_msg#53#260"
+msgstr "Just one more... Just one more\\nBuddha statue, and the Holy\\nMirror will be..."
+
+msgid "ig_msg#53#261"
+msgstr "I must hurry!\\nI'm beginning to show\\nrope marks."
+
+msgid "ig_msg#53#262"
+msgstr "Kirie... Rope...Maiden..."
+
+msgid "ig_msg#53#263"
+msgstr "My daughter... She was only\\nplaying Demon Tag..."
+
+msgid "ig_msg#53#264"
+msgstr "It was a mistake to live\\nin this mansion..."
+
+msgid "ig_msg#53#265"
+msgstr "The Blinding Mask must be\\nsomewhere in this mansion."
+
+msgid "ig_msg#53#266"
+msgstr "Where is my daughter,\\nMikoto?"
+
+msgid "ig_msg#53#267"
+msgstr "The children...\\nWhere have the children gone?"
+
+msgid "ig_msg#53#268"
+msgstr "My daughter... She was only\\nplaying Demon Tag..."
+
+msgid "ig_msg#53#269"
+msgstr "It can't be! How can a\\ncamera expose something\\nthat doesn't even exist?!"
+
+msgid "ig_msg#53#270"
+msgstr "I see...I see it..."
+

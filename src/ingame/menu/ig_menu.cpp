@@ -563,6 +563,9 @@ int64_t GetIngameMSGAddr(u_char type, int msg_no)
         return mod_addr;
     }
 
+#ifdef BUILD_EU_VERSION
+    if (type == 53 && sys_wrk.language == 0) return 0;
+#endif
     addr = MikuPan_GetHostAddress(MSN_FILE_ADDRESS + type * 4);
     addr = MikuPan_GetHostAddress(MSN_FILE_ADDRESS + Get4Byte((u_char *)addr) + msg_no * 4);
     addr = MikuPan_GetHostAddress(Get4Byte((u_char *)addr));

@@ -3,6 +3,7 @@
 #include "common.h"
 #include "typedefs.h"
 #include "subtitles.h"
+#include "mikupan/mikupan_textoverride.h"
 
 #include "sce/libdma.h"
 #include "sce/libgraph.h"
@@ -506,7 +507,7 @@ int GetIndexNums(int *tbl, int no)
 
 void MakeMovMes()
 {
-    if (sys_wrk.language != 0)
+    if (sys_wrk.language != 0 || MikuPan_EnglishSubtitlesReady())
     {
         nmdpri = 0;
         nmdpkt = 0;
@@ -519,7 +520,7 @@ void DrawMovMes(Q_WORDDATA *packet_buf)
 {
 	sceDmaChan *DmaGif;
 
-    if (sys_wrk.language != 0)
+    if (sys_wrk.language != 0 || MikuPan_EnglishSubtitlesReady())
     {
         DmaGif = sceDmaGetChan(2);
         sceDmaSend(DmaGif, (u_long128 *)((u_int)packet_buf & DMA_MEM));
@@ -595,7 +596,7 @@ void SetSubtitles(int type, int no, u_int mframe)
 
     pass = 0;
 
-    if (sys_wrk.language == 0)
+    if (sys_wrk.language == 0 && !MikuPan_EnglishSubtitlesReady())
     {
         subtitles_sys.flg = 0;
         return;
@@ -669,6 +670,7 @@ void SetSubtitles(int type, int no, u_int mframe)
 
                 ds.alpha = subtitles_sys.alp;
                 ds.str = (u_char *)GetIngameMSGAddr(53, stp->mesno);
+                if (ds.str == nullptr) continue;
                 ds.pri = stdp->pri;
 
                 if (stp->attr & 0x400)

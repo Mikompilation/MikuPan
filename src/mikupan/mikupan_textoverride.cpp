@@ -5,6 +5,7 @@
 #include "mikupan/debug/mikupan_logging.h"
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan_config.h"
+#include "mikupan/rendering/mikupan_font_identity.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -222,6 +223,7 @@ int64_t ResolveMessageOffset(const std::vector<u_char> &buf,
 
 const u_char kTerminator = 0xFF;
 const int kMaxDecodedChars = 4096;
+constexpr int kEnglishSubtitleCount = 271;
 
 std::string DecodeGameChar(u_char c)
 {
@@ -267,6 +269,7 @@ std::string DecodeGameChar(u_char c)
     case 0x71: return "\xC3\xBA"; // u-acute
     case 0x81: return "ch"; // Italian "ch" ligature
     case 0x83: return "rr"; // Italian "rr" ligature
+    case 0x8A: return "\"";
     case 0x8B: return "'";
     case 0x8E: return "-";
     case 0x8F: return "?";
@@ -449,6 +452,7 @@ bool EncodeOneToken(const std::string &text, size_t i, int lang,
 
     switch (c)
     {
+    case '"': out.push_back(0x8A); *consumed = 1; return true;
     case '\'': out.push_back(0x8B); *consumed = 1; return true;
     case '-':  out.push_back(0x8E); *consumed = 1; return true;
     case '?':  out.push_back(0x8F); *consumed = 1; return true;
@@ -567,6 +571,19 @@ bool EncodeGameString(const std::string &text, int lang, std::vector<u_char> &ou
     return true;
 }
 
+std::string EscapePoText(const std::string &text)
+{
+    std::string escaped;
+    for (char c : text)
+    {
+        if (c == '\"' || c == '\\') escaped += '\\';
+        escaped += c;
+    }
+    return escaped;
+}
+
+bool ExtractEnglishSubtitles(std::string &contents, int &extracted);
+
 void ExtractTable(const std::vector<u_char> &buf, const std::string &prefix,
                   u_int start, u_int end, std::string &contents,
                   int &extracted)
@@ -581,7 +598,7 @@ void ExtractTable(const std::vector<u_char> &buf, const std::string &prefix,
         if (text.empty()) continue;
 
         contents += "msgid \"" + prefix + "#" + std::to_string(msg_no) + "\"\n";
-        contents += "msgstr \"" + text + "\"\n\n";
+        contents += "msgstr \"" + EscapePoText(text) + "\"\n\n";
         extracted++;
     }
 }
@@ -600,6 +617,7 @@ void ExtractIgMsg(int lang, std::string &contents, int &extracted)
     for (int type = 0; type < category_count; type++)
     {
         if (type == 32) continue; // IGMSG_FURN_NAME
+        if (lang == 0 && type == 53 && ExtractEnglishSubtitles(contents, extracted)) continue;
 
         u_int start = 0;
         u_int end = 0;
@@ -861,6 +879,9 @@ struct CategoryBuffer
     std::unordered_map<int, size_t> offsets; // includes one entry past the last real message
 };
 
+const CategoryBuffer *BuiltinEnglishSubtitles(int lang);
+
+
 bool ResolveParsedCategory(const ParsedCategory &parsed, int lang,
                            std::vector<u_char> &blob, u_int *start, u_int *end)
 {
@@ -892,9 +913,11 @@ bool BuildCategoryBuffer(const ParsedCategory &parsed, int lang,
     std::vector<u_char> blob;
     u_int start = 0;
     u_int end = 0;
-    if (!ResolveParsedCategory(parsed, lang, blob, &start, &end)) return false;
+    const CategoryBuffer *builtin = parsed.kind == CategoryKind::IgMsg && parsed.type_or_map == 53
+        ? BuiltinEnglishSubtitles(lang) : nullptr;
+    if (builtin == nullptr && !ResolveParsedCategory(parsed, lang, blob, &start, &end)) return false;
 
-    const int entry_count = (int) ((end - start) / 4);
+    const int entry_count = builtin != nullptr ? kEnglishSubtitleCount : (int) ((end - start) / 4);
 
     out.data.clear();
     out.offsets.clear();
@@ -918,6 +941,13 @@ bool BuildCategoryBuffer(const ParsedCategory &parsed, int lang,
                      "msg %d, using original text", msg_no);
         }
 
+        if (builtin != nullptr)
+        {
+            const size_t first = builtin->offsets.at(msg_no);
+            const size_t last = builtin->offsets.at(msg_no + 1);
+            out.data.insert(out.data.end(), builtin->data.begin() + first, builtin->data.begin() + last);
+            continue;
+        }
         const int64_t str_offset = ResolveMessageOffset(blob, start, msg_no);
         if (str_offset < 0) { out.data.push_back(kTerminator); continue; }
 
@@ -936,6 +966,73 @@ bool BuildCategoryBuffer(const ParsedCategory &parsed, int lang,
 
     out.offsets[entry_count] = out.data.size();
 
+    return true;
+}
+
+const CategoryBuffer *BuiltinEnglishSubtitles(int lang)
+{
+#ifdef BUILD_EU_VERSION
+    if (lang != 0) return nullptr;
+    static const CategoryBuffer bank = []()
+    {
+        CategoryBuffer result;
+        std::vector<u_char> original;
+        if (!ReadIgMsgFile(0, original)) return result;
+        const std::string digest = MikuPanFonts::HashBytes(original.data(), original.size());
+        // Accept the retail English object and the undubber's complete reconstruction.
+        if (digest != "540a862fc08283823b61d8f56a39d08636348e0c273c5b4c99ddd6a25e343c91" && digest != "b9144d33b9f78860346a6b4110df5c4f8d61f3201001a9ce250ec5d944023c46")
+        {
+            info_log("MikuPan_Subtitles: unrecognized English message object, subtitles disabled");
+            return result;
+        }
+        std::unordered_map<std::string, std::unordered_map<int, std::string>> entries;
+        const auto path = std::filesystem::path(MikuPan_GetBaseDirectory()) /
+            "resources" / "text" / "english_subtitles.po";
+        if (!LoadPoFile(path, entries) || entries["ig_msg#53"].size() != kEnglishSubtitleCount)
+        {
+            info_log("MikuPan_Subtitles: complete English subtitle PO unavailable, subtitles disabled");
+            return result;
+        }
+        const auto &subtitles = entries.at("ig_msg#53");
+        for (int id = 0; id < kEnglishSubtitleCount; ++id)
+        {
+            const auto entry = subtitles.find(id);
+            std::vector<u_char> encoded;
+            if (entry == subtitles.end() ||
+                !EncodeGameString(entry->second, 0, encoded))
+            {
+                info_log("MikuPan_Subtitles: invalid English subtitle %d, subtitles disabled", id);
+                return CategoryBuffer{};
+            }
+            result.offsets[id] = result.data.size();
+            result.data.insert(result.data.end(), encoded.begin(), encoded.end());
+        }
+        result.offsets[kEnglishSubtitleCount] = result.data.size();
+        return result;
+    }();
+    return bank.data.empty() ? nullptr : &bank;
+#else
+    return nullptr;
+#endif
+}
+
+int64_t CategoryAddress(const CategoryBuffer &bank, int msg_no)
+{
+    const auto offset = bank.offsets.find(msg_no);
+    return offset == bank.offsets.end() ? 0 :
+        (int64_t)(uintptr_t)(bank.data.data() + offset->second);
+}
+
+bool ExtractEnglishSubtitles(std::string &contents, int &extracted)
+{
+    const CategoryBuffer *bank = BuiltinEnglishSubtitles(0);
+    if (bank == nullptr) return false;
+    for (int id = 0; id < kEnglishSubtitleCount; ++id)
+    {
+        contents += "msgid \"ig_msg#53#" + std::to_string(id) + "\"\n";
+        contents += "msgstr \"" + EscapePoText(DecodeGameString(bank->data, bank->offsets.at(id))) + "\"\n\n";
+        ++extracted;
+    }
     return true;
 }
 
@@ -983,17 +1080,26 @@ void MikuPan_GameTextExtractAllPOs(void)
 
 int64_t MikuPan_GetTextModAddr(const char *category, int msg_no)
 {
-    if (!mikupan_configuration.text_mods_enabled || category == nullptr) return 0;
+    if (category == nullptr) return 0;
 
 #ifdef BUILD_EU_VERSION
     const int lang = ClampLanguage(sys_wrk.language);
 #else
     const int lang = 0;
 #endif
+    const CategoryBuffer *builtin = std::strcmp(category, "ig_msg#53") == 0
+        ? BuiltinEnglishSubtitles(lang) : nullptr;
+#ifdef BUILD_EU_VERSION
+    if (lang == 0 && std::strcmp(category, "ig_msg#53") == 0 &&
+        (builtin == nullptr || msg_no < 0 || msg_no >= kEnglishSubtitleCount)) return 0;
+#endif
+    if (!mikupan_configuration.text_mods_enabled)
+        return builtin != nullptr ? CategoryAddress(*builtin, msg_no) : 0;
     LanguagePack &pack = GetPack(lang);
 
     const auto overrides_it = pack.overrides.find(category);
-    if (overrides_it == pack.overrides.end()) return 0; // no overrides at all for this category
+    if (overrides_it == pack.overrides.end())
+        return builtin != nullptr ? CategoryAddress(*builtin, msg_no) : 0;
 
     auto cat_it = pack.categories.find(category);
     if (cat_it == pack.categories.end())
@@ -1011,8 +1117,11 @@ int64_t MikuPan_GetTextModAddr(const char *category, int msg_no)
         cat_it = pack.categories.emplace(category, std::move(built)).first;
     }
 
-    const auto off_it = cat_it->second.offsets.find(msg_no);
-    if (off_it == cat_it->second.offsets.end()) return 0;
+    const int64_t address = CategoryAddress(cat_it->second, msg_no);
+    return address != 0 ? address : (builtin != nullptr ? CategoryAddress(*builtin, msg_no) : 0);
+}
 
-    return (int64_t) (uintptr_t) (cat_it->second.data.data() + off_it->second);
+int MikuPan_EnglishSubtitlesReady(void)
+{
+    return BuiltinEnglishSubtitles(0) != nullptr;
 }
