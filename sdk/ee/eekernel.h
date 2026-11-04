@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef EE_EEKERNEL_H
 #define EE_EEKERNEL_H
 
@@ -15,6 +16,9 @@
 #define DMAC_TO_SPR             9
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	int status;
@@ -60,4 +64,6 @@ int SignalSema(int sema_id);
 int WaitSema(int sema_id);
 int DeleteSema(int sema_id);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // EE_EEKERNEL_H

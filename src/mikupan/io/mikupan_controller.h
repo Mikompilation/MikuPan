@@ -1,11 +1,15 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_CONTROLLER_H
 #define MIKUPAN_MIKUPAN_CONTROLLER_H
 
 #include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_events.h>
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 #define MIKUPAN_CONTROLLER_BIND_NONE   (0)
@@ -166,4 +170,6 @@ void MikuPan_SetImprovedMovementCollisionsEnabled(int enabled);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_MIKUPAN_CONTROLLER_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_gs_memory.h"
 
 #include <cstring>
@@ -9,6 +10,9 @@
 #else
 #define MIKUPAN_GS_HOT
 #endif
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace GS
 {
@@ -534,3 +538,5 @@ void GSHelper::Clear()
 }
 
 }// namespace GS
+
+MIKUPAN_NAMESPACE_END

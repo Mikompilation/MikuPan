@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_ACS_DAT_H
 #define GRAPHICS_MOTION_ACS_DAT_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	float center[3];
@@ -205,4 +209,6 @@ extern CLOTH_DAT m051_cloth[];
 extern CLOTH_DAT m058_cloth[];
 extern CLOTH_DAT m059_cloth[];
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_ACS_DAT_H

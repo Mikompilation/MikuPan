@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -31,6 +32,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void FndrInit();
 static void SttsFade();
@@ -3513,3 +3517,5 @@ int isDispLamp()
 
     return 1;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "furn_ctl.h"
@@ -18,6 +19,9 @@
 #include "main/glob.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int furn_disp_flg = 0;
 
@@ -1150,3 +1154,5 @@ u_char FurnHitCheck2(u_short pos_x, u_short pos_y, u_char room_id)
 
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

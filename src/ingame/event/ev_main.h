@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_EVENT_EV_MAIN_H
 #define INGAME_EVENT_EV_MAIN_H
 
 #include "typedefs.h"
 
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char mode;
@@ -59,4 +63,6 @@ int ScenePlay(short int scene_no);
 void EndingInit();
 void EndingMain();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_EVENT_EV_MAIN_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -22,6 +23,9 @@
 #include "os/eeiop/eese.h"
 
 #include <stdlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 WANDER_SOUL_WRK wander_soul_wrk[1] = {};
 
@@ -1018,3 +1022,5 @@ int SoulTellingCameraInCtrl()
 
     return 1;
 }
+
+MIKUPAN_NAMESPACE_END

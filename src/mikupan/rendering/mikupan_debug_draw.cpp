@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "ingame/camera/camera.h"
 #include "main/glob.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -13,6 +14,9 @@
 
 #define CAMERA_DEBUG_MAX_VERTS 24
 #define CAMERA_DEBUG_RING_SEGS 12
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static float debug_line_vertices[CAMERA_DEBUG_MAX_VERTS][4];
 static int debug_line_vertex_count = 0;
@@ -321,3 +325,5 @@ void MikuPan_RenderCameraDebug(void)
     MikuPan_GPUSetDepthWrite(1);
     MikuPan_ResetRenderStateCache();
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,9 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "wan_dat.h"
 
 #include "wan_soul.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/soul_des100.h" // sceVu0FVECTOR soul_des100[/*2*/];
 #include "data/soul_des101.h" // sceVu0FVECTOR soul_des101[/*5*/];
 #include "data/soul_des102.h" // sceVu0FVECTOR soul_des102[/*2*/];
@@ -30,6 +32,8 @@
 #include "data/soul_des215.h" // sceVu0FVECTOR soul_des215[/*2*/];
 #include "data/soul_des216.h" // sceVu0FVECTOR soul_des216[/*2*/];
 #include "data/soul_des000.h" // sceVu0FVECTOR soul_des000[/*10*/];
+
+
 
 sceVu0FVECTOR *soul_des_array[/*26*/] = {
     soul_des100,
@@ -77,3 +81,5 @@ void SetWanSoDat2Wrk(int data_id, WANDER_SOUL_WRK *wswrk)
         wswrk->destination = soul_des_array[wander_soul_dat[data_id].destination_id];
     }
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/gameplay/mikupan_photo_capture.h"
 
 #include "common.h"
@@ -18,6 +19,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static u_short MikuPan_PhotoPackRgb555(int r, int g, int b)
 {
@@ -556,3 +560,5 @@ void MikuPan_ActivatePhotoNegativeFromSetNegaFilter(int type, float y12,
         PHOTO_NEGATIVE_PROTECT_W, PHOTO_NEGATIVE_PROTECT_H,
         coverage);
 }
+
+MIKUPAN_NAMESPACE_END

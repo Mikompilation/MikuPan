@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MC_MC_H
 #define MC_MC_H
 
 #include "typedefs.h"
 
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum {
 	MC_DATA_ADDR_HOST,
@@ -28,4 +32,6 @@ extern MC_DATA_STR mc_albumdata2_str[];
 extern u_long mc_gamedata_str_num;
 extern u_long mc_albumdata_str_num;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MC_MC_H

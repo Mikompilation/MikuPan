@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MC_MC_EXEC_H
 #define MC_MC_EXEC_H
 
 #include "typedefs.h"
 #include "sce/libmc.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern u_char save_pht_in_game;
 
@@ -29,4 +33,6 @@ void mcSetHeaderFile();
 char mcGetAlbumNo();
 void mcSetIconSys(sceMcIconSys *pSys);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MC_MC_EXEC_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifdef BUILD_EU_VERSION
 
 #include "common.h"
@@ -13,6 +14,9 @@
 #include "ingame/menu/ig_menu.h"
 #include "graphics/graph2d/tim2.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	int mesno;
@@ -750,4 +754,6 @@ void CheckSubtitlesFlag()
     }
 }
 
+
+MIKUPAN_NAMESPACE_END
 #endif // BUILD_EU_VERSION

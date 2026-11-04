@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "enums.h"
 #include "typedefs.h"
@@ -32,9 +33,14 @@
 
 #include <string.h>
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/camdat.h"// SPRT_DAT camdat[];
 #include "data/effdat.h"// SPRT_DAT effdat[];
+MIKUPAN_NAMESPACE_END
 #include "ingame/entry/ap_sgost.h"
+MIKUPAN_NAMESPACE_BEGIN
+
+
 static int tmp_effect_off = 0;
 static void *r23_e1 = 0;
 static void *r23_e2 = 0;
@@ -2636,3 +2642,5 @@ void tes_p3()
 {
     return;
 }
+
+MIKUPAN_NAMESPACE_END

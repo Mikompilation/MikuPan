@@ -1,4 +1,8 @@
+#include "mikupan/mikupan_region.h"
 #include "vu_program.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 unsigned int dma = 0;
 
@@ -69,3 +73,5 @@ void DIVPS_PROLOGUE()
 void DPS_PROLOGUE()
 {
 }
+
+MIKUPAN_NAMESPACE_END

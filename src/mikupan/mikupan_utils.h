@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_UTILS_H
 #define MIKUPAN_MIKUPAN_UTILS_H
 
@@ -8,6 +9,9 @@
 #define PS2_CENTER_X 320.0f
 #define PS2_CENTER_Y 224.0f
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float* out, float screen_width, float screen_height, float x, float y);
 void MikuPan_ConvertPs2HalfScreenCoordToNDCMaintainAspectRatio(float* out, float screen_width, float screen_height, float x, float y);
@@ -33,4 +37,6 @@ bool MikuPan_IsFiniteFloat(float value);
 
 int MikuPan_GetUiLanguage(void);
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_MIKUPAN_UTILS_H

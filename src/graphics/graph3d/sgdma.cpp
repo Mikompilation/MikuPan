@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "sgdma.h"
@@ -21,6 +22,9 @@
 #define REG_VIF1_STAT        ((volatile u_int *)(0x10003c00))
 #define REG_DMAC_ENABLEW     ((volatile u_int *)(0x1000f590))
 #define REG_DMAC_1_VIF1_CHCR ((volatile u_int *)(0x10009000))
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int DummyFlushData[] = {0, 0, 0, 0};
 
@@ -592,3 +596,5 @@ void LoadTextureAnimation(u_int *prim)
     AppendDmaBuffer(3);
     FlushModel(0);
 }
+
+MIKUPAN_NAMESPACE_END

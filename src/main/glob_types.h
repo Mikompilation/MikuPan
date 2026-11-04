@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MAIN_GLOB_TYPES_H
 #define MAIN_GLOB_TYPES_H
 
@@ -12,6 +13,9 @@
 #include "ingame/menu/ig_types.h"
 #include "ingame/photo/photo_types.h"
 #include "os/pad_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -424,4 +428,6 @@ typedef struct
     int param_camera;
 } DEBUG_NUMBERS;
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MAIN_GLOB_TYPES_H

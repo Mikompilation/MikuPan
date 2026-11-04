@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -10,6 +11,9 @@
 #include "ingame/map/furn_ctl.h"
 #include "ingame/map/map_area.h"
 #include "main/glob.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_char area_dat[11][6] = {
     {   0,   1,   2,   3,   8,  38 },
@@ -353,3 +357,5 @@ void ClearDispRoom(int wrk_no)
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

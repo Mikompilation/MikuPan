@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -6,6 +7,9 @@
 #include "edit/mde_file.h"
 #include "ingame/map/map_ctrl.h"
 #include "outgame/outgame.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int MdeFmnuExec(int act)
 {
@@ -39,3 +43,5 @@ int MdeFmnuExec(int act)
 
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

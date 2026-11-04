@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -13,6 +14,9 @@
 #include "ingame/entry/ap_sgost.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 /* data 322778 */ AP_WRK ap_wrk = {0};
 
@@ -91,3 +95,4 @@ void AreaEntrySet(void)
 {
     return;
 }
+MIKUPAN_NAMESPACE_END

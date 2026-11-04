@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "enums.h"
 #include "typedefs.h"
@@ -31,11 +32,14 @@
 
 #include <string.h>
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/stage_load_dat0.h"// MSN_LOAD_DAT stage_load_dat0[];
 #include "data/stage_load_dat1.h"// MSN_LOAD_DAT stage_load_dat1[];
 #include "data/stage_load_dat2.h"// MSN_LOAD_DAT stage_load_dat2[];
 #include "data/stage_load_dat3.h"// MSN_LOAD_DAT stage_load_dat3[];
 #include "data/stage_load_dat4.h"// MSN_LOAD_DAT stage_load_dat4[];
+
+
 MSN_LOAD_DAT* stage_load_dat[] = {
     stage_load_dat0, stage_load_dat1, stage_load_dat2,
     stage_load_dat3, stage_load_dat4,
@@ -514,3 +518,5 @@ void LoadStoryWrk()
     ingame_wrk.msn_no = *srcp++;
     ingame_wrk.difficult = *srcp++;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_IOP_INTRMAN_H
 #define MIKUPAN_IOP_INTRMAN_H
 
@@ -5,9 +6,14 @@
 #define INUM_DMA_7 40
 #define INUM_SPU   9
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 int CpuEnableIntr(void);
 int CpuSuspendIntr(int* oldstat);
 int CpuResumeIntr(int oldstat);
 int EnableIntr(int intr);
 
+
+MIKUPAN_NAMESPACE_END
 #endif

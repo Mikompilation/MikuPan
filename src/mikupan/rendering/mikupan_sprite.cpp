@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_renderer_internal.h"
 #include "graphics/graph2d/message.h"
 #include "mikupan/debug/mikupan_logging_c.h"
@@ -16,6 +17,9 @@
 #define TEXTURED_SPRITE_BATCH_MAX 4096
 #define MESSAGE_SPRITE_QUEUE_MAX 32768
 #define LATE_2D_OVERLAY_QUEUE_MAX 8192
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -1919,3 +1923,5 @@ void MikuPan_RenderTexturedTriangles3DWithState(sceGsTex0 *tex,
     MikuPan_PerfDrawCall();
     MikuPan_RestoreParticleTriangleState();
 }
+
+MIKUPAN_NAMESPACE_END

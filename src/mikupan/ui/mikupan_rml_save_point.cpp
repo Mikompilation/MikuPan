@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/ui/mikupan_rml_save_point.h"
 
 #include "enums.h"
@@ -19,6 +20,9 @@
 #include <string>
 #include <vector>
 
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max,
                unsigned short pitch, unsigned char menu);
@@ -484,7 +488,7 @@ bool MikuPan_RmlSavePointInit(Rml::Context* context)
     return true;
 }
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 void MikuPan_RmlSavePointStartFrame(void)
 {
@@ -806,3 +810,5 @@ void MikuPan_RmlSavePointApplyLanguage(int language)
 }
 
 }
+
+MIKUPAN_NAMESPACE_END

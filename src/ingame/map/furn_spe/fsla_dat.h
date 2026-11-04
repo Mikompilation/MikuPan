@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_FURN_SPE_FSLA_DAT_H
 #define INGAME_MAP_FURN_SPE_FSLA_DAT_H
 
@@ -22,7 +23,12 @@
 // extern FSPE_LIGHT_ANM *fspe_la_inp2[];
 // extern FSPE_LIGHT_ANM *fspe_la_outp1[];
 // extern FSPE_LIGHT_ANM *fspe_la_outp2[];
+
+MIKUPAN_NAMESPACE_BEGIN
+
 extern FSPE_LIGHT_ANM **fspe_la_array[];
 
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_FURN_SPE_FSLA_DAT_H

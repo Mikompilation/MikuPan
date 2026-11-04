@@ -1,5 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "glob.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_int realtime_scene_flg = 0; // sdata
 u_int scene_bg_load_flg = 0; // sdata
@@ -27,3 +31,5 @@ PHOTO_WRK photo_wrk = {0};
 PFILE_WRK pfile_wrk = {0};
 CAM_CUSTOM_WRK cam_custom_wrk = {0};
 DEBUG_NUMBERS dbg_wrk = {0};
+
+MIKUPAN_NAMESPACE_END

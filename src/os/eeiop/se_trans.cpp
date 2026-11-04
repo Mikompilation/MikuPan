@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -12,7 +13,10 @@
 #include "ingame/enemy/ene_ctl.h"
 #include "mikupan/mikupan_memory.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/fgf_tbl.h" // FG_FILE_TBL fgf_tbl[/*4*/] = { ... };
+
+
 SE_TRANS_CTRL st_ctrl = {0};
 
 static u_char ChkLoadReqQueueFree();
@@ -195,3 +199,5 @@ int SeFGhostTransCtrl()
     
     return ret;
 }
+
+MIKUPAN_NAMESPACE_END

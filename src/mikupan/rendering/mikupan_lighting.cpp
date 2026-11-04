@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_renderer_internal.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_gpu.h"
@@ -5,6 +6,9 @@
 #include "mikupan/mikupan_types.h"
 #include "graphics/graph3d/sg_dat.h"
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern int loadbw_flg;
 
@@ -558,3 +562,5 @@ void MikuPan_SetMaterial(const sceVu0FVECTOR *ambient,
         p->buffers[0].id, sizeof(MikuPan_MaterialData),
         &mikupan_material_data);
 }
+
+MIKUPAN_NAMESPACE_END

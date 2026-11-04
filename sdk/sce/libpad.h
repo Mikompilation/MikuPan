@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_LIBPAD_H
 #define SCE_LIBPAD_H
 
@@ -20,6 +21,9 @@
 #define InfoModeCurExOffs	    (3)
 #define InfoModeIdTable		    (4)
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 int scePadPortOpen(int port, int slot, void* addr);
 int scePadInit(int mode);
 int scePadGetState(int port, int slot);
@@ -33,4 +37,6 @@ int scePadInfoPressMode(int port, int slot);
 int scePadEnterPressMode(int port, int slot);
 int scePadSetActDirect(int port, int slot, const unsigned char* data);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_LIBPAD_H

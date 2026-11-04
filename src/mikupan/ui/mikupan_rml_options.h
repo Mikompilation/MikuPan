@@ -1,17 +1,22 @@
-#ifndef MIKUPAN_RML_OPTIONS_H
-#define MIKUPAN_RML_OPTIONS_H
-
-#ifdef __cplusplus
+#include "mikupan/mikupan_region.h"
 namespace Rml
 {
 class Context;
 }
+#ifndef MIKUPAN_RML_OPTIONS_H
+#define MIKUPAN_RML_OPTIONS_H
+
+
+MIKUPAN_NAMESPACE_BEGIN
+
+#ifdef __cplusplus
+
 
 bool MikuPan_RmlOptionsInit(Rml::Context* context);
 void MikuPan_RmlOptionsStartFrame(void);
 void MikuPan_RmlOptionsPrepareShutdown(void);
 void MikuPan_RmlOptionsShutdown(void);
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 void MikuPan_RmlOptionsOpen(void);
@@ -42,4 +47,6 @@ void MikuPan_RmlOptionsToggleDebug(void);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_RML_OPTIONS_H

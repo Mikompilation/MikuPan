@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -34,6 +35,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void (*SpecialEventInitTbl[])() = {
     SpecialEventInit000, SpecialEventInit001, SpecialEventInit002, SpecialEventInit003, SpecialEventInit004,
@@ -13168,3 +13172,5 @@ void SpecialEventMain090()
     HanyouKaitenMain(SPEV90_ROT_DOOR_KAKE);
 }
 
+
+MIKUPAN_NAMESPACE_END

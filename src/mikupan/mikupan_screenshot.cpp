@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_screenshot.h"
 #include "mikupan_config.h"
 #include "debug/mikupan_logging_c.h"
@@ -7,6 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int g_screenshot_pending = 0;
 
@@ -260,3 +264,5 @@ void MikuPan_ScreenshotCaptureIfRequested(int drawable_w, int drawable_h)
 
     free(rgba);
 }
+
+MIKUPAN_NAMESPACE_END

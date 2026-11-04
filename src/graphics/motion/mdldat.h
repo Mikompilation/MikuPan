@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_MDLDAT_H
 #define GRAPHICS_MOTION_MDLDAT_H
 
@@ -5,6 +6,9 @@
 #include "typedefs.h"
 
 #include "graphics/motion/acs_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	float scale;
@@ -508,4 +512,6 @@ extern ANI_CODE *arei_loopanm_tbl[];
 extern MANMDL_DAT manmdl_dat[];
 extern ANI_CODE **anm_tbl[];
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_MDLDAT_H

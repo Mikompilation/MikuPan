@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENEMY_ENE_CTL_H
 #define INGAME_ENEMY_ENE_CTL_H
 
@@ -5,6 +6,9 @@
 #include "ingame/ig_glob_types.h"
 #include "main/glob_types.h"
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern ENE_DAT jene_dat0[];
 extern AENE_INFO_DAT aene_info_dat0[];
@@ -84,4 +88,6 @@ int EnemyUseJudge(u_char ene_type);
 int ZeroGhostBattleJudge();
 void EneAdpcmPlayChk(ENE_WRK *ew);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_ENEMY_ENE_CTL_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_ANI_DAT_H
 #define GRAPHICS_MOTION_ANI_DAT_H
 
@@ -5,6 +6,9 @@
 
 #include "graphics/motion/mime_dat.h"
 #include "graphics/motion/mot_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef u_short ANI_CODE;
 
@@ -56,4 +60,6 @@ typedef struct {
 	u_char pkt_no;
 } ANI_MDL_CTRL;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_ANI_DAT_H

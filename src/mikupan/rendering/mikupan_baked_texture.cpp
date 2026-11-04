@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_baked_texture.h"
 
 #include "mikupan/bake/mikupan_bake.h"
@@ -21,6 +22,9 @@
 #include <string>
 #include <thread>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern char* file_name[];
 extern int loadbw_flg;
@@ -497,7 +501,7 @@ unsigned int CreateTexture(uint32_t id)
 
 }// namespace
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 int MikuPan_BakedTexture_Prepare(void)
 {
@@ -786,7 +790,7 @@ void MikuPan_BakedTexture_Shutdown(void)
     g_state = MIKUPAN_BAKE_IDLE;
 }
 
-}// extern "C"
+}// MIKUPAN_EXTERN_C
 
 namespace MikuPanBakedTexture2D
 {
@@ -835,3 +839,5 @@ bool ReadPixels(uint32_t id, std::vector<uint8_t>* out)
 }
 
 }// namespace MikuPanBakedTexture2D
+
+MIKUPAN_NAMESPACE_END

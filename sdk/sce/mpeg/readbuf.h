@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_MPEG_READBUF_H
 #define SCE_MPEG_READBUF_H
 
@@ -7,6 +8,9 @@
 #define N_READ_UNIT     5
 #define READBUF_BUFF_SIZE (N_READ_UNIT * READ_UNIT_SIZE)
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 typedef struct
 { // 0x5000c
     /* 0x00000 */ u_char data[N_READ_UNIT * READ_UNIT_SIZE];
@@ -15,4 +19,6 @@ typedef struct
     /* 0x50008 */ int size;
 } ReadBuf;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_MPEG_READBUF_H

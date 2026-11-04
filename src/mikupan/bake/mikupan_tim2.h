@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_TIM2_H
 #define MIKUPAN_TIM2_H
 
@@ -12,6 +13,9 @@
 /// checks it against the GS emulation for every picture on the disc.
 ///
 /// Dependency-free C++17, like the rest of the baker library.
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanBake
 {
@@ -91,4 +95,6 @@ bool DecodeTim2Texture(const Tim2Picture& image, const Tim2Picture& clut,
 
 }// namespace MikuPanBake
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_TIM2_H

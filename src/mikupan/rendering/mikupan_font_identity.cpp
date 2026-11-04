@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_font_identity.h"
 #include "../bake/mikupan_tim2.h"
 #include <algorithm>
 #include <cstring>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanFonts
 {
 namespace
@@ -128,3 +132,5 @@ std::string Fingerprint(const Atlases &atlases)
     return hash.Finish();
 }
 }
+
+MIKUPAN_NAMESPACE_END

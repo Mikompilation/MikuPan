@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_profiler.h"
 
 #include "SDL3/SDL_timer.h"
@@ -12,6 +13,9 @@
 /// Per-section CPU timers — accumulate time spent in each high-level area of
 /// rendering. Reset at frame start; sampled by the perf graph from the *last*
 /// frame so the values don't change underneath the UI mid-draw.
+
+MIKUPAN_NAMESPACE_BEGIN
+
 static double g_perf_section_ms_curr[PERF_SECT_COUNT] = {0};
 static double g_perf_section_ms_last[PERF_SECT_COUNT] = {0};
 
@@ -902,3 +906,5 @@ int MikuPan_PerfGetDrawCallsCurrent(void)            { return g_draw_calls_curr;
 int MikuPan_PerfGetMeshCacheHitsCurrent(void)        { return g_mesh_cache_hits_curr; }
 int MikuPan_PerfGetMeshCacheMissesNewCurrent(void)   { return g_mesh_cache_misses_new_curr; }
 int MikuPan_PerfGetMeshCacheMissesFullCurrent(void)  { return g_mesh_cache_misses_full_curr; }
+
+MIKUPAN_NAMESPACE_END

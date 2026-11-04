@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OUTGAME_BTL_MODE_BTL_MODE_H
 #define OUTGAME_BTL_MODE_BTL_MODE_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char mode;
@@ -47,4 +51,6 @@ void SetBattleEnd();
 void SetBattleClear();
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OUTGAME_BTL_MODE_BTL_MODE_H

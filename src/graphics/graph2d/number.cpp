@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "number.h"
@@ -9,6 +10,9 @@
 
 #include "message.h"
 #include "tim2.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 SPRT_DAT number_tex[][10] = {
 {    {
@@ -504,3 +508,5 @@ void NumberFontDisp(u_char number, u_char no, short int pos_x, short int pos_y, 
         DispSprD(&ds);
     }
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_ENEMY_ENTRY_H
 #define MIKUPAN_ENEMY_ENTRY_H
 
@@ -19,6 +20,9 @@
 #ifndef SE_ADDRNO_GHOST2
 #define SE_ADDRNO_GHOST2 18
 #endif
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char active;
@@ -339,4 +343,6 @@ static inline int MikuPan_EneEntryAfterAnmPacket(u_char no)
     return 1;
 }
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_ENEMY_ENTRY_H

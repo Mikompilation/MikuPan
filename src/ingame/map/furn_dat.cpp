@@ -1,7 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "furn_dat.h"
 #include "common.h"
 #include "typedefs.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/furn_attr_dat.h"       // u_int furn_attr_dat[][5];
 #include "data/furn_dat.h"            // FURN_DAT furn_dat[];
 #include "data/furn_photo_center00.h" // sceVu0FVECTOR furn_photo_center00[];
@@ -107,6 +109,8 @@
 #include "data/furn_photo_center97.h" // sceVu0FVECTOR furn_photo_center97[];
 #include "data/furn_photo_center98.h" // sceVu0FVECTOR furn_photo_center98[];
 #include "data/furn_photo_center99.h" // sceVu0FVECTOR furn_photo_center99[];
+
+
 sceVu0FVECTOR* fpc_dat[] = {
     (sceVu0FVECTOR*) furn_photo_center00,
     (sceVu0FVECTOR*) furn_photo_center01,
@@ -218,3 +222,4 @@ FURN_DAT* GetFurnDatP(u_short furn_id)
 {
     return &furn_dat[furn_id];
 }
+MIKUPAN_NAMESPACE_END

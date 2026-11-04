@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "pht_make.h"
 #include "common.h"
 #include "enums.h"
@@ -39,9 +40,12 @@
 
 #define PHT_MAKE_BUFFER_SIZE 0x18010
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/hintdat.h" // SPRT_DAT hintdat[];
 #include "data/hintreadat.h" // SPRT_DAT hintreadat[];
 #include "data/pazene_load_tbl.h" // int pazene_load_tbl[];
+
+
 
 int frm_type = 2;
 int ers_type = 1;
@@ -2803,3 +2807,5 @@ void PhotoMakeSave2()
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

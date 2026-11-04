@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_SE_TRANS_H
 #define OS_EEIOP_SE_TRANS_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x10
     /* 0x0 */ u_int dma_id;
@@ -25,4 +29,6 @@ u_char IsEndFgTrans();
 void FloatGhostSENotEmpty();
 int SeFGhostTransCtrl();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_SE_TRANS_H

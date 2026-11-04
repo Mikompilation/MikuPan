@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_GPU_H
 #define MIKUPAN_GPU_H
 
@@ -7,8 +8,11 @@
 #include "mikupan/mikupan_types.h"
 #include "mikupan_shader.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 /// Every shader bytecode format shipped in resources/shaders/ (one
@@ -302,4 +306,6 @@ void MikuPan_GPUSetVec2(const char *name, float x, float y);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_GPU_H

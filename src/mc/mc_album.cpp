@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -22,6 +23,9 @@
 #define MIMUM_MEM_BLOCK_SAVE_ALBUM_DATA_REQUIRED                               \
     ((1360464 + ICON_SYS_FILE_SIZE + ICON2_OBJ_FILE_SIZE) + 1023) / (512 * 2)  \
         + (5 / 2 + 5 % 2) + 1
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 char mcAlbumSaveMain()
 {
@@ -622,3 +626,5 @@ char mcCtrlAlbumSel()
 
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

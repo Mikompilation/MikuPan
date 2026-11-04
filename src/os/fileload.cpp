@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 
 #include "sce/sifrpc.h"
 
 #include "os/eeiop/cdvd/eecdvd.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static u_int sbuff[16];
 static sceSifClientData flCd;
@@ -44,3 +48,5 @@ void FileLoadB(int file_no, int64_t addr)
 {
     LoadReq(file_no, addr);
 }
+
+MIKUPAN_NAMESPACE_END

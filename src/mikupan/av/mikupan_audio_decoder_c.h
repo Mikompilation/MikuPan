@@ -1,11 +1,15 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_AUDIO_DECODER_C_H
 #define MIKUPAN_AUDIO_DECODER_C_H
 
 #include <stddef.h>
 #include <stdint.h>
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 typedef struct AudioDecoder AudioDecoder;
@@ -30,4 +34,6 @@ int mikupan_decoder_get_channels(AudioDecoder* dec);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

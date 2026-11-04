@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "pad.h"
@@ -6,6 +7,9 @@
 #include "main/glob.h"
 #include "os/key_cnf.h"
 #include "graphics/graph3d/sglib.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_short sce_pad[16] = {
     0x1000,  0x4000,  0x8000,  0x2000,
@@ -492,3 +496,5 @@ void PadClearCount(int p_id)
         pad[p_id].analog[i] = 0x80;
     }
 }
+
+MIKUPAN_NAMESPACE_END

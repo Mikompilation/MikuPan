@@ -1,20 +1,27 @@
-#ifndef MIKUPAN_RML_SAVE_LOAD_H
-#define MIKUPAN_RML_SAVE_LOAD_H
-
-#ifdef __cplusplus
-#include <vector>
-bool MikuPan_RmlSaveLoadBuildTransferPreview(unsigned mission, unsigned room, bool chapter,
-                                           std::vector<unsigned char>& pixels);
+#include "mikupan/mikupan_region.h"
 namespace Rml
 {
 class Context;
 }
+#ifndef MIKUPAN_RML_SAVE_LOAD_H
+#define MIKUPAN_RML_SAVE_LOAD_H
+
+
+MIKUPAN_NAMESPACE_BEGIN
+
+#ifdef __cplusplus
+MIKUPAN_NAMESPACE_END
+#include <vector>
+MIKUPAN_NAMESPACE_BEGIN
+bool MikuPan_RmlSaveLoadBuildTransferPreview(unsigned mission, unsigned room, bool chapter,
+                                           std::vector<unsigned char>& pixels);
+
 
 bool MikuPan_RmlSaveLoadInit(Rml::Context* context);
 void MikuPan_RmlSaveLoadStartFrame(void);
 void MikuPan_RmlSaveLoadPrepareShutdown(void);
 void MikuPan_RmlSaveLoadShutdown(void);
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 #define MIKUPAN_RML_SAVE_LOAD_RESULT_NONE 0
@@ -42,4 +49,6 @@ const char* MikuPan_RmlFilmHeaderSource(void);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

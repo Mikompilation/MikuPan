@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "ig_spd_menu.h"
 #include "common.h"
 #include "enums.h"
@@ -20,6 +21,9 @@
 #include "os/eeiop/adpcm/ea_ctrl.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void SpdMapStart();
 static void SpdMapInit();
@@ -431,3 +435,5 @@ static void SpdOptInOut()
             break;
     }
 }
+
+MIKUPAN_NAMESPACE_END

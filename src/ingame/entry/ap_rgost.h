@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_AP_RGOST_H
 #define INGAME_ENTRY_AP_RGOST_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char mode;
@@ -40,4 +44,6 @@ void SetRareGhostDispAlpha(int wrk_no, int rg_no);
 void SetRareGhostDispAnimation(int wrk_no, int rg_no);
 float SetRareGhostDispRate(int wrk_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_AP_RGOST_H

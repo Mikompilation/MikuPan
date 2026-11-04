@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_MPEG_VIBUF_H
 #define SCE_MPEG_VIBUF_H
 
@@ -24,6 +25,9 @@
 //    return tgt1 < len;
 //}
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 typedef struct { // 0x18
 	/* 0x00 */ long long pts;
 	/* 0x08 */ long long dts;
@@ -49,4 +53,6 @@ typedef struct { // 0x60
 	/* 0x5c */ int wt_ts;
 } ViBuf;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_MPEG_VIBUF_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "fsla_main.h"
@@ -10,6 +11,9 @@
 #include "main/glob.h"
 
 #include <stdlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_char able_to_light_tbl[] = {
     2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0,
@@ -331,3 +335,5 @@ void CandleAnmCtrl()
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

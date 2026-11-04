@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OUTGAME_MEMORY_ALBUM_H
 #define OUTGAME_MEMORY_ALBUM_H
 
 #include "typedefs.h"
 
 #include "ingame/menu/ig_rank.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 { // 0x44
@@ -86,4 +90,6 @@ void BtnExt(u_char mode, u_char alp);
 char InKeyTamusi();
 char GetAlbumCurPos(char side);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OUTGAME_MEMORY_ALBUM_H

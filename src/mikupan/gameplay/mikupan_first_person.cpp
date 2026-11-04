@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "enums.h"
 
@@ -16,6 +17,9 @@
 #define PI 3.1415928f
 #define DEG2RAD(x) ((float)(x) * PI / 180.0f)
 #define FINDER_MOUSE_RAD_PER_PIXEL 0.004f
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int mikupan_first_person_enabled = 0;
 int mikupan_first_person_r3_toggle_enabled = 0;
@@ -555,3 +559,4 @@ int MikuPan_FirstPersonShouldUseCameraSpotlight(void)
 {
     return mikupan_first_person_active;
 }
+MIKUPAN_NAMESPACE_END

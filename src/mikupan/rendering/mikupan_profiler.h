@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_PROFILER_H
 #define MIKUPAN_PROFILER_H
 
@@ -5,8 +6,11 @@
 #include "SDL3/SDL_timer.h"   /* SDL_GetPerformanceCounter — used by MIKUPAN_PERF_SCOPE */
 #include "mikupan_gl_compat.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
     /// CPU section IDs (must match MikuPan_PerfSection in mikupan_profiler.h)
@@ -113,7 +117,7 @@ struct MikuPan_PerfScopeGuard
     MikuPan_PerfScopeGuard& operator=(const MikuPan_PerfScopeGuard&) = delete;
 };
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 /// `__LINE__`-suffixed variable name lets the same function declare multiple
@@ -398,4 +402,6 @@ int  MikuPan_DrawCapGetIsolate(void);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif /* MIKUPAN_PROFILER_H */

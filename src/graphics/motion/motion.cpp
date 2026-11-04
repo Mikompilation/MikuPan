@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -23,6 +24,9 @@
 #include <math.h>
 #include <mikupan/mikupan_memory.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char file_id[4];
@@ -1968,3 +1972,5 @@ ENE_VRAM_CTRL ene_vram_bak[4] = {0};
 ENE_CHILD_CTRL ene_child_ctrl[4] = {0};
 QUAKE_CTRL quake = {0};
 PLYR_ACT_WRK plyr_act_wrk = {0};
+
+MIKUPAN_NAMESPACE_END

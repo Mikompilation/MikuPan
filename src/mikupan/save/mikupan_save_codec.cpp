@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_save_codec.h"
 #include "ingame/event/wan_soul.h"
 #include "ingame/map/map_area.h"
@@ -9,6 +10,9 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanSave
 {
 namespace
@@ -235,3 +239,5 @@ bool ToPs2(const Bytes &in, Bytes &out, std::string &error)
     return Convert(in, out, false, error);
 }
 } // namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END

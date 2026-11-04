@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -13,6 +14,9 @@
 #include "mikupan/mikupan_rng.h"
 
 #include <stdlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 SE_FOOT_RAND_ITA rand_ita_tbl[] = {
     {
@@ -258,3 +262,5 @@ u_char IsHokoriZone()
 {
     return plyr_wrk.pr_info.room_no == R009_NANDO;
 }
+
+MIKUPAN_NAMESPACE_END

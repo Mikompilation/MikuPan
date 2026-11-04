@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_UI_DEBUG_H
 #define MIKUPAN_MIKUPAN_UI_DEBUG_H
 
 #include "mikupan/mikupan_basictypes.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void CollectTexture(MikuPan_TextureInfo* tex, void* ud);
 int CompareTextureById(const void* a, const void* b);
@@ -38,4 +42,6 @@ int MikuPan_ShowStaticLighting(void);
 int MikuPan_GetMeshLightingMode(void);
 float MikuPan_GetNormalLength(void);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_MIKUPAN_UI_DEBUG_H

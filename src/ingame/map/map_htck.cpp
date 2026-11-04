@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "map_htck.h"
 #include "common.h"
 #include "enums.h"
@@ -11,6 +12,9 @@
 #define GET(t, o) (*((t *) (((u_char *) addr) + o)))
 
 #define BASE_ADDRESS 0x7f8000
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_char PosInAreaJudgeSub(int *addr, u_short pos_x, u_short pos_y, u_char type)
 {
@@ -381,3 +385,4 @@ u_char FurnCoverCheck(u_short pos_x, short int pos_y, u_short pos_z,
 
     return 0;
 }
+MIKUPAN_NAMESPACE_END

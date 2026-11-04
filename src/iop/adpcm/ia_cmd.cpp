@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #include "adpcm/iopadpcm.h"
 
 #include "memory.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void InitAdpcmCmdBuf()
 {
@@ -169,3 +173,5 @@ void IAdpcmCmdRestart()
 }
 
 void DbgDispAdpcmCmdWrk(ADPCM_CMD* acp) {}
+
+MIKUPAN_NAMESPACE_END

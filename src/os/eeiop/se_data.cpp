@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "se_data.h"
 #include "common.h"
 #include "enums.h"
@@ -5,6 +6,9 @@
 
 #include "os/eeiop/eese.h"
 #include "os/eeiop/se_data.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 const char se_use_static_tbl[/* 1*/][30] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0,
@@ -420,3 +424,5 @@ SE_STE *SeGetSeSte(/* a0 4 */ int num)
 {
     return &se_ste_tbl[num];
 }
+
+MIKUPAN_NAMESPACE_END

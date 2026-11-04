@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_MIRROR_H
 #define GRAPHICS_GRAPH3D_MIRROR_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	int mask;
@@ -24,7 +28,9 @@ typedef struct
     /* 0x288 */ int nodes;
 } MFlipNode;
 
+MIKUPAN_NAMESPACE_END
 #include "ingame/camera/camera.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 extern sceVu0FMATRIX mir_mtx;
 extern sceVu0FVECTOR mir_norm;
@@ -46,4 +52,6 @@ void CalcMirrorMatrix(SgCAMERA *camera);
 void MirrorDraw(SgCAMERA *camera, void *sgd_top, void (*render_func)(/* parameters unknown */));
 void MirrorRender(SgCAMERA *camera, void (*render_func)(/* parameters unknown */));
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_MIRROR_H

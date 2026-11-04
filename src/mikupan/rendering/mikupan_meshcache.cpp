@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_meshcache.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_profiler.h"
@@ -25,6 +26,9 @@
 /// Mesh buffers are created small and grown to the actual upload size (most PS2
 /// meshes are far under the old fixed 4 MiB), so the budget tracks real usage.
 #define MIKUPAN_MESHCACHE_BUF_INITIAL (4 * 1024)
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static unsigned int g_insert_counter = 0;
 
@@ -458,3 +462,5 @@ void MikuPan_MeshCache_GetStats(unsigned long long* bytes,
     if (buffers != NULL) *buffers = g_cache_buffers;
     if (entries != NULL) *entries = g_cache_entries;
 }
+
+MIKUPAN_NAMESPACE_END

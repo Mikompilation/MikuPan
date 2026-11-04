@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -29,6 +30,9 @@
 #include "mikupan/mikupan_memory.h"
 
 #include <os/eeiop/eeiop.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int rsc_menu_csr = 0;
 static int rsc_no[2] = {0, 0};
@@ -268,3 +272,5 @@ void RoomSizeCheckInit(void)
     rsc_no[1] = 0;
     load_size = -1;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_MIM_DAT_H
 #define GRAPHICS_MOTION_MIM_DAT_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_int *addr;
@@ -16,4 +20,6 @@ extern u_char mimchodo_r021[];
 extern u_char mimchodo_r041[];
 extern MIME_LOAD mimchodo_tbl[];
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_MIM_DAT_H

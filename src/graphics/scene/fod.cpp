@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -18,6 +19,9 @@
 #include "ingame/camera/camera.h"
 #include "ingame/plyr/unit_ctl.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 sceVu0FMATRIX fod_cmn_mtx = {0};
 FOD_EFF_PARAM eff_param = {0};
@@ -1020,3 +1024,5 @@ void FodSetEffectParam(FOD_EFF_DATA *fed)
     break;
     }
 }
+
+MIKUPAN_NAMESPACE_END

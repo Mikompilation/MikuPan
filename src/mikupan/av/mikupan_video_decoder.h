@@ -1,4 +1,6 @@
+#include "mikupan/mikupan_region.h"
 #pragma once
+
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -8,6 +10,8 @@ extern "C" {
 }
 
 #include <stdint.h>
+
+MIKUPAN_NAMESPACE_BEGIN
 
 struct VideoDecoder
 {
@@ -36,3 +40,4 @@ struct VideoDecoder
     bool decodeOneFrame(double &outPtsSec, const char **outErr);
     void close();
 };
+MIKUPAN_NAMESPACE_END

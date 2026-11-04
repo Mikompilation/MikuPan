@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -10,6 +11,9 @@
 #include "ingame/plyr/unit_ctl.h"
 #include "main/glob.h"
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_char find_stts[250] = {0};
 FIND_WRK find_wrk = {0};
@@ -162,3 +166,5 @@ u_char FindMapCtrl()
     return 0;
 }
 
+
+MIKUPAN_NAMESPACE_END

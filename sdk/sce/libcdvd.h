@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_LIBCDVD_H
 #define SCE_LIBCDVD_H
 
@@ -22,6 +23,9 @@
 #define SCECdSecS2048 0
 #define SCECdSecS2328 1
 #define SCECdSecS2340 2
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char stat;
@@ -65,4 +69,6 @@ int sceCdStInit(u_int bufmax, u_int bankmax, u_int iop_bufaddr);
 int sceCdSearchFile(sceCdlFILE *fp,const char *name);
 int sceCdStStart(u_int lbn, sceCdRMode *mode);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_LIBCDVD_H

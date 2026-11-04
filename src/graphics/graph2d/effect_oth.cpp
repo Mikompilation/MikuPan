@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "enums.h"
 #include "typedefs.h"
@@ -28,6 +29,9 @@
 #include "os/eeiop/eese.h"
 
 #include <math.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int stop_lf = 0;
 
@@ -8288,3 +8292,5 @@ void SetSaveCameraLamp()
     Set3DPosTexure(wlm, &de, 22, pos1, pos1, rgb1[col][0], rgb1[col][1], rgb1[col][2], rgb1[col][3]);
     Set3DPosTexure(wlm, &de, 14, pos2, pos2, rgb2[col][0], rgb2[col][1], rgb2[col][2], rgb2[col][3]);
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_SDL_RENDERER_H
 #define MIKUPAN_SDL_RENDERER_H
 #include "SDL3/SDL_init.h"
@@ -7,6 +8,9 @@
 #include "mikupan/mikupan_basictypes.h"
 #include "mikupan/mikupan_types.h"
 #include "mikupan/rendering/mikupan_gpu.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     sceVu0FVECTOR p;
@@ -488,4 +492,6 @@ void         MikuPan_ShadowDebugProbeTexture(void);
 void         MikuPan_ShadowDebugRecordCasterMeshType(int mesh_type);
 void         MikuPan_ShadowDebugRecordReceiverMeshType(int mesh_type);
 
+
+MIKUPAN_NAMESPACE_END
 #endif //MIKUPAN_SDL_RENDERER_H

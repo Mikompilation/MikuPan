@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -9,6 +10,9 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     int mission_no;
@@ -508,3 +512,5 @@ int MdeMapPointRoomNo(int pos_x, int pos_z, int floor_no)
 
     return 0xff;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_SGSUP_H
 #define GRAPHICS_GRAPH3D_SGSUP_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	short int GroupNo;
@@ -26,4 +30,6 @@ u_int* GetModelGroupPacket(void *sgd_top);
 void SgSortGroupP(void *sgd_top, int gnum);
 void SgSortUnitKind(void *sgd_top, int num); /// Initially not there, added
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_SGSUP_H

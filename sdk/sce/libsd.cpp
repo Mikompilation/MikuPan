@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "libsd.h"
 
 #include "iop/se/voice.h"
@@ -8,6 +9,9 @@
 #include <SDL3/SDL_platform.h>
 #include <SDL3/SDL_stdinc.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 s16 spuRam[(1024 * 1024 * 2) >> 1];
 s32 mVolL[2];
@@ -341,3 +345,5 @@ void MikuPan_SdShutdown(void)
     }
     sd_initialized = 0;
 }
+
+MIKUPAN_NAMESPACE_END

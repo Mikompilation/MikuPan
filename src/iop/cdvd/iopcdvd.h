@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef IOPCDVD_H_
 #define IOPCDVD_H_
 
 #include "iopmain.h"
 #include "libcdvd.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x20
     /* 0x00 */ int req_type;
@@ -100,4 +104,6 @@ void ICdvdBreak();
 
 void ICdvdLoadReqAdpcm(int file_no, int lsn, int read_now, u_int size_now, void* buf, u_char channel, u_char req_type, u_char endld_flg);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // IOPCDVD_H_

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "time_ctl.h"
 #include "plyr_ctl.h"
@@ -5,6 +6,9 @@
 #include "ingame/map/map_area.h"
 #include "os/system.h"
 #include "ingame/entry/entry.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void TimeCtrlInit()
 {
@@ -184,3 +188,4 @@ void SetRealTime()
 {
     SetNowClock(&time_wrk.real);
 }
+MIKUPAN_NAMESPACE_END

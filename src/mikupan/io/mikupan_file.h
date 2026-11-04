@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_FILE_LOADING_H
 #define MIKUPAN_FILE_LOADING_H
 
@@ -5,6 +6,9 @@
 #include <cstddef>
 #include <typedefs.h>
 #include <string>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -27,7 +31,7 @@ TYPEDEF_ALIGNED(64, struct
 
 
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 void MikuPan_LoadImgHdFile();
 void MikuPan_ServiceMissingDataFolderDialog();
 void MikuPan_RequestDataFolderSelection(const char *missing_path);
@@ -75,4 +79,6 @@ int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table, int max
 
 std::string MikuPan_GetRelativePath(const char* path);
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_FILE_LOADING_H

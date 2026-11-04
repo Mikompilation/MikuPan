@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #include "sif.h"
 
 #include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/mikupan_memory.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int sceSifDmaStat(unsigned int id)
 {
@@ -66,3 +70,5 @@ unsigned int sceSifSetDma(sceSifDmaData* sdd, int len)
 
     return 1;
 }
+
+MIKUPAN_NAMESPACE_END

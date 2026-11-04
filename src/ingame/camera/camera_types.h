@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_CAMERA_CAMERA_TYPES_H
 #define INGAME_CAMERA_CAMERA_TYPES_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 
@@ -77,4 +81,6 @@ typedef struct {
     sceVu0FVECTOR target_i;
 } CAMERA_DEBUG_PATH;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_CAMERA_CAMERA_TYPES_H

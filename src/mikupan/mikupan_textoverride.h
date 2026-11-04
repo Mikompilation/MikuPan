@@ -1,10 +1,14 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_TEXTOVERRIDE_H
 #define MIKUPAN_MIKUPAN_TEXTOVERRIDE_H
 
 #include <cstdint>
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 // Extracts every ig_msg category plus every map's event/movie/special-event dialog (read straight out of IMG_HD.BIN/IMG_BD.BIN) and writes one game_text.po under resources/mods/text/<lang>/ -- one language on NTSC-U (en only), all 5 on the PAL/EU build.
@@ -20,4 +24,6 @@ int64_t MikuPan_GetTextModAddr(const char *category, int msg_no);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

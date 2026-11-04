@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_PLYR_PLYR_CTL_H
 #define INGAME_PLYR_PLYR_CTL_H
 
@@ -6,6 +7,9 @@
 #include "ingame/map/furn_dat.h"
 #include "ingame/photo/photo_types.h"
 #include "main/glob.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -143,4 +147,6 @@ void PlayerWarpRoomLoadReq();
 int ShutterChanceChk();
 void PlayerWarpReq2(u_char dat_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_PLYR_PLYR_CTL_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_LOGGING_H
 #define MIKUPAN_LOGGING_H
 
@@ -10,8 +11,11 @@
 #define MIKUPAN_PRINTF_FORMAT(format_index, first_arg)
 #endif
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C"
+MIKUPAN_EXTERN_C
 {
 #endif
 
@@ -51,8 +55,10 @@ void critical_log(const char* fmt, ...) MIKUPAN_PRINTF_FORMAT(1, 2);
 
 #ifdef __cplusplus
 
+MIKUPAN_NAMESPACE_END
 #include <memory>
 #include <spdlog/spdlog.h>
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPan::Logging
 {
@@ -64,4 +70,6 @@ spdlog::logger& Logger();
 
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif //MIKUPAN_LOGGING_H

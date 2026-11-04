@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OUTGAME_SCN_TEST_H
 #define OUTGAME_SCN_TEST_H
 
@@ -7,6 +8,9 @@
 #include "graphics/graph3d/sglight.h"
 #include "graphics/scene/scene.h"
 #include "graphics/scene/fod.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x20
 	/* 0x00 */ FOD_EFF_DATA eff_data;
@@ -76,4 +80,6 @@ int ScnValueCtrlC(u_char *val, u_char max, u_char min, int inc, int mul);
 int SceneFileSaveBin();
 int SceneFileSaveText();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OUTGAME_SCN_TEST_H

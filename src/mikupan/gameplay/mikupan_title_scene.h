@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_GAMEPLAY_MIKUPAN_TITLE_SCENE_H
 #define MIKUPAN_GAMEPLAY_MIKUPAN_TITLE_SCENE_H
 
@@ -5,8 +6,11 @@
 #include "graphics/graph3d/light_types.h"
 #include "ingame/camera/camera_types.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 int MikuPan_TitleSceneIsTargetRoom(int msn_no, int room_no);
@@ -34,4 +38,6 @@ void MikuPan_TitleCalibrationPreviewDraw(void);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

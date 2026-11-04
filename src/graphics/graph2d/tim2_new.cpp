@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "tim2_new.h"
@@ -18,6 +19,9 @@
 #include "mikupan/rendering/mikupan_font_textures.h"
 #include "mikupan/rendering/mikupan_texture_slots.h"
 #include "os/eeiop/cdvd/eecdvd.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_int *tm2_end_pkt = NULL;
 
@@ -844,3 +848,5 @@ void SendFontTex()
     }
 }
 #endif
+
+MIKUPAN_NAMESPACE_END

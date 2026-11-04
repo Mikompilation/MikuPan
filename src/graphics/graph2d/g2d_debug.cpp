@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "g2d_debug.h"
@@ -18,6 +19,9 @@
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph2d/g2d_main.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int dither_alp = 0x40;
 int dither_col = 0x80;
@@ -1126,3 +1130,5 @@ void CheckHintTex()
 
 int hint_test_sw = 0;
 int hint_test_posx = 0;
+
+MIKUPAN_NAMESPACE_END

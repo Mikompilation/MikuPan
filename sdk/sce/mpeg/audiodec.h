@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_MPEG_AUDIODEC_H
 #define SCE_MPEG_AUDIODEC_H
 
@@ -13,6 +14,9 @@
 #define AUTODMA_CH 0
 
 #define UNIT_SIZE 1024
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x20
     /* 0x00 */ char id[4];
@@ -48,4 +52,6 @@ typedef struct { // 0x5c
     /* 0x58 */ int64_t iopZero;
 } AudioDec;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_MPEG_AUDIODEC_H

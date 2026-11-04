@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_PHOTO_CAPTURE_H
 #define MIKUPAN_PHOTO_CAPTURE_H
 
@@ -7,6 +8,9 @@
  * These keep original photo controller/draw code from knowing about renderer
  * history, capture suppression, or staged preview/save internals.
  */
+
+MIKUPAN_NAMESPACE_BEGIN
+
 void MikuPan_StagePhotoCaptureForSave(void);
 void MikuPan_OnHiddenFurniturePhotoStart(void);
 
@@ -31,4 +35,6 @@ int MikuPan_UsePhotoFrameOverlay(void);
 void MikuPan_ActivatePhotoNegativeFromSetNegaFilter(int type, float y12,
                                                     float y22);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_PHOTO_CAPTURE_H

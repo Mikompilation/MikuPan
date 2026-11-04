@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mirror.h"
 #include "cglm/mat4.h"
 #include "cglm/vec4.h"
@@ -20,6 +21,9 @@
 #include "os/system.h"
 
 #include <math.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int mirror_points = 0;
 
@@ -1176,3 +1180,5 @@ void MirrorRender(SgCAMERA *camera,
 
     MikuPan_Setup3D();
 }
+
+MIKUPAN_NAMESPACE_END

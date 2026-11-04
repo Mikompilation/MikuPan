@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "sgsu.h"
 #include "common.h"
 #include "enums.h"
@@ -22,6 +23,9 @@
 #include "mikupan/rendering/mikupan_renderer.h"
 
 #define min(x, y) (((x) > (y))? (y): (x))
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern void DRAWTYPE2();
 extern void DRAWTYPE2W();
@@ -1456,3 +1460,5 @@ void _vfito0(int *v0)
     v0[2] = (int)min(work_vf18[2], work_vf19[2]);
     v0[3] = (int)min(work_vf18[3], work_vf19[3]);
 }
+
+MIKUPAN_NAMESPACE_END

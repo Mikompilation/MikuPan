@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -24,6 +25,9 @@
 #include "os/eeiop/adpcm/ea_tape.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int BookGetMain();
 static void BookGetPad(u_char model_type, u_char model_no);
@@ -1217,3 +1221,5 @@ void StopTape(int item_no)
         i++;
     }
 }
+
+MIKUPAN_NAMESPACE_END

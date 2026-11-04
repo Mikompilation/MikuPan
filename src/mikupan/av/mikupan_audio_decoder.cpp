@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_audio_decoder.h"
 
 #include "mikupan/debug/mikupan_logging.h"
 
 #include <algorithm>
 #include <cstring>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static constexpr uint8_t START_CODE[3] = {0x00, 0x00, 0x01};
 static constexpr uint8_t PRIVATE_STREAM1 = 0xBD;
@@ -312,3 +316,5 @@ size_t MikupanAudioDecoder::pop(uint8_t* dst, size_t maxBytes)
 
     return n;
 }
+
+MIKUPAN_NAMESPACE_END

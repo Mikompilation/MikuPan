@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "ev_load.h"
 #include "common.h"
 #include "enums.h"
@@ -31,6 +32,7 @@
 #include <graphics/scene/scene.h>
 #include <string.h>
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/msn0_title_load_dat.h" // MSN_LOAD_DAT msn0_title_load_dat[];
 #include "data/scn0022_load.h" // MSN_LOAD_DAT scn0022_load[];
 #include "data/scn0022_del_dat.h" // u_short scn0022_del_dat[];
@@ -177,6 +179,8 @@
 #include "data/stg_title_sp_bak.h" // SPRT_SDAT stg_title_sp_bak[];
 #include "data/stg_title_sp_flr.h" // SPRT_SDAT stg_title_sp_flr[];
 #include "data/stg_title_sp_ttl.h" // SPRT_SDAT stg_title_sp_ttl[];
+
+
 
 MSN_LOAD_DAT load_dat_wrk[40] = {0};
 
@@ -937,3 +941,5 @@ void RoomLoadReq(int load_room)
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

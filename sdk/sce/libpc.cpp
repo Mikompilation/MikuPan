@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #include "libpc.h"
 
 #include <SDL3/SDL.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 uint64_t start_timer = 0;
 
@@ -44,3 +48,4 @@ int scePcGetCounter0(void)
 
     return (uint32_t)ps2_ticks;
 }
+MIKUPAN_NAMESPACE_END

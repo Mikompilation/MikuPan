@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -14,6 +15,9 @@
 #include "ingame/map/map_ctrl.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 RGOST_DSP_WRK rg_dsp_wrk[3] = {0};
 RGOST_WRK rg_wrk[200] = {0};
@@ -502,3 +506,5 @@ float SetRareGhostDispRate(int wrk_no)
 {
     return 0.0f;
 }
+
+MIKUPAN_NAMESPACE_END

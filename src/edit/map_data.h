@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef EDIT_MAP_DATA_H
 #define EDIT_MAP_DATA_H
 
@@ -9,6 +10,9 @@
 #define MDE_MAP_FLOOR_NUM 4
 #define MDE_MAP_SECTION_NUM 13
 #define MDE_MAP_ROOM_MAX 42
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     int room_id;
@@ -37,4 +41,6 @@ int MdeMapDataNum(int section_no, int room_id);
 int MdeMapRoomPos(int room_no, int floor_no, MDE_MAP_ROOM_POS *pos);
 int MdeMapPointRoomNo(int pos_x, int pos_z, int floor_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // EDIT_MAP_DATA_H

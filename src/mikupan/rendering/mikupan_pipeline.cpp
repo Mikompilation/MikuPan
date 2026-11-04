@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_pipeline.h"
 
 #include "mikupan/mikupan_types.h"
@@ -6,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct MikuPanPosition3Normal3Vertex
 {
@@ -483,3 +487,5 @@ u_int MikuPan_GetBoundTexture2D(void)
 {
     return g_bound_texture_2d[0];
 }
+
+MIKUPAN_NAMESPACE_END

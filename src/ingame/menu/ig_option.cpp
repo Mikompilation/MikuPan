@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -16,6 +17,9 @@
 #include "os/eeiop/eese.h"
 #include "os/key_cnf.h"
 #include "os/pad.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void MenuOptionDisp(u_char csr, u_char mode, u_char io);
 static void OptionCntInit();
@@ -1347,3 +1351,5 @@ static void DspLgtScrn(u_char alpha, u_char ttl)
     DispCaption(6, alpha);
 }
 
+
+MIKUPAN_NAMESPACE_END

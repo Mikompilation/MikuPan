@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_tim2.h"
 
 #include "mikupan_bake_data.h"
 
 #include <algorithm>
 #include <cstring>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanBake
 {
@@ -368,3 +372,5 @@ bool DecodeTim2Texture(const Tim2Picture& image, const Tim2Picture& clut,
 }
 
 }// namespace MikuPanBake
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "mikupan_memory.h"
 #include "mikupan/debug/mikupan_logging_c.h"
@@ -8,6 +9,9 @@
 #define PS2_SCRATCHPAD_MEM_SIZE (1024 * 16)
 
 /// Allocate double the amount of PS2 RAM to avoid overflow issues.
+
+MIKUPAN_NAMESPACE_BEGIN
+
 ATTRIBUTE_ALIGNED(64, unsigned char ps2_virtual_ram[PS2_VIRTUAL_RAM_SIZE]);
 
 /// 16kb of scratchpad memory
@@ -109,3 +113,5 @@ int MikuPan_GetPs2OffsetFromHostPointer(void *ptr)
     /// Conversion to int is safe because it is within the PS2 RAM size
     return (int)((uintptr_t)ptr - (uintptr_t)ps2_virtual_ram);
 }
+
+MIKUPAN_NAMESPACE_END

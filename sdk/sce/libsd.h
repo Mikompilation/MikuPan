@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef _LIBSD_H_
 #define _LIBSD_H_
 
@@ -51,6 +52,9 @@
 
 #define SD_VOICE(no) ((no) << 1)
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 typedef struct {
     int core;
     int mode;
@@ -86,4 +90,6 @@ void MikuPan_SdShutdown(void);
 void MikuPan_SdVoiceReachedAddress(int voice_index, u_int nax);
 void MikuPan_SdSetVoiceEnd(int voice_index);
 
+
+MIKUPAN_NAMESPACE_END
 #endif /* _LIBSD_H_ */

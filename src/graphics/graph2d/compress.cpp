@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -17,6 +18,9 @@
 
 // This macro is used to ensure correct rounding of integer values.
 #define ROUND(a) (((a) < 0) ? (int)((a) - 0.5f) : (int)((a) + 0.5f))
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     char *file;
@@ -1012,3 +1016,5 @@ static int InputBits(BIT_FILE *bit_file, int bit_count)
     
     return return_value;
 }
+
+MIKUPAN_NAMESPACE_END

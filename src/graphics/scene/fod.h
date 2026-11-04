@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_SCENE_FOD_H
 #define GRAPHICS_SCENE_FOD_H
 
@@ -5,6 +6,9 @@
 
 #include "ingame/camera/camera.h"
 #include "graphics/graph3d/sglight.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	sceVu0FVECTOR p;
@@ -303,4 +307,6 @@ u_int* FodGetFixEffect(u_int *tep);
 void FodSetEffect(FOD_CTRL *fc);
 void FodSetEffectParam(FOD_EFF_DATA *fed);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_SCENE_FOD_H

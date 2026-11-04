@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_AP_DGOST_H
 #define INGAME_ENTRY_AP_DGOST_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char mode;
@@ -22,4 +26,6 @@ int EnemyNoDeadGhostJudge(int ene_no);
 void DeadGhostSetLoad();
 void DeadGhostLoadDel();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_AP_DGOST_H

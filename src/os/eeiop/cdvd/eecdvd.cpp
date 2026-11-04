@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "eecdvd.h"
 #include "common.h"
 #include "enums.h"
@@ -12,6 +13,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "fnameee.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char start_pos;
@@ -345,3 +349,5 @@ int LoadReqLanguage(int file_no, u_int addr)
     return LoadReq(file_no + sys_wrk.language, addr);
 }
 #endif
+
+MIKUPAN_NAMESPACE_END

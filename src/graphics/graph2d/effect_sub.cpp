@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -26,6 +27,9 @@
 #include "os/system.h"
 
 #include <math.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	int screen_flag;
@@ -4190,3 +4194,5 @@ void Vu0FTOI0Vector(sceVu0IVECTOR v0, sceVu0FVECTOR v1)
     v0[2] = (int)v1[2];
     v0[3] = (int)v1[3];
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "libcdvd.h"
 
 #include "mikupan/io/mikupan_file_c.h"
@@ -9,6 +10,9 @@
 #define MIKUPAN_CD_HD_LSN_BASE 0x70000000u
 #define MIKUPAN_CD_FILE_LSN_BASE 0x71000000u
 #define MIKUPAN_CD_MAX_FILES 32
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_int lsn;
@@ -324,3 +328,5 @@ int sceCdStStart(u_int lbn, sceCdRMode* mode)
     cd_stream_file = SDL_IOFromFile(file->path, "rb");
     return cd_stream_file != NULL;
 }
+
+MIKUPAN_NAMESPACE_END

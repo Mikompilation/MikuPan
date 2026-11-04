@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -10,6 +11,9 @@
 #include <string.h>
 
 #define MDE_MENU_ROW_NUM 11
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 MDE_MENU_WRK mde_menu_wrk;
 
@@ -201,3 +205,5 @@ const char *MdeMenuPageName(int page)
 
     return mde_menu_page_name[page];
 }
+
+MIKUPAN_NAMESPACE_END

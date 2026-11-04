@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "sglight.h"
 #include "common.h"
 #include "typedefs.h"
@@ -19,6 +20,9 @@
 #include "mikupan/ui/mikupan_ui.h"
 
 #include <stdio.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int stack_num = 0;
 static int dbg_flg = 0;
@@ -2104,3 +2108,5 @@ void SgClearPreRender(void *sgd_top, int pnum)
         SgClearPreRenderPrim(GetTopProcUnitHeaderPtr(hs, pnum));
     }
 }
+
+MIKUPAN_NAMESPACE_END

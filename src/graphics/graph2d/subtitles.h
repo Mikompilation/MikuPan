@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifdef BUILD_EU_VERSION
 
 #ifndef GRAPHICS_GRAPH2D_SUBTITLES_H
@@ -6,6 +7,9 @@
 #include "typedefs.h"
 
 #include "graphics/graph2d/tim2.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_int type;
@@ -32,6 +36,8 @@ void CallSubtitles();
 void SetSubtitles(int type, int no, u_int mframe);
 void CheckSubtitlesFlag();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_SUBTITLES_H
 
 #endif // BUILD_EU_VERSION

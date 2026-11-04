@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "iopadpcm.h"
 
 #include "cdvd/iopcdvd.h"
@@ -9,6 +10,9 @@
 #include "loadcore.h"
 #include "memory.h"
 #include "thread.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 IOP_ADPCM iop_adpcm[2];
 u_char* AdpcmIopBuf[2];
@@ -921,3 +925,5 @@ void IAdpcmLoadEndPreOnly(int channel)
 {
     IAdpcmPreLoadEnd(channel);
 }
+
+MIKUPAN_NAMESPACE_END

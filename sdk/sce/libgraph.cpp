@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "libgraph.h"
 
 #include "graphics/graph2d/sprt.h"
@@ -6,6 +7,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void sceGsSetDefDBuff(sceGsDBuff* dp, short psm, short w, short h, short ztest, short zpsm, short clear)
 {
@@ -145,3 +149,5 @@ sceGsGParam* sceGsGetGParam()
 
     return gs_param;
 }
+
+MIKUPAN_NAMESPACE_END

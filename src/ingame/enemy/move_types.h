@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENEMY_MOVE_TYPES_H
 #define INGAME_ENEMY_MOVE_TYPES_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char job_no;
@@ -22,4 +26,6 @@ typedef struct {
 	int64_t comm_add_top;
 } MOVE_BOX;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENEMY_MOVE_TYPES_H

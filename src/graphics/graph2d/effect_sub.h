@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_EFFECT_SUB_H
 #define GRAPHICS_GRAPH2D_EFFECT_SUB_H
 
 #include "typedefs.h"
 
 #include "ee/eestruct.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char num;
@@ -124,4 +128,6 @@ void Vu0ApplyMatrix(sceVu0FVECTOR v0, sceVu0FMATRIX m0, sceVu0FVECTOR v1);
 void Vu0MulVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1, sceVu0FVECTOR v2);
 void Vu0FTOI0Vector(sceVu0IVECTOR v0, sceVu0FVECTOR v1);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_EFFECT_SUB_H

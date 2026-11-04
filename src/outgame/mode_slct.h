@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OUTGAME_MODE_SLCT_H
 #define OUTGAME_MODE_SLCT_H
 
 #include "typedefs.h"
 
 #include "graphics/graph2d/sprt.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char costume;
@@ -70,4 +74,6 @@ void SetCsrInfoStoryMode();
 void SetCsrInfoBattleMode();
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OUTGAME_MODE_SLCT_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "sgcam.h"
 #include "cglm/call/mat4.h"
 #include "common.h"
@@ -19,6 +20,9 @@
 #include "mikupan/rendering/mikupan_shader.h"
 
 #include <math.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 sceVu0FVECTOR clip_volume = {1920.0f, 896.0f, 256.0f, 16777000.0f};
 static sceVu0FVECTOR clip_volumev = {320.0f, 112.0f, 0.1f, 16777000.0f};
@@ -639,3 +643,5 @@ void _SetMulMatrixBB(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FMATRIX lw)
     glm_mat4_mul(m0, lw, wk0);
     glm_mat4_mul(m0, m1, wk1);
 }
+
+MIKUPAN_NAMESPACE_END

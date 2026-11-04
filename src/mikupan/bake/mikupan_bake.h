@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_BAKE_H
 #define MIKUPAN_BAKE_H
 
@@ -16,6 +17,9 @@
 ///
 /// The game runs it on first launch; tools/sgdstitch exposes it as
 /// `sgdstitch bake`. Dependency-free C++17: no SDL, no logging library.
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanBake
 {
@@ -95,4 +99,6 @@ bool BakeTextures(const Source& source, const Options& options, Sink* sink,
 
 }// namespace MikuPanBake
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_BAKE_H
