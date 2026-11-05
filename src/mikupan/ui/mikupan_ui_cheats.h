@@ -1,5 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_UI_CHEATS_H
 #define MIKUPAN_MIKUPAN_UI_CHEATS_H
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MikuPan_CheatSetInventoryItem(int item_no, int value);
 const char* MikuPan_CheatInventoryItemName(int item_no);
@@ -19,4 +23,6 @@ void MikuPan_UiCheatsRender(void);
 int MikuPan_IsTofuModeEnabled(void);
 const float* MikuPan_GetTofuColor(void);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_MIKUPAN_UI_CHEATS_H

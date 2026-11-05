@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_FURN_EFF_H
 #define INGAME_MAP_FURN_EFF_H
 
 #include "typedefs.h"
 
 #include "ingame/map/furn_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	float pos_x;
@@ -42,7 +46,9 @@ typedef struct {
 	u_char sclh;
 } FURN_EFCT_DEFORM;
 
+MIKUPAN_NAMESPACE_END
 #include "ingame/map/furn_ctl.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 extern FURN_EFCT_FIRE fefct_fire[];
 extern FURN_EFCT_SUNSHINE fefct_sunshine[];
@@ -52,4 +58,6 @@ void FurnEfctSet(FURN_WRK *fwp);
 void FurnEfctFree(FURN_WRK *fwp);
 void FurnHintDeformCtrl();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_FURN_EFF_H

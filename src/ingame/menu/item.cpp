@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -33,6 +34,9 @@
 #ifdef BUILD_EU_VERSION
 #include "graphics/graph2d/subtitles.h"
 #endif
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int IngameMenuItemEventOpenJudge(u_char item_no);
 static void ItemModeInOut();
@@ -2914,3 +2918,5 @@ static void YW_DBG()
     SetInteger2(0, 500.0f, 30.0f, 1, 0xff, 0xff, 0xff, spr_dat[ywdbg.char_no].x);
     SetInteger2(0, 550.0f, 30.0f, 1, 0xff, 0xff, 0xff, spr_dat[ywdbg.char_no].y);
 }
+
+MIKUPAN_NAMESPACE_END

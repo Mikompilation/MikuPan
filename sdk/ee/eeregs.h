@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef EE_EEREGS_H
 #define EE_EEREGS_H
 
@@ -37,6 +38,9 @@
 
 
 #define GS_CSR          ((volatile u_long *)(0x12001000))
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     unsigned EN1:1;
@@ -87,4 +91,6 @@ typedef struct {
     unsigned int p1;
 } tGS_BGCOLOR;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // EE_EEREGS_H

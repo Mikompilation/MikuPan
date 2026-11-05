@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/ui/mikupan_rml_title.h"
 
 #include "main/glob.h"
@@ -19,6 +20,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 class MikuPanTitleButtonListener final : public Rml::EventListener
 {
@@ -515,7 +519,7 @@ void MikuPan_RmlTitleShutdown(void)
     g_title = MikuPanRmlTitleState();
 }
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 int MikuPan_RmlTitleIsAvailable(void)
 {
@@ -668,3 +672,5 @@ void MikuPan_RmlTitleApplyLanguage(int language)
 }
 
 }
+
+MIKUPAN_NAMESPACE_END

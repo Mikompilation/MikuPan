@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -24,6 +25,9 @@
 #include "mikupan/rendering/mikupan_renderer.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "os/eeiop/eese.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void MapCntInit();
 static void MapCntRenew();
@@ -1893,3 +1897,5 @@ void AngleForWin(int pri, short int xo, short int yo, short int r, u_char ptn)
     }
 }
 
+
+MIKUPAN_NAMESPACE_END

@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_PHOTO_PHT_MAKE_H
 #define INGAME_PHOTO_PHT_MAKE_H
 
 #include "graphics/graph2d/sprt.h"
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern SPRT_DAT hintdat[];
 extern SPRT_DAT hintreadat[];
@@ -68,4 +72,6 @@ void ReqSavePicture();
 void PhotoMakeSave();
 void PhotoMakeSave2();
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_PHOTO_PHT_MAKE_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -24,6 +25,9 @@
 #include "graphics/graph2d/effect_ene.h"
 #include "graphics/graph3d/load3d.h"
 #include "sce/libvu0.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 ZHOUR_WRK zh_wrk = {0};
 
@@ -381,3 +385,5 @@ int ZeroHourAppearJudge()
 {
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

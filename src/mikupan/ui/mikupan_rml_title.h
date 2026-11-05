@@ -1,17 +1,22 @@
-#ifndef MIKUPAN_RML_TITLE_H
-#define MIKUPAN_RML_TITLE_H
-
-#ifdef __cplusplus
+#include "mikupan/mikupan_region.h"
 namespace Rml
 {
 class Context;
 }
+#ifndef MIKUPAN_RML_TITLE_H
+#define MIKUPAN_RML_TITLE_H
+
+
+MIKUPAN_NAMESPACE_BEGIN
+
+#ifdef __cplusplus
+
 
 bool MikuPan_RmlTitleInit(Rml::Context* context);
 void MikuPan_RmlTitleStartFrame(void);
 void MikuPan_RmlTitlePrepareShutdown(void);
 void MikuPan_RmlTitleShutdown(void);
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 #define MIKUPAN_RML_TITLE_COMMAND_NONE 0
@@ -39,4 +44,6 @@ void MikuPan_RmlTitleApplyLanguage(int language);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

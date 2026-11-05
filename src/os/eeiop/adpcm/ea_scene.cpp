@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -9,6 +10,9 @@
 #include "iop/adpcm/iopadpcm.h"
 
 // generates jump table in .rodata
+
+MIKUPAN_NAMESPACE_BEGIN
+
 void EAdpcmSceneMain()
 {    
     if (adpcm_map.mode != ADPCM_MODE_SCENE)
@@ -108,3 +112,5 @@ void AdpcmSceneStop()
     }
 }
 
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_GL_COMPAT_H
 #define MIKUPAN_GL_COMPAT_H
 
@@ -8,6 +9,9 @@
  * through MikuPan's SDL_GPU backend. Keep just those names local so the
  * project does not need an OpenGL loader header.
  */
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifndef GL_VERSION_1_0
 typedef unsigned int GLenum;
 typedef unsigned int GLuint;
@@ -93,4 +97,6 @@ typedef float GLfloat;
 #define GL_STATIC_DRAW 0x88E4
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_GL_COMPAT_H

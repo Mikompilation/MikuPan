@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_RGST_DAT_H
 #define INGAME_ENTRY_RGST_DAT_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char room;
@@ -85,4 +89,6 @@ extern RG_ALP_DAT *rg_alp_end[];
 // extern RG_RATE_DAT rg_rate_end01[0];
 // extern RG_RATE_DAT *rg_rate_end[0];
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_RGST_DAT_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -6,6 +7,9 @@
 #include "sce/libmc.h"
 
 #include "mc/mc_main.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 char (*mc_acs[])() = {
     mcSlotCheck,
@@ -570,3 +574,5 @@ void mcSyncErrWork(int cmd, int result)
     break;
     }
 }
+
+MIKUPAN_NAMESPACE_END

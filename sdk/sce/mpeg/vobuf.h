@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_MPEG_VOBUF_H
 #define SCE_MPEG_VOBUF_H
 
@@ -10,6 +11,9 @@
 #define VOBUF_STATUS_         0
 #define VOBUF_STATUS_TOPDONE  1
 #define VOBUF_STATUS_FULL     2
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char v[MAX_WIDTH * MAX_HEIGHT * 4];
@@ -29,4 +33,6 @@ typedef struct {
 	int size;
 } VoBuf;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_MPEG_VOBUF_H

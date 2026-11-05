@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "adpcm/iopadpcm.h"
 
 #include "se/iopse.h"
@@ -6,6 +7,9 @@
 #include "memory.h"
 #include "sysmem.h"
 #include "thread.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void GetPosCalc(ADPCM_POS_CALC* calcp);
 
@@ -226,3 +230,5 @@ void IaSetMasterVol(u_short mvol)
     sceSdSetParam(SD_P_MVOLL, mvol & 0x3FFF);
     sceSdSetParam(SD_P_MVOLR, mvol & 0x3FFF);
 }
+
+MIKUPAN_NAMESPACE_END

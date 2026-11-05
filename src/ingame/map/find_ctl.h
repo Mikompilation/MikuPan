@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_FIND_CTL_H
 #define INGAME_MAP_FIND_CTL_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char mode;
@@ -19,4 +23,6 @@ void FindMapInit();
 u_char FindMapReqJudge();
 u_char FindMapCtrl();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_FIND_CTL_H

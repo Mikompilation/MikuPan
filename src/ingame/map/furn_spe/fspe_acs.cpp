@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "furn_spe.h"
 #include "typedefs.h"
@@ -5,6 +6,9 @@
 #include "mikupan/mikupan_memory.h"
 
 #define BASE_ADDRESS 0x7f8000
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void FSpeMapDataMapping()
 {
@@ -44,3 +48,5 @@ u_char *FSpeGetTopAddr(u_short fact_no)
 
     return (u_char *) MikuPan_GetHostPointer(addr[fact_no]);
 }
+
+MIKUPAN_NAMESPACE_END

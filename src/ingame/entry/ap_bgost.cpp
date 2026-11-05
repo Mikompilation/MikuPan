@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -11,6 +12,9 @@
 #include "graphics/motion/mdlwork.h"
 #include "graphics/graph2d/effect_ene.h" // LoadEneDmgTex should be undeclared
 #include "graphics/motion/motion.h" // motInitEnemyAnm, motInitEnemyMdl should be undeclared
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 BGST_WRK bgst_wrk = {0};
 
@@ -111,3 +115,5 @@ int BindGhostLoad(void)
 
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "movie.h"
 #include "common.h"
 #include "enums.h"
@@ -73,6 +74,9 @@
 #include "graphics/scene/scene.h"
 #include "graphics/scene/scene_dat.h"
 #include "ingame/map/map_area.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 #ifdef BUILD_EU_VERSION
 char *mpegName[][40] = {
@@ -3434,3 +3438,5 @@ void voBufDecCount(VoBuf *f)
         f->count--;
     }
 }
+
+MIKUPAN_NAMESPACE_END

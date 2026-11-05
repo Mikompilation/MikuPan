@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -15,6 +16,9 @@
 #include "os/eeiop/eese.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void IngameMenuRankData(u_char dsp);
 static void IngameMenuRankDataDisp(u_char dsp);
@@ -1166,3 +1170,4 @@ int CheckSamePic(PICTURE_WRK *newp)
 
     return no;
 }
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -52,6 +53,9 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/key_cnf.h"
 #include "plyr/time_ctl.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int ItemGetMain();
 
@@ -651,3 +655,5 @@ void TmpPadOff()
         *key_now[i] = 0;
     }
 }
+
+MIKUPAN_NAMESPACE_END

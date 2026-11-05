@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -16,6 +17,9 @@
 #include "graphics/graph2d/effect_ene.h"
 #include "graphics/motion/mdlwork.h"
 // #include "graphics/graph2d/effect_ene.h" // LoadEneDmgTex
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 GGOST_DAT msn03ggst_dat = {
     .ggst = {  4,  0,  4, 0xff, 0xff },
@@ -309,3 +313,5 @@ void GuardGhostBattleEnd()
     GuardGhostLoadReq();
     DoorLockBattleAfter();
 }
+
+MIKUPAN_NAMESPACE_END

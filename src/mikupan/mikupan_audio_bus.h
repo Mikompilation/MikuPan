@@ -1,10 +1,14 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_AUDIO_BUS_H
 #define MIKUPAN_MIKUPAN_AUDIO_BUS_H
 
 #include "typedefs.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 u_int MikuPan_AudioGetRevision(void);
@@ -15,4 +19,6 @@ float MikuPan_AudioGetMasterScale(void);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

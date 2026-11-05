@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #include "libsg.h"
 #include "cglm/vec4.h"
 #include "graphics/graph3d/sglib.h"
 #include "typedefs.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u32 g_vu0_r = 0;
 sceVu0FMATRIX work_matrix_0 = {0};
@@ -262,3 +266,4 @@ qword *getObjWrk()
 {
     return (qword *) &objwork[sbuffer_p];
 }
+MIKUPAN_NAMESPACE_END

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #include "libpad.h"
 
 #include "mikupan/io/mikupan_controller.h"
 
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int scePadPortOpen(int port, int slot, void* addr)
 {
@@ -96,3 +100,4 @@ int scePadSetActDirect(int port, int slot, const unsigned char* data)
 
     return MikuPan_ControllerRumble(data);
 }
+MIKUPAN_NAMESPACE_END

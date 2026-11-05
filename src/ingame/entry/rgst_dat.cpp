@@ -1,12 +1,16 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "rgst_dat.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/rg_ap_dat.h"       // RGOST_AP_DAT rg_ap_dat[];
 #include "data/rg_dat.h"          // RGOST_DAT rg_dat[];
 #include "data/rg_center00.h"     // sceVu0FVECTOR rg_center00[];
 #include "data/rg_center01.h"     // sceVu0FVECTOR rg_center01[];
 // #include "data/rgc_dat.h"         // sceVu0FVECTOR *rgc_dat[];
+
+
 sceVu0FVECTOR *rgc_dat[] = {
     (sceVu0FVECTOR *)rg_center00,
     (sceVu0FVECTOR *)rg_center01,
@@ -41,3 +45,4 @@ sceVu0FVECTOR *rgc_dat[] = {
 #include "data/rg_rate_end00.h"   // RG_RATE_DAT rg_rate_end00[];
 #include "data/rg_rate_end01.h"   // RG_RATE_DAT rg_rate_end01[];
 #include "data/rg_rate_end.h"     // RG_RATE_DAT *rg_rate_end[];
+MIKUPAN_NAMESPACE_END

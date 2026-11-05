@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -18,6 +19,9 @@
 #include "ingame/menu/sp_menu.h"
 #include "graphics/graph2d/effect_scr.h"
 #include "graphics/mov/movie.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     float menu_alp;
@@ -233,3 +237,5 @@ static void GameOverMenuDisp(u_char alp)
         PutStringYW(6, 11 + i, 320, 204 + i * 29, 0x808080, go_wrk.menu_alp, 0x1e000, 1);
     }
 }
+
+MIKUPAN_NAMESPACE_END

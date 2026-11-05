@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -25,6 +26,9 @@
 #include "os/fileload.h"
 
 #define PI 3.1415928f
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char mode;
@@ -260,3 +264,5 @@ int GetLoadStartLock()
 {
     return load_start_wrk.lock;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_LIBGRAPH_H
 #define SCE_LIBGRAPH_H
 
@@ -12,6 +13,9 @@
 
 #define SCE_GS_NTSC 2
 #define SCE_GS_PAL  3
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct  {
   /// Repeat count (GS primitive data size)
@@ -245,4 +249,6 @@ int sceGsExecLoadImage(sceGsLoadImage *lp, u_long128 *srcaddr);
 int sceGsSetDefDrawEnv(sceGsDrawEnv1 *draw, short psm, short w, short h, short ztest, short zpsm);
 sceGsGParam *sceGsGetGParam();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_LIBGRAPH_H

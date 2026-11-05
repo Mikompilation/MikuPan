@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_renderer_internal.h"
 #include "mikupan_pipeline.h"
 #include "mikupan_gpu.h"
@@ -9,6 +10,9 @@
 /* Shadow map is square. The runtime size is g_shadow_fbo_size (changeable from
  * the UI); SHADOW_FBO_MAX_SIZE bounds it and sizes the probe readback buffer. */
 #define SHADOW_FBO_MAX_SIZE 2048
+
+MIKUPAN_NAMESPACE_BEGIN
+
 static int g_shadow_fbo_size = 256;
 static int g_shadow_resize_pending = 0;
 
@@ -536,3 +540,5 @@ void MikuPan_ShadowDebugProbeTexture(void)
     g_shadow_debug.probe_average =
         (float)sum / (float)(total * 255);
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -13,7 +14,10 @@
 #include "ingame/plyr/unit_ctl.h"
 #include "main/glob.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/map_item_dat.h"// MAP_ITEM_DAT map_item_dat[162];
+
+
 u_char map_item_ap_type[][2] = {
     {1, 0},
     {2, 0},
@@ -474,3 +478,5 @@ int ItemGetContinueJudge()
 
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

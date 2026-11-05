@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_CAMRA_H
 #define INGAME_MENU_IG_CAMRA_H
 
 #include "typedefs.h"
 #include "structs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char flsh_tmr;
@@ -50,4 +54,6 @@ void OpenCameraMenu();
 float NeonAlp(short int num, short int exe, short int dly, short int stp, short int no, short int *timer);
 float BeMax(u_char no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MENU_IG_CAMRA_H

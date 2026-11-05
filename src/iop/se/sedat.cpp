@@ -1,4 +1,8 @@
+#include "mikupan/mikupan_region.h"
 #include "iopse.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 /* data 90 */ SE_PARAM se_param_tbl[] = {
     { .adrs = 0x0, .attribute = 0x0, .pitch = 0x804, .adsr1 = 0x80ff, .adsr2 = 0xdfeb, .efct = 0x3, .vol = 0x1e, .pan = 0x40 },
@@ -571,3 +575,5 @@ int GetSeAdrs(int se_no)
 
     return se_param_tbl[se_no].adrs;
 }
+
+MIKUPAN_NAMESPACE_END

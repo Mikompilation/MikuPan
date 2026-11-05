@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_SE_PLYR_H
 #define OS_EEIOP_SE_PLYR_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char num;
@@ -15,4 +19,6 @@ u_char IsKarehaZone(sceVu0FVECTOR pos);
 u_char IsTakenohaZone(sceVu0FVECTOR pos);
 u_char IsHokoriZone();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_SE_PLYR_H

@@ -1,10 +1,14 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_FRAME_LIMITER_H
 #define MIKUPAN_FRAME_LIMITER_H
 
 #include <SDL3/SDL.h>
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 typedef struct MikuPan_FrameLimiter
@@ -47,4 +51,6 @@ void MikuPan_FrameLimiter_Wait(MikuPan_FrameLimiter* limiter);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

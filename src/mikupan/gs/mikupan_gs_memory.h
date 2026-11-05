@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_GS_MEMORY_H
 #define MIKUPAN_GS_MEMORY_H
 
@@ -11,6 +12,9 @@
 /// the game for the first-launch bake, and in tools/sgdstitch): the bake
 /// decodes model textures with it and checks every baked texture against
 /// it. Keep it free of SDL, logging and game headers.
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 enum PixelStorageFormat
 {
@@ -205,4 +209,6 @@ class GSHelper
 };
 }// namespace GS
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_GS_MEMORY_H

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_MOT_DAT_H
 #define GRAPHICS_MOTION_MOT_DAT_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	sceVu0FVECTOR rot;
@@ -23,4 +27,6 @@ typedef struct {
 	RST_DATA *rst1;
 } MOT_CTRL;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_MOT_DAT_H

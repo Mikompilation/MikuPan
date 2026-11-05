@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_LIBGIFPK_H
 #define SCE_LIBGIFPK_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_int *pCurrent;
@@ -22,4 +26,6 @@ u_int *sceGifPkReserve(sceGifPacket *pPacket, u_int count);
 void sceGifPkRef(sceGifPacket *pPacket, u_long128 *pRef, u_int size, u_int opt1, u_int opt2, u_int flag);
 
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_LIBGIFPK_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -14,6 +15,9 @@
 #include "mc/mc_exec.h"
 
 #include <stdio.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 MC_START_CHECK mc_start_check[] = {
     {0}, {0},
@@ -377,3 +381,5 @@ char mcCtrlCheckLanguage()
     return 0;
 }
 #endif
+
+MIKUPAN_NAMESPACE_END

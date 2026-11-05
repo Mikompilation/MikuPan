@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/gameplay/mikupan_graph3d_compat.h"
 
 #include <stdint.h>
@@ -10,6 +11,9 @@
 #include "mikupan/mikupan_types.h"
 #include "mikupan/rendering/mikupan_meshcache.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MikuPan_OnBlackWhiteClutTransition(u_int **previous_tri2_prim)
 {
@@ -129,3 +133,5 @@ void MikuPan_ApplyShadowStrengthFromPs2Alpha(int alpha)
 {
     MikuPan_SetShadowStrengthFromPs2Alpha(alpha);
 }
+
+MIKUPAN_NAMESPACE_END

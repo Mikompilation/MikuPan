@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -25,6 +26,9 @@
 #include "outgame/btl_mode/btl_mode.h"
 #include "outgame/mode_slct.h"
 #include "mikupan/mikupan_memory.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int rank_dat[] = {
     401, 1201, 2501, 4001, 7001,
@@ -454,3 +458,5 @@ void SetBattleClear()
     }
 }
 #endif
+
+MIKUPAN_NAMESPACE_END

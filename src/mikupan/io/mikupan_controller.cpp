@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_controller.h"
 #include "SDL3/SDL_scancode.h"
 #include "mikupan/mikupan_config.h"
@@ -21,6 +22,9 @@
 #include "mikupan/ui/mikupan_rml_save_point.h"
 
 #include <stdio.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int remap_target = -1;
 static int remap_target_kb = 0;
@@ -2863,3 +2867,5 @@ void MikuPan_ControllerDrawRemapWindow(void)
 
     igEnd();
 }
+
+MIKUPAN_NAMESPACE_END

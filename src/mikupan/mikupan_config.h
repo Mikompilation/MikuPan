@@ -1,11 +1,15 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_CONFIG_H
 #define MIKUPAN_MIKUPAN_CONFIG_H
 
 #include "mikupan_basictypes.h"
 #include <stddef.h>
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 extern MikuPan_Config mikupan_configuration;
@@ -20,4 +24,6 @@ int MikuPan_ResolveUserPath(const char *path, char *buffer,
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_MIKUPAN_CONFIG_H

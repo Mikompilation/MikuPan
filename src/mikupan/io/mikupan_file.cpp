@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "mikupan_file.h"
 #include "mikupan/mikupan_config.h"
@@ -27,6 +28,9 @@
 
 #include "mikupan/mikupan_memory.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 static std::mutex missing_data_dialog_mutex;
 static std::condition_variable missing_data_dialog_cv;
 static bool missing_data_dialog_requested = false;
@@ -34,7 +38,7 @@ static bool missing_data_dialog_open = false;
 static bool missing_data_dialog_selected = false;
 static std::string missing_data_path;
 
-extern "C" const char *MikuPan_GetBaseDirectory(void)
+MIKUPAN_EXTERN_C const char *MikuPan_GetBaseDirectory(void)
 {
     static std::string cached;
     if (!cached.empty())
@@ -589,7 +593,7 @@ static bool MikuPan_RequestMissingDataFolderDialogAsync(
     return true;
 }
 
-extern "C" void MikuPan_RequestDataFolderSelection(const char *missing_path)
+MIKUPAN_EXTERN_C void MikuPan_RequestDataFolderSelection(const char *missing_path)
 {
     const char *path = (missing_path != nullptr && missing_path[0] != '\0')
                            ? missing_path
@@ -616,7 +620,7 @@ static bool MikuPan_DataPathExistsNoPrompt(
     return !error && file_size > 0;
 }
 
-extern "C" bool MikuPan_HasRequiredDataFiles(char *missing_file,
+MIKUPAN_EXTERN_C bool MikuPan_HasRequiredDataFiles(char *missing_file,
                                              size_t missing_file_size)
 {
     const char *required_files[] = {
@@ -667,7 +671,7 @@ static void SDLCALL MikuPan_MissingDataFolderSelected(
     missing_data_dialog_cv.notify_all();
 }
 
-extern "C" void MikuPan_ServiceMissingDataFolderDialog()
+MIKUPAN_EXTERN_C void MikuPan_ServiceMissingDataFolderDialog()
 {
     std::string missing_path_to_show;
 
@@ -1402,3 +1406,5 @@ std::string MikuPan_GetRelativePath(const char *path)
 
     return std::filesystem::path(path).relative_path().generic_string();
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_IG_GLOB_H
 #define INGAME_IG_GLOB_H
 
 #include "typedefs.h"
 #include "ig_glob_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern FURN_WRK furn_wrk[60];
 extern FURN_EFCT fefct_wrk[60];
@@ -16,4 +20,6 @@ extern int disp3d_room_req;
 extern int disp3d_furn_req;
 
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_IG_GLOB_H

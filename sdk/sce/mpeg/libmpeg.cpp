@@ -1,4 +1,8 @@
+#include "mikupan/mikupan_region.h"
 #include "libmpeg.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int sceMpegReset(sceMpeg* mp)
 {
@@ -44,3 +48,5 @@ sceMpegCallback sceMpegAddStrCallback(sceMpeg* mp, sceMpegStrType strType, int c
 {
     return callback;
 }
+
+MIKUPAN_NAMESPACE_END

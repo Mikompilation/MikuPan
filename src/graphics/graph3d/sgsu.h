@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_SGSU_H
 #define GRAPHICS_GRAPH3D_SGSU_H
 
@@ -6,6 +7,9 @@
 #include "ee/eestruct.h"
 
 #include "graphics/graph3d/sg_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern SgCOORDUNIT *lcp;
 extern PHEAD *lphead;
@@ -55,4 +59,6 @@ const void  *MikuPan_SkinPalette(int *out_bones);
 unsigned long long MikuPan_SkinPaletteHash(void);
 void MikuPan_SkinFrameReset(void);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_SGSU_H

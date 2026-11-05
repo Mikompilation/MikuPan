@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_SGDMA_H
 #define GRAPHICS_GRAPH3D_SGDMA_H
 
@@ -6,6 +7,9 @@
 #include "typedefs.h"
 
 #include "ingame/map/furn_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void SetBlackWhiteCLUT();
 void ClearBlackWhiteCLUT();
@@ -36,4 +40,6 @@ TextureAnimation* GetTextureAnimation(void *sgd_top);
 void LoadTextureAnimation(u_int *prim);
 void SelectTextureAnimationFrame(u_int *prim);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_SGDMA_H

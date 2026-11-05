@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_ITEM_H
 #define INGAME_MENU_ITEM_H
 
 #include "typedefs.h"
 
 #include "ingame/menu/ig_camra.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	float io_x[7];
@@ -126,4 +130,6 @@ void BgFusumaYW(int rgb, float pos_x, float alpha, int pri);
 u_int FromPKZ(u_int pkz_addr, u_char pk2_no);
 void DcdCMP2PK2(u_int cmp_addr, u_int tmp_addr);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MENU_ITEM_H

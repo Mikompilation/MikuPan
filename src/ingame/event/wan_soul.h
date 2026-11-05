@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_EVENT_WAN_SOUL_H
 #define INGAME_EVENT_WAN_SOUL_H
 
 #include "typedefs.h"
 
 #include "ingame/enemy/move_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum
 {
@@ -111,4 +115,6 @@ u_char CallSoulTellingCamera(sceVu0FVECTOR soul_pos, sceVu0FVECTOR relative_came
 void CallSoulTellingCameraIn(sceVu0FVECTOR soul_pos, sceVu0FVECTOR mic_eye_pos, int time);
 int SoulTellingCameraInCtrl();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_EVENT_WAN_SOUL_H

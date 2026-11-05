@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -35,6 +36,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 sceVu0FVECTOR special_furn_pos[] = {
     { 34885.0f, -4800.0f, 46059.0f, 1.0f },
@@ -2554,3 +2558,5 @@ u_char* StopLampTremble(u_char *pointer)
 
     return pointer;
 }
+
+MIKUPAN_NAMESPACE_END

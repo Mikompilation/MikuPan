@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_logging.h"
 
 #include "spdlog/cfg/env.h"
@@ -15,6 +16,9 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace
 {
@@ -282,3 +286,5 @@ void critical_log(const char* fmt, ...)
     LogVariadic(MIKUPAN_LOG_CRITICAL, fmt, args);
     va_end(args);
 }
+
+MIKUPAN_NAMESPACE_END

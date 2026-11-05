@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "ap_pgost.h"
@@ -9,7 +10,10 @@
 #include "ingame/map/map_area.h"
 #include "ingame/map/map_ctrl.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/pg_dat.h" // PGOST_DAT pg_dat[];
+
+
 
 int test_rg_no = 0;
 PGOST_WRK pg_wrk = {0};
@@ -225,3 +229,5 @@ void PuzzleGhostDispMain()
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

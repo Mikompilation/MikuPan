@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 { // 0x8
@@ -22,4 +26,6 @@ typedef struct
     /* 0x10 */ sceVu0FVECTOR vtw;
 } SCRDEF;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // STRUCTS_H

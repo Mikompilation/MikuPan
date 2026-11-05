@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -10,6 +11,9 @@
 
 #include "os/eeiop/sd_room.h"
 #include "main/glob.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int EAGetNowMapFileNo();
 static u_short EAGetNowMapBgmVol();
@@ -129,3 +133,5 @@ static u_short EAGetNowMapBgmVol()
 
     return GetSdrAdpcmVol(plyr_wrk.pr_info.room_no);
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef EDIT_MDE_MENU_H
 #define EDIT_MDE_MENU_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum {
     MDE_MENU_PAGE_SUMMARY,
@@ -38,4 +42,6 @@ int MdeMenuCtrl(void);
 const char *MdeMenuPageName(int page);
 int MdeMenuCurrentRoomId(void);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // EDIT_MDE_MENU_H

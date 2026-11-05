@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -6,6 +7,9 @@
 #include "sce/libvu0.h"
 
 #include <math.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void GetSquare(sceVu0FVECTOR *v0, sceVu0FVECTOR *v1) 
 {
@@ -87,3 +91,5 @@ void RotFvector(float *rot, float *tv)
         sceVu0ApplyMatrix(tv, rot_matrix, tv);
     }
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "structs.h"
@@ -41,12 +42,15 @@
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "os/eeiop/eese.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/msl_bg_btl.h" // SPRT_DAT msl_bg_btl[11] = {...};
 #include "data/msl_bg_fsm.h" // SPRT_DAT msl_bg_fsm[11] = {...};
 #include "data/msl_bg_opt.h" // SPRT_DAT msl_bg_opt[11] = {...};
 #include "data/msl_bg_snd.h" // SPRT_DAT msl_bg_snd[11] = {...};
 #include "data/msl_bg_sty.h" // SPRT_DAT msl_bg_sty[11] = {...};
 #include "data/msel_sprt.h"  // SPRT_DAT msel_sprt[148] = {...};
+
+
 
 static u_char sm_csr_info[2] = {0, 0};
 int cmn_tex_load = 0;
@@ -1924,3 +1928,5 @@ void SetCsrInfoBattleMode()
     }
 }
 #endif
+
+MIKUPAN_NAMESPACE_END

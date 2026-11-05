@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_SAVE_CODEC_H
 #define MIKUPAN_SAVE_CODEC_H
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanSave
 {
 using Bytes = std::vector<uint8_t>;
@@ -30,4 +34,6 @@ bool Validate(const Bytes &data, std::string &error);
 bool ToNative(const Bytes &ps2, Bytes &native, std::string &error);
 bool ToPs2(const Bytes &native, Bytes &ps2, std::string &error);
 } // namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END
 #endif

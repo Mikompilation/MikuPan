@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_TEXTURE_SLOTS_H
 #define MIKUPAN_TEXTURE_SLOTS_H
 
@@ -20,8 +21,11 @@
 /// copies, the camera photo, the dither noise, photos from save data) are
 /// kept as plain pixels in the same tables.
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 /// A TIM2 picture upload: MakeTim2Direct3(), Tim2LoadImage2() and the other
@@ -79,4 +83,6 @@ void MikuPan_TexSlots_Shutdown(void);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_TEXTURE_SLOTS_H

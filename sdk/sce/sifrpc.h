@@ -1,5 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_SIFRPC_H
 #define SCE_SIFRPC_H
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 struct _sif_client_data;
 struct _sif_serve_data;
@@ -66,4 +70,6 @@ int sceSifRegisterRpc(sceSifServeData *sd, unsigned int command, sceSifRpcFunc f
 void sceSifRpcLoop(sceSifQueueData *qd);
 
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_SIFRPC_H

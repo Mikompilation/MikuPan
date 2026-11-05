@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "accessory.h"
@@ -33,6 +34,9 @@
 
 #define PI 3.1415927f
 #define PI2 6.2831855f
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void InitPlyrAcsAlpha()
 {
@@ -1941,3 +1945,5 @@ void SetSpeFurnLight(FURN_WRK *furn)
 
 SPRING rope_spring[20][9] = {0};
 C_PARTICLE rope_particle[20][10] = {0};
+
+MIKUPAN_NAMESPACE_END

@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_MDLACT_H
 #define GRAPHICS_MOTION_MDLACT_H
 
 #include "typedefs.h"
 
 #include "graphics/graph3d/sg_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef char (*plyr_act_func_t)(SgCOORDUNIT *cp);
 
@@ -38,4 +42,6 @@ char QuakeCamera();
 float motGetRandom(float upper, float lower);
 float motLinearSupValue(float moto, float saki, u_char mode, u_int cnt, u_int all_cnt);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_MDLACT_H

@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_FURN_SPE_FURN_SPE_H
 #define INGAME_MAP_FURN_SPE_FURN_SPE_H
 
 #include "typedefs.h"
 #include "graphics/graph3d/libsg.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char eventflg;
@@ -27,8 +31,10 @@ typedef struct {
 	sceVu0FMATRIX mat;
 } TREMBLE_H_WRK;
 
+MIKUPAN_NAMESPACE_END
 #include "ingame/map/furn_dat.h"
 #include "ingame/enemy/move_ctl.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 // extern sceVu0FVECTOR special_furn_pos[];
 extern FURN_DAT_SAVE f_dat_save[430];
@@ -105,4 +111,6 @@ void ThunderLight();
 u_char* CallLampTremble(u_char *pointer);
 u_char* StopLampTremble(u_char *pointer);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_FURN_SPE_FURN_SPE_H

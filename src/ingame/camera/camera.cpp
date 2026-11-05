@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "graphics/graph3d/sglib.h"
 #include "mikupan/io/mikupan_file_c.h"
@@ -33,6 +34,9 @@
 
 #define PI 3.1415928f
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 static u_short cam_no_save = 0;
 static u_short compling = 0xFFFF;
 static u_char cam_mode_old = 0;
@@ -49,7 +53,9 @@ u_char cam_info_disp = 1;
 
 #define DEG2RAD(x) ((float) (x) * PI / 180.0f)
 
+MIKUPAN_NAMESPACE_END
 #include "camera.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 sceVu0FVECTOR adj_cam_pos = {100.0f, -1400.0f, -1200.0f, 0.0f};
 int camera_third_person_enabled = 0;
@@ -3942,4 +3948,6 @@ void ClearDramaCamReq()
     }
 }
 
+
+MIKUPAN_NAMESPACE_END
 #endif

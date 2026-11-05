@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -9,6 +10,9 @@
 #include "iop/adpcm/iopadpcm.h"
 
 #define DEFAULT_PITCH 0xFFF
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void EAdpcmGoverMain(void)
 {  
@@ -66,3 +70,4 @@ void AdpcmStopGameOver(int fout_flm)
       adpcm_map.gover.mode = GAMEOVER_WHITE_IN;
     }
 }
+MIKUPAN_NAMESPACE_END

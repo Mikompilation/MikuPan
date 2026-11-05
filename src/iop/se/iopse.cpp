@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "iopse.h"
 
 #include "adpcm/iopadpcm.h"
@@ -7,6 +8,9 @@
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "sdmacro.h"
 #include "stdio.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_int snd_buf_top[] = {
     0x5400,
@@ -774,3 +778,5 @@ void SeSetMasterVol(u_short mvol)
     sceSdSetParam(SD_P_MVOLL | SD_CORE_1, mvol & 0x3FFF);
     sceSdSetParam(SD_P_MVOLR | SD_CORE_1, mvol & 0x3FFF);
 }
+
+MIKUPAN_NAMESPACE_END

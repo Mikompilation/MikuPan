@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -9,6 +10,9 @@
 #include "ingame/map/furn_dat.h"
 #include "ingame/map/furn_eff.h"
 #include "ingame/plyr/plyr_ctl.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void FurnEfctSetUse(FURN_WRK *fwp, float *pos, int fewrk_no);
 static void FurnEfctSetPos0(FURN_WRK *fwp, float *pos);
@@ -210,3 +214,5 @@ void FurnHintDeformCtrl()
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

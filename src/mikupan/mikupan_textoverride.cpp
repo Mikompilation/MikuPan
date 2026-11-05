@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_textoverride.h"
 
 #include "enums.h"
@@ -16,6 +17,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace
 {
@@ -1125,3 +1129,5 @@ int MikuPan_EnglishSubtitlesReady(void)
 {
     return BuiltinEnglishSubtitles(0) != nullptr;
 }
+
+MIKUPAN_NAMESPACE_END

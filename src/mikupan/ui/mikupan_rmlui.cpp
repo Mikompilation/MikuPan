@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/ui/mikupan_rmlui.h"
 #include "mikupan/ui/mikupan_rml_message_box.h"
 #include "mikupan/ui/mikupan_rml_mode_select.h"
@@ -43,6 +44,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max,
                unsigned short pitch, unsigned char menu);
@@ -1981,7 +1985,7 @@ void UpdateGamepadNavigation(void)
 } // namespace
 
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 void MikuPan_RmlUiRequestItemIcons(void)
 {
@@ -2383,3 +2387,5 @@ void MikuPan_RmlUiShutdown(void)
     g_rml = MikuPanRmlState();
 }
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_ui_saves.h"
 #include "mc/mc_main.h"
 #include "mikupan/save/mikupan_save_paths.h"
@@ -11,6 +12,9 @@
 #include <cstdio>
 #include <mutex>
 #include <set>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanUiSaves
 {
@@ -1138,3 +1142,5 @@ void Draw(SDL_Window* window)
     ImGui::End();
 }
 }// namespace MikuPanUiSaves
+
+MIKUPAN_NAMESPACE_END

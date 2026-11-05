@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_LIBVU0_H
 #define SCE_LIBVU0_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void sceVu0ScaleVectorXYZ(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float s);
 void sceVu0AddVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1, sceVu0FVECTOR v2);
@@ -33,4 +37,6 @@ void sceVu0ClampVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float min, float max)
 void sceVu0InterVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1, sceVu0FVECTOR v2, float r);
 void sceVu0RotTransPersF(sceVu0FVECTOR v0, sceVu0FMATRIX m0, sceVu0FVECTOR v1, int mode);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_LIBVU0_H

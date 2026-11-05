@@ -1,7 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "acs_dat.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/sphere_R100.h" // SPHERE sphere_R100;
 #include "data/sphere_R150.h" // SPHERE sphere_R150;
 #include "data/sphere_R200.h" // SPHERE sphere_R200;
@@ -107,3 +109,5 @@
 #include "data/m051_cloth.h" // CLOTH_DAT m051_cloth[];
 #include "data/m058_cloth.h" // CLOTH_DAT m058_cloth[];
 #include "data/m059_cloth.h" // CLOTH_DAT m059_cloth[];
+
+MIKUPAN_NAMESPACE_END

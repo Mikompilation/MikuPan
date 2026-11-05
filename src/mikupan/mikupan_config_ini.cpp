@@ -1,3 +1,5 @@
+#include "mikupan/host/engine_api.h"
+#include "mikupan/mikupan_region.h"
 #include "mikupan_config.h"
 
 #include "debug/mikupan_logging.h"
@@ -18,6 +20,9 @@
 #include <exception>
 
 #include "inipp.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace
 {
@@ -606,7 +611,7 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
 }
 }
 
-extern "C" void MikuPan_LoadConfiguration(const char *filename)
+MIKUPAN_EXTERN_C void MikuPan_LoadConfiguration(const char *filename)
 {
     if (filename != nullptr && filename[0] != '\0')
     {
@@ -643,10 +648,17 @@ extern "C" void MikuPan_LoadConfiguration(const char *filename)
         }
     }
 
+    if (const char* selected = MikuPanHost::DataRoot())
+    {
+        std::strncpy(mikupan_configuration.data_folder, selected,
+                     sizeof(mikupan_configuration.data_folder) - 1);
+        mikupan_configuration.data_folder[sizeof(mikupan_configuration.data_folder) - 1] = '\0';
+    }
+
     MikuPan_ConfigurationValidate();
 }
 
-extern "C" int MikuPan_SaveConfiguration(const char *filename)
+MIKUPAN_EXTERN_C int MikuPan_SaveConfiguration(const char *filename)
 {
     MikuPan_ConfigurationValidate();
 
@@ -661,7 +673,7 @@ extern "C" int MikuPan_SaveConfiguration(const char *filename)
     return TrySaveConfigurationFile(default_path) ? 1 : 0;
 }
 
-extern "C" int MikuPan_ResolveUserPath(const char *path, char *buffer,
+MIKUPAN_EXTERN_C int MikuPan_ResolveUserPath(const char *path, char *buffer,
                                         size_t buffer_size)
 {
     if (path == nullptr || buffer == nullptr || buffer_size == 0)
@@ -702,3 +714,5 @@ extern "C" int MikuPan_ResolveUserPath(const char *path, char *buffer,
     std::strcpy(buffer, resolved.c_str());
     return 1;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "sifrpc.h"
 #include <stdio.h>
 
@@ -7,6 +8,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void sceSifInitRpc(unsigned int mode)
 {
@@ -93,3 +97,5 @@ void sceSifRpcLoop(sceSifQueueData* qd)
 {
     (void)qd;
 }
+
+MIKUPAN_NAMESPACE_END

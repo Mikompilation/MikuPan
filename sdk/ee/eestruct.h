@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef EE_EESTRUCT_H
 #define EE_EESTRUCT_H
 
@@ -311,6 +312,9 @@
 #define SCE_GS_SET_XYZ(x, y, z) \
     ((u_long)(x) | ((u_long)(y) << 16) | ((u_long)(z) << 32))
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 typedef struct {
     unsigned long long CLAMP:1;
     unsigned long long pad01:63;
@@ -465,4 +469,6 @@ typedef struct {
 #define SCE_DMA_fromSPR     8
 #define SCE_DMA_toSPR       9
 
+
+MIKUPAN_NAMESPACE_END
 #endif // EE_EESTRUCT_H

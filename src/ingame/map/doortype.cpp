@@ -1,7 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "doortype.h"
 #include "enums.h"
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/door_type_dat.h" // DOOR_TYPE_DAT door_type_dat[];
 #include "data/dopen_tbl_dplrn.h" // static float dopen_tbl_dplrn[];
 #include "data/dopen_tbl_dplrc.h" // static float dopen_tbl_dplrc[];
@@ -36,6 +38,8 @@
 #include "data/dopen_tbl_drot.h" // static float dopen_tbl_drot[];
 #include "data/dopen_tbl_dpsk.h" // static float dopen_tbl_dpsk[];
 #include "data/dopen_tbl_dplk.h" // static float dopen_tbl_dplk[];
+
+
 
 float* dtbl_tbl[] = {
     dopen_tbl_dplrn,     dopen_tbl_dplrc,     dopen_tbl_dplrl,
@@ -133,3 +137,5 @@ int MotionIsDouble(u_char motion_no)
 
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

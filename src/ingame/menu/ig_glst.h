@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_GLST_H
 #define INGAME_MENU_IG_GLST_H
 
 #include "typedefs.h"
 
 #include "ingame/menu/ig_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     char disp_flg;
@@ -56,4 +60,6 @@ void DispGlistPhoto(u_int line, u_char alpha);
 char CheckGlistComplete(u_int list);
 char CheckGlistRareGhost(u_int kind, u_int no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MENU_IG_GLST_H

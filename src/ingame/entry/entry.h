@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_ENTRY_H
 #define INGAME_ENTRY_ENTRY_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char stts;
@@ -38,4 +42,6 @@ void ClearAppearWrkInfo();
 void EntryMain();
 void AreaEntrySet();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_ENTRY_H

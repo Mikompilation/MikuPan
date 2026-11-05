@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_SPD_MENU_H
 #define INGAME_MENU_IG_SPD_MENU_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -19,4 +23,6 @@ void SpdMapMain();
 void SpdOptStart();
 void SpdOptMain();
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_MENU_IG_SPD_MENU_H

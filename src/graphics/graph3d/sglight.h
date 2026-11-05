@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_SGLIGHT_H
 #define GRAPHICS_GRAPH3D_SGLIGHT_H
 
@@ -5,6 +6,9 @@
 
 #include "graphics/graph3d/sg_dat.h"
 #include "graphics/graph3d/sgsgd.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void SgPreRenderDbgOn();
 void SgPreRenderDbgOff();
@@ -48,4 +52,6 @@ void ClearPreRenderMeshData(u_int *prim);
 void SgClearPreRenderPrim(u_int *prim);
 void SgClearPreRender(void *sgd_top, int pnum);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_SGLIGHT_H

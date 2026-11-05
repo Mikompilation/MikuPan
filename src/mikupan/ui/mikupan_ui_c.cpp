@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_ui_saves.h"
 #include "typedefs.h"
 
@@ -20,8 +21,11 @@
 #include <string.h>
 
 // -- Backend wrappers (defined in mikupan_ui.cpp) ----------------------------
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 void MikuPan_ImGui_ImplInit(SDL_Window* window);
 void MikuPan_ImGui_ImplShutdown(void);
@@ -308,3 +312,5 @@ void MikuPan_UiMenuBar(void)
 
     igEndMainMenuBar();
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "rare_ene.h"
@@ -17,6 +18,9 @@
 #include "mikupan/debug/mikupan_logging.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     SPRT_DAT *spr;
@@ -523,3 +527,5 @@ void DrawRareEne()
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

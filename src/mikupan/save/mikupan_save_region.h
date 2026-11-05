@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_SAVE_REGION_H
 #define MIKUPAN_SAVE_REGION_H
 #include "mikupan_save_codec.h"
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanSave
 {
 enum class SaveRegion
@@ -23,4 +27,6 @@ bool ConvertRegion(const Bytes& data, SaveRegion source, SaveRegion target,
                    Bytes& output, std::string& error, unsigned language = 0,
                    bool display_60hz = false);
 }// namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END
 #endif

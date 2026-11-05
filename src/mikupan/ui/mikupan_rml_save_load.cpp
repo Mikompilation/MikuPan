@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/ui/mikupan_rml_save_load.h"
 #include "mikupan/ui/mikupan_rmlui.h"
 
@@ -38,6 +39,9 @@
 #include <string>
 #include <system_error>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int MikuPan_ReadResolvedFramebufferRGBA8TopLeft(int width,
                                                 int height,
@@ -2722,7 +2726,7 @@ void MikuPan_RmlSaveLoadShutdown(void)
     g_save_load = MikuPanRmlSaveLoadState();
 }
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 void MikuPan_RmlSaveLoadOpenSave(int mission_flag)
 {
@@ -3099,3 +3103,5 @@ void MikuPan_RmlSaveLoadApplyLanguage(int language)
 }
 
 }
+
+MIKUPAN_NAMESPACE_END

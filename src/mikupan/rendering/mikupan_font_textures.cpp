@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_font_textures.h"
 #include "mikupan_font_identity.h"
 #include "mikupan_gpu.h"
@@ -12,6 +13,9 @@
 #include <cstring>
 #include <string>
 #include <vector>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 extern char *file_name[];
 namespace MikuPanFonts
 {
@@ -141,3 +145,5 @@ void ShutdownGpu()
             if (id) { MikuPan_GPUReleaseTexture(id); id=0; }
 }
 }
+
+MIKUPAN_NAMESPACE_END

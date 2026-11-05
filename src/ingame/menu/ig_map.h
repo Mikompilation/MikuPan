@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_MAP_H
 #define INGAME_MENU_IG_MAP_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -62,4 +66,6 @@ void IngameMenuMapDisp(u_char mod);
 void IngameMiniMapDisp();
 void AngleForWin(int pri, short int xo, short int yo, short int r, u_char ptn);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_MENU_IG_MAP_H

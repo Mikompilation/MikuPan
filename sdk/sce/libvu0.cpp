@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "libvu0.h"
 
 #include "cglm/call/mat4.h"
@@ -6,6 +7,9 @@
 
 #define POW2(x) ((x) * (x))
 #define HALF_PI 1.57079637050628662109e0f
+
+MIKUPAN_NAMESPACE_BEGIN
+
 static void _sceVu0ecossin(int sign, float t, float* sin, float* cos)
 {
     // sin(x) expansion values seen in the very recent
@@ -430,3 +434,5 @@ void sceVu0InterVector(sceVu0FVECTOR v0, sceVu0FVECTOR v1, sceVu0FVECTOR v2,
     v0[2] = v1[2] * r + v2[2] * inv_r;
     v0[3] = v1[3] * r + v2[3] * inv_r;
 }
+
+MIKUPAN_NAMESPACE_END

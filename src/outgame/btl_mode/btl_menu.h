@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OUTGAME_BTL_MODE_BTL_MENU_H
 #define OUTGAME_BTL_MODE_BTL_MENU_H
 
 #include "btl_mode.h"
 #include "typedefs.h"
 #include "ingame/event/ev_load.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -40,4 +44,6 @@ void StageGhostLoadAfter();
 void SaveStoryWrk();
 void LoadStoryWrk();
 
+
+MIKUPAN_NAMESPACE_END
 #endif// OUTGAME_BTL_MODE_BTL_MENU_H

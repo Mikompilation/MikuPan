@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "takep_pe.h"
@@ -14,6 +15,9 @@
 #include "graphics/graph2d/tim2_new.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 sceVu0IVECTOR particle_eff_col = {100, 100, 200, 0};
 sceVu0FVECTOR l_eye_pos = {23087.0f, -687.0f, 12135.0f, 0.0f};
@@ -645,3 +649,5 @@ void EyeLightCtrl() {
         ndpkt = n + end_pktaddr + 1;
     }
 }
+
+MIKUPAN_NAMESPACE_END

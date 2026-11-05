@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "iopcdvd.h"
 #include "addresses.h"
 
@@ -21,6 +22,9 @@
 #include <stdint.h>
 #include <spdlog/spdlog.h>
 //#include <os/eeiop/cdvd/fnameee.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern char* file_name[];
 
@@ -1145,3 +1149,5 @@ static void ICdvdUnlock()
         SDL_UnlockMutex(cdvd_lock);
     }
 }
+
+MIKUPAN_NAMESPACE_END

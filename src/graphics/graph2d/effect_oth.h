@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_EFFECT_OTH_H
 #define GRAPHICS_GRAPH2D_EFFECT_OTH_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	sceVu0FVECTOR opos[24];
@@ -182,7 +186,9 @@ typedef struct { // 0x170
 	U32DATA tq[8];
 } EFF_SUNSHINE;
 
+MIKUPAN_NAMESPACE_END
 #include "graphics/graph2d/effect.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 extern int stop_lf;
 extern u_char prgb;
@@ -278,4 +284,6 @@ void SetSpirit(EFFECT_CONT *ec);
 void SetFaceSpirit(EFFECT_CONT *ec);
 void SetSaveCameraLamp();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_EFFECT_OTH_H

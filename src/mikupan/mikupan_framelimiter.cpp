@@ -1,4 +1,8 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_framelimiter.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static Uint64 MikuPan_SecondsToCounterTicks(const MikuPan_FrameLimiter* limiter,
                                             double seconds)
@@ -159,3 +163,4 @@ void MikuPan_FrameLimiter_Wait(MikuPan_FrameLimiter* limiter)
         limiter->next_counter = now;
     }
 }
+MIKUPAN_NAMESPACE_END

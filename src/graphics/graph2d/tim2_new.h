@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_TIM2_NEW_H
 #define GRAPHICS_GRAPH2D_TIM2_NEW_H
 
@@ -5,6 +6,9 @@
 #include "graphics/graph2d/tim2.h"
 
 // extern u_int *tm2_end_pkt;
+
+MIKUPAN_NAMESPACE_BEGIN
+
 extern Q_WORDDATA mpbufw[2][8192];
 
 u_int* MakeTim2Direct2(u_int *pkt_addr, u_int *tim2_addr, int tbp);
@@ -35,4 +39,6 @@ int MikuPan_RequestFontReload(int base_file_no, u_int addr);
 void MikuPan_FontTexPollPendingReload();
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_TIM2_NEW_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "rotd_ctl.h"
@@ -15,6 +16,9 @@
 #include "main/glob.h"
 
 #define PI 3.1415927f
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int CheckRotDoorOpenStatus(int dwrk_no, u_char type)
 {
@@ -241,3 +245,4 @@ u_char ChkRotDoorRot(int dwrk_no)
 
     return 1;
 }
+MIKUPAN_NAMESPACE_END

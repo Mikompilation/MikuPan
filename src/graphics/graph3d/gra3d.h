@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_GRA3D_H
 #define GRAPHICS_GRAPH3D_GRA3D_H
 
@@ -14,6 +15,9 @@
 
 #include <stdint.h>
 #include "ingame/map/furn_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern u_int fly_display[3];
 extern sceVu0FVECTOR fog_param[64];
@@ -110,4 +114,6 @@ void DrawGirl(int in_mirror);
 int DrawEnemy(int no);
 int DrawFlyMove(int work_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_GRA3D_H

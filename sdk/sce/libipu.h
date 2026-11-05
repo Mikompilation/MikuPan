@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_LIBIPU_H
 #define SCE_LIBIPU_H
 
@@ -6,6 +7,9 @@
 #define SCE_IPU_BCLR	0x00000000
 #define sceIpuIsBusy() ((int)((int)DGET_IPU_CTRL() < 0))
 #define sceIpuBCLR(bp) DPUT_IPU_CMD(SCE_IPU_BCLR | (bp))
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_int d4madr;
@@ -19,4 +23,6 @@ typedef struct {
 	u_int ipuctrl;
 } sceIpuDmaEnv;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_LIBIPU_H

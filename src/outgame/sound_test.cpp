@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -19,6 +20,9 @@
 #include "iop/adpcm/iopadpcm.h"
 #include "outgame/mode_slct.h"
 #include "outgame/sound_test.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_short bgm_no;
@@ -875,3 +879,5 @@ void OneNum(u_short num_chr, u_char number, u_char no, u_char timer, u_char tim_
     }
 }
 
+
+MIKUPAN_NAMESPACE_END

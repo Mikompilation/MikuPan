@@ -1,17 +1,15 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
 #include "ig_menu.h"
-
 #include <cstdio>
-
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/mikupan_textoverride.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/ui/mikupan_rml_options.h"
 #include "graphics/graph2d/effect.h"
 #include "graphics/graph2d/effect_sub.h"
-// #include "graphics/graph2d/tim2.h"
 #include "graphics/motion/mdlwork.h"
 #include "ingame/info/inf_disp.h"
 #include "ingame/menu/ig_album.h"
@@ -30,8 +28,15 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 #include "outgame/mode_slct.h"
-
 #include <string.h>
+#include <graphics/graph2d/message.h>
+
+
+// #include "graphics/graph2d/tim2.h"
+
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void IngameMenuOpenInit();
 static u_char MenuInOut();
@@ -54,7 +59,6 @@ static void CmnLineForWin(short int win_x, short int win_y, short int ofs_x, sho
 #include "data/sozai.h" // SPRT_DAT sozai;
 #include "data/mask_l.h" // SPRT_DAT mask_l;
 #include "data/mask_s.h" // SPRT_DAT mask_s;
-#include <graphics/graph2d/message.h>
 
 static ANA_PAD ana_pad;
 static FLSH_CORE flsh;
@@ -1783,3 +1787,5 @@ int StopCameraMenu()
     return 1;
 }
 
+
+MIKUPAN_NAMESPACE_END

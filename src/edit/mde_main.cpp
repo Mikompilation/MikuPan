@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -8,6 +9,9 @@
 #include "edit/mde_fmnu.h"
 #include "edit/mde_menu.h"
 #include "graphics/graph2d/g2d_main.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MdeInit(void)
 {
@@ -37,3 +41,5 @@ void MdeCtrl(void)
     MdeDispMain(&mde_menu_wrk);
     gra2dDraw(GRA2D_CALL_OG);
 }
+
+MIKUPAN_NAMESPACE_END

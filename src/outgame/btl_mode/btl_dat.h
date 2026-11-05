@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OUTGAME_BTL_MODE_BTL_DAT_H
 #define OUTGAME_BTL_MODE_BTL_DAT_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_short time;
@@ -26,4 +30,6 @@ typedef struct {
 extern STAGE_DAT stage_dat[];
 
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OUTGAME_BTL_MODE_BTL_DAT_H

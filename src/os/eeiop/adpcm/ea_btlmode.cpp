@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -7,6 +8,9 @@
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "os/eeiop/adpcm/ea_dat.h"
 #include "iop/adpcm/iopadpcm.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void EAdpcmBtlmodeMain()
 {
@@ -105,3 +109,4 @@ void AdpcmBtlmodeEnd()
     adpcm_map.event.use = 0;
     adpcm_map.btlmode.mode = BTL_MODE_READY;
 }
+MIKUPAN_NAMESPACE_END

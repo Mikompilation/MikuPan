@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "voice.h"
 #include "iop/iopmain.h"
 #include "mikupan/mikupan_audio.h"
@@ -9,6 +10,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 bool loopEnd;
 bool loopRepeat;
@@ -705,3 +709,5 @@ void FillAdpcmHeader(int vNo)
         v->lsa = v->nax & ~0x7;
     }
 }
+
+MIKUPAN_NAMESPACE_END

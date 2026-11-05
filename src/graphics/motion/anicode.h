@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_ANICODE_H
 #define GRAPHICS_MOTION_ANICODE_H
 
@@ -5,6 +6,9 @@
 
 #include "graphics/motion/mdlwork.h"
 #include "graphics/motion/mdldat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void motAniCodeClearBuf(ANI_CTRL *ani_ctrl);
 void motAniCodeSetBuf(ANI_CTRL *ani_ctrl, ANI_CODE code);
@@ -22,4 +26,6 @@ void motAniCodeReadDOOR(ANI_CTRL *ani_ctrl, int *args);
 void motAniCodeReadEFCT(ANI_CTRL *ani_ctrl, int *args);
 u_char motGetNextMotion(ANI_CTRL *ani_ctrl);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_ANICODE_H

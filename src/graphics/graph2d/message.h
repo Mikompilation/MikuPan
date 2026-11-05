@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_MESSAGE_H
 #define GRAPHICS_GRAPH2D_MESSAGE_H
 
@@ -5,6 +6,9 @@
 
 #include <stdint.h>
 #include "graphics/graph2d/str_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x58
 	/* 0x00 */ int pri;
@@ -48,7 +52,9 @@ typedef struct { // 0x30c
 	/* 0x00c */ u_char mes_alps[16][48];
 } MESV22;
 
+MIKUPAN_NAMESPACE_END
 #include "outgame/mode_slct.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 extern u_char ascii_font_tbl[];
 extern u_char ascii_font_tbl2[];
@@ -112,4 +118,6 @@ int SetMessageMov(int path, int type, DISP_STR *s);
 void MesPacketEnd();
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_MESSAGE_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "sgsgd.h"
 #include "common.h"
 #include "typedefs.h"
@@ -14,6 +15,9 @@
 #include "graphics/graph3d/sglib.h"
 
 #include <mikupan/mikupan_memory.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int post_process = 0;
 static int PresetChk;
@@ -598,3 +602,5 @@ void SgSetTEX1(void *sgd_top, sceGsTex1 *ptex1)
         SgSetTEX1Prim(pk[i], ptex1);
     }
 }
+
+MIKUPAN_NAMESPACE_END

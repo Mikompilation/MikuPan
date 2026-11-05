@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "leditor.h"
@@ -15,8 +16,13 @@
 #include "graphics/graph3d/load3d.h"
 #include "graphics/graph3d/sglight.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/room_name.h" // static char *room_name[];
+MIKUPAN_NAMESPACE_END
 #include "sce/libvu0.h"
+MIKUPAN_NAMESPACE_BEGIN
+
+
 
 static u_int *ldata_top;
 static u_int *pdata_top;
@@ -729,3 +735,5 @@ void ApplyFogData()
         fog_rgb_finder[disp_room][2] = dbg_wrk.fog_b;
     }
 }
+
+MIKUPAN_NAMESPACE_END

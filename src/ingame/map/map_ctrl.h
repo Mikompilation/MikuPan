@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_MAP_CTRL_H
 #define INGAME_MAP_MAP_CTRL_H
 
 #include "typedefs.h"
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_short camera_no;
@@ -56,4 +60,6 @@ void NakasuHazeSet();
 void DebugMemoryCheck(u_char *addr, int size);
 int GetRoomPos(u_char room_no, sceVu0FVECTOR room_pos);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_MAP_CTRL_H

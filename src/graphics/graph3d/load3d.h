@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_LOAD3D_H
 #define GRAPHICS_GRAPH3D_LOAD3D_H
 
 #include "typedefs.h"
 
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_int *pk2;
@@ -49,4 +53,6 @@ int InitializeRoomUnder(RMDL_ADDR *room_tbl);
 int LoadInitFurnModel(ROOM_LOAD_BLOCK *rlb);
 int LoadInitDoorModel(ROOM_LOAD_BLOCK *rlb);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_LOAD3D_H

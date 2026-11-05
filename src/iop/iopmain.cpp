@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "iopmain.h"
 
 #include "se/iopse.h"
@@ -12,6 +13,9 @@
 #include "sysmem.h"
 #include "thread.h"
 #include "timerman.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int iop_loop_thid = 0;
 IOP_STAT iop_stat;
@@ -203,3 +207,5 @@ void IopShutDown()
     MikuPan_IopHostShutdown();
     MikuPan_SdShutdown();
 }
+
+MIKUPAN_NAMESPACE_END

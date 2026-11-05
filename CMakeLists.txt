@@ -411,56 +411,6 @@ set(MIKUPAN_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated)
 set(MIKUPAN_VERSION_HEADER ${MIKUPAN_GENERATED_DIR}/mikupan_version.h)
 file(MAKE_DIRECTORY ${MIKUPAN_GENERATED_DIR})
 
-if(BUILD_EU_VERSION)
-    set(MIKUPAN_DATA_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/data_eu")
-else()
-    set(MIKUPAN_DATA_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/data")
-endif()
-
-set(MIKUPAN_DATA_INCLUDE_DIR "${MIKUPAN_GENERATED_DIR}/data_include")
-set(MIKUPAN_DATA_OUTPUT_DIR "${MIKUPAN_DATA_INCLUDE_DIR}/data")
-file(REMOVE_RECURSE "${MIKUPAN_DATA_OUTPUT_DIR}")
-file(MAKE_DIRECTORY "${MIKUPAN_DATA_OUTPUT_DIR}")
-file(GLOB_RECURSE MIKUPAN_DATA_HEADERS CONFIGURE_DEPENDS
-        "${MIKUPAN_DATA_SOURCE_DIR}/*.h"
-)
-set(MIKUPAN_DATA_HEADER_OUTPUTS)
-foreach(mikupan_data_header IN LISTS MIKUPAN_DATA_HEADERS)
-    file(RELATIVE_PATH mikupan_data_header_rel
-            "${MIKUPAN_DATA_SOURCE_DIR}"
-            "${mikupan_data_header}")
-    set(mikupan_data_header_out
-            "${MIKUPAN_DATA_OUTPUT_DIR}/${mikupan_data_header_rel}")
-    get_filename_component(mikupan_data_header_out_dir
-            "${mikupan_data_header_out}" DIRECTORY)
-    add_custom_command(
-            OUTPUT "${mikupan_data_header_out}"
-            COMMAND ${CMAKE_COMMAND} -E make_directory
-                    "${mikupan_data_header_out_dir}"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${mikupan_data_header}"
-                    "${mikupan_data_header_out}"
-            DEPENDS "${mikupan_data_header}"
-            VERBATIM
-    )
-    list(APPEND MIKUPAN_DATA_HEADER_OUTPUTS "${mikupan_data_header_out}")
-endforeach()
-add_custom_target(mikupan_data_headers
-        DEPENDS ${MIKUPAN_DATA_HEADER_OUTPUTS}
-)
-message(STATUS "MikuPan data headers: ${MIKUPAN_DATA_SOURCE_DIR}")
-
-# Generate once at configure time so the header always exists for compilation.
-execute_process(
-        COMMAND ${CMAKE_COMMAND}
-        -DSRC=${CMAKE_CURRENT_SOURCE_DIR}/cmake/mikupan_version.h.in
-        -DDST=${MIKUPAN_VERSION_HEADER}
-        -DGIT_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateVersion.cmake
-)
-
-# Regenerate before every build so it reflects the actual built commit even when
-# CMake isn't re-run. configure_file inside the script no-ops if nothing changed.
 add_custom_target(mikupan_version
         COMMAND ${CMAKE_COMMAND}
         -DSRC=${CMAKE_CURRENT_SOURCE_DIR}/cmake/mikupan_version.h.in
@@ -471,50 +421,60 @@ add_custom_target(mikupan_version
         COMMENT "Updating MikuPan build version info"
 )
 
+# Keep the regional code and data isolated while sharing third-party libraries.
+function(mikupan_add_engine region data_directory factory)
+    set(engine MikuPan${region})
+    set(data_include "${MIKUPAN_GENERATED_DIR}/${region}/data_include")
+    file(MAKE_DIRECTORY "${data_include}/data")
+    file(GLOB_RECURSE data_headers CONFIGURE_DEPENDS "${data_directory}/*.h")
+    set(data_outputs)
+    foreach(header IN LISTS data_headers)
+        file(RELATIVE_PATH relative "${data_directory}" "${header}")
+        set(output "${data_include}/data/${relative}")
+        get_filename_component(directory "${output}" DIRECTORY)
+        add_custom_command(OUTPUT "${output}"
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${directory}"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${header}" "${output}"
+                DEPENDS "${header}" VERBATIM)
+        list(APPEND data_outputs "${output}")
+    endforeach()
+    add_custom_target(${engine}_data DEPENDS ${data_outputs})
+    add_library(${engine} STATIC ${MIKUPAN_SOURCES} src/mikupan/host/engine.cpp)
+    add_dependencies(${engine} mikupan_version ${engine}_data compile_shaders)
+    if(TARGET ffmpeg_build)
+        add_dependencies(${engine} ffmpeg_build)
+    endif()
+    target_compile_definitions(${engine} PRIVATE
+            MIKUPAN_NAMESPACE=Engine${region}
+            MIKUPAN_ENGINE_FACTORY=${factory}
+            SDL_MAIN_NOIMPL=1)
+    if(region STREQUAL "EU")
+        target_compile_definitions(${engine} PRIVATE BUILD_EU_VERSION=1)
+    endif()
+    target_include_directories(${engine} PRIVATE
+            "${data_include}" sdk src src/iop extern
+            "${MIKUPAN_GENERATED_DIR}" ${SDL3_INCLUDE_DIR} "${FFMPEG_ROOT}/include")
+    target_link_libraries(${engine} PRIVATE
+            ZLIB::ZLIBSTATIC RmlUi::RmlUi cimgui implot SDL3::SDL3
+            spdlog::spdlog cglm ${MIKUPAN_FFMPEG_LIBS} inipp::inipp)
+endfunction()
+
+mikupan_add_engine(US "${CMAKE_CURRENT_SOURCE_DIR}/src/data" GetUsEngine)
+mikupan_add_engine(EU "${CMAKE_CURRENT_SOURCE_DIR}/src/data_eu" GetEuEngine)
+
+set(MIKUPAN_HOST_SOURCES src/mikupan/host/main.cpp src/mikupan/host/asset_check.cpp)
 if(ANDROID)
-    add_library(MikuPan SHARED ${MIKUPAN_SOURCES})
+    add_library(MikuPan SHARED ${MIKUPAN_HOST_SOURCES})
     set_target_properties(MikuPan PROPERTIES OUTPUT_NAME main)
 else()
-    add_executable(MikuPan ${MIKUPAN_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
+    add_executable(MikuPan ${MIKUPAN_HOST_SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
 endif()
 add_dependencies(MikuPan mikupan_version)
-add_dependencies(MikuPan mikupan_data_headers)
-add_dependencies(MikuPan compile_shaders)
-if(TARGET ffmpeg_build)
-    add_dependencies(MikuPan ffmpeg_build)
-endif()
-
-if(BUILD_EU_VERSION)
-    target_compile_definitions(MikuPan PRIVATE BUILD_EU_VERSION=1)
-endif()
-
-target_include_directories(MikuPan PRIVATE
-        ${MIKUPAN_DATA_INCLUDE_DIR}
-        "sdk/"
-        "src"
-        "src/iop"
-        "extern/"
-        ${MIKUPAN_GENERATED_DIR}
-        ${SDL3_INCLUDE_DIR}
-        "${FFMPEG_ROOT}/include"
-)
-
-target_link_libraries(MikuPan PRIVATE
-    ZLIB::ZLIBSTATIC
-        RmlUi::RmlUi
-        cimgui
-        implot
-        SDL3::SDL3
-        spdlog::spdlog
-        cglm
-        ${MIKUPAN_FFMPEG_LIBS}
-        inipp::inipp
-)
-
+target_include_directories(MikuPan PRIVATE src "${MIKUPAN_GENERATED_DIR}")
+target_link_libraries(MikuPan PRIVATE MikuPanUS MikuPanEU SDL3::SDL3)
 if(NOT MSVC)
     target_link_libraries(MikuPan PRIVATE m)
 endif()
-
 if(ANDROID)
     target_link_libraries(MikuPan PRIVATE log)
 endif()

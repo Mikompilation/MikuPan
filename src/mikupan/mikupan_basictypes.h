@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_BASICTYPES_H
 #define MIKUPAN_MIKUPAN_BASICTYPES_H
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -318,4 +322,6 @@ enum MikuPan_PipelineType
     MAX_NUMBER_OF_PIPELINES
 };
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_MIKUPAN_BASICTYPES_H

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_AP_FGOST_H
 #define INGAME_ENTRY_AP_FGOST_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -38,4 +42,6 @@ void GetFloatGhostSELoad();
 void FloatGhostAppearStop();
 void FloatGhostAppearStart();
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_ENTRY_AP_FGOST_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_BAKE_DATA_H
 #define MIKUPAN_BAKE_DATA_H
 
@@ -13,6 +14,9 @@
 /// because the in-game bake runs on whatever data the user has.
 ///
 /// Offsets are absolute offsets into the buffer that was passed in.
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanBake
 {
@@ -170,4 +174,6 @@ bool ParseTim2Pak(const uint8_t* data, size_t data_size, size_t base,
 
 }// namespace MikuPanBake
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_BAKE_DATA_H

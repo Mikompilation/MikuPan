@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_SHADOW_H
 #define GRAPHICS_GRAPH3D_SHADOW_H
 
 #include "typedefs.h"
 
 #include "ingame/camera/camera.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     int s;
@@ -25,8 +29,10 @@ typedef struct {
 
 typedef void (*EnvFuncCallback)();
 
+MIKUPAN_NAMESPACE_END
 #include "graphics/graph3d/sg_dat.h"
 #include "graphics/graph3d/gra3d.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 extern SgCAMERA scamera;
 
@@ -67,4 +73,6 @@ void CalcShadowHeight(sceVu0FVECTOR *bbox);
 void SetShadowCamera(float *center, sceVu0FVECTOR *bbox, SgCOORDUNIT *cp);
 void DrawShadow(ShadowHandle *shandle, EnvFuncCallback env_func);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_SHADOW_H

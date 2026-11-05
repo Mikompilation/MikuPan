@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_BAKED_TEXTURE_H
 #define MIKUPAN_BAKED_TEXTURE_H
 
@@ -8,8 +9,11 @@
 /// id: binding one is an array index. The 2D pictures get their ids stamped
 /// into their headers as their files load (mikupan_texture_slots.h).
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 typedef enum
@@ -63,10 +67,11 @@ void MikuPan_BakedTexture_Shutdown(void);
 #ifdef __cplusplus
 }
 
+MIKUPAN_NAMESPACE_END
 #include "mikupan/bake/mikupan_bake_format.h"
-
 #include <cstdint>
 #include <vector>
+MIKUPAN_NAMESPACE_BEGIN
 
 /// The 2D part of the pack, for the texture slots.
 namespace MikuPanBakedTexture2D
@@ -80,4 +85,6 @@ bool ReadPixels(uint32_t id, std::vector<uint8_t>* out);
 }// namespace MikuPanBakedTexture2D
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_BAKED_TEXTURE_H

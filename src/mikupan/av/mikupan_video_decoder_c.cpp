@@ -1,5 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_video_decoder_c.h"
 #include "mikupan_video_decoder.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 struct MovVidHandle_s
 {
@@ -117,3 +121,4 @@ double movvid_fps(MovVidHandle h)
 
     return 30.0;
 }
+MIKUPAN_NAMESPACE_END

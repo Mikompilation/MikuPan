@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_SIFDEV_H
 #define SCE_SIFDEV_H
 
@@ -16,6 +17,9 @@
 #define SCE_SEEK_CUR    1
 #define SCE_SEEK_END    2
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 int sceOpen(const char *filename, int flag, ...);
 int sceClose(int fd);
 int sceRead(int fd, void *buf, int nbyte);
@@ -29,4 +33,6 @@ int sceSifRebootIop(const char *img);
 int sceSifSyncIop();
 int sceSifLoadModule(const char *filename, int args, const char *argp);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_SIFDEV_H

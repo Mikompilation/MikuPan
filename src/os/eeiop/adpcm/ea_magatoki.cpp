@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -7,6 +8,9 @@
 #include "os/eeiop/adpcm/ea_dat.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
 #include "iop/adpcm/iopadpcm.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void EAdpcmMagatokiMain()
 {    
@@ -110,3 +114,5 @@ void AdpcmMagatokiStop()
         adpcm_map.event.use = 0;
     }
 }
+
+MIKUPAN_NAMESPACE_END

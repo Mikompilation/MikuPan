@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENEMY_MOVE_CTL_H
 #define INGAME_ENEMY_MOVE_CTL_H
 
@@ -9,6 +10,9 @@
 // but in `move_ctl.c` it needs to be unsized,
 // so we suppose it's been defined sized but
 // exported unsized:
+
+MIKUPAN_NAMESPACE_BEGIN
+
 extern u_char er_max_tbl[];
 
 void InitMoveBox(MOVE_BOX *mb);
@@ -146,4 +150,6 @@ void BJob012(ENE_WRK *ew);
 void BJob013(ENE_WRK *ew);
 void BJob014(ENE_WRK *ew);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENEMY_MOVE_CTL_H

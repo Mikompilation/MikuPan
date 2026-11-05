@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_I18N_H
 #define MIKUPAN_MIKUPAN_I18N_H
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 /* Returns the translation for msgid in the current UI language (see
@@ -26,4 +30,6 @@ void MikuPan_TranslationsReset(void);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_POINT_DEPTH_H
 #define MIKUPAN_POINT_DEPTH_H
 
@@ -9,6 +10,9 @@
 #define MIKUPAN_POINT_DEPTH_KEY_ENEMY_FRAME_HIT 2
 #define MIKUPAN_POINT_DEPTH_KEY_FURN_FRAME_POINT 3
 #define MIKUPAN_POINT_DEPTH_KEY_FURN_HINT 4
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static inline void MikuPan_CheckPointDepthKeyed(PP_JUDGE *ppj, int kind,
                                                 int object_id,
@@ -51,4 +55,6 @@ static inline void MikuPan_CheckPointDepth(PP_JUDGE *ppj)
     MikuPan_CheckPointDepthKeyed(ppj, MIKUPAN_POINT_DEPTH_KEY_DEFAULT, 0, 0);
 }
 
+
+MIKUPAN_NAMESPACE_END
 #endif

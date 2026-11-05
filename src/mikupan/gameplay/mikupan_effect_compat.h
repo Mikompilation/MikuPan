@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_EFFECT_COMPAT_H
 #define MIKUPAN_EFFECT_COMPAT_H
 
@@ -5,8 +6,11 @@
 #include "typedefs.h"
 #include "sce/libgraph.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 int MikuPan_TryScreenNegativeOverlay(u_char r, u_char g, u_char b, u_char alp, u_char alp2);
@@ -22,4 +26,6 @@ void MikuPan_ExpandScreenEffectQuadNoStretch(float *vertices, int vertex_count);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

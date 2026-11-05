@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_renderer_internal.h"
 #include "graphics/graph2d/message.h"
 #include "mikupan/bake/mikupan_tim2.h"
@@ -14,6 +15,9 @@
 #include <string>
 #include <format>
 #include <mikupan/io/mikupan_file.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static MikuPan_TextureInfo *fnt_texture[6] = {0};
 static unsigned int original_fnt_texture_id[6] = {0};
@@ -950,3 +954,5 @@ void MikuPan_DeleteTexture(MikuPan_TextureInfo *texture_info)
     MikuPan_GPUReleaseTexture(texture_info->id);
     free(texture_info);
 }
+
+MIKUPAN_NAMESPACE_END

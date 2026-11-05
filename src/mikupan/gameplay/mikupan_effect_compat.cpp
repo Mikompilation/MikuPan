@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/gameplay/mikupan_effect_compat.h"
 
 #include <string.h>
@@ -10,6 +11,9 @@
 
 #define MIKUPAN_GUS_QUEUE_MAX_VERTICES ((600 + 200 + (4 * 80)) * 6)
 #define MIKUPAN_GUS_QUEUE_MAX_BATCHES 16
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct MikuPan_GusDrawBatch
 {
@@ -325,3 +329,5 @@ void MikuPan_DrawQueuedGusObjects(void)
     g_mikupan_gus_vertex_count = 0;
     g_mikupan_gus_batch_count = 0;
 }
+
+MIKUPAN_NAMESPACE_END

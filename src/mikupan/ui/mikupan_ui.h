@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_IMGUI_WINDOW_H
 #define MIKUPAN_IMGUI_WINDOW_H
 
@@ -5,8 +6,11 @@
 #include "SDL3/SDL_events.h"
 #include "mikupan/mikupan_basictypes.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 void MikuPan_InitUi(SDL_Window *window);
@@ -126,4 +130,6 @@ const char *MikuPan_GetConfigSaveStatus(void);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_IMGUI_WINDOW_H

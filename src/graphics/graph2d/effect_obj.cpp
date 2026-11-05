@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "effect_obj.h"
@@ -36,6 +37,9 @@
  *
  * On PC we store the data in static globals that the C implementation uses.
  */
+
+MIKUPAN_NAMESPACE_BEGIN
+
 static sceVu0FMATRIX   g_vu0_stq_matrix;   /* vf4-vf7  = slm = SgWSMtx * wlm */
 static sceVu0FVECTOR   g_vu0_stq_params[3]; /* vf8-vf10 = stqparam             */
 
@@ -2341,3 +2345,5 @@ void _CalcParstDeformSTQ(float *stq, float *vt)
 }
 
 EFFINFO2 efi[8] = {0};
+
+MIKUPAN_NAMESPACE_END

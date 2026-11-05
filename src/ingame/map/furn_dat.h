@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_FURN_DAT_H
 #define INGAME_MAP_FURN_DAT_H
 
 #include "furn_types.h"
 #include "graphics/graph3d/light_types.h"
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern FURN_DAT furn_dat[];
 extern u_int furn_attr_dat[][5];
@@ -115,4 +119,6 @@ extern sceVu0FVECTOR* fpc_dat[];
 
 FURN_DAT* GetFurnDatP(u_short furn_id);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_MAP_FURN_DAT_H
