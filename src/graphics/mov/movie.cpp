@@ -298,6 +298,7 @@ int PlayMpegEvent()
     switch (movie_wrk.play_event_sta)
     {
         case 0:
+        case 6: // MoviePlay owns playback and its scene ID until it restores the title.
             ret = 0;
             break;
         case 1:
