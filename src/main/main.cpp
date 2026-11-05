@@ -24,6 +24,7 @@
 #include "iop/iopmain.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/ui/mikupan_rml_data_setup.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "os/eeiop/se_cmd.h"
 
@@ -58,7 +59,10 @@ static int MikuPan_TryInitializeGame(void)
             mikupan_missing_data_prompted = 0;
         }
 
-        if (!mikupan_missing_data_prompted)
+        /// The data setup screen asks for the files. The system dialog is all
+        /// that is left when RmlUi could not load it.
+        if (!mikupan_missing_data_prompted
+            && !MikuPan_RmlDataSetupIsAvailable())
         {
             MikuPan_RequestDataFolderSelection(mikupan_missing_data_file);
             mikupan_missing_data_prompted = 1;
@@ -134,6 +138,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
     MikuPan_ServiceMissingDataFolderDialog();
+    MikuPan_ServiceDataSourceBrowser();
 
     MikuPan_Clear();
     MikuPan_StartFrameUi();
@@ -151,7 +156,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             }
             else
             {
-                MikuPan_DrawMissingDataUi(mikupan_missing_data_file);
+                MikuPan_RmlDataSetupShow();
             }
 
             MikuPan_EndFrame();

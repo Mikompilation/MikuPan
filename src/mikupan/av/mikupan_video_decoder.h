@@ -9,8 +9,14 @@ extern "C" {
 
 #include <stdint.h>
 
+struct SDL_IOStream;
+
 struct VideoDecoder
 {
+    /// FFmpeg reads through the file layer, which is how it gets at movies
+    /// inside a disc image.
+    SDL_IOStream *io = nullptr;
+    AVIOContext *avio = nullptr;
     AVFormatContext *fmt = nullptr;
     AVCodecContext *dec = nullptr;
     SwsContext *sws = nullptr;

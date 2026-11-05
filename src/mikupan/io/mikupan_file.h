@@ -6,6 +6,17 @@
 #include <typedefs.h>
 #include <string>
 
+struct SDL_IOStream;
+
+/// What the data setup screen can point the game at.
+enum
+{
+    MIKUPAN_DATA_SOURCE_DISC_IMAGE,
+    MIKUPAN_DATA_SOURCE_IMG_HD,
+    MIKUPAN_DATA_SOURCE_IMG_BD,
+    MIKUPAN_DATA_SOURCE_COUNT
+};
+
 typedef struct
 {
     unsigned char Resv2,Sec,Min,Hour;
@@ -32,6 +43,13 @@ void MikuPan_LoadImgHdFile();
 void MikuPan_ServiceMissingDataFolderDialog();
 void MikuPan_RequestDataFolderSelection(const char *missing_path);
 bool MikuPan_HasRequiredDataFiles(char *missing_file, size_t missing_file_size);
+/// Shows the file picker for a MIKUPAN_DATA_SOURCE_*. The choice is checked,
+/// and saved to the configuration if it is good, by
+/// MikuPan_ServiceDataSourceBrowser() on the main thread.
+void MikuPan_BrowseForDataSource(int source);
+void MikuPan_ServiceDataSourceBrowser();
+/// The release this build plays, as a player would call it.
+const char *MikuPan_GetRequiredDiscName();
 void MikuPan_ReadFullFile(const char *filename, char *buffer);
 void MikuPan_ReadFileInArchive(int sector, int size, u_int *address);
 void MikuPan_BufferFile(int sector, int size, int64_t address);
@@ -57,6 +75,9 @@ void *MikuPan_OpenDataFile(const char *relative_name);
 bool MikuPan_ReadOpenDataFile(void *file, int64_t offset, void *buffer,
                               size_t size);
 void MikuPan_CloseDataFile(void *file);
+/// Opens for reading any path this layer hands out: a plain path, an Android
+/// content URI, or a file on the mounted disc image. See MikuPan_ResolveCdPath.
+SDL_IOStream *MikuPan_OpenStream(const char *path);
 u_char MikuPan_OpenFile(const char *filename, void *buffer, int size);
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size);
 bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size);
@@ -74,5 +95,11 @@ int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table, int max
 }
 
 std::string MikuPan_GetRelativePath(const char* path);
+/// The file a MIKUPAN_DATA_SOURCE_* currently stands for, empty when it has
+/// none.
+std::string MikuPan_GetDataSourcePath(int source);
+/// Why the data that was found or picked cannot be used, in words for the
+/// player. Empty when there is nothing to report.
+std::string MikuPan_GetDataProblem();
 
 #endif//MIKUPAN_FILE_LOADING_H

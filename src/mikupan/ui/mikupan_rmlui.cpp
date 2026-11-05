@@ -1,4 +1,5 @@
 #include "mikupan/ui/mikupan_rmlui.h"
+#include "mikupan/ui/mikupan_rml_data_setup.h"
 #include "mikupan/ui/mikupan_rml_message_box.h"
 #include "mikupan/ui/mikupan_rml_mode_select.h"
 #include "mikupan/ui/mikupan_rml_options.h"
@@ -1769,6 +1770,30 @@ void DispatchPadAction(MikuPanRmlPadAction action)
 {
     SetPointerInputActive(false);
 
+    // No sounds here: this screen is up because the game has not started.
+    if (MikuPan_RmlDataSetupIsOpen())
+    {
+        switch (action)
+        {
+            case MIKUPAN_RML_PAD_UP:
+                MikuPan_RmlDataSetupHandleVerticalInput(-1);
+                break;
+            case MIKUPAN_RML_PAD_DOWN:
+                MikuPan_RmlDataSetupHandleVerticalInput(1);
+                break;
+            case MIKUPAN_RML_PAD_CONFIRM:
+            case MIKUPAN_RML_PAD_ALT_CONFIRM:
+                MikuPan_RmlDataSetupActivate();
+                break;
+            case MIKUPAN_RML_PAD_CANCEL:
+                MikuPan_RmlDataSetupHandleCancel();
+                break;
+            default:
+                break;
+        }
+        return;
+    }
+
     if (MikuPan_RmlSavePointInputEnabled())
     {
         switch (action)
@@ -1927,7 +1952,8 @@ void ResetPadNavigationState(void)
 void UpdateGamepadNavigation(void)
 {
     if (!MikuPan_RmlOptionsIsOpen() && !MikuPan_RmlSaveLoadIsOpen()
-        && !MikuPan_RmlSavePointInputEnabled())
+        && !MikuPan_RmlSavePointInputEnabled()
+        && !MikuPan_RmlDataSetupIsOpen())
     {
         ResetPadNavigationState();
         return;
@@ -2078,6 +2104,7 @@ void MikuPan_RmlUiInit(SDL_Window* window)
         MikuPan_RmlModeSelectPrepareShutdown();
         MikuPan_RmlOptionsPrepareShutdown();
         MikuPan_RmlTitlePrepareShutdown();
+        MikuPan_RmlDataSetupPrepareShutdown();
         Rml::Shutdown();
         MikuPan_RmlMessageBoxShutdown();
         MikuPan_RmlSavePointShutdown();
@@ -2085,6 +2112,7 @@ void MikuPan_RmlUiInit(SDL_Window* window)
         MikuPan_RmlModeSelectShutdown();
         MikuPan_RmlOptionsShutdown();
         MikuPan_RmlTitleShutdown();
+        MikuPan_RmlDataSetupShutdown();
         g_rml = MikuPanRmlState();
         return;
     }
@@ -2093,6 +2121,7 @@ void MikuPan_RmlUiInit(SDL_Window* window)
     (void) MikuPan_RmlSavePointInit(g_rml.context);
     (void) MikuPan_RmlModeSelectInit(g_rml.context);
     (void) MikuPan_RmlTitleInit(g_rml.context);
+    (void) MikuPan_RmlDataSetupInit(g_rml.context);
 
     g_rml.initialized = true;
 }
@@ -2111,6 +2140,7 @@ void MikuPan_RmlUiStartFrame(void)
     MikuPan_RmlSavePointStartFrame();
     MikuPan_RmlModeSelectStartFrame();
     MikuPan_RmlTitleStartFrame();
+    MikuPan_RmlDataSetupStartFrame();
     UpdateGamepadNavigation();
     g_rml.context->Update();
 }
@@ -2221,6 +2251,27 @@ void MikuPan_RmlUiProcessEvent(SDL_Event* event)
         case SDL_EVENT_KEY_DOWN:
         {
             const Rml::Input::KeyIdentifier key = ConvertKey(event->key.key);
+            if (MikuPan_RmlDataSetupIsOpen())
+            {
+                if (key == Rml::Input::KI_UP)
+                {
+                    MikuPan_RmlDataSetupHandleVerticalInput(-1);
+                }
+                else if (key == Rml::Input::KI_DOWN)
+                {
+                    MikuPan_RmlDataSetupHandleVerticalInput(1);
+                }
+                else if (key == Rml::Input::KI_RETURN
+                         || key == Rml::Input::KI_SPACE)
+                {
+                    MikuPan_RmlDataSetupActivate();
+                }
+                else if (key == Rml::Input::KI_ESCAPE)
+                {
+                    MikuPan_RmlDataSetupHandleCancel();
+                }
+                break;
+            }
             if (MikuPan_RmlSavePointInputEnabled())
             {
                 if (key == Rml::Input::KI_UP)
@@ -2373,6 +2424,7 @@ void MikuPan_RmlUiShutdown(void)
     MikuPan_RmlModeSelectPrepareShutdown();
     MikuPan_RmlOptionsPrepareShutdown();
     MikuPan_RmlTitlePrepareShutdown();
+    MikuPan_RmlDataSetupPrepareShutdown();
     Rml::Shutdown();
     MikuPan_RmlMessageBoxShutdown();
     MikuPan_RmlSavePointShutdown();
@@ -2380,6 +2432,7 @@ void MikuPan_RmlUiShutdown(void)
     MikuPan_RmlModeSelectShutdown();
     MikuPan_RmlOptionsShutdown();
     MikuPan_RmlTitleShutdown();
+    MikuPan_RmlDataSetupShutdown();
     g_rml = MikuPanRmlState();
 }
 }

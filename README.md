@@ -27,10 +27,14 @@ Available native presets are `debug`, `debug-eu`, `release`, `release-eu`,
 `relwithdebinfo`, and `relwithdebinfo-eu`.
 
 ## Assets
-You need to copy the files `IMG_HD.BIN` and `IMG_BD.BIN` from the matching Fatal Frame ISO to the folder containing the `MikuPan` executable.
+MikuPan needs your own copy of the game. If it cannot find the game data it asks for it on launch, and saves your choice under `[paths]` in `mikupan.ini`:
+
+- **A disc image (`.iso`).** It is read as it is, so nothing is copied, and the cutscenes come with it.
+- **`IMG_HD.BIN` and `IMG_BD.BIN`** from the disc. Cutscenes play if the `MOVIE` folders sit beside them.
 
 Use the NTSC-U (USA) ISO with the default presets, or the PAL (EU) ISO with an `*-eu` preset. NTSC-J (Japan) ISOs will *NOT* work.
-The executable will be located at `{CMake-Build-Directory}/MikuPan`.
+
+To skip the question, copy the files to the folder containing the `MikuPan` executable, located at `{CMake-Build-Directory}/MikuPan`. Files in the data folder always take priority over a disc image.
 
 
 ![logo](extern/required-files.png)

@@ -5,7 +5,6 @@
 #include "cimgui.h"
 #include "main/glob.h"
 #include "mikupan/io/mikupan_controller.h"
-#include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/mikupan_screenshot.h"
 #include "mikupan/rendering/mikupan_baked_texture.h"
 #include "mikupan/rendering/mikupan_gpu.h"
@@ -94,45 +93,6 @@ void MikuPan_DrawUi(void)
 
     MikuPan_UiDebugWindowsRender();
     MikuPanUiSaves::Draw(ui_window);
-}
-
-void MikuPan_DrawMissingDataUi(const char *missing_file)
-{
-    ImGuiIO* io = igGetIO_Nil();
-    const float ui_scale = MikuPan_UiThemeGetDisplayScale();
-    const float scale = ui_scale > 0.0f ? ui_scale : 1.0f;
-    const float width = 520.0f * scale;
-    const float height = 0.0f;
-    const char *file = (missing_file != NULL && missing_file[0] != '\0')
-                           ? missing_file
-                           : "IMG_HD.BIN";
-
-    igSetNextWindowPos(
-        ImVec2{io->DisplaySize.x * 0.5f, io->DisplaySize.y * 0.5f},
-        ImGuiCond_Always,
-        ImVec2{0.5f, 0.5f});
-    igSetNextWindowSize(ImVec2{width, height}, ImGuiCond_Always);
-    if (!igBegin("Game Data Required", NULL,
-                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
-                 | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
-    {
-        igEnd();
-        return;
-    }
-
-    igTextWrapped("MikuPan needs the Fatal Frame disc data before it can start.");
-    igSpacing();
-    igText("Missing: %s", file);
-    igSpacing();
-    igTextWrapped("Select the folder that contains IMG_HD.BIN and IMG_BD.BIN. Extracted files are optional and will be used when present.");
-    igSpacing();
-
-    if (igButton("Select Folder", ImVec2{160.0f * scale, 0.0f}))
-    {
-        MikuPan_RequestDataFolderSelection(file);
-    }
-
-    igEnd();
 }
 
 void MikuPan_DrawTextureBakeUi(void)

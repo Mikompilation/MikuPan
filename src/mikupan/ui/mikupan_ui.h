@@ -15,7 +15,6 @@ int MikuPan_UiIsMenuOpen(void);
 void MikuPan_RenderUi(void);
 void MikuPan_StartFrameUi(void);
 void MikuPan_DrawUi(void);
-void MikuPan_DrawMissingDataUi(const char *missing_file);
 /// Shown while the textures are baked on first launch (or when the bake
 /// failed).
 void MikuPan_DrawTextureBakeUi(void);

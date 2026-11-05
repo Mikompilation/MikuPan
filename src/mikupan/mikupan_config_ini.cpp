@@ -357,6 +357,12 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
 
     ApplyString(ini, "paths", "data_folder", mikupan_configuration.data_folder,
                 sizeof(mikupan_configuration.data_folder));
+    ApplyString(ini, "paths", "iso_path", mikupan_configuration.iso_path,
+                sizeof(mikupan_configuration.iso_path));
+    ApplyString(ini, "paths", "img_hd_path", mikupan_configuration.img_hd_path,
+                sizeof(mikupan_configuration.img_hd_path));
+    ApplyString(ini, "paths", "img_bd_path", mikupan_configuration.img_bd_path,
+                sizeof(mikupan_configuration.img_bd_path));
 
     info_log("Loaded configuration from %s", path.generic_string().c_str());
     return true;
@@ -572,6 +578,9 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     }
 
     ini.sections["paths"]["data_folder"] = mikupan_configuration.data_folder;
+    ini.sections["paths"]["iso_path"] = mikupan_configuration.iso_path;
+    ini.sections["paths"]["img_hd_path"] = mikupan_configuration.img_hd_path;
+    ini.sections["paths"]["img_bd_path"] = mikupan_configuration.img_bd_path;
 
     ini.generate(stream);
     if (!stream.good())

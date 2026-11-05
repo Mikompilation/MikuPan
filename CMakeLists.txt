@@ -63,6 +63,7 @@ set(MIKUPAN_SOURCES
         resources/shaders/untextured_coloured_sprite.vert
         resources/shaders/normals_debug.geom
         resources/shaders/normals_debug.frag
+        "src/mikupan/io/mikupan_disc_image.cpp"
         "src/mikupan/io/mikupan_file.cpp"
         "src/mikupan/gameplay/mikupan_first_person.cpp"
         "src/mikupan/gameplay/mikupan_item_icon_hud.cpp"
@@ -292,6 +293,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/ui/mikupan_ui.cpp
         src/mikupan/ui/mikupan_ui_c.cpp
         src/mikupan/ui/mikupan_rmlui.cpp
+        src/mikupan/ui/mikupan_rml_data_setup.cpp
+        src/mikupan/ui/mikupan_rml_data_setup.h
         src/mikupan/ui/mikupan_rml_message_box.cpp
         src/mikupan/ui/mikupan_rml_message_box.h
         src/mikupan/ui/mikupan_rml_options.cpp
@@ -382,8 +385,10 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/mikupan_audio_bus.cpp"
         "src/mikupan/mikupan_config_ini.cpp"
         "src/mikupan/debug/mikupan_logging.cpp"
+        "src/mikupan/io/mikupan_disc_image.cpp"
         "src/mikupan/io/mikupan_file.cpp"
         "src/mikupan/rendering/mikupan_flashlight_dust.cpp"
+        "src/mikupan/ui/mikupan_rml_data_setup.cpp"
         "src/mikupan/ui/mikupan_rml_message_box.cpp"
         "src/mikupan/ui/mikupan_rml_mode_select.cpp"
         "src/mikupan/ui/mikupan_ui.cpp"

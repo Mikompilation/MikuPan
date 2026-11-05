@@ -12,6 +12,7 @@ MovVidHandle movvid_open(const char* path, const char** err)
 
     if (!movie_handle->dec.open(path, err))
     {
+        movie_handle->dec.close();
         delete movie_handle;
         return nullptr;
     }

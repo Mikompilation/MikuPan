@@ -19,10 +19,11 @@ typedef struct {
 static MikuPanCdFile cd_files[MIKUPAN_CD_MAX_FILES];
 static u_int cd_next_file_lsn = MIKUPAN_CD_FILE_LSN_BASE;
 static int cd_last_error;
-/* Opened through SDL_IOFromFile so the emulated CD can read paths that are not
- * plain filesystem paths -- notably Android content:// URIs and assets:// asset
- * paths. stdio fopen() cannot open those, which previously made every sceCdRead
- * fail on Android and hung ICdvdInitOnce in its load-retry loop. */
+/* Opened through MikuPan_OpenStream so the emulated CD can read paths that are
+ * not plain filesystem paths -- notably Android content:// URIs, assets:// asset
+ * paths and files on a disc image. stdio fopen() cannot open those, which
+ * previously made every sceCdRead fail on Android and hung ICdvdInitOnce in its
+ * load-retry loop. */
 static SDL_IOStream* cd_stream_file;
 
 static u_char DecToBcd(u_char dec)
@@ -41,7 +42,7 @@ static int ResolveDataFile(const char* name, char* out, size_t out_size)
 
 static int ReadFileBytes(const char* path, u_int offset, void* buf, u_int size)
 {
-    SDL_IOStream* io = SDL_IOFromFile(path, "rb");
+    SDL_IOStream* io = MikuPan_OpenStream(path);
     if (io == NULL) {
         cd_last_error = 1;
         return 0;
@@ -283,11 +284,13 @@ int sceCdSearchFile(sceCdlFILE* fp, const char* name)
         return 0;
     }
 
-    if (strstr(path, "IMG_HD.BIN") != NULL || strstr(path, "img_hd.bin") != NULL) 
+    /* By the name asked for, not the resolved path: a file picked by hand can
+     * be called anything. */
+    if (strstr(name, "IMG_HD.BIN") != NULL || strstr(name, "img_hd.bin") != NULL) 
     {
         lsn = MIKUPAN_CD_HD_LSN_BASE;
     } 
-    else if (strstr(path, "IMG_BD.BIN") != NULL || strstr(path, "img_bd.bin") != NULL) 
+    else if (strstr(name, "IMG_BD.BIN") != NULL || strstr(name, "img_bd.bin") != NULL) 
     {
         lsn = 0;
     } 
@@ -321,6 +324,6 @@ int sceCdStStart(u_int lbn, sceCdRMode* mode)
         return 0;
     }
 
-    cd_stream_file = SDL_IOFromFile(file->path, "rb");
+    cd_stream_file = MikuPan_OpenStream(file->path);
     return cd_stream_file != NULL;
 }

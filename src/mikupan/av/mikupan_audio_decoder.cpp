@@ -1,6 +1,10 @@
 #include "mikupan_audio_decoder.h"
 
 #include "mikupan/debug/mikupan_logging.h"
+#include "mikupan/io/mikupan_file.h"
+
+#include <SDL3/SDL_error.h>
+#include <SDL3/SDL_iostream.h>
 
 #include <algorithm>
 #include <cstring>
@@ -10,10 +14,10 @@ static constexpr uint8_t PRIVATE_STREAM1 = 0xBD;
 
 MikupanAudioDecoder::MikupanAudioDecoder(const char* path)
 {
-    file_ = std::fopen(path, "rb");
+    file_ = MikuPan_OpenStream(path);
     if (!file_)
     {
-        std::perror("MikupanAudioDecoder");
+        info_log("[AUDIO] Cannot open %s: %s", path, SDL_GetError());
         eof_ = true;
     }
 }
@@ -22,21 +26,23 @@ MikupanAudioDecoder::~MikupanAudioDecoder()
 {
     if (file_)
     {
-        std::fclose(file_);
+        SDL_CloseIO(file_);
     }
 }
 
 bool MikupanAudioDecoder::readN(uint8_t* dst, size_t n)
 {
-    if (!n)
+    while (n > 0)
     {
-        return true;
-    }
+        const size_t got = SDL_ReadIO(file_, dst, n);
+        if (got == 0)
+        {
+            eof_ = true;
+            return false;
+        }
 
-    if (std::fread(dst, 1, n, file_) != n)
-    {
-        eof_ = true;
-        return false;
+        dst += got;
+        n -= got;
     }
 
     return true;
@@ -50,7 +56,7 @@ bool MikupanAudioDecoder::findStartCode(uint8_t sid)
 
     while (!eof_)
     {
-        size_t n = std::fread(buffer + carry, 1, READ_CHUNK, file_);
+        size_t n = SDL_ReadIO(file_, buffer + carry, READ_CHUNK);
         if (n == 0)
         {
             eof_ = true;
@@ -67,7 +73,7 @@ bool MikupanAudioDecoder::findStartCode(uint8_t sid)
                 size_t unread = total - (i + 4);
 
                 if (unread != 0
-                    && std::fseek(file_, -(long) unread, SEEK_CUR) != 0)
+                    && SDL_SeekIO(file_, -(Sint64) unread, SDL_IO_SEEK_CUR) < 0)
                 {
                     eof_ = true;
                     return false;
@@ -129,7 +135,7 @@ bool MikupanAudioDecoder::readNextPrivateStream1PES()
 
     if (hdrLen)
     {
-        if (std::fseek(file_, hdrLen, SEEK_CUR))
+        if (SDL_SeekIO(file_, hdrLen, SDL_IO_SEEK_CUR) < 0)
         {
             return false;
         }

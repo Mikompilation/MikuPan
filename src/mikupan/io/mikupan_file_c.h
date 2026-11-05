@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+struct SDL_IOStream;
+
 typedef struct
 {
     unsigned char Resv2,Sec,Min,Hour;
@@ -32,6 +34,7 @@ void MikuPan_LoadImgHdFile();
 void MikuPan_ServiceMissingDataFolderDialog();
 void MikuPan_RequestDataFolderSelection(const char *missing_path);
 bool MikuPan_HasRequiredDataFiles(char *missing_file, size_t missing_file_size);
+void MikuPan_ServiceDataSourceBrowser();
 /* Records that file data was loaded at a PS2 main-memory offset; requests a
    texture-cache flush only when an address is loaded over a second time. */
 void MikuPan_ReadFullFile(const char *filename, char *buffer);
@@ -45,6 +48,7 @@ void *MikuPan_OpenDataFile(const char *relative_name);
 bool MikuPan_ReadOpenDataFile(void *file, int64_t offset, void *buffer,
                               size_t size);
 void MikuPan_CloseDataFile(void *file);
+struct SDL_IOStream *MikuPan_OpenStream(const char *path);
 u_char MikuPan_OpenFile(const char *filename, void *buffer, int size);
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size);
 bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size);

@@ -272,6 +272,11 @@ typedef struct
     MikuPan_ConfigInput input;
     char data_folder[512];
     int album_photo_png_export_enabled;
+    /// The disc image, or the archive files, picked on the data setup
+    /// screen.
+    char iso_path[512];
+    char img_hd_path[512];
+    char img_bd_path[512];
 } MikuPan_Config;
 
 enum MikuPan_PipelineType
