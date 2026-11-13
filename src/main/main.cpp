@@ -24,6 +24,8 @@
 #include "iop/iopmain.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/io/mikupan_undub.h"
+#include "spdlog/spdlog.h"
 #include "mikupan/ui/mikupan_rml_data_setup.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "os/eeiop/se_cmd.h"
@@ -74,10 +76,26 @@ static int MikuPan_TryInitializeGame(void)
     mikupan_missing_data_file[0] = '\0';
     mikupan_missing_data_prompted = 0;
 
+    /// Before anything reads the archive: the undub serves its own.
+    MikuPan_Undub_Activate();
+
     /// Model and 2D textures come from the texture pack, baked from the
     /// user's data on first launch.
     if (!MikuPan_BakedTexture_Prepare())
     {
+        /// Nothing has read the undub's archive but the bake, so the game
+        /// can still start without it rather than stop at the error.
+        if (MikuPan_BakedTexture_GetState() == MIKUPAN_BAKE_FAILED
+            && MikuPan_Undub_IsActive())
+        {
+            spdlog::error("Undub texture bake failed: {}",
+                          MikuPan_BakedTexture_GetError());
+            MikuPan_Undub_Deactivate(
+                "Miku's original model could not be prepared, so the "
+                "undub is off.");
+            MikuPan_BakedTexture_Shutdown();
+        }
+
         return 0;
     }
 
@@ -139,6 +157,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     MikuPan_ServiceMissingDataFolderDialog();
     MikuPan_ServiceDataSourceBrowser();
+    MikuPan_Undub_ServiceBrowser();
 
     MikuPan_Clear();
     MikuPan_StartFrameUi();

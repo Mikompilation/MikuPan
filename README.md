@@ -32,7 +32,7 @@ MikuPan needs your own copy of the game. If it cannot find the game data it asks
 - **A disc image (`.iso`).** It is read as it is, so nothing is copied, and the cutscenes come with it.
 - **`IMG_HD.BIN` and `IMG_BD.BIN`** from the disc. Cutscenes play if the `MOVIE` folders sit beside them.
 
-Use the NTSC-U (USA) ISO with the default presets, or the PAL (EU) ISO with an `*-eu` preset. NTSC-J (Japan) ISOs will *NOT* work.
+Use the NTSC-U (USA) ISO with the default presets, or the PAL (EU) ISO with an `*-eu` preset. NTSC-J (Japan) ISOs will *NOT* work as the game data, but one can add an undub, below.
 
 To skip the question, copy the files to the folder containing the `MikuPan` executable, located at `{CMake-Build-Directory}/MikuPan`. Files in the data folder always take priority over a disc image.
 
@@ -46,6 +46,17 @@ itself is not modified. Delete `IMG_TEX.BIN` to convert again.
 Optionally, run [sgdstitch](tools/sgdstitch/README.md) on the two files to merge
 the small PS2-sized mesh batches of the 3D models: characters need about half
 the draw calls while drawing the same triangles.
+
+### Undub
+With a copy of the Japanese release, *Zero* (SLPS-25074), MikuPan can play its
+voices, sound effects and movies, and Miku's original model and textures (the
+English releases changed her model), while text and menus stay those of your
+release. In **Settings > Special**, select the Japanese disc image, or its
+`IMG_HD.BIN` in a folder that also holds `IMG_BD.BIN` and the `MOVIE` folders,
+and switch **Japanese Undub** on. It applies the next time MikuPan starts, and
+the first start bakes Miku's original model into `IMG_TEX_UNDUB.BIN` next to
+`IMG_TEX.BIN`. Nothing is copied from the Japanese disc. The choice is saved
+under `[undub]` in `mikupan.ini`.
 
 ## Windows
 You need either `MinGW` or `Cygwin` with `gcc` and `CMake` in order to build `MikuPan`. `MSVC` with *CMake* will *ALSO* work. 

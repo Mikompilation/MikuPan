@@ -65,6 +65,7 @@ set(MIKUPAN_SOURCES
         resources/shaders/normals_debug.frag
         "src/mikupan/io/mikupan_disc_image.cpp"
         "src/mikupan/io/mikupan_file.cpp"
+        "src/mikupan/io/mikupan_undub.cpp"
         "src/mikupan/gameplay/mikupan_first_person.cpp"
         "src/mikupan/gameplay/mikupan_item_icon_hud.cpp"
         "src/common/ul_math.cpp"
@@ -387,6 +388,7 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/debug/mikupan_logging.cpp"
         "src/mikupan/io/mikupan_disc_image.cpp"
         "src/mikupan/io/mikupan_file.cpp"
+        "src/mikupan/io/mikupan_undub.cpp"
         "src/mikupan/rendering/mikupan_flashlight_dust.cpp"
         "src/mikupan/ui/mikupan_rml_data_setup.cpp"
         "src/mikupan/ui/mikupan_rml_message_box.cpp"

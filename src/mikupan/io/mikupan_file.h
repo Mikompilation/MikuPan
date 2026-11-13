@@ -95,6 +95,9 @@ int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table, int max
 }
 
 std::string MikuPan_GetRelativePath(const char* path);
+/// Where a data file is read from, as MikuPan_ResolveCdPath() finds it
+/// before the undub (mikupan_undub.h) has its say.
+std::string MikuPan_GetGameDataPath(const char *relative_name);
 /// The file a MIKUPAN_DATA_SOURCE_* currently stands for, empty when it has
 /// none.
 std::string MikuPan_GetDataSourcePath(int source);

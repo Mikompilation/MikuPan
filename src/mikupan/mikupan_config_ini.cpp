@@ -363,6 +363,10 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                 sizeof(mikupan_configuration.img_hd_path));
     ApplyString(ini, "paths", "img_bd_path", mikupan_configuration.img_bd_path,
                 sizeof(mikupan_configuration.img_bd_path));
+    ApplyValue(ini, "undub", "enabled", mikupan_configuration.undub_enabled);
+    ApplyString(ini, "undub", "disc_path",
+                mikupan_configuration.undub_disc_path,
+                sizeof(mikupan_configuration.undub_disc_path));
 
     info_log("Loaded configuration from %s", path.generic_string().c_str());
     return true;
@@ -581,6 +585,8 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     ini.sections["paths"]["iso_path"] = mikupan_configuration.iso_path;
     ini.sections["paths"]["img_hd_path"] = mikupan_configuration.img_hd_path;
     ini.sections["paths"]["img_bd_path"] = mikupan_configuration.img_bd_path;
+    SetValue(ini, "undub", "enabled", mikupan_configuration.undub_enabled);
+    ini.sections["undub"]["disc_path"] = mikupan_configuration.undub_disc_path;
 
     ini.generate(stream);
     if (!stream.good())

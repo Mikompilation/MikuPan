@@ -392,4 +392,6 @@ void MikuPan_ConfigurationValidate(void)
         mikupan_configuration.title_dither ? 1 : 0;
     mikupan_configuration.text_mods_enabled =
         mikupan_configuration.text_mods_enabled ? 1 : 0;
+    mikupan_configuration.undub_enabled =
+        mikupan_configuration.undub_enabled ? 1 : 0;
 }

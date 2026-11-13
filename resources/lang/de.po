@@ -1494,3 +1494,61 @@ msgstr "HD-Schriftarten verwenden, falls verfügbar"
 
 msgid "Use matching HD font textures when installed; otherwise use the original fonts."
 msgstr "Passende HD-Schrifttexturen verwenden, wenn sie installiert sind; andernfalls die Originalschriftarten verwenden."
+
+# --- mikupan_rml_options.cpp / mikupan_undub.cpp (Special: undub) ---
+msgid "Special"
+msgstr "Spezial"
+
+msgid "Undub"
+msgstr "Undub"
+
+msgid "Japanese Undub"
+msgstr "Japanischer Undub"
+
+msgid "Play the Japanese voices, sound effects and movies, and Miku's original model, from your Japanese disc. Applies the next time MikuPan starts."
+msgstr "Spielt die japanischen Stimmen, Soundeffekte und Videos sowie Mikus ursprüngliches Modell von deiner japanischen Disc ab. Gilt ab dem nächsten Start von MikuPan."
+
+msgid "Japanese Disc"
+msgstr "Japanische Disc"
+
+msgid "The disc image of Zero (Japan, SLPS-25074), or IMG_HD.BIN in a folder holding the disc's files."
+msgstr "Das Disc-Image von Zero (Japan, SLPS-25074) oder IMG_HD.BIN in einem Ordner mit den Dateien der Disc."
+
+msgid "Restart MikuPan to apply the change."
+msgstr "Starte MikuPan neu, um die Änderung anzuwenden."
+
+msgid "Playing the Japanese voices, sound effects, movies and Miku's original model."
+msgstr "Japanische Stimmen, Soundeffekte, Videos und Mikus ursprüngliches Modell sind aktiv."
+
+msgid "Select the Japanese disc to play the undub."
+msgstr "Wähle die japanische Disc aus, um mit Undub zu spielen."
+
+msgid "That is not the Japanese release of the game (Zero, SLPS-25074)."
+msgstr "Das ist nicht die japanische Version des Spiels (Zero, SLPS-25074)."
+
+msgid "The Japanese disc is incomplete. Select it again."
+msgstr "Die japanische Disc ist unvollständig. Wähle sie erneut aus."
+
+msgid "Select the Japanese disc image, or IMG_HD.BIN in a folder that holds the disc's files."
+msgstr "Wähle das japanische Disc-Image oder IMG_HD.BIN in einem Ordner mit den Dateien der Disc aus."
+
+msgid "The game data could not be read."
+msgstr "Die Spieldaten konnten nicht gelesen werden."
+
+msgid "The game data is too large to add the Japanese disc to."
+msgstr "Die Spieldaten sind zu groß, um die japanische Disc hinzuzufügen."
+
+msgid "The undub does not know this release."
+msgstr "Der Undub kennt diese Version des Spiels nicht."
+
+msgid "The path of that disc is too long."
+msgstr "Der Pfad dieser Disc ist zu lang."
+
+msgid "Miku's original model could not be prepared, so the undub is off."
+msgstr "Mikus ursprüngliches Modell konnte nicht vorbereitet werden, daher ist der Undub aus."
+
+msgid "That disc image could not be opened."
+msgstr "Dieses Disc-Image konnte nicht geöffnet werden."
+
+msgid "That file is not a complete disc image."
+msgstr "Diese Datei ist kein vollständiges Disc-Image."

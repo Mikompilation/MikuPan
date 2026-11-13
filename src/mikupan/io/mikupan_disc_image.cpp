@@ -47,11 +47,18 @@ struct DiscFile
     uint64_t size;
 };
 
-struct DiscImage
+} // namespace
+
+struct MikuPan_DiscIndex
 {
     std::string path;
     std::unordered_map<std::string, DiscFile> files;
 };
+
+namespace
+{
+
+using DiscImage = MikuPan_DiscIndex;
 
 /// The IOP and bake threads look files up while the main thread renders, so
 /// readers take their own reference to an index that never changes.
@@ -313,14 +320,15 @@ bool SDLCALL DiscFileStreamClose(void* userdata)
 
 } // namespace
 
-bool MikuPan_DiscImageMount(const char* path, std::string* error)
+std::shared_ptr<const MikuPan_DiscIndex>
+MikuPan_DiscImageIndex(const char* path, std::string* error)
 {
     SDL_IOStream* io = SDL_IOFromFile(path, "rb");
     if (io == nullptr)
     {
         spdlog::warn("Cannot open disc image {}: {}", path, SDL_GetError());
         *error = "That disc image could not be opened.";
-        return false;
+        return nullptr;
     }
 
     auto image = std::make_shared<DiscImage>();
@@ -333,44 +341,28 @@ bool MikuPan_DiscImageMount(const char* path, std::string* error)
     {
         spdlog::warn("{} is not a readable ISO 9660 image", path);
         *error = "That file is not a complete disc image.";
-        return false;
+        return nullptr;
     }
 
-    spdlog::info("Mounted disc image {} ({} files)", path, image->files.size());
-
-    std::lock_guard<std::mutex> lock(g_mounted_mutex);
-    g_mounted = std::move(image);
-    return true;
+    return image;
 }
 
-void MikuPan_DiscImageUnmount()
+bool MikuPan_DiscIndexHasFile(const MikuPan_DiscIndex& image,
+                              const std::string& name)
 {
-    std::lock_guard<std::mutex> lock(g_mounted_mutex);
-    g_mounted.reset();
+    return image.files.find(NormalizeName(name)) != image.files.end();
 }
 
-bool MikuPan_DiscImageHasFile(const std::string& name)
+SDL_IOStream* MikuPan_DiscIndexOpenFile(const MikuPan_DiscIndex& image,
+                                        const std::string& name)
 {
-    const auto image = GetMounted();
-    return image != nullptr
-        && image->files.find(NormalizeName(name)) != image->files.end();
-}
-
-SDL_IOStream* MikuPan_DiscImageOpenFile(const std::string& name)
-{
-    const auto image = GetMounted();
-    if (image == nullptr)
+    const auto file = image.files.find(NormalizeName(name));
+    if (file == image.files.end())
     {
         return nullptr;
     }
 
-    const auto file = image->files.find(NormalizeName(name));
-    if (file == image->files.end())
-    {
-        return nullptr;
-    }
-
-    SDL_IOStream* io = SDL_IOFromFile(image->path.c_str(), "rb");
+    SDL_IOStream* io = SDL_IOFromFile(image.path.c_str(), "rb");
     if (io == nullptr)
     {
         return nullptr;
@@ -395,4 +387,38 @@ SDL_IOStream* MikuPan_DiscImageOpenFile(const std::string& name)
     }
 
     return opened;
+}
+
+bool MikuPan_DiscImageMount(const char* path, std::string* error)
+{
+    auto image = MikuPan_DiscImageIndex(path, error);
+    if (image == nullptr)
+    {
+        return false;
+    }
+
+    spdlog::info("Mounted disc image {} ({} files)", path, image->files.size());
+
+    std::lock_guard<std::mutex> lock(g_mounted_mutex);
+    g_mounted = std::move(image);
+    return true;
+}
+
+void MikuPan_DiscImageUnmount()
+{
+    std::lock_guard<std::mutex> lock(g_mounted_mutex);
+    g_mounted.reset();
+}
+
+bool MikuPan_DiscImageHasFile(const std::string& name)
+{
+    const auto image = GetMounted();
+    return image != nullptr && MikuPan_DiscIndexHasFile(*image, name);
+}
+
+SDL_IOStream* MikuPan_DiscImageOpenFile(const std::string& name)
+{
+    const auto image = GetMounted();
+    return image != nullptr ? MikuPan_DiscIndexOpenFile(*image, name)
+                            : nullptr;
 }

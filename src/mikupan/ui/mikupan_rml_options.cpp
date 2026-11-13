@@ -8,6 +8,7 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
+#include "mikupan/io/mikupan_undub.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
 #include "mikupan/mikupan_i18n.h"
 #include "os/key_cnf.h"
@@ -152,6 +153,8 @@ struct Row
     std::function<bool()> enabled;
     /* A note is only there while this says yes. */
     std::function<bool()> shown;
+    /* A note that follows what this reports, there while it is not empty. */
+    Text note_text;
 
     /* Choice: an index into names, or name_of / count_of when the choices
      * come from the settings code.  choosable skips the ones that cannot be
@@ -376,6 +379,15 @@ Row Note(const char* text, std::function<bool()> shown)
 Text Fixed(const char* msgid)
 {
     return [msgid] { return T(msgid); };
+}
+
+Row StatusNote(Text text)
+{
+    Row row;
+    row.kind = RowKind::Note;
+    row.shown = [text] { return !text().empty(); };
+    row.note_text = std::move(text);
+    return row;
 }
 
 Row Choice(const char* label, Text help, std::vector<std::string> names,
@@ -1488,6 +1500,52 @@ Page GamePage(void)
     return page;
 }
 
+Page SpecialPage(void)
+{
+    Page page{"special", "Special", {}};
+    std::vector<Row>& rows = page.rows;
+
+    rows.push_back(Heading("Undub"));
+    rows.push_back(When(
+        Toggle("Japanese Undub",
+               Fixed("Play the Japanese voices, sound effects and movies, and "
+                     "Miku's original model, from your Japanese disc. "
+                     "Applies the next time MikuPan starts."),
+               [] { return mikupan_configuration.undub_enabled != 0; },
+               [](bool on) {
+                   mikupan_configuration.undub_enabled = on ? 1 : 0;
+                   MarkDirty();
+               }),
+        [] { return mikupan_configuration.undub_disc_path[0] != '\0'; }));
+    {
+        Row disc = Action(
+            "Japanese Disc",
+            [] {
+                std::string text =
+                    T("The disc image of Zero (Japan, SLPS-25074), or IMG_HD.BIN "
+                      "in a folder holding the disc's files.");
+                const char* path = mikupan_configuration.undub_disc_path;
+                if (path[0] != '\0')
+                {
+                    text += " " + std::string(path);
+                }
+                return text;
+            },
+            "Browse", [] { MikuPan_Undub_BrowseForDisc(); });
+        disc.plain = true;
+        disc.action_text = [] {
+            const char* path = mikupan_configuration.undub_disc_path;
+            return path[0] != '\0' ? TailOf(path, 34) : T("Not set");
+        };
+        rows.push_back(std::move(disc));
+    }
+    rows.push_back(StatusNote([] {
+        const std::string status = MikuPan_Undub_GetStatus();
+        return status.empty() ? status : T(status.c_str());
+    }));
+    return page;
+}
+
 const char* ButtonLabel(int index)
 {
     static const char* const kLabels[MIKUPAN_CONTROLLER_LOGICAL_COUNT] = {
@@ -1882,6 +1940,7 @@ void BuildPages(void)
     g_opt.pages.push_back(ControlsPage());
     g_opt.pages.push_back(KeyboardPage());
     g_opt.pages.push_back(ControllerPage());
+    g_opt.pages.push_back(SpecialPage());
 
     g_opt.panels.clear();
     g_opt.panels.push_back(CalibrationPanel());
@@ -2129,6 +2188,15 @@ void RefreshRow(Row& row)
         {
             row.element->SetClass("hidden", shown == 0);
             row.shown_flag = shown;
+        }
+        if (row.note_text)
+        {
+            const std::string text = row.note_text();
+            if (text != row.shown_value)
+            {
+                row.element->SetInnerRML(Escape(text));
+                row.shown_value = text;
+            }
         }
         return;
     }

@@ -1,6 +1,7 @@
 #include "typedefs.h"
 #include "mikupan_file.h"
 #include "mikupan/io/mikupan_disc_image.h"
+#include "mikupan/io/mikupan_undub.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/debug/mikupan_logging.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -252,6 +253,7 @@ static bool MikuPan_IsSdlAssetPathString(const std::string& path)
 {
     return path.rfind("assets://", 0) == 0
         || MikuPan_IsDiscPathString(path)
+        || MikuPan_Undub_IsUndubPath(path)
         || (!path.empty()
             && (path == mikupan_configuration.img_hd_path
                 || path == mikupan_configuration.img_bd_path))
@@ -380,7 +382,7 @@ static bool MikuPan_PathHasContent(const std::string& path)
 /// files keep overriding everything else, then what was picked on the data
 /// setup screen, then the mounted disc image. A file that is nowhere gets its
 /// data folder path, which is what the missing file prompts work from.
-static std::string MikuPan_GetDataPathString(
+static std::string MikuPan_GetGameDataPathString(
     const std::filesystem::path& relative_path)
 {
     const std::string folder_path =
@@ -410,6 +412,26 @@ static std::string MikuPan_GetDataPathString(
     }
 
     return folder_path;
+}
+
+/// The same, except that while the undub is active the archive and the
+/// movies come from it (mikupan_undub.h).
+static std::string MikuPan_GetDataPathString(
+    const std::filesystem::path& relative_path)
+{
+    std::string undub_path =
+        MikuPan_Undub_GetDataPath(relative_path.generic_string());
+    if (!undub_path.empty())
+    {
+        return undub_path;
+    }
+
+    return MikuPan_GetGameDataPathString(relative_path);
+}
+
+std::string MikuPan_GetGameDataPath(const char *relative_name)
+{
+    return MikuPan_GetGameDataPathString(relative_name);
 }
 
 static bool MikuPan_IsExcludedRuntimeAsset(const std::filesystem::path& path)
@@ -945,7 +967,7 @@ std::string MikuPan_GetDataSourcePath(int source)
         return mikupan_configuration.iso_path;
     }
 
-    const std::string path = MikuPan_GetDataPathString(
+    const std::string path = MikuPan_GetGameDataPathString(
         source == MIKUPAN_DATA_SOURCE_IMG_HD ? "IMG_HD.BIN" : "IMG_BD.BIN");
 
     return !MikuPan_IsDiscPathString(path) && MikuPan_PathHasContent(path)
@@ -1245,6 +1267,11 @@ SDL_IOStream *MikuPan_OpenStream(const char *path)
     if (MikuPan_IsDiscPathString(path))
     {
         return MikuPan_DiscImageOpenFile(path + std::strlen(kDiscPathPrefix));
+    }
+
+    if (MikuPan_Undub_IsUndubPath(path))
+    {
+        return MikuPan_Undub_OpenStream(path);
     }
 
     return SDL_IOFromFile(path, "rb");
