@@ -420,17 +420,6 @@ body {
     text-align: right;
 }
 
-.save-list-item.legacy-save .save-entry-night-row {
-    left: 14dp;
-    width: 170dp;
-    color: #efe8d8;
-}
-
-.save-list-item.legacy-save .save-entry-room-row {
-    left: 188dp;
-    width: 244dp;
-}
-
 .save-create-item {
     height: 36dp;
 }

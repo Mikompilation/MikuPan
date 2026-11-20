@@ -2,7 +2,6 @@
 #define MIKUPAN_SAVE_TRANSFER_H
 #include "mikupan_save_archive.h"
 #include "mikupan_save_region.h"
-#include <array>
 #include <filesystem>
 #include <map>
 #include <vector>
@@ -11,6 +10,7 @@ namespace MikuPanSave
 struct SlotInfo
 {
     bool occupied = false;
+    std::string filename;
     std::string description;
     std::string issue;
     std::string player;
@@ -23,7 +23,7 @@ struct Folder
     std::string issue;
     SaveRegion region = BuildRegion;
     std::map<std::string, Bytes> files;
-    std::array<SlotInfo, 3> slots;
+    std::vector<SlotInfo> slots = std::vector<SlotInfo>(3);
 };
 enum class StorageKind
 {
@@ -38,16 +38,19 @@ struct Storage
     bool exists = false, has_save = false;
     Folder save;
     Bytes card;
+    std::vector<SaveRegion> regions;
 };
 struct SlotMapping
 {
+    // PC list indices or PS2 slots; destination -1 appends a new PC save.
     int source, destination;
 };
 std::filesystem::path PcFolder();
 bool InspectFiles(const std::map<std::string, Bytes>& files,
                   bool native_allowed, Folder& folder, std::string& error);
 bool ReadStorage(const std::filesystem::path& path, StorageKind kind,
-                 bool native_allowed, Storage& storage, std::string& error);
+                 bool native_allowed, Storage& storage, std::string& error,
+                 const SaveRegion* card_region = nullptr);
 bool BuildBatch(const Folder& source, const Folder* destination,
                 const std::vector<SlotMapping>& slots, bool export_ps2,
                 Folder& result, std::string& error,

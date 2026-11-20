@@ -41,11 +41,16 @@ void Put(uint8_t* p, uint32_t value, unsigned n = 4)
 unsigned Index(SaveRegion region)
 {
     const auto n = unsigned(region);
-    if (n > 2)
+    if (n > 4)
     {
         throw std::runtime_error("Unknown save region.");
     }
-    return n;
+    // Asian and Korean archives retain US resource IDs; Korea uses EU collision records.
+    return n >= 3 ? 1 : n;
+}
+unsigned CollisionIndex(SaveRegion region)
+{
+    return region == SaveRegion::KR ? 2 : Index(region);
 }
 struct Asset
 {
@@ -76,6 +81,8 @@ const Asset& FindAsset(SaveRegion region, uint16_t id, unsigned type)
             end = std::end(assets_jp);
             break;
         case SaveRegion::US:
+        case SaveRegion::KR:
+        case SaveRegion::Asia:
             begin = std::begin(assets_us);
             end = std::end(assets_us);
             break;
@@ -157,7 +164,7 @@ void CheckPosition(const Bytes& data, SaveRegion source, SaveRegion target)
         {
             continue;
         }
-        const unsigned s = Index(source), t = Index(target);
+        const unsigned s = CollisionIndex(source), t = CollisionIndex(target);
         const auto *src = record_refs + r.first[s],
                    *dst = record_refs + r.first[t];
         for (unsigned i = 0; i < r.count[t]; ++i)
@@ -205,6 +212,10 @@ const char* RegionLabel(SaveRegion region)
             return "US / SLUS-20388";
         case SaveRegion::EU:
             return "Europe / SLES-50821";
+        case SaveRegion::KR:
+            return "Korea / SCPS-56008";
+        case SaveRegion::Asia:
+            return "Asia / SCPS-55043";
     }
     return "Unknown region";
 }
@@ -218,6 +229,10 @@ const char* RegionPrefix(SaveRegion region)
             return "BASLUS-20388zero";
         case SaveRegion::EU:
             return "BESLES-50821zero";
+        case SaveRegion::KR:
+            return "BKSCPS-56008zero";
+        case SaveRegion::Asia:
+            return "BISCPS-55043zero";
     }
     return "";
 }
@@ -253,7 +268,8 @@ bool ValidateRegion(const Bytes& data, SaveRegion source, std::string& error)
         }
         if (data[44] > 1
             || (source == SaveRegion::EU ? (data[45] & 127) > 4
-                                         : data[45] != 0))
+                : source == SaveRegion::KR ? (data[45] & 127) != 0
+                                          : data[45] != 0))
         {
             throw std::runtime_error(
                 "Save header does not match its declared region.");
@@ -343,7 +359,7 @@ bool ConvertRegion(const Bytes& data, SaveRegion source, SaveRegion target,
             Put(p, a.target[Index(target)], 2);
             if (a.event)
             {
-                p[2] = target == SaveRegion::EU ? 14 : 1;
+                p[2] = target == SaveRegion::EU || target == SaveRegion::KR ? 14 : 1;
             }
             else if (type == 14)
             {
@@ -398,7 +414,7 @@ bool ConvertRegion(const Bytes& data, SaveRegion source, SaveRegion target,
         next[Offset(1) + 2] = 0;
         next[45] = target == SaveRegion::EU
                        ? uint8_t(language | (display_60hz ? 128 : 0))
-                       : 0;
+                       : target == SaveRegion::KR ? 128 : 0;
         Seal(next);
         Bytes native;
         if (!ToNative(next, native, error) || !ToPs2(native, next, error)

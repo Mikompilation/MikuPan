@@ -1,5 +1,10 @@
 #include "mikupan_save_transfer.h"
 #include "main/glob.h"
+#include "mc/mc_exec.h"
+#include "mc/mc_icon.h"
+#include "mikupan/io/mikupan_file.h"
+#include "os/eeiop/cdvd/eecdvd.h"
+#include <limits>
 #include "mikupan/mikupan_config.h"
 #include "mikupan_memory_card.h"
 #include "mikupan_save_paths.h"
@@ -123,8 +128,33 @@ Folder Fresh(const Folder& source, bool ps2, SaveRegion region)
 {
     Folder out;
     out.region = region;
-    out.files["icon.sys"] = source.files.at("icon.sys");
-    out.files[Icon] = source.files.at(Icon);
+    const auto system = source.files.find("icon.sys");
+    const auto model = source.files.find(Icon);
+    if (system != source.files.end() && model != source.files.end()
+        && system->second.size() == 964
+        && std::memcmp(system->second.data(), "PS2D", 4) == 0
+        && !model->second.empty())
+    {
+        out.files["icon.sys"] = system->second;
+        out.files[Icon] = model->second;
+    }
+    else
+    {
+        sceMcIconSys icon{};
+        mcSetIconSys(&icon);
+        std::strcpy(reinterpret_cast<char*>(icon.TitleName), mc_icon_title);
+        const auto* bytes = reinterpret_cast<const uint8_t*>(&icon);
+        out.files["icon.sys"] = Bytes(bytes, bytes + sizeof(icon));
+        const IMG_ARRANGEMENT* arrangement = GetImgArrangementP(mc_iconFile[0]);
+        if (arrangement == nullptr || arrangement->size == 0
+            || arrangement->size > 1024 * 1024)
+            throw std::runtime_error("Cannot load the PS2 browser icon from the game assets.");
+        auto& data = out.files[Icon];
+        data.resize(arrangement->size);
+        if (!MikuPan_ReadDataFileRange("IMG_BD.BIN", int64_t(arrangement->start) * 2048,
+                                     data.data(), data.size()))
+            throw std::runtime_error("Cannot read the PS2 browser icon from the game assets.");
+    }
     for (int i = 0; i < 3; ++i)
     {
         out.files[Name(i, region)] = EmptySlot(ps2 ? Ps2Size : NativeSize());
@@ -136,14 +166,16 @@ void WriteFolder(const fs::path& path, const Folder& folder, bool native)
     fs::create_directories(path);
     for (const auto& f : folder.files)
     {
-        Write(path
+        const auto destination = path
                   / (native
                              && f.first.compare(0, std::strlen(Prefix), Prefix)
                                     == 0
                          ? std::string(NativePrefix)
                                + f.first.substr(std::strlen(Prefix))
-                         : f.first),
-              f.second);
+                         : f.first);
+        if (fs::is_regular_file(destination) && Read(destination) == f.second)
+            continue;
+        Write(destination, f.second);
     }
     SyncDirectory(path);
     SyncDirectory(path.parent_path());
@@ -170,8 +202,10 @@ bool Inspect(const fs::path& path, bool native_allowed, Folder& folder,
         }
         Folder result;
         std::set<std::string> names = {"icon.sys", Icon};
-        for (auto region : {SaveRegion::JP, SaveRegion::US, SaveRegion::EU})
+        for (auto region : AllRegions)
         {
+            if (native_allowed && region != BuildRegion)
+                continue;
             for (int i = 0; i < 3; ++i)
             {
                 names.insert(Name(i, region));
@@ -185,7 +219,7 @@ bool Inspect(const fs::path& path, bool native_allowed, Folder& folder,
             {
                 n = std::string(Prefix) + n.substr(std::strlen(NativePrefix));
             }
-            if (!names.count(n))
+            if (!names.count(n) && !(native_allowed && IsPcSaveFilename(fs::u8path(n), Prefix)))
             {
                 continue;
             }
@@ -206,7 +240,7 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
     {
         for (auto name : {"icon.sys", Icon})
         {
-            if (!files.count(name))
+            if (!native_allowed && !files.count(name))
             {
                 throw std::runtime_error("Missing PS2 browser icon files.");
             }
@@ -214,8 +248,10 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
         Folder result;
         result.files = files;
         bool identified = false;
-        for (auto region : {SaveRegion::JP, SaveRegion::US, SaveRegion::EU})
+        for (auto region : AllRegions)
         {
+            if (native_allowed && region != BuildRegion)
+                continue;
             if (files.count(Name(0, region)) || files.count(Name(1, region))
                 || files.count(Name(2, region)))
             {
@@ -228,27 +264,54 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
                 identified = true;
             }
         }
-        if (!identified)
+        if (!identified && !native_allowed)
         {
             throw std::runtime_error(
                 "Unsupported Fatal Frame save region/revision.");
         }
-        const auto& icon = files.at("icon.sys");
-        if (icon.size() != 964 || std::memcmp(icon.data(), "PS2D", 4)
-            || files.at(Icon).empty())
+        if (!native_allowed)
         {
-            throw std::runtime_error("Invalid PS2 browser icons.");
+            const auto& icon = files.at("icon.sys");
+            if (icon.size() != 964 || std::memcmp(icon.data(), "PS2D", 4)
+                || files.at(Icon).empty())
+            {
+                throw std::runtime_error("Invalid PS2 browser icons.");
+            }
         }
-        for (int i = 0; i < 3; ++i)
+        std::vector<std::string> entries;
+        if (native_allowed)
+        {
+            result.slots.clear();
+            for (const auto& file : files)
+                if (IsPcSaveFilename(fs::u8path(file.first), Prefix)
+                    && !Empty(file.second))
+                    entries.push_back(file.first);
+            std::sort(entries.begin(), entries.end(), [](const auto& left, const auto& right) {
+                const bool modern_left = IsModernSaveFilename(fs::u8path(left));
+                const bool modern_right = IsModernSaveFilename(fs::u8path(right));
+                if (modern_left != modern_right)
+                    return modern_left;
+                return PcSaveFileNumber(fs::u8path(left), Prefix)
+                       > PcSaveFileNumber(fs::u8path(right), Prefix);
+            });
+            result.slots.resize(entries.size());
+        }
+        else
+        {
+            for (int i = 0; i < 3; ++i)
+                entries.push_back(Name(i, result.region));
+        }
+        for (size_t i = 0; i < entries.size(); ++i)
         {
             auto& slot = result.slots[i];
-            if (!files.count(Name(i, result.region)))
+            slot.filename = entries[i];
+            if (!files.count(slot.filename))
             {
-                slot.issue = "Missing gameplay slot: " + Name(i, result.region);
+                slot.issue = "Missing gameplay slot: " + slot.filename;
                 slot.description = "Unavailable save";
                 continue;
             }
-            const auto& data = files.at(Name(i, result.region));
+            const auto& data = files.at(slot.filename);
             slot.occupied = !Empty(data);
             if (data.size() != Ps2Size
                 && (!native_allowed
@@ -298,7 +361,7 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
         // Keep identifiable damaged saves visible, but never transfer them.
         Folder damaged;
         unsigned regions = 0;
-        for (auto region : {SaveRegion::JP, SaveRegion::US, SaveRegion::EU})
+        for (auto region : AllRegions)
         {
             if (files.count(Name(0, region)) || files.count(Name(1, region))
                 || files.count(Name(2, region)))
@@ -332,7 +395,7 @@ bool InspectFiles(const SaveFiles& files, bool native_allowed, Folder& folder,
 namespace MikuPanSave
 {
 bool ReadStorage(const fs::path& path, StorageKind kind, bool native_allowed,
-                 Storage& storage, std::string& error)
+                 Storage& storage, std::string& error, const SaveRegion* card_region)
 {
     try
     {
@@ -344,6 +407,8 @@ bool ReadStorage(const fs::path& path, StorageKind kind, bool native_allowed,
         Storage result;
         result.kind = kind;
         result.path = path;
+        if (native_allowed && kind == StorageKind::Folder)
+            result.save.slots.clear();
         if (kind == StorageKind::BlankCard)
         {
             storage = std::move(result);
@@ -361,7 +426,7 @@ bool ReadStorage(const fs::path& path, StorageKind kind, bool native_allowed,
                     || result.card.size() == 8650752)
                 {
                     for (auto region :
-                         {SaveRegion::JP, SaveRegion::US, SaveRegion::EU})
+                         AllRegions)
                     {
                         SaveFiles candidate;
                         bool found = false;
@@ -373,16 +438,13 @@ bool ReadStorage(const fs::path& path, StorageKind kind, bool native_allowed,
                         }
                         if (found)
                         {
-                            if (result.has_save)
+                            result.regions.push_back(region);
+                            if ((!card_region && !result.has_save)
+                                || (card_region && region == *card_region))
                             {
-                                throw std::runtime_error(
-                                    "This card contains Fatal Frame saves for "
-                                    "several regions. "
-                                    "Import an extracted save folder or "
-                                    "archive for the desired region.");
+                                result.has_save = true;
+                                files = std::move(candidate);
                             }
-                            result.has_save = true;
-                            files = std::move(candidate);
                         }
                     }
                 }
@@ -408,7 +470,8 @@ bool ReadStorage(const fs::path& path, StorageKind kind, bool native_allowed,
                 {
                     return false;
                 }
-                result.has_save = true;
+                result.has_save = std::any_of(result.save.slots.begin(), result.save.slots.end(),
+                    [](const SlotInfo& slot) { return slot.occupied; });
             }
         }
         else if (kind == StorageKind::Card)
@@ -431,7 +494,7 @@ bool BuildBatch(const Folder& source, const Folder* destination,
 {
     try
     {
-        if (slots.empty() || slots.size() > 3)
+        if (slots.empty() || (export_ps2 && slots.size() > 3))
         {
             throw std::runtime_error("Select between one and three saves.");
         }
@@ -459,32 +522,54 @@ bool BuildBatch(const Folder& source, const Folder* destination,
             throw std::runtime_error(
                 "Destination save region does not match the selected output.");
         }
-        Folder next =
-            destination ? *destination : Fresh(source, export_ps2, region);
-        std::set<int> sources, targets;
+        Folder next;
+        if (destination)
+            next = checked_destination;
+        else if (export_ps2)
+            next = Fresh(source, true, region);
+        else
+            next.region = region;
+        int highest = 0;
+        if (!export_ps2)
+            for (const auto& file : next.files)
+                if (IsModernSaveFilename(fs::u8path(file.first)))
+                    highest = std::max(highest, PcSaveFileNumber(fs::u8path(file.first), Prefix));
+        std::set<int> sources, destinations;
+        std::set<std::string> targets;
         for (const auto& slot : slots)
         {
-            if (slot.source < 0 || slot.source >= 3 || slot.destination < 0
-                || slot.destination >= 3)
-            {
-                throw std::runtime_error(
-                    "Assign a destination slot to each selected save.");
-            }
-            if (!sources.insert(slot.source).second
-                || !targets.insert(slot.destination).second)
-            {
-                throw std::runtime_error(
-                    "Each source and destination slot can be used only once.");
-            }
-            if (!checked_source.slots[slot.source].issue.empty())
-            {
-                throw std::runtime_error(checked_source.slots[slot.source].issue);
-            }
-            if (!checked_source.slots[slot.source].occupied)
-            {
+            if (slot.source < 0 || size_t(slot.source) >= checked_source.slots.size()
+                || (export_ps2 && (slot.destination < 0 || slot.destination >= 3))
+                || (!export_ps2 && (slot.destination < -1
+                    || (slot.destination >= 0 && (!destination
+                        || size_t(slot.destination) >= checked_destination.slots.size())))))
+                throw std::runtime_error("Assign a valid destination to each selected save.");
+            if (!sources.insert(slot.source).second)
+                throw std::runtime_error("Each source save can be used only once.");
+            if (slot.destination >= 0 && !destinations.insert(slot.destination).second)
+                throw std::runtime_error("Each destination save can be used only once.");
+            const auto& source_slot = checked_source.slots[slot.source];
+            if (!source_slot.issue.empty())
+                throw std::runtime_error(source_slot.issue);
+            if (!source_slot.occupied)
                 throw std::runtime_error("Cannot transfer an empty slot.");
+            std::string filename;
+            if (export_ps2)
+                filename = Name(slot.destination, region);
+            else if (slot.destination >= 0
+                     && IsModernSaveFilename(fs::u8path(checked_destination.slots[slot.destination].filename)))
+                filename = checked_destination.slots[slot.destination].filename;
+            else
+            {
+                if (slot.destination >= 0)
+                    next.files.erase(checked_destination.slots[slot.destination].filename);
+                if (highest == std::numeric_limits<int>::max())
+                    throw std::runtime_error("No numbered PC save filenames remain available.");
+                filename = ModernSaveFilename(++highest);
             }
-            auto payload = source.files.at(Name(slot.source, source.region));
+            if (!targets.insert(filename).second)
+                throw std::runtime_error("Each destination save can be used only once.");
+            auto payload = checked_source.files.at(source_slot.filename);
             if (export_ps2)
             {
                 if (!ToPs2(payload, payload, error)
@@ -509,14 +594,17 @@ bool BuildBatch(const Folder& source, const Folder* destination,
                     return false;
                 }
             }
-            next.files[Name(slot.destination, region)] = std::move(payload);
+            next.files[filename] = std::move(payload);
         }
         if (!InspectFiles(next.files, !export_ps2, result, error)) return false;
         if (!result.issue.empty()) throw std::runtime_error(result.issue);
-        for (const auto& slot : slots)
+        for (const auto& filename : targets)
         {
-            if (!result.slots[slot.destination].issue.empty())
-                throw std::runtime_error(result.slots[slot.destination].issue);
+            const auto saved = std::find_if(result.slots.begin(), result.slots.end(),
+                [&](const SlotInfo& slot) { return slot.filename == filename; });
+            if (saved == result.slots.end() || !saved->issue.empty())
+                throw std::runtime_error(saved == result.slots.end()
+                    ? "The transferred save is missing." : saved->issue);
         }
         return true;
     }
@@ -531,7 +619,8 @@ namespace
 bool SameStorage(const Storage& expected, bool native, std::string& error)
 {
     Storage current;
-    return ReadStorage(expected.path, expected.kind, native, current, error)
+    const SaveRegion* region = expected.regions.empty() ? nullptr : &expected.save.region;
+    return ReadStorage(expected.path, expected.kind, native, current, error, region)
            && current.exists == expected.exists
            && current.has_save == expected.has_save
            && current.card == expected.card
@@ -561,6 +650,34 @@ void CommitFolder(const Storage& expected, const Folder& folder, bool native,
         {
             fs::copy(dest, stage, fs::copy_options::recursive
                                      | fs::copy_options::copy_symlinks);
+        }
+        if (expected.exists)
+        {
+            for (const auto& entry : fs::recursive_directory_iterator(dest))
+                if (!entry.is_symlink() && entry.is_regular_file())
+                    fs::last_write_time(stage / fs::relative(entry.path(), dest),
+                                        entry.last_write_time());
+        }
+        if (native)
+        {
+            for (const auto& file : expected.save.files)
+            {
+                const auto next = folder.files.find(file.first);
+                if (next == folder.files.end())
+                {
+                    const auto name = file.first.compare(0, std::strlen(Prefix), Prefix) == 0
+                        ? std::string(NativePrefix) + file.first.substr(std::strlen(Prefix))
+                        : file.first;
+                    fs::remove(stage / fs::u8path(name));
+                }
+                if (IsModernSaveFilename(fs::u8path(file.first))
+                    && next != folder.files.end() && next->second != file.second)
+                {
+                    auto preview = stage / fs::u8path(file.first);
+                    preview.replace_extension(".png");
+                    fs::remove(preview);
+                }
+            }
         }
         WriteFolder(stage, folder, native);
         Folder verified;
