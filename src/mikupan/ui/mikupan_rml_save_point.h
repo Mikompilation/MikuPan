@@ -1,17 +1,22 @@
-#ifndef MIKUPAN_RML_SAVE_POINT_H
-#define MIKUPAN_RML_SAVE_POINT_H
-
-#ifdef __cplusplus
+#include "mikupan/mikupan_region.h"
 namespace Rml
 {
 class Context;
 }
+#ifndef MIKUPAN_RML_SAVE_POINT_H
+#define MIKUPAN_RML_SAVE_POINT_H
+
+
+MIKUPAN_NAMESPACE_BEGIN
+
+#ifdef __cplusplus
+
 
 bool MikuPan_RmlSavePointInit(Rml::Context* context);
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 enum MikuPanRmlSavePointAction
@@ -48,4 +53,6 @@ void MikuPan_RmlSavePointApplyLanguage(int language);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

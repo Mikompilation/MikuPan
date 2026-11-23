@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
 #include "mc_icon.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 #ifdef BUILD_EU_VERSION
 const char mc_icon_title[] = {
@@ -71,3 +75,5 @@ const int mc_iconFile[] = {
 const int mc_iconFileAlbum[] = {
     ICON2_OBJ, ICON2_OBJ, ICON2_OBJ
 };
+
+MIKUPAN_NAMESPACE_END

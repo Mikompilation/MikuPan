@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_AP_BGOST_H
 #define INGAME_ENTRY_AP_BGOST_H
 
 #include "typedefs.h"
 
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char load_mode;
@@ -22,4 +26,6 @@ void Mission04BindGhostLoad02Req();
 int BindGhostBattleEnd(int wrk_no);
 int BindGhostLoad();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_AP_BGOST_H

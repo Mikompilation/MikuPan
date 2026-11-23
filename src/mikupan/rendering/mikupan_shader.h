@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_SHADER_H
 #define MIKUPAN_MIKUPAN_SHADER_H
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 enum ShaderPrograms
 {
@@ -78,4 +82,6 @@ const char *MikuPan_GetShaderVertSource(int idx);
 const char *MikuPan_GetShaderGeomSource(int idx);
 const char *MikuPan_GetShaderFragSource(int idx);
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_MIKUPAN_SHADER_H

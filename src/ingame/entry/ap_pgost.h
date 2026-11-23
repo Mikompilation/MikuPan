@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_AP_PGOST_H
 #define INGAME_ENTRY_AP_PGOST_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_short score;
@@ -31,4 +35,6 @@ void PuzzleGhostMain();
 void PuzzleGhostDispSet();
 void PuzzleGhostDispMain();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_AP_PGOST_H

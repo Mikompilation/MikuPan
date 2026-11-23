@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "mime.h"
@@ -18,6 +19,9 @@
 #include "os/pad.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char file_id[4];
@@ -1221,3 +1225,5 @@ void mimWeightCtrl(ANI_CTRL *ani_ctrl, u_int weight_id, float scale)
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

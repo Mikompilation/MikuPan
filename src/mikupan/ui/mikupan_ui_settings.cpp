@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_ui_saves.h"
 #include "mikupan_ui_settings.h"
 
@@ -34,6 +35,9 @@
 #define MIKUPAN_MAX_WINDOW_SIZES 128
 #define MIKUPAN_MAX_PS2_RESOLUTION_SCALE 6
 #define MIKUPAN_MAX_GPU_DRIVERS 8
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static const int msaa_list[] = {0, 2, 4, 8};
 
@@ -2535,3 +2539,5 @@ const char* MikuPan_GetConfigSaveStatus(void)
 {
     return config_save_status;
 }
+
+MIKUPAN_NAMESPACE_END

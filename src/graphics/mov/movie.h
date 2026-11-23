@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOV_MOVIE_H
 #define GRAPHICS_MOV_MOVIE_H
 
@@ -10,6 +11,9 @@
 #include "sce/mpeg/videodec.h"
 #include "sce/mpeg/audiodec.h"
 #include "sce/libcdvd.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 enum SCENE_NO {
 	SCENE_NO_0_01_0 = 0,
@@ -258,4 +262,6 @@ int voBufIsEmpty(VoBuf *f);
 VoTag* voBufGetTag(VoBuf *f);
 void voBufDecCount(VoBuf *f);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOV_MOVIE_H

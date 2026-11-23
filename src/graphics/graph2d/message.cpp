@@ -1,7 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
 #include "message.h"
+#include "sprt.h"
 
 #include "tim2_new.h"
 #include "mikupan/mikupan_memory.h"
@@ -26,6 +28,7 @@
 #endif
 #include "graphics/graph3d/sglib.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/ascii_font_tbl.h"  // u_char ascii_font_tbl[];
 #include "data/ascii_font_tbl2.h" // u_char ascii_font_tbl2[];
 #include "data/wbyte_font_tbl0.h" // int wbyte_font_tbl0[];
@@ -46,6 +49,8 @@
 #include "data/fntdat.h"          // SPRT_DAT fntdat[];
 #include "data/mesbox.h"          // SPRT_DAT mesbox[];
 #include "data/btntex.h"          // SPRT_DAT btntex[];
+
+
 int *mes_ex_nums[] = { &mc_ctrl.port_mes };
 
 static MES_DAT msdat;
@@ -3113,3 +3118,5 @@ int SetMessageMov(int path, int type, DISP_STR *s)
 #endif
 
 u_char *save_mes_addr = NULL;
+
+MIKUPAN_NAMESPACE_END

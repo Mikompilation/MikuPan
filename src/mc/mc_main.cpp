@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -18,6 +19,9 @@
 
 #include <stdio.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 MC_CTRL mc_ctrl = {0};
 MC_HEADER mc_header = {0};
@@ -1635,3 +1639,5 @@ int mcFormatEnd()
     return (mc_ctrl.cnt++ <= 90) ^ 1;
 }
 #endif
+
+MIKUPAN_NAMESPACE_END

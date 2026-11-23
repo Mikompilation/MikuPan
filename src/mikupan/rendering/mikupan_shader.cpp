@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_shader.h"
 
 #include "mikupan/io/mikupan_file_c.h"
@@ -6,6 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_int current_program = 0;
 u_int backup_current_program = 0;
@@ -557,3 +561,5 @@ SDL_GPUShader *MikuPan_GetGPUFragmentShader(int idx)
     }
     return g_fragment_shaders[idx];
 }
+
+MIKUPAN_NAMESPACE_END

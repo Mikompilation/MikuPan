@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -15,6 +16,9 @@
 #include "main/glob.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void IngameMenuGlstData();
 static void IngameMenuGlstDataDisp();
@@ -1027,3 +1031,4 @@ char CheckGlistRareGhost(u_int kind, u_int no)
 
     return 0;
 }
+MIKUPAN_NAMESPACE_END

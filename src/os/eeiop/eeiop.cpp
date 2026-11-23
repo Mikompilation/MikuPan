@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "sce/sifrpc.h"
@@ -9,6 +10,9 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 
 // int printf ( const char * format, ... );
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 EI_SYS ei_sys = {0};
 ATTRIBUTE_ALIGNED(64, IOP_COMMAND send_cmd[32]) = {0};
@@ -167,3 +171,5 @@ IOP_STAT *GetIopStatP()
 {
     return &rcv_stat;
 }
+
+MIKUPAN_NAMESPACE_END

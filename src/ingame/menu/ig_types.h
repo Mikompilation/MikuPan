@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_TYPES_H
 #define INGAME_MENU_IG_TYPES_H
 
 #include "os/system.h"
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -22,4 +26,6 @@ typedef struct
     u_short best_score;
 } SAVE_RANK;
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_MENU_IG_TYPES_H

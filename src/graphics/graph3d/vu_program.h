@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_VU_PROGRAM_H
 #define MIKUPAN_VU_PROGRAM_H
 #include "sglib.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern unsigned int dma;
 extern void DRAWTYPE2();
@@ -23,4 +27,6 @@ extern void DIVPS_PROLOGUE()   ;
 extern void DPS_PROLOGUE()     ;
 
 
+
+MIKUPAN_NAMESPACE_END
 #endif //MIKUPAN_VU_PROGRAM_H

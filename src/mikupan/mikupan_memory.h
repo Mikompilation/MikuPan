@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MEMORY_ADDRESSES_H
 #define MIKUPAN_MEMORY_ADDRESSES_H
 
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern unsigned char ps2_virtual_ram[];
 extern unsigned char ps2_virtual_scratchpad[];
@@ -129,4 +133,6 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 
 #define SCRATCHPAD_ADDRESS              0x70000000
 
+
+MIKUPAN_NAMESPACE_END
 #endif //MIKUPAN_MEMORY_ADDRESSES_H

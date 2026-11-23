@@ -1,7 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "scene_dat.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/scn_ene_efct.h" // SCN_ENE_EFCT scn_ene_efct[];
 #include "data/scn_vib_type.h" // SCN_VIB_TYPE scn_vib_type[];
 #include "data/scn_vib_0020.h" // SCN_VIB_DATA scn_vib_0020[];
@@ -75,6 +77,8 @@
 #include "data/scn_vib_5010.h" // SCN_VIB_DATA scn_vib_5010[];
 #include "data/scn_vib_5020.h" // SCN_VIB_DATA scn_vib_5020[];
 #include "data/scn_vib_dmy.h" // SCN_VIB_DATA scn_vib_dmy[];
+
+
 SCN_VIB_DATA *scn_vib_tbl[] = {
     scn_vib_dmy,
     scn_vib_0020,
@@ -178,3 +182,4 @@ SCN_VIB_DATA *scn_vib_tbl[] = {
     scn_vib_dmy,
 };
 #include "data/scene_movie_no.h" // u_char scene_movie_no[];
+MIKUPAN_NAMESPACE_END

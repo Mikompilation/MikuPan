@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -18,6 +19,9 @@
 #include "os/pad.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void FileCntInit();
 static void FileCntRenew();
@@ -3103,3 +3107,5 @@ enum NAME_PLATE_RABEL NAME_PLATE_RABEL = SAKKA;
 enum PARENT_RABEL PARENT_RABEL = SAKKA_PRT;
 enum REL_DIRECTION REL_DIRECTION = R_UP;
 enum REL_ALPB REL_ALPB = R_A;
+
+MIKUPAN_NAMESPACE_END

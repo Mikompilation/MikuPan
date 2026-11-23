@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_FILE_LOADING_H
 #define MIKUPAN_FILE_LOADING_H
 
@@ -7,6 +8,8 @@
 #include <string>
 
 struct SDL_IOStream;
+
+MIKUPAN_NAMESPACE_BEGIN
 
 /// What the data setup screen can point the game at.
 enum
@@ -38,7 +41,7 @@ TYPEDEF_ALIGNED(64, struct
 
 
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 void MikuPan_LoadImgHdFile();
 void MikuPan_ServiceMissingDataFolderDialog();
 void MikuPan_RequestDataFolderSelection(const char *missing_path);
@@ -105,4 +108,6 @@ std::string MikuPan_GetDataSourcePath(int source);
 /// player. Empty when there is nothing to report.
 std::string MikuPan_GetDataProblem();
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_FILE_LOADING_H

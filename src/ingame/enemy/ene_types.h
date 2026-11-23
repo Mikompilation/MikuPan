@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENEMY_ENE_TYPES_H
 #define INGAME_ENEMY_ENE_TYPES_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_int attr1;
@@ -69,4 +73,6 @@ typedef struct {
 	u_char rscl[64];
 } SPAWAY;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENEMY_ENE_TYPES_H

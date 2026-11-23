@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_gpu.h"
 
 #include "mikupan/debug/mikupan_logging_c.h"
@@ -22,6 +23,9 @@
 #define MIKUPAN_DEPTH_QUERY_SCREEN_RADIUS 16
 #define MIKUPAN_DEPTH_QUERY_MIN_READ_RADIUS 4
 #define MIKUPAN_DEPTH_QUERY_MAX_READ_RADIUS 32
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -4359,3 +4363,5 @@ void MikuPan_GPUSetVec2(const char* name, float x, float y)
     g_vertex_uniform_dirty = 1;
     g_fragment_uniform_dirty = 1;
 }
+
+MIKUPAN_NAMESPACE_END

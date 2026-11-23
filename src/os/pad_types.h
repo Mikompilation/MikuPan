@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_PAD_TYPES_H
 #define OS_PAD_TYPES_H
 
 #include "typedefs.h"
 
 // #include "sce/libpad.h" // scePadDmaBufferMax ?
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	int port;
@@ -30,5 +34,7 @@ typedef struct {
 	u_char an_dir_bak[2];
 } PAD_STRUCT;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_PAD_TYPES_H
 

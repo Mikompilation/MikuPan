@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_MDLWORK_H
 #define GRAPHICS_MOTION_MDLWORK_H
 
@@ -8,6 +9,9 @@
 #include "graphics/motion/mdldat.h"
 #include "graphics/motion/motion.h"
 #include "graphics/motion/mime_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_short pk2;
@@ -72,4 +76,6 @@ void motSetEnemyKuttuki(u_char work_id, u_char bone_id, float radius, float ry);
 void motReleaseEnemyKuttuki(u_char work_id);
 void SetPlyrClut(int bw_flg);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_MDLWORK_H

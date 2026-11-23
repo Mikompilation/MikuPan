@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "unit_ctl.h"
@@ -13,6 +14,9 @@
 #include <stdlib.h>
 
 #define PI 3.1415927f
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void RotLimitChk(float* rot)
 {
@@ -266,3 +270,5 @@ void ReqEneStop(u_char req, u_char except)
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -19,6 +20,9 @@
 #define FLOAT_MAX_SOUND_DISTANCE 10000.0f
 #define FLOAT_RES_X 640.0f
 #define US_MAX_PAN 0x4ff
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void SeCtrlInit()
 {
@@ -302,3 +306,5 @@ void SeCmdGetDataPitch(int se_req_no)
 {
     return;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_SGSGD_H
 #define GRAPHICS_GRAPH3D_SGSGD_H
 
@@ -5,6 +6,9 @@
 #include "ee/eestruct.h"
 
 #include "graphics/graph3d/sg_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MappingVUVNData(u_int *intpointer, HeaderSection *hs);
 void MappingVUVNDataPreset(u_int *intpointer, int mtype, int gloops, int hsize);
@@ -23,4 +27,6 @@ int GetModelKind(void *sgd_top);
 void SgSetTEX1Prim(u_int *prim, sceGsTex1 *ptex1);
 void SgSetTEX1(void *sgd_top, sceGsTex1 *ptex1);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_SGSGD_H

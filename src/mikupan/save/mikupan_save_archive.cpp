@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_save_archive.h"
 #include <algorithm>
 #include <array>
@@ -5,6 +6,9 @@
 #include <ctime>
 #include <stdexcept>
 #include <zlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanSave
 {
@@ -657,3 +661,5 @@ bool WriteSaveArchive(const std::string &directory, const SaveFiles &files,
     }
 }
 } // namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_ADPCM_EA_CMD_H
 #define OS_EEIOP_ADPCM_EA_CMD_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void EAdpcmCmdInit(u_int dev_init);
 void EAdpcmCmdPlay(u_char channel, u_char loop, int file_no, int start_flm, u_short vol, u_short pan, u_short pitch, u_short fin_flm);
@@ -20,4 +24,6 @@ u_short EAdpcmGetPan(float rot);
 u_short EAdpcmGetVol(float dist, u_short vol);
 u_short EAdpcmGetPitch(float rot, float dist, u_short pitch);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_ADPCM_EA_CMD_H

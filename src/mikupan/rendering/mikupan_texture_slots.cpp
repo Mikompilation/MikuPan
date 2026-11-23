@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_texture_slots.h"
 
 #include "mikupan/bake/mikupan_bake_format.h"
@@ -11,6 +12,9 @@
 #include <cstring>
 #include <memory>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace
 {
@@ -657,7 +661,7 @@ void ReleaseTexture(unsigned int* texture)
 
 }// namespace
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 void MikuPan_TexSlots_UploadImage(const void* picture_header, int block)
 {
@@ -1050,4 +1054,6 @@ void MikuPan_TexSlots_Shutdown(void)
     g_initialized = false;
 }
 
-}// extern "C"
+}// MIKUPAN_EXTERN_C
+
+MIKUPAN_NAMESPACE_END

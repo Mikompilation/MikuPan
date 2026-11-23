@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_EVENT_EV_LOAD_H
 #define INGAME_EVENT_EV_LOAD_H
 
@@ -5,6 +6,9 @@
 #include "graphics/graph2d/sprt.h"
 
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_short file_no;
@@ -225,4 +229,6 @@ int GetLoadGhostInfo(u_char *load_inf);
 void MikuCGDisp();
 void RoomLoadReq(int load_room);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_EVENT_EV_LOAD_H

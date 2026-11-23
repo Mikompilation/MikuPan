@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_LIGHT_TYPES_H
 #define GRAPHICS_GRAPH3D_LIGHT_TYPES_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char state;
@@ -67,4 +71,6 @@ typedef struct {
 	SPOT_WRK spot[3];
 } LIGHT_PACK;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_LIGHT_TYPES_H

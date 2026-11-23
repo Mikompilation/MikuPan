@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 
 #include "common.h"
 #include "typedefs.h"
@@ -21,6 +22,9 @@
 #include "outgame/memory_album.h"
 #include "outgame/mode_slct.h"
 #include "mc/mc_main.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 MC_DATA_STR mc_gamedata_str[] = {
     MC_DATA_HOST(&mc_header,      sizeof(mc_header)),
@@ -75,3 +79,5 @@ MC_DATA_STR mc_albumdata2_str[] = {
 
 u_long mc_gamedata_str_num = 30;
 u_long mc_albumdata_str_num = 4;
+
+MIKUPAN_NAMESPACE_END

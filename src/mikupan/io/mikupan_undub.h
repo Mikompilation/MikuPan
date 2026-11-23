@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_UNDUB_H
 #define MIKUPAN_UNDUB_H
 
@@ -21,7 +22,9 @@
 
 struct SDL_IOStream;
 
-extern "C" {
+MIKUPAN_NAMESPACE_BEGIN
+
+MIKUPAN_EXTERN_C {
 #else
 #include <stdbool.h>
 #endif
@@ -62,6 +65,8 @@ SDL_IOStream *MikuPan_Undub_OpenStream(const std::string& path);
 std::string MikuPan_Undub_GetStatus();
 /// Whether the settings differ from what this run started with.
 bool MikuPan_Undub_IsRestartPending();
+
+MIKUPAN_NAMESPACE_END
 #endif
 
 #endif // MIKUPAN_UNDUB_H

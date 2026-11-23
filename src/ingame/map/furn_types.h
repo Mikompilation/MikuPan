@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_FURN_TYPES_H
 #define INGAME_MAP_FURN_TYPES_H
 
 #include "typedefs.h"
 
 #include "graphics/graph3d/light_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_short attr_no;
@@ -113,4 +117,6 @@ typedef struct {
 	u_char snum;
 } FURN_DATA_POP;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_FURN_TYPES_H

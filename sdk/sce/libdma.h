@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_LIBDMA_H
 #define SCE_LIBDMA_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char  sts;
@@ -73,4 +77,6 @@ sceDmaChan *sceDmaGetChan(int id);
 void sceDmaSend(sceDmaChan *d, void *tag);
 int sceDmaSync(sceDmaChan *d, int mode, int timeout);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_LIBDMA_H

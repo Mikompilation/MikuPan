@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_TIM2_H
 #define GRAPHICS_GRAPH2D_TIM2_H
 
@@ -9,6 +10,9 @@
 
 #include "sce/libgraph.h"
 #include "mikupan/mikupan_basictypes.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 enum TIM2_gattr_type {
 	TIM2_NONE = 0,
@@ -63,8 +67,10 @@ typedef struct {
 	TIM2_UINT32 MMImageSize[0];
 } TIM2_MIPMAPHEADER;
 
+MIKUPAN_NAMESPACE_END
 #include "graphics/graph2d/effect_sub.h"
 #include "outgame/mode_slct.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 extern u_char g_bInterlace;
 extern int ndpkt;
@@ -140,4 +146,6 @@ void CopySq4DToSqr(DISP_SQAR *s, SQR4_DAT *d);
 void CopyGS4DToSqr(DISP_SQAR *s, GSQ4_DAT *d);
 void DispSqrD(DISP_SQAR *s);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_TIM2_H

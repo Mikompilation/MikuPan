@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_FONT_IDENTITY_H
 #define MIKUPAN_FONT_IDENTITY_H
 #include <array>
@@ -5,6 +6,9 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanFonts
 {
 constexpr size_t BankCount = 6;
@@ -23,4 +27,6 @@ bool Decode(const uint8_t *data, size_t size, const std::array<uint64_t, BankCou
 std::string Fingerprint(const Atlases &atlases);
 std::string HashBytes(const uint8_t *data, size_t size);
 }
+
+MIKUPAN_NAMESPACE_END
 #endif

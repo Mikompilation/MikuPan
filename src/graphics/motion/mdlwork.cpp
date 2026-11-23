@@ -1,6 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "mdlwork.h"
 #include "common.h"
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/plyr_file_id.h"// static PLYR_FILE_ID plyr_file_id[];
+MIKUPAN_NAMESPACE_END
 #include "enums.h"
 #include "graphics/graph2d/tim2_new.h"
 #include "graphics/graph3d/gra3d.h"
@@ -23,6 +26,9 @@
 #include "outgame/mode_slct.h"
 #include "sce/misc/diei.h"
 #include "typedefs.h"
+MIKUPAN_NAMESPACE_BEGIN
+
+
 
 void ManmdlSetAlpha(void *sgd_top, u_char alpha)
 {
@@ -1066,3 +1072,5 @@ void SetPlyrClut(int bw_flg)
     /// mode grays them in the shader instead of uploading the .bwc CLUTs.
     MikuPan_BakedTexture_SetPlayerBlackWhite(bw_flg);
 }
+
+MIKUPAN_NAMESPACE_END

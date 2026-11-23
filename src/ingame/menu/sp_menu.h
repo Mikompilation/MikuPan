@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_SP_MENU_H
 #define INGAME_MENU_SP_MENU_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {// 0x7
@@ -98,4 +102,6 @@ void AlbumModeInGameOverInit();
 char AlbumModeInGameOver();
 int SavePointLightJudge();
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_MENU_SP_MENU_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_MPEG_DEFS_H
 #define SCE_MPEG_DEFS_H
 
@@ -24,6 +25,9 @@
 
 #define TS_NONE -1
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 static inline void *DmaAddr(void *val)
 {
     return (void*)((int64_t)val & 0x0fffffff);
@@ -36,4 +40,6 @@ static inline void *UncAddr(void *val)
 
 void clearGsMem(int r, int g, int b, int disp_width, int disp_height);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_MPEG_DEFS_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "effect_sub2.h"
@@ -38,6 +39,9 @@
 #include "outgame/btl_mode/btl_dat.h"
 #include "outgame/btl_mode/btl_mode.h"
 #include "outgame/mode_slct.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x8
 	/* 0x0 */ void *start_point;
@@ -3744,3 +3748,5 @@ void TestPk2Data_2dg(long long sendtexaddr)
 }
 
 enum T_LOAD_MODE T_LOAD_MODE = (enum T_LOAD_MODE)0;
+
+MIKUPAN_NAMESPACE_END

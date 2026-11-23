@@ -1,4 +1,8 @@
+#include "mikupan/mikupan_region.h"
 #include "eekernel.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void* _gp;
 
@@ -56,3 +60,5 @@ int DeleteSema(int sema_id)
     (void)sema_id;
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

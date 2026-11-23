@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "movie.h"
 #include "common.h"
 #include "enums.h"
@@ -74,6 +75,9 @@
 #include "graphics/scene/scene.h"
 #include "graphics/scene/scene_dat.h"
 #include "ingame/map/map_area.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 #ifdef BUILD_EU_VERSION
 char *mpegName[][40] = {
@@ -300,6 +304,7 @@ int PlayMpegEvent()
     switch (movie_wrk.play_event_sta)
     {
         case 0:
+        case 6: // MoviePlay owns playback and its scene ID until it restores the title.
             ret = 0;
             break;
         case 1:
@@ -3452,3 +3457,5 @@ void voBufDecCount(VoBuf *f)
         f->count--;
     }
 }
+
+MIKUPAN_NAMESPACE_END

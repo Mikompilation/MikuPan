@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef IOPADPCM_H_
 #define IOPADPCM_H_
 
 #include "iopmain.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x2c
     /* 0x00:00 */ unsigned int fsize : 32;
@@ -174,4 +178,6 @@ void IAdpcmCmdPreLoad();
 void IAdpcmCmdPause();
 void IAdpcmCmdRestart();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // IOPADPCM_H_

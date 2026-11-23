@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_MIME_DAT_H
 #define GRAPHICS_MOTION_MIME_DAT_H
 
 #include "typedefs.h"
 
 #include "graphics/motion/acs_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	sceVu0FVECTOR *vtx;
@@ -35,4 +39,6 @@ typedef struct {
 	u_char pad;
 } MIME_CTRL;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_MIME_H

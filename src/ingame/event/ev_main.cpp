@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "enums.h"
 #include "typedefs.h"
@@ -53,6 +54,9 @@
 #include "graphics/graph3d/gra3d.h"
 #include "graphics/graph3d/load3d.h"
 #include "ingame/map/map_ctrl.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_char event_stts[250] = {0};
 EVENT_WRK ev_wrk = {0};
@@ -1587,3 +1591,5 @@ void EndingMain()
             break;
         }
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_FRAMEGRAPH_H
 #define MIKUPAN_MIKUPAN_FRAMEGRAPH_H
 
 #define FRAME_GRAPH_CAPACITY 600
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -19,4 +23,6 @@ int PerfTableBegin(const char* id);
 void PerfRow(const char* label, float ms, float total);
 void FrameTimeGraph_Draw(FrameTimeGraph* g);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_MIKUPAN_FRAMEGRAPH_H

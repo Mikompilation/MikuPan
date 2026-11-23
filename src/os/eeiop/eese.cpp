@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "eese.h"
 #include "common.h"
 #include "enums.h"
@@ -12,6 +13,9 @@
 #include "os/eeiop/se_cmd.h"
 #include "os/eeiop/se_data.h"
 #include "os/eeiop/se_trans.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -1446,3 +1450,5 @@ int SeStartV(int se_no, u_char voice_no)
     // no return with int return value in function signature ...
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

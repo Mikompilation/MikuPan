@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_UNDUB_DATA_H
 #define MIKUPAN_UNDUB_DATA_H
 
@@ -11,8 +12,10 @@
 
 #include "enums.h"
 
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 /// Entries in IMG_HD.BIN of the Japanese disc.
@@ -287,5 +290,7 @@ static const MikuPan_UndubVolume mikupan_undub_volumes[] = {
 #ifdef __cplusplus
 }
 #endif
+
+MIKUPAN_NAMESPACE_END
 
 #endif // MIKUPAN_UNDUB_DATA_H

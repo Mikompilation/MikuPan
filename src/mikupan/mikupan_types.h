@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_TYPES_H
 #define MIKUPAN_TYPES_H
 
@@ -6,6 +7,9 @@
 
 #include "sce/libgraph.h"
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef float LMATRIX[3][4];
 typedef float VECTOR3[3];
@@ -526,4 +530,6 @@ typedef struct
     sceGsLoadImage gsli;
 } SGDTRI2FILEHEADER;
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_TYPES_H

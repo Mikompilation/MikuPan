@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_FILE_H
 #define INGAME_MENU_IG_FILE_H
 
 #include "ingame/event/ev_spcl.h"
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct RELATION_DAT RELATION_DAT;
 typedef struct RELATION_PRT RELATION_PRT;
@@ -313,4 +317,6 @@ void SimpleDispSprtDS(SPRT_DAT *ssd, u_int addr, int sp_no, SPRT_SROT *srot,
 void TestPk2DataSou(long long sendtexaddr);
 void DispCaption(int no, u_char alp);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_MENU_IG_FILE_H

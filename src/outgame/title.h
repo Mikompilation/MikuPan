@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OUTGAME_TITLE_H
 #define OUTGAME_TITLE_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	int load_id;
@@ -40,7 +44,9 @@ typedef struct {
 } TITLE_SYS;
 #endif
 
+MIKUPAN_NAMESPACE_END
 #include "outgame/mode_slct.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 // extern SPRT_DAT title_sprt[11];
 // extern SPRT_DAT font_sprt[20];
@@ -71,4 +77,6 @@ void InitSelectLanguage();
 int SetSelectLanguage(int cur_pos);
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OUTGAME_TITLE_H

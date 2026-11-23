@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_FURN_SPE_FSLA_MAIN_H
 #define INGAME_MAP_FURN_SPE_FSLA_MAIN_H
 
@@ -5,6 +6,9 @@
 #include "graphics/graph3d/light_types.h"
 
 // extern u_char able_to_light_tbl[];
+
+MIKUPAN_NAMESPACE_BEGIN
+
 extern POINT_LIGHT_WRK point_light_wrk[8];
 extern FSPE_LIGHT_WRK fspe_light_wrk[7];
 
@@ -22,4 +26,6 @@ signed char CandleAnmOcc(sceVu0FVECTOR *pos, float r, float g, float b, u_char i
 void PointLightCtrl();
 void CandleAnmCtrl();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_FURN_SPE_FSLA_MAIN_H

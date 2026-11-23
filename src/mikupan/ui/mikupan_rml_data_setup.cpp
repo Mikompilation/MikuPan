@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/ui/mikupan_rml_data_setup.h"
 
 #include "mikupan/io/mikupan_file.h"
@@ -13,6 +14,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace
 {
@@ -288,7 +291,7 @@ void MikuPan_RmlDataSetupHandleCancel(void)
     g_data_setup.selected = kExitRow;
 }
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 int MikuPan_RmlDataSetupIsAvailable(void)
 {
@@ -332,3 +335,5 @@ void MikuPan_RmlDataSetupShow(void)
 }
 
 }
+
+MIKUPAN_NAMESPACE_END

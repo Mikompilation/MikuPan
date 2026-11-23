@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include <string.h>
 
 #include "common.h"
@@ -7,6 +8,9 @@
 #include "main/glob.h"
 #include "mikupan/mikupan_i18n.h"
 #include "os/key_cnf.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_short *default_key[32] = {
     &pad[0].cnt[0],  &pad[0].cnt[1],  &pad[0].cnt[2],  &pad[0].cnt[3],
@@ -427,3 +431,5 @@ const char *MikuPan_ActionProfileTargetLabel(int target)
 
     return MikuPan_Translate(action_profile_target_labels[target]);
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/ui/mikupan_rml_options.h"
 #include "mikupan/ui/mikupan_rml_save_load.h"
 
@@ -30,6 +31,9 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int SeStartFix(int se_no, unsigned short fin_spd, unsigned short vol_max,
                unsigned short pitch, unsigned char menu);
@@ -3205,7 +3209,7 @@ void MikuPan_RmlOptionsShutdown(void)
     g_opt = OptionsState();
 }
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 void MikuPan_RmlOptionsOpen(void)
 {
@@ -3377,3 +3381,5 @@ void MikuPan_RmlOptionsToggleDebug(void)
     }
 }
 }
+
+MIKUPAN_NAMESPACE_END

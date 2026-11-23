@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -17,6 +18,9 @@
 #define CALC_DELTA(X,Y) X - Y
 #define FLOAT_MAX_SOUND_DISTANCE 10000.0f
 #define CONCAT_USHORT(X, Y) (((X) << 16) | ((Y)))
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void EAdpcmCmdInit(u_int dev_init)
 {
@@ -178,3 +182,5 @@ u_short EAdpcmGetPitch(float rot, float dist, u_short pitch)
         return pitch * 0.7f;
     }
 }
+
+MIKUPAN_NAMESPACE_END

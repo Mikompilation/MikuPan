@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_RML_DATA_SETUP_H
 #define MIKUPAN_RML_DATA_SETUP_H
 
@@ -10,7 +11,11 @@ namespace Rml
 {
 class Context;
 }
+#endif
 
+MIKUPAN_NAMESPACE_BEGIN
+
+#ifdef __cplusplus
 bool MikuPan_RmlDataSetupInit(Rml::Context* context);
 void MikuPan_RmlDataSetupStartFrame(void);
 void MikuPan_RmlDataSetupPrepareShutdown(void);
@@ -19,7 +24,7 @@ int MikuPan_RmlDataSetupIsOpen(void);
 void MikuPan_RmlDataSetupHandleVerticalInput(int direction);
 void MikuPan_RmlDataSetupActivate(void);
 void MikuPan_RmlDataSetupHandleCancel(void);
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 int MikuPan_RmlDataSetupIsAvailable(void);
@@ -29,5 +34,7 @@ void MikuPan_RmlDataSetupShow(void);
 #ifdef __cplusplus
 }
 #endif
+
+MIKUPAN_NAMESPACE_END
 
 #endif

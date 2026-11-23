@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_LIBSG_H
 #define GRAPHICS_GRAPH3D_LIBSG_H
 #include "typedefs.h"
 #include "common.h"
 
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern u32 g_vu0_r;
 extern sceVu0FMATRIX work_matrix_0;
@@ -40,4 +44,6 @@ float Vu0DotProduct(float *v0, float*v1);
 void Vu0MulVectorX(sceVu0FVECTOR v0, sceVu0FVECTOR v1, float sc);
 qword* getObjWrk();
 
+
+MIKUPAN_NAMESPACE_END
 #endif //  GRAPHICS_GRAPH3D_LIBSG_H

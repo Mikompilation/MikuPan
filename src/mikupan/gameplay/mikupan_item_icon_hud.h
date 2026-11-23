@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_GAMEPLAY_MIKUPAN_ITEM_ICON_HUD_H
 #define MIKUPAN_GAMEPLAY_MIKUPAN_ITEM_ICON_HUD_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MikuPan_QuickSwapFinderFilm(void);
 int MikuPan_ConsumeFinderFilmCounterSnap(void);
@@ -12,4 +16,6 @@ void MikuPan_SetMirrorStoneHudEnabled(int enabled);
 int MikuPan_MirrorStoneHudEnabled(void);
 void MikuPan_ResetItemIconHud(void);
 
+
+MIKUPAN_NAMESPACE_END
 #endif

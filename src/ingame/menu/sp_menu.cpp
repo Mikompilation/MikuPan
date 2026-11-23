@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "sp_menu.h"
 #include "common.h"
 #include "enums.h"
@@ -33,6 +34,9 @@
 #include "os/eeiop/eese.h"
 #include "outgame/memory_album.h"
 
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static u_char SaveConte();
 static void WarningMsg(u_char msg, u_char csr0, u_char alp, u_char ha);
@@ -3662,3 +3666,5 @@ int SavePointLightJudge()
 
     return ev_wrk.btl_lock < 1;
 }
+
+MIKUPAN_NAMESPACE_END

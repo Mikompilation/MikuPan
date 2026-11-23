@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "graphics/graph3d/mirror.h"
 #include "mikupan_renderer_internal.h"
 #include "graphics/graph3d/sglib.h"
@@ -9,6 +10,9 @@
 #include "mikupan/mikupan_utils.h"
 #include <math.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 mat4 WorldClipView = {0};
 mat4 WorldView = {0};
@@ -240,3 +244,5 @@ void MikuPan_SetupMirrorMtx(float* mtx)
     MikuPan_SetUniformMatrix4fvToAllShaders((float*)WorldView, "view");
     MikuPan_RecomputeAndUploadDerived();
 }
+
+MIKUPAN_NAMESPACE_END

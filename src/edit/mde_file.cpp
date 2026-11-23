@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "edit/mde_file.h"
 
 #include "edit/map_data.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MdeFileInit(int mission_no, int floor_no)
 {
@@ -28,3 +32,5 @@ const char *MdeFileState(void)
 {
     return MdeMapDataState();
 }
+
+MIKUPAN_NAMESPACE_END

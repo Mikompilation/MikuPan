@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -7,6 +8,9 @@
 #include "os/eeiop/adpcm/ea_dat.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
 #include "iop/adpcm/iopadpcm.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void EAdpcmSoulMain()
 {
@@ -111,3 +115,5 @@ void AdpcmStopSoul(/* a0 4 */ int fout_flm)
         adpcm_map.soul.mode = AMSL_MODE_REQ_STOP;
     }
 }
+
+MIKUPAN_NAMESPACE_END

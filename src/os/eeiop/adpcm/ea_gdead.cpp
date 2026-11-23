@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -8,6 +9,9 @@
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
 #include "os/eeiop/adpcm/ea_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void EAdpcmGdeadMain()
 {
@@ -90,3 +94,5 @@ void AdpcmStopGhostDead(int fout_flm)
         adpcm_map.gdead.mode = AMGD_MODE_REQ_PLAYING;
     }
 }
+
+MIKUPAN_NAMESPACE_END

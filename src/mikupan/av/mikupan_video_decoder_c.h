@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #pragma once
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 typedef struct MovVidHandle_s* MovVidHandle;
@@ -29,3 +33,4 @@ double movvid_fps(MovVidHandle h);
 #ifdef __cplusplus
 }
 #endif
+MIKUPAN_NAMESPACE_END

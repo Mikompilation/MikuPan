@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "anicode.h"
@@ -11,6 +12,9 @@
 #include "graphics/motion/motion.h"
 #include "ingame/map/door_ctl.h"
 
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void motAniCodeClearBuf(ANI_CTRL *ani_ctrl)
 {
@@ -395,3 +399,5 @@ u_char motGetNextMotion(ANI_CTRL *ani_ctrl)
 
     return c_ctrl->stat == 1;
 }
+
+MIKUPAN_NAMESPACE_END

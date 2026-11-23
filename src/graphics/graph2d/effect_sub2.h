@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_EFFECT_SUB2_H
 #define GRAPHICS_GRAPH2D_EFFECT_SUB2_H
 
@@ -6,6 +7,9 @@
 #include "graphics/graph2d/sprt.h"
 
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x14
     /* 0x00 */ short int x_trans;
@@ -136,4 +140,6 @@ void DispSprt3(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SS
 void DispSprtTemp(SPRT_SDAT *ssd, int64_t addr, int sp_no, SPRT_SROT *srot, SPRT_SSCL *sscl, u_char alp_rate);
 void TestPk2Data_2dg(long long sendtexaddr);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_EFFECT_SUB2_H

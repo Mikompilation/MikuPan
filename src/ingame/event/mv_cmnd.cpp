@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "mv_cmnd.h"
@@ -9,6 +10,9 @@
 #include "main/glob.h"
 #include "mikupan/mikupan_textoverride.h"
 #include "mikupan/mikupan_memory.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 MOVIE_CMD_WRK mvcmd_wrk = {0};
 
@@ -90,3 +94,4 @@ int64_t GetMovieMessageAddr(short int msg_no)
 
     return MikuPan_GetHostAddress(BASE_ADDRESS + addr);
 }
+MIKUPAN_NAMESPACE_END

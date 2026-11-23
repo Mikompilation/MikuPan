@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_SGLIB_H
 #define GRAPHICS_GRAPH3D_SGLIB_H
 
@@ -8,6 +9,9 @@
 #include "graphics/graph3d/sg_dat.h"
 
 // typedef sceVu0FMATRIX sceVu0FMATRIX[4];
+
+MIKUPAN_NAMESPACE_BEGIN
+
 typedef float LMATRIX[3][4];
 
 typedef struct {
@@ -204,4 +208,6 @@ void _NormalizeVector2(sceVu0FVECTOR v, sceVu0FVECTOR v0);
 void _ApplyRotMatrix(sceVu0FVECTOR v0, sceVu0FVECTOR v1);
 void _ApplyMatrixXYZ(sceVu0FVECTOR v0, sceVu0FMATRIX m, sceVu0FVECTOR v1);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_SGLIB_H

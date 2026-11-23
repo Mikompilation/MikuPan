@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_EFFECT_RDR_H
 #define GRAPHICS_GRAPH2D_EFFECT_RDR_H
 
 #include "typedefs.h"
 
 #include "ingame/map/furn_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	void *adr;
@@ -29,7 +33,9 @@ typedef struct {
 	u_char sta;
 } BURN_FIRE;
 
+MIKUPAN_NAMESPACE_END
 #include "graphics/graph2d/effect.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 // extern BURN_FIRE burn_fire[10];
 // extern EFFRDR_RSV blood_drop_rsv[16];
@@ -64,4 +70,6 @@ void SetRDPFire(float *pos, u_short furn_id);
 void SetRDPFire2(float *pos, u_short furn_id);
 void ResetRDPFire(u_short furn_id);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_EFFECT_RDR_H

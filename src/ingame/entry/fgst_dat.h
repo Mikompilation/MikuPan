@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_FGST_DAT_H
 #define INGAME_ENTRY_FGST_DAT_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -20,4 +24,6 @@ extern FGST_AP_DAT fg_ap_dat3[];
 extern FGST_AP_DAT fg_ap_dat4[];
 extern FGST_AP_DAT *fg_ap_dat[];
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_FGST_DAT_H

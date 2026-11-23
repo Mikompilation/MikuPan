@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_FIRST_PERSON_H
 #define MIKUPAN_MIKUPAN_FIRST_PERSON_H
 
 #include "typedefs.h"
 #include "ingame/enemy/move_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern int mikupan_first_person_enabled;
 extern int mikupan_first_person_r3_toggle_enabled;
@@ -27,4 +31,6 @@ int MikuPan_FirstPersonShouldHidePlayerModel(void);
 int MikuPan_FirstPersonUseFinderFog(void);
 int MikuPan_FirstPersonShouldUseCameraSpotlight(void);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_MIKUPAN_FIRST_PERSON_H

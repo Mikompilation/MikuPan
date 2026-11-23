@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "shadow.h"
 #include "common.h"
 #include "typedefs.h"
@@ -17,13 +18,17 @@
 
 #define SCRATCHPAD ((u_char *) ps2_virtual_scratchpad)
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/scamera.h"// SgCAMERA scamera;
+MIKUPAN_NAMESPACE_END
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
 #include "mikupan/gameplay/mikupan_graph3d_compat.h"
 #include "mikupan/rendering/mikupan_renderer.h"
-
 #include <math.h>
+MIKUPAN_NAMESPACE_BEGIN
+
+
 
 static int write_flg = 0;
 static sceVu0FMATRIX *LWSMtx = (sceVu0FMATRIX *) &SCRATCHPAD[0x90];
@@ -1838,3 +1843,5 @@ void DrawShadow(ShadowHandle *shandle, EnvFuncCallback env_func)
 
     CalcShadowMatrix(shandle, center, scamera.ax, scamera.ay);
 }
+
+MIKUPAN_NAMESPACE_END

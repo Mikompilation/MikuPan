@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_MAP_HTCK_H
 #define INGAME_MAP_MAP_HTCK_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_char PosInAreaJudgeSub(int *addr, u_short pos_x, u_short pos_y, u_char type);
 void Get2DLinearConstFromPos(float *a, float *b, float *c, float x0, float y0, float x1, float y1);
@@ -11,4 +15,6 @@ int ChkInsideBox(float cpx, float cpy, float x0, float y0, float x1, float y1, f
 u_char HitChkSegment2All(sceVu0FVECTOR f, sceVu0FVECTOR t, float deg);
 u_char HitChkSegment2All2D(sceVu0FVECTOR f, sceVu0FVECTOR t, float deg);
 u_char FurnCoverCheck(u_short pos_x, short int pos_y, u_short pos_z, u_char room_no);
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_MAP_HTCK_H

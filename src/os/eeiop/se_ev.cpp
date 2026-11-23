@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -7,6 +8,9 @@
 #include "os/eeiop/eese.h"
 #include "os/eeiop/se_cmd.h"
 #include "os/eeiop/se_data.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 SE_EV_WRK se_ev_wrk[SE_EV_WRK_SIZE] = {0};
 
@@ -175,3 +179,5 @@ static SE_EV_WRK * SeEvGetSeEvWrk(u_char no)
     return NULL;
 }
 
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -23,6 +24,9 @@
 
 #include <mikupan/mikupan_memory.h>
 #include "mikupan/rendering/mikupan_meshcache.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 ROOM_LOAD_BLOCK room_load_block[2] = {0};
 #include "data/load_furn_num.h" // static short int load_furn_num[];
@@ -738,3 +742,5 @@ int LoadInitDoorModel(ROOM_LOAD_BLOCK *rlb)
 
     return ret;
 }
+
+MIKUPAN_NAMESPACE_END

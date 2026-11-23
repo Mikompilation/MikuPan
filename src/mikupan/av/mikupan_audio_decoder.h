@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_AUDIO_DECODER_H
 #define MIKUPAN_AUDIO_DECODER_H
 
@@ -6,6 +7,8 @@
 #include <vector>
 
 struct SDL_IOStream;
+
+MIKUPAN_NAMESPACE_BEGIN
 
 class MikupanAudioDecoder {
 public:
@@ -59,4 +62,6 @@ private:
     std::vector<uint8_t> pcmOut_;
 };
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_AUDIO_DECODER_H

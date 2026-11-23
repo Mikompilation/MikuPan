@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_ADPCM_EA_CTRL_H
 #define OS_EEIOP_ADPCM_EA_CTRL_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	sceVu0FVECTOR pos;
@@ -68,4 +72,6 @@ u_char IsEndAdpcmFadeOut();
 void EAdpcmFadeOutGameEnd(u_short fout_flm);
 u_char IsHighModeUse(u_char my_mode);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_ADPCM_EA_CTRL_H

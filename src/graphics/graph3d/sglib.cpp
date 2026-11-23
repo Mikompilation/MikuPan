@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "sglib.h"
 #include "cglm/mat4.h"
 #include "common.h"
@@ -19,6 +20,9 @@
 
 #define PI 3.1415925f
 #define POW2(x) ((x) * (x))
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 sceVu0FVECTOR work_vf01 = {0.0f, 0.0f, 0.0f, 0.0f};
 sceVu0FVECTOR work_vf02 = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -679,3 +683,4 @@ void _ApplyMatrixXYZ(sceVu0FVECTOR v0, sceVu0FMATRIX m, sceVu0FVECTOR v1)
 
     glm_vec4_copy(out, v0);
 }
+MIKUPAN_NAMESPACE_END

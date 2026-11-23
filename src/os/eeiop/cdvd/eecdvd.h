@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_CDVD_EECDVD_H
 #define OS_EEIOP_CDVD_EECDVD_H
 
 #include <stdint.h>
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_int start;
@@ -33,4 +37,6 @@ int GetFileNameCount();
 int LoadReqLanguage(int file_no, u_int addr);
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_CDVD_EECDVD_H

@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_SAVE_ARCHIVE_H
 #define MIKUPAN_SAVE_ARCHIVE_H
 #include "mikupan_memory_card.h"
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanSave
 {
 enum class SaveArchiveFormat
@@ -16,4 +20,6 @@ bool ReadSaveArchive(const Bytes &data, std::string &directory, SaveFiles &files
 bool WriteSaveArchive(const std::string &directory, const SaveFiles &files,
                       SaveArchiveFormat format, Bytes &data, std::string &error);
 } // namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END
 #endif

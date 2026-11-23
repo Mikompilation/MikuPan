@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -9,6 +10,9 @@
 #include "graphics/graph2d/message.h"
 
 #include <stdio.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void MdeDispSetSquare(int pri, float x, float y, float w, float h, u_char r, u_char g, u_char b, u_char a)
 {
@@ -94,3 +98,5 @@ void MdeDispMain(const MDE_MENU_WRK *wrk)
 
     MdeDispSetSquare(2, 36.0f, wrk->csr * 14 + 46, 270.0f, 12.0f, 0x50, 0x50, 0x64, 0x50);
 }
+
+MIKUPAN_NAMESPACE_END

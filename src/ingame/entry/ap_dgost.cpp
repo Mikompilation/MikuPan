@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -20,6 +21,9 @@
 #include <graphics/motion/motion.h>
 #include <mikupan/mikupan_memory.h>
 // #include "graphics/motion/motion.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_char dgst_room[] = {
     3, 7, 16, 21, 22, 23, 25, 27, 28, 0xFF,
@@ -248,3 +252,5 @@ void DeadGhostLoadDel()
         DelDataLoadWrk(dgst_load[i].file_no);
     }
 }
+
+MIKUPAN_NAMESPACE_END

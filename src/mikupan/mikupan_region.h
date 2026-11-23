@@ -1,0 +1,11 @@
+#pragma once
+
+#ifdef MIKUPAN_NAMESPACE
+#define MIKUPAN_NAMESPACE_BEGIN namespace MIKUPAN_NAMESPACE {
+#define MIKUPAN_NAMESPACE_END }
+#define MIKUPAN_EXTERN_C extern "C++"
+#else
+#define MIKUPAN_NAMESPACE_BEGIN
+#define MIKUPAN_NAMESPACE_END
+#define MIKUPAN_EXTERN_C extern "C"
+#endif

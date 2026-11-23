@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_STR_TYPES_H
 #define MIKUPAN_STR_TYPES_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char *str;
@@ -32,4 +36,6 @@ typedef struct {
     int pri;
 } STR_DAT;
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_STR_TYPES_H

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/mikupan_audio_bus.h"
 
 #include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_utils.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static u_int g_mikupan_audio_revision = 1;
 
@@ -23,3 +27,5 @@ float MikuPan_AudioGetMasterScale(void)
 {
     return MikuPan_ClampFloat(mikupan_configuration.audio.master, 0.0f, 1.0f);
 }
+
+MIKUPAN_NAMESPACE_END

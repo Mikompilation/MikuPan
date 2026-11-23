@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_DEVVIF1_H
 #define SCE_DEVVIF1_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_int row[4];
@@ -33,4 +37,6 @@ int sceDevVif1GetCnd(sceDevVif1Cnd *cnd);
 int sceDevVif1PutFifo(u_long128 *addr, int n);
 int sceDevVif1GetFifo(u_long128 *addr, int n);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_DEVVIF1_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_FILE_C_H
 #define MIKUPAN_MIKUPAN_FILE_C_H
 #include "typedefs.h"
@@ -6,6 +7,8 @@
 #include <stdbool.h>
 
 struct SDL_IOStream;
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -27,7 +30,7 @@ TYPEDEF_ALIGNED(64, struct
 } MikuPan_McTblGetDir);
 
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 void MikuPan_LoadImgHdFile();
@@ -63,4 +66,6 @@ int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table, int max
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_MIKUPAN_FILE_C_H

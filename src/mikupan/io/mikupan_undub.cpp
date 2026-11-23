@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_undub.h"
 
 #include "mikupan/io/mikupan_disc_image.h"
@@ -23,6 +24,8 @@
 #include <mutex>
 #include <string>
 #include <vector>
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace
 {
@@ -555,7 +558,7 @@ void SDLCALL DiscBrowsed(void* userdata, const char* const* filelist,
 
 } // namespace
 
-extern "C" void MikuPan_Undub_Activate(void)
+MIKUPAN_EXTERN_C void MikuPan_Undub_Activate(void)
 {
     if (g_run.activated)
     {
@@ -601,7 +604,7 @@ extern "C" void MikuPan_Undub_Activate(void)
     g_state.store(state.release(), std::memory_order_release);
 }
 
-extern "C" void MikuPan_Undub_Deactivate(const char* reason)
+MIKUPAN_EXTERN_C void MikuPan_Undub_Deactivate(const char* reason)
 {
     if (GetState() == nullptr)
     {
@@ -614,12 +617,12 @@ extern "C" void MikuPan_Undub_Deactivate(const char* reason)
     spdlog::warn("Undub is off: {}", g_run.problem);
 }
 
-extern "C" bool MikuPan_Undub_IsActive(void)
+MIKUPAN_EXTERN_C bool MikuPan_Undub_IsActive(void)
 {
     return GetState() != nullptr;
 }
 
-extern "C" bool MikuPan_Undub_GetAdpcmVolume(int file_no, unsigned short* vol)
+MIKUPAN_EXTERN_C bool MikuPan_Undub_GetAdpcmVolume(int file_no, unsigned short* vol)
 {
     if (GetState() == nullptr || vol == nullptr)
     {
@@ -638,7 +641,7 @@ extern "C" bool MikuPan_Undub_GetAdpcmVolume(int file_no, unsigned short* vol)
     return false;
 }
 
-extern "C" void MikuPan_Undub_BrowseForDisc(void)
+MIKUPAN_EXTERN_C void MikuPan_Undub_BrowseForDisc(void)
 {
     /// SDL reads these until the picker closes.
     static const SDL_DialogFileFilter filters[] = {
@@ -669,7 +672,7 @@ extern "C" void MikuPan_Undub_BrowseForDisc(void)
                            start.empty() ? nullptr : start.c_str(), false);
 }
 
-extern "C" void MikuPan_Undub_ServiceBrowser(void)
+MIKUPAN_EXTERN_C void MikuPan_Undub_ServiceBrowser(void)
 {
     std::string path;
 
@@ -799,3 +802,5 @@ bool MikuPan_Undub_IsRestartPending()
     return enabled != g_run.enabled
            || (enabled && g_run.disc != mikupan_configuration.undub_disc_path);
 }
+
+MIKUPAN_NAMESPACE_END

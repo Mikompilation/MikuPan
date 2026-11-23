@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #include "libmc.h"
 #include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "typedefs.h"
 #include <stddef.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int retval = 0;
 int mcRunCmdNo = 0;
@@ -123,3 +127,4 @@ int sceMcGetDir(int port, int slot, const char *name, unsigned mode, int maxent,
 
     return sceMcExecRun;
 }
+MIKUPAN_NAMESPACE_END

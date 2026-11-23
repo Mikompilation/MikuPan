@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "structs.h"
@@ -22,6 +23,9 @@
 #include "os/eeiop/eese.h"
 
 #include <mikupan/mikupan_memory.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 MC_ALBUM_SAVE mc_album_save = {0};
 MC_ALBUM_SAVE album_save_dat[2] = {0};
@@ -3096,3 +3100,5 @@ char GetAlbumCurPos(char side)
         return dm_albm.csr[side];
     }
 }
+
+MIKUPAN_NAMESPACE_END

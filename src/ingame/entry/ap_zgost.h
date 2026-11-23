@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_AP_ZGOST_H
 #define INGAME_ENTRY_AP_ZGOST_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x30
 	/* 0x00 */ sceVu0FVECTOR pos;
@@ -25,4 +29,6 @@ void ZeroHourOutReq();
 void ZeroHourAfterRoomLoadReq();
 int ZeroHourAppearJudge();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_AP_ZGOST_H

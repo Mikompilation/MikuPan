@@ -1,5 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #ifndef ENUMS_H
 #define ENUMS_H
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum
 {
@@ -6818,4 +6822,6 @@ enum
 };
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // ENUMS_H

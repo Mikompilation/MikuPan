@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_config.h"
 #include "mikupan_utils.h"
 
@@ -7,6 +8,9 @@
 #define MIKUPAN_CONFIG_DEFAULT_WINDOW_HEIGHT 720
 #define MIKUPAN_CONFIG_MSAA_COUNT 4
 #define MIKUPAN_CONFIG_DEFAULT_MSAA_INDEX 3
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 MikuPan_Config mikupan_configuration = {
     {
@@ -395,3 +399,5 @@ void MikuPan_ConfigurationValidate(void)
     mikupan_configuration.undub_enabled =
         mikupan_configuration.undub_enabled ? 1 : 0;
 }
+
+MIKUPAN_NAMESPACE_END

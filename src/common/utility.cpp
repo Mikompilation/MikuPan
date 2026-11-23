@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
 #include "utility.h"
 
 #include <ctype.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 char *StrToLower(char *str)
 {
@@ -19,3 +23,5 @@ char *StrToLower(char *str)
     
     return str;
 }
+
+MIKUPAN_NAMESPACE_END

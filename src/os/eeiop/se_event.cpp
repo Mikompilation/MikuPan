@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -8,6 +9,9 @@
 #include "ingame/map/door_ctl.h"
 #include "ingame/map/map_ctrl.h"
 #include "main/glob.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void SEventNoUse(u_char room_id0, u_char room_id1);
 static void SEventSetLoadTbl(u_int *ld_tbl, u_char room_id);
@@ -168,3 +172,5 @@ u_char SEventGetSeNo(int file_no)
     
     return 0xff;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_AP_SGOST_H
 #define INGAME_ENTRY_AP_SGOST_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_short st_x0;
@@ -43,4 +47,6 @@ int SettleGhostStartDisp();
 int SettleGhostBattleEnd();
 void SettleGhostDispEffect();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_AP_SGOST_H

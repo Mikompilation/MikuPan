@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -12,6 +13,9 @@
 #include <stdio.h>
 
 #define MDE_MDSP_X 320.0f
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MdeMdspLine(int line, char *str)
 {
@@ -117,3 +121,5 @@ void MdeMdspRoomPage(const MDE_MENU_WRK *wrk)
         MdeMdspLine(i + 3, tmp_str);
     }
 }
+
+MIKUPAN_NAMESPACE_END

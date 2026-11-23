@@ -1,7 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "mdldat.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/m000anm000.h" // ANI_CODE m000anm000[];
 #include "data/m000anm001.h" // ANI_CODE m000anm001[];
 #include "data/m000anm002.h" // ANI_CODE m000anm002[];
@@ -493,3 +495,4 @@
 #include "data/arei_loopanm_tbl.h" // ANI_CODE *arei_loopanm_tbl[];
 #include "data/manmdl_dat.h" // MANMDL_DAT manmdl_dat[];
 #include "data/anm_tbl.h" // ANI_CODE **anm_tbl[];
+MIKUPAN_NAMESPACE_END

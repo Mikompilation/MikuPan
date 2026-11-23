@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_SE_EV_H
 #define OS_EEIOP_SE_EV_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	int count;
@@ -22,4 +26,6 @@ void SeEvReq(int se_req_no, int se_ev_pos, int count, char mode);
 void SeEvSetPitch(int se_ev_pos, u_short pitch);
 u_short SeEvGetPitch(int se_ev_pos);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_SE_EV_H

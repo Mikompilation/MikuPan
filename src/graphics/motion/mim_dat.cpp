@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "mim_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_char mimchodo_r003[] = {0x0f, 0xff};
 u_char mimchodo_r007[] = {0x97, 0xff};
@@ -53,3 +57,5 @@ MIME_LOAD mimchodo_tbl[] = {
     { .addr = NULL, .dat = NULL, },
     { .addr = NULL, .dat = mimchodo_r041, },
 };
+
+MIKUPAN_NAMESPACE_END

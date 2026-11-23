@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_PIPELINE_H
 #define MIKUPAN_MIKUPAN_PIPELINE_H
 
 #include "mikupan/mikupan_basictypes.h"
 
 
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MikuPan_InitPipeline();
 void MikuPan_CreateBufferObjectsInfo(MikuPan_PipelineInfo* pipeline_info, u_int num_buffers);
@@ -32,4 +36,6 @@ void MikuPan_ResetGLBindCache(void);
 u_int MikuPan_GetBoundVAO(void);
 u_int MikuPan_GetBoundTexture2D(void);
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_MIKUPAN_PIPELINE_H

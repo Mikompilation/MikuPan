@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "effect_rdr.h"
@@ -25,6 +26,9 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 #include "os/pad.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	sceVu0FVECTOR bpos;
@@ -979,3 +983,5 @@ void ResetRDPFire(u_short furn_id)
 
     pfire_rsv[ret].furn_id = 0xffff;
 }
+
+MIKUPAN_NAMESPACE_END

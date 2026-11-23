@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_SYSTEM_H
 #define OS_SYSTEM_H
 
@@ -5,6 +6,9 @@
 #include "ee/eestruct.h"
 #include "sce/libgraph.h"
 #include "sce/libcdvd.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern int odev;
 extern int stop_put_draw_env;
@@ -28,4 +32,6 @@ int vblankHandler(int val);
 void vfunc();
 void SetSysBackColor(u_char r, u_char g, u_char b);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_SYSTEM_H

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_EESE_H
 #define OS_EEIOP_EESE_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_int btlhit_no;
@@ -94,4 +98,6 @@ void SeStartVpCmn(int se_no, int vpos, float *pos, float *mb, int fin_spd, u_sho
 u_char SeGetFreeSv();
 int SeStartV(int se_no, u_char voice_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_EESE_H

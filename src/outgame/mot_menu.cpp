@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -15,6 +16,9 @@
 
 #define MOT_MENU_ROW_NUM 11
 #define MOT_MENU_ENTRY_NUM ((int)(sizeof(mot_menu_entries) / sizeof(mot_menu_entries[0])))
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static const MOT_MENU_ENTRY mot_menu_entries[] = {
     {M000_MIKU,      A000_MIKU,      "M000 MIKU"},
@@ -330,3 +334,5 @@ void MotMenuDraw(MOT_MENU_WRK *menu)
 
     MotMenuSetSquare(2, 36.0f, menu->menu_csr * 14 + 46, 420.0f, 12.0f, 0x50, 0x50, 0x64, 0x50);
 }
+
+MIKUPAN_NAMESPACE_END

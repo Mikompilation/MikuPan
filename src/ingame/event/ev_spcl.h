@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_EVENT_EV_SPCL_H
 #define INGAME_EVENT_EV_SPCL_H
 
@@ -6,6 +7,9 @@
 #include "graphics/graph2d/sprt.h"
 
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char no;
@@ -470,5 +474,7 @@ void SpecialEventMain089();
 void SpecialEventInit090();
 void SpecialEventMain090();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_EVENT_EV_SPCL_H
 

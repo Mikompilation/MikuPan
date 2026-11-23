@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "mikupan_ui_debug.h"
 #include "mikupan_ui.h"
@@ -27,6 +28,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 const int mikupan_no_navigation_window =
     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration
@@ -2106,3 +2110,5 @@ float MikuPan_GetNormalLength(void)
 {
     return normal_length;
 }
+
+MIKUPAN_NAMESPACE_END

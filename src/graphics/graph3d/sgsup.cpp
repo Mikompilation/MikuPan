@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "sgsup.h"
 #include "common.h"
 #include "typedefs.h"
@@ -25,6 +26,9 @@
 
 #include <enums.h>
 #include <mikupan/ui/mikupan_ui_debug.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int write_flg = 0;
 static int write_counter = 0;
@@ -671,3 +675,5 @@ void SgSortGroupP(void *sgd_top, int gnum)
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

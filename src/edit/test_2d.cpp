@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -11,8 +12,11 @@
 #include "graphics/graph2d/number.h"
 #include "graphics/graph2d/tim2.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/test_tex0.h" // extern SPRT_DAT test_tex0[];
 #include "data/test_tex1.h" // extern SPRT_DAT test_tex1[];
+
+
 
 void LayoutTestInit()
 {
@@ -62,3 +66,5 @@ void LayoutTestDisp()
     NumberDisp(0xeb,0x140,0x96,0,0xff,0xff,0xff,0x80,0,5,1);
     NumberDisp(0xeb,0x140,200,0,0xff,0xff,0xff,0x80,0,5,2);
 }
+
+MIKUPAN_NAMESPACE_END

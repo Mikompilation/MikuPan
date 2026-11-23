@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_EEIOP_H
 #define OS_EEIOP_EEIOP_H
 
@@ -5,6 +6,9 @@
 
 #include "typedefs.h"
 #include "sce/sifrpc.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 { // 0x8
@@ -71,4 +75,6 @@ void SetIopCmdLg(int cmd_no, int64_t data1, int64_t data2, int64_t data3, int64_
 int checkIOP();
 IOP_STAT* GetIopStatP();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_EEIOP_H

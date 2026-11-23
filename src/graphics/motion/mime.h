@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_MIME_H
 #define GRAPHICS_MOTION_MIME_H
 
@@ -7,6 +8,9 @@
 #include "graphics/motion/mime_dat.h"
 #include "graphics/motion/acs_dat.h"
 #include "graphics/motion/ani_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_int* mimInitMimeCtrl(MIME_CTRL *m_ctrl, MIME_DAT *mdat, u_int *mim_p, u_int *mdl_p, u_int *tmp_p);
 void mimInitAcsCtrl(ANI_CTRL *ani_ctrl, u_short mdl_no);
@@ -49,4 +53,6 @@ void mimPlyrMepatiCtrl();
 void mimInitWeight(ANI_CTRL *ani_ctrl);
 void mimWeightCtrl(ANI_CTRL *ani_ctrl, u_int weight_id, float scale);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_MIME_H

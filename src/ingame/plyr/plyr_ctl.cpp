@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -53,6 +54,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 float photo_rng_tbl[] = {
     5000.0f
@@ -5839,3 +5843,5 @@ void PlayerWarpReq2(u_char dat_no)
     }
     SetBlackOut2(1);
 }
+
+MIKUPAN_NAMESPACE_END

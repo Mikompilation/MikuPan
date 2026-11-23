@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_SCENE_SCENE_DAT_H
 #define GRAPHICS_SCENE_SCENE_DAT_H
 
 #include "typedefs.h"
 
 #include "graphics/motion/ani_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_int type;
@@ -131,5 +135,7 @@ extern SCN_VIB_DATA *scn_vib_tbl[];
 extern u_char scene_movie_no[];
 
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_SCENE_SCENE_DAT_H
 

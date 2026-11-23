@@ -1,12 +1,16 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_audio_decoder_c.h"
 #include "mikupan_audio_decoder.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 struct AudioDecoder
 {
     MikupanAudioDecoder* impl;
 };
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 AudioDecoder* mikupan_decoder_open(const char* path)
 {
@@ -72,3 +76,4 @@ int mikupan_decoder_get_channels(AudioDecoder* dec)
     return dec->impl->get_channels();
 }
 }
+MIKUPAN_NAMESPACE_END

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MEMORY_CARD_H
 #define MIKUPAN_MEMORY_CARD_H
 #include "mikupan_save_codec.h"
 #include <map>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanSave
 {
 using SaveFiles = std::map<std::string, Bytes>;
@@ -15,4 +19,6 @@ bool WriteMemoryCard(const Bytes& base, const SaveFiles& files, Bytes& output,
                      std::string& error, bool ecc = true,
                      const char* folder = FolderName);
 }// namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END
 #endif

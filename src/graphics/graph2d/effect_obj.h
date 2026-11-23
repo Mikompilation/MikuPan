@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_EFFECT_OBJ_H
 #define GRAPHICS_GRAPH2D_EFFECT_OBJ_H
 
@@ -5,6 +6,9 @@
 #include "typedefs.h"
 
 #include <stdlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	float r;
@@ -26,7 +30,9 @@ typedef struct {
 	float r;
 } EFFINFO2;
 
+MIKUPAN_NAMESPACE_END
 #include "graphics/graph2d/effect.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 extern EFFINFO2 efi[8];
 
@@ -60,4 +66,6 @@ void _SetPartsDeformSTQRegs(sceVu0FVECTOR *params);
 void _CalcParstDeformSTQ(float *stq, float *vt);
 void SetNegaCircle(EFFECT_CONT *ec); /// Initially not there
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_EFFECT_OBJ_H

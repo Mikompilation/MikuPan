@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -21,6 +22,9 @@
 #ifdef BUILD_EU_VERSION
 #include "os/system.h"
 #endif
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int init_load_id = 0;
 int64_t init_load_adr = 0;
@@ -277,3 +281,5 @@ int LanguageSelectMain()
     return SetSelectLanguage(sys_wrk.language);
 }
 #endif
+
+MIKUPAN_NAMESPACE_END

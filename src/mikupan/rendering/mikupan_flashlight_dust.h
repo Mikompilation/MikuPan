@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_FLASHLIGHT_DUST_H
 #define MIKUPAN_FLASHLIGHT_DUST_H
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 typedef struct MikuPan_FlashlightDustSettings
@@ -64,4 +68,6 @@ const MikuPan_FlashlightDustRoomInfo* MikuPan_GetFlashlightDustRoomInfo(int inde
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

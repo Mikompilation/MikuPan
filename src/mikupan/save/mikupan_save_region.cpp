@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_save_region.h"
 #include <algorithm>
 #include <array>
@@ -5,6 +6,9 @@
 #include <cstring>
 #include <iterator>
 #include <stdexcept>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanSave
 {
 namespace
@@ -417,3 +421,5 @@ bool ConvertRegion(const Bytes& data, SaveRegion source, SaveRegion target,
     }
 }
 }// namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END

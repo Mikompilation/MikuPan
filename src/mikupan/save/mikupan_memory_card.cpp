@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_memory_card.h"
 #include <algorithm>
 #include <array>
@@ -5,6 +6,9 @@
 #include <ctime>
 #include <set>
 #include <stdexcept>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanSave
 {
@@ -603,3 +607,5 @@ bool WriteMemoryCard(const Bytes& base, const SaveFiles& files, Bytes& output,
     }
 }
 }// namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END

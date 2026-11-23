@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -27,6 +28,9 @@
 
 #define PI 3.1415927f
 #define DEG2RAD(x) ((float)(x) * PI / 180.0f)
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum {
     MOT_TEST_LOAD_MODEL,
@@ -466,3 +470,5 @@ void MotTestCtrl(void)
     MotMenuDraw(&mot_test_wrk.menu);
     gra2dDraw(GRA2D_CALL_OG);
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef IOPMAIN_H_
 #define IOPMAIN_H_
 
 #include "os/eeiop/eeiop.h"
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 #ifndef MIKUPAN_IOP_COMMAND_ID_DEFINED
 #define MIKUPAN_IOP_COMMAND_ID_DEFINED
@@ -89,4 +93,6 @@ IOP_STAT* GetIopStatP();
 void* IopDrvFunc(unsigned int command, void* data, int size);
 void IopShutDown();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // IOPMAIN_H_

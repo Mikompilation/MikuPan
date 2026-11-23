@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -7,6 +8,9 @@
 #include "os/eeiop/adpcm/ea_dat.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
 #include "iop/adpcm/iopadpcm.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void EAdpcmPuzzleMain()
 {
@@ -105,3 +109,5 @@ void AdpcmPuzzleEnd()
     adpcm_map.event.use = 0;
     adpcm_map.puzzle.mode = AMPZ_MODE_WAIT1;
 }
+
+MIKUPAN_NAMESPACE_END

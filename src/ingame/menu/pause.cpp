@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "pause.h"
 #include "common.h"
 #include "enums.h"
@@ -20,6 +21,9 @@
 #include "os/eeiop/eese.h"
 #include "outgame/btl_mode/btl_menu.h"
 #include "outgame/btl_mode/btl_mode.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void PauseDraw(u_char alp);
 static void MikuPan_PauseMouseInput();
@@ -463,3 +467,5 @@ static char CanPauseCHK()
 
     return can;
 }
+
+MIKUPAN_NAMESPACE_END

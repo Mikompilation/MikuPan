@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_EFFECT_H
 #define GRAPHICS_GRAPH2D_EFFECT_H
 
 #include "typedefs.h"
 
 #include "graphics/graph2d/tim2.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	Q_WORDDATA dat;
@@ -161,4 +165,6 @@ void tes_p20();
 void tes_p21();
 void tes_p3();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_EFFECT_H

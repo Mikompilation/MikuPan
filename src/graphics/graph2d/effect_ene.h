@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_EFFECT_ENE_H
 #define GRAPHICS_GRAPH2D_EFFECT_ENE_H
 
 #include "typedefs.h"
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	sceVu0FVECTOR npos;
@@ -167,8 +171,10 @@ extern sceVu0FVECTOR sword_line[2];
 extern EDMG_TEX_WRK edmg_tex_wrk[10];
 extern TAIL_DMG2_DAT enedmg2_tail[44];
 
+MIKUPAN_NAMESPACE_END
 #include "graphics/graph2d/effect_sub.h"
 #include "graphics/graph2d/effect.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 void InitEffectEne();
 void InitEffectEneEF();
@@ -214,4 +220,6 @@ void SetEneDmgEffect2_Sub2(NEW_PERTICLE *np, float *bpos1, float *bpos2, u_char 
 void SetEneDmgEffect2_Sub();
 void SetEneDmgEffect2();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_EFFECT_ENE_H

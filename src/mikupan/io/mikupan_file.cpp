@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "mikupan_file.h"
 #include "mikupan/io/mikupan_disc_image.h"
@@ -31,6 +32,9 @@
 
 #include "mikupan/mikupan_memory.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 static std::mutex missing_data_dialog_mutex;
 static std::condition_variable missing_data_dialog_cv;
 static bool missing_data_dialog_requested = false;
@@ -54,7 +58,7 @@ static std::string disc_image_problem;
 static std::string picked_data_source_problem;
 static std::string required_data_problem;
 
-extern "C" const char *MikuPan_GetBaseDirectory(void)
+MIKUPAN_EXTERN_C const char *MikuPan_GetBaseDirectory(void)
 {
     static std::string cached;
     if (!cached.empty())
@@ -694,7 +698,7 @@ static bool MikuPan_RequestMissingDataFolderDialogAsync(
     return true;
 }
 
-extern "C" void MikuPan_RequestDataFolderSelection(const char *missing_path)
+MIKUPAN_EXTERN_C void MikuPan_RequestDataFolderSelection(const char *missing_path)
 {
     const char *path = (missing_path != nullptr && missing_path[0] != '\0')
                            ? missing_path
@@ -715,7 +719,7 @@ static std::string MikuPan_GetWrongDiscProblem(const char *subject)
         + MikuPan_GetRequiredDiscName() + " disc.";
 }
 
-extern "C" const char *MikuPan_GetRequiredDiscName()
+MIKUPAN_EXTERN_C const char *MikuPan_GetRequiredDiscName()
 {
 #ifdef BUILD_EU_VERSION
     return "Project Zero (PAL)";
@@ -750,7 +754,7 @@ static void MikuPan_SyncDiscImage()
     }
 }
 
-extern "C" bool MikuPan_HasRequiredDataFiles(char *missing_file,
+MIKUPAN_EXTERN_C bool MikuPan_HasRequiredDataFiles(char *missing_file,
                                              size_t missing_file_size)
 {
     MikuPan_SyncDiscImage();
@@ -898,7 +902,7 @@ static void SDLCALL MikuPan_DataSourceBrowsed(
     }
 }
 
-extern "C" void MikuPan_BrowseForDataSource(int source)
+MIKUPAN_EXTERN_C void MikuPan_BrowseForDataSource(int source)
 {
     /// SDL reads these until the picker closes.
     static const SDL_DialogFileFilter disc_filters[] = {
@@ -931,7 +935,7 @@ extern "C" void MikuPan_BrowseForDataSource(int source)
                            false);
 }
 
-extern "C" void MikuPan_ServiceDataSourceBrowser()
+MIKUPAN_EXTERN_C void MikuPan_ServiceDataSourceBrowser()
 {
     int source = -1;
     std::string path;
@@ -1003,7 +1007,7 @@ static void SDLCALL MikuPan_MissingDataFolderSelected(
     missing_data_dialog_cv.notify_all();
 }
 
-extern "C" void MikuPan_ServiceMissingDataFolderDialog()
+MIKUPAN_EXTERN_C void MikuPan_ServiceMissingDataFolderDialog()
 {
     std::string missing_path_to_show;
 
@@ -1741,3 +1745,5 @@ std::string MikuPan_GetRelativePath(const char *path)
 
     return std::filesystem::path(path).relative_path().generic_string();
 }
+
+MIKUPAN_NAMESPACE_END

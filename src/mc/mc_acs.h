@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MC_MC_ACS_H
 #define MC_MC_ACS_H
 
 #include "typedefs.h"
 
 // extern char (*mc_acs[0])(/* parameters unknown */);
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 char mcAcsMain();
 void mcAcsReq(int func_no);
@@ -21,4 +25,6 @@ char mcDelete();
 char mcSyncNB();
 void mcSyncErrWork(int cmd, int result);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MC_MC_ACS_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_video_decoder.h"
 #include "mikupan/debug/mikupan_logging.h"
 #include "mikupan/io/mikupan_file.h"
@@ -7,6 +8,9 @@
 #include <string>
 
 #define VDBG(fmt, ...) info_log("[VIDEO] " fmt, ##__VA_ARGS__)
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static std::string ff_err2str(int err)
 {
@@ -256,3 +260,4 @@ void VideoDecoder::close()
     dec = nullptr;
     sws = nullptr;
 }
+MIKUPAN_NAMESPACE_END

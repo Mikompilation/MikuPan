@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #include "sifdev.h"
 
 #include <stdlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int sceOpen(const char* filename, int flag, ...)
 {
@@ -62,3 +66,5 @@ int sceSifLoadModule(const char* filename, int args, const char* argp)
 {
     return 1;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,11 +1,14 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/gameplay/mikupan_title_scene.h"
 
 #include "common.h"
 #include "outgame/title.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/load_door_num.h"
 #include "data/load_furn_num.h"
 #include "data/room_name.h"
+MIKUPAN_NAMESPACE_END
 #include "enums.h"
 #include "graphics/graph2d/effect_scr.h"
 #include "graphics/graph2d/effect_obj.h"
@@ -37,13 +40,17 @@
 #include "os/eeiop/adpcm/ea_dat.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/outgame.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+MIKUPAN_NAMESPACE_END
 #include "cimgui.h"
-
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+MIKUPAN_NAMESPACE_BEGIN
+
+
 
 extern FOD_EFF_PARAM eff_param;
 
@@ -2007,3 +2014,5 @@ void MikuPan_TitleBackgroundDebugUi(void)
     igEnd();
 }
 
+
+MIKUPAN_NAMESPACE_END

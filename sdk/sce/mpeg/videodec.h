@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_MPEG_VIDEODEC_H
 #define SCE_MPEG_VIDEODEC_H
 
@@ -9,6 +10,9 @@
 #define VD_STATE_FLUSH  2
 #define VD_STATE_END    3
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 typedef struct { // 0xb8
 	/* 0x00 */ sceMpeg mpeg;
 	/* 0x48 */ ViBuf vibuf;
@@ -18,4 +22,6 @@ typedef struct { // 0xb8
 	/* 0xb4 */ int hid_vblank;
 } VideoDec;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_MPEG_VIDEODEC_H

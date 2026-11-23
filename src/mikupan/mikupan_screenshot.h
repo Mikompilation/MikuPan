@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_SCREENSHOT_H
 #define MIKUPAN_MIKUPAN_SCREENSHOT_H
 
 /// Schedule a screenshot to be captured at the next renderer post-process flip.
 /// Cheap and idempotent — extra requests within the same frame collapse.
+
+MIKUPAN_NAMESPACE_BEGIN
+
 void MikuPan_ScreenshotRequest(void);
 
 /// Called from MikuPan_EndFrame at the moment the post-processed scene has
@@ -23,4 +27,6 @@ int MikuPan_ScreenshotWritePngRgba(const char *path,
                                    const unsigned char *rgba,
                                    int width, int height);
 
+
+MIKUPAN_NAMESPACE_END
 #endif //MIKUPAN_MIKUPAN_SCREENSHOT_H

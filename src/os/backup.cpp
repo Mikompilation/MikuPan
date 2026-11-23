@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 
@@ -11,6 +12,9 @@
 #define DATASET_ADDR0 ((u_char *)0x00420000)
 #define DATA_ADDR     ((u_char *)0x1a90000)
 #define DATA_SIZE     (0x200000)
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void SaveDataSet(u_char *addr0)
 {
@@ -72,3 +76,5 @@ void LoadDataDevelop(u_char *addr0)
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

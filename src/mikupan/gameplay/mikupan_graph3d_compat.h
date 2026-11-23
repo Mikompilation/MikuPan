@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_GRAPH3D_COMPAT_H
 #define MIKUPAN_GRAPH3D_COMPAT_H
 
@@ -7,8 +8,11 @@
 #include "graphics/graph3d/sg_dat.h"
 #include "graphics/graph3d/sglib.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 void MikuPan_OnBlackWhiteClutTransition(u_int **previous_tri2_prim);
@@ -31,4 +35,6 @@ void MikuPan_ApplyShadowStrengthFromPs2Alpha(int alpha);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif /* MIKUPAN_GRAPH3D_COMPAT_H */

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/gameplay/mikupan_title_scene.h"
 
 #include "common.h"
@@ -25,6 +26,9 @@
 #define MIKUPAN_TITLE_SCENE_CANDLE_LIGHT_POWER 1100.0f
 #define MIKUPAN_TITLE_SCENE_CANDLE_FLAME_SCALE_A 0.5f
 #define MIKUPAN_TITLE_SCENE_CANDLE_FLAME_SCALE_B 2.0f
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -609,3 +613,5 @@ void MikuPan_TitleSceneDraw(void)
         MikuPan_TitleSceneRenderDustParticle(&g_title_scene_dust[i], &draw_env);
     }
 }
+
+MIKUPAN_NAMESPACE_END

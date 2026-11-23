@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_SE_CMD_H
 #define OS_EEIOP_SE_CMD_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void SeCtrlInit();
 void SeCtrlMain();
@@ -16,4 +20,6 @@ float SeCmdGetAngle(float rot0, float rot1);
 int SeCmdSetPitch(int sw_no, u_short pitch);
 void SeCmdGetDataPitch(int se_req_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_SE_CMD_H

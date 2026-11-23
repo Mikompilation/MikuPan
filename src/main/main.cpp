@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "common.h"
 #include "enums.h"
@@ -35,6 +36,9 @@
 #include <mikupan/mikupan_memory.h>
 #include <sce/libpad.h>
 #include <mikupan/mikupan_framelimiter.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int mikupan_game_initialized = 0;
 static int mikupan_missing_data_prompted = 0;
@@ -321,3 +325,5 @@ int SoftResetChk()
     
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END
