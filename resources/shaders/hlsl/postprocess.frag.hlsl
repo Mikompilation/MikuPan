@@ -52,7 +52,7 @@ float3 FetchSceneCrt(float2 uv)
     color.g = uTexture.Sample(uTextureSampler, ClampTexelUv(uv)).g;
     color.b = uTexture.Sample(uTextureSampler, ClampTexelUv(uv + float2(-shift, 0.0))).b;
 
-    return color * uColor.rgb;
+    return color;
 }
 
 float3 BlendSceneCrt(float2 uv)
@@ -87,7 +87,9 @@ float2 WarpCrtUv(float2 uv)
     return centered * 0.5 + 0.5;
 }
 
-float3 ApplyCrt(float2 uv, float2 fragCoord)
+// tint is the quad's vertex colour. It must not be the uColor uniform, which
+// keeps whatever the last bounding box, debug line or depth probe drew with.
+float3 ApplyCrt(float2 uv, float2 fragCoord, float3 tint)
 {
     float2 warped = WarpCrtUv(uv);
     if (warped.x < 0.0 || warped.y < 0.0 || warped.x > 1.0 || warped.y > 1.0)
@@ -103,7 +105,7 @@ float3 ApplyCrt(float2 uv, float2 fragCoord)
     glow += FetchSceneCrt(warped + float2(0.0,  texel.y));
     glow += FetchSceneCrt(warped + float2(0.0, -texel.y));
     glow *= 0.25;
-    color = lerp(color, glow, clamp(uCrt3.w, 0.0, 1.0));
+    color = lerp(color, glow, clamp(uCrt3.w, 0.0, 1.0)) * tint;
 
     float scan_pos = warped.y * max(uTextureSize.y, 1.0) * max(uCrt1.x, 0.01);
     float scan_wave = 0.5 + 0.5 * cos(scan_pos * TAU);
@@ -180,7 +182,8 @@ float4 main(PSInput input) : SV_Target0
 
     if (uFlags1.w != 0 && uCrt0.x > 0.001)
     {
-        color = lerp(color, ApplyCrt(input.vUV, input.position.xy), clamp(uCrt0.x, 0.0, 1.0));
+        float3 crt = ApplyCrt(input.vUV, input.position.xy, input.uColor.rgb);
+        color = lerp(color, crt, clamp(uCrt0.x, 0.0, 1.0));
     }
 
     if (uFlags2.x != 0)
