@@ -39,6 +39,8 @@ Storage source, target;
 bool source_ok = false, target_ok = false;
 bool output_ecc = true;
 SaveRegion output_region = BuildRegion;
+SaveRegion import_region = BuildRegion;
+bool import_region_selected = false;
 SaveArchiveFormat output_archive = SaveArchiveFormat::None;
 const char* OutputSuffix()
 {
@@ -61,8 +63,8 @@ const char* OutputSuffix()
     return output_ecc ? ".ps2" : ".bin";
 }
 std::string source_error, target_error, message;
-std::array<bool, 3> selected {};
-std::array<int, 3> destination {-1, -1, -1};
+std::vector<bool> selected;
+std::vector<int> destination;
 std::atomic<bool> picking {false};
 std::mutex pick_mutex;
 std::string picked, pick_error;
@@ -84,7 +86,7 @@ fs::path ExternalFolder()
 {
     fs::path p = fs::u8path(external);
     std::error_code ec;
-    for (auto region : {SaveRegion::JP, SaveRegion::US, SaveRegion::EU})
+    for (auto region : AllRegions)
     {
         if (fs::is_regular_file(p / RegionFolder(region), ec))
         {
@@ -92,7 +94,7 @@ fs::path ExternalFolder()
         }
     }
     fs::path found;
-    for (auto region : {SaveRegion::JP, SaveRegion::US, SaveRegion::EU})
+    for (auto region : AllRegions)
     {
         if (fs::is_directory(p / RegionFolder(region), ec))
         {
@@ -107,8 +109,8 @@ fs::path ExternalFolder()
 }
 void ClearSelection()
 {
-    selected.fill(false);
-    destination.fill(-1);
+    selected.assign(source.save.slots.size(), false);
+    destination.assign(source.save.slots.size(), -1);
 }
 void SuggestOutput()
 {
@@ -159,7 +161,12 @@ void Refresh()
     {
         source_ok = valid_external && ps2_kind != StorageKind::BlankCard
                     && ReadStorage(external_path, ps2_kind, false, source,
-                                   source_error);
+                                   source_error, import_region_selected ? &import_region : nullptr);
+        if (source_ok && source.has_save)
+        {
+            import_region = source.save.region;
+            import_region_selected = true;
+        }
         if (!valid_external || ps2_kind == StorageKind::BlankCard)
         {
             source_error = "Open a PS2 card or extracted save folder.";
@@ -179,26 +186,27 @@ void Refresh()
     {
         target_error = std::string(exporting ? "PS2 destination: " : "PC destination: ") + target_error;
     }
+    ClearSelection();
     initialized = true;
 }
 void AssignEmptySlots()
 {
     std::set<int> used;
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < int(selected.size()); ++i)
     {
         if (selected[i] && destination[i] >= 0)
         {
             used.insert(destination[i]);
         }
     }
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < int(selected.size()); ++i)
     {
         if (!selected[i])
         {
             destination[i] = -1;
             continue;
         }
-        if (destination[i] >= 0)
+        if (!exporting || destination[i] >= 0)
         {
             continue;
         }
@@ -216,7 +224,7 @@ void AssignEmptySlots()
 std::vector<SlotMapping> Mappings()
 {
     std::vector<SlotMapping> slots;
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < int(selected.size()); ++i)
     {
         if (selected[i])
         {
@@ -294,14 +302,16 @@ std::string Unavailable(bool require_selection = true,
         return any ? "Select one or more source saves."
                    : "No compatible saves. Open a warning icon for details.";
     }
+    if (exporting && slots.size() > 3)
+        return "A PS2 save can contain at most three gameplay slots.";
     std::set<int> used;
     for (const auto& s : slots)
     {
-        if (s.destination < 0)
+        if (exporting && s.destination < 0)
         {
             return "Assign a destination slot to each selected save.";
         }
-        if (!used.insert(s.destination).second)
+        if (s.destination >= 0 && !used.insert(s.destination).second)
         {
             return "Each destination slot can be used only once.";
         }
@@ -442,6 +452,7 @@ void AdoptPicker()
             ps2_kind = picked_kind == Dialog::Folder ? StorageKind::Folder
                                                      : StorageKind::Card;
             ClearSelection();
+            import_region_selected = false;
             initialized = false;
             path_dirty = false;
             if (ps2_kind == StorageKind::Card)
@@ -519,26 +530,26 @@ void DestinationChoice(int i)
 {
     char label[64];
     std::snprintf(label, sizeof(label), "Destination##%d", i);
-    std::string preview = destination[i] < 0
-                              ? "Choose slot"
-                              : ("Slot " + std::to_string(destination[i] + 1));
-    ImGui::SetNextItemWidth(145);
-    if (ImGui::BeginCombo(label, preview.c_str()))
+    std::string preview = exporting ? "Choose slot" : "New PC save";
+    if (destination[i] >= 0)
+        preview = exporting ? "Slot " + std::to_string(destination[i] + 1)
+                            : target.save.slots[destination[i]].filename;
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::BeginCombo((std::string("##") + label).c_str(), preview.c_str()))
     {
-        for (int slot = 0; slot < 3; ++slot)
+        if (!exporting && ImGui::Selectable("New PC save", destination[i] == -1))
+            destination[i] = -1;
+        for (int slot = 0; slot < int(target.save.slots.size()); ++slot)
         {
-            const bool occupied = target.save.slots[slot].occupied;
-            const std::string text = "Slot " + std::to_string(slot + 1)
-                                     + (occupied ? " (replace)" : " (empty)");
+            const auto& save = target.save.slots[slot];
+            const std::string text = exporting
+                ? "Slot " + std::to_string(slot + 1)
+                      + (save.occupied ? " (replace)" : " (empty)")
+                : save.filename + " (replace)";
             if (ImGui::Selectable(text.c_str(), destination[i] == slot))
-            {
                 destination[i] = slot;
-            }
-            if (occupied && ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip("%s",
-                                  target.save.slots[slot].description.c_str());
-            }
+            if (save.occupied && ImGui::IsItemHovered())
+                ImGui::SetTooltip("%s", save.description.c_str());
         }
         ImGui::EndCombo();
     }
@@ -546,18 +557,26 @@ void DestinationChoice(int i)
 void Rows(bool is_source)
 {
     const auto& storage = is_source ? source : target;
-    for (int i = 0; i < 3; ++i)
+    std::vector<int> additions;
+    if (!is_source && !exporting)
+        for (int j = 0; j < int(selected.size()); ++j)
+            if (selected[j] && destination[j] == -1)
+                additions.push_back(j);
+    const SlotInfo empty;
+    for (int i = 0; i < int(storage.save.slots.size() + additions.size()); ++i)
     {
-        const auto& slot = storage.save.slots[i];
-        ImGui::PushID((is_source ? 0 : 10) + i);
-        int incoming = -1;
-        if (!is_source)
+        const bool adding = size_t(i) >= storage.save.slots.size();
+        const auto& slot = adding ? empty : storage.save.slots[i];
+        ImGui::PushID((is_source ? 0 : 100000) + i);
+        int incoming = adding ? additions[i - storage.save.slots.size()] : -1;
+        if (!is_source && !adding)
         {
-            for (int j = 0; j < 3; ++j)
+            for (int j = 0; j < int(selected.size()); ++j)
             {
                 if (selected[j] && destination[j] == i)
                 {
                     incoming = j;
+                    break;
                 }
             }
         }
@@ -574,9 +593,13 @@ void Rows(bool is_source)
         ImGui::BeginGroup();
         if (is_source)
         {
-            ImGui::BeginDisabled(!slot.occupied || !slot.issue.empty() || !source_ok);
-            if (ImGui::Checkbox("##select", &selected[i]))
+            const bool selection_full = exporting && !selected[i]
+                && std::count(selected.begin(), selected.end(), true) >= 3;
+            ImGui::BeginDisabled(!slot.occupied || !slot.issue.empty() || !source_ok || selection_full);
+            bool chosen = selected[i];
+            if (ImGui::Checkbox("##select", &chosen))
             {
+                selected[i] = chosen;
                 if (!selected[i])
                 {
                     destination[i] = -1;
@@ -643,7 +666,8 @@ void Rows(bool is_source)
         }
         else if (preview.occupied)
         {
-            ImGui::TextUnformatted(preview.player.c_str());
+            const auto& title = exporting && is_source ? preview.filename : preview.player;
+            ImGui::TextUnformatted(title.c_str());
             ImGui::Text("Chapter %u / Room %d", preview.chapter, preview.area);
             ImGui::TextDisabled("%02u:%02u:%02u", preview.hours,
                                 preview.minutes, preview.seconds);
@@ -672,7 +696,9 @@ void Rows(bool is_source)
             ImGui::TextDisabled("%s", slot.occupied ? "Keep existing save"
                                                     : "Empty slot");
         }
-        if (is_source && slot.occupied && slot.issue.empty() && source_ok && ImGui::IsWindowHovered()
+        if (is_source && slot.occupied && slot.issue.empty() && source_ok
+            && (!exporting || selected[i] || std::count(selected.begin(), selected.end(), true) < 3)
+            && ImGui::IsWindowHovered()
             && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
             && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
         {
@@ -746,6 +772,7 @@ bool ChoiceCard(const char* label, float width, float height = 110.f)
 void ChooseDirection(bool to_ps2)
 {
     exporting = to_ps2;
+    import_region_selected = false;
     output_region = BuildRegion;
     output_archive = SaveArchiveFormat::None;
     ps2_kind = exporting ? StorageKind::BlankCard : StorageKind::Card;
@@ -762,6 +789,7 @@ void ChooseDirection(bool to_ps2)
 }
 void ChooseStorage(SDL_Window* window, StorageKind kind)
 {
+    import_region_selected = false;
     ps2_kind = kind;
     external[0] = 0;
     path_dirty = false;
@@ -810,7 +838,8 @@ void Draw(SDL_Window* window)
                 titles[int(step)]);
     ImGui::Separator();
     ImGui::BeginDisabled(picking.load());
-    const float footer_height = ImGui::GetFrameHeightWithSpacing();
+    const float footer_height = ImGui::GetFrameHeightWithSpacing()
+                                + ImGui::GetStyle().ItemSpacing.y + 1.f;
     ImGui::BeginChild("wizard-page", ImVec2(0, -footer_height), 0,
                       ImGuiWindowFlags_NoBackground);
     const bool centered = step != Step::Slots;
@@ -819,7 +848,7 @@ void Draw(SDL_Window* window)
         const ImVec2 available = ImGui::GetContentRegionAvail();
         const float width = std::min(860.f, available.x);
         const float height =
-            step == Step::Format
+            (step == Step::Format || step == Step::Region)
                 ? available.y
                 : std::min(step == Step::Operation ? 300.f : 430.f,
                            available.y);
@@ -886,6 +915,21 @@ void Draw(SDL_Window* window)
                 ImGui::TextWrapped("%s", notes.c_str());
             }
         }
+        if (!exporting && source.regions.size() > 1)
+        {
+            if (ImGui::BeginCombo("Card save region", RegionLabel(import_region)))
+            {
+                const auto regions = source.regions;
+                for (const auto region : regions)
+                    if (ImGui::Selectable(RegionLabel(region), region == import_region))
+                    {
+                        import_region = region;
+                        import_region_selected = true;
+                        Refresh();
+                    }
+                ImGui::EndCombo();
+            }
+        }
         const int count =
             int(std::count(selected.begin(), selected.end(), true));
         const int available = int(std::count_if(source.save.slots.begin(),
@@ -897,10 +941,15 @@ void Draw(SDL_Window* window)
         ImGui::SameLine();
         if (ImGui::SmallButton("Select all"))
         {
-            for (int i = 0; i < 3; ++i)
+            ClearSelection();
+            int chosen = 0;
+            for (int i = 0; i < int(selected.size()); ++i)
             {
                 selected[i] = source_ok && source.save.slots[i].occupied
-                              && source.save.slots[i].issue.empty();
+                              && source.save.slots[i].issue.empty()
+                              && (!exporting || chosen < 3);
+                if (selected[i])
+                    ++chosen;
             }
             AssignEmptySlots();
         }
@@ -921,7 +970,9 @@ void Draw(SDL_Window* window)
                                              : "Destination: PC saves");
             ImGui::TableNextRow();
             const float height =
-                std::max(120.f, ImGui::GetContentRegionAvail().y);
+                std::max(120.f, ImGui::GetContentRegionAvail().y
+                                   - ImGui::GetStyle().CellPadding.y * 2.f
+                                   - ImGui::GetStyle().ItemSpacing.y);
             ImGui::TableSetColumnIndex(0);
             ImGui::BeginChild("source-list", ImVec2(0, height));
             Rows(true);
@@ -940,14 +991,17 @@ void Draw(SDL_Window* window)
             "The output will use that release's save data and filenames.");
         ImGui::Spacing();
         const float width = ImGui::GetContentRegionAvail().x;
-        for (auto region : {SaveRegion::JP, SaveRegion::US, SaveRegion::EU})
+        const float height = std::max(60.f,
+            (ImGui::GetContentRegionAvail().y
+             - ImGui::GetStyle().ItemSpacing.y * (AllRegions.size() - 1)) / AllRegions.size());
+        for (auto region : AllRegions)
         {
             const std::string label =
                 std::string(RegionLabel(region)) + "\n\n"
                 + (region == SaveRegion::EU
                        ? "PAL release; English for cross-region exports"
                        : "Original release");
-            if (ChoiceCard(label.c_str(), width, 90.f))
+            if (ChoiceCard(label.c_str(), width, height))
             {
                 Folder checked;
                 if (BuildBatch(source.save, nullptr, Mappings(), true, checked,

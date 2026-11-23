@@ -208,14 +208,15 @@ to retain changes. Effects and screen captures keep their original filtering.
 # PS2 save transfer
 
 Open **Settings → PS2 save transfer…** in the overlay to transfer gameplay saves.
-Import original Japanese (SLPS-25074), US (SLUS-20388), or European
-(SLES-50821) saves into either PC build. The source region is detected from the
+Import Japanese (SLPS-25074), US (SLUS-20388), European (SLES-50821),
+Korean (SCPS-56008), or Asian (SCPS-55043) saves into either PC build. The source region is detected from the
 save files. For export, choose the original game's region before the format.
 Cross-region exports to Europe default to English/PAL; imports into an EU build
 use its current language and display settings.
 
 Import from an extracted save folder, an 8 MB memory card, or a PSU/MAX/XPS/SPS/CBS
-archive. Select saves and assign their destination slots. Export formats are:
+archive. Imports create numbered PC saves, or replace a selected save.
+For export, choose up to three PC saves and assign their PS2 slots. Export formats are:
 
 - **ECC (.ps2):** a memory card with spare/ECC bytes, for PCSX2.
 - **Raw (.bin):** an 8 MB card without ECC bytes, for OPL.
@@ -229,16 +230,16 @@ Archives contain this game's selected saves, not an entire memory card. Card
 exports create a blank card populated with the selected saves. Choosing a format
 opens its picker; confirming the destination exports immediately. Missing
 extensions are added automatically; existing output files/folders are refused.
-Imports replace only the selected destination slots. Load imported saves normally
-afterward, and close the game's save/load screen before transferring.
+Load imported saves normally afterward, and close the game's save/load screen
+before transferring.
 Embedded photographs and battle records are retained. Saves with an active
 wandering soul must be saved again after it disappears before conversion.
 Cross-region conversion resets the control layout and preserves existing
 photographs, documents and earned camera upgrades; it does not recalculate
 regional bonus unlocks. Unsupported revisions, unfinished quest-item transfers,
 and positions blocked by a different regional map are refused with an explanation.
-For a card containing multiple Fatal Frame regions, import an extracted folder
-or archive for the desired region.
+For a card containing multiple Fatal Frame regions, choose its save region
+in the transfer wizard.
 
 ## HD font textures
 

@@ -36,9 +36,15 @@ int MikuPan_GetPs2OffsetFromHostPointer(void* ptr);
 #define MODE_SELECT_ADDRESS             0x01d10000
 #define MODE_SELECT2_ADDRESS            0x01d51db0
 #define SP_SPRITES_ADDRESS              0x01ce0000
+#ifdef BUILD_EU_VERSION
+#define PL_PSVP_PK2_ADDRESS             0x01d54030
+#define PL_SAVE_PK2_ADDRESS             0x01d10000
+#define SV_PHT_PK2_ADDRESS              0x01d23680
+#else
 #define PL_PSVP_PK2_ADDRESS             0x01d59630
 #define PL_SAVE_PK2_ADDRESS             0x01d15600
 #define SV_PHT_PK2_ADDRESS              0x01d28c80
+#endif
 #define M_SLCT_CMN_PK2_ADDRESS          0x00c80000
 #define M_SLCT_STY_PK2_ADDRESS          0x00cc0470
 #define PL_OPTI_PK2_ADDRESS             0x00ddc430

@@ -1,6 +1,7 @@
 #include "mikupan/mikupan_region.h"
 #include "mikupan/ui/mikupan_rml_save_load.h"
 #include "mikupan/ui/mikupan_rmlui.h"
+#include "mikupan/save/mikupan_save_paths.h"
 
 #include "common.h"
 #include "enums.h"
@@ -214,11 +215,6 @@ static bool MikuPan_RmlSaveLoadPreviewUsable(
 
     return sampled > 0 && visible * 200 >= sampled;
 }
-#ifdef BUILD_EU_VERSION
-static constexpr int kSavePreviewPackageAddress = 0x1d23680;
-#else
-static constexpr int kSavePreviewPackageAddress = 0x1d28c80;
-#endif
 
 static Rml::Element* MikuPan_RmlSaveLoadGetElement(const char* id)
 {
@@ -382,76 +378,32 @@ static std::filesystem::path MikuPan_RmlSaveLoadDirectory(void)
 static bool MikuPan_RmlSaveLoadIsMikuPanSaveFilename(
     const std::filesystem::path& path)
 {
-    const std::string filename = path.filename().string();
-    return filename.rfind("MikuPanSave", 0) == 0
-        && path.extension() == ".dat";
+    return MikuPanSave::IsModernSaveFilename(path);
+}
+
+static std::string MikuPan_RmlSaveLoadLegacyPrefix(
+    const std::filesystem::path& directory)
+{
+    std::string prefix = directory.filename().string();
+    if (!prefix.empty() && prefix.back() == '0')
+        prefix.pop_back();
+    return prefix;
 }
 
 static bool MikuPan_RmlSaveLoadIsSaveFilename(
     const std::filesystem::path& directory,
     const std::filesystem::path& path)
 {
-    const std::string filename = path.filename().string();
-    if (MikuPan_RmlSaveLoadIsMikuPanSaveFilename(path))
-    {
-        return true;
-    }
-
-    std::string legacy_prefix = directory.filename().string();
-    if (!legacy_prefix.empty() && legacy_prefix.back() == '0')
-    {
-        legacy_prefix.pop_back();
-    }
-
-    if (legacy_prefix.empty() || filename.rfind(legacy_prefix, 0) != 0)
-    {
-        return false;
-    }
-
-    const std::string suffix = filename.substr(legacy_prefix.size());
-    return !suffix.empty()
-        && std::all_of(suffix.begin(), suffix.end(), [](unsigned char ch) {
-               return ch >= '0' && ch <= '9';
-           });
+    return MikuPanSave::IsPcSaveFilename(path,
+        MikuPan_RmlSaveLoadLegacyPrefix(directory));
 }
 
 static int MikuPan_RmlSaveLoadFileNumber(
     const std::filesystem::path& directory,
     const std::filesystem::path& path)
 {
-    const std::string stem = path.stem().string();
-    size_t begin = 0;
-    const std::string mikupan_prefix = "MikuPanSave";
-    if (stem.rfind(mikupan_prefix, 0) == 0)
-    {
-        begin = mikupan_prefix.size();
-    }
-    else
-    {
-        std::string legacy_prefix = directory.filename().string();
-        if (!legacy_prefix.empty() && legacy_prefix.back() == '0')
-        {
-            legacy_prefix.pop_back();
-        }
-        if (legacy_prefix.empty() || stem.rfind(legacy_prefix, 0) != 0)
-        {
-            return -1;
-        }
-        begin = legacy_prefix.size();
-    }
-
-    if (begin >= stem.size())
-    {
-        return -1;
-    }
-
-    int slot_number = -1;
-    const char* first = stem.data() + begin;
-    const char* last = stem.data() + stem.size();
-    const auto result = std::from_chars(first, last, slot_number);
-    return result.ec == std::errc() && result.ptr == last
-        ? slot_number
-        : -1;
+    return MikuPanSave::PcSaveFileNumber(path,
+        MikuPan_RmlSaveLoadLegacyPrefix(directory));
 }
 
 static bool MikuPan_RmlSaveLoadReadHeader(const std::filesystem::path& path,
@@ -1559,43 +1511,58 @@ static bool MikuPan_RmlSaveLoadTextureMatches(
 static TIM2_PICTUREHEADER* MikuPan_RmlSaveLoadFindPreviewPicture(
     const SPRT_DAT& sprite)
 {
-    const int64_t package_address = MikuPan_GetHostAddress(
-        kSavePreviewPackageAddress);
-    if (package_address <= 0)
+    // Keep the artwork independent of the PS2 scratch area used by the original menus.
+    static std::vector<unsigned char> package_data;
+    static bool attempted = false;
+    if (!attempted)
     {
-        return nullptr;
+        attempted = true;
+        const IMG_ARRANGEMENT* arrangement = GetImgArrangementP(SV_PHT_PK2);
+        if (arrangement != nullptr && arrangement->size >= 16
+            && arrangement->size <= 16 * 1024 * 1024)
+        {
+            package_data.resize(arrangement->size);
+            if (!MikuPan_ReadDataFileRange("IMG_BD.BIN",
+                    int64_t(arrangement->start) * 2048,
+                    package_data.data(), package_data.size()))
+                package_data.clear();
+        }
     }
+    if (package_data.size() < 16)
+        return nullptr;
 
-    const auto* package = reinterpret_cast<const int*>(package_address);
+    const auto* package = reinterpret_cast<const int*>(package_data.data());
     const int texture_count = package[0];
-    if (texture_count <= 0 || texture_count > 128)
-    {
+    if (texture_count <= 0 || texture_count > 128
+        || size_t(texture_count) > (package_data.size() - 16) / 4)
         return nullptr;
-    }
 
     const int* offsets = package + 4;
     for (int index = 0; index < texture_count; index++)
     {
         const int offset = offsets[index];
-        if (offset < 16 || offset > 16 * 1024 * 1024)
-        {
+        if (offset < 16 || size_t(offset) > package_data.size() - sizeof(TIM2_FILEHEADER))
             continue;
-        }
 
-        void* tim2 = reinterpret_cast<void*>(package_address + offset);
+        auto* tim2 = package_data.data() + offset;
         if (Tim2CheckFileHeaer(tim2) == 0)
-        {
             continue;
-        }
+        const auto* header = reinterpret_cast<const TIM2_FILEHEADER*>(tim2);
+        const size_t picture_offset = header->FormatId == 0 ? sizeof(*header) : 0x80;
+        const size_t remaining = package_data.size() - offset;
+        if (picture_offset > remaining
+            || sizeof(TIM2_PICTUREHEADER) > remaining - picture_offset)
+            continue;
 
         auto* picture = Tim2GetPictureHeader(tim2, 0);
-        if (picture != nullptr
+        if (picture != nullptr && picture->HeaderSize >= sizeof(*picture)
+            && picture->TotalSize <= remaining - picture_offset
+            && picture->HeaderSize <= picture->TotalSize
+            && uint64_t(picture->ImageSize) + picture->ClutSize
+                   <= picture->TotalSize - picture->HeaderSize
             && MikuPan_RmlSaveLoadTextureMatches(*picture, sprite))
-        {
             return picture;
-        }
     }
-
     return nullptr;
 }
 
@@ -1611,7 +1578,10 @@ static bool MikuPan_RmlSaveLoadBuildOriginalPreview(
     const SPRT_DAT& sprite = spr_dat[sprite_index];
     TIM2_PICTUREHEADER* picture =
         MikuPan_RmlSaveLoadFindPreviewPicture(sprite);
-    if (picture == nullptr || sprite.w <= 0 || sprite.h <= 0)
+    if (picture == nullptr || sprite.w <= 0 || sprite.h <= 0
+        || sprite.u < 0 || sprite.v < 0
+        || sprite.u + sprite.w > picture->ImageWidth
+        || sprite.v + sprite.h > picture->ImageHeight)
     {
         return false;
     }
@@ -2043,6 +2013,10 @@ static void MikuPan_RmlSaveLoadBuildList(void)
                           entry.display_slot_number);
             save_label = slot_label;
         }
+        else
+        {
+            save_label = MikuPan_RmlSaveLoadTr(kSaveLoadStrLegacySave);
+        }
 
         const std::string item_class = entry.mikupan_save
             ? "save-list-item"
@@ -2388,9 +2362,9 @@ static std::filesystem::path MikuPan_RmlSaveLoadNewPath(void)
             highest, MikuPan_RmlSaveLoadFileNumber(directory, entry.path()));
     }
 
-    char filename[64];
-    std::snprintf(filename, sizeof(filename), "MikuPanSave%04d.dat", highest + 1);
-    return directory / filename;
+    if (highest == std::numeric_limits<int>::max())
+        return {};
+    return directory / MikuPanSave::ModernSaveFilename(highest + 1);
 }
 
 static void MikuPan_RmlSaveLoadCloseInternal(void)
