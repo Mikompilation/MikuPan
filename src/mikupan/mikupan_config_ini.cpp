@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_config.h"
 
 #include "debug/mikupan_logging.h"
@@ -18,6 +19,9 @@
 #include <exception>
 
 #include "inipp.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace
 {
@@ -357,6 +361,16 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
 
     ApplyString(ini, "paths", "data_folder", mikupan_configuration.data_folder,
                 sizeof(mikupan_configuration.data_folder));
+    ApplyString(ini, "paths", "iso_path", mikupan_configuration.iso_path,
+                sizeof(mikupan_configuration.iso_path));
+    ApplyString(ini, "paths", "img_hd_path", mikupan_configuration.img_hd_path,
+                sizeof(mikupan_configuration.img_hd_path));
+    ApplyString(ini, "paths", "img_bd_path", mikupan_configuration.img_bd_path,
+                sizeof(mikupan_configuration.img_bd_path));
+    ApplyValue(ini, "undub", "enabled", mikupan_configuration.undub_enabled);
+    ApplyString(ini, "undub", "disc_path",
+                mikupan_configuration.undub_disc_path,
+                sizeof(mikupan_configuration.undub_disc_path));
 
     info_log("Loaded configuration from %s", path.generic_string().c_str());
     return true;
@@ -572,6 +586,11 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
     }
 
     ini.sections["paths"]["data_folder"] = mikupan_configuration.data_folder;
+    ini.sections["paths"]["iso_path"] = mikupan_configuration.iso_path;
+    ini.sections["paths"]["img_hd_path"] = mikupan_configuration.img_hd_path;
+    ini.sections["paths"]["img_bd_path"] = mikupan_configuration.img_bd_path;
+    SetValue(ini, "undub", "enabled", mikupan_configuration.undub_enabled);
+    ini.sections["undub"]["disc_path"] = mikupan_configuration.undub_disc_path;
 
     ini.generate(stream);
     if (!stream.good())
@@ -606,7 +625,7 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
 }
 }
 
-extern "C" void MikuPan_LoadConfiguration(const char *filename)
+MIKUPAN_EXTERN_C void MikuPan_LoadConfiguration(const char *filename)
 {
     if (filename != nullptr && filename[0] != '\0')
     {
@@ -646,7 +665,7 @@ extern "C" void MikuPan_LoadConfiguration(const char *filename)
     MikuPan_ConfigurationValidate();
 }
 
-extern "C" int MikuPan_SaveConfiguration(const char *filename)
+MIKUPAN_EXTERN_C int MikuPan_SaveConfiguration(const char *filename)
 {
     MikuPan_ConfigurationValidate();
 
@@ -661,7 +680,7 @@ extern "C" int MikuPan_SaveConfiguration(const char *filename)
     return TrySaveConfigurationFile(default_path) ? 1 : 0;
 }
 
-extern "C" int MikuPan_ResolveUserPath(const char *path, char *buffer,
+MIKUPAN_EXTERN_C int MikuPan_ResolveUserPath(const char *path, char *buffer,
                                         size_t buffer_size)
 {
     if (path == nullptr || buffer == nullptr || buffer_size == 0)
@@ -702,3 +721,5 @@ extern "C" int MikuPan_ResolveUserPath(const char *path, char *buffer,
     std::strcpy(buffer, resolved.c_str());
     return 1;
 }
+
+MIKUPAN_NAMESPACE_END

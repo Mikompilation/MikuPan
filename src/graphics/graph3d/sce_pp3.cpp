@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "sce_pp3.h"
@@ -8,6 +9,9 @@
 #include "ee/registers.h"
 #include "sce/libdma.h"
 #include "sce/libgraph.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static sceGsDBuff db;
 
@@ -95,3 +99,5 @@ int scePP1_End(u_int mode)
 {
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

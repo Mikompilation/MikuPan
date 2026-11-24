@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_ui_save_preview.h"
 #include "mikupan_rml_save_load.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <cstring>
 #include <map>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanUiSavePreview
 {
 namespace
@@ -112,3 +116,5 @@ void Draw(const MikuPanSave::SlotInfo &slot, ImVec2 size)
     }
 }
 } // namespace MikuPanUiSavePreview
+
+MIKUPAN_NAMESPACE_END

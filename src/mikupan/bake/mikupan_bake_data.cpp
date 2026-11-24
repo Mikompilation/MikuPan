@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_bake_data.h"
 
 #include "mikupan/gs/mikupan_gs_memory.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanBake
 {
@@ -436,3 +440,5 @@ bool ParseTim2Pak(const uint8_t* data, size_t data_size, size_t base,
 }
 
 }// namespace MikuPanBake
+
+MIKUPAN_NAMESPACE_END

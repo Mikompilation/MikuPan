@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef IOPSE_H_
 #define IOPSE_H_
 
 #include "iopmain.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 enum GHOST_SE_ID {
     SG000_HENREI = 0,
@@ -263,4 +267,6 @@ void SeSetMasterVol(u_short mvol);
 SE_PARAM* SeGetSeParamTbl(int num);
 int GetSeAdrs(int se_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // IOPSE_H_

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_SD_ROOM_H
 #define OS_EEIOP_SD_ROOM_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	int file_no;
@@ -30,4 +34,6 @@ u_int* GetSdrFootSeTblP(u_char room_id);
 u_int GetSdrSrundSe(u_char room_id);
 u_int GetSdrEventSe(u_char room_id);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_SD_ROOM_H

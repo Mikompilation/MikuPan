@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_INFO_INF_DISP_H
 #define INGAME_INFO_INF_DISP_H
 
 #include "typedefs.h"
 #include "graphics/graph2d/sprt.h"
 #include "ingame/photo/photo_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     float frot_x;
@@ -172,4 +176,6 @@ void InfoDispPause();
 void InfoDispRestart();
 int isDispLamp();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_INFO_INF_DISP_H

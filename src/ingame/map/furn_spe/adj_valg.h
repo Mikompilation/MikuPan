@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_FURN_SPE_ADJ_VALG_H
 #define INGAME_MAP_FURN_SPE_ADJ_VALG_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     void *next;
@@ -22,4 +26,6 @@ void SameObjectWrkDelete(sceVu0FVECTOR ori);
 void RegisterAdjValG(sceVu0FVECTOR ori, sceVu0FVECTOR des, u_int time);
 void AdjustValueG();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_FURN_SPE_ADJ_VALG_H

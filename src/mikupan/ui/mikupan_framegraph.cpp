@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 
 #include "imgui.h"
@@ -11,6 +12,9 @@
 #include "mikupan/rendering/mikupan_texture_slots.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 const int mikupan_frame_graph_window_style = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH
                           | ImGuiTableFlags_SizingFixedFit
@@ -368,3 +372,5 @@ void FrameTimeGraph_Draw(FrameTimeGraph* g)
 
     ImGui::End();
 }
+
+MIKUPAN_NAMESPACE_END

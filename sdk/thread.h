@@ -1,5 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_IOP_THREAD_H
 #define MIKUPAN_IOP_THREAD_H
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef void (*ThreadEntry)(void);
 
@@ -29,4 +33,6 @@ void MikuPan_IopHostShutdown(void);
 #define GetThreadId MikuPan_IopGetThreadId
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

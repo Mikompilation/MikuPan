@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_PHOTO_PHOTO_TYPES_H
 #define INGAME_PHOTO_PHOTO_TYPES_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -35,4 +39,6 @@ typedef struct
     u_char falth;
 } PHOTO_WRK;
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_PHOTO_PHOTO_TYPES_H

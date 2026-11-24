@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_BASICTYPES_H
 #define MIKUPAN_MIKUPAN_BASICTYPES_H
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -272,6 +276,15 @@ typedef struct
     MikuPan_ConfigInput input;
     char data_folder[512];
     int album_photo_png_export_enabled;
+    /// The disc image, or the archive files, picked on the data setup
+    /// screen.
+    char iso_path[512];
+    char img_hd_path[512];
+    char img_bd_path[512];
+    /// The undub (mikupan_undub.h): played from the next launch while on,
+    /// with the Japanese disc image, or IMG_HD.BIN of a folder of its files.
+    int undub_enabled;
+    char undub_disc_path[512];
 } MikuPan_Config;
 
 enum MikuPan_PipelineType
@@ -318,4 +331,6 @@ enum MikuPan_PipelineType
     MAX_NUMBER_OF_PIPELINES
 };
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_MIKUPAN_BASICTYPES_H

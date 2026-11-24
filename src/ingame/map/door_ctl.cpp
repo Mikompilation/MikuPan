@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -38,6 +39,9 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static short int SearchAcDoor(int door_id);
 static short int SearchNcDoor(int door_id);
@@ -5029,3 +5033,5 @@ void PrintDoorID(int no)
 {
     return;
 }
+
+MIKUPAN_NAMESPACE_END

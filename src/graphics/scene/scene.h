@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_SCENE_SCENE_H
 #define GRAPHICS_SCENE_SCENE_H
 
@@ -7,6 +8,9 @@
 #include "graphics/scene/fod.h"
 #include "graphics/scene/scene_dat.h"
 
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	float min;
@@ -105,5 +109,7 @@ void SceneSetSquare(int pri, float x, float y, float w, float h, u_char r, u_cha
 void SceneCheckModelEntry(SCENE_CTRL *sc);
 void InitSceneWork();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_SCENE_SCENE_H
 

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "door_conte.h"
@@ -10,6 +11,9 @@
 #include "ingame/map/map_ctrl.h" // GetPointHeight
 #include "ingame/plyr/plyr_ctl.h" // SetPlyrAnime
 #include "main/glob.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void DoorConteInit();
 static void PlayerPosAdjust(u_char *time, u_char max);
@@ -167,3 +171,5 @@ static void PlyrPosReSet()
     mbp->pos[1] = GetPointHeight(mbp->pos[0], mbp->pos[2]);
 }
 
+
+MIKUPAN_NAMESPACE_END

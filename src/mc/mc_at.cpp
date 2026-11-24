@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -11,6 +12,9 @@
 #include "mc/mc_disp.h"
 #include "mc/mc_main.h"
 #include "mc_album.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char alp;
@@ -430,3 +434,5 @@ static char McAtAlbmMainLoop()
 
     return rtrn;
 }
+
+MIKUPAN_NAMESPACE_END

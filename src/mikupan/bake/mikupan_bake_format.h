@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_BAKE_FORMAT_H
 #define MIKUPAN_BAKE_FORMAT_H
 
@@ -25,6 +26,9 @@
 /// A baked mesh names its texture with an id that indexes the texture
 /// directory, and a 2D picture names its own. Finding a texture is one array
 /// index: no hashing, no search.
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanBake
 {
@@ -251,4 +255,6 @@ static_assert(sizeof(PatchRecord) == 40, "PatchRecord layout");
 
 }// namespace MikuPanBake
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_BAKE_FORMAT_H

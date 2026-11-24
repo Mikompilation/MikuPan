@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -10,6 +11,9 @@
 #include "ingame/map/door_ctl.h"
 #include "ingame/map/map_ctrl.h"
 // #include "ingame/map/map_ctrl.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void SDoorNoUse(u_char room_id0, u_char room_id1);
 static void SDoorSetLoadTbl(u_int *ld_tbl, u_char room_id);
@@ -216,3 +220,5 @@ void SeDoorClose(int dwrk_no)
         SeStartPos(se_no, door_wrk[dwrk_no].pos, 0, 0x1000, 0x1000, 0xff);
     }
 }
+
+MIKUPAN_NAMESPACE_END

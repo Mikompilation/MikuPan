@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "scene.h"
 #include "common.h"
 #include "enums.h"
@@ -44,6 +45,9 @@
 #include "graphics/motion/motion.h"
 #include "graphics/scene/fod.h"
 #include "graphics/scene/scene_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 SCENE_CTRL scene_ctrl[2] = {0};
 SCENE_FILE scene_file = {0};
@@ -1754,3 +1758,5 @@ void InitSceneWork()
     scn_vib_time0 = 0;
     scn_vib_time1 = 0;
 }
+
+MIKUPAN_NAMESPACE_END

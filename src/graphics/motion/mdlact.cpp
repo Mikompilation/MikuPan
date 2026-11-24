@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mdlact.h"
 #include "common.h"
 #include "enums.h"
@@ -11,6 +12,9 @@
 #include "main/glob.h"
 #include "os/eeiop/eese.h"
 #include "os/pad.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 plyr_act_func_t plyr_act_func[] = {
     motPlyrActLookAt, motPlyrActSurprise, motPlyrActSowasowa, motPlyrActKyoro,
@@ -575,3 +579,5 @@ float motLinearSupValue(float moto, float saki, u_char mode, u_int cnt,
 
     return val;
 }
+
+MIKUPAN_NAMESPACE_END

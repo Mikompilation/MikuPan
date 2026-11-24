@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_SG_DAT_H
 #define GRAPHICS_GRAPH3D_SG_DAT_H
 
@@ -6,6 +7,9 @@
 #include <mikupan/mikupan_memory.h>
 #include <stddef.h>
 #include <stdint.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	int num;
@@ -202,4 +206,6 @@ typedef struct {
     char vtype;
 } VUVN_PRIM;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_SG_DAT_H

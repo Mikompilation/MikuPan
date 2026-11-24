@@ -1,3 +1,6 @@
+#include "mikupan/mikupan_region.h"
+typedef struct ImFont ImFont;
+
 #ifndef MIKUPAN_MIKUPAN_UI_THEME_H
 #define MIKUPAN_MIKUPAN_UI_THEME_H
 
@@ -6,7 +9,9 @@
 #define MIKUPAN_UI_THEME_COUNT 7
 #define MIKUPAN_UI_FONT_COUNT 3
 
-typedef struct ImFont ImFont;
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern const char* const MikuPan_UiThemeLabels[MIKUPAN_UI_THEME_COUNT];
 extern const char* const MikuPan_UiFontLabels[MIKUPAN_UI_FONT_COUNT];
@@ -22,4 +27,6 @@ void MikuPan_ApplyFatalFrameStyle(int theme);
 ImFont* MikuPan_GetTitleBlockFont(void);
 ImFont* MikuPan_GetTitleFont(void);
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MIKUPAN_MIKUPAN_UI_THEME_H

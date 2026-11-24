@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "gra3d.h"
@@ -62,6 +63,9 @@
 
 #define UNCACHED(ptr)          ((void*)((int64_t)(ptr) | CachedBuffer))
 #define UNCACHED_ACCEL(ptr)    ((void*)((int64_t)(ptr) | 0x30000000))
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern unsigned int dma;
 
@@ -3280,3 +3284,5 @@ int DrawFlyMove(int work_no)
     MikuPan_DrawSourcePop(draw_source_token);
     return 1;
 }
+
+MIKUPAN_NAMESPACE_END

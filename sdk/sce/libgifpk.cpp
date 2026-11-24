@@ -1,4 +1,8 @@
+#include "mikupan/mikupan_region.h"
 #include "libgifpk.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 u_long128* sceGifPkTerminate(sceGifPacket* pPacket)
 {
@@ -41,3 +45,5 @@ u_int* sceGifPkReserve(sceGifPacket* pPacket, u_int count)
 void sceGifPkRef(sceGifPacket* pPacket, u_long128* pRef, u_int size, u_int opt1, u_int opt2, u_int flag)
 {
 }
+
+MIKUPAN_NAMESPACE_END

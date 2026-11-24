@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef COMMON_H
 #define COMMON_H
 
 /// Replacing it dummy value to avoid manually delete all of those declarations
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef char s8;
 typedef short s16;
@@ -54,4 +58,6 @@ typedef float f32;
 
 // #define PI 3.1415928f
 
+
+MIKUPAN_NAMESPACE_END
 #endif /* COMMON_H */

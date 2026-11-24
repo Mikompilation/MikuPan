@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "ig_album.h"
 #include "common.h"
 #include "enums.h"
@@ -12,6 +13,9 @@
 #include "mikupan/mikupan_memory.h"
 #include "os/eeiop/eese.h"
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void IngameAlbumMenu(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, u_char *list_top);
 static void CmndMenuVrgn(u_char *csr0, u_char *csr1, u_char *pic, u_char *mode, u_char *list_top);
@@ -2508,3 +2512,4 @@ float GetPhtDispAlpha()
 
     return 0.0f;
 }
+MIKUPAN_NAMESPACE_END

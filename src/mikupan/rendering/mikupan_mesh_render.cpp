@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_renderer_internal.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sgsu.h"
@@ -15,6 +16,9 @@
 #include <string.h>
 
 #define MIKUPAN_MESH_BUFFER_CAPACITY (1024 * 1024)
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -1122,3 +1126,5 @@ void MikuPan_RenderMeshType0x2(SGDPROCUNITHEADER *pVUVN, SGDPROCUNITHEADER *pPUH
                                   index_count, GL_UNSIGNED_INT, (void *)0);
     }
 }
+
+MIKUPAN_NAMESPACE_END

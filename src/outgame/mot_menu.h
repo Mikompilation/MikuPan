@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OUTGAME_MOT_MENU_H
 #define OUTGAME_MOT_MENU_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_short mdl_no;
@@ -40,4 +44,6 @@ void MotMenuDraw(MOT_MENU_WRK *menu);
 int MotMenuEntryNum(void);
 const MOT_MENU_ENTRY *MotMenuEntry(int entry_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OUTGAME_MOT_MENU_H

@@ -1,5 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "ig_glob.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 FURN_WRK furn_wrk[60] = {0};
 FURN_EFCT fefct_wrk[60] = {0};
@@ -11,3 +15,5 @@ FLY_WRK fly_wrk[10] = {0};
 u_char ep_sensor[3] = { 0, 0, 0 };
 int disp3d_room_req = 0;
 int disp3d_furn_req = 0;
+
+MIKUPAN_NAMESPACE_END

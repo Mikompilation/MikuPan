@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "tim2.h"
@@ -21,6 +22,9 @@
 #include <stdlib.h>
 
 // borrowed and adapted from FF2 symbols
+
+MIKUPAN_NAMESPACE_BEGIN
+
 typedef struct {
     int pack_num;
     int pad[3];
@@ -2566,3 +2570,5 @@ void DispSqrD(DISP_SQAR *s)
         GsDepthWriteEnabled(mzbuf),
         GsDepthTestToGLFunc(mtest));
 }
+
+MIKUPAN_NAMESPACE_END

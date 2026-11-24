@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MC_MC_MAIN_H
 #define MC_MC_MAIN_H
 
 #include "typedefs.h"
 #include "sce/libmc.h"
 
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	char sync;
@@ -145,4 +149,6 @@ int mcFormatEnd();
 
 bool mcIsInUse();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MC_MC_MAIN_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "photo.h"
 #include "common.h"
 #include "enums.h"
@@ -12,6 +13,9 @@
 #include "mikupan/mikupan_memory.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 long long PhotoScoreCount()
 {
@@ -382,3 +386,5 @@ void GetRecordSubject(PICTURE_WRK *pic)
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

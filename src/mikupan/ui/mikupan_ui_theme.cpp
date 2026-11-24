@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_ui_theme.h"
 
 #include "typedefs.h"
@@ -10,6 +11,9 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 const char* const MikuPan_UiThemeLabels[MIKUPAN_UI_THEME_COUNT] = {
     "Moonlit Blue", "Ghost Cyan", "Crimson",
@@ -911,3 +915,5 @@ float MikuPan_UiThemeGetDisplayScale(void)
 {
     return ui_display_scale;
 }
+
+MIKUPAN_NAMESPACE_END

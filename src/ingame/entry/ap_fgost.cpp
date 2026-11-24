@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -18,6 +19,9 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/se_trans.h"
 #include "sce/libvu0.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int load_mdl_addr[] = { 0xC80000, 0xD00000, 0xD80000, 0 };
 int load_mot_addr[] = { 0xA30000, 0xAE0000, 0xB90000, 0 };
@@ -438,3 +442,5 @@ void FloatGhostAppearStart()
         ap_wrk.room_fg[i] = 1;
     }
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_ROTD_CTL_H
 #define INGAME_MAP_ROTD_CTL_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int CheckRotDoorOpenStatus(int dwrk_no, u_char type);
 void ChangeRotDoorFace(u_short door_id);
@@ -10,4 +14,6 @@ void ChangeRotDoorFace2Room(u_short door_id, u_char room_id);
 int JudgePlyrRotForRotDoor(int dwrk_no);
 u_char ChkRotDoorRot(int dwrk_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_ROTD_CTL_H

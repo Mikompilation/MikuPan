@@ -1,10 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "title.h"
 
 #include "btl_mode/btl_menu.h"
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/load_door_num.h"
 #include "data/load_furn_num.h"
 #include "data/room_name.h"
+MIKUPAN_NAMESPACE_END
 #include "ee/kernel.h"
 #include "enums.h"
 #include "graphics/graph2d/effect.h"
@@ -54,8 +57,10 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
 #include "outgame.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+MIKUPAN_NAMESPACE_END
 #include "cimgui.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/ui/mikupan_ui.h"
@@ -65,12 +70,14 @@
 #include "mikupan/ui/mikupan_rml_save_load.h"
 #include "mikupan/ui/mikupan_rml_save_point.h"
 #include "mikupan/ui/mikupan_rml_title.h"
-
 #include <algorithm>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+MIKUPAN_NAMESPACE_BEGIN
+
+
 
 int opening_movie_type = 0;
 TITLE_WRK title_wrk = {0};
@@ -3200,3 +3207,5 @@ int SetSelectLanguage(int cur_pos)
     return title_sys.lang_sel_flow == 5;
 }
 #endif
+
+MIKUPAN_NAMESPACE_END

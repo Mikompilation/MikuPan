@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MAIN_GLOB_H
 #define MAIN_GLOB_H
 
@@ -28,6 +29,9 @@
 #define SELECT_PRESSED() *key_now[13]
 #define L3_PRESSED() *key_now[14]
 #define R3_PRESSED() *key_now[15]
+
+MIKUPAN_NAMESPACE_BEGIN
+
 extern u_int realtime_scene_flg;
 extern u_int scene_bg_load_flg;
 extern SYS_WRK sys_wrk;
@@ -55,4 +59,6 @@ extern PFILE_WRK pfile_wrk;
 extern CAM_CUSTOM_WRK cam_custom_wrk;
 extern DEBUG_NUMBERS dbg_wrk;
 
+
+MIKUPAN_NAMESPACE_END
 #endif// MAIN_GLOB_H

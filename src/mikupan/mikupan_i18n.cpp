@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_i18n.h"
 
 #include "mikupan/io/mikupan_file.h"
@@ -7,6 +8,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace
 {
@@ -249,3 +253,5 @@ void MikuPan_TranslationsReset(void)
         g_translations_loaded[i] = false;
     }
 }
+
+MIKUPAN_NAMESPACE_END

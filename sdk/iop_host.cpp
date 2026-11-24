@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "intrman.h"
 #include "introld.h"
 #include "sysmem.h"
@@ -13,6 +14,9 @@
 
 #define MIKUPAN_IOP_MAX_THREADS 64
 #define MIKUPAN_IOP_MAX_TIMERS 8
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     int id;
@@ -354,3 +358,5 @@ void MikuPan_IopHostShutdown(void)
         iop_threads[i].started = 0;
     }
 }
+
+MIKUPAN_NAMESPACE_END

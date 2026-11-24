@@ -1,4 +1,9 @@
+#include "mikupan/mikupan_region.h"
 #include "iopse.h"
+
+#include "mikupan/io/mikupan_undub.h"
+
+MIKUPAN_NAMESPACE_BEGIN
 
 /* data 90 */ SE_PARAM se_param_tbl[] = {
     { .adrs = 0x0, .attribute = 0x0, .pitch = 0x804, .adsr1 = 0x80ff, .adsr2 = 0xdfeb, .efct = 0x3, .vol = 0x1e, .pan = 0x40 },
@@ -552,7 +557,18 @@
 
 };
 
+#include "sedat_jp.h" // static SE_PARAM se_param_tbl_jp[];
+
 #define SE_PARAM_COUNT ((int)(sizeof(se_param_tbl) / sizeof(se_param_tbl[0])))
+
+static_assert(sizeof(se_param_tbl_jp) == sizeof(se_param_tbl),
+              "the Japanese SE table must index the same voices");
+
+/// The undub plays the Japanese banks, whose voices sit elsewhere in them.
+static SE_PARAM* SeGetActiveParamTbl()
+{
+    return MikuPan_Undub_IsActive() ? se_param_tbl_jp : se_param_tbl;
+}
 
 SE_PARAM* SeGetSeParamTbl(int num)
 {
@@ -560,7 +576,7 @@ SE_PARAM* SeGetSeParamTbl(int num)
         return 0;
     }
 
-    return &se_param_tbl[num];
+    return &SeGetActiveParamTbl()[num];
 }
 
 int GetSeAdrs(int se_no)
@@ -569,5 +585,7 @@ int GetSeAdrs(int se_no)
         return 0;
     }
 
-    return se_param_tbl[se_no].adrs;
+    return SeGetActiveParamTbl()[se_no].adrs;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -12,6 +13,9 @@
 #include "os/eeiop/adpcm/ea_cmd.h"
 #include "os/eeiop/adpcm/ea_ctrl.h"
 #include "os/eeiop/se_cmd.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void EadpcmUpdateAutog(ADPCM_TUNE_PARAM *atpp);
 static void EAdpcmAutogParaSet(ADPCM_TUNE_PARAM *atpp);
@@ -194,3 +198,5 @@ static void EAdpcmAutogParaSet(ADPCM_TUNE_PARAM *atpp)
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

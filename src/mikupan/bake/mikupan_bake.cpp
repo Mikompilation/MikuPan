@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_bake.h"
 
 #include "mikupan_bake_data.h"
@@ -13,6 +14,9 @@
 #include <set>
 #include <unordered_map>
 #include <utility>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace MikuPanBake
 {
@@ -2908,3 +2912,5 @@ bool BakeTextures(const Source& source, const Options& options, Sink* sink,
 }
 
 }// namespace MikuPanBake
+
+MIKUPAN_NAMESPACE_END

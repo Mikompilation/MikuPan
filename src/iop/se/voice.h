@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef VOICE_H
 #define VOICE_H
 #include "common.h"
@@ -7,6 +8,9 @@
 #include <SDL3/SDL_thread.h>
 
 #define VOICE_NUM 48
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum
 {
@@ -111,4 +115,6 @@ static inline void SetAdsr2(int vNo, u_short val)
 void CloseVoice(int vNo);
 void CloseVoices();
 
+
+MIKUPAN_NAMESPACE_END
 #endif// VOICE_H

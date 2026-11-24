@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_COMPRESS_H
 #define GRAPHICS_GRAPH2D_COMPRESS_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char sta;
@@ -37,4 +41,6 @@ void InitPhotoExpand();
 void ReqPhotoExpand();
 void ExpandFile(char *input, u_short *output2);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_COMPRESS_H

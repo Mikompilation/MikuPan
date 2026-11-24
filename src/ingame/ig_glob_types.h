@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_IG_GLOB_TYPES_H
 #define INGAME_IG_GLOB_TYPES_H
 
@@ -6,6 +7,9 @@
 #include "ingame/map/furn_types.h"
 #include "ingame/enemy/move_types.h"
 #include "ingame/enemy/ene_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	void *addr;
@@ -46,4 +50,6 @@ typedef struct {
 	sceVu0FVECTOR adjmv;
 } FLY_WRK;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_IG_GLOB_TYPES_H

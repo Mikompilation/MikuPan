@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_TAKEP_PE_H
 #define GRAPHICS_GRAPH2D_TAKEP_PE_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum
 {
@@ -60,4 +64,6 @@ void CallEyeLight(sceVu0FVECTOR *lpos, sceVu0FVECTOR *rpos);
 void StopEyeLight();
 void EyeLightCtrl();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_TAKEP_PE_H

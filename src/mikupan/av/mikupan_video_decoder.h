@@ -1,4 +1,6 @@
+#include "mikupan/mikupan_region.h"
 #pragma once
+
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -9,8 +11,16 @@ extern "C" {
 
 #include <stdint.h>
 
+struct SDL_IOStream;
+
+MIKUPAN_NAMESPACE_BEGIN
+
 struct VideoDecoder
 {
+    /// FFmpeg reads through the file layer, which is how it gets at movies
+    /// inside a disc image.
+    SDL_IOStream *io = nullptr;
+    AVIOContext *avio = nullptr;
     AVFormatContext *fmt = nullptr;
     AVCodecContext *dec = nullptr;
     SwsContext *sws = nullptr;
@@ -36,3 +46,4 @@ struct VideoDecoder
     bool decodeOneFrame(double &outPtsSec, const char **outErr);
     void close();
 };
+MIKUPAN_NAMESPACE_END

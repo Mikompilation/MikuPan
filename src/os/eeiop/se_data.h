@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_SE_DATA_H
 #define OS_EEIOP_SE_DATA_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_short se_no0;
@@ -23,4 +27,6 @@ char CheckSeUse(int se_no);
 char GetSeUseTbl(u_char type, u_char tbl_no, u_char se_no);
 SE_STE* SeGetSeSte(int num);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_EEIOP_SE_DATA_H

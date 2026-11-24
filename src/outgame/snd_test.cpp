@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -25,6 +26,9 @@
 #define SND_TEST_PITCH_MIN 0x0800
 #define SND_TEST_PITCH_MAX 0x1800
 #define SND_TEST_PAN_MAX 0x04ff
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum {
     SND_TEST_SRC_ADPCM,
@@ -433,3 +437,5 @@ void SndTestCtrl(void)
     SndTestDraw();
     gra2dDraw(GRA2D_CALL_OG);
 }
+
+MIKUPAN_NAMESPACE_END

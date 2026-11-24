@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_ITEM_CTL_H
 #define INGAME_MAP_ITEM_CTL_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char item_no;
@@ -47,4 +51,6 @@ void GetMapItem(u_short get_no);
 void ItemAppearCtrl();
 int ItemGetContinueJudge();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_ITEM_CTL_H

@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_DOOR_CTL_H
 #define INGAME_MAP_DOOR_CTL_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char stat;
@@ -186,4 +190,6 @@ void DoorMoveStart(u_char mtn_no, u_char door_close_flg);
 void OneRoomLoadReq();
 void PrintDoorID(int no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_DOOR_CTL_H

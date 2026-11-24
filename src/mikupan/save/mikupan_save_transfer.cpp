@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_save_transfer.h"
 #include "main/glob.h"
 #include "mc/mc_exec.h"
@@ -22,6 +23,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #endif
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanSave
 {
 namespace
@@ -854,3 +858,5 @@ bool TransferBatch(const Storage& source, const Storage& destination,
     }
 }
 }// namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END

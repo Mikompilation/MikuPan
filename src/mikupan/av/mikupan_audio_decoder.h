@@ -1,9 +1,14 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_AUDIO_DECODER_H
 #define MIKUPAN_AUDIO_DECODER_H
 
+#include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <vector>
+
+struct SDL_IOStream;
+
+MIKUPAN_NAMESPACE_BEGIN
 
 class MikupanAudioDecoder {
 public:
@@ -43,7 +48,7 @@ private:
     void convertRawToPCM();
 
 private:
-    std::FILE* file_ = nullptr;
+    SDL_IOStream* file_ = nullptr;
     bool eof_ = false;
 
     bool haveHeader_ = false;
@@ -57,4 +62,6 @@ private:
     std::vector<uint8_t> pcmOut_;
 };
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_AUDIO_DECODER_H

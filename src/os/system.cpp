@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "system.h"
@@ -26,6 +27,9 @@
 #include "os/eeiop/eese.h"
 #include "graphics/graph2d/g2d_debug.h"
 #include "mikupan/ui/mikupan_ui.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int odev = 0;
 int stop_put_draw_env = 0;
@@ -252,3 +256,5 @@ void SetSysBackColor(u_char r, u_char g, u_char b)
     g_db.clear1.rgbaq.G = g;
     g_db.clear1.rgbaq.B = b;
 }
+
+MIKUPAN_NAMESPACE_END

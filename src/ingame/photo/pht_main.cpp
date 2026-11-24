@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "enums.h"
 #include "typedefs.h"
@@ -22,6 +23,9 @@
 #include "mikupan/gameplay/mikupan_photo_capture.h"
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "os/eeiop/eese.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 int after_timer = 0;
 
@@ -404,3 +408,5 @@ void InitPazEneTexLoad()
         pazene_load_buf[i] = area_wrk.rgst[i];
     }
 }
+
+MIKUPAN_NAMESPACE_END

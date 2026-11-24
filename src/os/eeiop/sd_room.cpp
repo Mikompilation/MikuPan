@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "sd_room.h"
 #include "common.h"
 #include "enums.h"
@@ -8,6 +9,9 @@
 
 #define MAX_VOL 0x2fff
 #define RM_DOOR_SIZE 42
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
   u_int fno[3];
@@ -90,3 +94,5 @@ u_int GetSdrEventSe(u_char room_id)
 {
     return rm_event[rm_snd_info[room_id].event_no];
 }
+
+MIKUPAN_NAMESPACE_END

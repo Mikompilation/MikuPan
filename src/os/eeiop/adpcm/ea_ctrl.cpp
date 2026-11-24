@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -22,6 +23,9 @@
 #include "os/eeiop/eeiop.h"
 #include "iop/adpcm/iopadpcm.h"
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 ADPCM_MAP adpcm_map = {0};
 static u_char fout_flg;
@@ -443,3 +447,5 @@ u_char IsHighModeUse(u_char my_mode)
     
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

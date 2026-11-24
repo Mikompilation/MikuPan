@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_EVENT_WAN_DAT_H
 #define INGAME_EVENT_WAN_DAT_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char destination_id;
@@ -10,7 +14,9 @@ typedef struct {
 	u_short adpcm_id;
 } WANDER_SOUL_DAT;
 
+MIKUPAN_NAMESPACE_END
 #include "ingame/event/wan_soul.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 // extern sceVu0FVECTOR soul_des100[0];
 // extern sceVu0FVECTOR soul_des101[0];
@@ -43,4 +49,6 @@ typedef struct {
 
 void SetWanSoDat2Wrk(int data_id, WANDER_SOUL_WRK *wswrk);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_EVENT_WAN_DAT_H

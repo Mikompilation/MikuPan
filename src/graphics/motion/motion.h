@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_MOTION_H
 #define GRAPHICS_MOTION_MOTION_H
 
@@ -6,6 +7,9 @@
 #include "graphics/motion/ani_dat.h"
 #include "graphics/motion/mot_dat.h"
 #include "graphics/graph3d/sg_dat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	C_PARTICLE *particle;
@@ -158,4 +162,6 @@ u_int* motAlign128(u_int *addr);
 void motPrintVector(char *str, sceVu0FVECTOR vec);
 void sceRotMatrixXYZ(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FVECTOR rot);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_MOTION_H

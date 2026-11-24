@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -12,6 +13,9 @@
 #include "os/eeiop/se_cmd.h"
 #include "common/ul_math.h"
 #include "main/glob.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void EAdpcmFurnParaSet(ADPCM_TUNE_PARAM *atpp);
 
@@ -188,3 +192,5 @@ void AdpcmStopFurn(int fout_flm)
         }
     }
 }
+
+MIKUPAN_NAMESPACE_END

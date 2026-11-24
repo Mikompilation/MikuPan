@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_LIBPC_H
 #define SCE_LIBPC_H
 
@@ -51,8 +52,13 @@
 #define SCE_PC_EVENT1               (31 << 15)
 #define SCE_PC_CTE                  (1  << 31)
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 int scePcGetCounter0(void);
 void scePcStart(int control, int counter0, int counter1);
 void scePcStop();
 
+
+MIKUPAN_NAMESPACE_END
 #endif

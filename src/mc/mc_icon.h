@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MC_MC_ICON_H
 #define MC_MC_ICON_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern const char mc_icon_title[];
 extern const char mc_icon_album[];
@@ -13,4 +17,6 @@ extern const char *mc_iconName[];
 extern const int mc_iconFile[];
 extern const int mc_iconFileAlbum[];
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MC_MC_ICON_H

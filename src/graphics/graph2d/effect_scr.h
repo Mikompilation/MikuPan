@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_EFFECT_SCR_H
 #define GRAPHICS_GRAPH2D_EFFECT_SCR_H
 #include "common.h"
@@ -11,6 +12,9 @@
 // extern float blur_x_offset;
 // extern float blur_y_offset;
 // extern int gameover_flow;
+
+MIKUPAN_NAMESPACE_BEGIN
+
 extern int ef_exfade1_flow1;
 extern int ef_exfade1_flow2;
 extern int ef_exfade1_time1;
@@ -19,7 +23,9 @@ extern int ef_exfade2_time1;
 extern int ef_exfade2_time2;
 extern int ef_exfade2_time3;
 
+MIKUPAN_NAMESPACE_END
 #include "graphics/graph2d/effect.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 void InitEffectScr();
 void InitEffectScrEF();
@@ -94,4 +100,6 @@ void InitScreenSaver();
 void SetScreenSaver();
 void SetScreenEffect();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_EFFECT_SCR_H

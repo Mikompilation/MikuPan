@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -5,6 +6,9 @@
 
 #include "ingame/menu/item.h"
 #include "mc/mc_main.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void mcDispMessage()
 {
@@ -113,3 +117,5 @@ char mcCheckDrawButton(int msg_no)
     break;
     }
 }
+
+MIKUPAN_NAMESPACE_END

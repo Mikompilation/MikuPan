@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_SAVE_TRANSFER_H
 #define MIKUPAN_SAVE_TRANSFER_H
 #include "mikupan_save_archive.h"
@@ -5,6 +6,9 @@
 #include <filesystem>
 #include <map>
 #include <vector>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanSave
 {
 struct SlotInfo
@@ -66,4 +70,6 @@ bool TransferBatch(const Storage& source, const Storage& destination,
 bool Inspect(const std::filesystem::path& path, bool native_allowed,
              Folder& folder, std::string& error);
 }// namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END
 #endif

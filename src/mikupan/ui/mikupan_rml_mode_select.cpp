@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/ui/mikupan_rml_mode_select.h"
 
 #include "main/glob.h"
@@ -15,6 +16,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace
 {
@@ -509,7 +513,7 @@ void MikuPan_RmlModeSelectShutdown(void)
     g_mode_select = ModeSelectState();
 }
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 int MikuPan_RmlModeSelectIsAvailable(void)
 {
@@ -679,3 +683,5 @@ void MikuPan_RmlModeSelectApplyLanguage(int language)
 }
 
 }
+
+MIKUPAN_NAMESPACE_END

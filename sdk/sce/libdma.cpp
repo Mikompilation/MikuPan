@@ -1,6 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #include "libdma.h"
 
 #include <stdlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 sceDmaChan* dma_chan = NULL;
 
@@ -38,3 +42,5 @@ int sceDmaSync(sceDmaChan* d, int mode, int timeout)
 {
     return 1;
 }
+
+MIKUPAN_NAMESPACE_END

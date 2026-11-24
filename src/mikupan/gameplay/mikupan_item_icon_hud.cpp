@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
 
 #include "common.h"
@@ -19,6 +20,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ingame/menu/item.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 struct MikuPanItemIconSlot
 {
@@ -856,3 +860,5 @@ void MikuPan_ResetItemIconHud(void)
     mikupan_finder_film_icon_timer = 0;
     mikupan_finder_film_counter_snap = 0;
 }
+
+MIKUPAN_NAMESPACE_END

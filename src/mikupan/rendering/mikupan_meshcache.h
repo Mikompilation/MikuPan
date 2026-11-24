@@ -1,10 +1,14 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MESHCACHE_H
 #define MIKUPAN_MESHCACHE_H
 
 #include "mikupan/mikupan_basictypes.h"
 
+
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 /// Render-pass namespace for the cache key. The same pPUHead is drawn in
@@ -113,4 +117,6 @@ void MikuPan_MeshCache_GetStats(unsigned long long* bytes,
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_MESHCACHE_H

@@ -1,10 +1,16 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "ea_dat.h"
 
+#include "mikupan/io/mikupan_undub.h"
+
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/adpcm_vol_tbl.h"  // ADPCM_VOL adpcm_vol_tbl[NO_VOL_TABLE] = {...};
 
 // file_no receives values from CD_FILE_DAT
+
+
 u_short GetAdpcmVol(int file_no)
 {
     ADPCM_VOL *avp;
@@ -12,6 +18,12 @@ u_short GetAdpcmVol(int file_no)
     u_short vol;
 
     vol = MAX_VOLUME;
+
+    /// The Japanese voices come with the Japanese mix.
+    if (MikuPan_Undub_GetAdpcmVolume(file_no, &vol))
+    {
+        return vol > MAX_VOLUME ? MAX_VOLUME : vol;
+    }
 
     for (i = 0, avp = adpcm_vol_tbl; i < NO_VOL_TABLE; i++, avp++)
     {
@@ -30,3 +42,5 @@ u_short GetAdpcmVol(int file_no)
     return vol;
 }
 
+
+MIKUPAN_NAMESPACE_END

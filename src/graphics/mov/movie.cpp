@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "movie.h"
 #include "common.h"
 #include "enums.h"
@@ -36,6 +37,7 @@
 #include "SDL3/SDL_timer.h"
 #include "graphics/graph2d/subtitles.h"
 #include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/io/mikupan_undub.h"
 #include "mikupan/mikupan_audio_bus.h"
 #include "mikupan/debug/mikupan_logging_c.h"
 #include "mikupan/mikupan_memory.h"
@@ -73,6 +75,9 @@
 #include "graphics/scene/scene.h"
 #include "graphics/scene/scene_dat.h"
 #include "ingame/map/map_area.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 #ifdef BUILD_EU_VERSION
 char *mpegName[][40] = {
@@ -253,6 +258,11 @@ static int cpy2area(u_char *pd0, int d0, u_char *pd1, int d1, u_char *ps0,
                     int s0, u_char *ps1, int s1);
 
 static VideoDecoder g_vd = {0};
+#ifdef BUILD_EU_VERSION
+/// The movie comes from the Japanese disc of the undub, which only has the
+/// 60 Hz movies, also in 50 Hz mode.
+static bool g_movie_from_undub = false;
+#endif
 static ReadBuffer g_rb = {0};
 static AudioState g_audio_state = {0};
 
@@ -700,10 +710,19 @@ static int stepMovPlayback(void)
     }
 
 #ifdef BUILD_EU_VERSION
-    SetSubtitles(0, movie_wrk.play_event_no, g_vd.current_frame);
+    /// Subtitles and vibrations are timed in 60 Hz frames, and 50 Hz mode
+    /// plays 50 Hz movies. SetSubtitles() scales from 50 Hz by itself.
+    if (sys_wrk.pal_disp_mode == 0 && g_movie_from_undub)
+    {
+        SetSubtitles(0, movie_wrk.play_event_no, (g_vd.current_frame * 5) / 6);
+    }
+    else
+    {
+        SetSubtitles(0, movie_wrk.play_event_no, g_vd.current_frame);
+    }
     MakeMovMes();
 
-    if (sys_wrk.pal_disp_mode == 0)
+    if (sys_wrk.pal_disp_mode == 0 && !g_movie_from_undub)
     {
         SceneSetVibrate(movie_wrk.play_event_no, (g_vd.current_frame * 6) / 5);
     }
@@ -1020,6 +1039,10 @@ void initMov(char *bsfilename)
         info_log("Failed to resolve path for file.bin");
         return;
     }
+
+#ifdef BUILD_EU_VERSION
+    g_movie_from_undub = MikuPan_Undub_IsUndubPath(resolvedPath);
+#endif
 
     const char *err = NULL;
     g_vd.mov = movvid_open(resolvedPath, &err);
@@ -3434,3 +3457,5 @@ void voBufDecCount(VoBuf *f)
         f->count--;
     }
 }
+
+MIKUPAN_NAMESPACE_END

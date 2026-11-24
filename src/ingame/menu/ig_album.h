@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_ALBUM_H
 #define INGAME_MENU_IG_ALBUM_H
 
 #include "typedefs.h"
 #include "ig_types.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     float lrg_io_alf;
@@ -31,4 +35,6 @@ void OutGameInitPhoto();
 int isPhotoEnd();
 float GetPhtDispAlpha();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MENU_IG_ALBUM_H

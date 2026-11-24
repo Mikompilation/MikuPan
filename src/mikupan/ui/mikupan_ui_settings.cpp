@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_ui_saves.h"
 #include "mikupan_ui_settings.h"
 
@@ -15,6 +16,7 @@
 #include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_audio_bus.h"
 #include "mikupan/io/mikupan_controller.h"
+#include "mikupan/io/mikupan_file.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_flashlight_dust.h"
@@ -34,6 +36,9 @@
 #define MIKUPAN_MAX_WINDOW_SIZES 128
 #define MIKUPAN_MAX_PS2_RESOLUTION_SCALE 6
 #define MIKUPAN_MAX_GPU_DRIVERS 8
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static const int msaa_list[] = {0, 2, 4, 8};
 
@@ -1008,10 +1013,7 @@ static void MikuPan_DataFolderSelected(void* userdata,
         return;
     }
 
-    strncpy(mikupan_configuration.data_folder, filelist[0],
-            sizeof(mikupan_configuration.data_folder) - 1);
-    mikupan_configuration
-        .data_folder[sizeof(mikupan_configuration.data_folder) - 1] = '\0';
+    MikuPan_UseDataFolder(filelist[0]);
 }
 
 void MikuPan_UiSettingsInit(void)
@@ -2508,10 +2510,7 @@ void MikuPan_SetDataFolder(const char* folder)
         folder = "";
     }
 
-    strncpy(mikupan_configuration.data_folder, folder,
-            sizeof(mikupan_configuration.data_folder) - 1);
-    mikupan_configuration
-        .data_folder[sizeof(mikupan_configuration.data_folder) - 1] = '\0';
+    MikuPan_UseDataFolder(folder);
 }
 
 void MikuPan_BrowseDataFolderFromUi(void)
@@ -2535,3 +2534,5 @@ const char* MikuPan_GetConfigSaveStatus(void)
 {
     return config_save_status;
 }
+
+MIKUPAN_NAMESPACE_END

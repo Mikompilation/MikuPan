@@ -1,8 +1,12 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "object.h"
 
 #include "graphics/graph3d/sglib.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 qword *pstart1 = NULL;
 qword *pstart3 = NULL;
@@ -26,3 +30,5 @@ qword *pbase3 = NULL;
 {
     return;
 }
+
+MIKUPAN_NAMESPACE_END

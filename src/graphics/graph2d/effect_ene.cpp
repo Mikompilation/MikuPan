@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "effect_ene.h"
@@ -23,15 +24,20 @@
 #include "graphics/graph3d/libsg.h"
 // #include "graphics/graph3d/gra3d.h" // RequestSpirit needs to be undeclared
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/enedmg_fileno_tbl.h"// static int enedmg_fileno_tbl[][2];
 #include "data/enedmg_texno_tbl.h" // static SPRT_DAT enedmg_texno_tbl[];
 #include "data/eto_light.h"        // static sceVu0FVECTOR eto_light[5];
 #include "data/eto_rgb.h"          // static u_char eto_rgb[5][3];
+MIKUPAN_NAMESPACE_END
 #include "effect_oth.h"
 #include "enums.h"
 #include "graphics/graph3d/gra3d.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_renderer.h"
+MIKUPAN_NAMESPACE_BEGIN
+
+
 
 static sceVu0FVECTOR reserve_lig;
 static sceVu0FVECTOR spos[96];
@@ -5168,3 +5174,5 @@ void SetEneDmgEffect2()
 {
     enedmg2.enedmg2_flg = 1;
 }
+
+MIKUPAN_NAMESPACE_END

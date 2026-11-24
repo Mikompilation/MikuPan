@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "g2d_main.h"
@@ -28,6 +29,9 @@
 #endif
 
 // #include <cstdlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 G2D_LOAD_FLG g2d_load_flg = {0};
 
@@ -152,3 +156,5 @@ void gra2dDraw(int fl)
         InitPerformanceCounter();
     }
 }
+
+MIKUPAN_NAMESPACE_END

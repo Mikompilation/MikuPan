@@ -1,0 +1,117 @@
+<rml>
+<head>
+    <title>Game Data</title>
+    <link type="text/rcss" href="data_setup.rcss"/>
+    <link type="text/rcss" href="message_box.rcss"/>
+</head>
+<body>
+    <div id="data-setup-root" class="hidden">
+        <div id="data-setup-backdrop"></div>
+
+        <div id="data-setup-emblem">
+            <img id="data-setup-smoke-a" class="data-setup-smoke" src="../title/eu/back_2.png"/>
+            <img id="data-setup-smoke-b" class="data-setup-smoke" src="../title/eu/back_3.png"/>
+            <img id="data-setup-ring-glow" src="../title/eu/back_1_glow.png"/>
+            <img id="data-setup-ring" src="../title/eu/back_1.png"/>
+        </div>
+
+        <div id="data-setup-heading">Game Data Required</div>
+        <div id="data-setup-status"></div>
+
+        <div id="data-setup-menu">
+            <div id="data-setup-row-0" class="data-setup-row">
+                <div class="data-setup-board">
+                    <span class="data-setup-board-backing left"></span>
+                    <span class="data-setup-board-backing center"></span>
+                    <span class="data-setup-board-backing right"></span>
+                    <span class="data-setup-board-line top left"></span>
+                    <span class="data-setup-board-line top center"></span>
+                    <span class="data-setup-board-line top right"></span>
+                    <span class="data-setup-board-line bottom left"></span>
+                    <span class="data-setup-board-line bottom center"></span>
+                    <span class="data-setup-board-line bottom right"></span>
+                </div>
+                <button id="data-setup-hit-0" class="data-setup-hit"></button>
+                <span class="data-setup-label">Disc Image</span>
+                <span id="data-setup-value-0" class="data-setup-value"></span>
+            </div>
+
+            <div id="data-setup-or">
+                <span class="data-setup-or-line left"></span>
+                <span id="data-setup-or-label">or</span>
+                <span class="data-setup-or-line right"></span>
+            </div>
+
+            <div id="data-setup-row-1" class="data-setup-row">
+                <div class="data-setup-board">
+                    <span class="data-setup-board-backing left"></span>
+                    <span class="data-setup-board-backing center"></span>
+                    <span class="data-setup-board-backing right"></span>
+                    <span class="data-setup-board-line top left"></span>
+                    <span class="data-setup-board-line top center"></span>
+                    <span class="data-setup-board-line top right"></span>
+                    <span class="data-setup-board-line bottom left"></span>
+                    <span class="data-setup-board-line bottom center"></span>
+                    <span class="data-setup-board-line bottom right"></span>
+                </div>
+                <button id="data-setup-hit-1" class="data-setup-hit"></button>
+                <span class="data-setup-label">IMG_HD.BIN</span>
+                <span id="data-setup-value-1" class="data-setup-value"></span>
+            </div>
+
+            <div id="data-setup-row-2" class="data-setup-row">
+                <div class="data-setup-board">
+                    <span class="data-setup-board-backing left"></span>
+                    <span class="data-setup-board-backing center"></span>
+                    <span class="data-setup-board-backing right"></span>
+                    <span class="data-setup-board-line top left"></span>
+                    <span class="data-setup-board-line top center"></span>
+                    <span class="data-setup-board-line top right"></span>
+                    <span class="data-setup-board-line bottom left"></span>
+                    <span class="data-setup-board-line bottom center"></span>
+                    <span class="data-setup-board-line bottom right"></span>
+                </div>
+                <button id="data-setup-hit-2" class="data-setup-hit"></button>
+                <span class="data-setup-label">IMG_BD.BIN</span>
+                <span id="data-setup-value-2" class="data-setup-value"></span>
+            </div>
+
+            <div id="data-setup-row-3" class="data-setup-row action">
+                <button id="data-setup-hit-3" class="data-setup-hit"></button>
+                <span class="data-setup-action">Exit</span>
+            </div>
+        </div>
+
+        <div id="data-setup-message-box">
+            <div class="ff-message-fill"></div>
+            <div class="ff-message-frame">
+                <div class="ff-message-outer-horizontal top">
+                    <span class="ff-message-outer-fade left"></span>
+                    <span class="ff-message-outer-center"></span>
+                    <span class="ff-message-outer-fade right"></span>
+                </div>
+                <div class="ff-message-outer-horizontal bottom">
+                    <span class="ff-message-outer-fade left"></span>
+                    <span class="ff-message-outer-center"></span>
+                    <span class="ff-message-outer-fade right"></span>
+                </div>
+                <span class="ff-message-outer-vertical left"></span>
+                <span class="ff-message-outer-vertical right"></span>
+                <div class="ff-message-inner-horizontal top">
+                    <span class="ff-message-inner-fade left"></span>
+                    <span class="ff-message-inner-center"></span>
+                    <span class="ff-message-inner-fade right"></span>
+                </div>
+                <div class="ff-message-inner-horizontal bottom">
+                    <span class="ff-message-inner-fade left"></span>
+                    <span class="ff-message-inner-center"></span>
+                    <span class="ff-message-inner-fade right"></span>
+                </div>
+                <span class="ff-message-inner-vertical left"></span>
+                <span class="ff-message-inner-vertical right"></span>
+            </div>
+            <div id="data-setup-message-text"></div>
+        </div>
+    </div>
+</body>
+</rml>

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "mikupan_ui_cheats.h"
 
@@ -9,6 +10,9 @@
 #include "mikupan/mikupan_screenshot.h"
 #include "mikupan/mikupan_utils.h"
 #include "outgame/mode_slct.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int cheat_photo_mode = 0;
 static int cheat_photo_mode_previous_cam_mode = 0;
@@ -383,3 +387,5 @@ const float* MikuPan_GetTofuColor(void)
 {
     return cheat_tofu_color;
 }
+
+MIKUPAN_NAMESPACE_END

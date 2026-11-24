@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan/ui/mikupan_rml_message_box.h"
 
 #include "enums.h"
@@ -14,6 +15,9 @@
 #include <memory>
 #include <utility>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 namespace mikupan::rml_message_box
 {
@@ -376,3 +380,5 @@ void MikuPan_RmlMessageBoxShutdown(void)
     }
     mikupan::rml_message_box::g_state = mikupan::rml_message_box::State();
 }
+
+MIKUPAN_NAMESPACE_END

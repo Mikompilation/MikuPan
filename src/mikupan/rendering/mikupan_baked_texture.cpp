@@ -1,8 +1,10 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_baked_texture.h"
 
 #include "mikupan/bake/mikupan_bake.h"
 #include "mikupan/bake/mikupan_bake_format.h"
 #include "mikupan/io/mikupan_file.h"
+#include "mikupan/io/mikupan_undub.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan_gl_compat.h"
 #include "mikupan_gpu.h"
@@ -21,6 +23,9 @@
 #include <string>
 #include <thread>
 #include <vector>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern char* file_name[];
 extern int loadbw_flg;
@@ -79,11 +84,23 @@ void SetError(const std::string& error)
     g_error = error;
 }
 
+/// The undub swaps Miku's model, and its archive has entries of its own, so
+/// it keeps a pack of its own, as each release does: switching between them
+/// never bakes again.
+const char* PackFileName()
+{
+#ifdef BUILD_EU_VERSION
+    return MikuPan_Undub_IsActive() ? "IMG_TEX_EU_UNDUB.BIN" : "IMG_TEX_EU.BIN";
+#else
+    return MikuPan_Undub_IsActive() ? "IMG_TEX_UNDUB.BIN" : kPackFileName;
+#endif
+}
+
 std::string PackPath()
 {
     char path[1024];
 
-    if (!MikuPan_ResolveUserPath(kPackFileName, path, sizeof(path)))
+    if (!MikuPan_ResolveUserPath(PackFileName(), path, sizeof(path)))
     {
         return std::string();
     }
@@ -497,7 +514,7 @@ unsigned int CreateTexture(uint32_t id)
 
 }// namespace
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 int MikuPan_BakedTexture_Prepare(void)
 {
@@ -724,7 +741,7 @@ void MikuPan_BakedTexture_LoadList(const void* list)
         {
             spdlog::error("A model was baked into a different texture pack; "
                           "delete {} to bake again",
-                          kPackFileName);
+                          PackFileName());
             g_reported_stamp = true;
         }
 
@@ -786,7 +803,7 @@ void MikuPan_BakedTexture_Shutdown(void)
     g_state = MIKUPAN_BAKE_IDLE;
 }
 
-}// extern "C"
+}// MIKUPAN_EXTERN_C
 
 namespace MikuPanBakedTexture2D
 {
@@ -835,3 +852,5 @@ bool ReadPixels(uint32_t id, std::vector<uint8_t>* out)
 }
 
 }// namespace MikuPanBakedTexture2D
+
+MIKUPAN_NAMESPACE_END

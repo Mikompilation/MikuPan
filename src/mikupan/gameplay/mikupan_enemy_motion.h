@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_ENEMY_MOTION_H
 #define MIKUPAN_ENEMY_MOTION_H
 
@@ -9,6 +10,9 @@
 #include "main/glob.h"
 #include "mikupan/debug/mikupan_assert.h"
 #include "mikupan/debug/mikupan_logging_c.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static inline int MikuPan_MotEnemyModelResident(u_int mdl_no)
 {
@@ -121,4 +125,6 @@ static inline int MikuPan_MotValidateEnemyAniCtrl(const char *context, u_int wor
     return 1;
 }
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_ENEMY_MOTION_H

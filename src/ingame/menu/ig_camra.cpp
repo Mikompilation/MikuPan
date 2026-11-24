@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -13,6 +14,9 @@
 #include "os/eeiop/eese.h"
 #include "outgame/mode_slct.h"
 
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void MikuPan_CameraMenuMouseInput(void)
 {
@@ -1873,3 +1877,4 @@ float BeMax(u_char no)
 
     return per;
 }
+MIKUPAN_NAMESPACE_END

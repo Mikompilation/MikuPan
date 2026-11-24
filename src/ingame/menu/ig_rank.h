@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_RANK_H
 #define INGAME_MENU_IG_RANK_H
 
 #include "typedefs.h"
 #include "ingame/menu/ig_types.h"
 #include "os/system.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char mode;
@@ -28,4 +32,6 @@ void IngameMenuRankDisp();
 void RankingChkMem(PICTURE_WRK new_pic);
 int CheckSamePic(PICTURE_WRK *newp);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MENU_IG_RANK_H

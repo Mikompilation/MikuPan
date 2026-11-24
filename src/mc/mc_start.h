@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MC_MC_START_H
 #define MC_MC_START_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     int type;
@@ -22,4 +26,6 @@ char mcLanguageLoadMain();
 char mcCtrlCheckLanguage();
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MC_MC_START_H

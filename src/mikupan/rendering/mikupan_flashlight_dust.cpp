@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_flashlight_dust.h"
 
 #include "SDL3/SDL_timer.h"
@@ -23,6 +24,9 @@
 #define MIKUPAN_DUST_MAX_VERTICES \
     (MIKUPAN_DUST_MAX_PARTICLES * MIKUPAN_DUST_VERTS_PER_PARTICLE)
 #define MIKUPAN_DUST_MAX_DOOR_BURSTS 4
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct MikuPan_DoorDustBurst
 {
@@ -1303,3 +1307,5 @@ void MikuPan_RenderFlashlightDust(void)
         MIKUPAN_DEPTH_LEQUAL,
         MIKUPAN_GPU_BLEND_ADDITIVE);
 }
+
+MIKUPAN_NAMESPACE_END

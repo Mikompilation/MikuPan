@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_LIBMC_H
 #define SCE_LIBMC_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef int _iconVu0IVECTOR[4];
 typedef float _iconVu0FVECTOR[4];
@@ -150,4 +154,6 @@ int sceMcOpen(int port, int slot, const char *name, int mode);
 int sceMcGetDir(int port, int slot, const char *name, unsigned mode, int maxent, sceMcTblGetDir *table);
 int sceMcGetInfo(int port, int slot, int *type, int *free, int *format);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_LIBMC_H

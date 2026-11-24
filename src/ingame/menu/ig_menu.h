@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_MENU_H
 #define INGAME_MENU_IG_MENU_H
 
@@ -5,6 +6,9 @@
 
 #include "graphics/graph2d/str_types.h"
 #include "graphics/graph2d/sprt.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     short int pos_x;
@@ -69,4 +73,6 @@ void AnaPonChk();
 char CanYouOpenMyMind(char mode);
 int StopCameraMenu();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MENU_IG_MENU_H

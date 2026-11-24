@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -17,8 +18,11 @@
 #include "graphics/motion/mdlwork.h" // motReleaseAniMdlBuf
 #include "graphics/graph2d/effect_ene.h" // LoadEneDmgTex
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/sgef_dat.h" // SGEF_DAT sgef_dat[];
 #include "data/sgef_adpcm_dat.h" // u_short sgef_adpcm_dat[];
+
+
 
 SgCAMERA sg_cmr_bak = {0};
 
@@ -559,3 +563,5 @@ void SettleGhostDispEffect()
     break;
     }
 }
+
+MIKUPAN_NAMESPACE_END

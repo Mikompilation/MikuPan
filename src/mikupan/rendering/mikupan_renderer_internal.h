@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_RENDERER_INTERNAL_H
 #define MIKUPAN_RENDERER_INTERNAL_H
 
@@ -5,6 +6,9 @@
 #include "cglm/cglm.h"
 #include "SDL3/SDL_video.h"
 #include "mikupan_gl_compat.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -41,4 +45,6 @@ void MikuPan_ShadowDebugRecordReceiverMeshType(int mesh_type);
 void MikuPan_ShadowDebugRecordCasterDraw(int mesh_type, int index_count);
 void MikuPan_ShadowDebugRecordReceiverDraw(int mesh_type, int index_count);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // MIKUPAN_RENDERER_INTERNAL_H

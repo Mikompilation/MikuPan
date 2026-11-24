@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -34,6 +35,9 @@
 #include "os/eeiop/cdvd/eecdvd.h"
 #include "outgame/btl_mode/btl_mode.h"
 #include <mikupan/mikupan_memory.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x28
 	/* 0x00 */ u_int flow;
@@ -5767,3 +5771,5 @@ void SetScreenEffect()
     
     msbtset.mn.sw = screen_effect[n].mn.sw;
 }
+
+MIKUPAN_NAMESPACE_END

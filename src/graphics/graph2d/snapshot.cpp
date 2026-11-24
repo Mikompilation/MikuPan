@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "snapshot.h"
@@ -5,6 +6,9 @@
 #include <stdio.h>
 
 #include "sce/sifdev.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char bfType[2];
@@ -117,3 +121,5 @@ void TakeSnapshot(char *data_i, char *data_o, int size_w, int size_h, int type)
         now_no[type % 2]++;
     }
 }
+
+MIKUPAN_NAMESPACE_END

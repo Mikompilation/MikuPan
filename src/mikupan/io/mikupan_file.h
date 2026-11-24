@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_FILE_LOADING_H
 #define MIKUPAN_FILE_LOADING_H
 
@@ -5,6 +6,24 @@
 #include <cstddef>
 #include <typedefs.h>
 #include <string>
+
+struct SDL_IOStream;
+
+namespace MikuPanHost
+{
+enum class Region;
+}
+
+MIKUPAN_NAMESPACE_BEGIN
+
+/// What the data setup screen can point the game at.
+enum
+{
+    MIKUPAN_DATA_SOURCE_DISC_IMAGE,
+    MIKUPAN_DATA_SOURCE_IMG_HD,
+    MIKUPAN_DATA_SOURCE_IMG_BD,
+    MIKUPAN_DATA_SOURCE_COUNT
+};
 
 typedef struct
 {
@@ -27,11 +46,19 @@ TYPEDEF_ALIGNED(64, struct
 
 
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 void MikuPan_LoadImgHdFile();
 void MikuPan_ServiceMissingDataFolderDialog();
 void MikuPan_RequestDataFolderSelection(const char *missing_path);
-bool MikuPan_HasRequiredDataFiles(char *missing_file, size_t missing_file_size);
+/// Finds the game data and fixes it for the run. False while there is none
+/// this engine can play: `missing_file` names what to look for, or the data
+/// is the other release's and the host has been asked for its engine.
+bool MikuPan_PrepareGameData(char *missing_file, size_t missing_file_size);
+/// Shows the file picker for a MIKUPAN_DATA_SOURCE_*. The choice is checked,
+/// and saved to the configuration if it is good, by
+/// MikuPan_ServiceDataSourceBrowser() on the main thread.
+void MikuPan_BrowseForDataSource(int source);
+void MikuPan_ServiceDataSourceBrowser();
 void MikuPan_ReadFullFile(const char *filename, char *buffer);
 void MikuPan_ReadFileInArchive(int sector, int size, u_int *address);
 void MikuPan_BufferFile(int sector, int size, int64_t address);
@@ -57,6 +84,9 @@ void *MikuPan_OpenDataFile(const char *relative_name);
 bool MikuPan_ReadOpenDataFile(void *file, int64_t offset, void *buffer,
                               size_t size);
 void MikuPan_CloseDataFile(void *file);
+/// Opens for reading any path this layer hands out: a plain path, an Android
+/// content URI, or a file on the mounted disc image. See MikuPan_ResolveCdPath.
+SDL_IOStream *MikuPan_OpenStream(const char *path);
 u_char MikuPan_OpenFile(const char *filename, void *buffer, int size);
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size);
 bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size);
@@ -74,5 +104,25 @@ int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table, int max
 }
 
 std::string MikuPan_GetRelativePath(const char* path);
+/// The release this engine plays.
+MikuPanHost::Region MikuPan_GetEngineRegion();
+/// Whether there is game data to play, and of which release.
+bool MikuPan_FindGameData(MikuPanHost::Region *region);
+/// Makes `folder` the data folder, from the next launch on. One that holds
+/// the archive is played instead of what was picked before.
+void MikuPan_UseDataFolder(const std::string& folder);
+/// Where a data file is read from, as MikuPan_ResolveCdPath() finds it
+/// before the undub (mikupan_undub.h) has its say.
+std::string MikuPan_GetGameDataPath(const char *relative_name);
+/// The file a MIKUPAN_DATA_SOURCE_* currently stands for, empty when it has
+/// none.
+std::string MikuPan_GetDataSourcePath(int source);
+/// Why the data that was found or picked cannot be used, in words for the
+/// player. Empty when there is nothing to report.
+std::string MikuPan_GetDataProblem();
+/// The same for the options screen, where a change waits for a restart.
+std::string MikuPan_GetGameDataStatus();
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_FILE_LOADING_H

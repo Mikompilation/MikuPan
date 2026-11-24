@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_EEIOP_CDVD_FNAMEEE_H
 #define OS_EEIOP_CDVD_FNAMEEE_H
 
 #include "typedefs.h"
 
+MIKUPAN_NAMESPACE_BEGIN
+
 #ifdef BUILD_EU_VERSION
+
 char* file_name[] = 
 {
     "bin/dmy/dummydummy00.obj", "bin/dmy/dummydummy01.obj",
@@ -3036,6 +3040,9 @@ char* file_name[] = {"bin/dmy/dummydummy00.obj",
                            "bin/bgm/scene1332_old.str",
                            "bin/3ddata/room/rshade.sgd"};
 
+
 #endif
+
+MIKUPAN_NAMESPACE_END
 
 #endif // OS_EEIOP_CDVD_FNAMEEE_H

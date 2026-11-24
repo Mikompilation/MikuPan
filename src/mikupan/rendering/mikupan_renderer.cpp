@@ -1,4 +1,6 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_renderer.h"
+#include "mikupan/host/engine_api.h"
 #include "../mikupan_types.h"
 #include "SDL3/SDL_hints.h"
 #include "SDL3/SDL_init.h"
@@ -18,11 +20,19 @@
 #include "mikupan_profiler.h"
 #include "mikupan_renderer_internal.h"
 #include "mikupan_shader.h"
-
 #include <mikupan_version.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include "graphics/graph3d/sglib.h"
+#include "mikupan/mikupan_config.h"
+#include "mikupan/mikupan_utils.h"
+#include "mikupan_meshcache.h"
+#include "mikupan_pipeline.h"
+
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void MikuPan_ApplyWindowMode(int mode);
 static int MikuPan_RenderSceneToPhotoFramebuffer(void);
@@ -33,11 +43,6 @@ static void MikuPan_ConvertPs2RectToRenderTextureUv(float *out,
                                                     float x, float y,
                                                     float w, float h);
 
-#include "graphics/graph3d/sglib.h"
-#include "mikupan/mikupan_config.h"
-#include "mikupan/mikupan_utils.h"
-#include "mikupan_meshcache.h"
-#include "mikupan_pipeline.h"
 
 MikuPan_RenderWindow mikupan_render = {0};
 MikuPan_MsaaBufferObject render_back_msaa = {0};
@@ -393,12 +398,16 @@ SDL_AppResult MikuPan_Init()
         config_window_flags |= SDL_WINDOW_BORDERLESS;
     }
 
-    mikupan_render.window = SDL_CreateWindow(
-        "MikuPan",
-        desired_window_width,
-        desired_window_height,
-        config_window_flags
-        );
+    mikupan_render.window = MikuPanHost::TakeWindow();
+    if (mikupan_render.window == NULL)
+    {
+        mikupan_render.window = SDL_CreateWindow(
+            "MikuPan",
+            desired_window_width,
+            desired_window_height,
+            config_window_flags
+            );
+    }
 
     if (mikupan_render.window == NULL)
     {
@@ -2484,6 +2493,12 @@ void MikuPan_Shutdown()
     MikuPan_TextureShutdown();
     MikuPan_GPUShutdown();
     MikuPan_ShutdownGameCursor();
-    SDL_DestroyWindow(mikupan_render.window);
+    if (!MikuPanHost::KeepWindow(mikupan_render.window))
+    {
+        SDL_DestroyWindow(mikupan_render.window);
+    }
+    mikupan_render.window = NULL;
     MikuPan_ShutdownLogging();
 }
+
+MIKUPAN_NAMESPACE_END

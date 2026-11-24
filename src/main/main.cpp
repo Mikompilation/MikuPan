@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "common.h"
 #include "enums.h"
@@ -24,6 +25,9 @@
 #include "iop/iopmain.h"
 #include "mikupan/io/mikupan_controller.h"
 #include "mikupan/io/mikupan_file_c.h"
+#include "mikupan/io/mikupan_undub.h"
+#include "spdlog/spdlog.h"
+#include "mikupan/ui/mikupan_rml_data_setup.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "os/eeiop/se_cmd.h"
 
@@ -32,6 +36,9 @@
 #include <mikupan/mikupan_memory.h>
 #include <sce/libpad.h>
 #include <mikupan/mikupan_framelimiter.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int mikupan_game_initialized = 0;
 static int mikupan_missing_data_prompted = 0;
@@ -47,7 +54,7 @@ static int MikuPan_TryInitializeGame(void)
         return 1;
     }
 
-    if (!MikuPan_HasRequiredDataFiles(missing_file, sizeof(missing_file)))
+    if (!MikuPan_PrepareGameData(missing_file, sizeof(missing_file)))
     {
         if (strcmp(mikupan_missing_data_file, missing_file) != 0)
         {
@@ -58,7 +65,10 @@ static int MikuPan_TryInitializeGame(void)
             mikupan_missing_data_prompted = 0;
         }
 
-        if (!mikupan_missing_data_prompted)
+        /// The data setup screen asks for the files. The system dialog is all
+        /// that is left when RmlUi could not load it.
+        if (!mikupan_missing_data_prompted
+            && !MikuPan_RmlDataSetupIsAvailable())
         {
             MikuPan_RequestDataFolderSelection(mikupan_missing_data_file);
             mikupan_missing_data_prompted = 1;
@@ -70,10 +80,26 @@ static int MikuPan_TryInitializeGame(void)
     mikupan_missing_data_file[0] = '\0';
     mikupan_missing_data_prompted = 0;
 
+    /// Before anything reads the archive: the undub serves its own.
+    MikuPan_Undub_Activate();
+
     /// Model and 2D textures come from the texture pack, baked from the
     /// user's data on first launch.
     if (!MikuPan_BakedTexture_Prepare())
     {
+        /// Nothing has read the undub's archive but the bake, so the game
+        /// can still start without it rather than stop at the error.
+        if (MikuPan_BakedTexture_GetState() == MIKUPAN_BAKE_FAILED
+            && MikuPan_Undub_IsActive())
+        {
+            spdlog::error("Undub texture bake failed: {}",
+                          MikuPan_BakedTexture_GetError());
+            MikuPan_Undub_Deactivate(
+                "Miku's original model could not be prepared, so the "
+                "undub is off.");
+            MikuPan_BakedTexture_Shutdown();
+        }
+
         return 0;
     }
 
@@ -134,6 +160,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
     MikuPan_ServiceMissingDataFolderDialog();
+    MikuPan_ServiceDataSourceBrowser();
+    MikuPan_Undub_ServiceBrowser();
 
     MikuPan_Clear();
     MikuPan_StartFrameUi();
@@ -151,10 +179,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             }
             else
             {
-                MikuPan_DrawMissingDataUi(mikupan_missing_data_file);
+                MikuPan_RmlDataSetupShow();
             }
 
             MikuPan_EndFrame();
+            MikuPan_FrameLimiter_Wait(&frame_limiter);
             return SDL_APP_CONTINUE;
         }
     }
@@ -297,3 +326,5 @@ int SoftResetChk()
     
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_SAVE_PATHS_H
 #define MIKUPAN_SAVE_PATHS_H
 #include <filesystem>
@@ -5,6 +6,9 @@
 #include <charconv>
 #include <cstdio>
 #include <string>
+
+MIKUPAN_NAMESPACE_BEGIN
+
 namespace MikuPanSave
 {
 // SDL and ImGui use UTF-8; filesystem paths use UTF-16 on Windows.
@@ -51,4 +55,6 @@ inline std::string ModernSaveFilename(int number)
     return name;
 }
 } // namespace MikuPanSave
+
+MIKUPAN_NAMESPACE_END
 #endif

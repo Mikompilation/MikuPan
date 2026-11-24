@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef SCE_MPEG_LIBMPEG_H
 #define SCE_MPEG_LIBMPEG_H
 
@@ -6,6 +7,9 @@
 #include "sce/mpeg/defs.h"
 
 #define SCE_MPEG_BUFFER_SIZE(w, h)  ((w)*(h)*9/2 + 512 + 24*64 + 8192)
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum {
     sceMpegCbError = 0,
@@ -81,4 +85,6 @@ void sceMpegSetDecodeMode(sceMpeg *mp, int ni, int np, int nb);
 sceMpegCallback sceMpegAddCallback(sceMpeg *mp, sceMpegCbType type, sceMpegCallback callback, void *anyData);
 sceMpegCallback sceMpegAddStrCallback(sceMpeg *mp, sceMpegStrType strType, int ch, sceMpegCallback callback, void *anyData);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // SCE_MPEG_LIBMPEG_H

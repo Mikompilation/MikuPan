@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_LEDITOR_H
 #define GRAPHICS_GRAPH3D_LEDITOR_H
 
 #include "typedefs.h"
 
 #include "graphics/graph3d/sglight.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 { // 0x30
@@ -21,7 +25,9 @@ typedef struct
     /* 0x2c */ u_int *sdata;
 } ROOM_LIGHT;
 
+MIKUPAN_NAMESPACE_END
 #include "graphics/graph2d/g2d_debug.h"
+MIKUPAN_NAMESPACE_BEGIN
 
 void ReadLights(ROOM_LIGHT *rdata, void *buf);
 void ApplyLight(int room_no);
@@ -29,4 +35,6 @@ void MakeLightEditorData(DEBUG_MENU **dbgmenu_tbl, int now_tree);
 void MakeFogData(DEBUG_SUB_MENU **dbgmenu_tbl, int pos);
 void ApplyFogData();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_LEDITOR_H

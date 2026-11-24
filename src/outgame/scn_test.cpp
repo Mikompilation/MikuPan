@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "scn_test.h"
 #include "common.h"
 #include "enums.h"
@@ -36,6 +37,9 @@
 #include "graphics/graph3d/load3d.h"
 #include "graphics/graph3d/sglib.h"
 #include "graphics/graph3d/sgsgd.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static int mono_flg = 0;
 static SCENE_CTRL *scn_p = scene_ctrl;
@@ -2387,3 +2391,5 @@ int SceneFileSaveText()
     return 0;
 }
 
+
+MIKUPAN_NAMESPACE_END

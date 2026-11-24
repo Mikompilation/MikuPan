@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_ENTRY_AP_GGOST_H
 #define INGAME_ENTRY_AP_GGOST_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct { // 0x28
 	/* 0x00 */ u_char ggst[5];
@@ -25,4 +29,6 @@ int GuardGhostAppear();
 void GuardGhostBattleSet(int room_no);
 void GuardGhostBattleEnd();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_ENTRY_AP_GGOST_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_PLYR_UNIT_CTL_H
 #define INGAME_PLYR_UNIT_CTL_H
 
@@ -5,6 +6,9 @@
 
 /// Changed from void RotLimitChk(sceVu0FVECTOR rot); because the compiler
 /// did not like how it was being passed
+
+MIKUPAN_NAMESPACE_BEGIN
+
 void RotLimitChk(float* rot);
 float GetTrgtRotY(sceVu0FVECTOR p0, sceVu0FVECTOR p1);
 void GetTrgtRotFromPlyr(sceVu0FVECTOR p, sceVu0FVECTOR rot, int id);
@@ -17,4 +21,6 @@ int RotRngChk(sceVu0FVECTOR vp, sceVu0FVECTOR tp, float rot, float rng);
 int GetPointHeightChk(sceVu0FVECTOR tv);
 void ReqEneStop(u_char req, u_char except);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_PLYR_UNIT_CTL_H

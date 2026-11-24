@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -34,6 +35,9 @@
 #include "cimgui.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void CameraNoRenew() ;
 static u_short CameraGetDoramaCameraNo(u_short now_cam_no);
@@ -2177,3 +2181,5 @@ int GetRoomPos(u_char room_no, sceVu0FVECTOR room_pos)
 
     return 0;
 }
+
+MIKUPAN_NAMESPACE_END

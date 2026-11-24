@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "adj_valg.h"
@@ -5,6 +6,9 @@
 #include "sce/libvu0.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static ADJ_VALG_WRK adj_valg_wrk[15];
 
@@ -153,3 +157,5 @@ void AdjustValueG()
         avp = (ADJ_VALG_WRK *)avp->next;
     }
 }
+
+MIKUPAN_NAMESPACE_END

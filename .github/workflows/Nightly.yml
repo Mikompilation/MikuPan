@@ -84,9 +84,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        region:
-          - { name: US, eu: "OFF" }
-          - { name: EU, eu: "ON" }
         sys:
           - { os: windows-latest, shell: pwsh, name: windows }
           # Linux builds inside Valve's Steam Runtime 3 "sniper" SDK (Debian 11,
@@ -131,7 +128,7 @@ jobs:
         shell: msys2 {0}
         run: |
           git config --global --add safe.directory '*'
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_STATIC=${{ env.BUILD_STATIC }} -DMIKUPAN_COMPILE_SHADERS=OFF -DBUILD_EU_VERSION=${{ matrix.region.eu }}
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_STATIC=${{ env.BUILD_STATIC }} -DMIKUPAN_COMPILE_SHADERS=OFF
           cmake --build build -j 12 --target MikuPan
 
       # The SDK already carries CMake, Ninja and every SDL development package.
@@ -144,7 +141,7 @@ jobs:
           CXX: g++-14
         run: |
           git config --global --add safe.directory '*'
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF -DBUILD_EU_VERSION=${{ matrix.region.eu }}
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMIKUPAN_COMPILE_SHADERS=OFF
           cmake --build build --target MikuPan
 
       # Guard the Steam Runtime 3 floor: newer GLIBC symbols or dynamic C++
@@ -157,7 +154,7 @@ jobs:
       - name: Build (macOS)
         if: ${{ matrix.sys.os == 'macos-latest' }}
         run: |
-          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=${{env.BUILD_STATIC}} -DMIKUPAN_COMPILE_SHADERS=OFF -DBUILD_EU_VERSION=${{ matrix.region.eu }}
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=${{env.BUILD_STATIC}} -DMIKUPAN_COMPILE_SHADERS=OFF
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target MikuPan
 
       - name: Zip Windows App
@@ -165,26 +162,26 @@ jobs:
         working-directory: build
         shell: pwsh
         run: |
-          Compress-Archive -Path MikuPan/* -DestinationPath MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_nightly.zip
+          Compress-Archive -Path MikuPan/* -DestinationPath MikuPan_unified_${{ matrix.sys.name }}_nightly.zip
 
       - name: Zip OSX App
         if: ${{ matrix.sys.os == 'macos-latest' }}
         working-directory: build
         run: |
-          zip -r MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_nightly.zip MikuPan/*
+          zip -r MikuPan_unified_${{ matrix.sys.name }}_nightly.zip MikuPan/*
 
       - name: Zip Ubuntu App
         if: ${{ matrix.sys.os == 'ubuntu-latest' }}
         working-directory: build
         run: |
-          zip -r MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_nightly.zip MikuPan/*
+          zip -r MikuPan_unified_${{ matrix.sys.name }}_nightly.zip MikuPan/*
 
       - name: Upload nightly zip
         uses: actions/upload-artifact@v4
         with:
-          name: nightly-${{ matrix.region.name }}-${{ matrix.sys.name }}
+          name: nightly-unified-${{ matrix.sys.name }}
           if-no-files-found: error
-          path: build/MikuPan_${{ matrix.region.name }}_${{ matrix.sys.name }}_nightly.zip
+          path: build/MikuPan_unified_${{ matrix.sys.name }}_nightly.zip
 
   publish:
     needs: [shaders, build]

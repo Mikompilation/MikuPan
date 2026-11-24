@@ -1,17 +1,22 @@
-#ifndef MIKUPAN_RML_MODE_SELECT_H
-#define MIKUPAN_RML_MODE_SELECT_H
-
-#ifdef __cplusplus
+#include "mikupan/mikupan_region.h"
 namespace Rml
 {
 class Context;
 }
+#ifndef MIKUPAN_RML_MODE_SELECT_H
+#define MIKUPAN_RML_MODE_SELECT_H
+
+
+MIKUPAN_NAMESPACE_BEGIN
+
+#ifdef __cplusplus
+
 
 bool MikuPan_RmlModeSelectInit(Rml::Context* context);
 void MikuPan_RmlModeSelectStartFrame(void);
 void MikuPan_RmlModeSelectPrepareShutdown(void);
 void MikuPan_RmlModeSelectShutdown(void);
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 #define MIKUPAN_RML_MODE_SELECT_COMMAND_NONE 0
@@ -36,4 +41,6 @@ void MikuPan_RmlModeSelectApplyLanguage(int language);
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif

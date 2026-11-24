@@ -1,9 +1,13 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH3D_SGCAM_H
 #define GRAPHICS_GRAPH3D_SGCAM_H
 
 #include "typedefs.h"
 
 #include "ingame/camera/camera.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern sceVu0FVECTOR clip_volume;
 extern SgCAMERA *nowcamera;
@@ -24,4 +28,6 @@ void SgSetFog(float min, float max, float near, float far, int r, int g, int b);
 void SgSetWScissorBox(float ax, float ay, float az, float bx, float by, float bz);
 void _SetMulMatrixBB(sceVu0FMATRIX m0, sceVu0FMATRIX m1, sceVu0FMATRIX lw);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH3D_SGCAM_H

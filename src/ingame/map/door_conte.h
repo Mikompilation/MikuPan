@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_DOOR_CONTE_H
 #define INGAME_MAP_DOOR_CONTE_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef enum {
 	DR_CNT_IDOL = 0,
@@ -31,4 +35,6 @@ typedef struct {
 void DoorOpenConteInit();
 u_char DoorOpenConte();
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_DOOR_CONTE_H

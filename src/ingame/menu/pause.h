@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_PAUSE_H
 #define INGAME_MENU_PAUSE_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -32,4 +36,6 @@ void PauseInit();
 int PauseMain();
 void PauseDisp();
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_MENU_PAUSE_H

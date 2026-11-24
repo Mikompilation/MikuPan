@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef OS_KEY_CNF_H
 #define OS_KEY_CNF_H
 
@@ -8,6 +9,9 @@
 #define MIKUPAN_ACTION_PROFILE_MODE_COUNT  (2)
 #define MIKUPAN_ACTION_PROFILE_ACTION_COUNT (16)
 #define MIKUPAN_ACTION_PROFILE_TARGET_NONE (-1)
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern u_char key_type[32];
 
@@ -41,4 +45,6 @@ const char *MikuPan_ActionProfileModeLabel(int mode);
 const char *MikuPan_ActionProfileActionLabel(int mode, int action);
 const char *MikuPan_ActionProfileTargetLabel(int target);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // OS_KEY_CNF_H

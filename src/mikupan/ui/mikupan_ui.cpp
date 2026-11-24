@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_ui_saves.h"
 #include "SDL3/SDL.h"
 #include "imgui.h"
@@ -6,6 +7,9 @@
 #include "imgui_internal.h"
 #include "implot.h"
 #include "mikupan/rendering/mikupan_gpu.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void MikuPan_RemapGamepadWindowingTrigger(void)
 {
@@ -93,7 +97,7 @@ static void MikuPan_RemapGamepadWindowingTrigger(void)
     }
 }
 
-extern "C" {
+MIKUPAN_EXTERN_C {
 
 void MikuPan_ImPlot_CreateContext(void)
 {
@@ -161,3 +165,5 @@ void MikuPan_ImGui_ImplRenderDrawData(void)
     ImGui_ImplSDLGPU3_RenderDrawData(draw_data, cmd, pass);
 }
 }
+
+MIKUPAN_NAMESPACE_END

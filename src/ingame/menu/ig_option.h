@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_IG_OPTION_H
 #define INGAME_MENU_IG_OPTION_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_short snd_vol;
@@ -24,4 +28,6 @@ void DspOptCtrl(u_char csr, u_char mode, u_char alpha, u_char ttl);
 void StepLinesSimpleDraw(short int (*p_stp)[2], u_char r, u_char g, u_char b, u_char alpha);
 void SimpleHorLine(short int (*p_stp)[3], u_char r, u_char g, u_char b, u_char alpha, int typ);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MENU_IG_OPTION_H

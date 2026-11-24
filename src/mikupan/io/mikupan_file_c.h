@@ -1,9 +1,14 @@
+#include "mikupan/mikupan_region.h"
 #ifndef MIKUPAN_MIKUPAN_FILE_C_H
 #define MIKUPAN_MIKUPAN_FILE_C_H
 #include "typedefs.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+
+struct SDL_IOStream;
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct
 {
@@ -25,13 +30,14 @@ TYPEDEF_ALIGNED(64, struct
 } MikuPan_McTblGetDir);
 
 #ifdef __cplusplus
-extern "C" {
+MIKUPAN_EXTERN_C {
 #endif
 
 void MikuPan_LoadImgHdFile();
 void MikuPan_ServiceMissingDataFolderDialog();
 void MikuPan_RequestDataFolderSelection(const char *missing_path);
-bool MikuPan_HasRequiredDataFiles(char *missing_file, size_t missing_file_size);
+bool MikuPan_PrepareGameData(char *missing_file, size_t missing_file_size);
+void MikuPan_ServiceDataSourceBrowser();
 /* Records that file data was loaded at a PS2 main-memory offset; requests a
    texture-cache flush only when an address is loaded over a second time. */
 void MikuPan_ReadFullFile(const char *filename, char *buffer);
@@ -45,6 +51,7 @@ void *MikuPan_OpenDataFile(const char *relative_name);
 bool MikuPan_ReadOpenDataFile(void *file, int64_t offset, void *buffer,
                               size_t size);
 void MikuPan_CloseDataFile(void *file);
+struct SDL_IOStream *MikuPan_OpenStream(const char *path);
 u_char MikuPan_OpenFile(const char *filename, void *buffer, int size);
 u_char MikuPan_SaveFile(const char *filename, void *buffer, int size);
 bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size);
@@ -59,4 +66,6 @@ int MikuPan_GetListFiles(const char *folder, MikuPan_McTblGetDir *table, int max
 }
 #endif
 
+
+MIKUPAN_NAMESPACE_END
 #endif//MIKUPAN_MIKUPAN_FILE_C_H

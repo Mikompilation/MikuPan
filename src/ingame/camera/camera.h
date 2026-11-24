@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_CAMERA_CAMERA_H
 #define INGAME_CAMERA_CAMERA_H
 
@@ -11,6 +12,9 @@
 #define CAMERA_EASING_MODE(tbl)    (((tbl) >> 30) & 0x3)
 #define CAMERA_END                 0xffffffff
 #define CAMERA_LIST_END            0xffff
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern u_int ncam_000[];
 extern u_int ncam_001[];
@@ -273,4 +277,6 @@ void ReqDramaCamera(u_char req, u_short no, u_short time);
 void DramaCameraReqCtrl();
 void ClearDramaCamReq();
 
+
+MIKUPAN_NAMESPACE_END
 #endif// INGAME_CAMERA_CAMERA_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -13,6 +14,9 @@
 #include "common/ul_math.h"
 
 #define DEFAULT_PITCH 0xFFF
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static void EAdpcmGhostParaSet(ADPCM_TUNE_PARAM *atpp);
 
@@ -191,3 +195,4 @@ static void EAdpcmGhostParaSet(ADPCM_TUNE_PARAM *atpp)
         }
     }
 }
+MIKUPAN_NAMESPACE_END

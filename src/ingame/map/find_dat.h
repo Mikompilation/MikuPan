@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MAP_FIND_DAT_H
 #define INGAME_MAP_FIND_DAT_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_char type;
@@ -14,4 +18,6 @@ typedef struct {
 
 extern FIND_DAT find_dat[];
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MAP_FIND_DAT_H

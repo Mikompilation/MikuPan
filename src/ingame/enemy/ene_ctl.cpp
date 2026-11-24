@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -33,6 +34,7 @@
 #include "ingame/map/map_htck.h"
 #include "ingame/map/map_ctrl.h"
 
+MIKUPAN_NAMESPACE_BEGIN
 #include "data/aene_info_dat.h" // AENE_INFO_DAT *aene_info_dat[];
 #include "data/aene_info_dat0.h"// AENE_INFO_DAT aene_info_dat0[];
 #include "data/aene_info_dat1.h"// AENE_INFO_DAT aene_info_dat1[];
@@ -51,6 +53,7 @@
 #include "data/jene_dat2.h"     // ENE_DAT jene_dat2[];
 #include "data/jene_dat3.h"     // ENE_DAT jene_dat3[];
 #include "data/jene_dat4.h"     // ENE_DAT jene_dat4[];
+MIKUPAN_NAMESPACE_END
 #include "graphics/graph2d/effect_ene.h"
 #include "graphics/graph3d/gra3d.h"
 #include "graphics/motion/mdlwork.h"
@@ -61,6 +64,9 @@
 #include "outgame/btl_mode/btl_mode.h"
 #include "mikupan/gameplay/mikupan_enemy_entry.h"
 #include "mikupan/gameplay/mikupan_point_depth.h"
+MIKUPAN_NAMESPACE_BEGIN
+
+
 int erootd0[20][3] = {0};
 int erootd1[20][3] = {0};
 int erootd2[20][3] = {0};
@@ -2193,3 +2199,5 @@ void EneAdpcmPlayChk(ENE_WRK *ew)
         AdpcmPlayGhost(ew->dat->adpcm_no, &ew->move_box.pos, MAX_VOLUME, ew->move_box.idx, 200);
     }
 }
+
+MIKUPAN_NAMESPACE_END

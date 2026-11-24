@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "common.h"
 #include "typedefs.h"
 #include "enums.h"
@@ -28,6 +29,9 @@
 #include "graphics/graph3d/gra3d.h"
 
 #include <string.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void (*CommJmpTbl[])(MOVE_BOX * mb) = {
     EJob000, EJob001, EJob002, EJob003, EJob004, EJob005, EJob006, EJob007,
@@ -4228,3 +4232,5 @@ void BJob014(ENE_WRK *ew)
     ew->bwait_time = 0;
     ew->bpos_no = 0;
 }
+
+MIKUPAN_NAMESPACE_END

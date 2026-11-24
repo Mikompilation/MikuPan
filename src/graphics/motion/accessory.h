@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_MOTION_ACCESSORY_H
 #define GRAPHICS_MOTION_ACCESSORY_H
 
@@ -8,6 +9,9 @@
 
 #include "ingame/map/furn_ctl.h"
 #include "graphics/motion/mdlwork.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 extern SPRING rope_spring[20][9];
 extern C_PARTICLE rope_particle[20][10];
@@ -48,4 +52,6 @@ void acsChodoMoveNingyo(SgCOORDUNIT *cp, float *p, CMOVE_CTRL *mv);
 char acsChodoMoveKaidan(SgCOORDUNIT *cp, float *p1, CMOVE_CTRL *mv);
 void SetSpeFurnLight(FURN_WRK *furn);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_MOTION_ACCESSORY_H

@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #include "mikupan_utils.h"
 
 #include "main/glob.h"
@@ -5,6 +6,9 @@
 
 #include <cmath>
 #include <stdlib.h>
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 void MikuPan_ConvertPs2ScreenCoordToNDCMaintainAspectRatio(float *out,
                                                            float screen_width,
@@ -373,3 +377,5 @@ int MikuPan_GetUiLanguage(void)
     return 0;
 #endif
 }
+
+MIKUPAN_NAMESPACE_END

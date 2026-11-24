@@ -1,3 +1,4 @@
+#include "mikupan/mikupan_region.h"
 #ifndef AUDIO_COMMON_H
 #define AUDIO_COMMON_H
 #include "common.h"
@@ -7,6 +8,9 @@
 #define SAMPLE_RATE 48000
 #define BIT_RATE 16
 #define CHANNELS 2
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 static const s32 tbl_adpcm_filter[16][2] = {
     {  0,   0},
@@ -57,4 +61,6 @@ static inline s16 ApplyVolume(s16 sample, s32 vol)
     return (sample * vol) >> 15;
 }
 
+
+MIKUPAN_NAMESPACE_END
 #endif// AUDIO_COMMON_H

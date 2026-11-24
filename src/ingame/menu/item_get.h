@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef INGAME_MENU_ITEM_GET_H
 #define INGAME_MENU_ITEM_GET_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
     u_char msg_type_bak;
@@ -58,4 +62,6 @@ int CheckTape(int item_no);
 void PlayTape(int adpcm_no);
 void StopTape(int item_no);
 
+
+MIKUPAN_NAMESPACE_END
 #endif // INGAME_MENU_ITEM_GET_H

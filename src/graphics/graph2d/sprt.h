@@ -1,7 +1,11 @@
+#include "mikupan/mikupan_region.h"
 #ifndef GRAPHICS_GRAPH2D_SPRT_H
 #define GRAPHICS_GRAPH2D_SPRT_H
 
 #include "typedefs.h"
+
+
+MIKUPAN_NAMESPACE_BEGIN
 
 typedef struct {
 	u_long tex0;
@@ -158,4 +162,6 @@ typedef struct {
     u_char alpha;
 } GSQ4_DAT;
 
+
+MIKUPAN_NAMESPACE_END
 #endif // GRAPHICS_GRAPH2D_SPRT_H
