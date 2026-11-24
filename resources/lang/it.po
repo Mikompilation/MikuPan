@@ -1552,3 +1552,16 @@ msgstr "Impossibile aprire quell'immagine disco."
 
 msgid "That file is not a complete disc image."
 msgstr "Quel file non è un'immagine disco completa."
+
+# --- game data (mikupan_file.cpp, mikupan_rml_options.cpp) ---
+msgid "Disc Image"
+msgstr "Immagine disco"
+
+msgid "The disc image of the game to play, Fatal Frame (NTSC-U) or Project Zero (PAL)."
+msgstr "L'immagine disco del gioco, Fatal Frame (NTSC-U) o Project Zero (PAL)."
+
+msgid "That disc image is not Fatal Frame (NTSC-U) or Project Zero (PAL)."
+msgstr "Questa immagine disco non è né Fatal Frame (NTSC-U) né Project Zero (PAL)."
+
+msgid "The path of that file is too long."
+msgstr "Il percorso di quel file è troppo lungo."

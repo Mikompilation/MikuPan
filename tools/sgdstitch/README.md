@@ -96,8 +96,8 @@ picture of the 2D files. The baker is a library shared with the game
 sgdstitch bake IMG_HD.BIN IMG_BD.BIN --names src/os/eeiop/cdvd/fnameee.h --out baked
 ```
 
-writes `baked/IMG_TEX.BIN`, which the game accepts in its user folder. The
-pack holds the decoded images and every archive entry the bake rewrote (same
+writes `baked/IMG_TEX.BIN`, which the game accepts in its user folder (under
+the name `IMG_TEX_EU.BIN` when it is of the PAL release). The pack holds the decoded images and every archive entry the bake rewrote (same
 size, nothing moved); the game reads those entries from the pack, so
 `IMG_BD.BIN` itself is never modified. `--archive` also writes
 `baked/IMG_HD.BIN` and a patched `baked/IMG_BD.BIN` for offline tools.

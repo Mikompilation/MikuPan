@@ -54,7 +54,7 @@ static int MikuPan_TryInitializeGame(void)
         return 1;
     }
 
-    if (!MikuPan_HasRequiredDataFiles(missing_file, sizeof(missing_file)))
+    if (!MikuPan_PrepareGameData(missing_file, sizeof(missing_file)))
     {
         if (strcmp(mikupan_missing_data_file, missing_file) != 0)
         {
@@ -183,6 +183,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             }
 
             MikuPan_EndFrame();
+            MikuPan_FrameLimiter_Wait(&frame_limiter);
             return SDL_APP_CONTINUE;
         }
     }

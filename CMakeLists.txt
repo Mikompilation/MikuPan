@@ -16,7 +16,6 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     string(APPEND CMAKE_EXE_LINKER_FLAGS " -static-libstdc++ -static-libgcc")
 endif()
 
-option(BUILD_EU_VERSION "Build the PAL/EU version data and code paths." OFF)
 option(MIKUPAN_BUILD_TOOLS "Build the offline asset tools (sgdstitch)." OFF)
 
 if(ANDROID)

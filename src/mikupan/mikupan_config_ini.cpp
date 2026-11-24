@@ -1,4 +1,3 @@
-#include "mikupan/host/engine_api.h"
 #include "mikupan/mikupan_region.h"
 #include "mikupan_config.h"
 
@@ -661,13 +660,6 @@ MIKUPAN_EXTERN_C void MikuPan_LoadConfiguration(const char *filename)
             mikupan_configuration.data_folder
                 [sizeof(mikupan_configuration.data_folder) - 1] = '\0';
         }
-    }
-
-    if (const char* selected = MikuPanHost::DataRoot())
-    {
-        std::strncpy(mikupan_configuration.data_folder, selected,
-                     sizeof(mikupan_configuration.data_folder) - 1);
-        mikupan_configuration.data_folder[sizeof(mikupan_configuration.data_folder) - 1] = '\0';
     }
 
     MikuPan_ConfigurationValidate();

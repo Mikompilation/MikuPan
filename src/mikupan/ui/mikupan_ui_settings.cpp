@@ -16,6 +16,7 @@
 #include "mikupan/mikupan_config.h"
 #include "mikupan/mikupan_audio_bus.h"
 #include "mikupan/io/mikupan_controller.h"
+#include "mikupan/io/mikupan_file.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/rendering/mikupan_flashlight_dust.h"
@@ -1012,10 +1013,7 @@ static void MikuPan_DataFolderSelected(void* userdata,
         return;
     }
 
-    strncpy(mikupan_configuration.data_folder, filelist[0],
-            sizeof(mikupan_configuration.data_folder) - 1);
-    mikupan_configuration
-        .data_folder[sizeof(mikupan_configuration.data_folder) - 1] = '\0';
+    MikuPan_UseDataFolder(filelist[0]);
 }
 
 void MikuPan_UiSettingsInit(void)
@@ -2512,10 +2510,7 @@ void MikuPan_SetDataFolder(const char* folder)
         folder = "";
     }
 
-    strncpy(mikupan_configuration.data_folder, folder,
-            sizeof(mikupan_configuration.data_folder) - 1);
-    mikupan_configuration
-        .data_folder[sizeof(mikupan_configuration.data_folder) - 1] = '\0';
+    MikuPan_UseDataFolder(folder);
 }
 
 void MikuPan_BrowseDataFolderFromUi(void)

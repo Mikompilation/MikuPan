@@ -1,5 +1,6 @@
 #include "mikupan/mikupan_region.h"
 #include "mikupan_renderer.h"
+#include "mikupan/host/engine_api.h"
 #include "../mikupan_types.h"
 #include "SDL3/SDL_hints.h"
 #include "SDL3/SDL_init.h"
@@ -397,12 +398,16 @@ SDL_AppResult MikuPan_Init()
         config_window_flags |= SDL_WINDOW_BORDERLESS;
     }
 
-    mikupan_render.window = SDL_CreateWindow(
-        "MikuPan",
-        desired_window_width,
-        desired_window_height,
-        config_window_flags
-        );
+    mikupan_render.window = MikuPanHost::TakeWindow();
+    if (mikupan_render.window == NULL)
+    {
+        mikupan_render.window = SDL_CreateWindow(
+            "MikuPan",
+            desired_window_width,
+            desired_window_height,
+            config_window_flags
+            );
+    }
 
     if (mikupan_render.window == NULL)
     {
@@ -2488,7 +2493,11 @@ void MikuPan_Shutdown()
     MikuPan_TextureShutdown();
     MikuPan_GPUShutdown();
     MikuPan_ShutdownGameCursor();
-    SDL_DestroyWindow(mikupan_render.window);
+    if (!MikuPanHost::KeepWindow(mikupan_render.window))
+    {
+        SDL_DestroyWindow(mikupan_render.window);
+    }
+    mikupan_render.window = NULL;
     MikuPan_ShutdownLogging();
 }
 

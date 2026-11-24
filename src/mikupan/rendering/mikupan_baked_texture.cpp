@@ -85,10 +85,15 @@ void SetError(const std::string& error)
 }
 
 /// The undub swaps Miku's model, and its archive has entries of its own, so
-/// it keeps a pack of its own: switching it on or off never bakes again.
+/// it keeps a pack of its own, as each release does: switching between them
+/// never bakes again.
 const char* PackFileName()
 {
+#ifdef BUILD_EU_VERSION
+    return MikuPan_Undub_IsActive() ? "IMG_TEX_EU_UNDUB.BIN" : "IMG_TEX_EU.BIN";
+#else
     return MikuPan_Undub_IsActive() ? "IMG_TEX_UNDUB.BIN" : kPackFileName;
+#endif
 }
 
 std::string PackPath()

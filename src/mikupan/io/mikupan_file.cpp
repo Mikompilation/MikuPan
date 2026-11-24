@@ -1,12 +1,12 @@
 #include "mikupan/mikupan_region.h"
 #include "typedefs.h"
 #include "mikupan_file.h"
+#include "mikupan/host/asset_check.h"
 #include "mikupan/io/mikupan_disc_image.h"
 #include "mikupan/io/mikupan_undub.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/debug/mikupan_logging.h"
 #include "mikupan/ui/mikupan_ui.h"
-#include "os/eeiop/cdvd/eecdvd.h"
 #include "spdlog/spdlog.h"
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_events.h>
@@ -26,6 +26,7 @@
 #include <limits>
 #include <cstring>
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 #include <system_error>
 #include <vector>
@@ -57,6 +58,48 @@ static std::string synced_disc_image_path;
 static std::string disc_image_problem;
 static std::string picked_data_source_problem;
 static std::string required_data_problem;
+
+/// The releases there is an engine for, as a player would call them.
+static constexpr const char *kSupportedReleases =
+    "Fatal Frame (NTSC-U) or Project Zero (PAL)";
+
+/// The game data of a run.
+struct MikuPan_GameData
+{
+    std::string hd_path;
+    std::string bd_path;
+    /// The data folder, whose loose files and movies override the disc's.
+    std::string folder;
+    /// Not when the folder holds the other release.
+    bool use_folder = true;
+    /// The settings this came from.
+    std::string settings;
+};
+
+/// What this run plays. It is fixed once the game starts, since the settings
+/// may be changed to the other release's data while this one is running.
+static std::mutex fixed_game_data_mutex;
+static std::shared_ptr<const MikuPan_GameData> fixed_game_data;
+
+static std::shared_ptr<const MikuPan_GameData> MikuPan_GetFixedGameData()
+{
+    std::lock_guard<std::mutex> lock(fixed_game_data_mutex);
+    return fixed_game_data;
+}
+
+static void MikuPan_SetFixedGameData(
+    std::shared_ptr<const MikuPan_GameData> data)
+{
+    std::lock_guard<std::mutex> lock(fixed_game_data_mutex);
+    fixed_game_data = std::move(data);
+}
+
+static std::string MikuPan_GetActiveDataFolder()
+{
+    const auto data = MikuPan_GetFixedGameData();
+    return data != nullptr ? data->folder
+                           : std::string(mikupan_configuration.data_folder);
+}
 
 MIKUPAN_EXTERN_C const char *MikuPan_GetBaseDirectory(void)
 {
@@ -109,8 +152,8 @@ static std::filesystem::path MikuPan_GetApplicationBasePath()
 
 static std::filesystem::path MikuPan_GetDataRoot()
 {
-    const char *folder = mikupan_configuration.data_folder;
-    if (folder != nullptr && folder[0] != '\0')
+    const std::string folder = MikuPan_GetActiveDataFolder();
+    if (!folder.empty())
     {
         return std::filesystem::path(folder);
     }
@@ -217,18 +260,28 @@ static std::string MikuPan_GetAndroidTreeChildUri(
 }
 #endif
 
-static std::string MikuPan_GetDataFolderPathString(
+static std::string MikuPan_GetPathInFolder(
+    const std::string& folder,
     const std::filesystem::path& relative_path)
 {
-    const char *folder = mikupan_configuration.data_folder;
 #ifdef __ANDROID__
-    if (folder != nullptr && MikuPan_IsAndroidTreeUriString(folder))
+    if (MikuPan_IsAndroidTreeUriString(folder))
     {
         return MikuPan_GetAndroidTreeChildUri(folder, relative_path);
     }
 #endif
 
-    return (MikuPan_GetDataRoot() / relative_path).generic_string();
+    const std::filesystem::path root =
+        folder.empty() ? MikuPan_GetApplicationBasePath()
+                       : std::filesystem::path(folder);
+    return (root / relative_path).generic_string();
+}
+
+static std::string MikuPan_GetDataFolderPathString(
+    const std::filesystem::path& relative_path)
+{
+    return MikuPan_GetPathInFolder(MikuPan_GetActiveDataFolder(),
+                                   relative_path);
 }
 
 static std::string MikuPan_NormalizeSdlAssetPathString(const std::string& path)
@@ -251,16 +304,30 @@ static bool MikuPan_IsDiscPathString(const std::string& path)
     return path.rfind(kDiscPathPrefix, 0) == 0;
 }
 
-/// Files picked on the data setup screen count too: their paths arrive from
-/// the file picker as UTF-8, which narrow file APIs misread on Windows.
+/// Files picked on the data setup screen: their paths arrive from the file
+/// picker as UTF-8, which narrow file APIs misread on Windows.
+static bool MikuPan_IsPickedPathString(const std::string& path)
+{
+    if (path.empty())
+    {
+        return false;
+    }
+
+    if (const auto data = MikuPan_GetFixedGameData())
+    {
+        return path == data->hd_path || path == data->bd_path;
+    }
+
+    return path == mikupan_configuration.img_hd_path
+        || path == mikupan_configuration.img_bd_path;
+}
+
 static bool MikuPan_IsSdlAssetPathString(const std::string& path)
 {
     return path.rfind("assets://", 0) == 0
         || MikuPan_IsDiscPathString(path)
         || MikuPan_Undub_IsUndubPath(path)
-        || (!path.empty()
-            && (path == mikupan_configuration.img_hd_path
-                || path == mikupan_configuration.img_bd_path))
+        || MikuPan_IsPickedPathString(path)
 #ifdef __ANDROID__
         || MikuPan_IsAndroidContentUriString(path)
 #endif
@@ -382,31 +449,141 @@ static bool MikuPan_PathHasContent(const std::string& path)
     return !error && file_size > 0;
 }
 
-/// Where a data file is read from. The data folder comes first, so loose
-/// files keep overriding everything else, then what was picked on the data
-/// setup screen, then the mounted disc image. A file that is nowhere gets its
-/// data folder path, which is what the missing file prompts work from.
+/// Keeps the mounted image in step with the configuration. This runs every
+/// frame while the data is missing, so a path is only tried once.
+static void MikuPan_SyncDiscImage()
+{
+    const char *path = mikupan_configuration.iso_path;
+    if (synced_disc_image_path == path)
+    {
+        return;
+    }
+
+    synced_disc_image_path = path;
+    disc_image_problem.clear();
+
+    std::string error;
+    if (path[0] == '\0')
+    {
+        MikuPan_DiscImageUnmount();
+    }
+    else if (!MikuPan_DiscImageMount(path, &error))
+    {
+        MikuPan_DiscImageUnmount();
+        disc_image_problem =
+            "The saved disc image could not be read. Select it again.";
+    }
+}
+
+static int64_t MikuPan_GetStreamSize(const std::string& path)
+{
+    SDL_IOStream *stream = MikuPan_OpenStream(path.c_str());
+    if (stream == nullptr)
+    {
+        return -1;
+    }
+
+    const Sint64 size = SDL_GetIOSize(stream);
+    SDL_CloseIO(stream);
+    return size;
+}
+
+static std::string MikuPan_GetDataSettings()
+{
+    return std::string(mikupan_configuration.data_folder) + '\n'
+        + mikupan_configuration.iso_path + '\n'
+        + mikupan_configuration.img_hd_path + '\n'
+        + mikupan_configuration.img_bd_path;
+}
+
+/// Finds the two files of the archive together, so that they are never of
+/// two releases: on the disc image the player picked, else the files the
+/// player picked, else in the data folder, else beside the executable. A
+/// path stays empty when its file is nowhere.
+static bool MikuPan_FindArchive(MikuPan_GameData *data)
+{
+    MikuPan_SyncDiscImage();
+
+    const std::string folder = mikupan_configuration.data_folder;
+    const std::string folder_hd = MikuPan_GetPathInFolder(folder, "IMG_HD.BIN");
+    const std::string folder_bd = MikuPan_GetPathInFolder(folder, "IMG_BD.BIN");
+
+    data->folder = folder;
+    data->use_folder = true;
+    data->settings = MikuPan_GetDataSettings();
+
+    if (MikuPan_DiscImageHasFile("IMG_HD.BIN")
+        && MikuPan_DiscImageHasFile("IMG_BD.BIN"))
+    {
+        data->hd_path = std::string(kDiscPathPrefix) + "IMG_HD.BIN";
+        data->bd_path = std::string(kDiscPathPrefix) + "IMG_BD.BIN";
+
+        const int64_t folder_size = MikuPan_GetStreamSize(folder_hd);
+        data->use_folder = folder_size < 0
+            || folder_size == MikuPan_GetStreamSize(data->hd_path);
+        return true;
+    }
+
+    const auto find = [](const std::string& picked,
+                         const std::string& in_folder) {
+        if (!picked.empty() && MikuPan_PathHasContent(picked))
+        {
+            return picked;
+        }
+        return MikuPan_PathHasContent(in_folder) ? in_folder : std::string();
+    };
+
+    data->hd_path = find(mikupan_configuration.img_hd_path, folder_hd);
+    data->bd_path = find(mikupan_configuration.img_bd_path, folder_bd);
+    if (!data->hd_path.empty() && !data->bd_path.empty())
+    {
+        return true;
+    }
+
+    const std::string base = MikuPan_GetBaseDirectory();
+    const std::string base_hd = MikuPan_GetPathInFolder(base, "IMG_HD.BIN");
+    const std::string base_bd = MikuPan_GetPathInFolder(base, "IMG_BD.BIN");
+    if (MikuPan_PathHasContent(base_hd) && MikuPan_PathHasContent(base_bd))
+    {
+        data->hd_path = base_hd;
+        data->bd_path = base_bd;
+        data->folder = base;
+        return true;
+    }
+
+    return false;
+}
+
+/// Where a data file is read from: the archive from where MikuPan_FindArchive()
+/// found it, and any other file from the data folder, so that loose files
+/// override the disc's, else from the disc image. A file that is nowhere gets
+/// its data folder path, which is what the missing file prompts work from.
 static std::string MikuPan_GetGameDataPathString(
     const std::filesystem::path& relative_path)
 {
+    const auto fixed = MikuPan_GetFixedGameData();
     const std::string folder_path =
         MikuPan_GetDataFolderPathString(relative_path);
-    if (MikuPan_PathHasContent(folder_path))
-    {
-        return folder_path;
-    }
-
     const std::string name = MikuPan_ToLowerPathString(relative_path);
+
     if (name == "img_hd.bin" || name == "img_bd.bin")
     {
-        const std::string picked_path = name == "img_hd.bin"
-            ? mikupan_configuration.img_hd_path
-            : mikupan_configuration.img_bd_path;
-
-        if (!picked_path.empty() && MikuPan_PathHasContent(picked_path))
+        MikuPan_GameData found;
+        if (fixed == nullptr)
         {
-            return picked_path;
+            (void)MikuPan_FindArchive(&found);
         }
+
+        const MikuPan_GameData& data = fixed != nullptr ? *fixed : found;
+        const std::string& path =
+            name == "img_hd.bin" ? data.hd_path : data.bd_path;
+        return !path.empty() ? path : folder_path;
+    }
+
+    if ((fixed == nullptr || fixed->use_folder)
+        && MikuPan_PathHasContent(folder_path))
+    {
+        return folder_path;
     }
 
     const std::string disc_name = relative_path.generic_string();
@@ -506,11 +683,10 @@ static void MikuPan_ApplySelectedDataFolder(const std::string& folder)
         return;
     }
 
-    std::strncpy(mikupan_configuration.data_folder,
-                 folder.c_str(),
-                 sizeof(mikupan_configuration.data_folder) - 1);
-    mikupan_configuration
-        .data_folder[sizeof(mikupan_configuration.data_folder) - 1] = '\0';
+    MikuPan_UseDataFolder(folder);
+
+    /// The data this run started with is gone.
+    MikuPan_SetFixedGameData(nullptr);
 
     if (!MikuPan_SaveConfiguration(nullptr))
     {
@@ -706,134 +882,200 @@ MIKUPAN_EXTERN_C void MikuPan_RequestDataFolderSelection(const char *missing_pat
     MikuPan_RequestMissingDataFolderDialogAsync(std::filesystem::path(path));
 }
 
-/// IMG_HD.BIN has one 8-byte entry per file, and every release of the game has
-/// its own number of files, so its size tells the releases apart.
-static bool MikuPan_IsRequiredImgHdSize(int64_t size)
-{
-    return size == static_cast<int64_t>(GetFileNameCount()) * 8;
-}
-
-static std::string MikuPan_GetWrongDiscProblem(const char *subject)
-{
-    return std::string(subject) + " is not from the "
-        + MikuPan_GetRequiredDiscName() + " disc.";
-}
-
-MIKUPAN_EXTERN_C const char *MikuPan_GetRequiredDiscName()
+MikuPanHost::Region MikuPan_GetEngineRegion()
 {
 #ifdef BUILD_EU_VERSION
-    return "Project Zero (PAL)";
+    return MikuPanHost::Region::EU;
 #else
-    return "Fatal Frame (NTSC-U)";
+    return MikuPanHost::Region::US;
 #endif
 }
 
-/// Keeps the mounted image in step with the configuration. This runs every
-/// frame while the data is missing, so a path is only tried once.
-static void MikuPan_SyncDiscImage()
+static bool MikuPan_CheckGameData(const MikuPan_GameData& data,
+                                  MikuPanHost::Region *region)
 {
-    const char *path = mikupan_configuration.iso_path;
-    if (synced_disc_image_path == path)
+    /// Asked every frame while there is nothing to play, and the files may
+    /// still be copying, so a failure only holds for a moment.
+    static std::string failed_files;
+    static Uint64 failed_until = 0;
+    const std::string files = data.hd_path + '\n' + data.bd_path;
+
+    if (files == failed_files && SDL_GetTicks() < failed_until)
     {
-        return;
+        return false;
     }
 
-    synced_disc_image_path = path;
-    disc_image_problem.clear();
+    SDL_IOStream *index = MikuPan_OpenStream(data.hd_path.c_str());
+    SDL_IOStream *archive = MikuPan_OpenStream(data.bd_path.c_str());
+    const GameDataCheck check = CheckGameData(index, archive, region);
 
-    std::string error;
-    if (path[0] == '\0')
+    for (SDL_IOStream *stream : {index, archive})
     {
-        MikuPan_DiscImageUnmount();
-    }
-    else if (!MikuPan_DiscImageMount(path, &error))
-    {
-        MikuPan_DiscImageUnmount();
-        disc_image_problem =
-            "The saved disc image could not be read. Select it again.";
-    }
-}
-
-MIKUPAN_EXTERN_C bool MikuPan_HasRequiredDataFiles(char *missing_file,
-                                             size_t missing_file_size)
-{
-    MikuPan_SyncDiscImage();
-    required_data_problem = disc_image_problem;
-
-    const char *required_files[] = {
-        "IMG_HD.BIN",
-        "IMG_BD.BIN",
-    };
-
-    const char *missing = nullptr;
-    for (const char *required_file : required_files)
-    {
-        if (!MikuPan_PathHasContent(MikuPan_GetDataPathString(required_file)))
+        if (stream != nullptr)
         {
-            missing = required_file;
-            break;
+            SDL_CloseIO(stream);
         }
     }
 
-    if (missing == nullptr
-        && !MikuPan_IsRequiredImgHdSize(MikuPan_GetDataFileSize("IMG_HD.BIN")))
+    switch (check)
     {
-        missing = "IMG_HD.BIN";
-        required_data_problem =
-            MikuPan_GetWrongDiscProblem("The game data that was found");
+        case GameDataCheck::Playable:
+            required_data_problem.clear();
+            return true;
+        case GameDataCheck::Unreadable:
+            required_data_problem = "The game data could not be read.";
+            break;
+        case GameDataCheck::UnsupportedRelease:
+            required_data_problem =
+                std::string("The game data that was found is not ")
+                + kSupportedReleases + ".";
+            break;
+        case GameDataCheck::Mismatched:
+            required_data_problem = "IMG_HD.BIN and IMG_BD.BIN do not belong "
+                                    "together, or one is incomplete.";
+            break;
     }
+
+    failed_files = files;
+    failed_until = SDL_GetTicks() + 1000;
+    return false;
+}
+
+static bool MikuPan_FindGameData(MikuPan_GameData *data,
+                                 MikuPanHost::Region *region)
+{
+    const bool found = MikuPan_FindArchive(data);
+    if (!found)
+    {
+        required_data_problem = disc_image_problem;
+        return false;
+    }
+
+    return MikuPan_CheckGameData(*data, region);
+}
+
+bool MikuPan_FindGameData(MikuPanHost::Region *region)
+{
+    MikuPan_GameData data;
+    return MikuPan_FindGameData(&data, region);
+}
+
+MIKUPAN_EXTERN_C bool MikuPan_PrepareGameData(char *missing_file,
+                                              size_t missing_file_size)
+{
+    /// The textures may still be baking from it.
+    if (MikuPan_GetFixedGameData() != nullptr)
+    {
+        return true;
+    }
+
+    MikuPan_GameData data;
+    MikuPanHost::Region region;
+    const bool found = MikuPan_FindGameData(&data, &region);
 
     if (missing_file != nullptr && missing_file_size > 0)
     {
-        std::strncpy(missing_file, missing != nullptr ? missing : "",
-                     missing_file_size - 1);
+        const char *missing = found                    ? ""
+                              : data.hd_path.empty()   ? "IMG_HD.BIN"
+                                                       : "IMG_BD.BIN";
+        std::strncpy(missing_file, missing, missing_file_size - 1);
         missing_file[missing_file_size - 1] = '\0';
     }
-    return missing == nullptr;
+
+    if (!found)
+    {
+        return false;
+    }
+
+    if (region != MikuPan_GetEngineRegion())
+    {
+        MikuPanHost::RequestRegion(region);
+        return false;
+    }
+
+    spdlog::info("Game data: {} and {}", data.hd_path, data.bd_path);
+    MikuPan_SetFixedGameData(
+        std::make_shared<const MikuPan_GameData>(std::move(data)));
+    return true;
 }
 
 template <size_t N>
-static void MikuPan_SetConfigPath(char (&destination)[N],
+static bool MikuPan_SetConfigPath(char (&destination)[N],
                                   const std::string& path)
 {
-    std::strncpy(destination, path.c_str(), N - 1);
-    destination[N - 1] = '\0';
-}
-
-static int64_t MikuPan_GetStreamSize(const std::string& path)
-{
-    SDL_IOStream *stream = MikuPan_OpenStream(path.c_str());
-    if (stream == nullptr)
+    if (path.size() >= N)
     {
-        return -1;
+        return false;
     }
 
-    const Sint64 size = SDL_GetIOSize(stream);
-    SDL_CloseIO(stream);
-    return size;
+    std::memcpy(destination, path.c_str(), path.size() + 1);
+    return true;
+}
+
+void MikuPan_UseDataFolder(const std::string& folder)
+{
+    if (!MikuPan_SetConfigPath(mikupan_configuration.data_folder, folder))
+    {
+        spdlog::error("The path of the data folder is too long: {}", folder);
+        return;
+    }
+
+    /// A folder of movies or loose files goes with the disc image; one with
+    /// the archive is played instead of it.
+    if (MikuPan_PathHasContent(MikuPan_GetPathInFolder(folder, "IMG_HD.BIN"))
+        && MikuPan_PathHasContent(MikuPan_GetPathInFolder(folder, "IMG_BD.BIN")))
+    {
+        mikupan_configuration.iso_path[0] = '\0';
+        mikupan_configuration.img_hd_path[0] = '\0';
+        mikupan_configuration.img_bd_path[0] = '\0';
+    }
 }
 
 static bool MikuPan_UseDiscImage(const std::string& path, std::string *problem)
 {
-    if (!MikuPan_DiscImageMount(path.c_str(), problem))
+    const auto image = MikuPan_DiscImageIndex(path.c_str(), problem);
+    if (image == nullptr)
     {
         return false;
     }
 
-    /// Whatever the configuration holds comes back on the next sync if this
-    /// image turns out to be the wrong one.
-    synced_disc_image_path = path;
+    SDL_IOStream *index = MikuPan_DiscIndexOpenFile(*image, "IMG_HD.BIN");
+    SDL_IOStream *archive = MikuPan_DiscIndexOpenFile(*image, "IMG_BD.BIN");
+    MikuPanHost::Region region;
+    GameDataCheck check = GameDataCheck::UnsupportedRelease;
 
-    if (!MikuPan_DiscImageHasFile("IMG_HD.BIN")
-        || !MikuPan_DiscImageHasFile("IMG_BD.BIN")
-        || !MikuPan_IsRequiredImgHdSize(MikuPan_GetStreamSize(
-            kDiscPathPrefix + std::string("IMG_HD.BIN"))))
+    if (index != nullptr && archive != nullptr)
     {
-        *problem = MikuPan_GetWrongDiscProblem("That disc image");
+        check = CheckGameData(index, archive, &region);
+    }
+
+    for (SDL_IOStream *stream : {index, archive})
+    {
+        if (stream != nullptr)
+        {
+            SDL_CloseIO(stream);
+        }
+    }
+
+    if (check == GameDataCheck::UnsupportedRelease)
+    {
+        *problem = std::string("That disc image is not ") + kSupportedReleases
+            + ".";
         return false;
     }
 
-    MikuPan_SetConfigPath(mikupan_configuration.iso_path, path);
+    if (check != GameDataCheck::Playable)
+    {
+        *problem = "That file is not a complete disc image.";
+        return false;
+    }
+
+    if (!MikuPan_SetConfigPath(mikupan_configuration.iso_path, path))
+    {
+        *problem = "The path of that file is too long.";
+        return false;
+    }
+
     mikupan_configuration.img_hd_path[0] = '\0';
     mikupan_configuration.img_bd_path[0] = '\0';
     return true;
@@ -844,6 +1086,7 @@ static bool MikuPan_UseArchiveFile(int source, const std::string& path,
 {
     const bool is_hd = source == MIKUPAN_DATA_SOURCE_IMG_HD;
     const int64_t size = MikuPan_GetStreamSize(path);
+    MikuPanHost::Region region;
 
     if (size <= 0)
     {
@@ -851,9 +1094,10 @@ static bool MikuPan_UseArchiveFile(int source, const std::string& path,
         return false;
     }
 
-    if (is_hd && !MikuPan_IsRequiredImgHdSize(size))
+    if (is_hd && !RegionOfIndexSize(size, &region))
     {
-        *problem = MikuPan_GetWrongDiscProblem("That IMG_HD.BIN");
+        *problem = std::string("That IMG_HD.BIN is not from ")
+            + kSupportedReleases + ".";
         return false;
     }
 
@@ -865,22 +1109,31 @@ static bool MikuPan_UseArchiveFile(int source, const std::string& path,
         return false;
     }
 
-    if (is_hd)
+    auto& picked = is_hd ? mikupan_configuration.img_hd_path
+                         : mikupan_configuration.img_bd_path;
+    auto& other = is_hd ? mikupan_configuration.img_bd_path
+                        : mikupan_configuration.img_hd_path;
+
+    if (!MikuPan_SetConfigPath(picked, path))
     {
-        MikuPan_SetConfigPath(mikupan_configuration.img_hd_path, path);
-    }
-    else
-    {
-        MikuPan_SetConfigPath(mikupan_configuration.img_bd_path, path);
+        *problem = "The path of that file is too long.";
+        return false;
     }
 
     /// Its folder becomes the data folder, so that the other archive and the
     /// MOVIE folders are found if they sit beside it, as they do on the disc.
+    /// The other archive picked before may be of another release.
     const size_t separator = path.find_last_of("/\\");
     if (path.rfind("content://", 0) != 0 && separator != std::string::npos)
     {
-        MikuPan_SetConfigPath(mikupan_configuration.data_folder,
-                              path.substr(0, separator + 1));
+        const std::string folder = path.substr(0, separator + 1);
+        (void)MikuPan_SetConfigPath(mikupan_configuration.data_folder, folder);
+
+        if (MikuPan_PathHasContent(MikuPan_GetPathInFolder(
+                folder, is_hd ? "IMG_BD.BIN" : "IMG_HD.BIN")))
+        {
+            other[0] = '\0';
+        }
     }
 
     mikupan_configuration.iso_path[0] = '\0';
@@ -923,15 +1176,27 @@ MIKUPAN_EXTERN_C void MikuPan_BrowseForDataSource(int source)
         data_source_browser_open = true;
     }
 
-    const char *folder = mikupan_configuration.data_folder;
+    /// Start where the disc image picked last time is.
     const bool is_disc = source == MIKUPAN_DATA_SOURCE_DISC_IMAGE;
+    static std::string start;
+    start = mikupan_configuration.data_folder;
+    if (is_disc && mikupan_configuration.iso_path[0] != '\0')
+    {
+        const std::string image = mikupan_configuration.iso_path;
+        const size_t separator = image.find_last_of("/\\");
+        if (image.rfind("content://", 0) != 0
+            && separator != std::string::npos)
+        {
+            start = image.substr(0, separator + 1);
+        }
+    }
 
     SDL_ShowOpenFileDialog(MikuPan_DataSourceBrowsed,
                            reinterpret_cast<void *>(static_cast<intptr_t>(source)),
                            MikuPan_GetUiWindow(),
                            is_disc ? disc_filters : archive_filters,
                            SDL_arraysize(disc_filters),
-                           folder[0] != '\0' ? folder : nullptr,
+                           start.empty() ? nullptr : start.c_str(),
                            false);
 }
 
@@ -971,18 +1236,31 @@ std::string MikuPan_GetDataSourcePath(int source)
         return mikupan_configuration.iso_path;
     }
 
-    const std::string path = MikuPan_GetGameDataPathString(
-        source == MIKUPAN_DATA_SOURCE_IMG_HD ? "IMG_HD.BIN" : "IMG_BD.BIN");
+    MikuPan_GameData data;
+    (void)MikuPan_FindArchive(&data);
+    const std::string& path =
+        source == MIKUPAN_DATA_SOURCE_IMG_HD ? data.hd_path : data.bd_path;
 
-    return !MikuPan_IsDiscPathString(path) && MikuPan_PathHasContent(path)
-        ? path
-        : std::string();
+    return MikuPan_IsDiscPathString(path) ? std::string() : path;
 }
 
 std::string MikuPan_GetDataProblem()
 {
     return !picked_data_source_problem.empty() ? picked_data_source_problem
                                                : required_data_problem;
+}
+
+std::string MikuPan_GetGameDataStatus()
+{
+    if (!picked_data_source_problem.empty())
+    {
+        return picked_data_source_problem;
+    }
+
+    const auto data = MikuPan_GetFixedGameData();
+    return data != nullptr && data->settings != MikuPan_GetDataSettings()
+        ? "Restart MikuPan to apply the change."
+        : std::string();
 }
 
 static void SDLCALL MikuPan_MissingDataFolderSelected(
@@ -1529,8 +1807,7 @@ bool MikuPan_ResolveCdPath(const char* path, char* buffer, size_t buffer_size)
         const std::filesystem::path relative_data_path(s);
         const bool required_archive =
             MikuPan_IsRequiredArchiveDataFile(relative_data_path);
-        const char *folder = mikupan_configuration.data_folder;
-        if (folder != nullptr && MikuPan_IsAndroidTreeUriString(folder))
+        if (MikuPan_IsAndroidTreeUriString(MikuPan_GetActiveDataFolder()))
         {
             std::string resolved_path = MikuPan_GetDataPathString(s);
             if (MikuPan_GetSdlFileSize(resolved_path.c_str()) == 0)

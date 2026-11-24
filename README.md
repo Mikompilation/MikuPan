@@ -11,20 +11,16 @@ MikuPan is an in progress port of Fatal Frame 1 PS2 to PC running natively, no e
 For now, building in `debug` is highly recommended due to issues related to the `release` build. The build process was made to automatically fetch all required dependencies of the project.
 
 ## CMake presets
-Use the CMake presets to switch between the NTSC-U and PAL/EU builds without
-editing cache variables manually. The default presets target NTSC-U game data;
-the `*-eu` presets set `BUILD_EU_VERSION=ON` and target PAL/EU game data.
-
 ```powershell
 cmake --preset debug
 cmake --build --preset debug
-
-cmake --preset debug-eu
-cmake --build --preset debug-eu
 ```
 
-Available native presets are `debug`, `debug-eu`, `release`, `release-eu`,
-`relwithdebinfo`, and `relwithdebinfo-eu`.
+Available native presets are `debug`, `release`, and `relwithdebinfo`.
+
+There is one build for every release of the game: the executable holds an
+engine for NTSC-U and one for PAL/EU, and starts the one that plays the game
+data it finds.
 
 ## Assets
 MikuPan needs your own copy of the game. If it cannot find the game data it asks for it on launch, and saves your choice under `[paths]` in `mikupan.ini`:
@@ -32,16 +28,19 @@ MikuPan needs your own copy of the game. If it cannot find the game data it asks
 - **A disc image (`.iso`).** It is read as it is, so nothing is copied, and the cutscenes come with it.
 - **`IMG_HD.BIN` and `IMG_BD.BIN`** from the disc. Cutscenes play if the `MOVIE` folders sit beside them.
 
-Use the NTSC-U (USA) ISO with the default presets, or the PAL (EU) ISO with an `*-eu` preset. NTSC-J (Japan) ISOs will *NOT* work as the game data, but one can add an undub, below.
+Both Fatal Frame (NTSC-U) and Project Zero (PAL) work. NTSC-J (Japan) ISOs will *NOT* work as the game data, but one can add an undub, below.
 
-To skip the question, copy the files to the folder containing the `MikuPan` executable, located at `{CMake-Build-Directory}/MikuPan`. Files in the data folder always take priority over a disc image.
+To skip the question, copy the files to the folder containing the `MikuPan` executable, located at `{CMake-Build-Directory}/MikuPan`.
+
+To play another release, select its disc image in **Settings > Game > Disc Image**, or its folder in **Data Folder**; what you selected last is played, from the next launch on. Other loose files in the data folder, such as movies, take priority over the ones on the disc image.
 
 
 ![logo](extern/required-files.png)
 
 On first launch MikuPan converts the model and 2D textures of these files once
-(a few seconds) into `IMG_TEX.BIN` next to its configuration; the game data
-itself is not modified. Delete `IMG_TEX.BIN` to convert again.
+(a few seconds) into `IMG_TEX.BIN`, or `IMG_TEX_EU.BIN` for PAL, next to its
+configuration; the game data itself is not modified. Delete that file to
+convert again.
 
 Optionally, run [sgdstitch](tools/sgdstitch/README.md) on the two files to merge
 the small PS2-sized mesh batches of the 3D models: characters need about half
@@ -54,8 +53,8 @@ English releases changed her model), while text and menus stay those of your
 release. In **Settings > Special**, select the Japanese disc image, or its
 `IMG_HD.BIN` in a folder that also holds `IMG_BD.BIN` and the `MOVIE` folders,
 and switch **Japanese Undub** on. It applies the next time MikuPan starts, and
-the first start bakes Miku's original model into `IMG_TEX_UNDUB.BIN` next to
-`IMG_TEX.BIN`. Nothing is copied from the Japanese disc. The choice is saved
+the first start bakes Miku's original model into `IMG_TEX_UNDUB.BIN`, or
+`IMG_TEX_EU_UNDUB.BIN` for PAL, next to `IMG_TEX.BIN`. Nothing is copied from the Japanese disc. The choice is saved
 under `[undub]` in `mikupan.ini`.
 
 ## Windows
@@ -209,9 +208,9 @@ to retain changes. Effects and screen captures keep their original filtering.
 
 Open **Settings → PS2 save transfer…** in the overlay to transfer gameplay saves.
 Import Japanese (SLPS-25074), US (SLUS-20388), European (SLES-50821),
-Korean (SCPS-56008), or Asian (SCPS-55043) saves into either PC build. The source region is detected from the
+Korean (SCPS-56008), or Asian (SCPS-55043) saves into either release. The source region is detected from the
 save files. For export, choose the original game's region before the format.
-Cross-region exports to Europe default to English/PAL; imports into an EU build
+Cross-region exports to Europe default to English/PAL; imports into the EU release
 use its current language and display settings.
 
 Import from an extracted save folder, an 8 MB memory card, or a PSU/MAX/XPS/SPS/CBS

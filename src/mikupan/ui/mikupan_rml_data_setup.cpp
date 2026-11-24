@@ -193,9 +193,9 @@ void SyncValues(bool has_problem)
 void SyncStatus(const std::string& problem)
 {
     const std::string status =
-        problem.empty() ? std::string("This build plays the ")
-                + MikuPan_GetRequiredDiscName() + " disc."
-                        : problem;
+        problem.empty()
+            ? "MikuPan plays Fatal Frame (NTSC-U) and Project Zero (PAL)."
+            : problem;
 
     if (status != g_data_setup.shown_status)
     {

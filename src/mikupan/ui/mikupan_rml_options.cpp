@@ -1476,6 +1476,26 @@ Page GamePage(void)
 
     rows.push_back(Heading("Files"));
     {
+        Row disc = Action(
+            "Disc Image",
+            [] {
+                return T("The disc image of the game to play, Fatal Frame (NTSC-U) or "
+                         "Project Zero (PAL).")
+                    + " " + T("Select it to browse; a change applies on the next launch.");
+            },
+            "Browse", [] { MikuPan_BrowseForDataSource(MIKUPAN_DATA_SOURCE_DISC_IMAGE); });
+        disc.plain = true;
+        disc.action_text = [] {
+            const char* path = mikupan_configuration.iso_path;
+            return path[0] != '\0' ? TailOf(path, 34) : T("Not set");
+        };
+        rows.push_back(std::move(disc));
+    }
+    rows.push_back(StatusNote([] {
+        const std::string status = MikuPan_GetGameDataStatus();
+        return status.empty() ? status : T(status.c_str());
+    }));
+    {
         Row folder = Action(
             "Data Folder",
             [] {
