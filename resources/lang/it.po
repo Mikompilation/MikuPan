@@ -1494,3 +1494,76 @@ msgstr "Usa i caratteri HD se disponibili"
 
 msgid "Use matching HD font textures when installed; otherwise use the original fonts."
 msgstr "Usa le texture dei caratteri HD corrispondenti se installate; altrimenti usa i caratteri originali."
+
+# --- gyro aiming (mikupan_rml_options.cpp / mikupan_controller.cpp) ---
+msgid "Gyro"
+msgstr "Giroscopio"
+
+msgid "Finder Gyro"
+msgstr "Giroscopio del mirino"
+
+msgid "Gyro Aiming"
+msgstr "Mira giroscopica"
+
+msgid "Aim the raised Camera Obscura by moving the controller, alongside the stick."
+msgstr "Mira con la Camera Obscura muovendo il controller, insieme alla levetta."
+
+msgid "No controller is connected."
+msgstr "Nessun controller collegato."
+
+msgid "This controller has no gyro."
+msgstr "Questo controller non ha un giroscopio."
+
+msgid "Learning its drift: set it down and keep it still."
+msgstr "Apprendimento della deriva: lascia il controller immobile."
+
+msgid "Its drift is learned whenever it lies still."
+msgstr "La deriva viene appresa quando il controller è immobile."
+
+msgid "Gyro Sensitivity"
+msgstr "Sensibilità giroscopica"
+
+msgid "1.00x turns the view as far as the controller turns."
+msgstr "A 1,00× la visuale ruota quanto il controller."
+
+msgid "Turn With"
+msgstr "Ruota con"
+
+msgid "Yaw: point the controller left and right. Roll: tip it sideways like a wheel."
+msgstr "Imbardata: orienta il controller a sinistra/destra. Rollio: inclinalo come un volante."
+
+msgid "Yaw"
+msgstr "Imbardata"
+
+msgid "Roll"
+msgstr "Rollio"
+
+msgid "Pitch"
+msgstr "Beccheggio"
+
+msgid "Invert Gyro X"
+msgstr "Inverti X del giroscopio"
+
+msgid "Invert Gyro Y"
+msgstr "Inverti Y del giroscopio"
+
+msgid "Swap left and right."
+msgstr "Scambia sinistra e destra."
+
+msgid "Swap up and down."
+msgstr "Scambia su e giù."
+
+msgid "Recalibrate Gyro"
+msgstr "Ricalibra giroscopio"
+
+msgid "Forget the learned drift; set the controller down and keep it still to learn it again."
+msgstr "Dimentica la deriva appresa. Appoggia il controller immobile per ricalibrarlo."
+
+msgid "Recalibrate"
+msgstr "Ricalibra"
+
+msgid "Reset Gyro"
+msgstr "Ripristina giroscopio"
+
+msgid "Gyro aiming back to its defaults."
+msgstr "Ripristina la mira giroscopica predefinita."

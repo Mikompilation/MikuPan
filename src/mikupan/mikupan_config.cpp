@@ -1,5 +1,6 @@
 #include "mikupan_config.h"
 #include "mikupan_utils.h"
+#include "mikupan/io/mikupan_finder_gyro.h"
 
 #define MIKUPAN_CONFIG_THEME_COUNT 7
 #define MIKUPAN_CONFIG_FONT_COUNT 3
@@ -98,7 +99,14 @@ MikuPan_Config mikupan_configuration = {
     },
     {
         -1,
-        1
+        1,
+        {
+            1,
+            MIKUPAN_FINDER_GYRO_SENSITIVITY_DEFAULT,
+            0,
+            0,
+            MIKUPAN_FINDER_GYRO_TURN_YAW
+        }
     },
     "",
     1
@@ -348,6 +356,23 @@ static void MikuPan_ConfigurationValidateInput(MikuPan_ConfigInput* input)
     if (input->finder_mouse_sensitivity < 0.0f)
     {
         input->finder_mouse_sensitivity = 0.0f;
+    }
+
+    input->finder_gyro.enabled = input->finder_gyro.enabled ? 1 : 0;
+    /* Written so a NaN from a hand-edited file lands on the floor too. */
+    if (!(input->finder_gyro.sensitivity >= MIKUPAN_FINDER_GYRO_SENSITIVITY_MIN))
+    {
+        input->finder_gyro.sensitivity = MIKUPAN_FINDER_GYRO_SENSITIVITY_MIN;
+    }
+    else if (input->finder_gyro.sensitivity > MIKUPAN_FINDER_GYRO_SENSITIVITY_MAX)
+    {
+        input->finder_gyro.sensitivity = MIKUPAN_FINDER_GYRO_SENSITIVITY_MAX;
+    }
+    input->finder_gyro.invert_x = input->finder_gyro.invert_x ? 1 : 0;
+    input->finder_gyro.invert_y = input->finder_gyro.invert_y ? 1 : 0;
+    if (input->finder_gyro.turn_axis != MIKUPAN_FINDER_GYRO_TURN_ROLL)
+    {
+        input->finder_gyro.turn_axis = MIKUPAN_FINDER_GYRO_TURN_YAW;
     }
 }
 

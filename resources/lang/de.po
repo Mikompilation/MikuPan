@@ -1494,3 +1494,76 @@ msgstr "HD-Schriftarten verwenden, falls verfügbar"
 
 msgid "Use matching HD font textures when installed; otherwise use the original fonts."
 msgstr "Passende HD-Schrifttexturen verwenden, wenn sie installiert sind; andernfalls die Originalschriftarten verwenden."
+
+# --- gyro aiming (mikupan_rml_options.cpp / mikupan_controller.cpp) ---
+msgid "Gyro"
+msgstr "Gyrosensor"
+
+msgid "Finder Gyro"
+msgstr "Gyrosensor im Sucher"
+
+msgid "Gyro Aiming"
+msgstr "Gyro-Zielen"
+
+msgid "Aim the raised Camera Obscura by moving the controller, alongside the stick."
+msgstr "Mit dem Controller zusätzlich zum Stick die erhobene Kamera Obscura ausrichten."
+
+msgid "No controller is connected."
+msgstr "Kein Controller angeschlossen."
+
+msgid "This controller has no gyro."
+msgstr "Dieser Controller hat keinen Gyrosensor."
+
+msgid "Learning its drift: set it down and keep it still."
+msgstr "Drift wird gelernt: den Controller ruhig ablegen."
+
+msgid "Its drift is learned whenever it lies still."
+msgstr "Die Drift wird bei ruhendem Controller gelernt."
+
+msgid "Gyro Sensitivity"
+msgstr "Gyro-Empfindlichkeit"
+
+msgid "1.00x turns the view as far as the controller turns."
+msgstr "Bei 1,00× dreht sich die Ansicht genauso weit wie der Controller."
+
+msgid "Turn With"
+msgstr "Drehen mit"
+
+msgid "Yaw: point the controller left and right. Roll: tip it sideways like a wheel."
+msgstr "Gieren: Controller nach links/rechts drehen. Rollen: wie ein Lenkrad seitlich kippen."
+
+msgid "Yaw"
+msgstr "Gierbewegung"
+
+msgid "Roll"
+msgstr "Rollbewegung"
+
+msgid "Pitch"
+msgstr "Nickbewegung"
+
+msgid "Invert Gyro X"
+msgstr "Gyro-X umkehren"
+
+msgid "Invert Gyro Y"
+msgstr "Gyro-Y umkehren"
+
+msgid "Swap left and right."
+msgstr "Links und rechts vertauschen."
+
+msgid "Swap up and down."
+msgstr "Oben und unten vertauschen."
+
+msgid "Recalibrate Gyro"
+msgstr "Gyrosensor neu kalibrieren"
+
+msgid "Forget the learned drift; set the controller down and keep it still to learn it again."
+msgstr "Gelernte Drift verwerfen. Den Controller zum Neulernen ruhig ablegen."
+
+msgid "Recalibrate"
+msgstr "Neu kalibrieren"
+
+msgid "Reset Gyro"
+msgstr "Gyro zurücksetzen"
+
+msgid "Gyro aiming back to its defaults."
+msgstr "Gyro-Zielen auf Standardwerte zurücksetzen."

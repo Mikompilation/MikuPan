@@ -179,10 +179,21 @@ typedef struct
     float master;
 } MikuPan_ConfigAudio;
 
+/* Gyro aiming in the finder; see mikupan_finder_gyro.h. */
+typedef struct
+{
+    int enabled;
+    float sensitivity;
+    int invert_x;
+    int invert_y;
+    int turn_axis;
+} MikuPan_ConfigFinderGyro;
+
 typedef struct
 {
     int selected_gamepad_index;
     int rumble_enabled;
+    MikuPan_ConfigFinderGyro finder_gyro;
 
     /* Saved controller / keyboard bindings. Sizes mirror
      * MIKUPAN_CONTROLLER_LOGICAL_COUNT (16) and MIKUPAN_STICK_COUNT (4) from

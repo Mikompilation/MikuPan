@@ -1494,3 +1494,76 @@ msgstr "Utiliser les polices HD si disponibles"
 
 msgid "Use matching HD font textures when installed; otherwise use the original fonts."
 msgstr "Utiliser les textures de polices HD correspondantes si elles sont installées ; sinon, utiliser les polices originales."
+
+# --- gyro aiming (mikupan_rml_options.cpp / mikupan_controller.cpp) ---
+msgid "Gyro"
+msgstr "Gyroscope"
+
+msgid "Finder Gyro"
+msgstr "Gyroscope du viseur"
+
+msgid "Gyro Aiming"
+msgstr "Visée gyroscopique"
+
+msgid "Aim the raised Camera Obscura by moving the controller, alongside the stick."
+msgstr "Visez avec la Camera Obscura en bougeant la manette, en complément du stick."
+
+msgid "No controller is connected."
+msgstr "Aucune manette n'est connectée."
+
+msgid "This controller has no gyro."
+msgstr "Cette manette n'a pas de gyroscope."
+
+msgid "Learning its drift: set it down and keep it still."
+msgstr "Apprentissage de la dérive : posez la manette immobile."
+
+msgid "Its drift is learned whenever it lies still."
+msgstr "La dérive est apprise lorsque la manette reste immobile."
+
+msgid "Gyro Sensitivity"
+msgstr "Sensibilité gyroscopique"
+
+msgid "1.00x turns the view as far as the controller turns."
+msgstr "À 1,00×, la vue tourne autant que la manette."
+
+msgid "Turn With"
+msgstr "Tourner avec"
+
+msgid "Yaw: point the controller left and right. Roll: tip it sideways like a wheel."
+msgstr "Lacet : tourner la manette à gauche/droite. Roulis : l'incliner comme un volant."
+
+msgid "Yaw"
+msgstr "Lacet"
+
+msgid "Roll"
+msgstr "Roulis"
+
+msgid "Pitch"
+msgstr "Tangage"
+
+msgid "Invert Gyro X"
+msgstr "Inverser X gyroscopique"
+
+msgid "Invert Gyro Y"
+msgstr "Inverser Y gyroscopique"
+
+msgid "Swap left and right."
+msgstr "Inverser gauche et droite."
+
+msgid "Swap up and down."
+msgstr "Inverser haut et bas."
+
+msgid "Recalibrate Gyro"
+msgstr "Recalibrer le gyroscope"
+
+msgid "Forget the learned drift; set the controller down and keep it still to learn it again."
+msgstr "Effacer la dérive apprise. Posez la manette immobile pour la recalibrer."
+
+msgid "Recalibrate"
+msgstr "Recalibrer"
+
+msgid "Reset Gyro"
+msgstr "Réinitialiser le gyroscope"
+
+msgid "Gyro aiming back to its defaults."
+msgstr "Rétablir la visée gyroscopique par défaut."

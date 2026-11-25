@@ -23,6 +23,7 @@
 #include "iop/adpcm/iopadpcm.h"
 #include "iop/iopmain.h"
 #include "mikupan/io/mikupan_controller.h"
+#include "mikupan/io/mikupan_finder_gyro.h"
 #include "mikupan/io/mikupan_file_c.h"
 #include "mikupan/ui/mikupan_ui.h"
 #include "os/eeiop/se_cmd.h"
@@ -138,6 +139,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     MikuPan_Clear();
     MikuPan_StartFrameUi();
     MikuPan_LegacyMouseBeginFrame();
+    MikuPan_FinderGyroBeginFrame();
 
     if (!mikupan_game_initialized)
     {

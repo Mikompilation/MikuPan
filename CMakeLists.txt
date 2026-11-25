@@ -346,6 +346,8 @@ set(MIKUPAN_SOURCES
         src/mikupan/mikupan_audio_bus.h
         "src/mikupan/io/mikupan_controller.cpp"
         "src/mikupan/io/mikupan_controller.h"
+        "src/mikupan/io/mikupan_finder_gyro.cpp"
+        "src/mikupan/io/mikupan_finder_gyro.h"
         src/mikupan/mikupan_screenshot.cpp
         src/mikupan/mikupan_screenshot.h
         src/mikupan/mikupan_rng.cpp
@@ -383,6 +385,7 @@ set(MIKUPAN_NATIVE_CXX_SOURCES
         "src/mikupan/mikupan_config_ini.cpp"
         "src/mikupan/debug/mikupan_logging.cpp"
         "src/mikupan/io/mikupan_file.cpp"
+        "src/mikupan/io/mikupan_finder_gyro.cpp"
         "src/mikupan/rendering/mikupan_flashlight_dust.cpp"
         "src/mikupan/ui/mikupan_rml_message_box.cpp"
         "src/mikupan/ui/mikupan_rml_mode_select.cpp"

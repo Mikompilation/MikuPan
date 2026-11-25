@@ -1,4 +1,5 @@
 #include "mikupan_controller.h"
+#include "mikupan_finder_gyro.h"
 #include "SDL3/SDL_scancode.h"
 #include "mikupan/mikupan_config.h"
 #include "mikupan/debug/mikupan_logging_c.h"
@@ -270,6 +271,7 @@ static void MikuPan_CloseCurrentGamepad(void)
     if (mikupan_gamepad != NULL)
     {
         SDL_RumbleGamepad(mikupan_gamepad, 0, 0, 0);
+        MikuPan_FinderGyroSetGamepad(NULL);
         SDL_CloseGamepad(mikupan_gamepad);
         mikupan_gamepad = NULL;
     }
@@ -346,6 +348,8 @@ void MikuPan_ControllerProcessEvent(const SDL_Event *event)
     {
         return;
     }
+
+    MikuPan_FinderGyroProcessEvent(event);
 
     if (event->type == SDL_EVENT_MOUSE_MOTION)
     {
@@ -787,6 +791,7 @@ int MikuPan_OpenController()
         const char *safe_name = (name != NULL && name[0] != '\0') ? name : "<unknown controller>";
         info_log("Controller %d connected: %s",
                  selected_index + 1, safe_name);
+        MikuPan_FinderGyroSetGamepad(mikupan_gamepad);
     }
     else
     {
@@ -825,6 +830,7 @@ void MikuPan_ControllerResetBindings(void)
     MikuPan_InputBindingCaptureReset();
     finder_mouse_enabled = 1;
     finder_mouse_sensitivity = 1.0f;
+    MikuPan_FinderGyroResetSettings();
     MikuPan_SetControllerRumbleEnabled(1);
     MikuPan_SetFinderDpadFilmSwapEnabled(0);
     MikuPan_SetMirrorStoneHudEnabled(0);
@@ -2658,6 +2664,117 @@ static void MikuPan_ControllerDrawMovementModeCombo(
     }
 }
 
+/* Finder gyro aiming.  The status lines are what make it checkable from here:
+ * whether the pad has a gyro at all, whether it is reporting, which way a turn
+ * reads, and whether the drift has been learned. */
+static void MikuPan_ControllerDrawFinderGyroUi(void)
+{
+    MikuPan_FinderGyroStatus status;
+    MikuPan_FinderGyroGetStatus(&status);
+
+    igPushID_Str("finder_gyro");
+    igPushTextWrapPos(0.0f);
+    igSeparatorText(MikuPan_Translate("Finder Gyro"));
+    igTextDisabled("%s", MikuPan_Translate("Aim the raised Camera Obscura by moving the "
+                   "controller, alongside the stick."));
+
+    bool enabled = MikuPan_FinderGyroEnabled() != 0;
+    if (igCheckbox(MikuPan_Translate("Gyro Aiming"), &enabled))
+    {
+        MikuPan_SetFinderGyroEnabled(enabled ? 1 : 0);
+    }
+    igSameLine(0.0f, -1.0f);
+    if (!status.has_gamepad)
+    {
+        igTextDisabled("%s", MikuPan_Translate("No controller connected."));
+    }
+    else if (!status.has_gyro)
+    {
+        igTextDisabled("%s", MikuPan_Translate("This controller has no gyro."));
+    }
+    else if (status.active && status.rate_hz > 0.0f)
+    {
+        igTextDisabled("%.0f Hz", (double) status.rate_hz);
+    }
+    else
+    {
+        igTextDisabled("%s", MikuPan_Translate(status.active ? "On" : "Off"));
+    }
+
+    igBeginDisabled(!enabled);
+    float sensitivity = MikuPan_FinderGyroSensitivity();
+    igSetNextItemWidth(220.0f);
+    if (igSliderFloat(MikuPan_Translate("Gyro Sensitivity"), &sensitivity,
+                      MIKUPAN_FINDER_GYRO_SENSITIVITY_MIN,
+                      MIKUPAN_FINDER_GYRO_SENSITIVITY_MAX, "%.2fx",
+                      ImGuiSliderFlags_Logarithmic))
+    {
+        MikuPan_SetFinderGyroSensitivity(sensitivity);
+    }
+    igTextDisabled("%s", MikuPan_Translate("1.00x turns the view as far as the controller turns."));
+
+    const char *turn_axes[] = {MikuPan_Translate("Yaw"), MikuPan_Translate("Roll")};
+    int axis = MikuPan_FinderGyroTurnAxis();
+    igSetNextItemWidth(220.0f);
+    if (igCombo_Str_arr(MikuPan_Translate("Turn With"), &axis, turn_axes, 2, -1))
+    {
+        MikuPan_SetFinderGyroTurnAxis(axis);
+    }
+    igTextDisabled("%s", MikuPan_Translate("Yaw: point the controller left and right. "
+                   "Roll: tip it sideways like a wheel."));
+
+    bool invert_x = MikuPan_FinderGyroInvertX() != 0;
+    if (igCheckbox(MikuPan_Translate("Invert Gyro X"), &invert_x))
+    {
+        MikuPan_SetFinderGyroInvertX(invert_x ? 1 : 0);
+    }
+    igSameLine(0.0f, -1.0f);
+    bool invert_y = MikuPan_FinderGyroInvertY() != 0;
+    if (igCheckbox(MikuPan_Translate("Invert Gyro Y"), &invert_y))
+    {
+        MikuPan_SetFinderGyroInvertY(invert_y ? 1 : 0);
+    }
+    igEndDisabled();
+
+    igBeginDisabled(MikuPan_FinderGyroSettingsAreDefault() != 0);
+    if (igButton(MikuPan_Translate("Reset Gyro"), ImVec2{0, 0}))
+    {
+        MikuPan_FinderGyroResetSettings();
+    }
+    igEndDisabled();
+
+    /* Live, before sensitivity, so it reads the same whatever the slider says:
+     * turning the pad right should read positive yaw, lifting its far edge
+     * positive pitch. */
+    if (status.active)
+    {
+        igSameLine(0.0f, -1.0f);
+        if (igButton(MikuPan_Translate("Recalibrate Gyro"), ImVec2{0, 0}))
+        {
+            MikuPan_FinderGyroRecalibrate();
+        }
+
+        igText("%s %+7.1f   %s %+7.1f   deg/s",
+               MikuPan_Translate("Yaw"), (double) status.rate_yaw_deg,
+               MikuPan_Translate("Pitch"), (double) status.rate_pitch_deg);
+        if (status.calibration < 1.0f)
+        {
+            igTextDisabled("%s (%.0f%%)",
+                           MikuPan_Translate("Learning its drift: set it down and keep it still."),
+                           (double) (status.calibration * 100.0f));
+        }
+        else
+        {
+            igTextDisabled("%s (%+.2f / %+.2f / %+.2f deg/s)",
+                           MikuPan_Translate("Its drift is learned whenever it lies still."),
+                           (double) status.bias_deg[0], (double) status.bias_deg[1],
+                           (double) status.bias_deg[2]);
+        }
+    }
+    igPopTextWrapPos();
+    igPopID();
+}
+
 static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
 {
     bool enabled = MikuPan_IsCustomActionProfileEnabled() != 0;
@@ -2738,6 +2855,8 @@ static void MikuPan_ControllerDrawActionProfileSettingsUi(void)
 
     igTextDisabled("%s", MikuPan_Translate("Vertical aim follows the \"Reverse finder vertical aim\" "
                    "option above."));
+
+    MikuPan_ControllerDrawFinderGyroUi();
 }
 
 static void MikuPan_ControllerDrawActionProfileMapsUi(void)

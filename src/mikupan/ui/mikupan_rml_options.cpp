@@ -8,6 +8,7 @@
 #include "mikupan/mikupan_utils.h"
 #include "mikupan/io/mikupan_file.h"
 #include "mikupan/io/mikupan_controller.h"
+#include "mikupan/io/mikupan_finder_gyro.h"
 #include "mikupan/gameplay/mikupan_item_icon_hud.h"
 #include "mikupan/mikupan_i18n.h"
 #include "os/key_cnf.h"
@@ -1499,6 +1500,33 @@ const char* ButtonLabel(int index)
     return kLabels[index];
 }
 
+bool GyroOn(void)
+{
+    return MikuPan_FinderGyroEnabled() != 0;
+}
+
+/* What it does, and whether it can: the pad, its gyro, its calibration. */
+std::string GyroHelp(void)
+{
+    MikuPan_FinderGyroStatus status;
+    MikuPan_FinderGyroGetStatus(&status);
+    const char* state = "Its drift is learned whenever it lies still.";
+    if (status.has_gamepad == 0)
+    {
+        state = "No controller is connected.";
+    }
+    else if (status.has_gyro == 0)
+    {
+        state = "This controller has no gyro.";
+    }
+    else if (status.active != 0 && status.calibration < 1.0f)
+    {
+        state = "Learning its drift: set it down and keep it still.";
+    }
+    return T("Aim the raised Camera Obscura by moving the controller, alongside the stick.")
+           + " " + T(state);
+}
+
 Page ControlsPage(void)
 {
     Page page{"controls", "Controls", {}};
@@ -1561,6 +1589,49 @@ Page ControlsPage(void)
             [i] { return mikupan_stick_controller_map[i].invert != 0; },
             [i](bool on) { mikupan_stick_controller_map[i].invert = on ? 1 : 0; }));
     }
+
+    rows.push_back(Heading("Gyro"));
+    rows.push_back(Toggle(
+        "Gyro Aiming", GyroHelp, GyroOn,
+        [](bool on) { MikuPan_SetFinderGyroEnabled(on ? 1 : 0); }));
+    rows.push_back(When(
+        Neutral(Slider("Gyro Sensitivity",
+                       Fixed("1.00x turns the view as far as the controller turns."),
+                       MIKUPAN_FINDER_GYRO_SENSITIVITY_MIN,
+                       MIKUPAN_FINDER_GYRO_SENSITIVITY_MAX, 0.1f,
+                       [] { return MikuPan_FinderGyroSensitivity(); },
+                       [](float value) { MikuPan_SetFinderGyroSensitivity(value); },
+                       Format("%.2fx")),
+                MIKUPAN_FINDER_GYRO_SENSITIVITY_DEFAULT),
+        GyroOn));
+    rows.push_back(When(
+        Choice("Turn With",
+               Fixed("Yaw: point the controller left and right. Roll: tip it sideways like a wheel."),
+               {"Yaw", "Roll"}, [] { return MikuPan_FinderGyroTurnAxis(); },
+               [](int axis) { MikuPan_SetFinderGyroTurnAxis(axis); }),
+        GyroOn));
+    rows.push_back(When(
+        Toggle("Invert Gyro X", Fixed("Swap left and right."),
+               [] { return MikuPan_FinderGyroInvertX() != 0; },
+               [](bool on) { MikuPan_SetFinderGyroInvertX(on ? 1 : 0); }),
+        GyroOn));
+    rows.push_back(When(
+        Toggle("Invert Gyro Y", Fixed("Swap up and down."),
+               [] { return MikuPan_FinderGyroInvertY() != 0; },
+               [](bool on) { MikuPan_SetFinderGyroInvertY(on ? 1 : 0); }),
+        GyroOn));
+    rows.push_back(When(
+        Action("Recalibrate Gyro",
+               Fixed("Forget the learned drift; set the controller down and keep it still to learn it again."),
+               "Recalibrate", [] { MikuPan_FinderGyroRecalibrate(); }),
+        GyroOn));
+    rows.push_back(When(
+        Action("Reset Gyro", Fixed("Gyro aiming back to its defaults."), "Reset",
+               [] {
+                   MikuPan_FinderGyroResetSettings();
+                   MarkDirty();
+               }),
+        [] { return MikuPan_FinderGyroSettingsAreDefault() == 0; }));
 
     rows.push_back(Heading(""));
     rows.push_back(Action(

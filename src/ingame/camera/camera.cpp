@@ -25,6 +25,7 @@
 #include "enums.h"
 #include "main/glob.h"
 #include "mikupan/io/mikupan_controller.h"
+#include "mikupan/io/mikupan_finder_gyro.h"
 #include "mikupan/gameplay/mikupan_first_person.h"
 #include "os/key_cnf.h"
 
@@ -2332,6 +2333,11 @@ void FinderModeCameraCtrl()
 
     mb = &plyr_wrk.move_box;
 
+    /* The finder is up. Asked here and not in SetFinderRot(), so that a scripted
+     * swing or the paralysis, which take the aim away for a few frames, are not
+     * mistaken for a time when the pad's drift may be learned. */
+    MikuPan_FinderGyroRequest();
+
     if (plyr_wrk.move_mot == 11)
     {
         tv[0] = 0.0f;
@@ -2802,7 +2808,9 @@ void SetFinderRot()
 
     RotLimitChk(&plyr_wrk.frot_x);
 
-    /* Finder mouse-look: drive yaw/pitch straight from relative mouse motion.
+    /* Finder mouse-look and gyro: drive yaw/pitch straight from relative mouse
+     * motion and the controller's own turn. Neither goes through the stick,
+     * which FinderModePadChk() reduces to on/off at one of three fixed rates.
      * Requesting each aiming frame keeps the cursor captured (see
      * MikuPan_FinderMouseUpdate); the reticle stays centred because no stick
      * input is reported, giving a clean first-person feel. */
@@ -2812,12 +2820,36 @@ void SetFinderRot()
         float mdy = 0.0f;
         float sens;
         float fov_scale;
-        float pitch;
+        float look_yaw = 0.0f;
+        float look_pitch = 0.0f;
+        float gyro_yaw = 0.0f;
+        float gyro_pitch = 0.0f;
 
         if (MikuPan_FinderMouseConsume(&mdx, &mdy))
         {
             sens = MikuPan_FinderMouseSensitivity() * FINDER_MOUSE_RAD_PER_PIXEL;
 
+            look_yaw = mdx * sens;
+
+            /* Screen-up is negative dy; by default moving the mouse up looks
+             * up, matching the stick (which adds delta on pad_y < 0). */
+            look_pitch = -mdy * sens;
+            if (MikuPan_KeyProfileUsesFinderReverseY())
+            {
+                look_pitch = -look_pitch;
+            }
+        }
+
+        /* The gyro has inverts of its own: reversing the stick's vertical axis
+         * says nothing about which way a tilted controller should look. */
+        if (MikuPan_FinderGyroLook(&gyro_yaw, &gyro_pitch))
+        {
+            look_yaw += gyro_yaw;
+            look_pitch += gyro_pitch;
+        }
+
+        if (look_yaw != 0.0f || look_pitch != 0.0f)
+        {
             /* Aim more slowly as the finder zooms in (narrower fov). */
             fov_scale = camera.fov / DEG2RAD(51.0f);
             if (fov_scale > 1.0f)
@@ -2828,20 +2860,11 @@ void SetFinderRot()
             {
                 fov_scale = 0.25f;
             }
-            sens *= fov_scale;
 
-            mb->rot[1] += mdx * sens;
+            mb->rot[1] += look_yaw * fov_scale;
             RotLimitChk(&mb->rot[1]);
 
-            /* Screen-up is negative dy; by default moving the mouse up looks
-             * up, matching the stick (which adds delta on pad_y < 0). */
-            pitch = -mdy * sens;
-            if (MikuPan_KeyProfileUsesFinderReverseY())
-            {
-                pitch = -pitch;
-            }
-
-            plyr_wrk.frot_x += pitch;
+            plyr_wrk.frot_x += look_pitch * fov_scale;
             if (plyr_wrk.frot_x > DEG2RAD(60.0f))
             {
                 plyr_wrk.frot_x = DEG2RAD(60.0f);

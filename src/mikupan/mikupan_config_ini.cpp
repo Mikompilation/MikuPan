@@ -279,6 +279,16 @@ bool TryLoadConfigurationFile(const std::filesystem::path& path)
                mikupan_configuration.input.selected_gamepad_index);
     ApplyValue(ini, "input", "rumble_enabled",
                mikupan_configuration.input.rumble_enabled);
+    ApplyValue(ini, "input", "finder_gyro_enabled",
+               mikupan_configuration.input.finder_gyro.enabled);
+    ApplyValue(ini, "input", "finder_gyro_sensitivity",
+               mikupan_configuration.input.finder_gyro.sensitivity);
+    ApplyValue(ini, "input", "finder_gyro_invert_x",
+               mikupan_configuration.input.finder_gyro.invert_x);
+    ApplyValue(ini, "input", "finder_gyro_invert_y",
+               mikupan_configuration.input.finder_gyro.invert_y);
+    ApplyValue(ini, "input", "finder_gyro_turn_axis",
+               mikupan_configuration.input.finder_gyro.turn_axis);
     ApplyValue(ini, "input", "bindings_saved",
                mikupan_configuration.input.bindings_saved);
     for (int i = 0; i < 16; i++)
@@ -492,6 +502,16 @@ bool TrySaveConfigurationFile(const std::filesystem::path& path)
              mikupan_configuration.input.selected_gamepad_index);
     SetValue(ini, "input", "rumble_enabled",
              mikupan_configuration.input.rumble_enabled);
+    SetValue(ini, "input", "finder_gyro_enabled",
+             mikupan_configuration.input.finder_gyro.enabled);
+    SetValue(ini, "input", "finder_gyro_sensitivity",
+             mikupan_configuration.input.finder_gyro.sensitivity);
+    SetValue(ini, "input", "finder_gyro_invert_x",
+             mikupan_configuration.input.finder_gyro.invert_x);
+    SetValue(ini, "input", "finder_gyro_invert_y",
+             mikupan_configuration.input.finder_gyro.invert_y);
+    SetValue(ini, "input", "finder_gyro_turn_axis",
+             mikupan_configuration.input.finder_gyro.turn_axis);
     SetValue(ini, "input", "bindings_saved",
              mikupan_configuration.input.bindings_saved);
     if (mikupan_configuration.input.bindings_saved)
